@@ -23,6 +23,7 @@ class DataManager;
 class LineStyleControls;
 class LinePlotWidget;
 class PlotAlignmentWidget;
+class QCheckBox;
 class RelativeTimeAxisRangeControls;
 class Section;
 class VerticalAxisRangeControls;
@@ -106,6 +107,11 @@ private slots:
      */
     void _onStatePlotSeriesOptionsChanged(QString const & series_name);
 
+    /**
+     * @brief Handle color by group checkbox toggle
+     */
+    void _onColorByGroupToggled(bool checked);
+
 private:
     /**
      * @brief Populate the add series combo box with available AnalogTimeSeries keys
@@ -144,6 +150,7 @@ private:
     VerticalAxisRangeControls * _vertical_range_controls;
     Section * _vertical_range_controls_section;
     LineStyleControls * _line_style_controls;
+    QCheckBox * _color_by_group_checkbox{nullptr};
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;

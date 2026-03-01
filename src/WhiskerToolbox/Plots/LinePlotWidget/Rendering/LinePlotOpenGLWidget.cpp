@@ -4,6 +4,8 @@
 #include "CorePlotting/DataTypes/LineStyleData.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
+#include "GroupContextMenu/GroupContextMenuHandler.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/LineSelectionHelpers.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
@@ -15,8 +17,11 @@
 #include "CoreGeometry/boundingbox.hpp"
 #include "PlottingOpenGL/LineBatch/ComputeShaderIntersector.hpp"
 
+#include <QAction>
+#include <QContextMenuEvent>
 #include <QDebug>
 #include <QKeyEvent>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QOpenGLContext>
 #include <QString>
@@ -90,6 +95,22 @@ void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state)
                 });
         connect(_state.get(), &LinePlotState::seriesStyleChanged,
                 this, &LinePlotOpenGLWidget::onSeriesStyleChanged);
+        connect(_state.get(), &LinePlotState::colorByGroupChanged,
+                this, [this]() {
+                    makeCurrent();
+                    if (_state->colorByGroup()) {
+                        applyGroupColorsToLines();
+                    } else {
+                        // Clear overrides — upload transparent colors
+                        auto const & cpu = _line_store.cpuData();
+                        if (!cpu.empty()) {
+                            std::vector<glm::vec4> clear(cpu.numLines(), glm::vec4{0, 0, 0, 0});
+                            _line_renderer.updateLineColorOverrides(clear);
+                        }
+                    }
+                    doneCurrent();
+                    update();
+                });
 
         _scene_dirty = true;
         updateMatrices();
@@ -101,6 +122,38 @@ void LinePlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_mana
     _data_manager = data_manager;
     _scene_dirty = true;
     update();
+}
+
+void LinePlotOpenGLWidget::setGroupManager(GroupManager * group_manager)
+{
+    if (_group_manager) {
+        disconnect(_group_manager, nullptr, this, nullptr);
+    }
+
+    _group_manager = group_manager;
+
+    if (!_context_menu) {
+        createContextMenu();
+    }
+
+    if (_group_menu_handler) {
+        _group_menu_handler->setGroupManager(group_manager);
+    }
+
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::groupCreated, this, [this]() {
+            _scene_dirty = true;
+            update();
+        });
+        connect(_group_manager, &GroupManager::groupRemoved, this, [this]() {
+            _scene_dirty = true;
+            update();
+        });
+        connect(_group_manager, &GroupManager::groupModified, this, [this]() {
+            _scene_dirty = true;
+            update();
+        });
+    }
 }
 
 std::pair<double, double> LinePlotOpenGLWidget::getViewBounds() const
@@ -188,6 +241,15 @@ void LinePlotOpenGLWidget::paintGL()
     if (_scene_dirty) {
         rebuildScene();
         _scene_dirty = false;
+    }
+
+    // Check if group membership changed since last frame (generation counter)
+    if (_group_manager && _state && _state->colorByGroup()) {
+        auto const current_gen = _group_manager->generation();
+        if (current_gen != _last_group_generation) {
+            applyGroupColorsToLines();
+            _last_group_generation = current_gen;
+        }
     }
 
     // Render scene elements (axes, grids — future)
@@ -540,6 +602,12 @@ void LinePlotOpenGLWidget::rebuildScene()
     _line_store.upload(batch);
     _line_renderer.syncFromStore();
 
+    // Apply group colors after uploading new data
+    if (_group_manager && _state && _state->colorByGroup()) {
+        applyGroupColorsToLines();
+        _last_group_generation = _group_manager->generation();
+    }
+
     _scene_renderer.clearScene();
 }
 
@@ -729,4 +797,119 @@ CorePlotting::Interaction::GlyphPreview LinePlotOpenGLWidget::buildSelectionPrev
 {
     return WhiskerToolbox::Plots::buildLineSelectionPreview(
         _selection_start_screen, _selection_end_screen, _selection_remove_mode);
+}
+
+// =============================================================================
+// Context Menu & Group Management
+// =============================================================================
+
+void LinePlotOpenGLWidget::contextMenuEvent(QContextMenuEvent * event)
+{
+    if (!_context_menu || !_group_manager) {
+        QOpenGLWidget::contextMenuEvent(event);
+        return;
+    }
+
+    _group_menu_handler->updateMenuState(_context_menu);
+    _context_menu->popup(event->globalPos());
+    event->accept();
+}
+
+void LinePlotOpenGLWidget::createContextMenu()
+{
+    _context_menu = new QMenu(this);
+
+    _group_menu_handler = std::make_unique<GroupContextMenuHandler>(this);
+
+    GroupContextMenuCallbacks callbacks;
+    callbacks.getSelectedEntities = [this]() {
+        return getSelectedEntities();
+    };
+    callbacks.clearSelection = [this]() {
+        clearSelection();
+    };
+    callbacks.hasSelection = [this]() {
+        return !_selected_trial_indices.empty();
+    };
+    callbacks.onGroupOperationCompleted = [this]() {
+        clearSelection();
+        _scene_dirty = true;
+        update();
+    };
+
+    _group_menu_handler->setCallbacks(callbacks);
+
+    if (_group_manager) {
+        _group_menu_handler->setGroupManager(_group_manager);
+    }
+
+    _group_menu_handler->setupGroupMenuSection(_context_menu, true);
+
+    auto * clear_action = new QAction("Clear Selection", this);
+    _context_menu->addAction(clear_action);
+    connect(clear_action, &QAction::triggered, this, [this]() {
+        clearSelection();
+    });
+}
+
+std::unordered_set<EntityId> LinePlotOpenGLWidget::getSelectedEntities() const
+{
+    std::unordered_set<EntityId> result;
+    for (auto const trial_idx : _selected_trial_indices) {
+        auto eid = getEntityIdForTrial(trial_idx);
+        if (eid.has_value()) {
+            result.insert(*eid);
+        }
+    }
+    return result;
+}
+
+std::optional<EntityId> LinePlotOpenGLWidget::getEntityIdForTrial(std::uint32_t trial_index) const
+{
+    if (trial_index >= _cached_alignment_times.size()) {
+        return std::nullopt;
+    }
+    return EntityId{static_cast<uint64_t>(_cached_alignment_times[trial_index])};
+}
+
+void LinePlotOpenGLWidget::applyGroupColorsToLines()
+{
+    if (!_state || !_state->colorByGroup() || !_group_manager) {
+        return;
+    }
+
+    auto const & cpu = _line_store.cpuData();
+    if (cpu.empty() || _cached_alignment_times.empty()) {
+        return;
+    }
+
+    // Build per-line (0-based) color overrides
+    auto const num_lines = cpu.numLines();
+    std::vector<glm::vec4> per_line_colors(num_lines, glm::vec4{0.0f, 0.0f, 0.0f, 0.0f});
+
+    for (std::uint32_t i = 0; i < num_lines; ++i) {
+        auto const trial_index = cpu.lines[i].trial_index;
+        auto const entity_id = getEntityIdForTrial(trial_index);
+        if (!entity_id.has_value()) {
+            continue;
+        }
+
+        int const group_id = _group_manager->getEntityGroup(*entity_id);
+        if (group_id == -1) {
+            continue; // Not in any group — keep default color
+        }
+
+        QColor const group_color = _group_manager->getEntityColor(*entity_id, QColor());
+        if (!group_color.isValid()) {
+            continue;
+        }
+
+        per_line_colors[i] = glm::vec4(
+            static_cast<float>(group_color.redF()),
+            static_cast<float>(group_color.greenF()),
+            static_cast<float>(group_color.blueF()),
+            static_cast<float>(group_color.alphaF()));
+    }
+
+    _line_renderer.updateLineColorOverrides(per_line_colors);
 }

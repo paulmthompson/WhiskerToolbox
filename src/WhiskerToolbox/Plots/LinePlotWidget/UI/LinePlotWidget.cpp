@@ -95,6 +95,13 @@ void LinePlotWidget::setState(std::shared_ptr<LinePlotState> state)
     syncVerticalAxisRange();
 }
 
+void LinePlotWidget::setGroupManager(GroupManager * group_manager)
+{
+    if (_opengl_widget) {
+        _opengl_widget->setGroupManager(group_manager);
+    }
+}
+
 void LinePlotWidget::createTimeAxisIfNeeded()
 {
     if (_axis_widget) {

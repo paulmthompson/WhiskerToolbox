@@ -44,6 +44,7 @@ struct LinePlotStateData {
     CorePlotting::ViewStateData view_state;                                            ///< Zoom, pan, data bounds
     RelativeTimeAxisStateData time_axis;                                              ///< Time axis settings (min_range, max_range)
     VerticalAxisStateData vertical_axis;                                              ///< Vertical axis settings (y_min, y_max)
+    bool color_by_group = true;                                                       ///< Color lines by their group assignment
 };
 
 #endif // LINE_PLOT_STATE_DATA_HPP

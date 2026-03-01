@@ -13,7 +13,8 @@
 namespace LinePlotWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager) {
+                   std::shared_ptr<DataManager> data_manager,
+                   GroupManager * group_manager) {
 
     if (!registry) {
         std::cerr << "LinePlotWidgetModule::registerTypes: registry is null" << std::endl;
@@ -23,6 +24,7 @@ void registerTypes(EditorRegistry * registry,
     // Capture dependencies for lambdas
     auto dm = data_manager;
     auto reg = registry;
+    auto gm = group_manager;
 
     registry->registerType({.type_id = QStringLiteral("LinePlotWidget"),
                             .display_name = QStringLiteral("Line Plot"),
@@ -39,7 +41,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<LinePlotState>(); },
 
                             // View factory - creates LinePlotWidget (the view component)
-                            .create_view = [dm, reg](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_view = [dm, reg, gm](std::shared_ptr<EditorState> state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<LinePlotState>(state);
                                 if (!plot_state) {
                                     std::cerr << "LinePlotWidgetModule: Failed to cast state to LinePlotState" << std::endl;
@@ -48,6 +50,7 @@ void registerTypes(EditorRegistry * registry,
 
                                 auto * widget = new LinePlotWidget(dm);
                                 widget->setState(plot_state);
+                                widget->setGroupManager(gm);
 
                                 return widget;
                             },
@@ -65,32 +68,25 @@ void registerTypes(EditorRegistry * registry,
                                 return props;
                             },
 
-                            // Custom editor creation for potential future view/properties coupling
-                            .create_editor_custom = [dm](EditorRegistry * reg)
+                            // Custom editor creation for view/properties coupling
+                            .create_editor_custom = [dm, gm](EditorRegistry * reg)
                                     -> EditorRegistry::EditorInstance {
-                                // Create the shared state
                                 auto state = std::make_shared<LinePlotState>();
 
-                                // Create the view widget
                                 auto * view = new LinePlotWidget(dm);
                                 view->setState(state);
+                                view->setGroupManager(gm);
 
-                                // Create the properties widget with the shared state
                                 auto * props = new LinePlotPropertiesWidget(state, dm);
-                                // Connect properties widget to view widget (for range controls)
                                 props->setPlotWidget(view);
 
-                                // Connect view widget time position selection to update time in EditorRegistry
-                                // This allows the line plot to navigate to a specific time position
                                 if (reg) {
                                     QObject::connect(view, &LinePlotWidget::timePositionSelected,
                                                      [reg](TimePosition position) {
-                                                         // Update EditorRegistry time (triggers timeChanged signal for other widgets)
                                                          reg->setCurrentTime(position);
                                                      });
                                 }
 
-                                // Register the state
                                 reg->registerState(state);
 
                                 return EditorRegistry::EditorInstance{

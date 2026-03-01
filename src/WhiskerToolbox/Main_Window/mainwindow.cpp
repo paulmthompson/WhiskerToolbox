@@ -989,7 +989,7 @@ void MainWindow::_registerEditorTypes() {
 
     PSTHWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    LinePlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    LinePlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     HeatmapWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

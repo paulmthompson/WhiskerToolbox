@@ -359,7 +359,12 @@ void FuzzLinePlotStateDataRoundTrip(
     for (size_t i = 0; i < std::min(n, size_t{10}); ++i) {
         LinePlotOptions opts;
         opts.series_key = series_keys[i];
-        opts.line_style.thickness = line_thicknesses[i];
+        // Clamp to float range to avoid double→float overflow producing infinity
+        // (infinity is not valid JSON, causes rfl::json round-trip failure)
+        auto const clamped = std::clamp(line_thicknesses[i],
+                                         static_cast<double>(-std::numeric_limits<float>::max()),
+                                         static_cast<double>(std::numeric_limits<float>::max()));
+        opts.line_style.thickness = static_cast<float>(clamped);
         opts.line_style.hex_color = "#FF0000";
         data.plot_series["series_" + std::to_string(i)] = opts;
     }

@@ -36,6 +36,7 @@
 
 class DataManager;
 class EditorRegistry;
+class GroupManager;
 
 namespace LinePlotWidgetModule {
 
@@ -49,9 +50,11 @@ namespace LinePlotWidgetModule {
  * 
  * @param registry The EditorRegistry to register types with
  * @param data_manager Shared DataManager for widget construction
+ * @param group_manager Optional GroupManager for group-based coloring
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager);
+                   std::shared_ptr<DataManager> data_manager,
+                   GroupManager * group_manager = nullptr);
 
 }  // namespace LinePlotWidgetModule
 
