@@ -359,8 +359,8 @@ void FuzzLinePlotStateDataRoundTrip(
     for (size_t i = 0; i < std::min(n, size_t{10}); ++i) {
         LinePlotOptions opts;
         opts.series_key = series_keys[i];
-        opts.line_thickness = line_thicknesses[i];
-        opts.hex_color = "#FF0000";
+        opts.line_style.thickness = line_thicknesses[i];
+        opts.line_style.hex_color = "#FF0000";
         data.plot_series["series_" + std::to_string(i)] = opts;
     }
 
