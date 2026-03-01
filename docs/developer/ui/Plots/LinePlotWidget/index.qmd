@@ -105,6 +105,8 @@ LinePlotState emits category-level signals to minimize coupling complexity:
 | `windowSizeChanged` | Window size changed (also resets zoom/pan to fit) |
 | `plotSeriesAdded` / `plotSeriesRemoved` / `plotSeriesOptionsChanged` | Per-series changes |
 | `viewStateChanged` | Zoom, pan, or bounds changed (view transform only — no scene rebuild) |
+| `colorByGroupChanged` | Color-by-group toggle changed |
+| `seriesStyleChanged` | Per-series line style (color, thickness) changed |
 | `stateChanged` (inherited) | Any change requiring scene rebuild |
 
 **Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild via `stateChanged()`.
@@ -174,6 +176,17 @@ The LinePlotWidget uses a specialized **batch line rendering** pipeline distinct
 | `ComputeShaderIntersector` | `PlottingOpenGL/LineBatch/` | GPU compute shader intersector (GL 4.3+) |
 
 This infrastructure is **shared with** [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd), which uses the same `LineBatchData` / `BatchLineRenderer` / intersection system for rendering and selecting `LineData` entities.
+
+### Per-Line Color Overrides
+
+The `BatchLineRenderer` supports per-line color overrides via a `vec4` vertex attribute at location 3. When the alpha component is > 0, the override color is used instead of the global color. The fragment shader applies the following priority:
+
+1. **Hover color** (highest priority)
+2. **Selected color**
+3. **Group/per-line override** (alpha > 0)
+4. **Global color** (fallback)
+
+This is used for group-based coloring (see [Group Management](#group-management)) and will support external feature coloring and multi-series rendering in the future.
 
 ### Line State Colors
 
@@ -321,6 +334,55 @@ Additionally, the LinePlotWidget shares **line selection infrastructure** unique
 | `LineSelectionHelpers` | Yes | Yes |
 
 The key architectural distinction: LinePlotWidget maps selection results to **trial indices** (0-based into `GatherResult`), while TemporalProjectionViewWidget maps them to **entity IDs**.
+
+# Group Management
+
+The LinePlotWidget integrates with the application-wide `GroupManager` to allow users to assign selected trials to entity groups and visualize group membership via per-line coloring.
+
+## GroupManager Integration
+
+A `GroupManager*` is passed to `LinePlotWidget` via `setGroupManager()` during widget creation in `LinePlotWidgetRegistration`. The `LinePlotOpenGLWidget` connects to the `GroupManager`'s `groupCreated`, `groupRemoved`, and `groupModified` signals to reactively update the display.
+
+## Trial → EntityID Mapping
+
+Each trial in the displayed `GatherResult` corresponds to an alignment event. The alignment times are cached in `_cached_alignment_times` during `rebuildScene()`. The mapping is:
+
+```cpp
+EntityId{static_cast<uint64_t>(alignment_time_at_trial_index)}
+```
+
+This enables both the context menu (adding selected trials to groups) and group color lookups.
+
+## Context Menu
+
+Right-clicking the plot opens a context menu powered by the shared `GroupContextMenuHandler` (from `GroupContextMenu/`). The handler uses `GroupContextMenuCallbacks` to query the widget for:
+
+- `getSelectedEntities()` — maps selected trial indices to `EntityId`s
+- `hasSelection()` — whether any trials are selected
+- `clearSelection()` — clears selection state
+- `onGroupOperationCompleted()` — triggers scene rebuild after group changes
+
+## Group Coloring
+
+When `color_by_group` is enabled (default), lines belonging to entity groups are colored according to the group's assigned color. The `applyGroupColorsToLines()` method iterates over all lines, maps each to its entity and group, and uploads per-line color overrides to the `BatchLineRenderer`.
+
+Group color updates use a **generation counter** pattern: `paintGL()` checks `GroupManager::generation()` each frame and only re-applies colors when the generation changes, avoiding redundant GPU uploads.
+
+The `LinePlotPropertiesWidget` provides:
+
+- **Selection instructions** — describes Ctrl+Click drag for line selection (shared via `SelectionInstructions::lineCrossing()`)
+- **"Color by group assignment" checkbox** — toggles per-line group coloring on/off
+
+## Shared Infrastructure
+
+The group management pattern is shared with [ScatterPlotWidget](../ScatterPlotWidget/index.qmd):
+
+| Shared Component | Location | Purpose |
+|-----------------|----------|---------|
+| `GroupContextMenuHandler` | `GroupContextMenu/` | Populates context menu with group actions |
+| `GroupContextMenuCallbacks` | `GroupContextMenu/` | Widget-specific selection/entity callbacks |
+| `GroupManager` | `GroupManagementWidget/` | Central group state with generation counter |
+| `SelectionInstructions` | `Plots/Common/` | Selection mode help text |
 
 # Testing
 

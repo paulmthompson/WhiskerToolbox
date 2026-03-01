@@ -19,69 +19,50 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Axis system**: `RelativeTimeAxisWidget` (X) and `VerticalAxisWidget` (Y) with bidirectional sync
 - **Interaction**: Separated X/Y zoom, pan, double-click time navigation via shared `PlotInteractionHelpers`
 - **Line selection**: Ctrl+Click drag intersection stroke (add/remove modes), GPU compute shader and CPU intersector backends, shared `LineSelectionHelpers` with [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)
-- **Properties panel**: Alignment controls (`PlotAlignmentWidget`), series management (add/remove/table), line options (thickness, color), axis range controls in collapsible sections
+- **Properties panel**: Alignment controls (`PlotAlignmentWidget`), series management (add/remove/table), line options (thickness, color), axis range controls in collapsible sections, selection instructions, color-by-group checkbox
 - **State serialization**: Full round-trip JSON via `rfl::json`
 - **DataManager observer**: Combo box population and cleanup in destructor
+- **Group integration** (Phase 1): `GroupManager` passed at construction, right-click context menu via shared `GroupContextMenuHandler`, trial→EntityID mapping via cached alignment times, per-line group color overrides in `BatchLineRenderer` shader, generation-counter-based reactive updates, `color_by_group` state toggle
 
-**Not yet implemented**: Group integration for selected trials, mean/confidence interval overlay, external feature coloring, distribution tooltips, SVG export, and cross-widget linking described below.
+**Not yet implemented**: Mean/confidence interval overlay, external feature coloring, distribution tooltips, SVG export, and cross-widget linking described below.
 
 ---
 
-## Phase 1: Selection → Group Integration
+## Phase 1: Selection → Group Integration ✓
 
-**Status**: Not started. Line selection infrastructure is complete (`trialsSelected` signal emits 0-based trial indices). Group infrastructure exists in the Entity system.
+**Status**: Complete.
 
 **Goal**: Allow users to add selected trials (alignment events) to entity groups, enabling downstream filtering and analysis across widgets.
 
-### 1.1 Selection → Group UI
+### Implementation Summary
 
-When trials are selected (via Ctrl+Click drag), the properties panel should show:
+All four sub-phases are implemented:
 
-1. **"Add to Group" button** — enabled when a non-empty selection exists
-2. **Group combo box** — lists existing entity groups from the `EntityRegistry`
-3. **"New Group" button** — creates a new group and adds the selected events to it
+**1.1 Selection → Group UI**: Right-click context menu via the shared `GroupContextMenuHandler` infrastructure (from `GroupContextMenu/`). The context menu provides "Add to Group", "Remove from Group", "New Group" actions, gated by the current selection state via `GroupContextMenuCallbacks`. A "Clear Selection" action is also included. The properties panel shows selection instructions (Ctrl+Click drag) using the shared `SelectionInstructions::lineCrossing()` helper.
 
-The workflow:
+**1.2 Trial Index → EntityID Mapping**: Alignment times are cached in `_cached_alignment_times` during `rebuildScene()`. The `getEntityIdForTrial(uint32_t trial_index)` method maps each trial to `EntityId{static_cast<uint64_t>(alignment_time)}`. This is used both for the context menu (mapping selected trial indices to entity IDs) and for group color lookups.
 
-```
-User selects trials via Ctrl+Click drag
-        ↓
-trialsSelected(vector<uint32_t>) signal fires
-        ↓
-Properties panel enables "Add to Group" controls
-        ↓
-User selects/creates a group and clicks "Add to Group"
-        ↓
-Alignment event EntityIDs for the selected trial indices
-are added to the group in EntityRegistry
-```
+**1.3 Shared Group Integration Infrastructure**: Uses the existing shared components:
 
-### 1.2 Trial Index → EntityID Mapping
+- `GroupContextMenuHandler` (`GroupContextMenu/`) — shared with [ScatterPlotWidget](../ScatterPlotWidget/index.qmd)
+- `GroupManager` (`GroupManagementWidget/`) — passed via `setGroupManager()` at construction through `LinePlotWidgetRegistration`
+- `SelectionInstructions` (`Plots/Common/`) — shared helper for selection mode instructions
 
-The `GatherResult<AnalogTimeSeries>` holds alignment information. Each trial index corresponds to an alignment event (from a `DigitalEventSeries` or `DigitalIntervalSeries`). The mapping from trial index to the alignment event's EntityID must be established during scene building and cached for use by the group integration.
+**1.4 Visual Feedback for Groups**: Per-line color overrides in `BatchLineRenderer` via a `vec4` vertex attribute (location 3). Fragment shader priority: hover → selected → group override (alpha > 0) → global color. Group colors are applied reactively using `GroupManager::generation()` counter — checked each `paintGL()` frame, avoiding unnecessary GPU uploads. The `color_by_group` state toggle (checkbox in properties panel) controls whether group colors are applied.
 
-### 1.3 Shared Group Integration Infrastructure
+### Key Files Modified
 
-This group management pattern will be shared across multiple widgets:
-
-| Widget | What Gets Added to Group | Source of Selection |
-|--------|-------------------------|-------------------|
-| **LinePlotWidget** | Alignment event EntityIDs (trials) | Line selection stroke |
-| **[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)** | Line/Point EntityIDs | Line selection stroke |
-| **[ScatterPlotWidget](../ScatterPlotWidget/index.qmd)** | Point EntityIDs | (future) lasso/brush selection |
-| **DataViewerWidget** | Data entity EntityIDs | (future) row/range selection |
-
-The common pattern is:
-
-1. Widget exposes **selected entity IDs** (possibly via a shared signal type or interface)
-2. A shared **GroupManagementPanel** widget provides group combo box, add/new/remove buttons
-3. The panel calls `EntityRegistry::addToGroup()` with the selected IDs
-
-This `GroupManagementPanel` should be factored into `Plots/Common/` (or a higher-level shared widget location) so all widgets can embed the same group management UI. Initial implementation can be done inline in `LinePlotPropertiesWidget` and then refactored.
-
-### 1.4 Visual Feedback for Groups
-
-Once trials can belong to groups, optionally color or highlight lines belonging to specific groups. This connects to [Phase 3 (External Feature Coloring)](#phase-3-external-feature-coloring).
+| File | Changes |
+|------|---------|
+| `BatchLineRenderer.hpp/cpp` | Added `m_color_override_vbo`, `updateLineColorOverrides()`, `uploadDefaultColorOverrides()` |
+| Embedded + resource shaders (`.vert`, `.geom`, `.frag`) | Added `a_color_override` attribute passthrough and fragment priority logic |
+| `LinePlotStateData.hpp` | Added `bool color_by_group = true` |
+| `LinePlotState.hpp/cpp` | Added `colorByGroup()`, `setColorByGroup()`, `colorByGroupChanged` signal |
+| `LinePlotOpenGLWidget.hpp/cpp` | Added `GroupManager`, context menu, entity mapping, group color application |
+| `LinePlotWidget.hpp/cpp` | Added `setGroupManager()` forwarding |
+| `LinePlotPropertiesWidget.hpp/cpp` | Added Selection section with instructions and color-by-group checkbox |
+| `LinePlotWidgetRegistration.hpp/cpp` | Added `GroupManager*` parameter |
+| `CMakeLists.txt` | Added `GroupContextMenu` and `GroupManagementWidget` dependencies |
 
 ---
 
@@ -507,12 +488,7 @@ for (auto const & [name, options] : _state->data().plot_series) {
 
 ### 7.2 Per-Series Color in BatchLineRenderer
 
-Currently the `BatchLineRenderer` uses a single global color for all normal lines. Multi-series rendering requires either:
-
-- **Multiple draw calls** with different global colors (simpler, one per series)
-- **Per-line color attribute** in the shader (more efficient, see [Phase 3](#phase-3-external-feature-coloring))
-
-The per-line color approach from Phase 3 naturally supports multi-series coloring.
+The `BatchLineRenderer` now supports per-line color overrides via a `vec4` vertex attribute (implemented in Phase 1 for group coloring). Multi-series rendering can reuse this infrastructure by assigning each series' color as the per-line override for its lines.
 
 ### 7.3 Legend
 
@@ -526,7 +502,7 @@ When multiple series are displayed, a legend should map series names to their co
 ## Dependency Graph
 
 ```
-Phase 1: Selection → Groups
+Phase 1: Selection → Groups (DONE)
     ↓
 Phase 6: Cross-Widget Linking (uses groups for broadcast)
 
@@ -534,7 +510,7 @@ Phase 2: Mean / CI Overlay
 
 Phase 3: External Feature Coloring
     ├── depends on: CorePlotting::Colormaps (shared w/ HeatmapWidget, EventPlotWidget)
-    └── depends on: Per-line color in BatchLineRenderer
+    └── Per-line color in BatchLineRenderer (done in Phase 1)
 
 Phase 4: Distribution Tooltips
     └── depends on: shared PlotTooltipRenderer (also needed by HeatmapWidget)
@@ -543,7 +519,7 @@ Phase 5: SVG Export
     └── depends on: shared Export infrastructure
 
 Phase 7: Multi-Series Rendering
-    └── depends on: Per-line color in BatchLineRenderer (Phase 3)
+    └── Per-line color in BatchLineRenderer (done in Phase 1)
 ```
 
-Phases 1, 2, and 5 are independent and can proceed in parallel. Phase 3 unblocks Phase 7. Phase 4 introduces new shared infrastructure.
+Phase 1 is complete. Phases 2, 3, and 5 are independent and can proceed in parallel. Phase 3 no longer blocked (per-line color infrastructure done in Phase 1). Phase 4 introduces new shared infrastructure.
