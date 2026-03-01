@@ -31,7 +31,8 @@
             "name": "pybind11"
         },
         {
-            "name": "python3"
+            "name": "python3",
+            "default-features": false
         },
         {
             "name": "reflectcpp"
