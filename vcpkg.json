@@ -9,9 +9,6 @@
             "name": "eigen3"
         },
         {
-            "name": "glib"
-        },
-        {
             "name": "glm"
         },
         {
@@ -22,16 +19,13 @@
             "platform": "osx"
         },
         {
+            "name": "mlpack"
+        },
+        {
             "name": "nlohmann-json"
         },
         {
             "name": "openblas"
-        },
-        {
-            "name": "pybind11"
-        },
-        {
-            "name": "python3"
         },
         {
             "name": "reflectcpp"
@@ -41,6 +35,17 @@
         }
     ],
     "features": {
+        "bundlepython": {
+            "description": "Bundle Python interpreter and dependencies for standalone executable",
+            "dependencies": [
+                {
+                    "name": "python3"
+                },
+                {
+                    "name": "pybind11"
+                }
+            ]
+        },
         "capnproto": {
             "description": "CapnProto serialization support for binary data formats",
             "dependencies": [
@@ -81,7 +86,7 @@
             "description": "User interface components",
             "dependencies": [
                 {
-                    "name": "mlpack"
+                    "name": "glib"
                 },
                 {
                     "name": "opencv4"
@@ -197,6 +202,10 @@
         {
             "name": "protobuf",
             "version": "5.29.3"
+        },
+        {
+            "name": "pybind11",
+            "version": "3.0.0"
         },
         {
             "name": "python3",

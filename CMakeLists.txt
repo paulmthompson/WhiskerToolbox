@@ -19,6 +19,8 @@ option(ENABLE_OPENCV "Enable OpenCV support for image mask loading/saving" ON)
 
 option(ENABLE_UI "Enable UI" ON)
 
+option(BUNDLE_PYTHON "Bundle Python interpreter and dependencies for Python API support" ON)
+
 option(ENABLE_BENCHMARK "Enable benchmark support" OFF)
 
 option(ENABLE_DETAILED_TEST_DISCOVERY "Enable detailed test discovery output" OFF)
@@ -50,6 +52,13 @@ if(ENABLE_FFMPEG)
     message(STATUS "FFmpeg support: ENABLED")
 else()
     message(STATUS "FFmpeg support: DISABLED")
+endif()
+
+if(BUNDLE_PYTHON)
+    list(APPEND VCPKG_MANIFEST_FEATURES "bundlepython")
+    message(STATUS "Python vcpkg ENABLED")
+else()
+    message(STATUS "Python vcpkg DISABLED")
 endif()
 
 if(ENABLE_OPENCV)
