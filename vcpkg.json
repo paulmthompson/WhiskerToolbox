@@ -9,9 +9,6 @@
             "name": "eigen3"
         },
         {
-            "name": "glib"
-        },
-        {
             "name": "glm"
         },
         {
@@ -20,6 +17,9 @@
         {
             "name": "libffi",
             "platform": "osx"
+        },
+        {
+            "name": "mlpack"
         },
         {
             "name": "nlohmann-json"
@@ -81,7 +81,7 @@
             "description": "User interface components",
             "dependencies": [
                 {
-                    "name": "mlpack"
+                    "name": "glib"
                 },
                 {
                     "name": "opencv4"
