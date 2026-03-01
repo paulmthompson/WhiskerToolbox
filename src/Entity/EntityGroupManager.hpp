@@ -223,7 +223,18 @@ public:
      * @brief Notify observers that group membership or descriptors changed.
      * Call this once after bulk updates to avoid excessive UI refreshes.
      */
-    void notifyGroupsChanged() { m_group_observers.notifyObservers(); }
+    void notifyGroupsChanged() { ++m_generation; m_group_observers.notifyObservers(); }
+
+    /**
+     * @brief Get the current generation counter.
+     *
+     * The generation is incremented on every call to notifyGroupsChanged().
+     * Widgets can cache this value and compare on each paint frame to detect
+     * changes without connecting to observer signals.
+     *
+     * @return Monotonically increasing generation counter
+     */
+    [[nodiscard]] uint64_t generation() const { return m_generation; }
 
 private:
     // Group metadata
@@ -240,6 +251,9 @@ private:
 
     // Observer for bulk change notifications
     ObserverData m_group_observers;
+
+    // Monotonically increasing counter; incremented on every notifyGroupsChanged()
+    uint64_t m_generation{0};
 };
 
 #endif // ENTITYGROUPMANAGER_HPP

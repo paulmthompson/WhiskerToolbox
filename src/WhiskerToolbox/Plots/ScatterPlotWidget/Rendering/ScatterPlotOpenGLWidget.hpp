@@ -129,6 +129,7 @@ private:
     GroupManager * _group_manager{nullptr};
     std::unique_ptr<GroupContextMenuHandler> _group_menu_handler;
     QMenu * _context_menu{nullptr};
+    uint64_t _last_group_generation{0};  ///< Cached generation for change detection
 
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);
@@ -160,6 +161,15 @@ private:
      * @return EntityId if the point has an associated entity
      */
     [[nodiscard]] std::optional<EntityId> getEntityIdForPoint(std::size_t index) const;
+
+    /**
+     * @brief Apply group colors to the glyph batch after scene construction
+     *
+     * When color_by_group is enabled, iterates the scatter_points batch and
+     * replaces each glyph's color with its group color from GroupManager.
+     * Points not in any group retain the default glyph style color.
+     */
+    void applyGroupColorsToScene();
 
     // === Single-point selection ===
     void handleSinglePointCtrlClick(QPoint const & screen_pos);

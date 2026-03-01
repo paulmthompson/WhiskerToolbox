@@ -54,6 +54,7 @@ struct ScatterPlotStateData {
     std::optional<ScatterAxisSource> x_source;  ///< X-axis data source
     std::optional<ScatterAxisSource> y_source;  ///< Y-axis data source
     bool show_reference_line = false;           ///< Show y=x reference line
+    bool color_by_group = true;                  ///< Color points by their group assignment
 
     /// Glyph style for scatter points (shape, size, color, alpha)
     CorePlotting::GlyphStyleData glyph_style{CorePlotting::GlyphType::Circle, 5.0f, "#3388FF", 0.8f};
@@ -114,6 +115,10 @@ public:
     [[nodiscard]] bool showReferenceLine() const { return _data.show_reference_line; }
     void setShowReferenceLine(bool show);
 
+    // === Color by group ===
+    [[nodiscard]] bool colorByGroup() const { return _data.color_by_group; }
+    void setColorByGroup(bool enabled);
+
     // === Selection mode ===
     [[nodiscard]] ScatterSelectionMode selectionMode() const;
     void setSelectionMode(ScatterSelectionMode mode);
@@ -139,6 +144,7 @@ signals:
     void xSourceChanged();
     void ySourceChanged();
     void referenceLineChanged();
+    void colorByGroupChanged();
     void glyphStyleChanged();
     void selectionModeChanged();
     void selectionChanged();

@@ -65,6 +65,8 @@ void ScatterPlotOpenGLWidget::setState(std::shared_ptr<ScatterPlotState> state)
                 this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &ScatterPlotState::glyphStyleChanged,
                 this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &ScatterPlotState::colorByGroupChanged,
+                this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &ScatterPlotState::selectionChanged,
                 this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &ScatterPlotState::selectionModeChanged,
@@ -115,6 +117,15 @@ void ScatterPlotOpenGLWidget::paintGL()
 
     if (!_opengl_initialized) {
         return;
+    }
+
+    // Check if group membership changed since last frame (generation counter pattern)
+    if (_group_manager && _state && _state->colorByGroup()) {
+        auto const current_gen = _group_manager->generation();
+        if (current_gen != _last_group_generation) {
+            _scene_dirty = true;
+            _last_group_generation = current_gen;
+        }
     }
 
     if (_scene_dirty) {
@@ -471,7 +482,53 @@ void ScatterPlotOpenGLWidget::rebuildScene()
     }
 
     _scene = builder.build();
+    applyGroupColorsToScene();
     _scene_renderer.uploadScene(_scene);
+}
+
+void ScatterPlotOpenGLWidget::applyGroupColorsToScene()
+{
+    if (!_state || !_state->colorByGroup() || !_group_manager) {
+        return;
+    }
+
+    if (_scatter_data.empty()) {
+        return;
+    }
+
+    // Apply group colors to glyph batches that contain scatter points.
+    // The first batch(es) are scatter_points / scatter_selected / scatter_highlight.
+    // We patch colors for any batch whose entity_ids map back to scatter data indices.
+    for (auto & batch : _scene.glyph_batches) {
+        for (std::size_t i = 0; i < batch.entity_ids.size(); ++i) {
+            auto const scatter_idx = static_cast<std::size_t>(batch.entity_ids[i].id);
+            if (scatter_idx >= _scatter_data.size()) {
+                continue;
+            }
+
+            // Map scatter index → EntityId via TimeFrameIndex
+            auto const entity_id = getEntityIdForPoint(scatter_idx);
+            if (!entity_id.has_value()) {
+                continue;
+            }
+
+            int const group_id = _group_manager->getEntityGroup(*entity_id);
+            if (group_id == -1) {
+                continue;  // Not in any group — keep default color
+            }
+
+            QColor const group_color = _group_manager->getEntityColor(*entity_id, QColor());
+            if (!group_color.isValid()) {
+                continue;
+            }
+
+            batch.colors[i] = glm::vec4(
+                static_cast<float>(group_color.redF()),
+                static_cast<float>(group_color.greenF()),
+                static_cast<float>(group_color.blueF()),
+                static_cast<float>(group_color.alphaF()));
+        }
+    }
 }
 
 void ScatterPlotOpenGLWidget::setGroupManager(GroupManager * group_manager)

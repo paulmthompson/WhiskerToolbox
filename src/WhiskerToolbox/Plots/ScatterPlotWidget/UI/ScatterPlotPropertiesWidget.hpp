@@ -68,6 +68,7 @@ private:
     void _onXOffsetChanged(int value);
     void _onYOffsetChanged(int value);
     void _onReferenceLineToggled(bool checked);
+    void _onColorByGroupToggled(bool checked);
     void _updateCompatibilityLabel();
     void _updateUIFromState();
     void _applyXSourceToState();
@@ -98,6 +99,9 @@ private:
     // Glyph style
     Section * _glyph_style_section{nullptr};
     GlyphStyleControls * _glyph_style_controls{nullptr};
+
+    // Group coloring
+    QCheckBox * _color_by_group_checkbox{nullptr};
 
     // Selection mode
     Section * _selection_section{nullptr};

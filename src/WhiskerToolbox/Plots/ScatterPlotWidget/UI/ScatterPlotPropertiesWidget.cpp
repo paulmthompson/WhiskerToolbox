@@ -163,6 +163,15 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
         auto * glyph_layout = new QVBoxLayout();
         glyph_layout->setContentsMargins(4, 4, 4, 4);
         glyph_layout->addWidget(_glyph_style_controls);
+
+        // Color by group checkbox
+        _color_by_group_checkbox = new QCheckBox("Color by group assignment");
+        _color_by_group_checkbox->setToolTip(
+            "When enabled, points are colored according to their group color.\n"
+            "Points not in any group use the default glyph color above.");
+        _color_by_group_checkbox->setChecked(_state->colorByGroup());
+        glyph_layout->addWidget(_color_by_group_checkbox);
+
         _glyph_style_section->setContentLayout(*glyph_layout);
     }
 
@@ -212,6 +221,10 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
             this, &ScatterPlotPropertiesWidget::_onYOffsetChanged);
     connect(_reference_line_checkbox, &QCheckBox::toggled,
             this, &ScatterPlotPropertiesWidget::_onReferenceLineToggled);
+    if (_color_by_group_checkbox) {
+        connect(_color_by_group_checkbox, &QCheckBox::toggled,
+                this, &ScatterPlotPropertiesWidget::_onColorByGroupToggled);
+    }
     connect(_selection_mode_combo, &QComboBox::currentIndexChanged,
             this, &ScatterPlotPropertiesWidget::_onSelectionModeChanged);
 
@@ -398,6 +411,13 @@ void ScatterPlotPropertiesWidget::_onReferenceLineToggled(bool checked)
 {
     if (_state) {
         _state->setShowReferenceLine(checked);
+    }
+}
+
+void ScatterPlotPropertiesWidget::_onColorByGroupToggled(bool checked)
+{
+    if (_state) {
+        _state->setColorByGroup(checked);
     }
 }
 
@@ -632,6 +652,11 @@ void ScatterPlotPropertiesWidget::_updateUIFromState()
     // Reference line
     if (_reference_line_checkbox) {
         _reference_line_checkbox->setChecked(_state->showReferenceLine());
+    }
+
+    // Color by group
+    if (_color_by_group_checkbox) {
+        _color_by_group_checkbox->setChecked(_state->colorByGroup());
     }
 
     // Selection mode

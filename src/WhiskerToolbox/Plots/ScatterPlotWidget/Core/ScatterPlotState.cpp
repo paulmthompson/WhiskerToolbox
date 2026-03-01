@@ -171,6 +171,16 @@ void ScatterPlotState::setShowReferenceLine(bool show)
     }
 }
 
+void ScatterPlotState::setColorByGroup(bool enabled)
+{
+    if (_data.color_by_group != enabled) {
+        _data.color_by_group = enabled;
+        markDirty();
+        emit colorByGroupChanged();
+        emit stateChanged();
+    }
+}
+
 ScatterSelectionMode ScatterPlotState::selectionMode() const
 {
     if (_data.selection_mode == "polygon") {
