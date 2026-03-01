@@ -31,8 +31,13 @@ The following features are complete and documented in [index.qmd](index.qmd):
 
 - **Line style customization** (Phase 2): `LineStyleData` (color, thickness, alpha) via `LineStyleState`/`LineStyleControls` — global single style, replaces hardcoded red
 
-**Not yet implemented**: polygon selection, double-click time navigation, group integration, group-based coloring,
-and subgroup visibility filtering described below.
+- **Polygon selection** (Phase 4): Dual-mode selection (Point/Line/Polygon) via combo box; Enter to close polygon, Backspace to undo vertex, Escape to cancel; uses shared `PolygonInteractionController` and `selectPointsInPolygon()` from `CorePlotting/Selection/`; polygon preview via `PreviewRenderer`; additive selection (adds to existing)
+
+- **Group integration** (Phase 5): Right-click context menu via `GroupContextMenuHandler` for "Add to Group", "Create New Group", "Remove from Group"; integrated with `EntityRegistry`; selection instructions via shared `SelectionInstructions` helpers
+
+- **Group-based coloring** (Phase 6): `color_by_group` toggle in properties panel; `applyGroupColorsToScene()` applies group colors to point glyphs with priority (selected → group → default); `GroupManager` signal connections trigger scene rebuild on group changes
+
+**Not yet implemented**: double-click time navigation, subgroup visibility filtering, per-key rendering options described below.
 
 ---
 
@@ -77,11 +82,17 @@ during the `rebuildScene()` pass and cached as `std::unordered_map<EntityId, Tim
 
 ## Phase 4: Polygon Selection
 
-**Status**: Not started. Currently only point-by-point click selection and line stroke
-selection are implemented.
+**Status**: ✅ **Completed** (March 2026).
 
 **Goal**: Allow the user to draw a polygon (lasso) to select multiple points at once,
 complementing the existing click-to-select and stroke-to-intersect modes.
+
+**Implementation Notes**: The polygon selection uses the shared `PolygonInteractionController`
+from `CorePlotting/Interaction/` and the `selectPointsInPolygon()` utility from
+`CorePlotting/Selection/`. Polygon selection is **additive** (adds to existing selection)
+rather than replacing. Enter key closes the polygon (not double-click, which is reserved
+for future time navigation). Polygon mode is integrated into the selection mode combo box
+as the fourth option.
 
 ### 4.1 Polygon Interaction (Existing Infrastructure)
 
@@ -175,12 +186,17 @@ fires after polygon selection completes.
 
 ## Phase 5: Selection → Group Integration
 
-**Status**: Not started. Selection infrastructure is complete (point click and line stroke);
-`entitiesSelected` signal emits `EntityId` sets. Entity group infrastructure exists in the
-Entity system.
+**Status**: ✅ **Completed** (March 2026). Implemented via `GroupContextMenuHandler`
+right-click menu rather than a dedicated panel widget.
 
 **Goal**: Allow users to add selected points and lines to entity groups, enabling downstream
 filtering and analysis across widgets.
+
+**Implementation Notes**: Uses the existing `GroupContextMenuHandler` infrastructure for
+right-click group operations. The `GroupManager` is passed during widget registration and
+wired to the OpenGL widget. Selected EntityIDs are exposed via callbacks to the context
+menu handler. This approach reuses the well-tested group menu system and provides consistent
+UX across widgets. A dedicated `GroupManagementPanel` was not needed.
 
 ### 5.1 Group Context Menu
 
@@ -228,51 +244,49 @@ Add a "Selection & Groups" section to the properties panel:
 
 ## Phase 6: Group-Based Coloring
 
-**Status**: Not started. Depends on Phase 5 (group integration).
+**Status**: ✅ **Completed** (March 2026) for points. Line group coloring deferred.
 
 **Goal**: Color points and lines by their group membership, allowing visual identification
 of subgroups in the spatial overlay.
 
-### 6.1 Color Configuration
+**Implementation Notes**: Implemented for point glyphs via `applyGroupColorsToScene()`
+which iterates glyph batches and applies group colors from `GroupManager`. Color priority:
+selected (orange) → group color → default style. A "Color by Group" checkbox in the
+properties panel toggles the feature. The state field `color_by_group` is serialized.
+GroupManager signals (`groupCreated`, `groupRemoved`, `groupModified`) trigger scene rebuilds.
+Line group coloring is deferred due to the separate `BatchLineRenderer` pipeline.
 
-```cpp
-struct GroupColorConfig {
-    std::string color_mode = "fixed";  // "fixed" or "by_group"
+### 6.1 Implementation Details
 
-    // For by_group coloring:
-    // Map from group name → hex color string
-    // Groups not in the map use the default color
-    std::map<std::string, std::string> group_colors;
-};
-```
-
-Add `GroupColorConfig` to `TemporalProjectionViewStateData` for both points and lines:
+The implementation uses a simple boolean toggle rather than a complex configuration struct:
 
 ```cpp
 struct TemporalProjectionViewStateData {
     // ... existing fields ...
-    GroupColorConfig point_color_config;
-    GroupColorConfig line_color_config;
+    bool color_by_group = true;  // Toggle for group-based coloring
 };
 ```
 
+Colors are retrieved directly from `GroupManager::getEntityColor()`, which manages group colors centrally. This avoids duplicating color management in each widget.
+
 ### 6.2 Color Assignment During Scene Build
 
-In `rebuildScene()`, when `color_mode == "by_group"`:
+The `applyGroupColorsToScene()` method runs after the initial scene build and applies group colors with priority:
 
-1. Query `EntityRegistry` for all groups
-2. For each point/line `EntityId`, look up which group(s) it belongs to
-3. Assign the first matching group's color (or default color if no group)
-4. Write the color into `RenderableGlyphBatch::colors` (points) or per-line color
-   override (lines)
+1. **Skip selected entities** — Selected points retain their orange highlight color
+2. **Query GroupManager** — For each unselected entity, call `GroupManager::getEntityColor(entity_id, default_color)`
+3. **Update glyph batch colors** — Write the group color into `RenderableGlyphBatch::colors` array
+4. **Re-upload to GPU** — Call `GlyphRenderer::updateColors()` to upload the modified color buffer
+
+This approach preserves the selection highlight while applying group colors to all other entities. Entities not in any group use the default glyph style color.
 
 ### 6.3 Properties Panel Controls
 
-Add a "Group Coloring" collapsible section:
+The implementation adds a single checkbox control:
 
-- **Color mode combo** — Fixed / By Group
-- **Group color table** — lists groups with color pickers per group
-- **Default color** — color for entities not in any group
+- **"Color by Group" checkbox** — toggles `TemporalProjectionViewStateData::color_by_group`
+
+Group colors are managed centrally in `GroupManagementWidget`, not per-widget. This provides consistent group colors across all plot widgets.
 
 ### 6.4 Shared Colormap/Group Color Infrastructure
 
@@ -449,15 +463,16 @@ granularity.
 
 ## Shared Components Summary
 
-Components that should be factored into shared locations rather than implemented inline:
+Components that have been factored into shared locations or are candidates for sharing:
 
-| Component | Proposed Location | Used By |
-|-----------|-------------------|---------|
-| `selectPointsInPolygon` | `CorePlotting/Selection/` | TemporalProjectionViewWidget, [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
-| `GroupManagementPanel` | `Plots/Common/` | TemporalProjectionViewWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
-| `GroupColorMapper` | `CorePlotting/` | TemporalProjectionViewWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd) |
-| Extended `GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` | TemporalProjectionViewWidget, [EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd), [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) |
-| `GlyphStyleControls` widget | `Plots/Common/GlyphStyleWidget/` | TemporalProjectionViewWidget, [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) |
+| Component | Status | Location | Used By |
+|-----------|--------|----------|---------|
+| `selectPointsInPolygon` | ✅ **Implemented** | `CorePlotting/Selection/` | TemporalProjectionViewWidget, [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
+| `SelectionInstructions` | ✅ **Implemented** | `Plots/Common/SelectionInstructions.hpp` | TemporalProjectionViewWidget, ScatterPlotWidget |
+| `GroupManagementPanel` | ⏸️ **Deferred** | N/A | Both widgets use `GroupContextMenuHandler` via right-click; dedicated panel not needed yet |
+| `GroupColorMapper` | ⏳ **Planned** | `CorePlotting/` | TemporalProjectionViewWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd) |
+| Extended `GlyphType` enum | ✅ **Implemented** | `CorePlotting/DataTypes/GlyphStyleData.hpp` | TemporalProjectionViewWidget, [EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd), [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) |
+| `GlyphStyleControls` widget | ✅ **Implemented** | `Plots/Common/GlyphStyleWidget/` | TemporalProjectionViewWidget, [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd), ScatterPlotWidget |
 ## Design Decisions
 
 1. **Per-key vs. global rendering options**: Phase 2 started with global options

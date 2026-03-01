@@ -9,7 +9,10 @@
 #include "CorePlotting/LineBatch/LineBatchBuilder.hpp"
 #include "CorePlotting/Mappers/SpatialMapper_AllTimes.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
+#include "CorePlotting/Selection/PolygonSelection.hpp"
 #include "DataManager/DataManager.hpp"
+#include "GroupContextMenu/GroupContextMenuHandler.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Plots/Common/LineSelectionHelpers.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
@@ -17,8 +20,10 @@
 #include "Points/Point_Data.hpp"
 
 #include <QApplication>
+#include <QContextMenuEvent>
 #include <QDebug>
 #include <QKeyEvent>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QWheelEvent>
 
@@ -41,6 +46,7 @@ TemporalProjectionOpenGLWidget::TemporalProjectionOpenGLWidget(QWidget * parent)
 TemporalProjectionOpenGLWidget::~TemporalProjectionOpenGLWidget()
 {
     makeCurrent();
+    _preview_renderer.cleanup();
     _scene_renderer.cleanup();
     doneCurrent();
 }
@@ -73,6 +79,17 @@ void TemporalProjectionOpenGLWidget::setState(std::shared_ptr<TemporalProjection
                 this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &TemporalProjectionViewState::lineStyleChanged,
                 this, &TemporalProjectionOpenGLWidget::onLineStyleChanged);
+        connect(_state.get(), &TemporalProjectionViewState::colorByGroupChanged,
+                this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &TemporalProjectionViewState::selectionChanged,
+                this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &TemporalProjectionViewState::selectionModeChanged,
+                this, [this](QString const &) {
+                    cancelPolygonSelection();
+                    cancelLineSelection();
+                    _scene_dirty = true;
+                    update();
+                });
         _scene_dirty = true;
         updateMatrices();
         update();
@@ -102,6 +119,7 @@ void TemporalProjectionOpenGLWidget::initializeGL()
     if (!_scene_renderer.initialize()) {
         qWarning() << "TemporalProjectionOpenGLWidget: Failed to initialize SceneRenderer";
     }
+    _preview_renderer.initialize();
     // Initialize line batch store and renderer for selectable lines
     if (!_line_store.initialize()) {
         qWarning() << "TemporalProjectionOpenGLWidget: Failed to initialize BatchLineStore";
@@ -170,6 +188,14 @@ void TemporalProjectionOpenGLWidget::paintGL()
         _scene_renderer.renderPreview(preview, _widget_width, _widget_height);
         glEnable(GL_DEPTH_TEST);
     }
+
+    // Render polygon preview if building polygon
+    if (_polygon_controller.isActive()) {
+        glDisable(GL_DEPTH_TEST);
+        auto polygon_preview = _polygon_controller.getPreview();
+        _preview_renderer.render(polygon_preview, _widget_width, _widget_height);
+        glEnable(GL_DEPTH_TEST);
+    }
 }
 
 void TemporalProjectionOpenGLWidget::resizeGL(int w, int h)
@@ -196,6 +222,9 @@ void TemporalProjectionOpenGLWidget::mousePressEvent(QMouseEvent * event)
             } else if (selection_mode == "line") {
                 // Line selection starts a drag operation
                 startLineSelection(event->pos(), shift_held /* remove_mode */);
+            } else if (selection_mode == "polygon") {
+                // Polygon selection: add vertex
+                handlePolygonCtrlClick(event);
             }
         } else {
             // Panning mode
@@ -214,6 +243,14 @@ void TemporalProjectionOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
         updateLineSelection(event->pos());
         event->accept();
         return;
+    }
+
+    // Update polygon preview cursor position if active
+    if (_polygon_controller.isActive()) {
+        auto const screen_x = static_cast<float>(event->pos().x());
+        auto const screen_y = static_cast<float>(event->pos().y());
+        _polygon_controller.updateCursorPosition(screen_x, screen_y);
+        update();
     }
 
     if (event->buttons() & Qt::LeftButton) {
@@ -457,12 +494,13 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
         for (auto & glyph_batch : _scene.glyph_batches) {
             for (size_t i = 0; i < glyph_batch.entity_ids.size(); ++i) {
                 if (_selected_entity_ids.count(glyph_batch.entity_ids[i])) {
-                    glyph_batch.colors[i] = glm::vec4{1.0f, 0.8f, 0.0f, 1.0f}; // Yellow
+                    glyph_batch.colors[i] = glm::vec4{1.0f, 0.6f, 0.0f, 0.9f}; // Orange for selected
                 }
             }
         }
     }
 
+    applyGroupColorsToScene();
     _scene_renderer.uploadScene(_scene);
 
     // === Phase 5: Build LineBatchData for BatchLineRenderer (selectable lines) ===
@@ -551,6 +589,32 @@ QPointF TemporalProjectionOpenGLWidget::screenToWorld(QPoint const & screen_pos)
                                                _widget_height, screen_pos);
 }
 
+void TemporalProjectionOpenGLWidget::keyPressEvent(QKeyEvent * event)
+{
+    if (_polygon_controller.isActive()) {
+        if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+            completePolygonSelection();
+            event->accept();
+            return;
+        }
+        if (event->key() == Qt::Key_Escape) {
+            cancelPolygonSelection();
+            event->accept();
+            return;
+        }
+        if (event->key() == Qt::Key_Backspace) {
+            _polygon_controller.removeLastVertex();
+            if (!_polygon_vertices_world.empty()) {
+                _polygon_vertices_world.pop_back();
+            }
+            update();
+            event->accept();
+            return;
+        }
+    }
+    QOpenGLWidget::keyPressEvent(event);
+}
+
 void TemporalProjectionOpenGLWidget::keyReleaseEvent(QKeyEvent * event)
 {
     if (event->key() == Qt::Key_Escape && _is_selecting) {
@@ -580,6 +644,9 @@ void TemporalProjectionOpenGLWidget::clearSelection()
     _scene_dirty = true;  // Need rebuild for point color reset
     update();
     emit entitiesSelected(_selected_entity_ids);
+    if (_state) {
+        emit _state->selectionChanged();
+    }
 }
 
 glm::vec2 TemporalProjectionOpenGLWidget::screenToNDC(QPoint const & screen_pos) const
@@ -633,6 +700,9 @@ void TemporalProjectionOpenGLWidget::handleClickSelection(QPoint const & screen_
         _scene_dirty = true;
         update();
         emit entitiesSelected(_selected_entity_ids);
+        if (_state) {
+            emit _state->selectionChanged();
+        }
     }
 }
 
@@ -726,4 +796,216 @@ void TemporalProjectionOpenGLWidget::applyLineIntersectionResults(
     _line_renderer.syncFromStore();
 
     emit entitiesSelected(_selected_entity_ids);
+    if (_state) {
+        emit _state->selectionChanged();
+    }
+}
+
+// =============================================================================
+// Group Manager Integration
+// =============================================================================
+
+void TemporalProjectionOpenGLWidget::setGroupManager(GroupManager * group_manager)
+{
+    // Disconnect from previous group manager if any
+    if (_group_manager) {
+        disconnect(_group_manager, nullptr, this, nullptr);
+    }
+
+    _group_manager = group_manager;
+
+    // Create context menu if it doesn't exist
+    if (!_context_menu) {
+        createContextMenu();
+    }
+
+    // Update the group menu handler with the new group manager
+    if (_group_menu_handler) {
+        _group_menu_handler->setGroupManager(group_manager);
+    }
+
+    // Connect to group manager signals if available
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::groupCreated, this, [this]() {
+            _scene_dirty = true;
+            update();
+        });
+        connect(_group_manager, &GroupManager::groupRemoved, this, [this]() {
+            _scene_dirty = true;
+            update();
+        });
+        connect(_group_manager, &GroupManager::groupModified, this, [this]() {
+            _scene_dirty = true;
+            update();
+        });
+    }
+}
+
+void TemporalProjectionOpenGLWidget::createContextMenu()
+{
+    _context_menu = new QMenu(this);
+
+    // Create the group context menu handler
+    _group_menu_handler = std::make_unique<GroupContextMenuHandler>(this);
+
+    // Setup callbacks for the group handler
+    GroupContextMenuCallbacks callbacks;
+    callbacks.getSelectedEntities = [this]() -> std::unordered_set<EntityId> {
+        return _selected_entity_ids;
+    };
+    callbacks.clearSelection = [this]() {
+        clearSelection();
+    };
+    callbacks.hasSelection = [this]() {
+        return !_selected_entity_ids.empty();
+    };
+    callbacks.onGroupOperationCompleted = [this]() {
+        clearSelection();
+        _scene_dirty = true;
+        update();
+    };
+
+    _group_menu_handler->setCallbacks(callbacks);
+
+    if (_group_manager) {
+        _group_menu_handler->setGroupManager(_group_manager);
+    }
+
+    _group_menu_handler->setupGroupMenuSection(_context_menu, true);
+
+    auto * clear_selection_action = new QAction("Clear Selection", this);
+    _context_menu->addAction(clear_selection_action);
+    connect(clear_selection_action, &QAction::triggered, this, [this]() {
+        clearSelection();
+    });
+}
+
+void TemporalProjectionOpenGLWidget::contextMenuEvent(QContextMenuEvent * event)
+{
+    if (!_context_menu || !_group_manager) {
+        QOpenGLWidget::contextMenuEvent(event);
+        return;
+    }
+
+    _group_menu_handler->updateMenuState(_context_menu);
+    _context_menu->popup(event->globalPos());
+    event->accept();
+}
+
+void TemporalProjectionOpenGLWidget::applyGroupColorsToScene()
+{
+    if (!_state || !_state->colorByGroup() || !_group_manager) {
+        return;
+    }
+
+    // Color priority (highest → lowest):
+    //   1. Selected (orange)      — already applied in rebuildScene
+    //   2. Group color            — applied here
+    //   3. Default glyph color    — already set by addGlyphs
+
+    for (auto & batch : _scene.glyph_batches) {
+        for (std::size_t i = 0; i < batch.entity_ids.size(); ++i) {
+            EntityId const entity_id = batch.entity_ids[i];
+
+            // Skip selected points — they keep their dedicated colors
+            if (_selected_entity_ids.count(entity_id)) {
+                continue;
+            }
+
+            int const group_id = _group_manager->getEntityGroup(entity_id);
+            if (group_id == -1) {
+                continue;  // Not in any group — keep default color
+            }
+
+            QColor const group_color = _group_manager->getEntityColor(entity_id, QColor());
+            if (!group_color.isValid()) {
+                continue;
+            }
+
+            batch.colors[i] = glm::vec4(
+                static_cast<float>(group_color.redF()),
+                static_cast<float>(group_color.greenF()),
+                static_cast<float>(group_color.blueF()),
+                static_cast<float>(group_color.alphaF()));
+        }
+    }
+}
+
+// =============================================================================
+// Polygon Selection
+// =============================================================================
+
+void TemporalProjectionOpenGLWidget::handlePolygonCtrlClick(QMouseEvent * event)
+{
+    auto const screen_x = static_cast<float>(event->pos().x());
+    auto const screen_y = static_cast<float>(event->pos().y());
+    QPointF const world = screenToWorld(event->pos());
+
+    if (!_polygon_controller.isActive()) {
+        // Start a new polygon
+        _polygon_vertices_world.clear();
+        _polygon_vertices_world.emplace_back(
+            static_cast<float>(world.x()), static_cast<float>(world.y()));
+        _polygon_controller.start(screen_x, screen_y, "temporal_polygon_selection");
+    } else {
+        // Add a vertex
+        _polygon_vertices_world.emplace_back(
+            static_cast<float>(world.x()), static_cast<float>(world.y()));
+        auto result = _polygon_controller.addVertex(screen_x, screen_y);
+        if (result == CorePlotting::Interaction::AddVertexResult::ClosedPolygon) {
+            completePolygonSelection();
+            return;
+        }
+    }
+    update();
+}
+
+void TemporalProjectionOpenGLWidget::completePolygonSelection()
+{
+    if (!_state || _polygon_vertices_world.size() < 3) {
+        cancelPolygonSelection();
+        return;
+    }
+
+    _polygon_controller.complete();
+
+    // Run point-in-polygon selection on point glyph batches
+    for (auto const & batch : _scene.glyph_batches) {
+        // Extract x and y from the batch positions
+        std::vector<float> x_values;
+        std::vector<float> y_values;
+        x_values.reserve(batch.positions.size());
+        y_values.reserve(batch.positions.size());
+        for (auto const & pos : batch.positions) {
+            x_values.push_back(pos.x);
+            y_values.push_back(pos.y);
+        }
+
+        auto selection_result = CorePlotting::Selection::selectPointsInPolygon(
+            _polygon_vertices_world,
+            x_values,
+            y_values);
+
+        // Add selected points to the entity selection (additive)
+        for (auto idx : selection_result.selected_indices) {
+            if (idx < batch.entity_ids.size()) {
+                _selected_entity_ids.insert(batch.entity_ids[idx]);
+            }
+        }
+    }
+
+    _polygon_vertices_world.clear();
+    _scene_dirty = true;
+    update();
+    emit entitiesSelected(_selected_entity_ids);
+    if (_state) {
+        emit _state->selectionChanged();
+    }
+}
+
+void TemporalProjectionOpenGLWidget::cancelPolygonSelection()
+{
+    _polygon_controller.cancel();
+    _polygon_vertices_world.clear();
+    update();
 }

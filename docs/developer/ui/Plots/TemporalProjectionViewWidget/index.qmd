@@ -78,6 +78,9 @@ struct TemporalProjectionViewStateData {
 
     // Selection
     std::string selection_mode = "none"; // "none", "point", "line", "polygon"
+    
+    // Group integration
+    bool color_by_group = true;  // Toggle for group-based coloring
 };
 ```
 
@@ -93,6 +96,8 @@ struct TemporalProjectionViewStateData {
 | `glyphStyleChanged` | Any point glyph style property (shape, size, color, alpha) changed |
 | `lineWidthChanged` | Line rendering width changed |
 | `selectionModeChanged` | Selection mode changed |
+| `selectionChanged` | Selection set changed (entities added/removed) |
+| `colorByGroupChanged` | Group-based coloring toggled on/off |
 | `stateChanged` (inherited) | Any change requiring scene rebuild |
 
 **Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild via `stateChanged()`.
@@ -337,14 +342,14 @@ These are the same shared interaction helpers used across all plot widgets — s
 
 ## Selection Modes
 
-The widget supports three selection modes, controlled by a combo box in the properties panel:
+The widget supports four selection modes, controlled by a combo box in the properties panel:
 
 ### Point Selection (mode: "point")
 
 - **Ctrl + Click** on a point: Toggle selection (add or remove entity)
 - **Ctrl + Shift + Click**: Remove mode (deselect only)
 - Uses `SceneHitTester::queryQuadTree()` for spatial point lookup with 10-pixel tolerance
-- Selected points are highlighted yellow in the glyph batch
+- Selected points are highlighted orange in the glyph batch
 
 This shares the `SceneHitTester` infrastructure from `CorePlotting/Interaction/` also used by [EventPlotWidget](../EventPlotWidget/index.qmd) for raster click hit testing.
 
@@ -365,11 +370,67 @@ This shares the line selection infrastructure with [LinePlotWidget](../LinePlotW
 | `CpuLineBatchIntersector` | `CorePlotting/LineBatch/` | CPU fallback intersector |
 | `ComputeShaderIntersector` | `PlottingOpenGL/LineBatch/` | GPU compute shader (GL 4.3+) |
 
+### Polygon Selection (mode: "polygon")
+
+- **Ctrl + Click**: Begin polygon / add vertex
+- **Mouse move** (while active): Update preview line from last vertex to cursor
+- **Enter**: Close polygon and select all points inside
+- **Escape**: Cancel polygon drawing
+- **Backspace**: Undo last vertex
+- Uses the shared `PolygonInteractionController` from `CorePlotting/Interaction/`
+- Point containment test via `selectPointsInPolygon()` from `CorePlotting/Selection/` (ray-casting algorithm)
+- Polygon preview rendered via `PreviewRenderer`
+- **Additive selection**: Polygon selection adds to existing selection rather than replacing
+
+This shares the polygon interaction infrastructure with [ScatterPlotWidget](../ScatterPlotWidget/index.qmd):
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `PolygonInteractionController` | `CorePlotting/Interaction/` | Click-based polygon creation, cursor preview, auto-close |
+| `selectPointsInPolygon` | `CorePlotting/Selection/` | Ray-casting point-in-polygon test |
+| `PreviewRenderer` | `CorePlotting/Rendering/` | Renders polygon preview during construction |
+
+The selection mode instructions are provided via the shared `SelectionInstructions` helpers from `Plots/Common/SelectionInstructions.hpp`, which provide context-sensitive help text for each mode.
+
 ### Selection State
 
 Selected entity IDs are tracked in an `std::unordered_set<EntityId>`. When the selection changes, the `entitiesSelected` signal is emitted, allowing other components (e.g., group management) to react.
 
 Selection is preserved across scene rebuilds: after rebuilding, both point glyph colors and line selection masks are restored from the cached `_selected_entity_ids` set.
+
+## Group Integration
+
+The widget integrates with the project's Entity Group system to enable organizing selected points and lines into groups for downstream analysis. A `GroupManager` is passed during widget registration and wired to the OpenGL renderer.
+
+### Right-Click Context Menu
+
+When entities are selected, right-clicking displays a context menu powered by `GroupContextMenuHandler` with actions:
+
+- **Add to Group** — submenu lists existing entity groups
+- **Create New Group** — creates a new group and adds selected entities
+- **Remove from Group** — lists groups the selected entities belong to
+- **Clear Selection** — clears the current selection
+
+The context menu integrates with `EntityRegistry` for group operations. The handler receives callbacks for:
+
+- `getSelectedEntities()` — returns the current `_selected_entity_ids` set
+- `clearSelection()` — clears the selection
+- `hasSelection()` — checks if any entities are selected
+- `onGroupOperationCompleted()` — called after group operations to refresh the scene
+
+### Group-Based Coloring
+
+Points can be colored by their group membership, allowing visual identification of subgroups. A **"Color by Group"** checkbox in the properties panel toggles the feature (stored in `TemporalProjectionViewStateData::color_by_group`).
+
+When enabled, `applyGroupColorsToScene()` applies group colors with the following priority:
+
+1. **Selected points** — orange (`1.0, 0.6, 0.0, 0.9`) for visual feedback
+2. **Group colors** — each group has an assigned color from `GroupManager::getEntityColor()`
+3. **Default style** — falls back to the user-configured glyph style
+
+The `GroupManager` emits signals (`groupCreated`, `groupRemoved`, `groupModified`) that trigger scene rebuilds to reflect group changes made in other widgets.
+
+**Note**: Line group coloring is deferred due to the separate `BatchLineRenderer` pipeline. Only point glyph coloring is currently implemented.
 
 # Properties Panel
 
@@ -387,9 +448,11 @@ The `TemporalProjectionViewPropertiesWidget` provides the following controls:
 - **Point Appearance section** — `GlyphStyleControls` with shape, size, color, and alpha controls. See [Visual Customization — Points](#points) for full details.
 - **Line width spinbox** — adjusts line thickness (default: 2.0)
 
-## Selection Controls
+## Selection and Grouping Controls
 
-- **Selection mode combo** — None / Point / Line
+- **Selection mode combo** — None / Point / Line / Polygon
+- **Selection instructions label** — context-sensitive help text (via shared `SelectionInstructions` helpers)
+- **Color by Group checkbox** — toggles group-based coloring for points
 - **Clear selection button** — clears all selected entities
 
 ## Axis Range Controls

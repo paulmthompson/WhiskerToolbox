@@ -20,6 +20,7 @@
 #include <memory>
 
 class DataManager;
+class GroupManager;
 class TemporalProjectionViewState;
 class TemporalProjectionOpenGLWidget;
 class HorizontalAxisRangeControls;
@@ -61,6 +62,12 @@ public:
      * @brief Clear all entity selections in the OpenGL widget
      */
     void clearSelection();
+
+    /**
+     * @brief Set the GroupManager for group-related context menu actions
+     * @param group_manager Pointer to the GroupManager (not owned)
+     */
+    void setGroupManager(GroupManager * group_manager);
 
     /**
      * @brief Handle time changes from EditorRegistry

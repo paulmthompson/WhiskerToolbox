@@ -8,6 +8,7 @@
 #include "DataManager/Tensors/TensorData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
+#include "Plots/Common/SelectionInstructions.hpp"
 #include "Collapsible_Widget/Section.hpp"
 #include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
 #include "UI/ScatterPlotWidget.hpp"
@@ -441,17 +442,11 @@ void ScatterPlotPropertiesWidget::_updateSelectionInstructions()
     if (idx == 0) {
         // Single Point
         _selection_instructions_label->setText(
-            "Ctrl+Click: toggle point selection\n"
-            "Shift+Click: remove from selection\n"
-            "Right-click: group context menu");
+            WhiskerToolbox::Plots::SelectionInstructions::singlePoint());
     } else {
         // Polygon
         _selection_instructions_label->setText(
-            "Ctrl+Click: add polygon vertex\n"
-            "Enter: close polygon & select enclosed points\n"
-            "Backspace: undo last vertex\n"
-            "Escape: cancel polygon\n"
-            "Right-click: group context menu");
+            WhiskerToolbox::Plots::SelectionInstructions::polygon());
     }
 }
 

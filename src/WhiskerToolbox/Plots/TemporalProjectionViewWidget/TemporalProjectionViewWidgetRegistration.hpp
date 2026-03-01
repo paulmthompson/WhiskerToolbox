@@ -36,6 +36,7 @@
 
 class DataManager;
 class EditorRegistry;
+class GroupManager;
 
 namespace TemporalProjectionViewWidgetModule {
 
@@ -44,14 +45,19 @@ namespace TemporalProjectionViewWidgetModule {
  * 
  * This function registers the TemporalProjectionViewWidget type, including:
  * - State factory: Creates TemporalProjectionViewState
- * - View factory: Creates TemporalProjectionViewWidget (the main plot component)
+ * - View factory: Creates TemporalProjectionViewWidget (the main view component)
  * - Properties factory: Creates TemporalProjectionViewPropertiesWidget
+ * 
+ * The Temporal Projection View supports group context menu for adding selected
+ * points/lines to entity groups when a GroupManager is provided.
  * 
  * @param registry The EditorRegistry to register types with
  * @param data_manager Shared DataManager for widget construction
+ * @param group_manager Optional GroupManager for group-aware features (can be nullptr)
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager);
+                   std::shared_ptr<DataManager> data_manager,
+                   GroupManager * group_manager = nullptr);
 
 }  // namespace TemporalProjectionViewWidgetModule
 

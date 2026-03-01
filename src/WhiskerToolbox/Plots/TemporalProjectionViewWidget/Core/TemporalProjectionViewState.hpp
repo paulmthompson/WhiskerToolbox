@@ -50,6 +50,7 @@ struct TemporalProjectionViewStateData {
     // Rendering
     CorePlotting::GlyphStyleData point_glyph_style;
     CorePlotting::LineStyleData line_style;  ///< Line color, thickness, alpha
+    bool color_by_group = true;  ///< Color points/lines by their group assignment
 
     // Selection
     std::string selection_mode = "none"; // "none", "point", "line", "polygon"
@@ -167,6 +168,11 @@ public:
     /** @brief Get the serializable line style data (read-only) */
     [[nodiscard]] CorePlotting::LineStyleData getLineStyle() const { return _data.line_style; }
 
+    // === Color by Group ===
+
+    [[nodiscard]] bool colorByGroup() const { return _data.color_by_group; }
+    void setColorByGroup(bool enabled);
+
     // === Selection Mode ===
     
     /** @brief Get selection mode */
@@ -189,7 +195,9 @@ signals:
     void lineDataKeysCleared();
     void glyphStyleChanged();
     void lineStyleChanged();
+    void colorByGroupChanged();
     void selectionModeChanged(QString const & mode);
+    void selectionChanged();
 
 private:
     TemporalProjectionViewStateData _data;

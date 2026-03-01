@@ -6,6 +6,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <iostream>
@@ -13,7 +14,8 @@
 namespace TemporalProjectionViewWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager) {
+                   std::shared_ptr<DataManager> data_manager,
+                   GroupManager * group_manager) {
 
     if (!registry) {
         std::cerr << "TemporalProjectionViewWidgetModule::registerTypes: registry is null" << std::endl;
@@ -23,6 +25,7 @@ void registerTypes(EditorRegistry * registry,
     // Capture dependencies for lambdas
     auto dm = data_manager;
     auto reg = registry;
+    auto gm = group_manager;
 
     registry->registerType({.type_id = QStringLiteral("TemporalProjectionViewWidget"),
                             .display_name = QStringLiteral("Temporal Projection View"),
@@ -39,7 +42,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<TemporalProjectionViewState>(); },
 
                             // View factory - creates TemporalProjectionViewWidget (the view component)
-                            .create_view = [dm, reg](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_view = [dm, reg, gm](std::shared_ptr<EditorState> state) -> QWidget * {
                                 auto projection_state = std::dynamic_pointer_cast<TemporalProjectionViewState>(state);
                                 if (!projection_state) {
                                     std::cerr << "TemporalProjectionViewWidgetModule: Failed to cast state to TemporalProjectionViewState" << std::endl;
@@ -48,6 +51,11 @@ void registerTypes(EditorRegistry * registry,
 
                                 auto * widget = new TemporalProjectionViewWidget(dm);
                                 widget->setState(projection_state);
+
+                                // Set the group manager if available
+                                if (gm) {
+                                    widget->setGroupManager(gm);
+                                }
 
                                 if (reg) {
                                     QObject::connect(reg,
@@ -72,7 +80,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Custom editor creation for potential future view/properties coupling
-                            .create_editor_custom = [dm](EditorRegistry * reg)
+                            .create_editor_custom = [dm, gm](EditorRegistry * reg)
                                     -> EditorRegistry::EditorInstance {
                                 // Create the shared state
                                 auto state = std::make_shared<TemporalProjectionViewState>();
@@ -80,6 +88,11 @@ void registerTypes(EditorRegistry * registry,
                                 // Create the view widget
                                 auto * view = new TemporalProjectionViewWidget(dm);
                                 view->setState(state);
+
+                                // Set the group manager if available
+                                if (gm) {
+                                    view->setGroupManager(gm);
+                                }
 
                                 if (reg) {
                                     QObject::connect(reg,

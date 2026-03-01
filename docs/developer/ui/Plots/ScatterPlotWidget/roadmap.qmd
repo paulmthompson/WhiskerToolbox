@@ -53,7 +53,7 @@ dedicated "Add to Group" button panel.
 **Implemented**: A "Selection" collapsible section in `ScatterPlotPropertiesWidget` provides:
 
 - **Mode combo box** — "Single Point" (default) / "Polygon"
-- **Instructions label** — Context-sensitive help text that changes based on the selected mode:
+- **Instructions label** — Context-sensitive help text that changes based on the selected mode, provided via shared `SelectionInstructions` helpers from `Plots/Common/SelectionInstructions.hpp`:
   - **Single Point**: "Ctrl+Click: Toggle selection | Shift+Click: Remove from selection"
   - **Polygon**: "Ctrl+Click: Add vertex | Enter: Close polygon | Backspace: Undo vertex | Escape: Cancel"
 
@@ -245,6 +245,7 @@ Components that have been factored into shared locations or are candidates for s
 | Component | Status | Location | Used By |
 |-----------|--------|----------|---------|
 | `selectPointsInPolygon` | ✅ **Implemented** | `CorePlotting/Selection/` | ScatterPlotWidget; available for [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
+| `SelectionInstructions` | ✅ **Implemented** | `Plots/Common/SelectionInstructions.hpp` | ScatterPlotWidget, TemporalProjectionViewWidget |
 | `GroupManagementPanel` | ⏸️ **Deferred** | N/A | ScatterPlotWidget uses existing `GroupContextMenuHandler` via right-click; dedicated panel not needed yet |
 | `Colormaps` | ⏳ **Planned** | `CorePlotting/Colormaps/` | ScatterPlotWidget (Phase 7), [HeatmapWidget](../HeatmapWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd), [LinePlotWidget](../LinePlotWidget/roadmap.qmd) |
 

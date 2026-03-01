@@ -496,13 +496,29 @@ void ScatterPlotOpenGLWidget::applyGroupColorsToScene()
         return;
     }
 
+    // Color priority (highest → lowest):
+    //   1. Navigated-to highlight (yellow) — scatter_highlight batch
+    //   2. Selected (orange)               — scatter_selected batch
+    //   3. Group color                     — applied here to scatter_points batch
+    //   4. Default glyph style color       — already set by addGlyphs
+    //
+    // Build skip sets so we only recolor unselected, un-navigated points.
+    auto const & selected_indices = _state->selectedIndices();
+    std::unordered_set<std::size_t> skip_set(selected_indices.begin(), selected_indices.end());
+    if (_navigated_index.has_value()) {
+        skip_set.insert(*_navigated_index);
+    }
+
     // Apply group colors to glyph batches that contain scatter points.
-    // The first batch(es) are scatter_points / scatter_selected / scatter_highlight.
-    // We patch colors for any batch whose entity_ids map back to scatter data indices.
     for (auto & batch : _scene.glyph_batches) {
         for (std::size_t i = 0; i < batch.entity_ids.size(); ++i) {
             auto const scatter_idx = static_cast<std::size_t>(batch.entity_ids[i].id);
             if (scatter_idx >= _scatter_data.size()) {
+                continue;
+            }
+
+            // Skip selected / navigated points — they keep their dedicated colors
+            if (skip_set.contains(scatter_idx)) {
                 continue;
             }
 

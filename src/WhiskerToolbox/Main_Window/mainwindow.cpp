@@ -993,7 +993,7 @@ void MainWindow::_registerEditorTypes() {
 
     HeatmapWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    TemporalProjectionViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    TemporalProjectionViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     ScatterPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 

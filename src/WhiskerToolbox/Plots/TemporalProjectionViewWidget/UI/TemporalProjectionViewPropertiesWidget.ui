@@ -294,6 +294,20 @@
      </layout>
     </widget>
    </item>
+   <item>
+    <widget class="QCheckBox" name="color_by_group_checkbox">
+     <property name="text">
+      <string>Color by group assignment</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+     <property name="toolTip">
+      <string>When enabled, points are colored according to their group color.
+Points not in any group use the default glyph color above.</string>
+     </property>
+    </widget>
+   </item>
    <!-- Selection Mode Section -->
    <item>
     <widget class="QLabel" name="selection_label">
@@ -324,6 +338,24 @@
        <string>Line</string>
       </property>
      </item>
+     <item>
+      <property name="text">
+       <string>Polygon</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="selection_instructions_label">
+     <property name="text">
+      <string>No selection mode active</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #888; font-size: 11px;</string>
+     </property>
     </widget>
    </item>
    <item>

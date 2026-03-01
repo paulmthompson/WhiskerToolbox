@@ -291,3 +291,15 @@ void TemporalProjectionViewState::setSelectionMode(QString const & mode)
         emit stateChanged();
     }
 }
+
+// === Color by Group ===
+
+void TemporalProjectionViewState::setColorByGroup(bool enabled)
+{
+    if (_data.color_by_group != enabled) {
+        _data.color_by_group = enabled;
+        markDirty();
+        emit colorByGroupChanged();
+        emit stateChanged();
+    }
+}
