@@ -36,7 +36,7 @@
  * @see TransformPipeline::execute() for pipeline execution
  */
 
-#include "DataManager/DataManagerTypes.hpp"
+#include "DataManager/DataManagerTypes.hpp" // DataTypeVariant
 
 #include <memory>
 #include <vector>

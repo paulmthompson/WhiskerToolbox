@@ -38,6 +38,7 @@ target_link_libraries(LinePlotWidget PRIVATE
 
 target_link_libraries(LinePlotWidget PRIVATE DataManager)
 target_link_libraries(LinePlotWidget PRIVATE EditorState)
+target_link_libraries(LinePlotWidget PRIVATE LineStyleControls)
 target_link_libraries(LinePlotWidget PRIVATE PlotAlignmentWidget)
 target_link_libraries(LinePlotWidget PRIVATE RelativeTimeAxisWidget)
 target_link_libraries(LinePlotWidget PRIVATE VerticalAxisWidget)

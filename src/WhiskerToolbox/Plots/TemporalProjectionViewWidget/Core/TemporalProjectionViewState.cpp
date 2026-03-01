@@ -1,6 +1,7 @@
 #include "TemporalProjectionViewState.hpp"
 
 #include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
+#include "Plots/Common/LineStyleControls/Core/LineStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 
@@ -12,7 +13,8 @@ TemporalProjectionViewState::TemporalProjectionViewState(QObject * parent)
     : EditorState(parent),
       _horizontal_axis_state(std::make_unique<HorizontalAxisState>(this)),
       _vertical_axis_state(std::make_unique<VerticalAxisState>(this)),
-      _glyph_style_state(std::make_unique<GlyphStyleState>(this))
+      _glyph_style_state(std::make_unique<GlyphStyleState>(this)),
+      _line_style_state(std::make_unique<LineStyleState>(this))
 {
     _data.instance_id = getInstanceId().toStdString();
     _data.horizontal_axis = _horizontal_axis_state->data();
@@ -50,6 +52,16 @@ TemporalProjectionViewState::TemporalProjectionViewState(QObject * parent)
                 _data.point_glyph_style = _glyph_style_state->data();
                 markDirty();
                 emit glyphStyleChanged();
+                emit stateChanged();
+            });
+
+    // Sync line style state with serializable data
+    _line_style_state->setStyleSilent(_data.line_style);
+    connect(_line_style_state.get(), &LineStyleState::styleChanged,
+            this, [this]() {
+                _data.line_style = _line_style_state->data();
+                markDirty();
+                emit lineStyleChanged();
                 emit stateChanged();
             });
 }
@@ -141,6 +153,7 @@ bool TemporalProjectionViewState::fromJson(std::string const & json)
         _horizontal_axis_state->data() = _data.horizontal_axis;
         _vertical_axis_state->data() = _data.vertical_axis;
         _glyph_style_state->setStyleSilent(_data.point_glyph_style);
+        _line_style_state->setStyleSilent(_data.line_style);
         // Sync view state bounds from axes so they never drift
         _data.view_state.x_min = _horizontal_axis_state->getXMin();
         _data.view_state.x_max = _horizontal_axis_state->getXMax();
@@ -257,10 +270,11 @@ void TemporalProjectionViewState::setPointSize(float size)
 
 void TemporalProjectionViewState::setLineWidth(float width)
 {
-    if (_data.line_width != width) {
-        _data.line_width = width;
+    if (_data.line_style.thickness != width) {
+        _data.line_style.thickness = width;
+        _line_style_state->setStyleSilent(_data.line_style);
         markDirty();
-        emit lineWidthChanged(width);
+        emit lineStyleChanged();
         emit stateChanged();
     }
 }

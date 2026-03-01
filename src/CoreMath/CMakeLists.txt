@@ -8,7 +8,7 @@ set(NEURALYZER_COREMATH_SOURCES
 )
 
 add_library(CoreMath STATIC ${NEURALYZER_COREMATH_SOURCES})
-
+set_target_properties(CoreMath PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Set up include directories
 target_include_directories(CoreMath PUBLIC

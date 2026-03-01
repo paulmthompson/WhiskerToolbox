@@ -3,6 +3,7 @@
 #include "Core/LinePlotState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "Plots/Common/LineStyleControls/LineStyleControls.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
@@ -11,7 +12,6 @@
 
 #include "ui_LinePlotPropertiesWidget.h"
 
-#include <QColorDialog>
 #include <QHeaderView>
 #include <QTableWidget>
 #include <QTableWidgetItem>
@@ -31,6 +31,7 @@ LinePlotPropertiesWidget::LinePlotPropertiesWidget(std::shared_ptr<LinePlotState
       _range_controls_section(nullptr),
       _vertical_range_controls(nullptr),
       _vertical_range_controls_section(nullptr),
+      _line_style_controls(nullptr),
       _dm_observer_id(-1)
 {
     ui->setupUi(this);
@@ -43,9 +44,17 @@ LinePlotPropertiesWidget::LinePlotPropertiesWidget(std::shared_ptr<LinePlotState
     ui->alignment_widget_placeholder->deleteLater();
     ui->main_layout->insertWidget(alignment_index, _alignment_widget);
 
-    // Set up color display button
-    ui->color_display_button->setFlat(false);
-    ui->color_display_button->setEnabled(false);// Make it non-clickable, just for display
+    // Hide old bespoke style controls (replaced by LineStyleControls)
+    ui->line_thickness_label->hide();
+    ui->line_thickness_spinbox->hide();
+    ui->color_label->hide();
+    ui->color_widget->hide();
+
+    // Create LineStyleControls (initially unbound — bound when series is selected)
+    _line_style_controls = new LineStyleControls(nullptr, this);
+    _line_style_controls->setEnabled(false);
+    // Insert after series_options_label
+    ui->series_options_layout->insertWidget(1, _line_style_controls);
 
     // Set up plot series table
     ui->plot_series_table->setColumnCount(2);
@@ -63,10 +72,6 @@ LinePlotPropertiesWidget::LinePlotPropertiesWidget(std::shared_ptr<LinePlotState
             this, &LinePlotPropertiesWidget::_onRemoveSeriesClicked);
     connect(ui->plot_series_table, &QTableWidget::itemSelectionChanged,
             this, &LinePlotPropertiesWidget::_onPlotSeriesSelectionChanged);
-    connect(ui->line_thickness_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &LinePlotPropertiesWidget::_onLineThicknessChanged);
-    connect(ui->color_button, &QPushButton::clicked,
-            this, &LinePlotPropertiesWidget::_onColorButtonClicked);
 
     // Populate combo boxes
     _populateAddSeriesComboBox();
@@ -199,20 +204,18 @@ void LinePlotPropertiesWidget::_onPlotSeriesSelectionChanged()
     bool has_selection = !selected.isEmpty();
     ui->remove_series_button->setEnabled(has_selection);
     ui->series_options_widget->setEnabled(has_selection);
+    _line_style_controls->setEnabled(has_selection);
 
     if (has_selection && _state) {
         int row = selected.first()->row();
         QTableWidgetItem * name_item = ui->plot_series_table->item(row, 0);
         if (name_item) {
             QString series_name = name_item->text();
-            _updateSeriesOptions(series_name);
+            _updateLineStyleControlsBinding(series_name);
         }
     } else {
-        // Clear options display - disable controls
-        ui->line_thickness_spinbox->blockSignals(true);
-        ui->line_thickness_spinbox->setValue(1.0);
-        ui->line_thickness_spinbox->blockSignals(false);
-        _updateColorDisplay("#000000");
+        // Unbind line style controls when no selection
+        _line_style_controls->setLineStyleState(nullptr);
     }
 }
 
@@ -262,22 +265,14 @@ void LinePlotPropertiesWidget::_updatePlotSeriesTable()
     }
 }
 
-void LinePlotPropertiesWidget::_updateSeriesOptions(QString const & series_name)
+void LinePlotPropertiesWidget::_updateLineStyleControlsBinding(QString const & series_name)
 {
-    if (!_state) {
+    if (!_state || !_line_style_controls) {
         return;
     }
 
-    auto options = _state->getPlotSeriesOptions(series_name);
-    if (options) {
-        // Update line thickness
-        ui->line_thickness_spinbox->blockSignals(true);
-        ui->line_thickness_spinbox->setValue(options->line_thickness);
-        ui->line_thickness_spinbox->blockSignals(false);
-
-        // Update color display
-        _updateColorDisplay(QString::fromStdString(options->hex_color));
-    }
+    auto * style_state = _state->lineStyleStateForSeries(series_name);
+    _line_style_controls->setLineStyleState(style_state);
 }
 
 void LinePlotPropertiesWidget::_onStatePlotSeriesAdded(QString const & series_name)
@@ -294,20 +289,15 @@ void LinePlotPropertiesWidget::_onStatePlotSeriesRemoved(QString const & series_
     ui->plot_series_table->clearSelection();
     ui->remove_series_button->setEnabled(false);
     ui->series_options_widget->setEnabled(false);
+    _line_style_controls->setLineStyleState(nullptr);
+    _line_style_controls->setEnabled(false);
 }
 
 void LinePlotPropertiesWidget::_onStatePlotSeriesOptionsChanged(QString const & series_name)
 {
-    // Update the table and options if this series is selected
+    // Update the table; LineStyleControls auto-updates from its bound state
+    Q_UNUSED(series_name)
     _updatePlotSeriesTable();
-    QList<QTableWidgetItem *> selected = ui->plot_series_table->selectedItems();
-    if (!selected.isEmpty()) {
-        int row = selected.first()->row();
-        QTableWidgetItem * name_item = ui->plot_series_table->item(row, 0);
-        if (name_item && name_item->text() == series_name) {
-            _updateSeriesOptions(series_name);
-        }
-    }
 }
 
 void LinePlotPropertiesWidget::_updateUIFromState()
@@ -338,52 +328,4 @@ QString LinePlotPropertiesWidget::_getSelectedSeriesName() const
         return name_item->text();
     }
     return QString();
-}
-
-void LinePlotPropertiesWidget::_updateColorDisplay(QString const & hex_color)
-{
-    // Update the color display button with the new color
-    ui->color_display_button->setStyleSheet(
-            QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color));
-}
-
-void LinePlotPropertiesWidget::_onLineThicknessChanged(double value)
-{
-    QString series_name = _getSelectedSeriesName();
-    if (series_name.isEmpty() || !_state) {
-        return;
-    }
-
-    auto options = _state->getPlotSeriesOptions(series_name);
-    if (options) {
-        options->line_thickness = value;
-        _state->updatePlotSeriesOptions(series_name, *options);
-    }
-}
-
-void LinePlotPropertiesWidget::_onColorButtonClicked()
-{
-    QString series_name = _getSelectedSeriesName();
-    if (series_name.isEmpty() || !_state) {
-        return;
-    }
-
-    // Get current color
-    QColor current_color;
-    auto options = _state->getPlotSeriesOptions(series_name);
-    if (options) {
-        current_color = QColor(QString::fromStdString(options->hex_color));
-    } else {
-        current_color = QColor("#000000");// Default black
-    }
-
-    // Open color dialog
-    QColor color = QColorDialog::getColor(current_color, this, "Choose Color");
-
-    if (color.isValid() && options) {
-        QString hex_color = color.name();
-        _updateColorDisplay(hex_color);
-        options->hex_color = hex_color.toStdString();
-        _state->updatePlotSeriesOptions(series_name, *options);
-    }
 }

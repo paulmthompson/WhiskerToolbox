@@ -25,6 +25,7 @@ set(COREPLOTTING_SOURCES
     DataTypes/SeriesStyle.hpp
     DataTypes/GlyphStyleData.hpp
     DataTypes/GlyphStyleConversion.hpp
+    DataTypes/LineStyleData.hpp
     DataTypes/SeriesDataCache.hpp
     DataTypes/HistogramData.hpp
     DataTypes/AlphaCurve.hpp

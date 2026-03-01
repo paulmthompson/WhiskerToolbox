@@ -8,6 +8,8 @@ set(TRANSFORM_V2_SOURCES
         core/DataManagerIntegration.hpp
         core/DataManagerIntegration.cpp
         core/ElementRegistry.hpp 
+        core/ParameterIO.hpp
+        core/ParameterIO.cpp
         core/ParameterSchema.hpp
         core/ParameterSchema.cpp
         core/PipelineLoader.hpp

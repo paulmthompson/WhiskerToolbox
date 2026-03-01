@@ -16,8 +16,10 @@
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/DataTypes/GlyphStyleData.hpp"
+#include "CorePlotting/DataTypes/LineStyleData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
+#include "Plots/Common/LineStyleControls/Core/LineStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
@@ -47,7 +49,7 @@ struct TemporalProjectionViewStateData {
 
     // Rendering
     CorePlotting::GlyphStyleData point_glyph_style;
-    float line_width = 2.0f;
+    CorePlotting::LineStyleData line_style;  ///< Line color, thickness, alpha
 
     // Selection
     std::string selection_mode = "none"; // "none", "point", "line", "polygon"
@@ -146,6 +148,9 @@ public:
 
     /** @brief Get glyph style state (for GlyphStyleControls binding) */
     [[nodiscard]] GlyphStyleState * glyphStyleState() { return _glyph_style_state.get(); }
+
+    /** @brief Get line style state (for LineStyleControls binding) */
+    [[nodiscard]] LineStyleState * lineStyleState() { return _line_style_state.get(); }
     
     /** @brief Get point size (convenience, reads from glyph style) */
     [[nodiscard]] float getPointSize() const { return _data.point_glyph_style.size; }
@@ -153,11 +158,14 @@ public:
     /** @brief Set point size (convenience, delegates to glyph style state) */
     void setPointSize(float size);
     
-    /** @brief Get line width */
-    [[nodiscard]] float getLineWidth() const { return _data.line_width; }
+    /** @brief Get line width (convenience, reads from line style) */
+    [[nodiscard]] float getLineWidth() const { return _data.line_style.thickness; }
     
-    /** @brief Set line width */
+    /** @brief Set line width (convenience, delegates to line style state) */
     void setLineWidth(float width);
+
+    /** @brief Get the serializable line style data (read-only) */
+    [[nodiscard]] CorePlotting::LineStyleData getLineStyle() const { return _data.line_style; }
 
     // === Selection Mode ===
     
@@ -180,7 +188,7 @@ signals:
     void lineDataKeyRemoved(QString const & key);
     void lineDataKeysCleared();
     void glyphStyleChanged();
-    void lineWidthChanged(float width);
+    void lineStyleChanged();
     void selectionModeChanged(QString const & mode);
 
 private:
@@ -188,6 +196,7 @@ private:
     std::unique_ptr<HorizontalAxisState> _horizontal_axis_state;
     std::unique_ptr<VerticalAxisState> _vertical_axis_state;
     std::unique_ptr<GlyphStyleState> _glyph_style_state;
+    std::unique_ptr<LineStyleState> _line_style_state;
 };
 
 #endif  // TEMPORAL_PROJECTION_VIEW_STATE_HPP

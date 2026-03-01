@@ -1,11 +1,5 @@
 #include "core/RegisteredTransforms.hpp"
 
-#include "CoreGeometry/masks.hpp"
-#include "CoreGeometry/points.hpp"
-#include "DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "Tensors/TensorData.hpp"
-
 #include "algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
 #include "algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
@@ -25,6 +19,12 @@
 #include "algorithms/SumReduction/SumReduction.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
+
+#include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/points.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Tensors/TensorData.hpp"
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 

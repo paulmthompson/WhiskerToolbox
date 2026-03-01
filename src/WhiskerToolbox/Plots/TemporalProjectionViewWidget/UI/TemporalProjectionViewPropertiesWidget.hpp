@@ -7,7 +7,8 @@
  *
  * Provides controls for:
  * - Adding/removing point and line data keys from DataManager
- * - Point size and line width rendering controls
+ * - Point glyph options via GlyphStyleControls (shape, size, color, alpha)
+ * - Line style options via LineStyleControls (color, thickness, alpha)
  * - Selection mode toggle (None / Point / Line)
  * - Axis range controls via HorizontalAxisRangeControls and VerticalAxisRangeControls
  *   in collapsible sections (set when setPlotWidget is called)
@@ -25,6 +26,7 @@
 class DataManager;
 class GlyphStyleControls;
 class HorizontalAxisRangeControls;
+class LineStyleControls;
 class TemporalProjectionViewWidget;
 class Section;
 class VerticalAxisRangeControls;
@@ -73,9 +75,6 @@ private slots:
     void _onRemoveLineClicked();
     void _onLineTableSelectionChanged();
 
-    // Rendering controls
-    void _onLineWidthChanged(double value);
-
     // Selection mode
     void _onSelectionModeChanged(int index);
     void _onClearSelectionClicked();
@@ -102,6 +101,7 @@ private:
     VerticalAxisRangeControls * _vertical_range_controls;
     Section * _vertical_range_controls_section;
     GlyphStyleControls * _glyph_style_controls;
+    LineStyleControls * _line_style_controls;
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;

@@ -27,10 +27,11 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Point rendering**: SceneBuilder→SceneRenderer pipeline using `addGlyphs()` for points with single instanced draw call
 - **Auto-fit bounds**: Automatic X/Y bounds detection from data with 5% padding on first data load (when bounds are at defaults)
 - **Reference line rendering**: $y = x$ diagonal via `addPolyLine()` with show/hide toggle in properties panel; endpoints update on pan/zoom
-- **DataManager observer** (Phase 6 partial): Observer registration/removal in properties widget for combo box synchronization
+- **DataManager observer**: Observer registration/removal in properties widget for combo box synchronization; stale key handling clears axis source when selected data key is deleted from DataManager; tested in `ScatterPlotPropertiesWidget.test.cpp`
 - **Double-click-to-navigate**: Point hit testing via shared `SceneHitTester` + `QuadTree<EntityId>` spatial index, `pointDoubleClicked` → `timePositionSelected` → `EditorRegistry::setCurrentTime()` signal chain, yellow highlight glyph for navigated-to point
 - **Glyph customization**: `GlyphStyleData` in `ScatterPlotStateData` with default blue circle style (`#3388FF`, size 5, alpha 0.8); `GlyphStyleState` owned by `ScatterPlotState` with `glyphStyleChanged` signal; `GlyphStyleControls` embedded in properties panel "Glyph Options" collapsible section; rendering uses `toRenderableGlyphType()` and `hexColorToVec4()` from `GlyphStyleConversion.hpp`; full round-trip JSON serialization
 - **Point selection** (Phase 3): Dual selection modes (SinglePoint/Polygon) via combo box in properties panel; SinglePoint mode: Ctrl+Click toggles selection, Shift+Click removes; Polygon mode: Ctrl+Click adds vertices, Enter closes polygon, Backspace undoes, Escape cancels; `selectPointsInPolygon()` utility in `CorePlotting/Selection/`; selected points rendered with distinct style (orange, +4 size); integration with `GroupContextMenuHandler` for right-click group operations; fully tested
+- **Temporal offset for outlier detection**: Per-axis `time_offset` field in `ScatterAxisSource` enables lag-plots ($x(t)$ vs $x(t-1)$); `buildScatterPoints()` applies offsets for all source type combinations; offset spinboxes (-10000 to 10000) in properties panel per axis; points where offset pushes index outside valid range are excluded; tested in `BuildScatterPoints.test.cpp`
 
 **Not yet implemented**:
 feature coloring (Phase 7), stale key handling (Phase 6.3).

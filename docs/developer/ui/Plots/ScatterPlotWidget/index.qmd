@@ -146,7 +146,20 @@ When a `TensorData` key is selected for either axis, an additional combo box app
 
 ### Temporal Offset
 
-An optional temporal offset allows plotting a value against its own shifted version (e.g., $x(t)$ vs $x(t-1)$). This is useful for identifying outliers where values change too rapidly between consecutive time points. The offset is specified in units of `TimeFrameIndex` steps and applies to either axis independently.
+An optional temporal offset allows plotting a value against its own shifted version (e.g., $x(t)$ vs $x(t-1)$). The offset is specified in units of `TimeFrameIndex` steps and applies to either axis independently via the `ScatterAxisSource::time_offset` field.
+
+**Outlier detection use case**: Plotting `MaskArea(t)` vs `MaskArea(t-1)` (same source key on both axes, with `time_offset = -1` on the Y-axis) produces a scatter where:
+
+- Points near the $y = x$ diagonal represent slow changes
+- Points far from the diagonal represent rapid transitions (potential outliers)
+
+When the user sets `time_offset = -1` for the Y-axis source:
+
+1. For each `TimeFrameIndex` $t$, the X value is $x(t)$ and the Y value is $x(t-1)$
+2. Points where the offset pushes $t$ outside the valid range are excluded
+3. The `TimeFrameIndex` stored per point is the "primary" index (X-axis, no offset)
+
+The reference line ($y = x$) is particularly useful in this mode — it immediately shows which points represent rapid changes (far from diagonal) vs. slow changes (near diagonal). Each axis has an offset spinbox (range: -10000 to 10000) in the properties panel.
 
 # Rendering Pipeline
 
@@ -442,19 +455,7 @@ This makes it more similar in structure to [TemporalProjectionViewWidget](../Tem
 - `tests/WhiskerToolbox/Analysis_Dashboard/Analysis_Dashboard.test.cpp` — Verifies `ScatterPlotWidget` creation via `PlotFactory`
 - `tests/WhiskerToolbox/Plots/ScatterPlotWidget/SourceCompatibility.test.cpp` — Row-type compatibility validation (21 test cases covering `resolveSourceRowType`, all compatible pairings, all incompatible pairings, and missing/unknown sources)
 - `tests/WhiskerToolbox/Plots/ScatterPlotWidget/BuildScatterPoints.test.cpp` — Point pair computation covering all 6 source type combinations (ATS×ATS, ATS×TensorTFI, TensorTFI×ATS, TensorTFI×TensorTFI, Ordinal×Ordinal, Interval×Interval), temporal offset, empty/missing keys, incompatible sources, named columns, and `ScatterPointData` struct operations
-
-## Needed Tests
-
-The properties widget should be tested for the standard DataManager observer contract:
-
-| Category | What It Verifies |
-|----------|-----------------|
-| Combo box population | Data source combo boxes reflect DataManager keys |
-| Observer refresh | Adding/removing data updates combo boxes |
-| Destruction cleanup | Observer removed in destructor; no crash after widget dies |
-| State serialization | Round-trip JSON serialization of `ScatterPlotStateData` |
-
-See [Plot Widget Guide](../plot_widget_guide.md) for full testing requirements and the common `PlotWidgetCommonTests.hpp` template.
+- `tests/WhiskerToolbox/Plots/ScatterPlotWidget/ScatterPlotPropertiesWidget.test.cpp` — Properties widget DataManager integration (combo box population, observer refresh on data add/remove, destruction cleanup, stale key handling, state synchronization)
 
 # See Also
 

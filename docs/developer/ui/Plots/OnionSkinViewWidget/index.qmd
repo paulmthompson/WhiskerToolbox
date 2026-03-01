@@ -86,7 +86,6 @@ struct OnionSkinViewStateData {
 
     // Rendering
     float point_size = 8.0f;
-    float line_width = 2.0f;
     bool highlight_current = true;  ///< Draw current frame with distinct color/size
 };
 ```
@@ -103,7 +102,6 @@ struct OnionSkinViewStateData {
 | `maskDataKeyAdded` / `maskDataKeyRemoved` / `maskDataKeysCleared` | Mask data key changes |
 | `windowBehindChanged` / `windowAheadChanged` | Temporal window size changed |
 | `alphaCurveChanged` / `minAlphaChanged` / `maxAlphaChanged` | Alpha curve parameters changed |
-| `pointSizeChanged` / `lineWidthChanged` | Rendering parameter changed |
 | `highlightCurrentChanged` | Current-frame highlight toggle changed |
 | `stateChanged` (inherited) | Any change requiring full state update |
 
@@ -366,6 +364,13 @@ Understanding the relationship between OnionSkinViewWidget and other spatial/lin
 | Alignment | None (current frame ± window) | None (all time) | PlotAlignmentState |
 | X-Axis | HorizontalAxis | HorizontalAxis | RelativeTimeAxis |
 | Selection | Click-to-select (point) | Point + Line selection modes | Line selection |
+
+# Testing
+
+## Existing Tests
+
+- `tests/WhiskerToolbox/Plots/OnionSkinViewWidget/OnionSkinViewState.test.cpp` — State creation, serialization round-trip, axis state composition
+- `tests/WhiskerToolbox/Plots/OnionSkinViewWidget/OnionSkinViewPropertiesWidget.test.cpp` — Properties widget DataManager integration (combo box population, observer refresh on data add/remove, destruction cleanup, stale key handling for point/line/mask keys)
 
 # See Also
 

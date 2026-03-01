@@ -12,6 +12,7 @@
  */
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/DataTypes/LineStyleData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
@@ -23,11 +24,13 @@
 
 /**
  * @brief Options for plotting an analog time series in the line plot
+ *
+ * Uses the shared LineStyleData for color/thickness/alpha configuration,
+ * which enables use of LineStyleControls in the properties panel.
  */
 struct LinePlotOptions {
-    std::string series_key;                           ///< Key of the AnalogTimeSeries to plot
-    double line_thickness = 1.0;                      ///< Thickness of the line (default: 1.0)
-    std::string hex_color = "#000000";                ///< Color as hex string (default: black)
+    std::string series_key;                              ///< Key of the AnalogTimeSeries to plot
+    CorePlotting::LineStyleData line_style;              ///< Style (color, thickness, alpha)
 };
 
 /**

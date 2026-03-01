@@ -14,6 +14,7 @@
 #include "Plots/LinePlotWidget/Core/LinePlotStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "Plots/Common/LineStyleControls/Core/LineStyleState.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
@@ -180,6 +181,16 @@ public:
      */
     void updatePlotSeriesOptions(QString const & series_name, LinePlotOptions const & options);
 
+    /**
+     * @brief Get the LineStyleState for a specific series
+     * @param series_name Name/key of the series
+     * @return LineStyleState pointer, or nullptr if series not found
+     *
+     * The returned state is owned by this LinePlotState and shares lifetime
+     * with the series. Use with LineStyleControls::setLineStyleState().
+     */
+    [[nodiscard]] LineStyleState * lineStyleStateForSeries(QString const & series_name);
+
     // === View State (Zoom / Pan / Bounds) ===
 
     /** @brief Get the current view state */
@@ -259,15 +270,30 @@ signals:
     void plotSeriesOptionsChanged(QString const & series_name);
 
     /**
+     * @brief Emitted when a series' line style changes (via LineStyleState)
+     * @param series_name Name of the series whose style changed
+     */
+    void seriesStyleChanged(QString const & series_name);
+
+    /**
      * @brief Emitted when view state changes (zoom, pan, or bounds)
      */
     void viewStateChanged();
 
 private:
+    /**
+     * @brief Create a LineStyleState for a series and wire up signals
+     * @param series_name Name of the series
+     */
+    void _createLineStyleStateForSeries(QString const & series_name);
+
     LinePlotStateData _data;
     std::unique_ptr<PlotAlignmentState> _alignment_state;
     std::unique_ptr<RelativeTimeAxisState> _relative_time_axis_state;
     std::unique_ptr<VerticalAxisState> _vertical_axis_state;
+
+    /// Per-series LineStyleState instances (owned, keyed by series name)
+    std::map<std::string, std::unique_ptr<LineStyleState>> _series_line_style_states;
 };
 
 #endif// LINE_PLOT_STATE_HPP

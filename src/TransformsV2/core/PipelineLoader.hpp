@@ -1,19 +1,21 @@
 #ifndef WHISKERTOOLBOX_V2_PIPELINE_LOADER_HPP
 #define WHISKERTOOLBOX_V2_PIPELINE_LOADER_HPP
 
-#include "core/ElementRegistry.hpp"
-#include "core/ParameterIO.hpp"
-#include "core/RangeReductionRegistry.hpp"
 #include "core/TransformPipeline.hpp"
 #include "detail/ReductionStep.hpp"
+
+#include <rfl.hpp>
+#include <rfl/json.hpp>
 
 #include <fstream>
 #include <map>
 #include <optional>
-#include <rfl.hpp>
-#include <rfl/json.hpp>
 #include <string>
 #include <vector>
+
+namespace WhiskerToolbox::Transforms::V2 {
+    class ElementRegistry;
+}
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 

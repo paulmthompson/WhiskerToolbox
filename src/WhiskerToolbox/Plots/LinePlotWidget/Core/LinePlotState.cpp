@@ -164,6 +164,7 @@ void LinePlotState::addPlotSeries(QString const & series_name, QString const & s
     options.series_key = key_str;
 
     _data.plot_series[name_str] = options;
+    _createLineStyleStateForSeries(series_name);
     markDirty();
     emit plotSeriesAdded(series_name);
     emit stateChanged();
@@ -175,6 +176,7 @@ void LinePlotState::removePlotSeries(QString const & series_name)
     auto it = _data.plot_series.find(name_str);
     if (it != _data.plot_series.end()) {
         _data.plot_series.erase(it);
+        _series_line_style_states.erase(name_str);
         markDirty();
         emit plotSeriesRemoved(series_name);
         emit stateChanged();
@@ -207,10 +209,56 @@ void LinePlotState::updatePlotSeriesOptions(QString const & series_name, LinePlo
     auto it = _data.plot_series.find(name_str);
     if (it != _data.plot_series.end()) {
         it->second = options;
+        // Sync LineStyleState silently (avoid recursion)
+        auto state_it = _series_line_style_states.find(name_str);
+        if (state_it != _series_line_style_states.end()) {
+            state_it->second->setStyleSilent(options.line_style);
+        }
         markDirty();
         emit plotSeriesOptionsChanged(series_name);
         emit stateChanged();
     }
+}
+
+LineStyleState * LinePlotState::lineStyleStateForSeries(QString const & series_name)
+{
+    std::string name_str = series_name.toStdString();
+    auto it = _series_line_style_states.find(name_str);
+    if (it != _series_line_style_states.end()) {
+        return it->second.get();
+    }
+    return nullptr;
+}
+
+void LinePlotState::_createLineStyleStateForSeries(QString const & series_name)
+{
+    std::string name_str = series_name.toStdString();
+
+    // Get current style from data (or default)
+    auto data_it = _data.plot_series.find(name_str);
+    CorePlotting::LineStyleData initial_style;
+    if (data_it != _data.plot_series.end()) {
+        initial_style = data_it->second.line_style;
+    }
+
+    auto state = std::make_unique<LineStyleState>(this);
+    state->setStyleSilent(initial_style);
+
+    // Connect styleChanged to sync back to data and emit signals
+    connect(state.get(), &LineStyleState::styleChanged, this,
+            [this, name_str]() {
+                auto state_it = _series_line_style_states.find(name_str);
+                auto data_it = _data.plot_series.find(name_str);
+                if (state_it != _series_line_style_states.end() &&
+                    data_it != _data.plot_series.end()) {
+                    data_it->second.line_style = state_it->second->data();
+                    markDirty();
+                    emit seriesStyleChanged(QString::fromStdString(name_str));
+                    emit stateChanged();
+                }
+            });
+
+    _series_line_style_states[name_str] = std::move(state);
 }
 
 // === View State (Zoom / Pan / Bounds) ===
@@ -297,6 +345,12 @@ bool LinePlotState::fromJson(std::string const & json)
         // Restore relative time axis and vertical axis state from serialized data
         _relative_time_axis_state->data() = _data.time_axis;
         _vertical_axis_state->data() = _data.vertical_axis;
+
+        // Recreate LineStyleState instances for each series
+        _series_line_style_states.clear();
+        for (auto const & [name, _] : _data.plot_series) {
+            _createLineStyleStateForSeries(QString::fromStdString(name));
+        }
 
         emit stateChanged();
         return true;
