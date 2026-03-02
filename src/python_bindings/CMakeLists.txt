@@ -1,53 +1,57 @@
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-find_package(pybind11 CONFIG REQUIRED)
 
 # ---------------------------------------------------------------------------
-# Locate the Python standard library so we can deploy it next to the
-# executable.  The embedded interpreter needs encodings, io, os, etc.
+# Locate pybind11: Handle both vcpkg (CMake) and uv (Python pip)
 # ---------------------------------------------------------------------------
-# Derive the prefix from the Python3 executable found by CMake.
-# vcpkg places it under vcpkg_installed/<triplet>/tools/python3/python3.X
-get_filename_component(_python_tools_dir "${Python3_EXECUTABLE}" DIRECTORY)
+# 1. Try standard CMake discovery first (this natively catches the vcpkg case)
+find_package(pybind11 CONFIG QUIET)
 
+if(NOT pybind11_FOUND)
+    message(STATUS "[PythonBridge] pybind11 not found in standard paths, checking Python env...")
+    
+    # 2. Ask the discovered Python interpreter if pybind11 is installed via pip/uv
+    execute_process(
+        COMMAND "${Python3_EXECUTABLE}" -c "import pybind11; print(pybind11.get_cmake_dir())"
+        RESULT_VARIABLE _pybind_res
+        OUTPUT_VARIABLE pybind11_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET # Suppress the noisy python traceback if it fails
+    )
+
+    if(_pybind_res EQUAL 0)
+        message(STATUS "[PythonBridge] Found pybind11 CMake dir via Python: ${pybind11_DIR}")
+    else()
+        message(FATAL_ERROR "[PythonBridge] Could not find pybind11 via CMake or Python environment.")
+    endif()
+
+    # Now that we've set pybind11_DIR, require it so the targets are imported
+    find_package(pybind11 CONFIG REQUIRED)
+else()
+    message(STATUS "[PythonBridge] Found pybind11 via standard CMake/vcpkg discovery.")
+endif()
+
+# ---------------------------------------------------------------------------
+# Locate the Python standard library dynamically
+# ---------------------------------------------------------------------------
+# Ask Python directly where its prefix and standard library are located
+execute_process(
+    COMMAND "${Python3_EXECUTABLE}" -c "import sys; print(sys.prefix)"
+    OUTPUT_VARIABLE _python_prefix
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY
+)
+
+execute_process(
+    COMMAND "${Python3_EXECUTABLE}" -c "import sysconfig; print(sysconfig.get_path('stdlib'))"
+    OUTPUT_VARIABLE _python_stdlib
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY
+)
+
+# Define where the stdlib should go relative to the executable if bundled
 if (WIN32)
-    # vcpkg Windows layout: the Python stdlib (Lib/) lives next to the
-    # Python executable, i.e. at  tools/python3/Lib/ — NOT at the triplet
-    # root.  Probe the most likely locations and pick the first that has
-    # the 'encodings' package (the module the interpreter needs first).
-    set(_python_prefix "")
-    set(_python_stdlib "")
-
-    # Candidate 1: Lib/ next to the Python executable
-    if (EXISTS "${_python_tools_dir}/Lib/encodings/__init__.py")
-        set(_python_prefix "${_python_tools_dir}")
-        set(_python_stdlib "${_python_tools_dir}/Lib")
-    endif()
-
-    # Candidate 2: Lib/ at the triplet root (two levels up)
-    if (NOT _python_stdlib)
-        get_filename_component(_candidate "${_python_tools_dir}" DIRECTORY)
-        get_filename_component(_candidate "${_candidate}" DIRECTORY)
-        if (EXISTS "${_candidate}/Lib/encodings/__init__.py")
-            set(_python_prefix "${_candidate}")
-            set(_python_stdlib "${_candidate}/Lib")
-        endif()
-    endif()
-
-    # Fallback: use the tools dir and hope for the best
-    if (NOT _python_stdlib)
-        set(_python_prefix "${_python_tools_dir}")
-        set(_python_stdlib "${_python_tools_dir}/Lib")
-        message(WARNING "[PythonBridge] Could not verify Python stdlib at ${_python_stdlib}")
-    endif()
-
     set(_python_stdlib_dest "Lib")          # relative to exe dir
 else()
-    # vcpkg Linux layout: tools/python3/python3.12
-    # prefix is two levels up:  vcpkg_installed/<triplet>/
-    # stdlib is at <prefix>/lib/python<major>.<minor>/
-    get_filename_component(_python_prefix "${_python_tools_dir}" DIRECTORY)
-    get_filename_component(_python_prefix "${_python_prefix}" DIRECTORY)
-    set(_python_stdlib "${_python_prefix}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}")
     set(_python_stdlib_dest "lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}")
 endif()
 
@@ -130,4 +134,3 @@ else()
         WT_PYTHON_STDLIB_REL_DIR="lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}"
     )
 endif()
-

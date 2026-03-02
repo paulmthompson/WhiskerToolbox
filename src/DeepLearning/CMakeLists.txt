@@ -3,7 +3,9 @@
 # target conflicts
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(reflectcpp CONFIG REQUIRED)
-find_package(OpenCV CONFIG REQUIRED)
+if (ENABLE_UI AND ENABLE_ORTOOLS)
+    find_package(OpenCV CONFIG REQUIRED)
+endif()
 
 set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
 find_package(Torch REQUIRED)
