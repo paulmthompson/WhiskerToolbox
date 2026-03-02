@@ -261,53 +261,6 @@ This is distinct from `SelectionContext` (which handles data key selection) — 
 
 ---
 
-## Phase 7: Shared Components Factoring
-
-**Status**: Design exploration. Depends on Phases 5 and 6 being implemented.
-
-**Goal**: Extract reusable components for PSTH, Heatmap, and ScatterPlot to reduce duplication across trial-aligned plot types.
-
-### Proposed Shared Components
-
-```
-Plots/Common/
-├── AlignedPlotDataProvider.hpp   # GatherResult-based data provision
-├── PlotLinkingController.hpp     # Cross-widget linking logic  
-├── GlyphSelectionManager.hpp     # Shared selection logic
-├── PlotViewState.hpp             # Common view state (zoom, pan)
-└── ColormapRegistry.hpp          # Shared colormap utilities
-```
-
-### AlignedPlotDataProvider
-
-Common data preparation pattern for all trial-aligned widgets:
-
-```cpp
-class AlignedPlotDataProvider {
-public:
-    void setAlignmentState(PlotAlignmentState* state);
-    void setDataManager(std::shared_ptr<DataManager> dm);
-    
-    GatherResult<DigitalEventSeries> gatherEvents(std::string const& key);
-
-    void setSortConfig(TrialSortConfig const& config);
-    
-signals:
-    void dataChanged();
-};
-```
-
-### Usage Across Widgets
-
-| Widget | Uses GatherResult | Uses PlotLinking | Uses Colormaps | Uses GlyphSelection |
-|--------|------------------|------------------|----------------|---------------------|
-| EventPlotWidget | Yes | Yes | Yes (Phase 5) | Yes |
-| [PSTHWidget](../PSTHWidget/index.qmd) | Yes (aggregate) | Yes | No | No |
-| [HeatmapWidget](../HeatmapWidget/index.qmd) | Yes (aggregate) | Yes (source) | Yes | Yes (rows) |
-| ScatterPlotWidget | No | No | Future | Yes |
-
----
-
 ## Implementation Priority
 
 ### Next Up
@@ -319,7 +272,6 @@ signals:
 ### Following
 
 4. **Phase 5**: External feature sorting/coloring via TensorData
-5. **Phase 7**: Shared component extraction
 
 ### Open Questions
 
