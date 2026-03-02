@@ -68,6 +68,7 @@ website:
         - section: "Data Inspectors"
           contents:
             - developer/ui/data_inspectors/tensor_inspector.qmd
+            - developer/ui/data_inspectors/digital_event_series_inspector.qmd
         - section: "Data Management"
           contents:
             - developer/DataManager/data_manager.qmd

@@ -21,3 +21,6 @@ tools
 ninja-build/ninja
 
 dist
+
+build_log.txt
+test_log.txt

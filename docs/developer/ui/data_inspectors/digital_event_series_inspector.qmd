@@ -1,0 +1,68 @@
+---
+title: "DigitalEventSeries Inspector"
+---
+
+## Overview
+
+The DigitalEventSeries inspector provides inspection and management of `DigitalEventSeries` objects. It consists of two coordinated widgets:
+
+- **DigitalEventSeriesInspector** — the inspector panel (East zone) with add/remove, export, and group filter controls
+- **DigitalEventSeriesDataView** — the table view (Center zone) displaying events with Frame and Group columns
+
+## Features
+
+### Event Management
+
+- **Add Event**: Adds an event at the current frame position
+- **Remove Event**: Removes an event at the current frame position
+
+### Group Support
+
+Group management follows the same pattern as `DigitalIntervalSeriesInspector`:
+
+- **Group ID column**: The event table includes a "Group" column showing each event's group name
+- **Group filtering**: A combo box in the inspector panel filters the table by group ("All Groups" or a specific group)
+- **Right-click context menu**: The table view provides group management via context menu:
+  - **Move to Group**: Assign selected events to a group
+  - **Remove from Group**: Unassign selected events from their groups
+
+Groups are managed through the `GroupManager` which is set on both the inspector and the data view.
+
+### Export
+
+Events can be exported to CSV format via a collapsible export section.
+
+## Architecture
+
+### EventTableModel
+
+`EventTableModel` is a `QAbstractTableModel` that provides:
+
+- Two columns: Frame and Group
+- Group name resolution via `GroupManager`
+- Group filtering via `setGroupFilter()` / `clearGroupFilter()`
+- Row data access via `getRowData()` returning `EventTableRow` (time, entity\_id, group\_name)
+
+The model accepts a `DigitalEventSeries const *` via `setEvents()`, iterating over its `view()` to extract `EventWithId` elements including entity IDs.
+
+### Inspector ↔ DataView Connection
+
+The inspector and data view are connected in `DataInspectorPropertiesWidget::_connectInspectorToView()`. The inspector's `setDataView()` method:
+
+1. Sets the `GroupManager` on the view
+2. Connects view signals (`moveEventsRequested`, `copyEventsRequested`, `deleteEventsRequested`, `moveEventsToGroupRequested`, `removeEventsFromGroupRequested`) to inspector slots
+
+### Signal Flow
+
+```
+User right-clicks table → DataView emits signal → Inspector handles operation → Data updated → Observer notifies → View refreshes
+```
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `EventTableModel.hpp/.cpp` | Table model with group column and filtering |
+| `DigitalEventSeriesDataView.hpp/.cpp` | Table view with context menu and group support |
+| `DigitalEventSeriesInspector.hpp/.cpp` | Inspector panel with group filter combo box |
+| `DigitalEventSeriesInspector.ui` | Qt Designer form with group filter layout |

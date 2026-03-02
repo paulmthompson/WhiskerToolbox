@@ -10,6 +10,8 @@
  * ## Features
  * - Add/remove events
  * - Export to CSV
+ * - Group filtering via combo box
+ * - Right-click context menu for group management (via DataView)
  * 
  * Note: Event table view is provided by DigitalEventSeriesDataView in the view panel.
  * 
@@ -18,6 +20,7 @@
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
 #include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <memory>
 #include <string>
@@ -28,6 +31,8 @@ class DigitalEventSeriesInspector;
 }
 
 class CSVEventSaver_Widget;
+class DigitalEventSeriesDataView;
+class GroupManager;
 
 using EventSaverOptionsVariant = std::variant<CSVEventSaverOptions>;
 
@@ -43,7 +48,7 @@ public:
     /**
      * @brief Construct the digital event series inspector
      * @param data_manager Shared DataManager for data access
-     * @param group_manager Optional GroupManager for group features (not used)
+     * @param group_manager Optional GroupManager for group features
      * @param parent Parent widget
      */
     explicit DigitalEventSeriesInspector(
@@ -65,7 +70,22 @@ public:
     [[nodiscard]] QString getTypeName() const override { return QStringLiteral("Digital Event Series"); }
 
     [[nodiscard]] bool supportsExport() const override { return true; }
-    [[nodiscard]] bool supportsGroupFiltering() const override { return false; }
+
+    /**
+     * @brief Set the data view to use for selection and group coordination
+     * @param view Pointer to the DigitalEventSeriesDataView (can be nullptr)
+     * 
+     * This connects the widget's selection operations to the view panel's table.
+     * Also sets up group manager and context menu signals on the view.
+     * Should be called when both the inspector and view are created.
+     */
+    void setDataView(DigitalEventSeriesDataView * view);
+
+    /**
+     * @brief Set the group manager for group features
+     * @param group_manager Pointer to GroupManager (can be nullptr)
+     */
+    void setGroupManager(GroupManager * group_manager);
 
 private:
     enum SaverType { CSV };
@@ -98,7 +118,43 @@ private:
      */
     [[nodiscard]] int64_t _getCurrentTimeInSeriesFrame() const;
 
+    /**
+     * @brief Move selected events to the specified target key
+     * 
+     * @param target_key The key to move events to
+     */
+    void _moveEventsToTarget(std::string const & target_key);
+
+    /**
+     * @brief Copy selected events to the specified target key
+     * 
+     * @param target_key The key to copy events to
+     */
+    void _copyEventsToTarget(std::string const & target_key);
+
+    /**
+     * @brief Delete selected events from the current data
+     */
+    void _deleteSelectedEvents();
+
+    /**
+     * @brief Move selected events to a specific group
+     * @param group_id The group ID to move events to
+     */
+    void _moveEventsToGroup(int group_id);
+
+    /**
+     * @brief Remove selected events from their groups
+     */
+    void _removeEventsFromGroup();
+
+    /**
+     * @brief Populate the group filter combo box
+     */
+    void _populateGroupFilterCombo();
+
     Ui::DigitalEventSeriesInspector * ui;
+    DigitalEventSeriesDataView * _data_view{nullptr};
 
 private slots:
     void _addEventButton();
@@ -106,6 +162,9 @@ private slots:
 
     void _onExportTypeChanged(int index);
     void _handleSaveEventCSVRequested(CSVEventSaverOptions options);
+
+    void _onGroupFilterChanged(int index);
+    void _onGroupChanged();
 };
 
 #endif// DIGITAL_EVENT_SERIES_INSPECTOR_HPP

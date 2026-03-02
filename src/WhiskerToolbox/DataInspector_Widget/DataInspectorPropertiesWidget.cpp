@@ -3,18 +3,20 @@
 
 #include "DataInspectorState.hpp"
 #include "DataInspectorViewWidget.hpp"
+#include "DigitalEventSeries/DigitalEventSeriesDataView.hpp"
+#include "DigitalEventSeries/DigitalEventSeriesInspector.hpp"
 #include "DigitalIntervalSeries/DigitalIntervalSeriesDataView.hpp"
 #include "DigitalIntervalSeries/DigitalIntervalSeriesInspector.hpp"
+#include "Inspectors/BaseInspector.hpp"
+#include "Inspectors/InspectorFactory.hpp"
 #include "LineData/LineInspector.hpp"
 #include "LineData/LineTableView.hpp"
 #include "PointData/PointInspector.hpp"
 #include "PointData/PointTableView.hpp"
-#include "TensorData/TensorInspector.hpp"
 #include "TensorData/TensorDesigner.hpp"
-#include "TimeFrameData/TimeFrameInspector.hpp"
+#include "TensorData/TensorInspector.hpp"
 #include "TimeFrameData/TimeFrameDataView.hpp"
-#include "Inspectors/BaseInspector.hpp"
-#include "Inspectors/InspectorFactory.hpp"
+#include "TimeFrameData/TimeFrameInspector.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/SelectionContext.hpp"
@@ -24,13 +26,13 @@
 #include <QVBoxLayout>
 
 DataInspectorPropertiesWidget::DataInspectorPropertiesWidget(
-    std::shared_ptr<DataManager> data_manager,
-    GroupManager * group_manager,
-    QWidget * parent)
-    : QWidget(parent)
-    , ui(std::make_unique<Ui::DataInspectorPropertiesWidget>())
-    , _data_manager(std::move(data_manager))
-    , _group_manager(group_manager) {
+        std::shared_ptr<DataManager> data_manager,
+        GroupManager * group_manager,
+        QWidget * parent)
+    : QWidget(parent),
+      ui(std::make_unique<Ui::DataInspectorPropertiesWidget>()),
+      _data_manager(std::move(data_manager)),
+      _group_manager(group_manager) {
     ui->setupUi(this);
     _setupUi();
     _connectSignals();
@@ -108,7 +110,7 @@ void DataInspectorPropertiesWidget::_setupUi() {
     // Set up the pin button
     ui->pinButton->setCheckable(true);
     ui->pinButton->setToolTip(tr("Pin to keep inspecting this data regardless of selection"));
-    
+
     // Set up placeholder content
     _updateHeaderDisplay();
 }
@@ -153,7 +155,7 @@ void DataInspectorPropertiesWidget::_onInspectedTimeFrameKeyChanged(QString cons
 }
 
 void DataInspectorPropertiesWidget::_onTimeFrameFocusChanged(
-    QString const & time_key, SelectionSource const & source) {
+        QString const & time_key, SelectionSource const & source) {
     // Ignore if pinned
     if (_state && _state->isPinned()) {
         return;
@@ -175,9 +177,9 @@ void DataInspectorPropertiesWidget::_onStateChanged() {
 
 void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) {
     std::string const key_std = key.toStdString();
-    
+
     if (key_std == _current_key && _current_inspector) {
-        return;  // Already showing this data
+        return;// Already showing this data
     }
 
     _current_key = key_std;
@@ -199,7 +201,7 @@ void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) 
 
     // Get the data type
     auto const data_type = _data_manager->getType(key_std);
-    
+
     // Update type label
     QString type_name = QString::fromStdString(convert_data_type_to_string(data_type));
     ui->dataTypeLabel->setText(type_name);
@@ -219,7 +221,7 @@ void DataInspectorPropertiesWidget::_updateInspectorForTimeFrame(QString const &
     std::string const key_std = key.toStdString();
 
     if (key_std == _current_key && _current_type == DM_DataType::Time && _current_inspector) {
-        return;  // Already showing this timeframe
+        return;// Already showing this timeframe
     }
 
     _current_key = key_std;
@@ -262,34 +264,34 @@ void DataInspectorPropertiesWidget::_createInspectorForType(DM_DataType type) {
 
     // Create the appropriate inspector using the factory
     _current_inspector = InspectorFactory::createInspector(
-        type,
-        _data_manager,
-        _group_manager,
-        this);
+            type,
+            _data_manager,
+            _group_manager,
+            this);
 
     if (_current_inspector) {
         _current_type = type;
-        
+
         // Set the state pointer so the inspector can access time position
         if (_state) {
             _current_inspector->setState(_state);
         }
-        
+
         ui->contentLayout->addWidget(_current_inspector.get());
 
         // Connect the inspector's frameSelected signal
         connect(_current_inspector.get(), &BaseInspector::frameSelected,
                 this, &DataInspectorPropertiesWidget::frameSelected);
-        
+
         // Connect inspector to view if needed
         _connectInspectorToView();
     } else {
         // No inspector available for this type - show placeholder
         _current_type = DM_DataType::Unknown;
         auto * placeholder = new QLabel(
-            tr("No inspector available for type: %1")
-                .arg(QString::fromStdString(convert_data_type_to_string(type))),
-            this);
+                tr("No inspector available for type: %1")
+                        .arg(QString::fromStdString(convert_data_type_to_string(type))),
+                this);
         placeholder->setAlignment(Qt::AlignCenter);
         placeholder->setWordWrap(true);
         ui->contentLayout->addWidget(placeholder);
@@ -309,10 +311,10 @@ void DataInspectorPropertiesWidget::_clearInspector() {
     if (_current_inspector) {
         // Disconnect signals
         disconnect(_current_inspector.get(), nullptr, this, nullptr);
-        
+
         // Remove callbacks from data
         _current_inspector->removeCallbacks();
-        
+
         // Remove from layout and delete
         ui->contentLayout->removeWidget(_current_inspector.get());
         _current_inspector.reset();
@@ -329,13 +331,22 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
     if (!_current_inspector || !_view_widget) {
         return;
     }
-    
+
     // Check if this is a DigitalIntervalSeriesInspector and connect it to the view
     auto * interval_inspector = dynamic_cast<DigitalIntervalSeriesInspector *>(_current_inspector.get());
     if (interval_inspector) {
         auto * interval_view = dynamic_cast<DigitalIntervalSeriesDataView *>(_view_widget->currentView());
         if (interval_view) {
             interval_inspector->setDataView(interval_view);
+        }
+    }
+
+    // Check if this is a DigitalEventSeriesInspector and connect it to the view
+    auto * event_inspector = dynamic_cast<DigitalEventSeriesInspector *>(_current_inspector.get());
+    if (event_inspector) {
+        auto * event_view = dynamic_cast<DigitalEventSeriesDataView *>(_view_widget->currentView());
+        if (event_view) {
+            event_inspector->setDataView(event_view);
         }
     }
 

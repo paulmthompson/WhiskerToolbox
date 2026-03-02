@@ -1,11 +1,14 @@
 #include "DigitalEventSeriesInspector.hpp"
 #include "ui_DigitalEventSeriesInspector.h"
 
-#include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataExport_Widget/DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp"
+#include "DataInspector_Widget/DataInspectorState.hpp"
+#include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
+#include "DigitalEventSeriesDataView.hpp"
+#include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <QComboBox>
 #include <QFileDialog>
@@ -15,9 +18,8 @@
 #include <QPushButton>
 #include <QStackedWidget>
 
-#include <filesystem>
-#include <fstream>
 #include <iostream>
+#include <unordered_set>
 
 DigitalEventSeriesInspector::DigitalEventSeriesInspector(
         std::shared_ptr<DataManager> data_manager,
@@ -32,6 +34,12 @@ DigitalEventSeriesInspector::DigitalEventSeriesInspector(
     // Set up export section
     ui->export_section->setTitle("Export");
     ui->export_section->autoSetContentLayout();
+
+    // Initialize group filter combo box
+    _populateGroupFilterCombo();
+
+    // Set up group manager signals if group manager exists
+    connectGroupManagerSignals(groupManager(), this, &DigitalEventSeriesInspector::_onGroupChanged);
 }
 
 DigitalEventSeriesInspector::~DigitalEventSeriesInspector() {
@@ -66,6 +74,56 @@ void DigitalEventSeriesInspector::updateView() {
     // No explicit updateTable method
 }
 
+void DigitalEventSeriesInspector::setDataView(DigitalEventSeriesDataView * view) {
+    // Disconnect from old view if any
+    if (_data_view) {
+        disconnect(_data_view, &DigitalEventSeriesDataView::moveEventsRequested, this, nullptr);
+        disconnect(_data_view, &DigitalEventSeriesDataView::copyEventsRequested, this, nullptr);
+        disconnect(_data_view, &DigitalEventSeriesDataView::moveEventsToGroupRequested, this, nullptr);
+        disconnect(_data_view, &DigitalEventSeriesDataView::removeEventsFromGroupRequested, this, nullptr);
+        disconnect(_data_view, &DigitalEventSeriesDataView::deleteEventsRequested, this, nullptr);
+    }
+
+    _data_view = view;
+    if (_data_view) {
+        // Set group manager on the view
+        if (groupManager()) {
+            _data_view->setGroupManager(groupManager());
+        }
+
+        // Connect to view signals for move/copy operations
+        connect(_data_view, &DigitalEventSeriesDataView::moveEventsRequested,
+                this, &DigitalEventSeriesInspector::_moveEventsToTarget);
+        connect(_data_view, &DigitalEventSeriesDataView::copyEventsRequested,
+                this, &DigitalEventSeriesInspector::_copyEventsToTarget);
+
+        // Connect to view signals for group management operations
+        connect(_data_view, &DigitalEventSeriesDataView::moveEventsToGroupRequested,
+                this, &DigitalEventSeriesInspector::_moveEventsToGroup);
+        connect(_data_view, &DigitalEventSeriesDataView::removeEventsFromGroupRequested,
+                this, &DigitalEventSeriesInspector::_removeEventsFromGroup);
+
+        // Connect to view signal for delete operation
+        connect(_data_view, &DigitalEventSeriesDataView::deleteEventsRequested,
+                this, &DigitalEventSeriesInspector::_deleteSelectedEvents);
+    }
+}
+
+void DigitalEventSeriesInspector::setGroupManager(GroupManager * group_manager) {
+    BaseInspector::setGroupManager(group_manager);
+    if (_data_view) {
+        _data_view->setGroupManager(group_manager);
+    }
+    // Disconnect old connections if any
+    if (groupManager()) {
+        disconnect(groupManager(), nullptr, this, nullptr);
+    }
+    if (group_manager) {
+        connectGroupManagerSignals(group_manager, this, &DigitalEventSeriesInspector::_onGroupChanged);
+    }
+    _populateGroupFilterCombo();
+}
+
 void DigitalEventSeriesInspector::_connectSignals() {
     connect(ui->add_event_button, &QPushButton::clicked, this, &DigitalEventSeriesInspector::_addEventButton);
     connect(ui->remove_event_button, &QPushButton::clicked, this, &DigitalEventSeriesInspector::_removeEventButton);
@@ -75,6 +133,10 @@ void DigitalEventSeriesInspector::_connectSignals() {
             this, &DigitalEventSeriesInspector::_onExportTypeChanged);
     connect(ui->csv_event_saver_widget, &CSVEventSaver_Widget::saveEventCSVRequested,
             this, &DigitalEventSeriesInspector::_handleSaveEventCSVRequested);
+
+    // Group filter signals
+    connect(ui->groupFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &DigitalEventSeriesInspector::_onGroupFilterChanged);
 }
 
 void DigitalEventSeriesInspector::_assignCallbacks() {
@@ -217,4 +279,204 @@ std::string DigitalEventSeriesInspector::_generateFilename() const {
 
 void DigitalEventSeriesInspector::_updateFilename() {
     ui->filename_edit->setText(QString::fromStdString(_generateFilename()));
+}
+
+void DigitalEventSeriesInspector::_moveEventsToTarget(std::string const & target_key) {
+    if (!_data_view) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "DigitalEventSeriesInspector: No events selected to move." << std::endl;
+        return;
+    }
+
+    auto source_event_data = dataManager()->getData<DigitalEventSeries>(_active_key);
+    auto target_event_data = dataManager()->getData<DigitalEventSeries>(target_key);
+
+    if (!source_event_data || !target_event_data) {
+        std::cerr << "DigitalEventSeriesInspector: Could not retrieve source or target data." << std::endl;
+        return;
+    }
+
+    // Get events for selected entity IDs, add to target, remove from source
+    for (auto const & event_with_id: source_event_data->view()) {
+        for (auto const & eid: selected_entity_ids) {
+            if (event_with_id.id() == eid) {
+                target_event_data->addEvent(event_with_id.time());
+            }
+        }
+    }
+
+    // Remove from source by time
+    for (auto const & event_with_id: source_event_data->view()) {
+        for (auto const & eid: selected_entity_ids) {
+            if (event_with_id.id() == eid) {
+                source_event_data->removeEvent(event_with_id.time());
+                break;
+            }
+        }
+    }
+
+    std::cout << "DigitalEventSeriesInspector: Moved " << selected_entity_ids.size()
+              << " events from " << _active_key << " to " << target_key << std::endl;
+}
+
+void DigitalEventSeriesInspector::_copyEventsToTarget(std::string const & target_key) {
+    if (!_data_view) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "DigitalEventSeriesInspector: No events selected to copy." << std::endl;
+        return;
+    }
+
+    auto source_event_data = dataManager()->getData<DigitalEventSeries>(_active_key);
+    auto target_event_data = dataManager()->getData<DigitalEventSeries>(target_key);
+
+    if (!source_event_data || !target_event_data) {
+        std::cerr << "DigitalEventSeriesInspector: Could not retrieve source or target data." << std::endl;
+        return;
+    }
+
+    std::unordered_set<EntityId> selected_set(selected_entity_ids.begin(), selected_entity_ids.end());
+
+    // Copy events for selected entity IDs to target
+    for (auto const & event_with_id: source_event_data->view()) {
+        if (selected_set.contains(event_with_id.id())) {
+            target_event_data->addEvent(event_with_id.time());
+        }
+    }
+
+    std::cout << "DigitalEventSeriesInspector: Copied " << selected_entity_ids.size()
+              << " events from " << _active_key << " to " << target_key << std::endl;
+}
+
+void DigitalEventSeriesInspector::_deleteSelectedEvents() {
+    if (!_data_view) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "DigitalEventSeriesInspector: No events selected to delete." << std::endl;
+        return;
+    }
+
+    auto event_data = dataManager()->getData<DigitalEventSeries>(_active_key);
+    if (!event_data) {
+        std::cerr << "DigitalEventSeriesInspector: DigitalEventSeries object ('" << _active_key << "') not found." << std::endl;
+        return;
+    }
+
+    std::unordered_set<EntityId> selected_set(selected_entity_ids.begin(), selected_entity_ids.end());
+
+    // Collect times to remove (can't modify while iterating)
+    std::vector<TimeFrameIndex> times_to_remove;
+    for (auto const & event_with_id: event_data->view()) {
+        if (selected_set.contains(event_with_id.id())) {
+            times_to_remove.push_back(event_with_id.time());
+        }
+    }
+
+    for (auto const & time: times_to_remove) {
+        event_data->removeEvent(time);
+    }
+
+    std::cout << "DigitalEventSeriesInspector: Deleted " << times_to_remove.size()
+              << " events from '" << _active_key << "'." << std::endl;
+}
+
+void DigitalEventSeriesInspector::_moveEventsToGroup(int group_id) {
+    if (!_data_view || !groupManager()) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "DigitalEventSeriesInspector: No events selected to move to group." << std::endl;
+        return;
+    }
+
+    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+
+    // First, remove entities from their current groups
+    groupManager()->ungroupEntities(entity_ids_set);
+
+    // Then, assign entities to the specified group
+    groupManager()->assignEntitiesToGroup(group_id, entity_ids_set);
+
+    // Refresh the view to show updated group information
+    if (_data_view) {
+        _data_view->updateView();
+    }
+
+    std::cout << "DigitalEventSeriesInspector: Moved " << selected_entity_ids.size()
+              << " selected events to group " << group_id << std::endl;
+}
+
+void DigitalEventSeriesInspector::_removeEventsFromGroup() {
+    if (!_data_view || !groupManager()) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "DigitalEventSeriesInspector: No events selected to remove from group." << std::endl;
+        return;
+    }
+
+    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+
+    // Remove entities from all groups
+    groupManager()->ungroupEntities(entity_ids_set);
+
+    // Refresh the view to show updated group information
+    if (_data_view) {
+        _data_view->updateView();
+    }
+
+    std::cout << "DigitalEventSeriesInspector: Removed " << selected_entity_ids.size()
+              << " selected events from their groups." << std::endl;
+}
+
+void DigitalEventSeriesInspector::_onGroupFilterChanged(int index) {
+    if (!_data_view || !groupManager()) {
+        return;
+    }
+
+    if (index == 0) {
+        // "All Groups" selected
+        _data_view->clearGroupFilter();
+    } else {
+        // Specific group selected (index - 1 because index 0 is "All Groups")
+        auto groups = groupManager()->getGroups();
+        auto group_ids = groups.keys();
+        if (index - 1 < group_ids.size()) {
+            int group_id = group_ids[index - 1];
+            _data_view->setGroupFilter(group_id);
+        }
+    }
+}
+
+void DigitalEventSeriesInspector::_onGroupChanged() {
+    // Store current selection
+    int current_index = ui->groupFilterCombo->currentIndex();
+    QString current_text;
+    if (current_index >= 0 && current_index < ui->groupFilterCombo->count()) {
+        current_text = ui->groupFilterCombo->itemText(current_index);
+    }
+
+    // Update the group filter combo box when groups change
+    _populateGroupFilterCombo();
+
+    // Restore selection
+    restoreGroupFilterSelection(ui->groupFilterCombo, current_index, current_text);
+}
+
+void DigitalEventSeriesInspector::_populateGroupFilterCombo() {
+    populateGroupFilterCombo(ui->groupFilterCombo, groupManager());
 }

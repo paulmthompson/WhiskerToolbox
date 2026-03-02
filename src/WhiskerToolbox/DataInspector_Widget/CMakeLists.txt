@@ -39,6 +39,7 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
         DigitalEventSeries/DigitalEventSeriesInspector.cpp
         DigitalEventSeries/DigitalEventSeriesInspector.ui
         DigitalEventSeries/EventTableModel.hpp
+        DigitalEventSeries/EventTableModel.cpp
         DigitalEventSeries/DigitalEventSeriesDataView.hpp
         DigitalEventSeries/DigitalEventSeriesDataView.cpp
 
