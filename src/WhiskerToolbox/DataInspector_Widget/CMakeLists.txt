@@ -46,6 +46,7 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
         DigitalIntervalSeries/DigitalIntervalSeriesInspector.cpp
         DigitalIntervalSeries/DigitalIntervalSeriesInspector.ui
         DigitalIntervalSeries/IntervalTableModel.hpp
+        DigitalIntervalSeries/IntervalTableModel.cpp
         DigitalIntervalSeries/DigitalIntervalSeriesDataView.hpp
         DigitalIntervalSeries/DigitalIntervalSeriesDataView.cpp
 

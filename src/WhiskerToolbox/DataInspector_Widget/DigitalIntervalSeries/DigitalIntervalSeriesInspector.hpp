@@ -21,6 +21,7 @@
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"               // For context menu utilities
 #include "TimeFrame/interval_data.hpp"
 #include "TimeFrame/TimeFrame.hpp"  // For TimePosition
+#include "Entity/EntityTypes.hpp"
 
 #include <functional>
 #include <string>
@@ -69,16 +70,22 @@ public:
     [[nodiscard]] QString getTypeName() const override { return QStringLiteral("Digital Interval Series"); }
 
     [[nodiscard]] bool supportsExport() const override { return true; }
-    [[nodiscard]] bool supportsGroupFiltering() const override { return false; }
 
     /**
-     * @brief Set the data view to use for selection
+     * @brief Set the data view to use for selection and group coordination
      * @param view Pointer to the DigitalIntervalSeriesDataView (can be nullptr)
      * 
      * This connects the widget's selection operations to the view panel's table.
+     * Also sets up group manager and context menu signals on the view.
      * Should be called when both the inspector and view are created.
      */
     void setDataView(DigitalIntervalSeriesDataView * view);
+
+    /**
+     * @brief Set the group manager for group features
+     * @param group_manager Pointer to GroupManager (can be nullptr)
+     */
+    void setGroupManager(GroupManager * group_manager);
 
     /**
      * @brief Set a callback function to get selected intervals from the view panel
@@ -88,6 +95,7 @@ public:
 
 private:
     Ui::DigitalIntervalSeriesInspector * ui;
+    DigitalIntervalSeriesDataView * _data_view{nullptr};
     bool _interval_epoch{false};
     int64_t _interval_start{0};
     int64_t _interval_end{0};// Track both start and end for bidirectional support
@@ -157,6 +165,22 @@ private:
     void _deleteSelectedIntervals();
 
     /**
+     * @brief Move selected intervals to a specific group
+     * @param group_id The group ID to move intervals to
+     */
+    void _moveIntervalsToGroup(int group_id);
+
+    /**
+     * @brief Remove selected intervals from their groups
+     */
+    void _removeIntervalsFromGroup();
+
+    /**
+     * @brief Populate the group filter combo box
+     */
+    void _populateGroupFilterCombo();
+
+    /**
      * @brief Get the current time converted to the DigitalIntervalSeries timeframe
      * @return The current time index in the series' timeframe, or -1 if conversion fails
      * 
@@ -178,6 +202,9 @@ private slots:
     void _mergeIntervalsButton();
     void _cancelIntervalButton();
     void _createIntervalContextMenuRequested(QPoint const & position);
+
+    void _onGroupFilterChanged(int index);
+    void _onGroupChanged();
 };
 
 #endif // DIGITAL_INTERVAL_SERIES_INSPECTOR_HPP
