@@ -3,15 +3,21 @@
 #include "Core/BuildScatterPoints.hpp"
 #include "Core/ScatterPlotState.hpp"
 #include "Core/SourceCompatibility.hpp"
+
 #include "CoreGeometry/boundingbox.hpp"
 #include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
 #include "CorePlotting/Interaction/HitTestResult.hpp"
+#include "CorePlotting/Interaction/PolygonInteractionController.hpp"
+#include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Mappers/MappedElement.hpp"
+#include "CorePlotting/SceneGraph/RenderablePrimitives.hpp" // RenderableScene
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CorePlotting/Selection/PolygonSelection.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GroupContextMenu/GroupContextMenuHandler.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
+#include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
+#include "PlottingOpenGL/SceneRenderer.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 
 #include <QContextMenuEvent>
@@ -26,6 +32,13 @@
 
 ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
+
+    _hit_tester = std::make_unique<CorePlotting::SceneHitTester>();
+    _polygon_controller = std::make_unique<CorePlotting::Interaction::PolygonInteractionController>();
+    _preview_renderer = std::make_unique<PlottingOpenGL::PreviewRenderer>();
+    _scene = std::make_unique<CorePlotting::RenderableScene>();
+    _scene_renderer = std::make_unique<PlottingOpenGL::SceneRenderer>();
+
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
@@ -38,8 +51,8 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
 
 ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() {
     makeCurrent();
-    _preview_renderer.cleanup();
-    _scene_renderer.cleanup();
+    _preview_renderer->cleanup();
+    _scene_renderer->cleanup();
     doneCurrent();
 }
 
@@ -98,10 +111,10 @@ void ScatterPlotOpenGLWidget::initializeGL() {
         glEnable(GL_MULTISAMPLE);
     }
 
-    if (!_scene_renderer.initialize()) {
+    if (!_scene_renderer->initialize()) {
         return;
     }
-    _preview_renderer.initialize();
+    _preview_renderer->initialize();
     _opengl_initialized = true;
     updateMatrices();
 }
@@ -127,13 +140,13 @@ void ScatterPlotOpenGLWidget::paintGL() {
         _scene_dirty = false;
     }
 
-    _scene_renderer.render(_view_matrix, _projection_matrix);
+    _scene_renderer->render(_view_matrix, _projection_matrix);
 
     // Render polygon selection preview overlay (in screen coordinates)
-    if (_polygon_controller.isActive() && _preview_renderer.isInitialized()) {
-        auto preview = _polygon_controller.getPreview();
+    if (_polygon_controller->isActive() && _preview_renderer && _preview_renderer->isInitialized()) {
+        auto preview = _polygon_controller->getPreview();
         if (preview.isValid()) {
-            _preview_renderer.render(preview, _widget_width, _widget_height);
+            _preview_renderer->render(preview, _widget_width, _widget_height);
         }
     }
 }
@@ -169,7 +182,7 @@ void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         }
 
         // Default: start potential pan (only when no polygon is active)
-        if (!_polygon_controller.isActive()) {
+        if (!_polygon_controller->isActive()) {
             _is_panning = false;
             _pan_eligible = true;
             _click_start_pos = event->pos();
@@ -181,14 +194,14 @@ void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
 void ScatterPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     // Update polygon preview line during polygon selection
-    if (_polygon_controller.isActive()) {
+    if (_polygon_controller->isActive()) {
         auto const screen_x = static_cast<float>(event->pos().x());
         auto const screen_y = static_cast<float>(event->pos().y());
-        _polygon_controller.updateCursorPosition(screen_x, screen_y);
+        _polygon_controller->updateCursorPosition(screen_x, screen_y);
         update();// Redraw to show updated preview
     }
 
-    if ((event->buttons() & Qt::LeftButton) && _pan_eligible && !_polygon_controller.isActive()) {
+    if ((event->buttons() & Qt::LeftButton) && _pan_eligible && !_polygon_controller->isActive()) {
         int const dx = event->pos().x() - _click_start_pos.x();
         int const dy = event->pos().y() - _click_start_pos.y();
         int const distance_sq = dx * dx + dy * dy;
@@ -248,7 +261,7 @@ void ScatterPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
     // Disable zoom while a polygon selection is in progress to avoid
     // world-coordinate mismatch with the screen-space preview overlay.
-    if (_polygon_controller.isActive()) {
+    if (_polygon_controller->isActive()) {
         event->accept();
         return;
     }
@@ -261,7 +274,7 @@ void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
 }
 
 void ScatterPlotOpenGLWidget::keyPressEvent(QKeyEvent * event) {
-    if (_polygon_controller.isActive()) {
+    if (_polygon_controller->isActive()) {
         if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
             completePolygonSelection();
             event->accept();
@@ -273,7 +286,7 @@ void ScatterPlotOpenGLWidget::keyPressEvent(QKeyEvent * event) {
             return;
         }
         if (event->key() == Qt::Key_Backspace) {
-            _polygon_controller.removeLastVertex();
+            _polygon_controller->removeLastVertex();
             if (!_polygon_vertices_world.empty()) {
                 _polygon_vertices_world.pop_back();
             }
@@ -333,7 +346,7 @@ QPointF ScatterPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const 
 
 void ScatterPlotOpenGLWidget::rebuildScene() {
     if (!_state || !_data_manager) {
-        _scene_renderer.clearScene();
+        _scene_renderer->clearScene();
         return;
     }
 
@@ -343,7 +356,7 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
     // Clear scatter data if sources are not configured
     if (!x_source.has_value() || !y_source.has_value()) {
         _scatter_data.clear();
-        _scene_renderer.clearScene();
+        _scene_renderer->clearScene();
         return;
     }
 
@@ -351,7 +364,7 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
     auto compat = checkSourceCompatibility(*_data_manager, *x_source, *y_source);
     if (!compat.compatible) {
         _scatter_data.clear();
-        _scene_renderer.clearScene();
+        _scene_renderer->clearScene();
         return;
     }
 
@@ -359,7 +372,7 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
     _scatter_data = buildScatterPoints(*_data_manager, *x_source, *y_source);
 
     if (_scatter_data.empty()) {
-        _scene_renderer.clearScene();
+        _scene_renderer->clearScene();
         return;
     }
 
@@ -470,9 +483,10 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
                             EntityId{0}, ref_style);
     }
 
-    _scene = builder.build();
+    auto scene = builder.build();
+    _scene = std::make_unique<CorePlotting::RenderableScene>(std::move(scene));
     applyGroupColorsToScene();
-    _scene_renderer.uploadScene(_scene);
+    _scene_renderer->uploadScene(*_scene);
 }
 
 void ScatterPlotOpenGLWidget::applyGroupColorsToScene() {
@@ -498,7 +512,7 @@ void ScatterPlotOpenGLWidget::applyGroupColorsToScene() {
     }
 
     // Apply group colors to glyph batches that contain scatter points.
-    for (auto & batch: _scene.glyph_batches) {
+    for (auto & batch: _scene->glyph_batches) {
         for (std::size_t i = 0; i < batch.entity_ids.size(); ++i) {
             auto const scatter_idx = static_cast<std::size_t>(batch.entity_ids[i].id);
             if (scatter_idx >= _scatter_data.size()) {
@@ -645,13 +659,13 @@ std::optional<std::size_t> ScatterPlotOpenGLWidget::hitTestPointAt(QPoint const 
 
     // Note: We need a mutable hit tester for the query, but this is safe
     // as the config doesn't persist and queryQuadTree is conceptually const
-    auto & mutable_tester = const_cast<CorePlotting::SceneHitTester &>(_hit_tester);
+    auto & mutable_tester = const_cast<CorePlotting::SceneHitTester &>(*_hit_tester);
     mutable_tester.setConfig(config);
 
     auto const result = mutable_tester.queryQuadTree(
             static_cast<float>(world.x()),
             static_cast<float>(world.y()),
-            _scene);
+            *_scene);
 
     if (result.hasHit() && result.entity_id.has_value()) {
         auto const idx = static_cast<std::size_t>(result.entity_id->id);
@@ -725,17 +739,17 @@ void ScatterPlotOpenGLWidget::handlePolygonCtrlClick(QMouseEvent * event) {
     auto const screen_y = static_cast<float>(event->pos().y());
     QPointF const world = screenToWorld(event->pos());
 
-    if (!_polygon_controller.isActive()) {
+    if (!_polygon_controller->isActive()) {
         // Start a new polygon
         _polygon_vertices_world.clear();
         _polygon_vertices_world.emplace_back(
                 static_cast<float>(world.x()), static_cast<float>(world.y()));
-        _polygon_controller.start(screen_x, screen_y, "scatter_polygon_selection");
+        _polygon_controller->start(screen_x, screen_y, "scatter_polygon_selection");
     } else {
         // Add a vertex
         _polygon_vertices_world.emplace_back(
                 static_cast<float>(world.x()), static_cast<float>(world.y()));
-        auto result = _polygon_controller.addVertex(screen_x, screen_y);
+        auto result = _polygon_controller->addVertex(screen_x, screen_y);
         if (result == CorePlotting::Interaction::AddVertexResult::ClosedPolygon) {
             completePolygonSelection();
             return;
@@ -750,7 +764,7 @@ void ScatterPlotOpenGLWidget::completePolygonSelection() {
         return;
     }
 
-    _polygon_controller.complete();
+    _polygon_controller->complete();
 
     // Run point-in-polygon selection on the scatter data
     auto selection_result = CorePlotting::Selection::selectPointsInPolygon(
@@ -769,7 +783,7 @@ void ScatterPlotOpenGLWidget::completePolygonSelection() {
 }
 
 void ScatterPlotOpenGLWidget::cancelPolygonSelection() {
-    _polygon_controller.cancel();
+    _polygon_controller->cancel();
     _polygon_vertices_world.clear();
     update();
 }

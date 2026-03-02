@@ -19,21 +19,15 @@
  * @see SceneRenderer for the rendering pipeline
  */
 
-#include "Core/ScatterPlotState.hpp"
 #include "Core/ScatterPointData.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
-#include "CorePlotting/Interaction/PolygonInteractionController.hpp"
-#include "CorePlotting/Interaction/SceneHitTester.hpp"
-#include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "Entity/EntityTypes.hpp"
-#include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
-#include "PlottingOpenGL/SceneRenderer.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <glm/glm.hpp>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 
-#include <glm/glm.hpp>
 #include <memory>
 #include <optional>
 #include <unordered_set>
@@ -45,6 +39,21 @@ class QMenu;
 class QMouseEvent;
 class QWheelEvent;
 class QKeyEvent;
+class ScatterPlotState;
+
+namespace CorePlotting {
+    class RenderableScene;
+    class SceneHitTester;
+}
+
+namespace CorePlotting::Interaction {
+class PolygonInteractionController;
+}
+
+namespace PlottingOpenGL {
+    class PreviewRenderer;
+    class SceneRenderer;
+}
 
 /**
  * @brief OpenGL widget for rendering scatter plots
@@ -111,19 +120,19 @@ private:
     static constexpr int DRAG_THRESHOLD = 4;
 
     // Scene rendering
-    PlottingOpenGL::SceneRenderer _scene_renderer;
-    CorePlotting::RenderableScene _scene;
+    std::unique_ptr<PlottingOpenGL::SceneRenderer> _scene_renderer;
+    std::unique_ptr<CorePlotting::RenderableScene> _scene;
     bool _scene_dirty{true};
     bool _opengl_initialized{false};
     ScatterPointData _scatter_data;
 
     // Hit testing (double-click-to-navigate)
-    CorePlotting::SceneHitTester _hit_tester;
+    std::unique_ptr<CorePlotting::SceneHitTester> _hit_tester;
     std::optional<std::size_t> _navigated_index;///< Index of last navigated-to point (for highlight)
 
     // Polygon interaction controller
-    CorePlotting::Interaction::PolygonInteractionController _polygon_controller;
-    PlottingOpenGL::PreviewRenderer _preview_renderer;
+    std::unique_ptr<CorePlotting::Interaction::PolygonInteractionController> _polygon_controller;
+    std::unique_ptr<PlottingOpenGL::PreviewRenderer> _preview_renderer;
     std::vector<glm::vec2> _polygon_vertices_world;///< World-space vertices for containment test
 
     // Group context menu support
