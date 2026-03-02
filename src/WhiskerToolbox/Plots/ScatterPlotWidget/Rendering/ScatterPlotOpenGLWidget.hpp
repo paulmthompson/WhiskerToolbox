@@ -67,7 +67,7 @@ public:
 
     void setState(std::shared_ptr<ScatterPlotState> state);
     void setDataManager(std::shared_ptr<DataManager> data_manager);
-    
+
     /**
      * @brief Set the GroupManager for group-related context menu actions
      * @param group_manager Pointer to the GroupManager (not owned)
@@ -105,6 +105,7 @@ private:
     glm::mat4 _view_matrix{1.0f};
 
     bool _is_panning{false};
+    bool _pan_eligible{false};///< True only when the press event intended a pan (no modifier selection)
     QPoint _click_start_pos;
     QPoint _last_mouse_pos;
     static constexpr int DRAG_THRESHOLD = 4;
@@ -118,43 +119,43 @@ private:
 
     // Hit testing (double-click-to-navigate)
     CorePlotting::SceneHitTester _hit_tester;
-    std::optional<std::size_t> _navigated_index;  ///< Index of last navigated-to point (for highlight)
-    
+    std::optional<std::size_t> _navigated_index;///< Index of last navigated-to point (for highlight)
+
     // Polygon interaction controller
     CorePlotting::Interaction::PolygonInteractionController _polygon_controller;
     PlottingOpenGL::PreviewRenderer _preview_renderer;
-    std::vector<glm::vec2> _polygon_vertices_world;  ///< World-space vertices for containment test
+    std::vector<glm::vec2> _polygon_vertices_world;///< World-space vertices for containment test
 
     // Group context menu support
     GroupManager * _group_manager{nullptr};
     std::unique_ptr<GroupContextMenuHandler> _group_menu_handler;
     QMenu * _context_menu{nullptr};
-    uint64_t _last_group_generation{0};  ///< Cached generation for change detection
+    uint64_t _last_group_generation{0};///< Cached generation for change detection
 
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
     void rebuildScene();
-    
+
     /**
      * @brief Create the context menu and group handler
      */
     void createContextMenu();
-    
+
     /**
      * @brief Hit test for a point at the given screen position
      * @param screen_pos The position in screen coordinates
      * @return Index into _scatter_data if a point was hit, nullopt otherwise
      */
     [[nodiscard]] std::optional<std::size_t> hitTestPointAt(QPoint const & screen_pos) const;
-    
+
     /**
      * @brief Get the currently selected entities for the group context menu
      * @return Set of EntityIds corresponding to selected scatter points
      */
     [[nodiscard]] std::unordered_set<EntityId> getSelectedEntities() const;
-    
+
     /**
      * @brief Get EntityId for a point at the given scatter data index
      * @param index Index into _scatter_data
@@ -174,11 +175,11 @@ private:
     // === Single-point selection ===
     void handleSinglePointCtrlClick(QPoint const & screen_pos);
     void handleSinglePointShiftClick(QPoint const & screen_pos);
-    
+
     // === Polygon selection ===
     void handlePolygonCtrlClick(QMouseEvent * event);
     void completePolygonSelection();
     void cancelPolygonSelection();
 };
 
-#endif  // SCATTER_PLOT_OPENGL_WIDGET_HPP
+#endif// SCATTER_PLOT_OPENGL_WIDGET_HPP
