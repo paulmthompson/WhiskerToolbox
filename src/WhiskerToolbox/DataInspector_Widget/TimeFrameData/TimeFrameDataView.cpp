@@ -3,7 +3,9 @@
 #include "TimeFrameTableModel.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "Entity/EntityRegistry.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <QHeaderView>
 #include <QLabel>
@@ -38,7 +40,7 @@ void TimeFrameDataView::removeCallbacks() {
 
 void TimeFrameDataView::updateView() {
     if (_active_key.empty() || !_table_model) {
-        _table_model->setTimeValues({});
+        _table_model->setTimeValues({}, {}, nullptr);
         _info_label->setText(QStringLiteral("No TimeFrame selected"));
         _info_label->setVisible(true);
         _table_view->setVisible(false);
@@ -47,7 +49,7 @@ void TimeFrameDataView::updateView() {
 
     auto timeframe = dataManager()->getTime(TimeKey(_active_key));
     if (!timeframe) {
-        _table_model->setTimeValues({});
+        _table_model->setTimeValues({}, {}, nullptr);
         _info_label->setText(
             QStringLiteral("TimeFrame not found: %1")
                 .arg(QString::fromStdString(_active_key)));
@@ -64,7 +66,7 @@ void TimeFrameDataView::updateView() {
         times.push_back(timeframe->getTimeAtIndex(TimeFrameIndex(i)));
     }
 
-    _table_model->setTimeValues(times);
+    _table_model->setTimeValues(times, _active_key, dataManager()->getEntityRegistry());
 
     _info_label->setText(
         QStringLiteral("TimeFrame: %1  |  %2 entries")
@@ -94,4 +96,43 @@ void TimeFrameDataView::_setupUi() {
     _table_view->setVisible(false);
 
     _layout->addWidget(_table_view);
+}
+
+void TimeFrameDataView::setGroupManager(GroupManager * group_manager) {
+    // Disconnect from old group manager
+    if (_group_manager) {
+        disconnect(_group_manager, nullptr, this, nullptr);
+    }
+
+    _group_manager = group_manager;
+    if (_table_model) {
+        _table_model->setGroupManager(group_manager);
+    }
+
+    // Connect to new group manager signals
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::groupCreated,
+                this, &TimeFrameDataView::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupRemoved,
+                this, &TimeFrameDataView::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupModified,
+                this, &TimeFrameDataView::_onGroupChanged);
+    }
+}
+
+void TimeFrameDataView::setGroupFilter(int group_id) {
+    if (_table_model) {
+        _table_model->setGroupFilter(group_id);
+    }
+}
+
+void TimeFrameDataView::clearGroupFilter() {
+    if (_table_model) {
+        _table_model->clearGroupFilter();
+    }
+}
+
+void TimeFrameDataView::_onGroupChanged() {
+    // Refresh the view to update group information and reapply filters
+    updateView();
 }

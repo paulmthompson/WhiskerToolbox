@@ -11,6 +11,8 @@
 #include "PointData/PointTableView.hpp"
 #include "TensorData/TensorInspector.hpp"
 #include "TensorData/TensorDesigner.hpp"
+#include "TimeFrameData/TimeFrameInspector.hpp"
+#include "TimeFrameData/TimeFrameDataView.hpp"
 #include "Inspectors/BaseInspector.hpp"
 #include "Inspectors/InspectorFactory.hpp"
 
@@ -373,5 +375,14 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
                          this, [this](QString const & key) {
                              inspectData(key);
                          });
+    }
+
+    // Check if this is a TimeFrameInspector and connect it to the view
+    auto * tf_inspector = dynamic_cast<TimeFrameInspector *>(_current_inspector.get());
+    if (tf_inspector) {
+        auto * tf_view = dynamic_cast<TimeFrameDataView *>(_view_widget->currentView());
+        if (tf_view) {
+            tf_inspector->setDataView(tf_view);
+        }
     }
 }

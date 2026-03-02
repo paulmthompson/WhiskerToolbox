@@ -15,6 +15,7 @@
 
 #include "DataInspector_Widget/Inspectors/BaseDataView.hpp"
 
+class GroupManager;
 class TimeFrameTableModel;
 
 class QLabel;
@@ -47,6 +48,13 @@ public:
 
     [[nodiscard]] QTableView * tableView() const { return _table_view; }
 
+    void setGroupManager(GroupManager * group_manager);
+    void setGroupFilter(int group_id);
+    void clearGroupFilter();
+
+private slots:
+    void _onGroupChanged();
+
 private:
     void _setupUi();
 
@@ -54,6 +62,7 @@ private:
     QTableView * _table_view{nullptr};
     TimeFrameTableModel * _table_model{nullptr};
     QLabel * _info_label{nullptr};
+    GroupManager * _group_manager{nullptr};
 };
 
 #endif // TIMEFRAME_DATA_VIEW_HPP

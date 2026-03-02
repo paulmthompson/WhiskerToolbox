@@ -1,8 +1,14 @@
 #include "TimeFrameInspector.hpp"
 
+#include "TimeFrameDataView.hpp"
+
+#include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
+
 #include "DataManager/DataManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
+#include <QComboBox>
 #include <QLabel>
 #include <QVBoxLayout>
 
@@ -12,6 +18,8 @@ TimeFrameInspector::TimeFrameInspector(
     QWidget * parent)
     : BaseInspector(std::move(data_manager), group_manager, parent) {
     _setupUi();
+    _connectSignals();
+    _populateGroupFilterCombo();
 }
 
 TimeFrameInspector::~TimeFrameInspector() {
@@ -30,7 +38,6 @@ void TimeFrameInspector::setActiveKey(std::string const & key) {
 
 void TimeFrameInspector::removeCallbacks() {
     // TimeFrame objects don't currently support per-object callbacks
-    // so nothing to clean up
 }
 
 void TimeFrameInspector::updateView() {
@@ -55,6 +62,13 @@ void TimeFrameInspector::updateView() {
     }
 }
 
+void TimeFrameInspector::setDataView(TimeFrameDataView * view) {
+    _data_view = view;
+    if (_data_view && groupManager()) {
+        _data_view->setGroupManager(groupManager());
+    }
+}
+
 void TimeFrameInspector::_setupUi() {
     auto * layout = new QVBoxLayout(this);
     layout->setContentsMargins(4, 4, 4, 4);
@@ -64,5 +78,48 @@ void TimeFrameInspector::_setupUi() {
     _info_label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     layout->addWidget(_info_label);
 
+    // Group filter section
+    auto * filter_label = new QLabel(QStringLiteral("Filter by Group:"), this);
+    layout->addWidget(filter_label);
+
+    _group_filter_combo = new QComboBox(this);
+    layout->addWidget(_group_filter_combo);
+
     layout->addStretch();
+}
+
+void TimeFrameInspector::_connectSignals() {
+    connect(_group_filter_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &TimeFrameInspector::_onGroupFilterChanged);
+
+    connectGroupManagerSignals(groupManager(), this, &TimeFrameInspector::_onGroupChanged);
+}
+
+void TimeFrameInspector::_onGroupFilterChanged(int index) {
+    if (!_data_view || !groupManager()) {
+        return;
+    }
+
+    if (index == 0) {
+        // "All Groups" selected
+        _data_view->clearGroupFilter();
+    } else {
+        int group_id = _group_filter_combo->itemData(index).toInt();
+        _data_view->setGroupFilter(group_id);
+    }
+}
+
+void TimeFrameInspector::_onGroupChanged() {
+    int current_index = _group_filter_combo->currentIndex();
+    QString current_text;
+    if (current_index >= 0 && current_index < _group_filter_combo->count()) {
+        current_text = _group_filter_combo->currentText();
+    }
+
+    _populateGroupFilterCombo();
+    restoreGroupFilterSelection(_group_filter_combo, current_index, current_text);
+}
+
+void TimeFrameInspector::_populateGroupFilterCombo() {
+    populateGroupFilterCombo(_group_filter_combo, groupManager());
 }

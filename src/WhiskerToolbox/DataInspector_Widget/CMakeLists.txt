@@ -94,6 +94,7 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
         TimeFrameData/TimeFrameInspector.hpp
         TimeFrameData/TimeFrameInspector.cpp
         TimeFrameData/TimeFrameTableModel.hpp
+        TimeFrameData/TimeFrameTableModel.cpp
         TimeFrameData/TimeFrameDataView.hpp
         TimeFrameData/TimeFrameDataView.cpp
         )
