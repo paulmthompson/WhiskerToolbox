@@ -167,10 +167,14 @@ When asked to implement a specific task, follow these standardized workflows to 
 ### Adding a New Feature
 When adding a new feature or creating new files, you must complete the following steps:
 
-1. **Doxygen Headers:** Every new C++ file (`.h`/`.cpp`) must have an `@file` Doxygen tag at the top with a brief description of the file's contents.
+1. **Doxygen Headers:** Every new C++ file (`.hpp`/`.cpp`) must have an `@file` Doxygen tag at the top with a brief description of the file's contents.
 2. **Auto-Formatting:** After modifying or adding files, ALWAYS run `clang-format -i` exclusively on the files you touched (do not format the entire repository).
-3. **Linting (clang-tidy):** Run `run-clang-tidy -fix` to automatically repair any linting errors in the files you touched. 
-   - *Note on Context Bloat:* If clang-tidy produces massive output, redirect it to a file (`> tidy_log.txt 2>&1`) and only grep for `error:` or `warning:` lines if the auto-fix fails.
+3. **Linting (clang-tidy):** **Do not skip this step.** Run clang-tidy on every C++ file (`.hpp`/`.cpp`) file you touched and apply auto-fixes. Use the exact command:
+   ```bash
+   run-clang-tidy -fix -p out/build/Clang/Release path/to/file1.cpp path/to/file2.cpp > tidy_log.txt 2>&1
+   grep -c "error:\|warning:" tidy_log.txt || echo "Clean"
+   ```
+   Report the warning/error count from the grep output. If auto-fixes were applied, re-run the build to confirm nothing broke. Redirect output to `tidy_log.txt` to avoid context bloat; use `grep -E "error:|warning:" tidy_log.txt` to inspect failures.
 4. **Developer Documentation:** Always create or modify the corresponding developer documentation entry.
    - For a source file `src/Path/To/File.cpp`, create/edit `docs/developer/Path/To/File.qmd`.
    - You MUST add any newly created `.qmd` files to the navigation structure in `docs/_quarto.yml`.
