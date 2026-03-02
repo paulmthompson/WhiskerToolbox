@@ -1,0 +1,7 @@
+---
+title: "TemporalProjectionViewWidget"
+---
+
+# TemporalProjectionViewWidget
+
+This section provides user guidance on the TemporalProjectionViewWidget.

@@ -1,0 +1,7 @@
+---
+title: "ScatterPlotWidget"
+---
+
+# ScatterPlotWidget
+
+This section provides user guidance on the ScatterPlotWidget.
