@@ -62,7 +62,7 @@ namespace WhiskerToolbox::Plots {
  * PSTHViewState, ScatterPlotViewState, ACFViewState,
  * TemporalProjectionViewViewState, etc.
  */
-template <typename T>
+template<typename T>
 concept ViewStateLike = requires(T const & vs) {
     { vs.x_zoom } -> std::convertible_to<double>;
     { vs.y_zoom } -> std::convertible_to<double>;
@@ -76,7 +76,7 @@ concept ViewStateLike = requires(T const & vs) {
  * Satisfied by EventPlotState, LinePlotState, HeatmapState, PSTHState,
  * ScatterPlotState, ACFState, TemporalProjectionViewState, etc.
  */
-template <typename T>
+template<typename T>
 concept ZoomPanSettable = requires(T & state, float f) {
     state.setPan(f, f);
     state.setXZoom(f);
@@ -91,7 +91,7 @@ concept ZoomPanSettable = requires(T & state, float f) {
  * TemporalProjectionViewViewState, OnionSkinViewViewState, etc.
  * Used by the one-arg computeOrthoProjection overload to derive ranges.
  */
-template <typename T>
+template<typename T>
 concept ViewStateWithBounds = ViewStateLike<T> && requires(T const & vs) {
     { vs.x_min } -> std::convertible_to<double>;
     { vs.x_max } -> std::convertible_to<double>;
@@ -116,10 +116,9 @@ concept ViewStateWithBounds = ViewStateLike<T> && requires(T const & vs) {
  * @return NDC (x, y) as glm::vec2.
  */
 [[nodiscard]] inline glm::vec2 screenToNDC(
-    QPoint const & screen_pos,
-    int widget_width,
-    int widget_height)
-{
+        QPoint const & screen_pos,
+        int widget_width,
+        int widget_height) {
     float const ndc_x = (2.0f * screen_pos.x() / widget_width) - 1.0f;
     float const ndc_y = 1.0f - (2.0f * screen_pos.y() / widget_height);
     return glm::vec2(ndc_x, ndc_y);
@@ -137,13 +136,12 @@ concept ViewStateWithBounds = ViewStateLike<T> && requires(T const & vs) {
  * @return World (x, y) as a QPointF.
  */
 [[nodiscard]] inline QPointF screenToWorld(
-    glm::mat4 const & projection_matrix,
-    int widget_width,
-    int widget_height,
-    QPoint const & screen_pos)
-{
+        glm::mat4 const & projection_matrix,
+        int widget_width,
+        int widget_height,
+        QPoint const & screen_pos) {
     float const ndc_x = (2.0f * screen_pos.x() / widget_width) - 1.0f;
-    float const ndc_y = 1.0f - (2.0f * screen_pos.y() / widget_height); // Flip Y
+    float const ndc_y = 1.0f - (2.0f * screen_pos.y() / widget_height);// Flip Y
 
     glm::mat4 const inv_proj = glm::inverse(projection_matrix);
     glm::vec4 const ndc(ndc_x, ndc_y, 0.0f, 1.0f);
@@ -163,12 +161,11 @@ concept ViewStateWithBounds = ViewStateLike<T> && requires(T const & vs) {
  * @return Screen (x, y) as a QPoint.
  */
 [[nodiscard]] inline QPoint worldToScreen(
-    glm::mat4 const & projection_matrix,
-    int widget_width,
-    int widget_height,
-    float world_x,
-    float world_y)
-{
+        glm::mat4 const & projection_matrix,
+        int widget_width,
+        int widget_height,
+        float world_x,
+        float world_y) {
     glm::vec4 const world(world_x, world_y, 0.0f, 1.0f);
     glm::vec4 const ndc = projection_matrix * world;
 
@@ -197,24 +194,40 @@ concept ViewStateWithBounds = ViewStateLike<T> && requires(T const & vs) {
  * @param y_center    Center of the data range on Y.
  * @return The orthographic projection matrix.
  */
-template <ViewStateLike ViewState>
+template<ViewStateLike ViewState>
 [[nodiscard]] glm::mat4 computeOrthoProjection(
-    ViewState const & view_state,
-    float x_range,
-    float x_center,
-    float y_range,
-    float y_center)
-{
-    float const zoomed_x_range = x_range / static_cast<float>(view_state.x_zoom);
-    float const zoomed_y_range = y_range / static_cast<float>(view_state.y_zoom);
+        ViewState const & view_state,
+        float x_range,
+        float x_center,
+        float y_range,
+        float y_center) {
+    // Guard against degenerate ranges that would produce NaN/inf in the
+    // projection matrix.  This can happen transiently when bounds are
+    // being initialised (e.g. y_min == y_max before unit count is known).
+    constexpr float MIN_RANGE = 1e-6f;
+    if (x_range < MIN_RANGE) {
+        x_range = MIN_RANGE;
+    }
+    if (y_range < MIN_RANGE) {
+        y_range = MIN_RANGE;
+    }
+
+    float const x_zoom = static_cast<float>(view_state.x_zoom);
+    float const y_zoom = static_cast<float>(view_state.y_zoom);
+
+    float const safe_x_zoom = (x_zoom > 0.0f) ? x_zoom : 1.0f;
+    float const safe_y_zoom = (y_zoom > 0.0f) ? y_zoom : 1.0f;
+
+    float const zoomed_x_range = x_range / safe_x_zoom;
+    float const zoomed_y_range = y_range / safe_y_zoom;
 
     float const pan_x = static_cast<float>(view_state.x_pan);
     float const pan_y = static_cast<float>(view_state.y_pan);
 
-    float const left   = x_center - zoomed_x_range / 2.0f + pan_x;
-    float const right  = x_center + zoomed_x_range / 2.0f + pan_x;
+    float const left = x_center - zoomed_x_range / 2.0f + pan_x;
+    float const right = x_center + zoomed_x_range / 2.0f + pan_x;
     float const bottom = y_center - zoomed_y_range / 2.0f + pan_y;
-    float const top    = y_center + zoomed_y_range / 2.0f + pan_y;
+    float const top = y_center + zoomed_y_range / 2.0f + pan_y;
 
     return glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
 }
@@ -230,19 +243,18 @@ template <ViewStateLike ViewState>
  * @param view_state  The cached view state (zoom, pan, and axis bounds).
  * @return The orthographic projection matrix.
  */
-template <ViewStateWithBounds ViewState>
-[[nodiscard]] glm::mat4 computeOrthoProjection(ViewState const & view_state)
-{
+template<ViewStateWithBounds ViewState>
+[[nodiscard]] glm::mat4 computeOrthoProjection(ViewState const & view_state) {
     float const x_range =
-        static_cast<float>(view_state.x_max - view_state.x_min);
+            static_cast<float>(view_state.x_max - view_state.x_min);
     float const x_center =
-        static_cast<float>(view_state.x_min + view_state.x_max) / 2.0f;
+            static_cast<float>(view_state.x_min + view_state.x_max) / 2.0f;
     float const y_range =
-        static_cast<float>(view_state.y_max - view_state.y_min);
+            static_cast<float>(view_state.y_max - view_state.y_min);
     float const y_center =
-        static_cast<float>(view_state.y_min + view_state.y_max) / 2.0f;
+            static_cast<float>(view_state.y_min + view_state.y_max) / 2.0f;
     return computeOrthoProjection(view_state, x_range, x_center, y_range,
-                                 y_center);
+                                  y_center);
 }
 
 // =============================================================================
@@ -266,21 +278,20 @@ template <ViewStateWithBounds ViewState>
  * @param widget_width  Widget width in pixels.
  * @param widget_height Widget height in pixels.
  */
-template <ZoomPanSettable State, ViewStateLike ViewState>
+template<ZoomPanSettable State, ViewStateLike ViewState>
 void handlePanning(
-    State & state,
-    ViewState const & view_state,
-    int delta_x,
-    int delta_y,
-    float x_range,
-    float y_range,
-    int widget_width,
-    int widget_height)
-{
+        State & state,
+        ViewState const & view_state,
+        int delta_x,
+        int delta_y,
+        float x_range,
+        float y_range,
+        int widget_width,
+        int widget_height) {
     float const world_per_pixel_x =
-        x_range / (widget_width * static_cast<float>(view_state.x_zoom));
+            x_range / (widget_width * static_cast<float>(view_state.x_zoom));
     float const world_per_pixel_y =
-        y_range / (widget_height * static_cast<float>(view_state.y_zoom));
+            y_range / (widget_height * static_cast<float>(view_state.y_zoom));
 
     float const new_pan_x = static_cast<float>(view_state.x_pan) - delta_x * world_per_pixel_x;
     float const new_pan_y = static_cast<float>(view_state.y_pan) + delta_y * world_per_pixel_y;
@@ -303,19 +314,18 @@ void handlePanning(
  * @param widget_width  Widget width in pixels.
  * @param widget_height Widget height in pixels.
  */
-template <ZoomPanSettable State, ViewStateWithBounds ViewState>
+template<ZoomPanSettable State, ViewStateWithBounds ViewState>
 void handlePanning(
-    State & state,
-    ViewState const & view_state,
-    int delta_x,
-    int delta_y,
-    int widget_width,
-    int widget_height)
-{
+        State & state,
+        ViewState const & view_state,
+        int delta_x,
+        int delta_y,
+        int widget_width,
+        int widget_height) {
     float const x_range =
-        static_cast<float>(view_state.x_max - view_state.x_min);
+            static_cast<float>(view_state.x_max - view_state.x_min);
     float const y_range =
-        static_cast<float>(view_state.y_max - view_state.y_min);
+            static_cast<float>(view_state.y_max - view_state.y_min);
     handlePanning(state, view_state, delta_x, delta_y, x_range, y_range,
                   widget_width, widget_height);
 }
@@ -340,14 +350,13 @@ void handlePanning(
  * @param y_only      If true, zoom only the Y axis.
  * @param both_axes   If true, zoom both axes simultaneously.
  */
-template <ZoomPanSettable State, ViewStateLike ViewState>
+template<ZoomPanSettable State, ViewStateLike ViewState>
 void handleZoom(
-    State & state,
-    ViewState const & view_state,
-    float delta,
-    bool y_only,
-    bool both_axes)
-{
+        State & state,
+        ViewState const & view_state,
+        float delta,
+        bool y_only,
+        bool both_axes) {
     float const factor = std::pow(1.1f, delta);
 
     if (y_only) {
@@ -360,6 +369,6 @@ void handleZoom(
     }
 }
 
-} // namespace WhiskerToolbox::Plots
+}// namespace WhiskerToolbox::Plots
 
-#endif // PLOT_INTERACTION_HELPERS_HPP
+#endif// PLOT_INTERACTION_HELPERS_HPP

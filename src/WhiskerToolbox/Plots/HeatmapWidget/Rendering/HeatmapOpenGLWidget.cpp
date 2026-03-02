@@ -14,10 +14,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 HeatmapOpenGLWidget::HeatmapOpenGLWidget(QWidget * parent)
-    : QOpenGLWidget(parent)
-{
+    : QOpenGLWidget(parent) {
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
@@ -29,20 +29,18 @@ HeatmapOpenGLWidget::HeatmapOpenGLWidget(QWidget * parent)
     setFormat(format);
 }
 
-HeatmapOpenGLWidget::~HeatmapOpenGLWidget()
-{
+HeatmapOpenGLWidget::~HeatmapOpenGLWidget() {
     makeCurrent();
     _scene_renderer.cleanup();
     doneCurrent();
 }
 
-void HeatmapOpenGLWidget::setState(std::shared_ptr<HeatmapState> state)
-{
+void HeatmapOpenGLWidget::setState(std::shared_ptr<HeatmapState> state) {
     if (_state) {
         _state->disconnect(this);
     }
 
-    _state = state;
+    _state = std::move(state);
 
     if (_state) {
         _cached_view_state = _state->viewState();
@@ -62,20 +60,17 @@ void HeatmapOpenGLWidget::setState(std::shared_ptr<HeatmapState> state)
     }
 }
 
-void HeatmapOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager)
-{
-    _data_manager = data_manager;
+void HeatmapOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    _data_manager = std::move(data_manager);
     _scene_dirty = true;
     update();
 }
 
-CorePlotting::ViewStateData const & HeatmapOpenGLWidget::viewState() const
-{
+CorePlotting::ViewStateData const & HeatmapOpenGLWidget::viewState() const {
     return _cached_view_state;
 }
 
-void HeatmapOpenGLWidget::resetView()
-{
+void HeatmapOpenGLWidget::resetView() {
     if (_state) {
         _state->setXZoom(1.0);
         _state->setYZoom(1.0);
@@ -87,8 +82,7 @@ void HeatmapOpenGLWidget::resetView()
 // OpenGL Lifecycle
 // =============================================================================
 
-void HeatmapOpenGLWidget::initializeGL()
-{
+void HeatmapOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
     updateBackgroundColor();
     glEnable(GL_DEPTH_TEST);
@@ -108,8 +102,7 @@ void HeatmapOpenGLWidget::initializeGL()
     updateMatrices();
 }
 
-void HeatmapOpenGLWidget::paintGL()
-{
+void HeatmapOpenGLWidget::paintGL() {
     updateBackgroundColor();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if (!_opengl_initialized) {
@@ -117,13 +110,16 @@ void HeatmapOpenGLWidget::paintGL()
     }
     if (_scene_dirty) {
         rebuildScene();
+        // Note: rebuildScene() may re-trigger _scene_dirty via unitCountChanged
+        // signal chain. Only clear the flag if no new state changes occurred.
+        // If _scene_dirty was re-set during rebuild, an update() is already
+        // scheduled and the next paintGL will handle it.
         _scene_dirty = false;
     }
     _scene_renderer.render(_view_matrix, _projection_matrix);
 }
 
-void HeatmapOpenGLWidget::resizeGL(int w, int h)
-{
+void HeatmapOpenGLWidget::resizeGL(int w, int h) {
     _widget_width = std::max(1, w);
     _widget_height = std::max(1, h);
     glViewport(0, 0, _widget_width, _widget_height);
@@ -134,8 +130,7 @@ void HeatmapOpenGLWidget::resizeGL(int w, int h)
 // Mouse Interaction
 // =============================================================================
 
-void HeatmapOpenGLWidget::mousePressEvent(QMouseEvent * event)
-{
+void HeatmapOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         _is_panning = false;
         _click_start_pos = event->pos();
@@ -144,8 +139,7 @@ void HeatmapOpenGLWidget::mousePressEvent(QMouseEvent * event)
     event->accept();
 }
 
-void HeatmapOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
-{
+void HeatmapOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (event->buttons() & Qt::LeftButton) {
         int const dx = event->pos().x() - _click_start_pos.x();
         int const dy = event->pos().y() - _click_start_pos.y();
@@ -166,8 +160,7 @@ void HeatmapOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
     event->accept();
 }
 
-void HeatmapOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
-{
+void HeatmapOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         if (_is_panning) {
             _is_panning = false;
@@ -177,17 +170,15 @@ void HeatmapOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
     event->accept();
 }
 
-void HeatmapOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
-{
+void HeatmapOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
-        QPointF world = screenToWorld(event->pos());
+        QPointF const world = screenToWorld(event->pos());
         emit plotDoubleClicked(static_cast<int64_t>(world.x()));
     }
     QOpenGLWidget::mouseDoubleClickEvent(event);
 }
 
-void HeatmapOpenGLWidget::wheelEvent(QWheelEvent * event)
-{
+void HeatmapOpenGLWidget::wheelEvent(QWheelEvent * event) {
     float const delta = event->angleDelta().y() / 120.0f;
     bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
@@ -199,14 +190,12 @@ void HeatmapOpenGLWidget::wheelEvent(QWheelEvent * event)
 // Slots
 // =============================================================================
 
-void HeatmapOpenGLWidget::onStateChanged()
-{
+void HeatmapOpenGLWidget::onStateChanged() {
     _scene_dirty = true;
     update();
 }
 
-void HeatmapOpenGLWidget::onViewStateChanged()
-{
+void HeatmapOpenGLWidget::onViewStateChanged() {
     if (_state) {
         _cached_view_state = _state->viewState();
     }
@@ -219,8 +208,7 @@ void HeatmapOpenGLWidget::onViewStateChanged()
 // Private Methods
 // =============================================================================
 
-void HeatmapOpenGLWidget::rebuildScene()
-{
+void HeatmapOpenGLWidget::rebuildScene() {
     if (!_state || !_data_manager) {
         _scene_renderer.clearScene();
         return;
@@ -247,7 +235,7 @@ void HeatmapOpenGLWidget::rebuildScene()
 
     // 1. Gather trial-aligned DigitalEventSeries data for all selected units
     auto contexts = WhiskerToolbox::Plots::createUnitGatherContexts(
-        _data_manager, unit_keys, alignment_state->data());
+            _data_manager, unit_keys, alignment_state->data());
 
     if (contexts.empty()) {
         _scene_renderer.clearScene();
@@ -257,7 +245,7 @@ void HeatmapOpenGLWidget::rebuildScene()
 
     // 2. Estimate firing rates for all units using configured estimation method
     auto rate_estimates = WhiskerToolbox::Plots::estimateRates(
-        contexts, window_size, _state->estimationParams());
+            contexts, window_size, _state->estimationParams());
 
     if (rate_estimates.empty()) {
         _scene_renderer.clearScene();
@@ -269,7 +257,7 @@ void HeatmapOpenGLWidget::rebuildScene()
     auto const scaling = _state->scaling();
     // TODO: make time_units_per_second configurable if data uses non-ms units
     constexpr double time_units_per_second = 1000.0;
-    for (auto & est : rate_estimates) {
+    for (auto & est: rate_estimates) {
         WhiskerToolbox::Plots::applyScaling(est, scaling, time_units_per_second);
     }
 
@@ -277,14 +265,15 @@ void HeatmapOpenGLWidget::rebuildScene()
     //    times[] are bin centers; reconstruct left edges from sample_spacing.
     std::vector<CorePlotting::HeatmapRowData> rows;
     rows.reserve(rate_estimates.size());
-    for (auto & est : rate_estimates) {
+    for (auto & est: rate_estimates) {
         double const spacing = est.metadata.sample_spacing;
         double const left_edge = est.times.empty()
-            ? 0.0 : est.times.front() - spacing / 2.0;
+                                         ? 0.0
+                                         : est.times.front() - spacing / 2.0;
         rows.push_back(CorePlotting::HeatmapRowData{
-            .values = std::move(est.values),
-            .bin_start = left_edge,
-            .bin_width = spacing,
+                .values = std::move(est.values),
+                .bin_start = left_edge,
+                .bin_width = spacing,
         });
     }
 
@@ -293,9 +282,9 @@ void HeatmapOpenGLWidget::rebuildScene()
 
     // Use Coolwarm for z-score, Inferno otherwise
     auto const colormap_preset =
-        (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore)
-            ? CorePlotting::Colormaps::ColormapPreset::Coolwarm
-            : CorePlotting::Colormaps::ColormapPreset::Inferno;
+            (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore)
+                    ? CorePlotting::Colormaps::ColormapPreset::Coolwarm
+                    : CorePlotting::Colormaps::ColormapPreset::Inferno;
     auto colormap = CorePlotting::Colormaps::getColormap(colormap_preset);
 
     // Map state color range config to CorePlotting::HeatmapColorRange
@@ -315,7 +304,7 @@ void HeatmapOpenGLWidget::rebuildScene()
     }
 
     auto scene = CorePlotting::HeatmapMapper::buildScene(
-        rows, colormap, mapper_range);
+            rows, colormap, mapper_range);
 
     _scene_renderer.uploadScene(scene);
 
@@ -327,54 +316,49 @@ void HeatmapOpenGLWidget::rebuildScene()
     }
 }
 
-void HeatmapOpenGLWidget::updateMatrices()
-{
+void HeatmapOpenGLWidget::updateMatrices() {
     _projection_matrix =
-        WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
-QPointF HeatmapOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
-{
+QPointF HeatmapOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
     return WhiskerToolbox::Plots::screenToWorld(
-        _projection_matrix, _widget_width, _widget_height, screen_pos);
+            _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
-void HeatmapOpenGLWidget::handlePanning(int delta_x, int delta_y)
-{
+void HeatmapOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
     WhiskerToolbox::Plots::handlePanning(
-        *_state, _cached_view_state, delta_x, delta_y, _widget_width,
-        _widget_height);
+            *_state, _cached_view_state, delta_x, delta_y, _widget_width,
+            _widget_height);
 }
 
-void HeatmapOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
-{
+void HeatmapOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes) {
     if (!_state) {
         return;
     }
 
     WhiskerToolbox::Plots::handleZoom(
-        *_state, _cached_view_state, delta, y_only, both_axes);
+            *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
-void HeatmapOpenGLWidget::updateBackgroundColor()
-{
+void HeatmapOpenGLWidget::updateBackgroundColor() {
     if (!_state) {
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         return;
     }
 
-    QString hex_color = _state->getBackgroundColor();
-    QColor color(hex_color);
+    QString const hex_color = _state->getBackgroundColor();
+    QColor const color(hex_color);
     if (color.isValid()) {
         glClearColor(
-            static_cast<float>(color.redF()),
-            static_cast<float>(color.greenF()),
-            static_cast<float>(color.blueF()),
-            1.0f);
+                static_cast<float>(color.redF()),
+                static_cast<float>(color.greenF()),
+                static_cast<float>(color.blueF()),
+                1.0f);
     } else {
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     }

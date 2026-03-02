@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 
 namespace CorePlotting {
 
@@ -11,18 +12,42 @@ namespace CorePlotting {
 // =============================================================================
 
 std::pair<float, float> HeatmapMapper::computeAutoRange(
-    std::vector<HeatmapRowData> const & rows)
-{
-    double max_val = 0.0;
-    for (auto const & row : rows) {
-        for (double const v : row.values) {
-            max_val = std::max(max_val, v);
-        }
-    }
-    if (max_val <= 0.0) {
+        std::vector<HeatmapRowData> const & rows) {
+    if (rows.empty()) {
         return {0.0f, 1.0f};
     }
-    return {0.0f, static_cast<float>(max_val)};
+
+    bool has_values = false;
+    double min_val = std::numeric_limits<double>::max();
+    double max_val = std::numeric_limits<double>::lowest();
+    for (auto const & row: rows) {
+        for (double const v: row.values) {
+            min_val = std::min(min_val, v);
+            max_val = std::max(max_val, v);
+            has_values = true;
+        }
+    }
+
+    if (!has_values) {
+        return {0.0f, 1.0f};
+    }
+
+    // All non-negative: use [0, max] (backward-compatible for counts)
+    if (min_val >= 0.0) {
+        if (max_val <= 0.0) {
+            return {0.0f, 1.0f};// all zeros
+        }
+        return {0.0f, static_cast<float>(max_val)};
+    }
+
+    // Data contains negative values (e.g. z-scores)
+    if (min_val == max_val) {
+        // All identical negative values — provide a safe range
+        return {static_cast<float>(min_val - 0.5),
+                static_cast<float>(max_val + 0.5)};
+    }
+
+    return {static_cast<float>(min_val), static_cast<float>(max_val)};
 }
 
 // =============================================================================
@@ -30,10 +55,9 @@ std::pair<float, float> HeatmapMapper::computeAutoRange(
 // =============================================================================
 
 RenderableRectangleBatch HeatmapMapper::toRectangleBatch(
-    std::vector<HeatmapRowData> const & rows,
-    Colormaps::ColormapFunction const & colormap,
-    HeatmapColorRange const & color_range)
-{
+        std::vector<HeatmapRowData> const & rows,
+        Colormaps::ColormapFunction const & colormap,
+        HeatmapColorRange const & color_range) {
     RenderableRectangleBatch batch;
 
     if (rows.empty()) {
@@ -57,8 +81,8 @@ RenderableRectangleBatch HeatmapMapper::toRectangleBatch(
             break;
         case HeatmapColorRange::Mode::Symmetric: {
             float abs_max = 0.0f;
-            for (auto const & row : rows) {
-                for (double const v : row.values) {
+            for (auto const & row: rows) {
+                for (double const v: row.values) {
                     abs_max = std::max(abs_max, static_cast<float>(std::abs(v)));
                 }
             }
@@ -71,7 +95,7 @@ RenderableRectangleBatch HeatmapMapper::toRectangleBatch(
 
     // Count total cells for reservation
     std::size_t total_cells = 0;
-    for (auto const & row : rows) {
+    for (auto const & row: rows) {
         total_cells += row.values.size();
     }
 
@@ -87,7 +111,7 @@ RenderableRectangleBatch HeatmapMapper::toRectangleBatch(
 
         for (std::size_t col = 0; col < row.values.size(); ++col) {
             auto const x = static_cast<float>(
-                row.bin_start + static_cast<double>(col) * row.bin_width);
+                    row.bin_start + static_cast<double>(col) * row.bin_width);
             auto const value = static_cast<float>(row.values[col]);
 
             // bounds = (x, y, width, height) where (x,y) is bottom-left
@@ -95,7 +119,7 @@ RenderableRectangleBatch HeatmapMapper::toRectangleBatch(
 
             // Map value through colormap
             batch.colors.push_back(
-                Colormaps::mapValue(colormap, value, vmin, vmax));
+                    Colormaps::mapValue(colormap, value, vmin, vmax));
         }
     }
 
@@ -107,14 +131,13 @@ RenderableRectangleBatch HeatmapMapper::toRectangleBatch(
 // =============================================================================
 
 RenderableScene HeatmapMapper::buildScene(
-    std::vector<HeatmapRowData> const & rows,
-    Colormaps::ColormapFunction const & colormap,
-    HeatmapColorRange const & color_range)
-{
+        std::vector<HeatmapRowData> const & rows,
+        Colormaps::ColormapFunction const & colormap,
+        HeatmapColorRange const & color_range) {
     RenderableScene scene;
 
     scene.rectangle_batches.push_back(
-        toRectangleBatch(rows, colormap, color_range));
+            toRectangleBatch(rows, colormap, color_range));
 
     // Identity matrices — the widget overrides with its own projection
     scene.view_matrix = glm::mat4{1.0f};
@@ -123,4 +146,4 @@ RenderableScene HeatmapMapper::buildScene(
     return scene;
 }
 
-} // namespace CorePlotting
+}// namespace CorePlotting
