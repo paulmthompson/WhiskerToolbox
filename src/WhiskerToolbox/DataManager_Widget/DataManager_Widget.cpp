@@ -22,6 +22,7 @@
 
 #include "NewDataWidget/NewDataWidget.hpp"
 #include "OutputDirectoryWidget/OutputDirectoryWidget.hpp"
+#include "TimeFrame_Table_Widget/TimeFrame_Table_Widget.hpp"
 
 #include <QFileDialog>
 #include <QMenu>
@@ -54,6 +55,9 @@ DataManager_Widget::DataManager_Widget(
 
     ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
     ui->feature_table_widget->setDataManager(_data_manager);
+
+    // Setup TimeFrame table
+    ui->timeframe_table_widget->setDataManager(_data_manager);
 
     // Ensure the feature table doesn't expand beyond available width
     ui->feature_table_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -118,6 +122,7 @@ DataManager_Widget::~DataManager_Widget() {
 
 void DataManager_Widget::openWidget() {
     ui->feature_table_widget->populateTable();
+    ui->timeframe_table_widget->populateTable();
     // Refresh timeframes when opening the widget
     if (ui->new_data_widget) {
         ui->new_data_widget->populateTimeframes();

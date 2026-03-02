@@ -91,6 +91,22 @@
      </widget>
     </item>
     <item>
+     <widget class="TimeFrame_Table_Widget" name="timeframe_table_widget" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>80</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="Section" name="output_dir_section" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -223,6 +239,12 @@
    <class>NewDataWidget</class>
    <extends>QWidget</extends>
    <header>DataManager_Widget/NewDataWidget/NewDataWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>TimeFrame_Table_Widget</class>
+   <extends>QWidget</extends>
+   <header>TimeFrame_Table_Widget/TimeFrame_Table_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
