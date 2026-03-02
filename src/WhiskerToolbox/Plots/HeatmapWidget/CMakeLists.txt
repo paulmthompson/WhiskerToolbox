@@ -2,6 +2,8 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGL OpenGLWidgets)
 
 set(HEATMAP_WIDGET_SOURCES
 
+        Core/HeatmapDataPipeline.cpp
+        Core/HeatmapDataPipeline.hpp
         Core/HeatmapState.cpp
         Core/HeatmapState.hpp
 

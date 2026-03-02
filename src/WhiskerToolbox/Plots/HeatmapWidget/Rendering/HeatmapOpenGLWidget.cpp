@@ -3,10 +3,8 @@
 #include "CorePlotting/Colormaps/Colormap.hpp"
 #include "CorePlotting/Mappers/HeatmapMapper.hpp"
 #include "DataManager/DataManager.hpp"
-#include "GatherResult/GatherResult.hpp"
-#include "Plots/Common/EventRateEstimation/EventRateEstimation.hpp"
-#include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "Plots/HeatmapWidget/Core/HeatmapDataPipeline.hpp"
 
 #include <QDebug>
 #include <QMouseEvent>
@@ -233,56 +231,29 @@ void HeatmapOpenGLWidget::rebuildScene() {
         return;
     }
 
-    // 1. Gather trial-aligned DigitalEventSeries data for all selected units
-    auto contexts = WhiskerToolbox::Plots::createUnitGatherContexts(
-            _data_manager, unit_keys, alignment_state->data());
-
-    if (contexts.empty()) {
-        _scene_renderer.clearScene();
-        emit unitCountChanged(0);
-        return;
-    }
-
-    // 2. Estimate firing rates for all units using configured estimation method
-    auto rate_estimates = WhiskerToolbox::Plots::estimateRates(
-            contexts, window_size, _state->estimationParams());
-
-    if (rate_estimates.empty()) {
-        _scene_renderer.clearScene();
-        emit unitCountChanged(0);
-        return;
-    }
-
-    // 3. Apply scaling in-place using the selected scaling mode
-    auto const scaling = _state->scaling();
+    // Run the pure-data pipeline (gather → estimate → scale → convert)
+    WhiskerToolbox::Plots::HeatmapPipelineConfig config;
+    config.window_size = window_size;
+    config.scaling = _state->scaling();
+    config.estimation_params = _state->estimationParams();
     // TODO: make time_units_per_second configurable if data uses non-ms units
-    constexpr double time_units_per_second = 1000.0;
-    for (auto & est: rate_estimates) {
-        WhiskerToolbox::Plots::applyScaling(est, scaling, time_units_per_second);
+    config.time_units_per_second = 1000.0;
+
+    auto pipeline_result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            _data_manager, unit_keys, alignment_state->data(), config);
+
+    if (!pipeline_result.success || pipeline_result.rows.empty()) {
+        _scene_renderer.clearScene();
+        emit unitCountChanged(0);
+        return;
     }
 
-    // 4. Convert RateEstimate to CorePlotting::HeatmapRowData for the mapper
-    //    times[] are bin centers; reconstruct left edges from sample_spacing.
-    std::vector<CorePlotting::HeatmapRowData> rows;
-    rows.reserve(rate_estimates.size());
-    for (auto & est: rate_estimates) {
-        double const spacing = est.metadata.sample_spacing;
-        double const left_edge = est.times.empty()
-                                         ? 0.0
-                                         : est.times.front() - spacing / 2.0;
-        rows.push_back(CorePlotting::HeatmapRowData{
-                .values = std::move(est.values),
-                .bin_start = left_edge,
-                .bin_width = spacing,
-        });
-    }
-
-    // 5. Build the colored rectangle scene with appropriate colormap and range
+    // Build the colored rectangle scene with appropriate colormap and range
     auto const & color_range_config = _state->colorRange();
 
     // Use Coolwarm for z-score, Inferno otherwise
     auto const colormap_preset =
-            (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore)
+            (config.scaling == WhiskerToolbox::Plots::ScalingMode::ZScore)
                     ? CorePlotting::Colormaps::ColormapPreset::Coolwarm
                     : CorePlotting::Colormaps::ColormapPreset::Inferno;
     auto colormap = CorePlotting::Colormaps::getColormap(colormap_preset);
@@ -304,12 +275,12 @@ void HeatmapOpenGLWidget::rebuildScene() {
     }
 
     auto scene = CorePlotting::HeatmapMapper::buildScene(
-            rows, colormap, mapper_range);
+            pipeline_result.rows, colormap, mapper_range);
 
     _scene_renderer.uploadScene(scene);
 
-    // 6. Update Y-axis to reflect unit count
-    auto const num_units = rows.size();
+    // Update Y-axis to reflect unit count
+    auto const num_units = pipeline_result.rows.size();
     if (num_units != _unit_count) {
         _unit_count = num_units;
         emit unitCountChanged(_unit_count);

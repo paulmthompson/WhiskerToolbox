@@ -14,20 +14,20 @@
 #include <QHBoxLayout>
 #include <QResizeEvent>
 #include <QVBoxLayout>
+#include <utility>
 
 #include "ui_HeatmapWidget.h"
 
 HeatmapWidget::HeatmapWidget(std::shared_ptr<DataManager> data_manager,
                              QWidget * parent)
     : QWidget(parent),
-      _data_manager(data_manager),
+      _data_manager(std::move(std::move(data_manager))),
       ui(new Ui::HeatmapWidget),
       _opengl_widget(nullptr),
       _axis_widget(nullptr),
       _range_controls(nullptr),
       _vertical_axis_widget(nullptr),
-      _vertical_range_controls(nullptr)
-{
+      _vertical_range_controls(nullptr) {
     ui->setupUi(this);
 
     auto * horizontal_layout = new QHBoxLayout();
@@ -50,9 +50,9 @@ HeatmapWidget::HeatmapWidget(std::shared_ptr<DataManager> data_manager,
 
     // Replace the main layout
     QLayout * old_layout = layout();
-    if (old_layout) {
+    
         delete old_layout;
-    }
+    
     setLayout(vertical_layout);
 
     // Forward signals from OpenGL widget
@@ -82,7 +82,7 @@ HeatmapWidget::~HeatmapWidget() {
 }
 
 void HeatmapWidget::setState(std::shared_ptr<HeatmapState> state) {
-    _state = state;
+    _state = std::move(state);
 
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
@@ -143,8 +143,7 @@ void HeatmapWidget::wireTimeAxis() {
     });
 }
 
-void HeatmapWidget::wireVerticalAxis()
-{
+void HeatmapWidget::wireVerticalAxis() {
     if (!_vertical_axis_widget && _state) {
         auto * vertical_axis_state = _state->verticalAxisState();
         if (vertical_axis_state) {
@@ -159,7 +158,7 @@ void HeatmapWidget::wireVerticalAxis()
                         auto * item = vbox->itemAt(0);
                         if (item && item->layout()) {
                             if (auto * hbox =
-                                    qobject_cast<QHBoxLayout *>(item->layout())) {
+                                        qobject_cast<QHBoxLayout *>(item->layout())) {
                                 hbox->insertWidget(0, _vertical_axis_widget);
                             }
                         }
@@ -229,8 +228,7 @@ void HeatmapWidget::syncTimeAxisRange() {
     time_axis_state->setRangeSilent(min, max);
 }
 
-void HeatmapWidget::syncVerticalAxisRange()
-{
+void HeatmapWidget::syncVerticalAxisRange() {
     if (!_state) {
         return;
     }
@@ -242,8 +240,7 @@ void HeatmapWidget::syncVerticalAxisRange()
     vas->setRangeSilent(min, max);
 }
 
-std::pair<double, double> HeatmapWidget::computeVisibleUnitRange() const
-{
+std::pair<double, double> HeatmapWidget::computeVisibleUnitRange() const {
     if (!_state) {
         return {0.0, 0.0};
     }
@@ -265,8 +262,7 @@ std::pair<double, double> HeatmapWidget::computeVisibleTimeRange() const {
     return {center - half + vs.x_pan, center + half + vs.x_pan};
 }
 
-void HeatmapWidget::resizeEvent(QResizeEvent * event)
-{
+void HeatmapWidget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
     if (_axis_widget) {
         _axis_widget->update();
@@ -288,7 +284,6 @@ VerticalAxisRangeControls * HeatmapWidget::getVerticalRangeControls() const {
     return _vertical_range_controls;
 }
 
-VerticalAxisState * HeatmapWidget::getVerticalAxisState() const
-{
+VerticalAxisState * HeatmapWidget::getVerticalAxisState() const {
     return _state ? _state->verticalAxisState() : nullptr;
 }

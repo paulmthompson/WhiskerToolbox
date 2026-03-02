@@ -76,8 +76,8 @@ private:
         std::string key;
         std::string type;
         std::string timeFrame;
-        bool isGroup;
-        bool isDataTypeGroup;
+        bool isGroup = false;
+        bool isDataTypeGroup = false;
         std::string color;
         bool enabled = false;
         std::vector<std::string> children;
@@ -86,7 +86,7 @@ private:
 
     Ui::Feature_Tree_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
-    int _observer_id = -1;  ///< DataManager observer callback ID for cleanup
+    int _observer_id = -1;                       ///< DataManager observer callback ID for cleanup
     std::string _grouping_pattern = "(.+)_\\d+$";// Default pattern: name_number
     std::vector<DM_DataType> _type_filters;
     bool _organize_by_datatype = true;
@@ -116,16 +116,16 @@ private:
     void _populateTreeFlat(std::vector<std::string> const & allKeys);
     std::string _extractGroupName(std::string const & key);
     void _addFeatureToTree(std::string const & key, bool isGroup = false, bool isDataTypeGroup = false);
-    void _setupTreeItem(QTreeWidgetItem * item, TreeFeature const & feature);
+    static void _setupTreeItem(QTreeWidgetItem * item, TreeFeature const & feature);
     bool _hasTypeFilter(DM_DataType const & type);
     void _updateChildrenState(QTreeWidgetItem * parent, int column);
     void _updateParentState(QTreeWidgetItem * child, int column);
     QTreeWidgetItem * _getOrCreateDataTypeItem(DM_DataType dataType);
-    std::string _getDataTypeGroupName(DM_DataType dataType);
-    
+    static std::string _getDataTypeGroupName(DM_DataType dataType);
+
     // Column width management
     void _setAdaptiveColumnWidths();
-    
+
     // Row appearance management
     void _updateItemAppearance(QTreeWidgetItem * item, bool enabled);
     void _updateAllItemAppearances();

@@ -19,8 +19,10 @@ Plots/HeatmapWidget/
 ├── HeatmapWidgetRegistration.hpp    # EditorRegistry registration module
 ├── HeatmapWidgetRegistration.cpp
 ├── Core/
-│   └── HeatmapState.hpp             # QObject state class + serializable struct
-│       HeatmapState.cpp
+│   ├── HeatmapState.hpp             # QObject state class + serializable struct
+│   ├── HeatmapState.cpp
+│   ├── HeatmapDataPipeline.hpp      # Pure-data pipeline (testable without OpenGL)
+│   └── HeatmapDataPipeline.cpp
 ├── Rendering/
 │   ├── HeatmapOpenGLWidget.hpp      # OpenGL rendering + mouse interaction
 │   └── HeatmapOpenGLWidget.cpp
@@ -41,6 +43,7 @@ Plots/HeatmapWidget/
 | `HeatmapPropertiesWidget` (UI) | Properties panel — alignment settings, axis range controls (via collapsible sections) |
 | `HeatmapOpenGLWidget` (Rendering) | OpenGL canvas — heatmap scene building, rendering, mouse interaction |
 | `HeatmapState` (Core) | Serializable state — alignment, view state, background color |
+| `HeatmapDataPipeline` (Core) | Pure-data pipeline — gather, estimate, scale, convert (testable without OpenGL) |
 | `HeatmapWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
 
 ## EditorState Pattern
@@ -113,16 +116,16 @@ The window size change handler resets the X view state bounds (`x_min`, `x_max`)
 
 ## Data Flow
 
+The data pipeline has been extracted into a pure free function `runHeatmapPipeline()` in `HeatmapDataPipeline.hpp/cpp`. This enables comprehensive testing of the gather → estimate → scale → convert pipeline without any OpenGL context. `HeatmapOpenGLWidget::rebuildScene()` delegates to this function for data processing, then handles colormap selection and OpenGL scene upload.
+
 ```
 HeatmapState (alignment + estimation_params + scaling)
         ↓
-createUnitGatherContexts() — one UnitGatherContext per selected unit
-        ↓
-estimateRates(contexts, window_size, estimationParams())
-        ↓
-applyScaling(rate_estimate, scaling()) per unit
-        ↓
-HeatmapRowData (times[], values[], metadata.sample_spacing)
+runHeatmapPipeline()  [HeatmapDataPipeline.cpp — testable free function]
+  ├─ createUnitGatherContexts() — one UnitGatherContext per selected unit
+  ├─ estimateRates(contexts, window_size, estimationParams())
+  ├─ applyScaling(rate_estimate, scaling()) per unit
+  └─ → HeatmapPipelineResult { rows, rate_estimates, success }
         ↓
 HeatmapMapper::buildScene() — colormap + color range → RenderableRectangleBatch
         ↓

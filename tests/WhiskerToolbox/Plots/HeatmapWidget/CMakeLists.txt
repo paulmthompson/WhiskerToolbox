@@ -16,6 +16,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_heatmap_widget
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Plots/HeatmapWidget/HeatmapPropertiesWidget.test.cpp
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Plots/HeatmapWidget/HeatmapDataPipeline.test.cpp
 )
 
 target_link_libraries(test_heatmap_widget PRIVATE 
@@ -24,6 +25,9 @@ target_link_libraries(test_heatmap_widget PRIVATE
     DataManager 
     EditorState
     PlotAlignmentWidget
+    EventRateEstimation
+    CorePlotting
+    GatherResult
     Qt6::Widgets
     Qt6::Core
     Qt6::Gui

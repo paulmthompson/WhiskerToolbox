@@ -12,8 +12,7 @@ HeatmapState::HeatmapState(QObject * parent)
     : EditorState(parent),
       _alignment_state(std::make_unique<PlotAlignmentState>(this)),
       _relative_time_axis_state(std::make_unique<RelativeTimeAxisState>(this)),
-      _vertical_axis_state(std::make_unique<VerticalAxisState>(this))
-{
+      _vertical_axis_state(std::make_unique<VerticalAxisState>(this)) {
     _data.instance_id = getInstanceId().toStdString();
     _data.alignment = _alignment_state->data();
 
@@ -82,8 +81,7 @@ HeatmapState::HeatmapState(QObject * parent)
 
 QString HeatmapState::getDisplayName() const { return QString::fromStdString(_data.display_name); }
 
-void HeatmapState::setDisplayName(QString const & name)
-{
+void HeatmapState::setDisplayName(QString const & name) {
     if (_data.display_name != name.toStdString()) {
         _data.display_name = name.toStdString();
         markDirty();
@@ -91,24 +89,20 @@ void HeatmapState::setDisplayName(QString const & name)
     }
 }
 
-QString HeatmapState::getAlignmentEventKey() const
-{
+QString HeatmapState::getAlignmentEventKey() const {
     return _alignment_state->getAlignmentEventKey();
 }
-void HeatmapState::setAlignmentEventKey(QString const & key)
-{
+void HeatmapState::setAlignmentEventKey(QString const & key) {
     _alignment_state->setAlignmentEventKey(key);
     _data.alignment = _alignment_state->data();
     markDirty();
     emit stateChanged();
 }
 
-IntervalAlignmentType HeatmapState::getIntervalAlignmentType() const
-{
+IntervalAlignmentType HeatmapState::getIntervalAlignmentType() const {
     return _alignment_state->getIntervalAlignmentType();
 }
-void HeatmapState::setIntervalAlignmentType(IntervalAlignmentType type)
-{
+void HeatmapState::setIntervalAlignmentType(IntervalAlignmentType type) {
     _alignment_state->setIntervalAlignmentType(type);
     _data.alignment = _alignment_state->data();
     markDirty();
@@ -116,8 +110,7 @@ void HeatmapState::setIntervalAlignmentType(IntervalAlignmentType type)
 }
 
 double HeatmapState::getOffset() const { return _alignment_state->getOffset(); }
-void HeatmapState::setOffset(double offset)
-{
+void HeatmapState::setOffset(double offset) {
     _alignment_state->setOffset(offset);
     _data.alignment = _alignment_state->data();
     markDirty();
@@ -125,15 +118,13 @@ void HeatmapState::setOffset(double offset)
 }
 
 double HeatmapState::getWindowSize() const { return _alignment_state->getWindowSize(); }
-void HeatmapState::setWindowSize(double window_size)
-{
+void HeatmapState::setWindowSize(double window_size) {
     _alignment_state->setWindowSize(window_size);
 }
 
 // === View State ===
 
-void HeatmapState::setXZoom(double zoom)
-{
+void HeatmapState::setXZoom(double zoom) {
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;
         markDirty();
@@ -141,8 +132,7 @@ void HeatmapState::setXZoom(double zoom)
     }
 }
 
-void HeatmapState::setYZoom(double zoom)
-{
+void HeatmapState::setYZoom(double zoom) {
     if (_data.view_state.y_zoom != zoom) {
         _data.view_state.y_zoom = zoom;
         markDirty();
@@ -150,8 +140,7 @@ void HeatmapState::setYZoom(double zoom)
     }
 }
 
-void HeatmapState::setPan(double x_pan, double y_pan)
-{
+void HeatmapState::setPan(double x_pan, double y_pan) {
     if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
         _data.view_state.x_pan = x_pan;
         _data.view_state.y_pan = y_pan;
@@ -160,8 +149,7 @@ void HeatmapState::setPan(double x_pan, double y_pan)
     }
 }
 
-void HeatmapState::setXBounds(double x_min, double x_max)
-{
+void HeatmapState::setXBounds(double x_min, double x_max) {
     if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
         _data.view_state.x_min = x_min;
         _data.view_state.x_max = x_max;
@@ -173,8 +161,7 @@ void HeatmapState::setXBounds(double x_min, double x_max)
     }
 }
 
-void HeatmapState::setYBounds(double y_min, double y_max)
-{
+void HeatmapState::setYBounds(double y_min, double y_max) {
     if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
         _data.view_state.y_min = y_min;
         _data.view_state.y_max = y_max;
@@ -189,8 +176,7 @@ void HeatmapState::setYBounds(double y_min, double y_max)
 
 // === Unit Management ===
 
-void HeatmapState::addUnit(std::string const & key)
-{
+void HeatmapState::addUnit(std::string const & key) {
     if (hasUnit(key)) {
         return;
     }
@@ -200,8 +186,7 @@ void HeatmapState::addUnit(std::string const & key)
     emit stateChanged();
 }
 
-void HeatmapState::removeUnit(std::string const & key)
-{
+void HeatmapState::removeUnit(std::string const & key) {
     auto it = std::find(_data.unit_keys.begin(), _data.unit_keys.end(), key);
     if (it == _data.unit_keys.end()) {
         return;
@@ -212,10 +197,9 @@ void HeatmapState::removeUnit(std::string const & key)
     emit stateChanged();
 }
 
-void HeatmapState::addUnits(std::vector<std::string> const & keys)
-{
+void HeatmapState::addUnits(std::vector<std::string> const & keys) {
     bool changed = false;
-    for (auto const & key : keys) {
+    for (auto const & key: keys) {
         if (!hasUnit(key)) {
             _data.unit_keys.push_back(key);
             changed = true;
@@ -228,10 +212,9 @@ void HeatmapState::addUnits(std::vector<std::string> const & keys)
     }
 }
 
-void HeatmapState::removeUnits(std::vector<std::string> const & keys)
-{
+void HeatmapState::removeUnits(std::vector<std::string> const & keys) {
     bool changed = false;
-    for (auto const & key : keys) {
+    for (auto const & key: keys) {
         auto it = std::find(_data.unit_keys.begin(), _data.unit_keys.end(), key);
         if (it != _data.unit_keys.end()) {
             _data.unit_keys.erase(it);
@@ -245,20 +228,17 @@ void HeatmapState::removeUnits(std::vector<std::string> const & keys)
     }
 }
 
-bool HeatmapState::hasUnit(std::string const & key) const
-{
+bool HeatmapState::hasUnit(std::string const & key) const {
     return std::find(_data.unit_keys.begin(), _data.unit_keys.end(), key) != _data.unit_keys.end();
 }
 
 // === Background Color ===
 
-QString HeatmapState::getBackgroundColor() const
-{
+QString HeatmapState::getBackgroundColor() const {
     return QString::fromStdString(_data.background_color);
 }
-void HeatmapState::setBackgroundColor(QString const & hex_color)
-{
-    std::string hex_str = hex_color.toStdString();
+void HeatmapState::setBackgroundColor(QString const & hex_color) {
+    std::string const hex_str = hex_color.toStdString();
     if (_data.background_color != hex_str) {
         _data.background_color = hex_str;
         markDirty();
@@ -269,20 +249,17 @@ void HeatmapState::setBackgroundColor(QString const & hex_color)
 
 // === Scaling ===
 
-void HeatmapState::setScaling(WhiskerToolbox::Plots::ScalingMode scaling)
-{
+void HeatmapState::setScaling(WhiskerToolbox::Plots::ScalingMode scaling) {
     if (_data.scaling != scaling) {
         _data.scaling = scaling;
 
         // When switching to ZScore, auto-suggest Symmetric color range
-        if (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore
-            && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Auto) {
+        if (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Auto) {
             _data.color_range.mode = HeatmapColorRangeConfig::Mode::Symmetric;
             emit colorRangeChanged();
         }
         // When switching away from ZScore with Symmetric, revert to Auto
-        if (scaling != WhiskerToolbox::Plots::ScalingMode::ZScore
-            && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Symmetric) {
+        if (scaling != WhiskerToolbox::Plots::ScalingMode::ZScore && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Symmetric) {
             _data.color_range.mode = HeatmapColorRangeConfig::Mode::Auto;
             emit colorRangeChanged();
         }
@@ -293,8 +270,7 @@ void HeatmapState::setScaling(WhiskerToolbox::Plots::ScalingMode scaling)
     }
 }
 
-void HeatmapState::setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params)
-{
+void HeatmapState::setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params) {
     if (_data.estimation_params != params) {
         _data.estimation_params = params;
         markDirty();
@@ -305,8 +281,7 @@ void HeatmapState::setEstimationParams(WhiskerToolbox::Plots::EstimationParams c
 
 // === Color Range ===
 
-void HeatmapState::setColorRangeMode(HeatmapColorRangeConfig::Mode mode)
-{
+void HeatmapState::setColorRangeMode(HeatmapColorRangeConfig::Mode mode) {
     if (_data.color_range.mode != mode) {
         _data.color_range.mode = mode;
         markDirty();
@@ -315,8 +290,7 @@ void HeatmapState::setColorRangeMode(HeatmapColorRangeConfig::Mode mode)
     }
 }
 
-void HeatmapState::setColorRangeBounds(double vmin, double vmax)
-{
+void HeatmapState::setColorRangeBounds(double vmin, double vmax) {
     if (_data.color_range.vmin != vmin || _data.color_range.vmax != vmax) {
         _data.color_range.vmin = vmin;
         _data.color_range.vmax = vmax;
@@ -326,8 +300,7 @@ void HeatmapState::setColorRangeBounds(double vmin, double vmax)
     }
 }
 
-void HeatmapState::setColorRange(HeatmapColorRangeConfig const & config)
-{
+void HeatmapState::setColorRange(HeatmapColorRangeConfig const & config) {
     _data.color_range = config;
     markDirty();
     emit colorRangeChanged();
@@ -336,15 +309,13 @@ void HeatmapState::setColorRange(HeatmapColorRangeConfig const & config)
 
 // === Serialization ===
 
-std::string HeatmapState::toJson() const
-{
+std::string HeatmapState::toJson() const {
     HeatmapStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();
     return rfl::json::write(data_to_serialize);
 }
 
-bool HeatmapState::fromJson(std::string const & json)
-{
+bool HeatmapState::fromJson(std::string const & json) {
     auto result = rfl::json::read<HeatmapStateData>(json);
     if (result) {
         _data = *result;

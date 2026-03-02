@@ -21,27 +21,27 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
+#include <utility>
 
 HeatmapPropertiesWidget::HeatmapPropertiesWidget(std::shared_ptr<HeatmapState> state,
                                                  std::shared_ptr<DataManager> data_manager,
                                                  QWidget * parent)
     : QWidget(parent),
       ui(new Ui::HeatmapPropertiesWidget),
-      _state(state),
-      _data_manager(data_manager),
+      _state(std::move(std::move(state))),
+      _data_manager(std::move(std::move(data_manager))),
       _alignment_widget(nullptr),
       _unit_tree_widget(nullptr),
       _plot_widget(nullptr),
       _range_controls(nullptr),
       _range_controls_section(nullptr),
       _vertical_range_controls(nullptr),
-      _vertical_range_controls_section(nullptr)
-{
+      _vertical_range_controls_section(nullptr) {
     ui->setupUi(this);
 
     // Create and add PlotAlignmentWidget
     _alignment_widget = new PlotAlignmentWidget(_state->alignmentState(), _data_manager, this);
-    int alignment_index = ui->main_layout->indexOf(ui->alignment_widget_placeholder);
+    int const alignment_index = ui->main_layout->indexOf(ui->alignment_widget_placeholder);
     ui->main_layout->removeWidget(ui->alignment_widget_placeholder);
     ui->alignment_widget_placeholder->deleteLater();
     ui->main_layout->insertWidget(alignment_index, _alignment_widget);
@@ -53,13 +53,11 @@ HeatmapPropertiesWidget::HeatmapPropertiesWidget(std::shared_ptr<HeatmapState> s
     _setupScalingSection();
 }
 
-HeatmapPropertiesWidget::~HeatmapPropertiesWidget()
-{
+HeatmapPropertiesWidget::~HeatmapPropertiesWidget() {
     delete ui;
 }
 
-void HeatmapPropertiesWidget::setPlotWidget(HeatmapWidget * plot_widget)
-{
+void HeatmapPropertiesWidget::setPlotWidget(HeatmapWidget * plot_widget) {
     _plot_widget = plot_widget;
     if (!_plot_widget || !_state) {
         return;
@@ -69,9 +67,9 @@ void HeatmapPropertiesWidget::setPlotWidget(HeatmapWidget * plot_widget)
     if (time_axis_state) {
         _range_controls_section = new Section(this, "Time Axis Range Controls");
         _range_controls =
-            new RelativeTimeAxisRangeControls(time_axis_state, _range_controls_section);
+                new RelativeTimeAxisRangeControls(time_axis_state, _range_controls_section);
         _range_controls_section->autoSetContentLayout();
-        int insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
+        int const insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
         ui->main_layout->insertWidget(insert_index, _range_controls_section);
     }
 
@@ -79,17 +77,16 @@ void HeatmapPropertiesWidget::setPlotWidget(HeatmapWidget * plot_widget)
     if (vertical_axis_state) {
         _vertical_range_controls_section = new Section(this, "Y-Axis Range Controls");
         _vertical_range_controls =
-            new VerticalAxisRangeControls(vertical_axis_state, _vertical_range_controls_section);
+                new VerticalAxisRangeControls(vertical_axis_state, _vertical_range_controls_section);
         _vertical_range_controls_section->autoSetContentLayout();
-        int insert_index = _range_controls_section
-                               ? ui->main_layout->indexOf(_range_controls_section) + 1
-                               : ui->main_layout->indexOf(_alignment_widget) + 1;
+        int const insert_index = _range_controls_section
+                                   ? ui->main_layout->indexOf(_range_controls_section) + 1
+                                   : ui->main_layout->indexOf(_alignment_widget) + 1;
         ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
     }
 }
 
-void HeatmapPropertiesWidget::_setupUnitTree()
-{
+void HeatmapPropertiesWidget::_setupUnitTree() {
     _unit_tree_widget = new Feature_Tree_Widget(this);
 
     // Filter to only show DigitalEventSeries keys
@@ -102,7 +99,7 @@ void HeatmapPropertiesWidget::_setupUnitTree()
     _unit_tree_widget->setDataManager(_data_manager);
 
     // Replace the placeholder widget with the tree
-    int tree_index = ui->main_layout->indexOf(ui->unit_tree_placeholder);
+    int const tree_index = ui->main_layout->indexOf(ui->unit_tree_placeholder);
     ui->main_layout->removeWidget(ui->unit_tree_placeholder);
     ui->unit_tree_placeholder->deleteLater();
     ui->main_layout->insertWidget(tree_index, _unit_tree_widget);
@@ -113,8 +110,7 @@ void HeatmapPropertiesWidget::_setupUnitTree()
     _syncTreeFromState();
 }
 
-void HeatmapPropertiesWidget::_connectUnitTreeSignals()
-{
+void HeatmapPropertiesWidget::_connectUnitTreeSignals() {
     if (!_unit_tree_widget || !_state) {
         return;
     }
@@ -142,8 +138,7 @@ void HeatmapPropertiesWidget::_connectUnitTreeSignals()
             });
 }
 
-void HeatmapPropertiesWidget::_syncTreeFromState()
-{
+void HeatmapPropertiesWidget::_syncTreeFromState() {
     if (!_unit_tree_widget || !_state) {
         return;
     }
@@ -172,7 +167,7 @@ void HeatmapPropertiesWidget::_syncTreeFromState()
         // Check if this is a leaf key that should be enabled
         if (item->childCount() == 0) {
             bool const should_enable =
-                std::find(unit_keys.begin(), unit_keys.end(), key) != unit_keys.end();
+                    std::find(unit_keys.begin(), unit_keys.end(), key) != unit_keys.end();
             item->setCheckState(1, should_enable ? Qt::Checked : Qt::Unchecked);
         }
 
@@ -213,8 +208,7 @@ void HeatmapPropertiesWidget::_syncTreeFromState()
 // Scaling Section
 // =============================================================================
 
-void HeatmapPropertiesWidget::_setupScalingSection()
-{
+void HeatmapPropertiesWidget::_setupScalingSection() {
     using WhiskerToolbox::Plots::ScalingMode;
 
     _scaling_section = new Section(this, "Rate Estimation & Scaling");
@@ -269,7 +263,7 @@ void HeatmapPropertiesWidget::_setupScalingSection()
     _scaling_section->setContentLayout(*layout);
 
     // Insert after the unit tree but before the spacer
-    int spacer_index = ui->main_layout->indexOf(ui->vertical_spacer);
+    int const spacer_index = ui->main_layout->indexOf(ui->vertical_spacer);
     ui->main_layout->insertWidget(spacer_index, _scaling_section);
 
     // --- Sync from state ---
@@ -293,7 +287,7 @@ void HeatmapPropertiesWidget::_setupScalingSection()
             this, [this](int index) {
                 if (!_state || index < 0) return;
                 auto mode = static_cast<HeatmapColorRangeConfig::Mode>(
-                    _color_range_mode_combo->itemData(index).toInt());
+                        _color_range_mode_combo->itemData(index).toInt());
                 _state->setColorRangeMode(mode);
                 _updateColorRangeVisibility();
             });
@@ -322,8 +316,7 @@ void HeatmapPropertiesWidget::_setupScalingSection()
             this, [this]() { _syncScalingFromState(); });
 }
 
-void HeatmapPropertiesWidget::_syncScalingFromState()
-{
+void HeatmapPropertiesWidget::_syncScalingFromState() {
     if (!_state) return;
 
     // Sync estimation controls
@@ -333,12 +326,12 @@ void HeatmapPropertiesWidget::_syncScalingFromState()
     _scaling_controls->setScalingMode(_state->scaling());
 
     // Sync color range combo
-    QSignalBlocker range_blocker(_color_range_mode_combo);
-    QSignalBlocker vmin_blocker(_vmin_spin);
-    QSignalBlocker vmax_blocker(_vmax_spin);
+    QSignalBlocker const range_blocker(_color_range_mode_combo);
+    QSignalBlocker const vmin_blocker(_vmin_spin);
+    QSignalBlocker const vmax_blocker(_vmax_spin);
 
     auto const & cr = _state->colorRange();
-    int range_idx = _color_range_mode_combo->findData(static_cast<int>(cr.mode));
+    int const range_idx = _color_range_mode_combo->findData(static_cast<int>(cr.mode));
     if (range_idx >= 0) {
         _color_range_mode_combo->setCurrentIndex(range_idx);
     }
@@ -348,12 +341,11 @@ void HeatmapPropertiesWidget::_syncScalingFromState()
     _vmax_spin->setValue(cr.vmax);
 }
 
-void HeatmapPropertiesWidget::_updateColorRangeVisibility()
-{
+void HeatmapPropertiesWidget::_updateColorRangeVisibility() {
     if (!_state) return;
 
     bool const is_manual =
-        _state->colorRange().mode == HeatmapColorRangeConfig::Mode::Manual;
+            _state->colorRange().mode == HeatmapColorRangeConfig::Mode::Manual;
     _vmin_label->setVisible(is_manual);
     _vmin_spin->setVisible(is_manual);
     _vmax_label->setVisible(is_manual);
