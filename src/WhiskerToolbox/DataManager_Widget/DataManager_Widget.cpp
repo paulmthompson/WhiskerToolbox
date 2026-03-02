@@ -109,6 +109,16 @@ DataManager_Widget::DataManager_Widget(
                 _selection_context->setSelectedData(SelectedDataKey(key), source);
             }
         });
+
+        // Connect timeframe table selection to SelectionContext
+        // TimeFrame keys are separate from data keys, so use the dedicated timeframe signal
+        connect(ui->timeframe_table_widget, &TimeFrame_Table_Widget::timeFrameSelected,
+                this, [this](QString const & time_key) {
+            if (_selection_context) {
+                SelectionSource source{EditorInstanceId(_state->getInstanceId()), QStringLiteral("timeframe_table")};
+                _selection_context->setTimeFrameFocus(time_key, source);
+            }
+        });
     }
 }
 

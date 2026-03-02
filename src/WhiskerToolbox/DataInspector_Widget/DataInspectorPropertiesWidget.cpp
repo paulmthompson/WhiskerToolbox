@@ -16,6 +16,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/SelectionContext.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QLabel>
 #include <QVBoxLayout>
@@ -46,6 +47,8 @@ void DataInspectorPropertiesWidget::setState(std::shared_ptr<DataInspectorState>
     if (_state) {
         connect(_state.get(), &DataInspectorState::inspectedDataKeyChanged,
                 this, &DataInspectorPropertiesWidget::_onInspectedKeyChanged);
+        connect(_state.get(), &DataInspectorState::inspectedTimeFrameKeyChanged,
+                this, &DataInspectorPropertiesWidget::_onInspectedTimeFrameKeyChanged);
         connect(_state.get(), &DataInspectorState::pinnedChanged,
                 this, [this](bool pinned) {
                     ui->pinButton->setChecked(pinned);
@@ -55,7 +58,11 @@ void DataInspectorPropertiesWidget::setState(std::shared_ptr<DataInspectorState>
 
         // Initialize UI from state
         ui->pinButton->setChecked(_state->isPinned());
-        _onInspectedKeyChanged(_state->inspectedDataKey());
+        if (!_state->inspectedTimeFrameKey().isEmpty()) {
+            _onInspectedTimeFrameKeyChanged(_state->inspectedTimeFrameKey());
+        } else {
+            _onInspectedKeyChanged(_state->inspectedDataKey());
+        }
     }
 }
 
@@ -70,6 +77,8 @@ void DataInspectorPropertiesWidget::setSelectionContext(SelectionContext * conte
     if (_selection_context) {
         connect(_selection_context, &SelectionContext::selectionChanged,
                 this, &DataInspectorPropertiesWidget::_onSelectionChanged);
+        connect(_selection_context, &SelectionContext::timeFrameFocusChanged,
+                this, &DataInspectorPropertiesWidget::_onTimeFrameFocusChanged);
     }
 }
 
@@ -82,6 +91,14 @@ void DataInspectorPropertiesWidget::inspectData(QString const & key) {
         _state->setInspectedDataKey(key);
     } else {
         _updateInspectorForKey(key);
+    }
+}
+
+void DataInspectorPropertiesWidget::inspectTimeFrame(QString const & key) {
+    if (_state) {
+        _state->setInspectedTimeFrameKey(key);
+    } else {
+        _updateInspectorForTimeFrame(key);
     }
 }
 
@@ -129,6 +146,27 @@ void DataInspectorPropertiesWidget::_onInspectedKeyChanged(QString const & key) 
     _updateInspectorForKey(key);
 }
 
+void DataInspectorPropertiesWidget::_onInspectedTimeFrameKeyChanged(QString const & key) {
+    _updateInspectorForTimeFrame(key);
+}
+
+void DataInspectorPropertiesWidget::_onTimeFrameFocusChanged(
+    QString const & time_key, SelectionSource const & source) {
+    // Ignore if pinned
+    if (_state && _state->isPinned()) {
+        return;
+    }
+
+    // Ignore if change came from us
+    if (_state && source.editor_instance_id.toString() == _state->getInstanceId()) {
+        return;
+    }
+
+    if (!time_key.isEmpty()) {
+        inspectTimeFrame(time_key);
+    }
+}
+
 void DataInspectorPropertiesWidget::_onStateChanged() {
     _updateHeaderDisplay();
 }
@@ -172,6 +210,42 @@ void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) 
         _current_inspector->setActiveKey(key_std);
         // Reconnect to view after setting key (view might have changed)
         _connectInspectorToView();
+    }
+}
+
+void DataInspectorPropertiesWidget::_updateInspectorForTimeFrame(QString const & key) {
+    std::string const key_std = key.toStdString();
+
+    if (key_std == _current_key && _current_type == DM_DataType::Time && _current_inspector) {
+        return;  // Already showing this timeframe
+    }
+
+    _current_key = key_std;
+    _updateHeaderDisplay();
+
+    // Clear existing inspector
+    _clearInspector();
+
+    if (key.isEmpty() || !_data_manager) {
+        return;
+    }
+
+    // Verify the TimeFrame exists
+    auto timeframe = _data_manager->getTime(TimeKey(key_std));
+    if (!timeframe) {
+        ui->dataKeyLabel->setText(tr("TimeFrame not found: %1").arg(key));
+        return;
+    }
+
+    // Update type label
+    ui->dataTypeLabel->setText(QStringLiteral("TimeFrame"));
+
+    // Create TimeFrame inspector
+    _createInspectorForType(DM_DataType::Time);
+
+    // Set the active key on the inspector
+    if (_current_inspector) {
+        _current_inspector->setActiveKey(key_std);
     }
 }
 

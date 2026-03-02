@@ -53,6 +53,10 @@ TimeFrame_Table_Widget::TimeFrame_Table_Widget(QWidget * parent)
             "    background-color: #106ebe;"
             "    color: white;"
             "}");
+
+    // Connect cell click to emit timeFrameSelected signal
+    connect(ui->timeframe_table, &QTableWidget::cellClicked,
+            this, &TimeFrame_Table_Widget::_onRowClicked);
 }
 
 TimeFrame_Table_Widget::~TimeFrame_Table_Widget() {
@@ -151,4 +155,11 @@ void TimeFrame_Table_Widget::resizeEvent(QResizeEvent * event) {
     _setAdaptiveColumnWidths();
 
     _is_resizing = false;
+}
+
+void TimeFrame_Table_Widget::_onRowClicked(int row, int /*column*/) {
+    auto * nameItem = ui->timeframe_table->item(row, 0);
+    if (nameItem) {
+        emit timeFrameSelected(nameItem->text());
+    }
 }

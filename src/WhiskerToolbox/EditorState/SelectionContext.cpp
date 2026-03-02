@@ -19,6 +19,12 @@ void SelectionContext::setSelectedData(SelectedDataKey const & data_key, Selecti
         _primary_selected.clear();
     }
 
+    // Clear timeframe focus when selecting data (they are mutually exclusive)
+    if (data_key.isValid() && !_time_frame_focus.isEmpty()) {
+        _time_frame_focus.clear();
+        emit timeFrameFocusChanged(QString(), source);
+    }
+
     // Also update data focus for passive awareness widgets
     // This bridges the legacy setSelectedData API to the new dataFocusChanged pattern
     bool const focus_changed = (_data_focus != data_key);
@@ -140,6 +146,12 @@ void SelectionContext::setDataFocus(SelectedDataKey const & data_key,
     
     _data_focus = data_key;
     _data_focus_type = data_type;
+
+    // Clear timeframe focus when setting data focus (they are mutually exclusive)
+    if (data_key.isValid() && !_time_frame_focus.isEmpty()) {
+        _time_frame_focus.clear();
+        emit timeFrameFocusChanged(QString(), source);
+    }
     
     // Also update legacy selection for backward compatibility
     _selected_data.clear();
@@ -168,6 +180,30 @@ SelectedDataKey SelectionContext::dataFocus() const {
 
 QString SelectionContext::dataFocusType() const {
     return _data_focus_type;
+}
+
+// === TimeFrame Focus ===
+
+void SelectionContext::setTimeFrameFocus(QString const & time_key, SelectionSource const & source) {
+    bool const focus_changed = (_time_frame_focus != time_key);
+
+    _time_frame_focus = time_key;
+
+    // Clear data focus when setting timeframe focus (they are mutually exclusive)
+    if (!time_key.isEmpty() && _data_focus.isValid()) {
+        _data_focus.clear();
+        _data_focus_type.clear();
+        _selected_data.clear();
+        _primary_selected.clear();
+    }
+
+    if (focus_changed) {
+        emit timeFrameFocusChanged(time_key, source);
+    }
+}
+
+QString SelectionContext::timeFrameFocus() const {
+    return _time_frame_focus;
 }
 
 // === Active Editor / Widget Focus ===

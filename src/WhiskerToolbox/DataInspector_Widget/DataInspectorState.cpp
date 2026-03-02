@@ -39,6 +39,7 @@ bool DataInspectorState::fromJson(std::string const & json) {
 
         emit stateChanged();
         emit inspectedDataKeyChanged(QString::fromStdString(_data.inspected_data_key));
+        emit inspectedTimeFrameKeyChanged(QString::fromStdString(_data.inspected_timeframe_key));
         emit pinnedChanged(_data.is_pinned);
         return true;
     }
@@ -49,6 +50,13 @@ void DataInspectorState::setInspectedDataKey(QString const & key) {
     std::string const key_std = key.toStdString();
     if (_data.inspected_data_key != key_std) {
         _data.inspected_data_key = key_std;
+
+        // Clear timeframe key when setting data key (mutually exclusive)
+        if (!key.isEmpty() && !_data.inspected_timeframe_key.empty()) {
+            _data.inspected_timeframe_key.clear();
+            emit inspectedTimeFrameKeyChanged(QString());
+        }
+
         markDirty();
         emit inspectedDataKeyChanged(key);
     }
@@ -56,6 +64,26 @@ void DataInspectorState::setInspectedDataKey(QString const & key) {
 
 QString DataInspectorState::inspectedDataKey() const {
     return QString::fromStdString(_data.inspected_data_key);
+}
+
+void DataInspectorState::setInspectedTimeFrameKey(QString const & key) {
+    std::string const key_std = key.toStdString();
+    if (_data.inspected_timeframe_key != key_std) {
+        _data.inspected_timeframe_key = key_std;
+
+        // Clear data key when setting timeframe key (mutually exclusive)
+        if (!key.isEmpty() && !_data.inspected_data_key.empty()) {
+            _data.inspected_data_key.clear();
+            emit inspectedDataKeyChanged(QString());
+        }
+
+        markDirty();
+        emit inspectedTimeFrameKeyChanged(key);
+    }
+}
+
+QString DataInspectorState::inspectedTimeFrameKey() const {
+    return QString::fromStdString(_data.inspected_timeframe_key);
 }
 
 void DataInspectorState::setPinned(bool pinned) {

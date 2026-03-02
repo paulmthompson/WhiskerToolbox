@@ -287,6 +287,28 @@ public:
      */
     [[nodiscard]] QString dataFocusType() const;
 
+    // === TimeFrame Focus ===
+
+    /**
+     * @brief Set the focused TimeFrame key
+     * 
+     * TimeFrame objects are separate from data objects in DataManager.
+     * This provides a dedicated signal path so that TimeFrame keys are
+     * not confused with data keys.
+     * 
+     * Setting a timeframe focus clears the data focus and vice versa.
+     * 
+     * @param time_key TimeFrame key in DataManager (empty to clear)
+     * @param source Who is making this selection
+     */
+    void setTimeFrameFocus(QString const & time_key, SelectionSource const & source);
+
+    /**
+     * @brief Get the currently focused TimeFrame key
+     * @return TimeFrame key, or empty string if none focused
+     */
+    [[nodiscard]] QString timeFrameFocus() const;
+
     // === Active Editor / Widget Focus ===
 
     /**
@@ -370,6 +392,17 @@ signals:
      */
     void widgetFocusChanged(EditorInstanceId const & instance_id);
 
+    /**
+     * @brief Emitted when TimeFrame focus changes
+     * 
+     * This is a separate signal from dataFocusChanged because TimeFrame
+     * keys live in a different namespace than data keys.
+     * 
+     * @param time_key The focused TimeFrame key (empty if cleared)
+     * @param source Who made the focus change
+     */
+    void timeFrameFocusChanged(QString const & time_key, SelectionSource const & source);
+
     // === Legacy Signals (still functional, consider migrating to above) ===
 
     /**
@@ -408,6 +441,9 @@ private:
     // Data focus (Phase 1 - primary mechanism for passive awareness)
     SelectedDataKey _data_focus;
     QString _data_focus_type;
+
+    // TimeFrame focus (separate from data focus)
+    QString _time_frame_focus;
 
     // Legacy selection (kept for backward compatibility)
     SelectedDataKey _primary_selected;

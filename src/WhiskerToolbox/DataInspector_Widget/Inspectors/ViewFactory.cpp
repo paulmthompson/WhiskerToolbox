@@ -11,6 +11,7 @@
 #include "DataInspector_Widget/DigitalEventSeries/DigitalEventSeriesDataView.hpp"
 #include "DataInspector_Widget/DigitalIntervalSeries/DigitalIntervalSeriesDataView.hpp"
 #include "DataInspector_Widget/TensorData/TensorDataView.hpp"
+#include "DataInspector_Widget/TimeFrameData/TimeFrameDataView.hpp"
 
 std::unique_ptr<BaseDataView> ViewFactory::createView(
     DM_DataType type,
@@ -43,9 +44,11 @@ std::unique_ptr<BaseDataView> ViewFactory::createView(
         case DM_DataType::Tensor:
             return std::make_unique<TensorDataView>(data_manager, parent);
         
+        case DM_DataType::Time:
+            return std::make_unique<TimeFrameDataView>(data_manager, parent);
+        
         case DM_DataType::Unknown:
         case DM_DataType::RaggedAnalog:
-        case DM_DataType::Time:
         default:
             return nullptr;
     }
@@ -62,11 +65,11 @@ bool ViewFactory::hasView(DM_DataType type) {
         case DM_DataType::DigitalEvent:
         case DM_DataType::DigitalInterval:
         case DM_DataType::Tensor:
+        case DM_DataType::Time:
             return true;
         
         case DM_DataType::Unknown:
         case DM_DataType::RaggedAnalog:
-        case DM_DataType::Time:
         default:
             return false;
     }

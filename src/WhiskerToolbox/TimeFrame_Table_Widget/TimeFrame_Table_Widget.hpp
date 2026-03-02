@@ -39,8 +39,16 @@ public:
 protected:
     void resizeEvent(QResizeEvent * event) override;
 
+signals:
+    /**
+     * @brief Emitted when a TimeFrame row is clicked in the table
+     * @param time_key The TimeFrame key that was selected
+     */
+    void timeFrameSelected(QString const & time_key);
+
 private slots:
     void _refreshTable();
+    void _onRowClicked(int row, int column);
 
 private:
     Ui::TimeFrame_Table_Widget * ui;

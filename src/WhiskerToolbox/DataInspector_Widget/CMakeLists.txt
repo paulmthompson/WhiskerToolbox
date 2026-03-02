@@ -90,6 +90,12 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
         TensorData/TensorDesigner.cpp
         TensorData/ColumnConfigDialog.hpp
         TensorData/ColumnConfigDialog.cpp
+
+        TimeFrameData/TimeFrameInspector.hpp
+        TimeFrameData/TimeFrameInspector.cpp
+        TimeFrameData/TimeFrameTableModel.hpp
+        TimeFrameData/TimeFrameDataView.hpp
+        TimeFrameData/TimeFrameDataView.cpp
         )
 
 add_library(DataInspector_Widget STATIC ${DATA_INSPECTOR_WIDGET_SOURCES})
