@@ -69,26 +69,6 @@ void ScatterPlotState::setDisplayName(QString const & name)
     }
 }
 
-double ScatterPlotState::getXMin() const
-{
-    return _horizontal_axis_state->getXMin();
-}
-
-double ScatterPlotState::getXMax() const
-{
-    return _horizontal_axis_state->getXMax();
-}
-
-double ScatterPlotState::getYMin() const
-{
-    return _vertical_axis_state->getYMin();
-}
-
-double ScatterPlotState::getYMax() const
-{
-    return _vertical_axis_state->getYMax();
-}
-
 void ScatterPlotState::setXZoom(double zoom)
 {
     if (_data.view_state.x_zoom != zoom) {
