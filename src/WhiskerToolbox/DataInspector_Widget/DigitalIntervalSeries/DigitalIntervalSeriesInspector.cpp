@@ -1,13 +1,13 @@
 #include "DigitalIntervalSeriesInspector.hpp"
 #include "ui_DigitalIntervalSeriesInspector.h"
 
+#include "DataExport_Widget/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
-#include "DataExport_Widget/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"
 #include "DigitalIntervalSeriesDataView.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
@@ -29,9 +29,9 @@
 #include <unordered_set>
 
 DigitalIntervalSeriesInspector::DigitalIntervalSeriesInspector(
-    std::shared_ptr<DataManager> data_manager,
-    GroupManager * group_manager,
-    QWidget * parent)
+        std::shared_ptr<DataManager> data_manager,
+        GroupManager * group_manager,
+        QWidget * parent)
     : BaseInspector(std::move(data_manager), group_manager, parent),
       ui(new Ui::DigitalIntervalSeriesInspector) {
     ui->setupUi(this);
@@ -201,7 +201,7 @@ int64_t DigitalIntervalSeriesInspector::_getCurrentTimeInSeriesFrame() const {
     }
 
     // Convert the state's time_position to the series' timeframe
-    TimeFrameIndex converted_index = time_position.convertTo(series_timeframe);
+    TimeFrameIndex const converted_index = time_position.convertTo(series_timeframe);
     return converted_index.getValue();
 }
 
@@ -222,8 +222,8 @@ void DigitalIntervalSeriesInspector::_createIntervalButton() {
         _interval_end = current_time;
 
         // Ensure proper ordering (start <= end) by swapping if necessary
-        int64_t start = std::min(_interval_start, _interval_end);
-        int64_t end = std::max(_interval_start, _interval_end);
+        int64_t const start = std::min(_interval_start, _interval_end);
+        int64_t const end = std::max(_interval_start, _interval_end);
 
         contactIntervals->addEvent(TimeFrameIndex(start), TimeFrameIndex(end));
 
@@ -285,7 +285,7 @@ void DigitalIntervalSeriesInspector::_flipIntervalButton() {
         return;
     }
 
-    TimeFrameIndex series_index(current_time);
+    TimeFrameIndex const series_index(current_time);
     if (intervals->hasIntervalAtTime(series_index, *series_timeframe)) {
         intervals->setEventAtTime(series_index, false);
     } else {
@@ -294,7 +294,7 @@ void DigitalIntervalSeriesInspector::_flipIntervalButton() {
 }
 
 void DigitalIntervalSeriesInspector::_extendInterval() {
-    std::vector<Interval> selected_intervals = _getSelectedIntervals();
+    std::vector<Interval> const selected_intervals = _getSelectedIntervals();
     if (selected_intervals.empty()) {
         std::cout << "Error: No intervals selected in the view panel." << std::endl;
         return;
@@ -309,7 +309,7 @@ void DigitalIntervalSeriesInspector::_extendInterval() {
     auto intervals = dataManager()->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 
-    for (Interval const & interval : selected_intervals) {
+    for (Interval const & interval: selected_intervals) {
         if (current_time < interval.start) {
             intervals->addEvent(Interval{current_time, interval.end});
         } else if (current_time > interval.end) {
@@ -321,7 +321,7 @@ void DigitalIntervalSeriesInspector::_extendInterval() {
 }
 
 void DigitalIntervalSeriesInspector::_onExportTypeChanged(int index) {
-    QString current_text = ui->export_type_combo->itemText(index);
+    QString const current_text = ui->export_type_combo->itemText(index);
     if (current_text == "CSV") {
         ui->stacked_saver_options->setCurrentWidget(ui->csv_interval_saver_widget);
     } else {
@@ -357,7 +357,7 @@ void DigitalIntervalSeriesInspector::_initiateSaveProcess(SaverType saver_type, 
     bool save_successful = false;
     switch (saver_type) {
         case SaverType::CSV: {
-            CSVIntervalSaverOptions & specific_csv_options = std::get<CSVIntervalSaverOptions>(options_variant);
+            auto & specific_csv_options = std::get<CSVIntervalSaverOptions>(options_variant);
             specific_csv_options.parent_dir = dataManager()->getOutputPath();
             if (specific_csv_options.parent_dir.empty()) {
                 specific_csv_options.parent_dir = ".";
@@ -401,7 +401,7 @@ std::vector<Interval> DigitalIntervalSeriesInspector::_getSelectedIntervals() {
 }
 
 void DigitalIntervalSeriesInspector::_moveIntervalsToTarget(std::string const & target_key) {
-    std::vector<Interval> selected_intervals = _getSelectedIntervals();
+    std::vector<Interval> const selected_intervals = _getSelectedIntervals();
     if (selected_intervals.empty()) {
         std::cout << "No intervals selected to move." << std::endl;
         return;
@@ -433,26 +433,33 @@ void DigitalIntervalSeriesInspector::_moveIntervalsToTarget(std::string const & 
 }
 
 void DigitalIntervalSeriesInspector::_copyIntervalsToTarget(std::string const & target_key) {
-    std::vector<Interval> selected_intervals = _getSelectedIntervals();
-    if (selected_intervals.empty()) {
-        std::cout << "No intervals selected to copy." << std::endl;
+    if (!_data_view) {
         return;
     }
 
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "DigitalIntervalSeriesInspector: No intervals selected to copy." << std::endl;
+        return;
+    }
+
+    auto source_interval_data = dataManager()->getData<DigitalIntervalSeries>(_active_key);
     auto target_interval_data = dataManager()->getData<DigitalIntervalSeries>(target_key);
 
-    if (!target_interval_data) {
-        std::cerr << "Could not retrieve target DigitalIntervalSeries data." << std::endl;
+    if (!source_interval_data || !target_interval_data) {
+        std::cerr << "DigitalIntervalSeriesInspector: Could not retrieve source or target data." << std::endl;
         return;
     }
 
-    // Add intervals to target (source remains unchanged)
-    for (Interval const & interval: selected_intervals) {
-        target_interval_data->addEvent(interval);
-    }
+    std::unordered_set<EntityId> const selected_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_copied = source_interval_data->copyByEntityIds(*target_interval_data, selected_set, NotifyObservers::Yes);
 
-    std::cout << "Copied " << selected_intervals.size() << " intervals from " << _active_key
-              << " to " << target_key << std::endl;
+    if (total_copied > 0) {
+        std::cout << "DigitalIntervalSeriesInspector: Copied " << total_copied
+                  << " intervals from " << _active_key << " to " << target_key << std::endl;
+    } else {
+        std::cout << "DigitalIntervalSeriesInspector: No intervals found with the selected EntityIds to copy." << std::endl;
+    }
 }
 
 void DigitalIntervalSeriesInspector::_mergeIntervalsButton() {
@@ -543,8 +550,8 @@ std::string DigitalIntervalSeriesInspector::_generateFilename() const {
     std::string sanitized_key = _active_key;
 
     // Replace characters that might be problematic in filenames
-    std::string invalid_chars = "<>:\"/\\|?*";
-    for (char invalid_char: invalid_chars) {
+    std::string const invalid_chars = "<>:\"/\\|?*";
+    for (char const invalid_char: invalid_chars) {
         std::replace(sanitized_key.begin(), sanitized_key.end(), invalid_char, '_');
     }
 
@@ -557,7 +564,7 @@ std::string DigitalIntervalSeriesInspector::_generateFilename() const {
         sanitized_key = sanitized_key.substr(start, end - start + 1);
     }
 
-    QString current_export_type = ui->export_type_combo->currentText();
+    QString const current_export_type = ui->export_type_combo->currentText();
     std::string extension;
 
     if (current_export_type == "CSV") {
@@ -572,12 +579,12 @@ std::string DigitalIntervalSeriesInspector::_generateFilename() const {
 }
 
 void DigitalIntervalSeriesInspector::_updateFilename() {
-    std::string filename = _generateFilename();
+    std::string const filename = _generateFilename();
     ui->filename_edit->setText(QString::fromStdString(filename));
 }
 
 void DigitalIntervalSeriesInspector::_deleteSelectedIntervals() {
-    std::vector<Interval> selected_intervals = _getSelectedIntervals();
+    std::vector<Interval> const selected_intervals = _getSelectedIntervals();
     if (selected_intervals.empty()) {
         std::cout << "DigitalIntervalSeriesInspector: No intervals selected to delete." << std::endl;
         return;
@@ -589,14 +596,14 @@ void DigitalIntervalSeriesInspector::_deleteSelectedIntervals() {
         return;
     }
 
-    std::cout << "DigitalIntervalSeriesInspector: Deleting " << selected_intervals.size() 
+    std::cout << "DigitalIntervalSeriesInspector: Deleting " << selected_intervals.size()
               << " intervals from '" << _active_key << "'..." << std::endl;
 
     // Delete the selected intervals
-    size_t deleted_count = interval_data_ptr->removeIntervals(selected_intervals);
+    size_t const deleted_count = interval_data_ptr->removeIntervals(selected_intervals);
 
     if (deleted_count > 0) {
-        std::cout << "DigitalIntervalSeriesInspector: Successfully deleted " << deleted_count 
+        std::cout << "DigitalIntervalSeriesInspector: Successfully deleted " << deleted_count
                   << " intervals." << std::endl;
         // The table will be automatically updated through the observer pattern
     } else {
@@ -632,7 +639,7 @@ void DigitalIntervalSeriesInspector::_onGroupFilterChanged(int index) {
         auto groups = groupManager()->getGroups();
         auto group_ids = groups.keys();
         if (index - 1 < group_ids.size()) {
-            int group_id = group_ids[index - 1];
+            int const group_id = group_ids[index - 1];
             _data_view->setGroupFilter(group_id);
         }
     }
@@ -640,7 +647,7 @@ void DigitalIntervalSeriesInspector::_onGroupFilterChanged(int index) {
 
 void DigitalIntervalSeriesInspector::_onGroupChanged() {
     // Store current selection
-    int current_index = ui->groupFilterCombo->currentIndex();
+    int const current_index = ui->groupFilterCombo->currentIndex();
     QString current_text;
     if (current_index >= 0 && current_index < ui->groupFilterCombo->count()) {
         current_text = ui->groupFilterCombo->itemText(current_index);
@@ -668,7 +675,7 @@ void DigitalIntervalSeriesInspector::_moveIntervalsToGroup(int group_id) {
         return;
     }
 
-    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
 
     // First, remove entities from their current groups
     groupManager()->ungroupEntities(entity_ids_set);
@@ -696,7 +703,7 @@ void DigitalIntervalSeriesInspector::_removeIntervalsFromGroup() {
         return;
     }
 
-    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
 
     // Remove entities from all groups
     groupManager()->ungroupEntities(entity_ids_set);

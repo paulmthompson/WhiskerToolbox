@@ -325,6 +325,43 @@ public:
         notifyObservers();
     }
 
+    // ========== Entity-Based Bulk Operations ==========
+
+    /**
+     * @brief Copy intervals with specific EntityIds to another DigitalIntervalSeries
+     *
+     * Copies all intervals matching the given EntityIds to the target series.
+     * Copied intervals get new EntityIds in the target based on the target's
+     * identity context (via addEvent which auto-assigns EntityIds).
+     *
+     * @note Because addEvent merges overlapping intervals, the number of intervals
+     *       added to the target may be fewer than the number of EntityIds matched.
+     *
+     * @param target The target series to copy intervals to
+     * @param entity_ids Set of EntityIds to copy
+     * @param notify If Yes, the target notifies observers after the operation
+     * @return The number of intervals actually copied (before any merging)
+     */
+    std::size_t copyByEntityIds(DigitalIntervalSeries & target,
+                                std::unordered_set<EntityId> const & entity_ids,
+                                NotifyObservers notify);
+
+    // NOTE: moveByEntityIds is intentionally NOT implemented for DigitalIntervalSeries.
+    //
+    // Moving intervals between series has unresolved edge cases due to interval merging:
+    //   - DigitalIntervalSeries guarantees non-overlapping intervals by merging on insert.
+    //   - If a moved interval overlaps with an existing interval in the target, the two
+    //     will be merged into a single new interval.
+    //   - The original EntityId of the moved interval is lost during merging, but any
+    //     group memberships tied to that EntityId are NOT automatically cleaned up.
+    //   - The merged interval in the target gets a new EntityId that is not associated
+    //     with any group, leaving group state inconsistent.
+    //   - Similarly, removing the source interval may orphan group references.
+    //
+    // A proper implementation would need to define merging semantics for EntityIds and
+    // group memberships. Until those semantics are decided, move operations should be
+    // done manually at the UI level where the user can handle conflicts.
+
     // ========== Getters ==========
 
     [[nodiscard]] size_t size() const { return _storage.size(); };
@@ -456,7 +493,7 @@ public:
      * @return Shared pointer to new view-based series
      */
     [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createView(
-            std::shared_ptr<DigitalIntervalSeries const> source,
+            const std::shared_ptr<DigitalIntervalSeries const>& source,
             int64_t start,
             int64_t end);
 
@@ -468,7 +505,7 @@ public:
      * @return Shared pointer to new view-based series
      */
     [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createView(
-            std::shared_ptr<DigitalIntervalSeries const> source,
+            const std::shared_ptr<DigitalIntervalSeries const>& source,
             std::unordered_set<EntityId> const & entity_ids);
 
     /**
