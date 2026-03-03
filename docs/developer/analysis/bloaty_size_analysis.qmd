@@ -1,0 +1,183 @@
+---
+title: "Bloaty Size Analysis"
+format: html
+---
+
+# Bloaty Size Analysis
+
+This document provides an analysis of the binary size of the Neuralyzer program and its various libraries using [Bloaty McBloatface](https://github.com/google/bloaty).
+
+## Libraries
+
+### libNEURALYZER_GEOMETRY.so
+```
+    FILE SIZE        VM SIZE
+ --------------  --------------
+  61.4%   101Ki  74.3%   101Ki    .text
+   7.2%  11.9Ki   0.0%       0    .strtab
+   4.9%  8.18Ki   6.0%  8.18Ki    .dynstr
+   4.9%  8.15Ki   0.0%       0    [Unmapped]
+   4.7%  7.70Ki   5.6%  7.70Ki    .eh_frame
+   3.9%  6.47Ki   0.0%       0    .symtab
+   2.8%  4.62Ki   3.4%  4.62Ki    .dynsym
+   1.7%  2.74Ki   2.0%  2.74Ki    .rela.plt
+   1.2%  1.94Ki   0.0%       0    [ELF Section Headers]
+   1.1%  1.84Ki   1.3%  1.84Ki    .plt
+   1.1%  1.83Ki   1.3%  1.83Ki    .plt.sec
+   1.1%  1.82Ki   1.3%  1.82Ki    .gcc_except_table
+   0.7%  1.21Ki   0.9%  1.21Ki    .eh_frame_hdr
+   0.6%  1.01Ki   0.7%  1.01Ki    .gnu.hash
+   0.6%    1006   0.5%     677    [14 Others]
+   0.6%     960   0.7%     960    .got.plt
+   0.4%     616   0.4%     616    [ELF Program Headers]
+   0.3%     588   0.4%     588    .rodata
+   0.3%     552   0.4%     552    .rela.dyn
+   0.3%     528   0.4%     528    .dynamic
+   0.2%     396   0.3%     396    .gnu.version
+ 100.0%   165Ki 100.0%   136Ki    TOTAL
+```
+
+### libDataManager.so
+```
+    FILE SIZE        VM SIZE
+ --------------  --------------
+  52.0%  2.50Mi  64.1%  2.50Mi    .text
+  15.1%   744Ki   0.0%       0    .strtab
+  10.5%   516Ki  12.9%   516Ki    .dynstr
+   4.3%   214Ki   5.4%   214Ki    .eh_frame
+   3.6%   175Ki   0.0%       0    .symtab
+   2.8%   139Ki   3.5%   139Ki    .dynsym
+   2.6%   125Ki   3.2%   125Ki    .rodata
+   2.2%   110Ki   2.8%   110Ki    .rela.dyn
+   1.9%  91.7Ki   2.3%  91.7Ki    .gcc_except_table
+   0.8%  41.0Ki   1.0%  41.0Ki    .gnu.hash
+   0.8%  39.4Ki   1.0%  39.4Ki    .rela.plt
+   0.7%  36.5Ki   0.9%  36.5Ki    .eh_frame_hdr
+   0.6%  31.2Ki   0.8%  31.2Ki    .data.rel.ro
+   0.5%  26.3Ki   0.7%  26.3Ki    .plt
+   0.5%  26.3Ki   0.7%  26.3Ki    .plt.sec
+   0.3%  13.2Ki   0.3%  13.2Ki    .got.plt
+   0.2%  11.7Ki   0.3%  11.7Ki    .gnu.version
+   0.2%  8.34Ki   0.0%       0    [Unmapped]
+   0.1%  7.09Ki   0.2%  7.09Ki    .got
+   0.1%  3.78Ki   0.1%  3.68Ki    [16 Others]
+   0.0%  2.00Ki   0.0%       0    [ELF Section Headers]
+ 100.0%  4.81Mi 100.0%  3.90Mi    TOTAL
+```
+
+### libStateEstimation.so
+```
+    FILE SIZE        VM SIZE
+ --------------  --------------
+  61.6%   713Ki  72.1%   713Ki    .text
+  10.9%   126Ki   0.0%       0    .strtab
+   8.3%  96.8Ki   9.8%  96.8Ki    .dynstr
+   3.8%  43.7Ki   4.4%  43.7Ki    .eh_frame
+   3.1%  35.8Ki   0.0%       0    .symtab
+   2.5%  28.9Ki   2.9%  28.9Ki    .dynsym
+   2.0%  23.0Ki   2.3%  23.0Ki    .rela.dyn
+   1.5%  17.3Ki   1.7%  17.3Ki    .rodata
+   1.3%  14.7Ki   1.5%  14.7Ki    .gcc_except_table
+   0.8%  9.41Ki   0.9%  9.41Ki    .gnu.hash
+   0.7%  8.62Ki   0.9%  8.62Ki    .rela.plt
+   0.6%  7.25Ki   0.7%  7.21Ki    .data.rel.ro
+   0.6%  6.81Ki   0.7%  6.81Ki    .eh_frame_hdr
+   0.5%  5.77Ki   0.6%  5.77Ki    .plt
+   0.5%  5.75Ki   0.6%  5.75Ki    .plt.sec
+   0.4%  4.58Ki   0.0%       0    [Unmapped]
+   0.3%  2.90Ki   0.3%  2.90Ki    .got.plt
+   0.2%  2.41Ki   0.2%  2.41Ki    .gnu.version
+   0.2%  2.28Ki   0.2%  2.11Ki    [16 Others]
+   0.2%  2.06Ki   0.0%       0    [ELF Section Headers]
+   0.1%  1.27Ki   0.1%  1.27Ki    .got
+ 100.0%  1.13Mi 100.0%   990Ki    TOTAL
+```
+
+### libDeepLearning.a
+```
+    FILE SIZE        VM SIZE
+ --------------  --------------
+  22.9%   252Ki  38.3%   150Ki    [665 Others]
+  13.8%   151Ki  38.5%   151Ki    .text
+  11.9%   131Ki   0.0%       0    [ELF Section Headers]
+  10.5%   116Ki   0.0%       0    .strtab
+   7.0%  77.2Ki   0.0%       0    .rela.text
+   6.8%  75.6Ki   0.0%       0    .symtab
+   6.2%  68.7Ki   0.0%       0    .shstrtab
+   5.6%  61.4Ki   0.0%       0    [AR Symbol Table]
+   2.8%  30.8Ki   0.0%       0    .rela.text.unlikely
+   2.8%  30.7Ki   7.8%  30.7Ki    .eh_frame
+   2.0%  21.6Ki   0.0%       0    .rela.eh_frame
+   1.9%  20.7Ki   5.2%  20.7Ki    .text.unlikely
+   0.9%  9.84Ki   2.5%  9.83Ki    .text._ZN5torch2nn10functional6detail11interpolateERKN2at6TensorERKSt8optionalISt6vectorIlSaIlEEERKS7_IS8_IdSaIdEEESt7variantIJNS_8enumtype8kNearestENSK_7kLinearENSK_9kBilinearENSK_8kBicubicENSK_10kTrilinearENSK_5kAreaENSK_13kNearestExactEEES7_IbEST_b
+   0.9%  9.81Ki   2.5%  9.74Ki    .gcc_except_table
+   0.7%  8.20Ki   2.1%  8.19Ki    .text._ZN3rfl7parsing16NamedTupleParserINS_4json6ReaderENS2_6WriterELb0ELb0ELb0ENS_10ProcessorsIJEEEJNS_5FieldIXtlNS_8internal13StringLiteralILm9EEEtlSt5arrayIcLm9EEtlA9_cLc109ELc111ELc100ELc101ELc108ELc95ELc105ELc100EEEEEPNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEENS7_IXtlNS9_ILm13EEEtlSB_IcLm13EEtlA13_cLc100ELc105ELc115ELc112ELc108ELc97ELc121ELc95ELc110ELc97ELc109ELc101EEEEESK_EENS7_IXtlNS9_ILm12EEEtlSB_IcLm12EEtlA12_cLc100ELc101ELc115ELc99ELc114ELc105ELc112ELc116ELc105ELc111ELc110EEEEEPSt8optionalISJ_EEENS7_IXtlSM_tlSN_tlSO_Lc119ELc101ELc105ELc103ELc104ELc116ELc115ELc95ELc112ELc97ELc116ELc104EEEEESV_EENS7_IXtlNS9_ILm8EEEtlSB_IcLm8EEtlA8_cLc98ELc97ELc99ELc107ELc101ELc110ELc100EEEEESV_EENS7_IXtlNS9_ILm21EEEtlSB_IcLm21EEtlA21_cLc112ELc114ELc101ELc102ELc101ELc114ELc114ELc101ELc100ELc95ELc98ELc97ELc116ELc99ELc104ELc95ELc115ELc105ELc122ELc101EEEEEPST_IiEEENS7_IXtlNS9_ILm15EEEtlSB_IcLm15EEtlA15_cLc109ELc97ELc120ELc95ELc98ELc97ELc116ELc99ELc104ELc95ELc115ELc105ELc122ELc101EEEEES16_EENS7_IXtlNS9_ILm7EEEtlSB_IcLm7EEtlA7_cLc105ELc110ELc112ELc117ELc116ELc115EEEEEPSt6vectorIN2dl8SlotSpecESaIS1H_EEEENS7_IXtlSY_tlSZ_tlS10_Lc111ELc117ELc116ELc112ELc117ELc116ELc115EEEEES1K_EEEE20read_object_or_arrayERKS3_RKNS3_17YYJSONInputObjectEPNS_10NamedTupleIJSL_SP_SW_SX_S11_S17_S1B_S1L_S1M_EEE
+   0.6%  6.97Ki   1.8%  6.96Ki    .text._ZN3rfl7parsing16NamedTupleParserINS_4json6ReaderENS2_6WriterELb0ELb0ELb0ENS_10ProcessorsIJEEEJNS_5FieldIXtlNS_8internal13StringLiteralILm5EEEtlSt5arrayIcLm5EEtlA5_cLc110ELc97ELc109ELc101EEEEEPNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEENS7_IXtlNS9_ILm6EEEtlSB_IcLm6EEtlA6_cLc115ELc104ELc97ELc112ELc101EEEEEPSt6vectorIlSaIlEEEENS7_IXtlNS9_ILm12EEEtlSB_IcLm12EEtlA12_cLc100ELc101ELc115ELc99ELc114ELc105ELc112ELc116ELc105ELc111ELc110EEEEEPSt8optionalISJ_EEENS7_IXtlNS9_ILm20EEEtlSB_IcLm20EEtlA20_cLc114ELc101ELc99ELc111ELc109ELc109ELc101ELc110ELc100ELc101ELc100ELc95ELc101ELc110ELc99ELc111ELc100ELc101ELc114EEEEESZ_EENS7_IXtlS11_tlS12_tlS13_Lc114ELc101ELc99ELc111ELc109ELc109ELc101ELc110ELc100ELc101ELc100ELc95ELc100ELc101ELc99ELc111ELc100ELc101ELc114EEEEESZ_EENS7_IXtlNS9_ILm10EEEtlSB_IcLm10EEtlA10_cLc105ELc115ELc95ELc115ELc116ELc97ELc116ELc105ELc99EEEEEPSX_IbEEENS7_IXtlNS9_ILm16EEEtlSB_IcLm16EEtlA16_cLc105ELc115ELc95ELc98ELc111ELc111ELc108ELc101ELc97ELc110ELc95ELc109ELc97ELc115ELc107EEEEES1A_EENS7_IXtlNS9_ILm13EEEtlSB_IcLm13EEtlA13_cLc115ELc101ELc113ELc117ELc101ELc110ELc99ELc101ELc95ELc100ELc105ELc109EEEEEPSX_IiEEEEE20read_object_or_arrayERKS3_RKNS3_17YYJSONInputObjectEPNS_10NamedTupleIJSL_ST_S10_S14_S15_S1B_S1F_S1L_EEE
+   0.6%  6.89Ki   0.0%       0    .rela.text._ZN3rfl7parsing16NamedTupleParserINS_4json6ReaderENS2_6WriterELb0ELb0ELb0ENS_10ProcessorsIJEEEJNS_5FieldIXtlNS_8internal13StringLiteralILm9EEEtlSt5arrayIcLm9EEtlA9_cLc109ELc111ELc100ELc101ELc108ELc95ELc105ELc100EEEEEPNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEENS7_IXtlNS9_ILm13EEEtlSB_IcLm13EEtlA13_cLc100ELc105ELc115ELc112ELc108ELc97ELc121ELc95ELc110ELc97ELc109ELc101EEEEESK_EENS7_IXtlNS9_ILm12EEEtlSB_IcLm12EEtlA12_cLc100ELc101ELc115ELc99ELc114ELc105ELc112ELc116ELc105ELc111ELc110EEEEEPSt8optionalISJ_EEENS7_IXtlSM_tlSN_tlSO_Lc119ELc101ELc105ELc103ELc104ELc116ELc115ELc95ELc112ELc97ELc116ELc104EEEEESV_EENS7_IXtlNS9_ILm8EEEtlSB_IcLm8EEtlA8_cLc98ELc97ELc99ELc107ELc101ELc110ELc100EEEEESV_EENS7_IXtlNS9_ILm21EEEtlSB_IcLm21EEtlA21_cLc112ELc114ELc101ELc102ELc101ELc114ELc114ELc101ELc100ELc95ELc98ELc97ELc116ELc99ELc104ELc95ELc115ELc105ELc122ELc101EEEEEPST_IiEEENS7_IXtlNS9_ILm15EEEtlSB_IcLm15EEtlA15_cLc109ELc97ELc120ELc95ELc98ELc97ELc116ELc99ELc104ELc95ELc115ELc105ELc122ELc101EEEEES16_EENS7_IXtlNS9_ILm7EEEtlSB_IcLm7EEtlA7_cLc105ELc110ELc112ELc117ELc116ELc115EEEEEPSt6vectorIN2dl8SlotSpecESaIS1H_EEEENS7_IXtlSY_tlSZ_tlS10_Lc111ELc117ELc116ELc112ELc117ELc116ELc115EEEEES1K_EEEE20read_object_or_arrayERKS3_RKNS3_17YYJSONInputObjectEPNS_10NamedTupleIJSL_SP_SW_SX_S11_S17_S1B_S1L_S1M_EEE
+   0.6%  6.38Ki   0.0%       0    .group
+   0.5%  5.72Ki   0.0%       0    .rela.text._ZN5torch2nn10functional6detail11interpolateERKN2at6TensorERKSt8optionalISt6vectorIlSaIlEEERKS7_IS8_IdSaIdEEESt7variantIJNS_8enumtype8kNearestENSK_7kLinearENSK_9kBilinearENSK_8kBicubicENSK_10kTrilinearENSK_5kAreaENSK_13kNearestExactEEES7_IbEST_b
+   0.5%  5.64Ki   1.4%  5.59Ki    .rodata.str1.8
+   0.5%  5.55Ki   0.0%       0    .rela.text._ZN3rfl7parsing16NamedTupleParserINS_4json6ReaderENS2_6WriterELb0ELb0ELb0ENS_10ProcessorsIJEEEJNS_5FieldIXtlNS_8internal13StringLiteralILm5EEEtlSt5arrayIcLm5EEtlA5_cLc110ELc97ELc109ELc101EEEEEPNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEENS7_IXtlNS9_ILm6EEEtlSB_IcLm6EEtlA6_cLc115ELc104ELc97ELc112ELc101EEEEEPSt6vectorIlSaIlEEEENS7_IXtlNS9_ILm12EEEtlSB_IcLm12EEtlA12_cLc100ELc101ELc115ELc99ELc114ELc105ELc112ELc116ELc105ELc111ELc110EEEEEPSt8optionalISJ_EEENS7_IXtlNS9_ILm20EEEtlSB_IcLm20EEtlA20_cLc114ELc101ELc99ELc111ELc109ELc109ELc101ELc110ELc100ELc101ELc100ELc95ELc101ELc110ELc99ELc111ELc100ELc101ELc114EEEEESZ_EENS7_IXtlS11_tlS12_tlS13_Lc114ELc101ELc99ELc111ELc109ELc109ELc101ELc110ELc100ELc101ELc100ELc95ELc100ELc101ELc99ELc111ELc100ELc101ELc114EEEEESZ_EENS7_IXtlNS9_ILm10EEEtlSB_IcLm10EEtlA10_cLc105ELc115ELc95ELc115ELc116ELc97ELc116ELc105ELc99EEEEEPSX_IbEEENS7_IXtlNS9_ILm16EEEtlSB_IcLm16EEtlA16_cLc105ELc115ELc95ELc98ELc111ELc111ELc108ELc101ELc97ELc110ELc95ELc109ELc97ELc115ELc107EEEEES1A_EENS7_IXtlNS9_ILm13EEEtlSB_IcLm13EEtlA13_cLc115ELc101ELc113ELc117ELc101ELc110ELc99ELc101ELc95ELc100ELc105ELc109EEEEEPSX_IiEEEEE20read_object_or_arrayERKS3_RKNS3_17YYJSONInputObjectEPNS_10NamedTupleIJSL_ST_S10_S14_S15_S1B_S1F_S1L_EEE
+ 100.0%  1.08Mi 100.0%   394Ki    TOTAL
+```
+
+### libCoreMath.a
+```
+    FILE SIZE        VM SIZE
+ --------------  --------------
+  23.3%  44.3Ki  40.0%  44.3Ki    .text
+   9.6%  18.2Ki   0.0%       0    .rela.text
+   8.7%  16.5Ki  14.9%  16.5Ki    .text._ZN4arma6auxlib16solve_rect_rcondINS_3MatIdEEEEbRNS2_INT_9elem_typeEEERNS4_8pod_typeES7_RKNS_4BaseIS5_S4_EE
+   7.0%  13.4Ki  12.1%  13.4Ki    .text._ZN4arma6auxlib16solve_approx_svdINS_3MatIdEEEEbRNS2_INT_8pod_typeEEES7_RKNS_4BaseIS5_S4_EE
+   5.8%  11.1Ki   0.0%       0    .rela.text.unlikely
+   5.7%  10.8Ki   9.8%  10.8Ki    .text.unlikely
+   4.4%  8.45Ki   0.0%       0    .strtab
+   4.4%  8.44Ki   0.0%       0    [ELF Section Headers]
+   4.4%  8.41Ki   7.6%  8.39Ki    .text._ZN4arma6auxlib23solve_band_rcond_commonINS_3MatIdEEEEbRNS2_INT_9elem_typeEEERNS4_8pod_typeERKS6_yyRKNS_4BaseIS5_S4_EE
+   4.2%  8.06Ki   0.0%       0    .symtab
+   3.9%  7.33Ki   4.5%  5.00Ki    [36 Others]
+   3.7%  6.94Ki   6.3%  6.93Ki    .text._ZN4arma6auxlib18solve_square_rcondINS_3MatIdEEEEbRNS2_INT_9elem_typeEEERNS4_8pod_typeES7_RKNS_4BaseIS5_S4_EE
+   2.6%  4.97Ki   0.0%       0    .rela.text._ZN4arma6auxlib16solve_rect_rcondINS_3MatIdEEEEbRNS2_INT_9elem_typeEEERNS4_8pod_typeES7_RKNS_4BaseIS5_S4_EE
+   2.3%  4.36Ki   0.0%       0    .rela.text._ZN4arma6auxlib16solve_approx_svdINS_3MatIdEEEEbRNS2_INT_8pod_typeEEES7_RKNS_4BaseIS5_S4_EE
+   1.8%  3.51Ki   3.2%  3.51Ki    .eh_frame
+   1.6%  3.00Ki   0.0%       0    .shstrtab
+   1.4%  2.65Ki   0.0%       0    .rela.eh_frame
+   1.4%  2.61Ki   0.0%       0    [AR Symbol Table]
+   1.3%  2.53Ki   0.0%       0    .rela.text._ZN4arma6auxlib23solve_band_rcond_commonINS_3MatIdEEEEbRNS2_INT_9elem_typeEEERNS4_8pod_typeERKS6_yyRKNS_4BaseIS5_S4_EE
+   1.3%  2.48Ki   0.0%       0    .rela.text._ZN4arma6auxlib18solve_square_rcondINS_3MatIdEEEEbRNS2_INT_9elem_typeEEERNS4_8pod_typeES7_RKNS_4BaseIS5_S4_EE
+   1.0%  1.83Ki   1.6%  1.82Ki    .gcc_except_table
+ 100.0%   189Ki 100.0%   110Ki    TOTAL
+```
+
+### libCorePlotting.a
+```
+    FILE SIZE        VM SIZE
+ --------------  --------------
+  31.3%   164Ki  69.7%   164Ki    .text
+  17.0%  89.6Ki   0.0%       0    .rela.text
+  10.4%  54.9Ki   0.0%       0    [ELF Section Headers]
+   9.1%  48.1Ki   0.0%       0    .strtab
+   8.9%  46.9Ki  11.1%  26.3Ki    [177 Others]
+   6.9%  36.2Ki   0.0%       0    .symtab
+   4.8%  25.1Ki   0.0%       0    [AR Symbol Table]
+   3.3%  17.6Ki   0.0%       0    .shstrtab
+   2.7%  14.3Ki   6.0%  14.3Ki    .eh_frame
+   2.0%  10.7Ki   0.0%       0    .rela.eh_frame
+   1.6%  8.65Ki   0.0%       0    .rela.text.unlikely
+   1.0%  5.18Ki   2.2%  5.17Ki    .text.unlikely
+   0.0%       0   1.3%  3.00Ki    .bss._ZZN12CorePlotting9Colormaps6detail10infernoLUTEvE3lut
+   0.0%       0   1.3%  3.00Ki    .bss._ZZN12CorePlotting9Colormaps6detail10viridisLUTEvE3lut
+   0.0%       0   1.3%  3.00Ki    .bss._ZZN12CorePlotting9Colormaps6detail11coolwarmLUTEvE3lut
+   0.0%       0   1.3%  3.00Ki    .bss._ZZN12CorePlotting9Colormaps6detail12grayscaleLUTEvE3lut
+   0.0%       0   1.3%  3.00Ki    .bss._ZZN12CorePlotting9Colormaps6detail6hotLUTEvE3lut
+   0.0%       0   1.3%  3.00Ki    .bss._ZZN12CorePlotting9Colormaps6detail8magmaLUTEvE3lut
+   0.0%       0   1.3%  3.00Ki    .bss._ZZN12CorePlotting9Colormaps6detail9plasmaLUTEvE3lut
+   0.5%  2.83Ki   1.2%  2.75Ki    .gcc_except_table
+   0.4%  2.26Ki   1.0%  2.26Ki    .text._ZN8QuadTreeI8EntityIdE9subdivideEv
+ 100.0%   527Ki 100.0%   236Ki    TOTAL
+```
+
+
+## Summary
+
+This analysis provides a high-level overview of the library sizes and their internal section breakdown. The `.text` section (executable code) generally takes up the most space, followed by symbol tables (`.strtab`, `.dynstr`) and read-only data (`.rodata`).
