@@ -14,6 +14,7 @@ For starting projects, I recommend looking into four separate initiatives to ens
 -   [Testing](testing/testing.qmd): Unit tests are critical for ensuring that code changes do not break existing functionality. This section describes the testing framework and guidelines for writing tests.
 -   [Profiling and Performance](benchmark/benchmarking.qmd): Profiling tools can help identify performance bottlenecks in the code. This section describes how to use profiling tools to optimize code performance.
 -   [Static Analysis](analysis/static_analysis.qmd): Static analysis tools can help identify potential issues in the code before they become problems. This section describes how to use static analysis tools to improve code quality.
+-   [Size Analysis](analysis/bloaty_size_analysis.qmd): Bloaty size analysis of library components. This helps us ensure that our output binaries are reasonably sized.
 -   [Fuzzing](fuzz/fuzzing.qmd): Fuzzing is a technique for testing software by providing random inputs to the program. This section describes how to use fuzzing to identify bugs in the code or unexpected edge cases in complex algorithms.
 
 Neuralyzer has many moving parts. There are multiple libraries that encapsulate different features that are maintained as part of this project. It is worth being familiar with some of these:
