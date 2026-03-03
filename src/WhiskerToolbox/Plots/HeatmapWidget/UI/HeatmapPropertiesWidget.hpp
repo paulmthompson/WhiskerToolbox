@@ -26,6 +26,7 @@ class EstimationMethodControls;
 class Feature_Tree_Widget;
 class HeatmapWidget;
 class PlotAlignmentWidget;
+class QCheckBox;
 class QComboBox;
 class QDoubleSpinBox;
 class QLabel;
@@ -91,12 +92,19 @@ private:
     QLabel * _vmin_label{nullptr};
     QLabel * _vmax_label{nullptr};
 
+    // Sorting UI
+    Section * _sorting_section{nullptr};
+    QComboBox * _sort_mode_combo{nullptr};
+    QCheckBox * _sort_ascending_check{nullptr};
+
     void _setupUnitTree();
     void _connectUnitTreeSignals();
     void _syncTreeFromState();
     void _setupScalingSection();
     void _syncScalingFromState();
     void _updateColorRangeVisibility();
+    void _setupSortingSection();
+    void _syncSortingFromState();
 };
 
 #endif// HEATMAP_PROPERTIES_WIDGET_HPP

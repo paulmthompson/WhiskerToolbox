@@ -15,16 +15,16 @@
  * @see EditorState for base class documentation
  */
 
-#include "EditorState/EditorState.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "EditorState/EditorState.hpp"
 #include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
 #include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
-#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
-#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -32,6 +32,56 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+// =============================================================================
+// Sort Mode (serializable)
+// =============================================================================
+
+/**
+ * @brief Sorting modes for heatmap rows
+ *
+ * Controls how unit rows are ordered in the heatmap display.
+ * Sorting is applied after rate estimation and scaling, before colormap mapping.
+ */
+enum class HeatmapSortMode {
+    Manual,      ///< User-defined order (order of addition) — default
+    TimeToPeak,  ///< Sort by latency of peak rate relative to t=0 (ascending)
+    PeakRate,    ///< Sort by maximum rate value (descending)
+    MeanRate,    ///< Sort by mean rate across all bins (descending)
+    Alphabetical,///< Sort by unit label / event key (ascending)
+};
+
+/**
+ * @brief Return a human-readable label for a HeatmapSortMode value
+ */
+[[nodiscard]] constexpr char const * sortModeLabel(HeatmapSortMode mode) noexcept {
+    switch (mode) {
+        case HeatmapSortMode::Manual:
+            return "Manual";
+        case HeatmapSortMode::TimeToPeak:
+            return "Time to Peak";
+        case HeatmapSortMode::PeakRate:
+            return "Peak Rate";
+        case HeatmapSortMode::MeanRate:
+            return "Mean Rate";
+        case HeatmapSortMode::Alphabetical:
+            return "Alphabetical";
+    }
+    return "Unknown";
+}
+
+/**
+ * @brief All available sort modes (for populating combo boxes)
+ */
+[[nodiscard]] inline std::vector<HeatmapSortMode> allSortModes() {
+    return {
+            HeatmapSortMode::Manual,
+            HeatmapSortMode::TimeToPeak,
+            HeatmapSortMode::PeakRate,
+            HeatmapSortMode::MeanRate,
+            HeatmapSortMode::Alphabetical,
+    };
+}
 
 // =============================================================================
 // Color Range Configuration (serializable)
@@ -45,14 +95,14 @@
  */
 struct HeatmapColorRangeConfig {
     enum class Mode {
-        Auto,       ///< Range from data min/max (default)
-        Manual,     ///< User-specified vmin/vmax
-        Symmetric,  ///< Symmetric around zero (for z-scores)
+        Auto,     ///< Range from data min/max (default)
+        Manual,   ///< User-specified vmin/vmax
+        Symmetric,///< Symmetric around zero (for z-scores)
     };
 
     Mode mode = Mode::Auto;
-    double vmin = 0.0;   ///< Manual minimum (used when mode == Manual)
-    double vmax = 1.0;   ///< Manual maximum (used when mode == Manual)
+    double vmin = 0.0;///< Manual minimum (used when mode == Manual)
+    double vmax = 1.0;///< Manual maximum (used when mode == Manual)
 };
 
 // =============================================================================
@@ -70,11 +120,13 @@ struct HeatmapStateData {
     RelativeTimeAxisStateData time_axis;
     VerticalAxisStateData vertical_axis;
     std::string background_color = "#FFFFFF";
-    std::vector<std::string> unit_keys;  ///< Selected DigitalEventSeries keys
+    std::vector<std::string> unit_keys;///< Selected DigitalEventSeries keys
     WhiskerToolbox::Plots::ScalingMode scaling =
             WhiskerToolbox::Plots::ScalingMode::FiringRateHz;
     WhiskerToolbox::Plots::EstimationParams estimation_params;
     HeatmapColorRangeConfig color_range;
+    HeatmapSortMode sort_mode = HeatmapSortMode::Manual;
+    bool sort_ascending = true;
 };
 
 /**
@@ -150,6 +202,16 @@ public:
     /** @brief Set the estimation parameters. Emits estimationParamsChanged() and stateChanged(). */
     void setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params);
 
+    // === Sorting ===
+    /** @brief Get the current sort mode */
+    [[nodiscard]] HeatmapSortMode sortMode() const { return _data.sort_mode; }
+    /** @brief Set the sort mode. Emits sortChanged() and stateChanged(). */
+    void setSortMode(HeatmapSortMode mode);
+    /** @brief Get the current sort direction */
+    [[nodiscard]] bool sortAscending() const { return _data.sort_ascending; }
+    /** @brief Set the sort direction. Emits sortChanged() and stateChanged(). */
+    void setSortAscending(bool ascending);
+
     // === Color Range ===
     /** @brief Get the current color range configuration */
     [[nodiscard]] HeatmapColorRangeConfig const & colorRange() const { return _data.color_range; }
@@ -178,10 +240,11 @@ signals:
     void windowSizeChanged(double window_size);
     void viewStateChanged();
     void backgroundColorChanged(QString const & hex_color);
-    void unitsChanged();  ///< Emitted when the unit list changes (add/remove)
-    void scalingChanged();     ///< Emitted when scaling mode changes
-    void colorRangeChanged();  ///< Emitted when color range config changes
-    void estimationParamsChanged();  ///< Emitted when estimation params (bin_size) change
+    void unitsChanged();           ///< Emitted when the unit list changes (add/remove)
+    void scalingChanged();         ///< Emitted when scaling mode changes
+    void colorRangeChanged();      ///< Emitted when color range config changes
+    void estimationParamsChanged();///< Emitted when estimation params (bin_size) change
+    void sortChanged();            ///< Emitted when sort mode or direction changes
 
 private:
     HeatmapStateData _data;

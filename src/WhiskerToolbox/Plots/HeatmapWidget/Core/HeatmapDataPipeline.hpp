@@ -19,7 +19,9 @@
 #include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
 #include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
+#include "Plots/HeatmapWidget/Core/HeatmapState.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
@@ -73,6 +75,43 @@ struct HeatmapPipelineResult {
         std::vector<std::string> const & unit_keys,
         PlotAlignmentData const & alignment_data,
         HeatmapPipelineConfig const & config);
+
+// =============================================================================
+// Sorting
+// =============================================================================
+
+/**
+ * @brief Compute a permutation vector that sorts the pipeline rows
+ *
+ * Returns indices into the original row order such that
+ * `rows[result[0]]` is the first row in sorted order, etc.
+ *
+ * @param result      Pipeline result containing rows and rate_estimates
+ * @param unit_keys   Unit keys (parallel to rows) — used for Alphabetical sort
+ * @param sort_mode   Sorting criterion
+ * @param ascending   Sort direction
+ * @return Index permutation of size `result.rows.size()`
+ */
+[[nodiscard]] std::vector<std::size_t> computeSortOrder(
+        HeatmapPipelineResult const & result,
+        std::vector<std::string> const & unit_keys,
+        HeatmapSortMode sort_mode,
+        bool ascending);
+
+/**
+ * @brief Apply a precomputed permutation to the pipeline result and unit keys
+ *
+ * Reorders `result.rows`, `result.rate_estimates`, and `unit_keys` in-place
+ * according to the given index permutation.
+ *
+ * @param result       Pipeline result to reorder (modified in-place)
+ * @param unit_keys    Unit keys to reorder in parallel (modified in-place)
+ * @param sort_indices Permutation from computeSortOrder()
+ */
+void applySortOrder(
+        HeatmapPipelineResult & result,
+        std::vector<std::string> & unit_keys,
+        std::vector<std::size_t> const & sort_indices);
 
 }// namespace WhiskerToolbox::Plots
 

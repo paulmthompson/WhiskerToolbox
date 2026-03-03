@@ -14,6 +14,7 @@
 
 #include "ui_HeatmapPropertiesWidget.h"
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
@@ -51,6 +52,9 @@ HeatmapPropertiesWidget::HeatmapPropertiesWidget(std::shared_ptr<HeatmapState> s
 
     // Set up the scaling / color range section
     _setupScalingSection();
+
+    // Set up the sorting section
+    _setupSortingSection();
 }
 
 HeatmapPropertiesWidget::~HeatmapPropertiesWidget() {
@@ -80,8 +84,8 @@ void HeatmapPropertiesWidget::setPlotWidget(HeatmapWidget * plot_widget) {
                 new VerticalAxisRangeControls(vertical_axis_state, _vertical_range_controls_section);
         _vertical_range_controls_section->autoSetContentLayout();
         int const insert_index = _range_controls_section
-                                   ? ui->main_layout->indexOf(_range_controls_section) + 1
-                                   : ui->main_layout->indexOf(_alignment_widget) + 1;
+                                         ? ui->main_layout->indexOf(_range_controls_section) + 1
+                                         : ui->main_layout->indexOf(_alignment_widget) + 1;
         ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
     }
 }
@@ -350,4 +354,73 @@ void HeatmapPropertiesWidget::_updateColorRangeVisibility() {
     _vmin_spin->setVisible(is_manual);
     _vmax_label->setVisible(is_manual);
     _vmax_spin->setVisible(is_manual);
+}
+
+// =============================================================================
+// Sorting Section
+// =============================================================================
+
+void HeatmapPropertiesWidget::_setupSortingSection() {
+    _sorting_section = new Section(this, "Sorting");
+
+    // --- Sort mode combo ---
+    _sort_mode_combo = new QComboBox(_sorting_section);
+    _sort_mode_combo->setObjectName("sort_mode_combo");
+    for (auto const mode: allSortModes()) {
+        _sort_mode_combo->addItem(sortModeLabel(mode), static_cast<int>(mode));
+    }
+
+    // --- Ascending checkbox ---
+    _sort_ascending_check = new QCheckBox("Ascending", _sorting_section);
+    _sort_ascending_check->setObjectName("sort_ascending_check");
+
+    // --- Layout ---
+    auto * layout = new QFormLayout();
+    layout->setContentsMargins(4, 4, 4, 4);
+    layout->setSpacing(4);
+    layout->addRow("Sort By:", _sort_mode_combo);
+    layout->addRow(_sort_ascending_check);
+
+    _sorting_section->setContentLayout(*layout);
+
+    // Insert after the scaling section but before the spacer
+    int const spacer_index = ui->main_layout->indexOf(ui->vertical_spacer);
+    ui->main_layout->insertWidget(spacer_index, _sorting_section);
+
+    // --- Sync from state ---
+    _syncSortingFromState();
+
+    // --- Connect signals ---
+    connect(_sort_mode_combo, &QComboBox::currentIndexChanged,
+            this, [this](int index) {
+                if (!_state || index < 0) return;
+                auto mode = static_cast<HeatmapSortMode>(
+                        _sort_mode_combo->itemData(index).toInt());
+                _state->setSortMode(mode);
+            });
+
+    connect(_sort_ascending_check, &QCheckBox::toggled,
+            this, [this](bool checked) {
+                if (!_state) return;
+                _state->setSortAscending(checked);
+            });
+
+    // Listen for state changes
+    connect(_state.get(), &HeatmapState::sortChanged,
+            this, [this]() { _syncSortingFromState(); });
+}
+
+void HeatmapPropertiesWidget::_syncSortingFromState() {
+    if (!_state) return;
+
+    QSignalBlocker const mode_blocker(_sort_mode_combo);
+    QSignalBlocker const asc_blocker(_sort_ascending_check);
+
+    int const mode_idx = _sort_mode_combo->findData(
+            static_cast<int>(_state->sortMode()));
+    if (mode_idx >= 0) {
+        _sort_mode_combo->setCurrentIndex(mode_idx);
+    }
+
+    _sort_ascending_check->setChecked(_state->sortAscending());
 }

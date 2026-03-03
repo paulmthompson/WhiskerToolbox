@@ -279,6 +279,26 @@ void HeatmapState::setEstimationParams(WhiskerToolbox::Plots::EstimationParams c
     }
 }
 
+// === Sorting ===
+
+void HeatmapState::setSortMode(HeatmapSortMode mode) {
+    if (_data.sort_mode != mode) {
+        _data.sort_mode = mode;
+        markDirty();
+        emit sortChanged();
+        emit stateChanged();
+    }
+}
+
+void HeatmapState::setSortAscending(bool ascending) {
+    if (_data.sort_ascending != ascending) {
+        _data.sort_ascending = ascending;
+        markDirty();
+        emit sortChanged();
+        emit stateChanged();
+    }
+}
+
 // === Color Range ===
 
 void HeatmapState::setColorRangeMode(HeatmapColorRangeConfig::Mode mode) {

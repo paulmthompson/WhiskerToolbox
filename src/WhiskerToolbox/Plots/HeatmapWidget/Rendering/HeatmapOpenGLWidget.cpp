@@ -248,6 +248,16 @@ void HeatmapOpenGLWidget::rebuildScene() {
         return;
     }
 
+    // Apply row sorting if a non-Manual sort mode is selected
+    auto const sort_mode = _state->sortMode();
+    if (sort_mode != HeatmapSortMode::Manual) {
+        auto sorted_keys = std::vector<std::string>(unit_keys);
+        auto sort_indices = WhiskerToolbox::Plots::computeSortOrder(
+                pipeline_result, sorted_keys, sort_mode, _state->sortAscending());
+        WhiskerToolbox::Plots::applySortOrder(
+                pipeline_result, sorted_keys, sort_indices);
+    }
+
     // Build the colored rectangle scene with appropriate colormap and range
     auto const & color_range_config = _state->colorRange();
 

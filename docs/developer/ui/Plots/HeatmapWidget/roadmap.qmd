@@ -27,8 +27,9 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Y-axis auto-fit**: `HeatmapWidget` auto-fits the vertical axis when the unit count changes. Y bounds are set to `[0, num_units]`, Y zoom is reset to 1.0, and Y pan is reset to 0.0 so all units are visible. The `VerticalAxisWidget` uses `identityAxis("Unit", 0)` for integer unit-index labels. Signal renamed from `trialCountChanged` to `unitCountChanged` for semantic clarity.
 - **Scaling and normalization**: Five scaling modes (Firing Rate Hz, Z-Score, Normalized [0,1], Raw Count, Count/Trial). Uses shared `ScalingMode`/`applyScaling()` from `RateEstimate.hpp`. `HeatmapStateData` extended with `scaling` and `color_range` (Auto/Manual/Symmetric). Auto-switches to Coolwarm colormap for z-score and Symmetric color range. Properties panel has "Scaling & Color Range" collapsible section with `ScalingModeControls` widget and manual vmin/vmax spinboxes.
 - **Rate estimation options** : `EstimationParams` variant (`std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>`) stored directly in `HeatmapStateData::estimation_params`. Lightweight `EstimationParams.hpp` header (no heavy transitive deps) safe to include from state headers. `RateEstimationControls` library provides composable Qt widgets: `EstimationMethodControls` (method combo + stacked per-method parameter pages) and `ScalingModeControls` (scaling mode combo). `HeatmapPropertiesWidget` uses both widgets. Renderer passes `estimationParams()` directly to `estimateRates()` — no intermediate conversion.
+- **Row sorting**: Five sorting modes (Manual, TimeToPeak, PeakRate, MeanRate, Alphabetical) with ascending/descending toggle. `HeatmapSortMode` enum and `sortModeLabel()` / `allSortModes()` utilities defined in `HeatmapState.hpp`. `HeatmapStateData` extended with `sort_mode` and `sort_ascending`. Sorting logic in `HeatmapDataPipeline.hpp/cpp` via `computeSortOrder()` (returns index permutation) and `applySortOrder()` (reorders rows, rate estimates, and unit keys in-place). Applied after `runHeatmapPipeline()` in renderer before colormap mapping. Properties panel has "Sorting" collapsible section with sort mode combo and ascending checkbox. Full serialization round-trip.
 
-**Not yet implemented**: colorbar display (Phase 4), colormap selection UI (Phase 9), sorting, and all cross-widget linking described below.
+**Not yet implemented**: colorbar display (Phase 4), colormap selection UI (Phase 9), and all cross-widget linking described below.
 
 ---
 
@@ -78,67 +79,9 @@ which also needs a color legend for its power spectrum display.
 
 ---
 
-## Phase 6: Row Sorting
-
-**Status**: Not started. Phase 1 is now complete; this phase can proceed.
-
-**Goal**: Allow users to reorder heatmap rows by various criteria for pattern discovery.
-
-### 6.1 Sorting Modes
-
-```cpp
-enum class HeatmapSortMode {
-    Manual,         ///< User-defined order (default — order of addition)
-    TimeToPeak,     ///< Sort by latency of peak rate relative to t=0 (ascending)
-    PeakRate,       ///< Sort by maximum rate value (descending)
-    MeanRate,       ///< Sort by mean rate across all bins (descending)
-    Alphabetical    ///< Sort by unit label / event key (ascending)
-};
-```
-
-### 6.2 Time-to-Peak Sorting
-
-The primary sorting mode. For each unit row:
-
-1. Find the bin with the maximum rate value
-2. The bin's center time relative to t = 0 is the "time to peak"
-3. Sort units by time to peak in ascending order
-
-This produces the characteristic "diagonal stripe" pattern seen in neuroscience publications,
-revealing temporal sequences in population activity.
-
-### 6.3 State Extension
-
-```cpp
-struct HeatmapStateData {
-    // ... existing fields ...
-    HeatmapSortMode sort_mode = HeatmapSortMode::Manual;
-    bool sort_ascending = true;
-};
-```
-
-### 6.4 Implementation
-
-Sorting is applied after rate matrix computation and before colormap mapping:
-
-```cpp
-auto sort_indices = computeSortOrder(rate_matrix, sort_mode, sort_ascending);
-auto sorted_matrix = reorderRows(rate_matrix, sort_indices);
-auto sorted_units = reorderVector(units, sort_indices);
-```
-
-The sorted order should also be reflected in the Y-axis labels.
-
-### 6.5 Properties Panel
-
-Add a "Sorting" combo box to the properties panel with the available modes. Include an
-ascending/descending toggle button.
-
----
-
 ## Phase 7: Cross-Widget Linking
 
-**Status**: Design complete. Depends on [Phase 1](#phase-1-core-rendering--per-unit-rate-matrix).
+**Status**: Design complete.
 Related to [EventPlot Roadmap](../EventPlotWidget/roadmap.qmd) Phase 6 and
 [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 4.
 

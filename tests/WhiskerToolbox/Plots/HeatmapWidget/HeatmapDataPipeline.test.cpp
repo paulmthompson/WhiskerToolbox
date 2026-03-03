@@ -18,6 +18,7 @@
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "Plots/HeatmapWidget/Core/HeatmapState.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -530,4 +531,240 @@ TEST_CASE("runHeatmapPipeline single unit no spikes in window",
             result.rows[0].values.begin(),
             result.rows[0].values.end(), 0.0);
     REQUIRE(total == 0.0);
+}
+
+// =============================================================================
+// Row Sorting Tests
+// =============================================================================
+
+namespace {
+
+/**
+ * @brief Fixture with three units having distinct peak times and rates
+ *
+ * Sets up:
+ * - "early_unit":  spikes at relative times ~0  (peak near t=0)
+ * - "mid_unit":    spikes at relative times ~20 (peak near t=20)
+ * - "late_unit":   spikes at relative times ~40 (peak near t=40)
+ *
+ * early_unit has the most spikes (highest peak rate), late_unit has fewest.
+ * Keys are chosen so alphabetical order differs from temporal order.
+ */
+struct SortingFixture {
+    std::shared_ptr<DataManager> dm;
+    PlotAlignmentData alignment_data;
+    WhiskerToolbox::Plots::HeatmapPipelineConfig config;
+    std::vector<std::string> unit_keys;
+
+    SortingFixture() {
+        dm = std::make_shared<DataManager>();
+
+        auto tf = createTimeFrame(10000);
+        dm->removeTime(TimeKey("time"));
+        dm->setTime(TimeKey("time"), tf);
+
+        // Alignment at t=500
+        auto alignment = createEventSeries({500});
+        alignment->setTimeFrame(tf);
+        dm->setData<DigitalEventSeries>("alignment", alignment, TimeKey("time"));
+
+        // "early_unit": 5 spikes near t=500 (relative ~0), highest rate
+        auto early = createEventSeries({498, 499, 500, 501, 502});
+        early->setTimeFrame(tf);
+        dm->setData<DigitalEventSeries>("early_unit", early, TimeKey("time"));
+
+        // "mid_unit": 3 spikes near t=520 (relative ~20), medium rate
+        auto mid = createEventSeries({519, 520, 521});
+        mid->setTimeFrame(tf);
+        dm->setData<DigitalEventSeries>("mid_unit", mid, TimeKey("time"));
+
+        // "late_unit": 1 spike near t=540 (relative ~40), lowest rate
+        auto late_ev = createEventSeries({540});
+        late_ev->setTimeFrame(tf);
+        dm->setData<DigitalEventSeries>("late_unit", late_ev, TimeKey("time"));
+
+        alignment_data.alignment_event_key = "alignment";
+        alignment_data.window_size = 100.0;
+
+        config.window_size = 100.0;
+        config.scaling = WhiskerToolbox::Plots::ScalingMode::RawCount;
+        config.estimation_params = WhiskerToolbox::Plots::BinningParams{.bin_size = 10.0};
+        config.time_units_per_second = 1000.0;
+
+        // Manual insertion order: early, mid, late
+        unit_keys = {"early_unit", "mid_unit", "late_unit"};
+    }
+};
+
+}// anonymous namespace
+
+TEST_CASE("computeSortOrder Manual returns identity",
+          "[HeatmapDataPipeline][sorting]") {
+    SortingFixture f;
+    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            f.dm, f.unit_keys, f.alignment_data, f.config);
+    REQUIRE(result.success);
+
+    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+            result, f.unit_keys, HeatmapSortMode::Manual, true);
+
+    REQUIRE(indices.size() == 3);
+    REQUIRE(indices[0] == 0);
+    REQUIRE(indices[1] == 1);
+    REQUIRE(indices[2] == 2);
+}
+
+TEST_CASE("computeSortOrder TimeToPeak ascending sorts by peak latency",
+          "[HeatmapDataPipeline][sorting]") {
+    SortingFixture f;
+    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            f.dm, f.unit_keys, f.alignment_data, f.config);
+    REQUIRE(result.success);
+
+    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+            result, f.unit_keys, HeatmapSortMode::TimeToPeak, true);
+
+    REQUIRE(indices.size() == 3);
+    // early_unit peaks first, then mid, then late
+    REQUIRE(indices[0] == 0);// early_unit
+    REQUIRE(indices[1] == 1);// mid_unit
+    REQUIRE(indices[2] == 2);// late_unit
+}
+
+TEST_CASE("computeSortOrder TimeToPeak descending reverses order",
+          "[HeatmapDataPipeline][sorting]") {
+    SortingFixture f;
+    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            f.dm, f.unit_keys, f.alignment_data, f.config);
+    REQUIRE(result.success);
+
+    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+            result, f.unit_keys, HeatmapSortMode::TimeToPeak, false);
+
+    REQUIRE(indices.size() == 3);
+    // late_unit peaks last, so it comes first in descending
+    REQUIRE(indices[0] == 2);// late_unit
+    REQUIRE(indices[1] == 1);// mid_unit
+    REQUIRE(indices[2] == 0);// early_unit
+}
+
+TEST_CASE("computeSortOrder PeakRate descending sorts highest first",
+          "[HeatmapDataPipeline][sorting]") {
+    SortingFixture f;
+    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            f.dm, f.unit_keys, f.alignment_data, f.config);
+    REQUIRE(result.success);
+
+    // Default descending: highest peak rate first
+    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+            result, f.unit_keys, HeatmapSortMode::PeakRate, false);
+
+    REQUIRE(indices.size() == 3);
+    // early_unit has 5 spikes (highest peak), late_unit has 1 (lowest)
+    REQUIRE(indices[0] == 0);// early_unit (highest)
+    REQUIRE(indices[2] == 2);// late_unit (lowest)
+}
+
+TEST_CASE("computeSortOrder MeanRate descending sorts highest first",
+          "[HeatmapDataPipeline][sorting]") {
+    SortingFixture f;
+    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            f.dm, f.unit_keys, f.alignment_data, f.config);
+    REQUIRE(result.success);
+
+    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+            result, f.unit_keys, HeatmapSortMode::MeanRate, false);
+
+    REQUIRE(indices.size() == 3);
+    // early_unit has most total spikes → highest mean
+    REQUIRE(indices[0] == 0);// early_unit
+    REQUIRE(indices[2] == 2);// late_unit (fewest)
+}
+
+TEST_CASE("computeSortOrder Alphabetical ascending",
+          "[HeatmapDataPipeline][sorting]") {
+    SortingFixture f;
+    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            f.dm, f.unit_keys, f.alignment_data, f.config);
+    REQUIRE(result.success);
+
+    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+            result, f.unit_keys, HeatmapSortMode::Alphabetical, true);
+
+    REQUIRE(indices.size() == 3);
+    // "early_unit" < "late_unit" < "mid_unit"
+    REQUIRE(f.unit_keys[indices[0]] == "early_unit");
+    REQUIRE(f.unit_keys[indices[1]] == "late_unit");
+    REQUIRE(f.unit_keys[indices[2]] == "mid_unit");
+}
+
+TEST_CASE("computeSortOrder Alphabetical descending",
+          "[HeatmapDataPipeline][sorting]") {
+    SortingFixture f;
+    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            f.dm, f.unit_keys, f.alignment_data, f.config);
+    REQUIRE(result.success);
+
+    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+            result, f.unit_keys, HeatmapSortMode::Alphabetical, false);
+
+    REQUIRE(indices.size() == 3);
+    // "mid_unit" > "late_unit" > "early_unit"
+    REQUIRE(f.unit_keys[indices[0]] == "mid_unit");
+    REQUIRE(f.unit_keys[indices[1]] == "late_unit");
+    REQUIRE(f.unit_keys[indices[2]] == "early_unit");
+}
+
+TEST_CASE("applySortOrder reorders rows rate_estimates and unit_keys",
+          "[HeatmapDataPipeline][sorting]") {
+    SortingFixture f;
+    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            f.dm, f.unit_keys, f.alignment_data, f.config);
+    REQUIRE(result.success);
+
+    // Sort by time to peak descending (late → mid → early)
+    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+            result, f.unit_keys, HeatmapSortMode::TimeToPeak, false);
+
+    // Save original data for reference
+    auto original_row0_values = result.rows[0].values;
+    auto const original_key0 = f.unit_keys[0];
+
+    WhiskerToolbox::Plots::applySortOrder(result, f.unit_keys, indices);
+
+    // After descending time-to-peak sort: late_unit should be first
+    REQUIRE(f.unit_keys[0] == "late_unit");
+    REQUIRE(f.unit_keys[1] == "mid_unit");
+    REQUIRE(f.unit_keys[2] == "early_unit");
+
+    // Rows should have same count
+    REQUIRE(result.rows.size() == 3);
+    REQUIRE(result.rate_estimates.size() == 3);
+}
+
+TEST_CASE("computeSortOrder with single row returns identity",
+          "[HeatmapDataPipeline][sorting][edge]") {
+    SingleUnitFixture f;
+    std::vector<std::string> unit_keys = {"spikes"};
+
+    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            f.dm, unit_keys, f.alignment_data, f.config);
+    REQUIRE(result.success);
+
+    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+            result, unit_keys, HeatmapSortMode::TimeToPeak, true);
+
+    REQUIRE(indices.size() == 1);
+    REQUIRE(indices[0] == 0);
+}
+
+TEST_CASE("computeSortOrder with empty result returns empty",
+          "[HeatmapDataPipeline][sorting][edge]") {
+    WhiskerToolbox::Plots::HeatmapPipelineResult empty_result;
+    std::vector<std::string> unit_keys;
+
+    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+            empty_result, unit_keys, HeatmapSortMode::PeakRate, true);
+
+    REQUIRE(indices.empty());
 }
