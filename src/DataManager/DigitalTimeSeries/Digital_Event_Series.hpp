@@ -195,10 +195,71 @@ public:
     [[nodiscard]] size_t size() const { return _storage.size(); }
 
     /**
+     * @brief Add a new event at the specified time with a specific EntityId
+     * 
+     * Maintains sorted order. Duplicate times are rejected (no-op).
+     * Used internally for move operations to preserve entity IDs.
+     * 
+     * @param event_time The time index for the new event
+     * @param entity_id The EntityId to assign to the event
+     * @param notify Whether to notify observers after the operation
+     * @throws std::runtime_error if storage is View or Lazy (read-only)
+     */
+    void addEvent(TimeFrameIndex event_time, EntityId entity_id, NotifyObservers notify);
+
+    /**
      * @brief Remove all events from the series
      * @throws std::runtime_error if storage is View or Lazy (read-only)
      */
     void clear();
+
+    // ========== Entity-Based Bulk Operations ==========
+
+    /**
+     * @brief Move events with specific EntityIds to another DigitalEventSeries
+     * 
+     * Moves all events matching the given EntityIds to the target series.
+     * Moved events preserve their EntityIds in the target and are removed
+     * from this series.
+     * 
+     * @param target The target series to move events to
+     * @param entity_ids Set of EntityIds to move
+     * @param notify If Yes, both source and target notify observers after the operation
+     * @return The number of events actually moved
+     * @throws std::runtime_error if either source or target storage is View or Lazy
+     */
+    std::size_t moveByEntityIds(DigitalEventSeries & target,
+                                std::unordered_set<EntityId> const & entity_ids,
+                                NotifyObservers notify);
+
+    /**
+     * @brief Copy events with specific EntityIds to another DigitalEventSeries
+     * 
+     * Copies all events matching the given EntityIds to the target series.
+     * Copied events get new EntityIds in the target based on the target's
+     * identity context (via addEvent which auto-assigns EntityIds).
+     * 
+     * @param target The target series to copy events to
+     * @param entity_ids Set of EntityIds to copy
+     * @param notify If Yes, the target notifies observers after the operation
+     * @return The number of events actually copied
+     */
+    std::size_t copyByEntityIds(DigitalEventSeries & target,
+                                std::unordered_set<EntityId> const & entity_ids,
+                                NotifyObservers notify);
+
+    /**
+     * @brief Delete events with specific EntityIds from this series
+     * 
+     * Removes all events matching the given EntityIds.
+     * 
+     * @param entity_ids Set of EntityIds to delete
+     * @param notify If Yes, observers are notified after the operation
+     * @return The number of events actually deleted
+     * @throws std::runtime_error if storage is View or Lazy (read-only)
+     */
+    std::size_t deleteByEntityIds(std::unordered_set<EntityId> const & entity_ids,
+                                  NotifyObservers notify);
 
     // ========== Range Queries (Public - Require TimeFrame) ==========
 
@@ -311,7 +372,7 @@ public:
      * @return New series backed by view storage
      */
     static std::shared_ptr<DigitalEventSeries> createView(
-            std::shared_ptr<DigitalEventSeries const> source,
+            const std::shared_ptr<DigitalEventSeries const>& source,
             TimeFrameIndex start,
             TimeFrameIndex end);
 
@@ -323,7 +384,7 @@ public:
      * @return New series backed by view storage
      */
     static std::shared_ptr<DigitalEventSeries> createView(
-            std::shared_ptr<DigitalEventSeries const> source,
+            const std::shared_ptr<DigitalEventSeries const>& source,
             std::unordered_set<EntityId> const & entity_ids);
 
     /**

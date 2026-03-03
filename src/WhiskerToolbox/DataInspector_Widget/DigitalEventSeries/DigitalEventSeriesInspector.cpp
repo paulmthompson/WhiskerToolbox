@@ -175,7 +175,7 @@ int64_t DigitalEventSeriesInspector::_getCurrentTimeInSeriesFrame() const {
     }
 
     // Convert the state's time_position to the series' timeframe
-    TimeFrameIndex converted_index = time_position.convertTo(series_timeframe);
+    TimeFrameIndex const converted_index = time_position.convertTo(series_timeframe);
     return converted_index.getValue();
 }
 
@@ -300,27 +300,15 @@ void DigitalEventSeriesInspector::_moveEventsToTarget(std::string const & target
         return;
     }
 
-    // Get events for selected entity IDs, add to target, remove from source
-    for (auto const & event_with_id: source_event_data->view()) {
-        for (auto const & eid: selected_entity_ids) {
-            if (event_with_id.id() == eid) {
-                target_event_data->addEvent(event_with_id.time());
-            }
-        }
-    }
+    std::unordered_set<EntityId> const selected_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_moved = source_event_data->moveByEntityIds(*target_event_data, selected_set, NotifyObservers::Yes);
 
-    // Remove from source by time
-    for (auto const & event_with_id: source_event_data->view()) {
-        for (auto const & eid: selected_entity_ids) {
-            if (event_with_id.id() == eid) {
-                source_event_data->removeEvent(event_with_id.time());
-                break;
-            }
-        }
+    if (total_moved > 0) {
+        std::cout << "DigitalEventSeriesInspector: Moved " << total_moved
+                  << " events from " << _active_key << " to " << target_key << std::endl;
+    } else {
+        std::cout << "DigitalEventSeriesInspector: No events found with the selected EntityIds to move." << std::endl;
     }
-
-    std::cout << "DigitalEventSeriesInspector: Moved " << selected_entity_ids.size()
-              << " events from " << _active_key << " to " << target_key << std::endl;
 }
 
 void DigitalEventSeriesInspector::_copyEventsToTarget(std::string const & target_key) {
@@ -342,17 +330,15 @@ void DigitalEventSeriesInspector::_copyEventsToTarget(std::string const & target
         return;
     }
 
-    std::unordered_set<EntityId> selected_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::unordered_set<EntityId> const selected_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_copied = source_event_data->copyByEntityIds(*target_event_data, selected_set, NotifyObservers::Yes);
 
-    // Copy events for selected entity IDs to target
-    for (auto const & event_with_id: source_event_data->view()) {
-        if (selected_set.contains(event_with_id.id())) {
-            target_event_data->addEvent(event_with_id.time());
-        }
+    if (total_copied > 0) {
+        std::cout << "DigitalEventSeriesInspector: Copied " << total_copied
+                  << " events from " << _active_key << " to " << target_key << std::endl;
+    } else {
+        std::cout << "DigitalEventSeriesInspector: No events found with the selected EntityIds to copy." << std::endl;
     }
-
-    std::cout << "DigitalEventSeriesInspector: Copied " << selected_entity_ids.size()
-              << " events from " << _active_key << " to " << target_key << std::endl;
 }
 
 void DigitalEventSeriesInspector::_deleteSelectedEvents() {
@@ -372,21 +358,10 @@ void DigitalEventSeriesInspector::_deleteSelectedEvents() {
         return;
     }
 
-    std::unordered_set<EntityId> selected_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::unordered_set<EntityId> const selected_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_deleted = event_data->deleteByEntityIds(selected_set, NotifyObservers::Yes);
 
-    // Collect times to remove (can't modify while iterating)
-    std::vector<TimeFrameIndex> times_to_remove;
-    for (auto const & event_with_id: event_data->view()) {
-        if (selected_set.contains(event_with_id.id())) {
-            times_to_remove.push_back(event_with_id.time());
-        }
-    }
-
-    for (auto const & time: times_to_remove) {
-        event_data->removeEvent(time);
-    }
-
-    std::cout << "DigitalEventSeriesInspector: Deleted " << times_to_remove.size()
+    std::cout << "DigitalEventSeriesInspector: Deleted " << total_deleted
               << " events from '" << _active_key << "'." << std::endl;
 }
 
@@ -401,7 +376,7 @@ void DigitalEventSeriesInspector::_moveEventsToGroup(int group_id) {
         return;
     }
 
-    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
 
     // First, remove entities from their current groups
     groupManager()->ungroupEntities(entity_ids_set);
@@ -429,7 +404,7 @@ void DigitalEventSeriesInspector::_removeEventsFromGroup() {
         return;
     }
 
-    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
 
     // Remove entities from all groups
     groupManager()->ungroupEntities(entity_ids_set);
@@ -456,7 +431,7 @@ void DigitalEventSeriesInspector::_onGroupFilterChanged(int index) {
         auto groups = groupManager()->getGroups();
         auto group_ids = groups.keys();
         if (index - 1 < group_ids.size()) {
-            int group_id = group_ids[index - 1];
+            int const group_id = group_ids[index - 1];
             _data_view->setGroupFilter(group_id);
         }
     }
@@ -464,7 +439,7 @@ void DigitalEventSeriesInspector::_onGroupFilterChanged(int index) {
 
 void DigitalEventSeriesInspector::_onGroupChanged() {
     // Store current selection
-    int current_index = ui->groupFilterCombo->currentIndex();
+    int const current_index = ui->groupFilterCombo->currentIndex();
     QString current_text;
     if (current_index >= 0 && current_index < ui->groupFilterCombo->count()) {
         current_text = ui->groupFilterCombo->itemText(current_index);
