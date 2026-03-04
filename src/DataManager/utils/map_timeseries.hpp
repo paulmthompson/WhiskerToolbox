@@ -3,7 +3,7 @@
 
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <algorithm>
 #include <map>

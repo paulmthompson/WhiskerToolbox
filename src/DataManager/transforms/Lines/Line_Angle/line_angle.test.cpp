@@ -7,6 +7,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <memory>
 #include <cmath>
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 #include "fixtures/scenarios/line/geometry_scenarios.hpp"

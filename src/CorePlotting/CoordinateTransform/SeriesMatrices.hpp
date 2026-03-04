@@ -2,7 +2,7 @@
 #define COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP
 
 #include "Layout/LayoutTransform.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

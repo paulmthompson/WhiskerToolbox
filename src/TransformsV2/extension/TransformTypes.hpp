@@ -4,7 +4,7 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <variant>
 #include <vector>

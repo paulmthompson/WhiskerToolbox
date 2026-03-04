@@ -1,14 +1,16 @@
 #ifndef EXECUTION_PLAN_H
 #define EXECUTION_PLAN_H
 
+#include "TimeFrame/TimeFrameIndex.hpp"
 #include "TimeFrame/interval_data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
-//#include "utils/TableView/core/DataSourceNameInterner.hpp"
 #include "utils/TableView/core/RowDescriptor.h"
 
+#include <map>
+#include <memory>
 #include <utility>
 #include <vector>
-#include <map>
+
+class TimeFrame;
 
 /**
  * @brief Holds a cached, reusable access pattern for a specific data source.
@@ -19,7 +21,11 @@
  */
 class ExecutionPlan {
 public:
-    enum class DataSourceKind : std::uint8_t { Unknown=0, Analog, Event, IntervalKind, Line };
+    enum class DataSourceKind : std::uint8_t { Unknown = 0,
+                                               Analog,
+                                               Event,
+                                               IntervalKind,
+                                               Line };
     /**
      * @brief Default constructor.
      */
@@ -79,22 +85,20 @@ public:
      * @brief Gets the TimeFrame associated with this execution plan.
      * @return Shared pointer to the TimeFrame.
      */
-    std::shared_ptr<TimeFrame> getTimeFrame() const {
-        return m_timeFrame;
-    }
+    std::shared_ptr<TimeFrame> getTimeFrame() const;
 
     // Entity-expanded API
     void setRows(std::vector<RowId> rows) {
         m_rows = std::move(rows);
     }
 
-    std::vector<RowId> const& getRows() const {
+    std::vector<RowId> const & getRows() const {
         return m_rows;
     }
 
     bool hasEntities() const {
         if (m_rows.empty()) return false;
-        for (auto const& r : m_rows) {
+        for (auto const & r: m_rows) {
             if (r.entityIndex.has_value()) return true;
         }
         return false;
@@ -107,17 +111,17 @@ public:
     DataSourceKind getSourceKind() const { return m_sourceKind; }
 
     // Group spans per timestamp for fast broadcast
-    void setTimeToRowSpan(std::map<TimeFrameIndex, std::pair<size_t,size_t>> map) {
+    void setTimeToRowSpan(std::map<TimeFrameIndex, std::pair<size_t, size_t>> map) {
         m_timeToRowSpan = std::move(map);
     }
 
-    std::map<TimeFrameIndex, std::pair<size_t,size_t>> const& getTimeToRowSpan() const {
+    std::map<TimeFrameIndex, std::pair<size_t, size_t>> const & getTimeToRowSpan() const {
         return m_timeToRowSpan;
     }
 
     template<typename F>
-    void forEachTimestampGroup(F&& f) const {
-        for (auto const& [t, span] : m_timeToRowSpan) {
+    void forEachTimestampGroup(F && f) const {
+        for (auto const & [t, span]: m_timeToRowSpan) {
             f(t, span.first, span.second);
         }
     }
@@ -130,7 +134,7 @@ private:
     DataSourceId m_sourceId{0};
     DataSourceKind m_sourceKind{DataSourceKind::Unknown};
     std::vector<RowId> m_rows;
-    std::map<TimeFrameIndex, std::pair<size_t,size_t>> m_timeToRowSpan;
+    std::map<TimeFrameIndex, std::pair<size_t, size_t>> m_timeToRowSpan;
 };
 
 #endif// EXECUTION_PLAN_H

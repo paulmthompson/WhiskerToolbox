@@ -20,6 +20,7 @@
 #endif
 
 #include "TimeFrame/TimeIndexStorage.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <algorithm>
 #include <cassert>

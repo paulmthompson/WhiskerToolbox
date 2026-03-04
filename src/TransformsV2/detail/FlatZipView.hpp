@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <algorithm>
 #include <cstddef>

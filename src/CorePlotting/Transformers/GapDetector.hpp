@@ -5,12 +5,12 @@
 #include "SceneGraph/RenderablePrimitives.hpp"
 
 #include "Entity/EntityTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 
 #include <ranges>
 #include <vector>
 
 class AnalogTimeSeries;
+class TimeFrame;
 
 namespace CorePlotting {
 

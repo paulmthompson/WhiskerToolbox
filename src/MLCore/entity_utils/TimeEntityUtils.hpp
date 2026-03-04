@@ -14,7 +14,7 @@
  */
 
 #include "Entity/EntityTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <cstdint>
 #include <memory>

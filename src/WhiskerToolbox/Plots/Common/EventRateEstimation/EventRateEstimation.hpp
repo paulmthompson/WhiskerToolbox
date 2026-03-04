@@ -74,7 +74,6 @@
 #include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 
 #include <cstddef>
@@ -83,6 +82,8 @@
 #include <string>
 #include <variant>
 #include <vector>
+
+class TimeFrame;
 
 namespace WhiskerToolbox::Plots {
 

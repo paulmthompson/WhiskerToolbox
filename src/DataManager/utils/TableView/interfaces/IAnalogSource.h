@@ -1,13 +1,15 @@
 #ifndef IANALOG_SOURCE_H
 #define IANALOG_SOURCE_H
 
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <span>
 #include <string>
 #include <vector>
+
+class TimeFrame;
 
 /**
  * @brief Interface for any data source that can be viewed as an analog signal.

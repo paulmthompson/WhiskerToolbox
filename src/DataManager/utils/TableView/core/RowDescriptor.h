@@ -1,9 +1,8 @@
 #ifndef ROW_DESCRIPTOR_H
 #define ROW_DESCRIPTOR_H
 
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 #include "TimeFrame/interval_data.hpp"
-//#include "utils/TableView/core/DataSourceNameInterner.hpp"
 #include "Entity/EntityTypes.hpp"
 
 #include <cstddef>

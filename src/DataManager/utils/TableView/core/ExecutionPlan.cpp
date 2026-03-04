@@ -1,5 +1,7 @@
 #include "ExecutionPlan.h"
 
+#include "TimeFrame/TimeFrame.hpp"
+
 ExecutionPlan::ExecutionPlan(std::vector<TimeFrameIndex> indices, std::shared_ptr<TimeFrame> timeFrame)
     : m_indices(std::move(indices)),
       m_timeFrame(std::move(timeFrame)) {
@@ -37,3 +39,7 @@ void ExecutionPlan::setIntervals(std::vector<TimeFrameInterval> intervals) {
     // Clear indices to maintain consistency
     m_indices.clear();
 }
+
+std::shared_ptr<TimeFrame> ExecutionPlan::getTimeFrame() const {
+        return m_timeFrame;
+    }

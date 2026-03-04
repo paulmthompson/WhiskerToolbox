@@ -2,7 +2,6 @@
 #define INDEX_GROUPING_HPP
 
 #include "Entity/EntityGroupManager.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 
 #include <algorithm>
 #include <map>

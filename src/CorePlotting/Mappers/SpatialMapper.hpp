@@ -11,7 +11,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <ranges>
 #include <vector>

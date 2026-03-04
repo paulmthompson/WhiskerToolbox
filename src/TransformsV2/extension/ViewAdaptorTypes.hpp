@@ -69,7 +69,7 @@
 
 #include "TransformTypes.hpp"
 
-#include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <any>
 #include <concepts>
