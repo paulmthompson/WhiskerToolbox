@@ -1,7 +1,7 @@
 #ifndef COLUMNTYPEINFO_HPP
 #define COLUMNTYPEINFO_HPP
 
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 #include "utils/metaprogramming_utils.hpp"
 
 #include <string>

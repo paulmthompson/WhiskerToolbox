@@ -2,6 +2,7 @@
 #include "analog_armadillo.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 
 arma::Row<double> convertAnalogTimeSeriesToMlpackArray(

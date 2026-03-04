@@ -3,11 +3,7 @@
 
 #include "datamanager_export.h"
 
-#include "TimeFrame/StrongTimeTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
-
 #include <armadillo>
-
 
 class AnalogTimeSeries;
 

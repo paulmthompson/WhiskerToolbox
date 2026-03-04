@@ -9,7 +9,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <algorithm>
 #include <cmath>

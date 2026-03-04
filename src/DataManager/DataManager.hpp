@@ -7,7 +7,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <functional>   // std::function
 #include <iostream>     // std::cerr, std::cout
@@ -29,6 +29,7 @@ using GroupId = std::uint64_t;
 
 class TableRegistry;
 struct TableEvent;
+class TimeFrame;
 
 namespace WhiskerToolbox::Entity::Lineage {
 class LineageRegistry;

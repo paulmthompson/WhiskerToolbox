@@ -6,6 +6,7 @@
 // only the gather logic that depends on PlotAlignmentData (a plain POD struct).
 
 #include "GatherResult/GatherResult.hpp"
+#includle "TimeFrame/TimeFrame.hpp"
 #include "TransformsV2/extension/IntervalAdapters.hpp"
 
 #include <algorithm>

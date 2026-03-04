@@ -31,7 +31,7 @@
 #include "storage/TensorStorageWrapper.hpp"
 
 #include "Observer/Observer_Data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "DataManager/TypeTraits/DataTypeTraits.hpp"
 
@@ -57,6 +57,7 @@
 class TimeIndexStorage;
 class LazyColumnTensorStorage;
 class TensorData;
+class TimeFrame;
 
 /**
  * @brief Callback that wires observer invalidation after lazy tensor construction.

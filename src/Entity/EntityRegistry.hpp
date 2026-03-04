@@ -10,7 +10,7 @@
 #define ENTITYREGISTRY_HPP
 
 #include "Entity/EntityTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <mutex>
 #include <optional>

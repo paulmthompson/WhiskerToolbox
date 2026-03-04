@@ -20,7 +20,7 @@
 
 #include "DataManager/Tensors/TensorData.hpp"                     // InvalidationWiringFn
 #include "DataManager/Tensors/storage/LazyColumnTensorStorage.hpp"// ColumnProviderFn, ColumnSource
-#include "TimeFrame/TimeFrame.hpp"                           // TimeFrameIndex
+#include "TimeFrame/TimeFrameIndex.hpp"                           // TimeFrameIndex
 
 #include <functional>
 #include <memory>

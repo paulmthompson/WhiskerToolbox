@@ -13,7 +13,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "Entity/Lineage/LineageRegistry.hpp"
 #include "Entity/Lineage/LineageTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <string>
 #include <unordered_set>
