@@ -1,0 +1,68 @@
+---
+title: "getEntityIdsInRange Helpers"
+description: "Pure query functions collecting EntityIds within a time range from data types"
+---
+
+## Overview
+
+`getEntityIdsInRange` is a set of **free functions** that return the set of `EntityId`s whose
+data falls within a specified `[start, end]` time range. These are pure query functions with
+no side effects, designed to be used by commands such as `MoveByTimeRange` and
+`CopyByTimeRange`.
+
+**Source files:**
+
+- `src/DataManager/Commands/GetEntityIdsInRange.hpp` — Template + declarations
+- `src/DataManager/Commands/GetEntityIdsInRange.cpp` — Non-template implementations
+- `src/DataManager/Commands/GetEntityIdsInRange.test.cpp` — Unit tests
+
+All code lives in the `commands` namespace with no Qt dependency.
+
+## API
+
+All overloads share the same signature pattern:
+
+```cpp
+std::unordered_set<EntityId> getEntityIdsInRange(
+    DataType const & data,
+    TimeFrameIndex start,
+    TimeFrameIndex end);
+```
+
+### RaggedTimeSeries template
+
+A constrained function template accepting any type with a `flattened_data()` method
+(LineData, PointData, MaskData). Iterates the flattened view of `(TimeFrameIndex, EntityId, TData)`
+tuples and collects IDs where `time >= start && time <= end`.
+
+The template is defined entirely in the header using a C++20 `requires` clause:
+
+```cpp
+template<typename RaggedT>
+    requires requires(RaggedT const & r) { r.flattened_data(); }
+std::unordered_set<EntityId> getEntityIdsInRange(
+    RaggedT const & data, TimeFrameIndex start, TimeFrameIndex end);
+```
+
+### DigitalEventSeries overload
+
+Iterates `data.view()` which returns `EventWithId` objects. Filters events where
+`event.time() >= start && event.time() <= end` and collects their entity IDs.
+
+### DigitalIntervalSeries overload
+
+Iterates `data.view()` which returns `IntervalWithId` objects. Uses an **overlap check**:
+an interval overlaps the query range when `interval.start <= end && interval.end >= start`.
+This correctly handles intervals that partially overlap the query range.
+
+## Tests
+
+Five `TEST_CASE`s cover all overloads:
+
+| Test Case | Data Type | Sections |
+|-----------|-----------|----------|
+| LineData | `RaggedTimeSeries<Line2D>` | All in range, subset, exact boundary, no matches, empty |
+| PointData | `RaggedTimeSeries<Point2D<float>>` | All in range, subset, exact boundary, no matches |
+| MaskData | `RaggedTimeSeries<MaskData::MaskType>` | All in range, subset |
+| DigitalEventSeries | `DigitalEventSeries` | All in range, subset, boundary match, no matches, empty |
+| DigitalIntervalSeries | `DigitalIntervalSeries` | All in range, full overlap, partial overlap, boundary touch, no matches, empty |

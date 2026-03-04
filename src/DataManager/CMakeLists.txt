@@ -41,6 +41,8 @@ set(DATAMANAGER_SOURCES
         Commands/VariableSubstitution.cpp
         Commands/SequenceExecution.hpp
         Commands/SequenceExecution.cpp
+        Commands/GetEntityIdsInRange.hpp
+        Commands/GetEntityIdsInRange.cpp
 
         loaders/loading_utils.hpp
 

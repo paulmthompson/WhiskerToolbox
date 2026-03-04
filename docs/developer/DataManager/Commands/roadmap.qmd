@@ -92,10 +92,10 @@ See [Sequence Execution](index.qmd#sequence-execution) in the design document.
 
 ### Step 1.6 — `getEntityIdsInRange` Helpers
 
-- [ ] Free function template for `RaggedTimeSeries<T>` types (LineData, PointData, MaskData) using `flattened_data()`
-- [ ] Overload for `DigitalEventSeries` using `view()`
-- [ ] Overload for `DigitalIntervalSeries` collecting IDs of overlapping intervals
-- [ ] These are pure query functions living in `src/DataManager/Commands/`
+- [x] Free function template for `RaggedTimeSeries<T>` types (LineData, PointData, MaskData) using `flattened_data()`
+- [x] Overload for `DigitalEventSeries` using `view()`
+- [x] Overload for `DigitalIntervalSeries` collecting IDs of overlapping intervals
+- [x] These are pure query functions living in `src/DataManager/Commands/`
 
 See [getEntityIdsInRange](index.qmd#getentityidsinrange-free-functions) in the design document.
 

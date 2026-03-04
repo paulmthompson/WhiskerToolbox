@@ -85,6 +85,7 @@ website:
                 - developer/DataManager/Commands/roadmap.qmd
                 - developer/DataManager/Commands/core_types.qmd
                 - developer/DataManager/Commands/sequence_execution.qmd
+                - developer/DataManager/Commands/get_entity_ids_in_range.qmd
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd
