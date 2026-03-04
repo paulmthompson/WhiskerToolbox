@@ -6,6 +6,7 @@
 #include "Entity/EntityRegistry.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <ranges>
 #include <utility>
 #include <vector>
@@ -80,6 +81,16 @@ void DigitalIntervalSeries::addEvent(Interval new_interval) {
 
     _cacheOptimizationPointers();
     notifyObservers();
+}
+
+void DigitalIntervalSeries::addEvent(TimeFrameIndex start, TimeFrameIndex end) {
+
+    if (start > end) {
+        std::cout << "Start time is greater than end time" << std::endl;
+        return;
+    }
+
+    addEvent(Interval{start.getValue(), end.getValue()});
 }
 
 void DigitalIntervalSeries::_addEventInternal(Interval new_interval) {
@@ -342,7 +353,7 @@ void DigitalIntervalSeries::_cacheOptimizationPointers() {
 // ========== Factory Methods ==========
 
 std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
-        const std::shared_ptr<DigitalIntervalSeries const>& source,
+        std::shared_ptr<DigitalIntervalSeries const> const & source,
         int64_t start,
         int64_t end) {
     // Get shared owning storage from source (zero-copy via aliasing constructor)
@@ -367,7 +378,7 @@ std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
 }
 
 std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
-        const std::shared_ptr<DigitalIntervalSeries const>& source,
+        std::shared_ptr<DigitalIntervalSeries const> const & source,
         std::unordered_set<EntityId> const & entity_ids) {
     auto result = std::make_shared<DigitalIntervalSeries>();
     result->_time_frame = source->_time_frame;

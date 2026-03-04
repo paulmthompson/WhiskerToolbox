@@ -47,6 +47,7 @@
 #include <ranges>
 #include <string>
 #include <typeindex>
+#include <vector>
 
 namespace WhiskerToolbox::Transforms::V2 {
 

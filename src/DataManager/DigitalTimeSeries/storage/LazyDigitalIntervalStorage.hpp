@@ -5,12 +5,12 @@
 #include "DigitalIntervalStorageCache.hpp"
 
 #include "Entity/EntityTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 
 #include <algorithm>
 #include <numeric>
 #include <ranges>
+#include <unordered_map>
 
 // =============================================================================
 // Lazy Storage (View-based Computation on Demand)

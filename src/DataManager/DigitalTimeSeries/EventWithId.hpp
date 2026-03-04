@@ -2,7 +2,7 @@
 #define BEHAVIORTOOLBOX_EVENT_WITH_ID_HPP
 
 #include "Entity/EntityTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
 /**
  * @brief Structure to hold a digital event with its associated EntityID

@@ -4,7 +4,6 @@
 #include "DigitalIntervalStorageCache.hpp"
 
 #include "Entity/EntityTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 
 #include <optional>

@@ -14,7 +14,7 @@
 #define ENTITYTYPES_HPP
 
 #include <cstdint>
-#include <functional>
+#include <utility> // std::forward
 #include <string>
 
 /**

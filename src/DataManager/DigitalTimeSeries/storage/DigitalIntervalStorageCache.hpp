@@ -2,7 +2,6 @@
 #define DIGITAL_INTERVAL_STORAGE_CACHE_HPP
 
 #include "Entity/EntityTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 
 /**

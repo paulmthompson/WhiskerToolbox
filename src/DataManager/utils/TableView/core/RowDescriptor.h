@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <optional>
 #include <variant>
+#include <vector>
 
 using DataSourceId = std::uint32_t;
 

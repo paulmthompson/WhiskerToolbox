@@ -67,7 +67,6 @@
 #include "storage/DigitalIntervalStorage.hpp"
 
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -259,15 +258,7 @@ public:
 
     void addEvent(Interval new_interval);
 
-    void addEvent(TimeFrameIndex start, TimeFrameIndex end) {
-
-        if (start > end) {
-            std::cout << "Start time is greater than end time" << std::endl;
-            return;
-        }
-
-        addEvent(Interval{start.getValue(), end.getValue()});
-    }
+    void addEvent(TimeFrameIndex start, TimeFrameIndex end);
 
     void setEventAtTime(TimeFrameIndex time, bool event);
 
