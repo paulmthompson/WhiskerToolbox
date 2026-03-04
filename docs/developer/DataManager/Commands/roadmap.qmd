@@ -1,0 +1,346 @@
+---
+title: "Command Architecture Roadmap"
+---
+
+## Progress Summary
+
+*Last updated: 2026-03-04*
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| **Phase 1:** Command Foundation | Not Started | Core types, ICommand base class, factory, variable substitution, first commands, unit tests |
+| **Phase 2:** Triage Session | Not Started | Mark/Commit/Recall state machine consuming command sequences |
+| **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
+| **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
+| **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
+| **Phase 6:** CLI Batch Executor & Macro Recording | Not Started | Headless command sequence execution; record GUI actions as JSON |
+
+For the full architectural design, types, and code examples, see the
+[Command Architecture Design Document](index.qmd).
+
+## Dependency Graph
+
+```
+Phase 1: Command Foundation
+   │
+   ├──► Phase 2: Triage Session
+   │
+   ├──► Phase 3: Persistence Commands & Save Registry
+   │
+   ├──► Phase 4: Action Journal Integration
+   │         (also depends on State Mgmt Phase 4)
+   │
+   ├──► Phase 5: Undo/Redo
+   │
+   └──► Phase 6: CLI Batch & Macro Recording
+                    (also depends on Phases 3, 4)
+```
+
+**Parallelizable work:**
+
+- Phases 2, 3, and 5 are independent of each other and can proceed in parallel after Phase 1.
+- Phase 4 depends on both Phase 1 and the Action Journal from the State Management Roadmap.
+- Phase 6 can begin once Phases 1, 3, and 4 are complete (Phase 5/undo is not required).
+
+---
+
+## Phase 1 — Command Foundation
+
+**Goal:** Minimal, testable core. No Qt dependency.
+
+**Depends on:** Nothing
+
+### Step 1.1 — Core Types
+
+Create `src/DataManager/Commands/` directory and CMake target (`Commands` static library).
+Implement the four core structs, all reflect-cpp serializable:
+
+- [ ] `CommandResult` — success/error + affected keys
+- [ ] `CommandContext` — holds `shared_ptr<DataManager>`, runtime variables, optional progress callback
+- [ ] `CommandDescriptor` — single command invocation (name + parameters + description)
+- [ ] `CommandSequenceDescriptor` — sequence of commands with optional name, version, and template variables
+
+See [Core Types](index.qmd#core-types) in the design document.
+
+### Step 1.2 — ICommand Base Class
+
+- [ ] `ICommand` abstract base with `execute()`, `commandName()`, `toJson()`, `isUndoable()`, `undo()`, `mergeId()`, `mergeWith()`
+- [ ] Default implementations: `isUndoable()` → false, `undo()` → error, `mergeId()` → -1, `mergeWith()` → false
+
+See [ICommand Base Class](index.qmd#icommand-base-class) in the design document.
+
+### Step 1.3 — Command Factory
+
+- [ ] `createCommand()` free function: maps `command_name` string + `rfl::Generic` parameters → `unique_ptr<ICommand>`
+- [ ] Returns `nullptr` for unknown command names or deserialization failures
+
+See [Command Factory](index.qmd#command-factory) in the design document.
+
+### Step 1.4 — Variable Substitution
+
+- [ ] Implement two-pass `${variable}` substitution (static pass from `CommandSequenceDescriptor::variables`, runtime pass from `CommandContext::runtime_variables`)
+- [ ] Reuse the pattern from TransformsV2 pipeline variable substitution
+
+See [Variable Substitution](index.qmd#variable-substitution) in the design document.
+
+### Step 1.5 — Sequence Execution
+
+- [ ] `executeSequence()` free function: iterates descriptors, applies variable substitution, creates + executes commands, collects executed commands in `SequenceResult` for undo
+- [ ] Stop-on-first-error behavior (configurable)
+
+See [Sequence Execution](index.qmd#sequence-execution) in the design document.
+
+### Step 1.6 — `getEntityIdsInRange` Helpers
+
+- [ ] Free function template for `RaggedTimeSeries<T>` types (LineData, PointData, MaskData) using `flattened_data()`
+- [ ] Overload for `DigitalEventSeries` using `view()`
+- [ ] Overload for `DigitalIntervalSeries` collecting IDs of overlapping intervals
+- [ ] These are pure query functions living in `src/DataManager/Commands/`
+
+See [getEntityIdsInRange](index.qmd#getentityidsinrange-free-functions) in the design document.
+
+### Step 1.7 — First Four Commands
+
+Implement concrete command classes with parameter structs:
+
+- [ ] `MoveByTimeRange` — moves entities in `[start_frame, end_frame]` between same-type data objects. Captures moved entity IDs for undo.
+- [ ] `CopyByTimeRange` — copies entities (source unmodified). Wider type support than move.
+- [ ] `AddInterval` — appends an interval to a `DigitalIntervalSeries`. Creates the series if `create_if_missing` is true.
+- [ ] `ForEachKey` — meta-command iterating a list of values, binding each to a template variable, and executing sub-commands per item. Undo reverses sub-commands in reverse order.
+
+See [Commands](index.qmd#commands) in the design document.
+
+### Step 1.8 — Unit Tests
+
+- [ ] Factory lookup: known command names return non-null; unknown returns null
+- [ ] Variable substitution: static + runtime variables resolve correctly in parameters
+- [ ] Command execution: `MoveByTimeRange` moves entities between data objects
+- [ ] Command execution: `CopyByTimeRange` copies without modifying source
+- [ ] Command execution: `AddInterval` creates/appends intervals
+- [ ] Sequence execution: multi-command sequence runs in order, stops on error
+- [ ] `ForEachKey` expansion: sub-commands execute once per item with correct variable binding
+- [ ] `getEntityIdsInRange` correctness for each supported data type
+- [ ] Error handling: missing keys, type mismatches, empty ranges
+
+### Step 1.9 — Validation (Stretch Goal)
+
+- [ ] `validateSequence()` function with `ValidationResult` (warnings + errors)
+- [ ] Structural check: all command names are valid factory keys
+- [ ] Deserialization check: parameters parse into expected structs
+- [ ] Variable resolution check: all `${variable}` references resolve
+
+See [Validation](index.qmd#validation) in the design document.
+
+### Step 1.10 — GUI Verb Audit
+
+- [ ] Walk all widgets and enumerate user-facing actions that modify `DataManager` state
+- [ ] Tag each action: covered by Phase 1 commands, covered by existing systems (TransformsV2, LoaderRegistry), or needs a future command wrapper
+- [ ] Document the audit results for planning future phases
+
+---
+
+## Phase 2 — Triage Session
+
+**Goal:** Mark/Commit/Recall workflow using command sequences.
+
+**Depends on:** Phase 1
+
+### Step 2.1 — TriageSession Core Class
+
+- [ ] `TriageSession` non-Qt class in `src/DataManager/TriageSession/`
+- [ ] State machine: `Idle` ↔ `Marking` transitions via `mark()`, `commit()`, `recall()`
+- [ ] `commit()` populates `CommandContext::runtime_variables` with `mark_frame` and `current_frame`, delegates to `executeSequence()`
+- [ ] Pipeline configuration: `setPipeline()` / `pipeline()` accessors
+
+See [Triage Session](index.qmd#triage-session) in the design document.
+
+### Step 2.2 — TriageSessionState (EditorState)
+
+- [ ] `TriageSessionState` EditorState subclass in `src/WhiskerToolbox/TriageSession/`
+- [ ] Serializes pipeline JSON and tracked-regions key
+- [ ] State machine resets to Idle on workspace load (never resume mid-triage)
+- [ ] Signals: `pipelineChanged()`, `stateChanged()`
+
+### Step 2.3 — TriageSessionWidget (Qt UI)
+
+- [ ] Mark / Commit / Recall buttons with status display
+- [ ] Pipeline display: load JSON, edit JSON, show command summary
+- [ ] Tracked-regions summary: interval count, frame count, remaining frames
+
+See [UI Sketch](index.qmd#ui-sketch) in the design document.
+
+### Step 2.4 — Keyboard Shortcuts
+
+- [ ] **M** — Mark (start a triage range)
+- [ ] **C** — Commit (execute pipeline for `[mark_frame, current_frame]`)
+- [ ] **R** — Recall (abort, jump back to mark frame)
+
+### Step 2.5 — Tracked-Regions Visualization
+
+- [ ] Render tracked-regions `DigitalIntervalSeries` as shaded overlay on the timeline/scrubber
+
+### Step 2.6 — Unit Tests
+
+- [ ] State machine transitions: Idle → Marking → Idle (commit), Marking → Idle (recall)
+- [ ] Commit populates correct runtime variables
+- [ ] Recall resets state without executing commands
+- [ ] Integration test: full triage round-trip with mock DataManager (mark → scrub → commit → verify data moved + interval added)
+
+---
+
+## Phase 3 — Persistence Commands & Save Registry
+
+**Goal:** Unified `SaveData` command wrapping all existing saver functions.
+
+**Depends on:** Phase 1
+
+### Step 3.1 — SaverRegistry
+
+- [ ] `SaverRegistry` class mapping format strings to saver functions (analogous to `LoaderRegistry`)
+- [ ] Register existing savers: CSV single-file, CSV multi-file for LineData, PointData, DigitalEventSeries, DigitalIntervalSeries, AnalogTimeSeries
+
+### Step 3.2 — SaveData Command
+
+- [ ] `SaveDataParams` struct: data_key, format, path, optional format_options
+- [ ] `SaveData` command dispatches to `SaverRegistry` based on format string
+- [ ] Atomic write-ahead pattern: write to `.tmp`, `fsync()`, `rename()` over target
+- [ ] Deserialize format-specific option structs from `format_options`
+
+See [SaveData](index.qmd#savedata) and [Persistence Safety](index.qmd#persistence-safety) in the design document.
+
+### Step 3.3 — LoadData Command
+
+- [ ] `LoadDataParams` struct: data_key, data_type, filepath, format, optional format_options
+- [ ] `LoadData` command wraps `LoaderRegistry` for unified dispatch
+
+### Step 3.4 — Unit Tests
+
+- [ ] Save round-trip: save data object, reload, verify contents match
+- [ ] Atomic write safety: verify `.tmp` → `rename()` pattern
+- [ ] Format dispatch: correct saver called for each format string
+- [ ] Error handling: unknown format, missing data key, write permission failure
+
+---
+
+## Phase 4 — Action Journal Integration
+
+**Goal:** Commands auto-record to journal; journal can replay command entries.
+
+**Depends on:** Phase 1, State Management Roadmap Phase 4 (Action Journal)
+
+### Step 4.1 — Journal Hook in executeSequence
+
+- [ ] `executeSequence()` accepts optional `ActionJournal*` parameter
+- [ ] On successful command execution, record `ActionEntry` with timestamp, command name/description, serialized parameters, source widget
+
+### Step 4.2 — Journal Replay
+
+- [ ] Deserialize `ActionEntry::payload_json` via `createCommand()` + `execute()` for replay
+- [ ] Journal export: filter out undone entries, produce clean `CommandSequenceDescriptor` JSON
+
+### Step 4.3 — WorkspaceManager Integration
+
+- [ ] Connect journal recording to existing `WorkspaceManager` provenance tracking
+
+---
+
+## Phase 5 — Undo/Redo
+
+**Goal:** CommandStack, EditorState memento undo, inverse-command undo for data mutations.
+
+**Depends on:** Phase 1
+
+### Step 5.1 — CommandStack
+
+- [ ] `CommandStack` class: push executed commands, undo/redo with `CommandContext`
+- [ ] Clean state tracking: `markClean()` / `isClean()` for save-state awareness
+- [ ] Redo stack cleared on new command push
+
+See [CommandStack](index.qmd#commandstack) in the design document.
+
+### Step 5.2 — WidgetStateChangeCommand
+
+- [ ] Generic memento-based command for any `EditorState`
+- [ ] Captures before/after JSON snapshots
+- [ ] `mergeWith()` for coalescing rapid changes to the same widget
+
+See [WidgetStateChangeCommand](index.qmd#widgetstatechangecommand) in the design document.
+
+### Step 5.3 — CommandSequenceCommand
+
+- [ ] Wraps `vector<unique_ptr<ICommand>>` for macro undo (e.g., triage commits)
+- [ ] `isUndoable()` returns true if any child is undoable
+- [ ] `undo()` reverses children in reverse order, skipping non-undoable ones
+
+See [CommandSequenceCommand](index.qmd#commandsequencecommand-triage-undo) in the design document.
+
+### Step 5.4 — MoveByTimeRange Undo
+
+- [ ] Verify `MoveByTimeRange` correctly captures entity IDs during `execute()` and moves them back during `undo()`
+- [ ] Integration test: move → undo → verify original state restored
+
+### Step 5.5 — UI Integration
+
+- [ ] Edit → Undo / Redo menu items
+- [ ] Ctrl+Z / Ctrl+Shift+Z keyboard shortcuts
+- [ ] Integration with dirty tracking (`EditorState::isDirty()`, `WorkspaceManager`)
+
+---
+
+## Phase 6 — CLI Batch Executor & Macro Recording
+
+**Goal:** Execute command sequences headlessly; record GUI actions as commands.
+
+**Depends on:** Phases 1, 3, 4
+
+### Step 6.1 — CLI Executor
+
+- [ ] CLI tool or application mode: load a `.json` command sequence, create `DataManager`, execute, exit
+- [ ] Variable substitution for batch parameterization (reuses existing pipeline variable system)
+- [ ] Exit code reflects success/failure
+
+### Step 6.2 — Macro Recorder
+
+- [ ] Intercept GUI actions (data loads, transforms, triage commits) and emit `CommandDescriptor`s
+- [ ] Record to an in-memory `CommandSequenceDescriptor` that can be saved to JSON
+
+### Step 6.3 — ConfigExportToolbar
+
+- [ ] Reusable toolbar component: "Copy as JSON", "Save Configuration..."
+- [ ] Attach to widgets that produce command sequences (triage session, transform widget, etc.)
+
+---
+
+## Relationship to State Management Roadmap
+
+This roadmap replaces Phases 4–6 of the
+[State Management Roadmap](../../STATE_MANAGEMENT_ROADMAP.md) with a more comprehensive
+command-first architecture. The key differences:
+
+| State Mgmt Roadmap (old) | Command Architecture (this doc) |
+|---|---|
+| Phase 4: Action Journal records ad-hoc action types | Phase 4 here: Action Journal records `CommandDescriptor`s — standardized, replayable |
+| Phase 5: `Command` interface with `execute()`/`undo()` as standalone pattern | Phases 1+5 here: `ICommand` virtual base with factory, `CommandStack` layered on top |
+| Phase 6: `SessionReplayer` replays workspace provenance | Phase 6 here: CLI executor replays `CommandSequenceDescriptor` — same mechanism as triage |
+| No concept of triage or batch operations | Triage Session is Phase 2; demonstrates the architecture's power |
+| `JSONConsole_Widget` dispatches by type | JSON Console dispatches to `executeSequence()` for command sequences |
+
+Ideas **carried forward** from the State Management Roadmap (not lost):
+
+- **Action Journal** (`ActionEntry`, append-only log, JSONL format, query/filter) — Phase 4 here
+- **JSON Console Widget** (`JSONEditor` component, schema validation, multi-type dispatch) — integrated via JSON Console Integration section
+- **CommandStack** (undo/redo, clean state, merge) — Phase 5 here
+- **Memento-based EditorState undo** (`WidgetStateChangeCommand`) — Phase 5
+- **Command merging** for sequential similar operations — Phase 5 (built into `ICommand::mergeWith()`)
+- **Journal compaction** (filter undone entries on save) — Phase 4
+- **ConfigExportToolbar** ("Copy as JSON", "Send to Console", "Save Configuration...") — Phase 6
+- **Session replay / batch processing** via parameterized journal replay — Phase 6
+- **Incremental adoption** (not every operation needs to be a command immediately) — design principle
+
+The State Management Roadmap should be updated to reference this document for Phases 4–6 and
+remove the detailed designs that now live here.
+
+## See Also
+
+- [Command Architecture Design Document](index.qmd) — full architecture, types, and code examples
+- [Data Manager](../data_manager.qmd) — core data management documentation

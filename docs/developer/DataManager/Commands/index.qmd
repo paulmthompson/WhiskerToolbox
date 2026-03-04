@@ -1,0 +1,1196 @@
+---
+title: "Command Architecture"
+---
+
+## Overview
+
+The Command Architecture provides a unified system for representing all `DataManager`-level
+operations as serializable, composable, and optionally undoable command objects. It enables
+multi-step workflows (such as triage pipelines) to be defined as JSON documents and executed
+atomically.
+
+For the phased implementation plan, see the [Command Architecture Roadmap](roadmap.qmd).
+
+## Source Location
+
+- Core library: `src/DataManager/Commands/`
+- Triage session (non-Qt): `src/DataManager/TriageSession/`
+- Triage widget (Qt): `src/WhiskerToolbox/TriageSession/`
+- Command sequence widget (Qt): `src/WhiskerToolbox/Commands/`
+
+## Problem Statement
+
+Neuralyzer has several independent "verb systems" that each handle a category of operations:
+
+| System | What it does | JSON-serializable? | Composable? |
+|--------|-------------|-------------------|-------------|
+| `LoaderRegistry` + `IFormatLoader` | Create data objects from files | Yes (`nlohmann::json` config) | No |
+| `TransformsV2` + `PipelineDescriptor` | Transform data element-by-element | Yes (`rfl::json`) | Yes (pipelines) |
+| `CSVSingleFileLineSaverOptions`, etc. | Save data objects to disk | Structurally yes (reflect-cpp structs) | No unified dispatch |
+| `moveByEntityIds` / `copyByEntityIds` | Move/copy entries between data objects | No — imperative C++ only | No |
+| `DigitalIntervalSeries` creation | Track inspected regions | No — widget-driven | No |
+| `EditorState::fromJson()` / `toJson()` | Widget state changes | Yes (reflect-cpp) | No |
+
+These systems cannot be combined into multi-step workflows. A user who wants to "move 5 line
+objects from predicted to ground truth, save all 10 CSVs, and record the inspected frame range"
+must perform each step manually through different widgets. There is no way to define this
+workflow as a reusable, serializable unit.
+
+### Motivating Scenarios
+
+**Scenario 1 — Line triage:** A deep learning algorithm produces 5 `LineData` objects across
+200,000 video frames. The user visually inspects the video, identifies stretches of correct
+output, and wants to batch-move those lines to "ground truth" objects, save the CSVs, and
+record which frames have been triaged — all in one atomic operation they can repeat hundreds of
+times.
+
+**Scenario 2 — Contact labeling:** The user jumps to scattered regions of a video (frames
+75000–76000, 150000–151000) to label "contact" events. Frames within those manually-inspected
+regions that lack a contact label are implicitly "not contact." The program must track which
+regions have been inspected so that unlabeled frames outside those regions are correctly treated
+as "unknown" rather than "negative."
+
+**Scenario 3 — Multi-object persistence:** As data moves between "predicted" and "ground truth"
+states, the source and destination CSVs must both be updated. Forgetting to save, or saving
+only one side, creates data loss risk. Serialization should be part of the same operation that
+moves data, not a separate manual step.
+
+## Architecture Overview
+
+The solution is a **Command Architecture** — any operation on `DataManager` is represented as
+an `ICommand` subclass with typed parameters. Commands can be composed into sequences, resolved
+with runtime variables, and dispatched through a single virtual `execute()` call. A simple
+factory function maps JSON descriptors to concrete command objects.
+
+**Completeness criterion:** A command exists for every user-facing action in the GUI that
+modifies `DataManager` state. The underlying systems may be arbitrarily complex (a transform
+pipeline chains dozens of element transforms; a data load involves format detection, parsing,
+and TimeFrame setup), but the *command* is whatever the user sees as a single action: "run this
+pipeline," "load this file," "move these frames." Command coverage is audited by walking every
+widget and enumerating its buttons, menu items, keyboard shortcuts, and drag-and-drop actions.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    ICommand (virtual base)                    │
+│  (JSON-serializable via reflect-cpp, optional undo)          │
+│                                                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐  │
+│  │ MoveByTime   │  │ SaveData     │  │ RunPipeline       │  │
+│  │ CopyByTime   │  │ LoadData     │  │ (wraps            │  │
+│  │              │  │              │  │  TransformsV2)    │  │
+│  └──────────────┘  └──────────────┘  └───────────────────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐  │
+│  │ AddInterval  │  │ DeleteData   │  │ CreateData        │  │
+│  │ ClearAtTime  │  │              │  │ (wraps Loaders)   │  │
+│  └──────────────┘  └──────────────┘  └───────────────────┘  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ used by
+         ┌─────────────────┼─────────────────┐
+         ▼                 ▼                 ▼
+   TriageSession     ActionJournal     Future consumers
+   (mark/commit)     (record/replay)   (CLI batch, macros,
+                                        Python bridge)
+```
+
+### Relationship to Existing Systems
+
+- **TransformsV2 operates at the element level** — transform individual data points within a
+  single data object. The Command Architecture operates at the **DataManager level** — move
+  entire objects, save files, create intervals, manage state.
+- **`RunTransformPipeline`** is a command that bridges the two: it takes an input key, output
+  key, and pipeline descriptor, and delegates to TransformsV2 for execution.
+- **EditorState** is not replaced and is not part of the command architecture. EditorState
+  manages view/UI concerns (display options, zoom, active selections) which already have their
+  own persistence via `toJson()`/`fromJson()` and workspace save.
+
+### Scope Boundary: Data State vs. View State
+
+User actions fall into two categories with different infrastructure:
+
+| | DataManager operations | EditorState operations |
+|---|---|---|
+| **Examples** | Move data, save CSV, run pipeline, add interval, delete object | Change line color, toggle grid, set zoom, pick active data key |
+| **Scope** | Shared state — affects all consumers of that data | Local state — affects one widget instance |
+| **Frequency** | Occasional (button clicks, triage commits) | Constant (every slider drag, color pick, checkbox) |
+| **Mechanism** | `ICommand` with `execute()` / `undo()` | EditorState signals + `markDirty()` |
+| **Persistence** | Explicit (`SaveData` command, workspace save) | Automatic (EditorState workspace serialization) |
+| **Undo** | Via `CommandStack` (per-command inverse or memento) | Not needed — user just changes it back |
+| **Composable** | Yes (command sequences, triage pipelines) | No |
+| **Journal** | Yes (every command recorded) | No |
+
+**`ICommand` is for data mutations only.** This follows the same boundary Blender draws between
+its Operator system (scene data → global undo) and viewport/UI state (no undo). The rationale:
+
+- Data mutations can be **destructive** (moving 10,000 entities between objects). Undo matters.
+- View state changes are **trivially reversible** by the user (drag the slider back, re-pick
+  the color). Undo is noise.
+- Data mutations are **composable** ("move 5 objects, save, add interval" is a meaningful
+  workflow). View state changes are not.
+- Data mutations are **worth journaling** for reproducibility. View state changes are not.
+
+If a specific widget state change is destructive enough to warrant undo (e.g., "reset all
+display options to defaults"), it can use the opt-in `WidgetStateChangeCommand` adapter. But
+routine interactions — the vast majority of EditorState changes — stay outside the command
+system entirely.
+
+**Future option:** If fine-grained view-state undo becomes valuable, the natural fit is a
+per-EditorState memento stack — a lightweight, widget-local undo that doesn't interact with the
+global `CommandStack`. This would be an EditorState feature, not a command architecture feature.
+
+### Where This Lives
+
+| Component | Location | Qt dependency? |
+|-----------|----------|---------------|
+| `ICommand`, `CommandResult`, `CommandContext` | `src/DataManager/Commands/` | **No** |
+| `CommandDescriptor`, `CommandSequenceDescriptor` | `src/DataManager/Commands/` | **No** |
+| Concrete commands + `createCommand()` factory | `src/DataManager/Commands/` | **No** |
+| `TriageSession` | `src/DataManager/TriageSession/` | **No** |
+| `TriageSessionWidget` | `src/WhiskerToolbox/TriageSession/` | Yes |
+| `CommandSequenceWidget` | `src/WhiskerToolbox/Commands/` | Yes |
+
+Placing the command library inside `DataManager` (not `WhiskerToolbox`) ensures it is usable
+from unit tests, Python bindings, and future CLI tools without pulling in Qt.
+
+## Core Types
+
+### CommandResult
+
+```cpp
+/// @brief Result of executing a command
+struct CommandResult {
+    bool success = false;
+    std::string error_message;
+
+    /// Keys of data objects that were created or modified
+    std::vector<std::string> affected_keys;
+
+    static CommandResult ok(std::vector<std::string> keys = {}) {
+        return {true, {}, std::move(keys)};
+    }
+    static CommandResult error(std::string msg) {
+        return {false, std::move(msg), {}};
+    }
+};
+```
+
+### CommandContext
+
+Runtime context provided to every command at execution time. This is **not serialized** — it is
+the environment that commands run in.
+
+```cpp
+struct CommandContext {
+    std::shared_ptr<DataManager> data_manager;
+
+    /// Runtime-resolved values (current_frame, mark_frame, etc.)
+    /// Used for ${variable} substitution in command parameters
+    std::map<std::string, std::string> runtime_variables;
+
+    /// Optional progress reporting
+    std::function<void(float)> on_progress;
+};
+```
+
+### CommandDescriptor (JSON-serializable)
+
+A single command invocation as it appears in a JSON file:
+
+```cpp
+struct CommandDescriptor {
+    std::string command_name;                                     // Factory lookup key
+    std::optional<rfl::Generic> parameters;                       // Command-specific params
+    std::optional<std::string> description;                       // Human-readable
+};
+```
+
+### CommandSequenceDescriptor
+
+A sequence of commands, optionally with template variables:
+
+```cpp
+struct CommandSequenceDescriptor {
+    std::optional<std::string> name;
+    std::optional<std::string> version;
+    std::optional<std::map<std::string, std::string>> variables;  // Static template vars
+    std::vector<CommandDescriptor> commands;
+};
+```
+
+## ICommand Interface & Factory
+
+Commands use a virtual base class. Each command holds its own parameters, knows how to execute
+and (optionally) undo itself, and can serialize to JSON via reflect-cpp. No registry or static
+registration is needed.
+
+### ICommand Base Class
+
+```cpp
+/// @brief Base class for all commands operating on DataManager.
+class ICommand {
+public:
+    virtual ~ICommand() = default;
+
+    /// Execute the command against the DataManager in ctx
+    virtual CommandResult execute(CommandContext const& ctx) = 0;
+
+    /// Human-readable name used for journal entries and UI display
+    virtual std::string commandName() const = 0;
+
+    /// Serialize parameters to JSON (via rfl::json::write on the params struct)
+    virtual std::string toJson() const = 0;
+
+    /// Undo support (opt-in). Default: not undoable.
+    virtual bool isUndoable() const { return false; }
+    virtual CommandResult undo(CommandContext const& ctx) {
+        return CommandResult::error("Command does not support undo");
+    }
+
+    /// For undo merging (Phase 5). Same id = mergeable. -1 = never merge.
+    virtual int mergeId() const { return -1; }
+    virtual bool mergeWith(ICommand const& /*other*/) { return false; }
+};
+```
+
+Every command is a self-contained object: it holds its parameters, implements `execute()`, and
+optionally implements `undo()`. There is **one interface** for both execution and undo — no
+separate `IUndoableCommand` hierarchy.
+
+### Command Factory
+
+The only place that needs to know about all command types is a single factory function. It maps
+a `command_name` string + `rfl::Generic` parameters to a concrete `ICommand` instance:
+
+```cpp
+/// Create a command from a descriptor's name and rfl::Generic parameters.
+/// Returns nullptr if the command name is unknown or parameters fail to parse.
+std::unique_ptr<ICommand> createCommand(
+    std::string const& name,
+    rfl::Generic const& params);
+```
+
+Implementation (in one `.cpp` file):
+
+```cpp
+std::unique_ptr<ICommand> createCommand(
+    std::string const& name,
+    rfl::Generic const& params)
+{
+    auto const json = rfl::json::write(params);
+
+    if (name == "MoveByTimeRange") {
+        auto p = rfl::json::read<MoveByTimeRangeParams>(json);
+        if (!p) return nullptr;
+        return std::make_unique<MoveByTimeRange>(std::move(*p));
+    }
+    if (name == "CopyByTimeRange") {
+        auto p = rfl::json::read<CopyByTimeRangeParams>(json);
+        if (!p) return nullptr;
+        return std::make_unique<CopyByTimeRange>(std::move(*p));
+    }
+    if (name == "AddInterval") {
+        auto p = rfl::json::read<AddIntervalParams>(json);
+        if (!p) return nullptr;
+        return std::make_unique<AddInterval>(std::move(*p));
+    }
+    if (name == "ForEachKey") {
+        auto p = rfl::json::read<ForEachKeyParams>(json);
+        if (!p) return nullptr;
+        return std::make_unique<ForEachKey>(std::move(*p));
+    }
+    // ... future commands added here
+    return nullptr;
+}
+```
+
+This is deliberately simple. For a set of ~10–15 commands that grows slowly, a centralized
+factory is a feature, not a limitation — you can see every command the system supports in one
+place.
+
+### Why Not a Static Registry?
+
+The TransformsV2 `ElementRegistry` uses static registration because the pipeline builder must
+**introspect transform metadata at assembly time**: input/output types, chaining compatibility,
+reduction vs. element transform, parameter schemas. The registry answers questions the
+orchestrator needs before it can wire the pipeline together.
+
+Commands have none of this complexity. A command takes a `DataManager`, does something, returns
+`CommandResult`. The sequence executor doesn't need to know what a command does internally — it
+just calls `execute()` in order and stops on error.
+
+This means:
+
+- **No `--whole-archive` linker flags.** Static registration requires RAII objects in anonymous
+  namespaces that the linker may strip. A factory in a `.cpp` file has no such issue.
+- **No type-erased storage.** The virtual interface provides dispatch directly.
+- **Undo is unified.** The same `ICommand` object implements both `execute()` and `undo()`,
+  holding any state needed between the two calls.
+- **Trivial to add commands.** Write a params struct, write a class, add one `if` branch to
+  the factory.
+
+### Sequence Execution
+
+A free function executes a sequence of command descriptors:
+
+```cpp
+/// Execute a sequence of command descriptors. Stops on first error by default.
+/// Returns the commands that were executed (for undo support).
+struct SequenceResult {
+    CommandResult result;
+    std::vector<std::unique_ptr<ICommand>> executed_commands;  // For undo
+};
+
+SequenceResult executeSequence(
+    CommandSequenceDescriptor const& seq,
+    CommandContext const& ctx,
+    bool stop_on_error = true);
+```
+
+Implementation steps:
+
+1. Apply static variable substitution from `seq.variables` to each descriptor's JSON.
+2. Apply runtime variable substitution from `ctx.runtime_variables`.
+3. For each descriptor, call `createCommand()` to instantiate the concrete command.
+4. Call `command->execute(ctx)`.
+5. Collect executed commands into the result (for optional undo later).
+6. Stop on first error if requested.
+
+**Error policy:** If a command fails mid-sequence, `executeSequence()` leaves partial state and
+reports which commands succeeded. The `SequenceResult::executed_commands` vector contains all
+commands that completed successfully before the failure. Automatic rollback is deferred as a
+future option.
+
+Returning the executed `ICommand` objects is key: they may hold undo state (e.g., which entity
+IDs were moved). The caller (triage session, undo stack) can keep them alive.
+
+### Variable Substitution
+
+Two-pass `${variable}` substitution reusing the pattern from TransformsV2 pipelines:
+
+1. **Static pass**: Template variables from `CommandSequenceDescriptor::variables` are
+   substituted into the JSON before deserialization. These are known at authoring time.
+2. **Runtime pass**: `CommandContext::runtime_variables` (e.g., `mark_frame`, `current_frame`)
+   are substituted after the static pass.
+
+Both passes use the same string replacement logic. For parameters that are numeric (like frame
+indices), the substituted string is parsed to the expected type during reflect-cpp
+deserialization.
+
+### Validation
+
+A `validateSequence()` function checks a command sequence for errors *before* any commands
+execute:
+
+```cpp
+struct ValidationResult {
+    bool valid = true;
+    std::vector<std::string> warnings;  // Non-fatal issues
+    std::vector<std::string> errors;    // Fatal issues that would cause execution failure
+};
+
+ValidationResult validateSequence(
+    CommandSequenceDescriptor const& seq,
+    CommandContext const& ctx);
+```
+
+Validation checks (in order of increasing specificity):
+
+1. **Structural:** All `command_name` values map to known commands in the factory.
+2. **Deserialization:** Parameters deserialize into the expected params struct without error.
+3. **Variable resolution:** All `${variable}` references resolve to either static variables in
+   `seq.variables` or runtime variables in `ctx.runtime_variables`.
+4. **Data key existence (optional):** Referenced source/destination/data keys exist in the
+   `DataManager`. Optional because some commands create objects on demand.
+5. **Type compatibility (optional):** For move/copy commands, source and destination resolve to
+   the same `DataTypeVariant` alternative.
+
+Checks 1–3 are cheap and can run without a `DataManager`. Checks 4–5 require a live
+`DataManager` and are appropriate for pre-execution validation.
+
+## Commands
+
+### MoveByTimeRange
+
+Moves all entries in `[start_frame, end_frame]` from one data object to another of the same
+type. Uses `DataManager::getDataVariant()` to resolve keys to type-erased `DataTypeVariant`
+values, then dispatches via `std::visit` + `if constexpr` to call the appropriate typed
+`moveByEntityIds()` method.
+
+**Type support:** `LineData`, `PointData`, `MaskData` (via `RaggedTimeSeries<T>`), and
+`DigitalEventSeries` support `moveByEntityIds()`. Other types (`DigitalIntervalSeries`,
+`AnalogTimeSeries`, `MediaData`, `TensorData`) do not — the command returns an error for
+unsupported types.
+
+```cpp
+struct MoveByTimeRangeParams {
+    std::string source_key;
+    std::string destination_key;
+    int64_t start_frame;
+    int64_t end_frame;
+};
+
+class MoveByTimeRange : public ICommand {
+public:
+    MoveByTimeRangeParams params;
+
+    explicit MoveByTimeRange(MoveByTimeRangeParams p) : params(std::move(p)) {}
+
+    std::string commandName() const override { return "MoveByTimeRange"; }
+    std::string toJson() const override { return rfl::json::write(params); }
+    bool isUndoable() const override { return true; }
+
+    CommandResult execute(CommandContext const& ctx) override {
+        auto src_var = ctx.data_manager->getDataVariant(params.source_key);
+        auto dst_var = ctx.data_manager->getDataVariant(params.destination_key);
+        if (!src_var || !dst_var)
+            return CommandResult::error("Key not found");
+        if (src_var->index() != dst_var->index())
+            return CommandResult::error("Source and destination must be the same data type");
+
+        auto const start = TimeFrameIndex(params.start_frame);
+        auto const end = TimeFrameIndex(params.end_frame);
+
+        return std::visit([&](auto& src_ptr) -> CommandResult {
+            using DataT = std::decay_t<decltype(*src_ptr)>;
+            auto dst_ptr = ctx.data_manager->getData<DataT>(
+                params.destination_key);
+
+            if constexpr (requires(DataT& s, DataT& d,
+                          std::unordered_set<EntityId> const& ids) {
+                              s.moveByEntityIds(d, ids, NotifyObservers::yes);
+                          }) {
+                _moved_ids = getEntityIdsInRange(*src_ptr, start, end);
+                src_ptr->moveByEntityIds(
+                    *dst_ptr, _moved_ids, NotifyObservers::yes);
+                return CommandResult::ok(
+                    {params.source_key, params.destination_key});
+            } else {
+                return CommandResult::error(
+                    "Data type does not support move operations");
+            }
+        }, *src_var);
+    }
+
+    CommandResult undo(CommandContext const& ctx) override {
+        // Move entities back: destination → source using captured _moved_ids
+        // (symmetric inverse of execute)
+        ...
+    }
+
+private:
+    std::unordered_set<EntityId> _moved_ids;  // Captured during execute() for undo
+};
+```
+
+Note how `_moved_ids` is populated during `execute()` and consumed during `undo()`. The command
+object itself is the undo state — no external bookkeeping needed.
+
+#### `getEntityIdsInRange` Free Functions
+
+The `getEntityIdsInRange()` helper is a set of **free functions** (not methods on the data
+types) that leverage existing `std::views` to collect entity IDs in a time range:
+
+```cpp
+/// For RaggedTimeSeries types (LineData, PointData, MaskData).
+template<typename RaggedT>
+    requires requires(RaggedT const& r) { r.flattened_data(); }
+std::unordered_set<EntityId> getEntityIdsInRange(
+    RaggedT const& data, TimeFrameIndex start, TimeFrameIndex end);
+
+/// For DigitalEventSeries.
+std::unordered_set<EntityId> getEntityIdsInRange(
+    DigitalEventSeries const& data, TimeFrameIndex start, TimeFrameIndex end);
+
+/// For DigitalIntervalSeries.
+std::unordered_set<EntityId> getEntityIdsInRange(
+    DigitalIntervalSeries const& data, TimeFrameIndex start, TimeFrameIndex end);
+```
+
+These are pure query functions with no side effects. They live in `src/DataManager/Commands/`
+alongside the commands that use them. No modifications to the core data types are needed — they
+operate on the existing view APIs.
+
+Example JSON:
+
+```json
+{
+    "command_name": "MoveByTimeRange",
+    "parameters": {
+        "source_key": "predicted_whisker_0",
+        "destination_key": "gt_whisker_0",
+        "start_frame": 42000,
+        "end_frame": 43500
+    }
+}
+```
+
+### CopyByTimeRange
+
+Same shape as `MoveByTimeRange` but uses `copyByEntityIds()`. Source is not modified. Supports a
+wider set of types: `DigitalIntervalSeries` supports `copyByEntityIds()` but not
+`moveByEntityIds()` (due to interval merging losing entity IDs).
+
+### SaveData
+
+Wraps existing saver functions behind a uniform command interface.
+
+```cpp
+struct SaveDataParams {
+    std::string data_key;
+    std::string format;       // "csv_single", "csv_multi", "hdf5", "binary", etc.
+    std::string path;
+    std::optional<rfl::Generic> format_options;  // Forwarded to format-specific saver
+};
+```
+
+Example JSON:
+
+```json
+{
+    "command_name": "SaveData",
+    "parameters": {
+        "data_key": "gt_whisker_0",
+        "format": "csv_single",
+        "path": "/data/output/gt_whisker_0.csv",
+        "format_options": {"delimiter": ",", "precision": 2}
+    }
+}
+```
+
+The `SaveData` command dispatches to the appropriate saver based on the `format` string. A
+`SaverRegistry` (analogous to `LoaderRegistry`) maps format strings to saver functions.
+
+### AddInterval
+
+Appends an interval to a `DigitalIntervalSeries` in `DataManager`.
+
+```cpp
+struct AddIntervalParams {
+    std::string interval_key;
+    int64_t start_frame;
+    int64_t end_frame;
+    bool create_if_missing = true;  // Create the series if it doesn't exist
+};
+```
+
+### LoadData (future)
+
+```cpp
+struct LoadDataParams {
+    std::string data_key;
+    std::string data_type;    // "LineData", "MaskData", etc.
+    std::string filepath;
+    std::string format;
+    std::optional<rfl::Generic> format_options;
+};
+```
+
+### RunTransformPipeline (future)
+
+```cpp
+struct RunPipelineParams {
+    std::string input_key;
+    std::string output_key;
+    std::optional<rfl::Generic> pipeline;       // Inline PipelineDescriptor
+    std::optional<std::string> pipeline_file;   // Path to pipeline JSON
+};
+```
+
+### ForEachKey (Meta-Command)
+
+Iterates over a list of values and executes a sub-sequence of commands for each, binding the
+current element to a template variable. This eliminates verbose repetition in pipelines that
+operate on multiple data objects identically.
+
+```cpp
+struct ForEachKeyParams {
+    std::vector<std::string> items;          // List of values to iterate
+    std::string variable;                    // Variable name bound to each item
+    std::vector<CommandDescriptor> commands;  // Sub-commands to execute per item
+};
+```
+
+`ForEachKey` is itself an `ICommand`. Its `execute()` implementation iterates `items`, binds
+each value to `${variable}` in the runtime variables, and calls `createCommand()` + `execute()`
+for each sub-command.
+
+Example — triage 5 whiskers with one meta-command:
+
+```json
+{
+    "command_name": "ForEachKey",
+    "parameters": {
+        "items": ["whisker_0", "whisker_1", "whisker_2", "whisker_3", "whisker_4"],
+        "variable": "whisker",
+        "commands": [
+            {
+                "command_name": "MoveByTimeRange",
+                "parameters": {
+                    "source_key": "${pred_prefix}${whisker}",
+                    "destination_key": "${gt_prefix}${whisker}",
+                    "start_frame": "${mark_frame}",
+                    "end_frame": "${current_frame}"
+                }
+            },
+            {
+                "command_name": "SaveData",
+                "parameters": {
+                    "data_key": "${gt_prefix}${whisker}",
+                    "format": "csv_single",
+                    "path": "${output_dir}/${gt_prefix}${whisker}.csv"
+                }
+            }
+        ]
+    }
+}
+```
+
+For undo, `ForEachKey` collects all executed sub-commands and undoes them in reverse order.
+
+## Triage Session
+
+The triage session is a **consumer** of the command architecture, not a bespoke system. It
+manages a simple state machine and, on commit, executes a user-configured
+`CommandSequenceDescriptor`.
+
+### State Machine
+
+```
+IDLE  ──[Mark]──►  MARKING  ──[Commit]──►  IDLE
+                      │
+                      └──[Recall]──►  IDLE (jump back to mark frame)
+```
+
+### Core Class
+
+```cpp
+class TriageSession {
+public:
+    enum class State { Idle, Marking };
+
+    // Configuration (serialized with EditorState)
+    void setPipeline(CommandSequenceDescriptor pipeline);
+    CommandSequenceDescriptor const& pipeline() const;
+
+    // State machine
+    void mark(TimeFrameIndex frame);
+    void recall();  // Reset to Idle; caller should jump to mark frame
+    CommandResult commit(TimeFrameIndex current_frame, std::shared_ptr<DataManager> dm);
+
+    // Query
+    State state() const;
+    TimeFrameIndex markFrame() const;  // Only valid when state == Marking
+
+private:
+    CommandSequenceDescriptor _pipeline;
+    State _state = State::Idle;
+    TimeFrameIndex _mark_frame;
+};
+```
+
+### Commit Implementation
+
+On `commit()`, the session populates `CommandContext::runtime_variables` with the mark and
+current frame, then delegates to the free `executeSequence()` function:
+
+```cpp
+CommandResult TriageSession::commit(TimeFrameIndex current_frame,
+                                     std::shared_ptr<DataManager> dm) {
+    CommandContext ctx;
+    ctx.data_manager = dm;
+    ctx.runtime_variables["mark_frame"] = std::to_string(_mark_frame.getValue());
+    ctx.runtime_variables["current_frame"] = std::to_string(current_frame.getValue());
+
+    auto [result, commands] = executeSequence(_pipeline, ctx);
+    if (result.success) {
+        _state = State::Idle;
+    }
+    return result;
+}
+```
+
+The triage session has no knowledge of what commands are in its pipeline.
+
+### Tracked Regions
+
+The triage session doesn't manage tracked regions directly. Instead, the user includes an
+`AddInterval` command in their triage pipeline:
+
+```json
+{
+    "command_name": "AddInterval",
+    "parameters": {
+        "interval_key": "tracked_regions",
+        "start_frame": "${mark_frame}",
+        "end_frame": "${current_frame}"
+    }
+}
+```
+
+The resulting `DigitalIntervalSeries` in `DataManager` is a first-class data object. It can be:
+
+- Visualized on the timeline as a shaded overlay.
+- Queried by MLCore to know which frames have been manually triaged.
+- Used to compute complement regions (frames that haven't been inspected yet).
+- Saved/loaded like any other data object.
+
+### Example Triage Pipeline
+
+A complete pipeline for triaging 5 whisker line objects:
+
+```json
+{
+    "name": "Triage 5 Whiskers",
+    "variables": {
+        "gt_prefix": "gt_",
+        "pred_prefix": "predicted_",
+        "output_dir": "/data/experiment_01/ground_truth"
+    },
+    "commands": [
+        {
+            "command_name": "MoveByTimeRange",
+            "parameters": {
+                "source_key": "${pred_prefix}whisker_0",
+                "destination_key": "${gt_prefix}whisker_0",
+                "start_frame": "${mark_frame}",
+                "end_frame": "${current_frame}"
+            }
+        },
+        {
+            "command_name": "MoveByTimeRange",
+            "parameters": {
+                "source_key": "${pred_prefix}whisker_1",
+                "destination_key": "${gt_prefix}whisker_1",
+                "start_frame": "${mark_frame}",
+                "end_frame": "${current_frame}"
+            }
+        },
+        {
+            "command_name": "MoveByTimeRange",
+            "parameters": {
+                "source_key": "${pred_prefix}whisker_2",
+                "destination_key": "${gt_prefix}whisker_2",
+                "start_frame": "${mark_frame}",
+                "end_frame": "${current_frame}"
+            }
+        },
+        {
+            "command_name": "MoveByTimeRange",
+            "parameters": {
+                "source_key": "${pred_prefix}whisker_3",
+                "destination_key": "${gt_prefix}whisker_3",
+                "start_frame": "${mark_frame}",
+                "end_frame": "${current_frame}"
+            }
+        },
+        {
+            "command_name": "MoveByTimeRange",
+            "parameters": {
+                "source_key": "${pred_prefix}whisker_4",
+                "destination_key": "${gt_prefix}whisker_4",
+                "start_frame": "${mark_frame}",
+                "end_frame": "${current_frame}"
+            }
+        },
+        {
+            "command_name": "SaveData",
+            "parameters": {
+                "data_key": "${gt_prefix}whisker_0",
+                "format": "csv_single",
+                "path": "${output_dir}/${gt_prefix}whisker_0.csv"
+            }
+        },
+        {
+            "command_name": "SaveData",
+            "parameters": {
+                "data_key": "${gt_prefix}whisker_1",
+                "format": "csv_single",
+                "path": "${output_dir}/${gt_prefix}whisker_1.csv"
+            }
+        },
+        {
+            "command_name": "SaveData",
+            "parameters": {
+                "data_key": "${gt_prefix}whisker_2",
+                "format": "csv_single",
+                "path": "${output_dir}/${gt_prefix}whisker_2.csv"
+            }
+        },
+        {
+            "command_name": "SaveData",
+            "parameters": {
+                "data_key": "${gt_prefix}whisker_3",
+                "format": "csv_single",
+                "path": "${output_dir}/${gt_prefix}whisker_3.csv"
+            }
+        },
+        {
+            "command_name": "SaveData",
+            "parameters": {
+                "data_key": "${gt_prefix}whisker_4",
+                "format": "csv_single",
+                "path": "${output_dir}/${gt_prefix}whisker_4.csv"
+            }
+        },
+        {
+            "command_name": "AddInterval",
+            "parameters": {
+                "interval_key": "tracked_regions",
+                "start_frame": "${mark_frame}",
+                "end_frame": "${current_frame}"
+            }
+        },
+        {
+            "command_name": "SaveData",
+            "parameters": {
+                "data_key": "tracked_regions",
+                "format": "csv_single",
+                "path": "${output_dir}/tracked_regions.csv"
+            }
+        }
+    ]
+}
+```
+
+### UI Sketch
+
+```
+┌─────────────────────────────────────────┐
+│ Triage Session                          │
+├─────────────────────────────────────────┤
+│ Status: IDLE / MARKING (from 42000)     │
+│                                         │
+│ [Mark]  [Commit]  [Recall]              │
+│                                         │
+│ Pipeline: "Triage 5 Whiskers"           │
+│ [Load...] [Edit JSON...]               │
+│                                         │
+│ Commands (12):                          │
+│  1. MoveByTimeRange: pred_w0 → gt_w0   │
+│  2. MoveByTimeRange: pred_w1 → gt_w1   │
+│  ...                                    │
+│  11. AddInterval: tracked_regions       │
+│  12. SaveData: tracked_regions          │
+│                                         │
+│ Tracked: 3 intervals, 5,200 frames      │
+│ Remaining: 194,800 frames               │
+└─────────────────────────────────────────┘
+```
+
+**Keyboard shortcuts** (essential for the scrubbing workflow):
+
+- **M** — Mark (start a triage range)
+- **C** — Commit (execute pipeline for `[mark_frame, current_frame]`)
+- **R** — Recall (abort, jump back to mark frame)
+
+### TriageSessionState (EditorState subclass)
+
+The triage session widget follows the standard EditorState pattern:
+
+```cpp
+struct TriageSessionStateData {
+    std::string pipeline_json;          // Serialized CommandSequenceDescriptor
+    std::string tracked_regions_key;    // Key to the tracked-regions interval series
+    // State machine is NOT serialized — always starts Idle on load
+};
+
+class TriageSessionState : public EditorState {
+    Q_OBJECT
+public:
+    QString getTypeName() const override { return "TriageSession"; }
+    std::string toJson() const override;
+    bool fromJson(std::string const& json) override;
+
+signals:
+    void pipelineChanged();
+    void stateChanged();  // Mark/Commit/Recall transitions
+};
+```
+
+## Tracked Regions for Machine Learning
+
+The tracked-regions `DigitalIntervalSeries` created by `AddInterval` commands during triage has
+direct utility for machine learning workflows.
+
+### Implicit Negative Labeling
+
+```
+Tracked: [75000, 76000] ∪ [150000, 151000]
+
+Frame 75500 + has "contact" label  →  ground truth POSITIVE
+Frame 75700 + no "contact" label   →  ground truth NEGATIVE  (within tracked region)
+Frame 80000 + no "contact" label   →  UNKNOWN                (outside tracked region)
+```
+
+### Prediction Scope
+
+When running predictions with MLCore, restrict to untracked regions:
+
+```cpp
+auto tracked = dm->getData<DigitalIntervalSeries>("tracked_regions");
+auto complement = tracked->complement(TimeFrameIndex(0), TimeFrameIndex(total_frames));
+// Predict only within complement intervals
+```
+
+### Incremental Training
+
+As the user triages more data:
+
+1. Tracked regions grow.
+2. More ground truth positives and negatives become available.
+3. The model can be retrained on the expanded ground truth.
+4. Predictions are made on the shrinking untracked region.
+5. The user focuses triage on frames where the model is uncertain.
+
+This creates a human-in-the-loop active learning pipeline, all driven by the same triage
+session mechanism.
+
+## Persistence Safety
+
+### Write-Ahead Pattern
+
+For expensive data (LineData CSVs with millions of entries), the `SaveData` command should use
+atomic writes:
+
+1. Write to `path.tmp` (same filesystem).
+2. `fsync()` the temporary file.
+3. `rename()` atomically over the target path (atomic on POSIX).
+
+This prevents corruption if the application crashes mid-save.
+
+### When to Save
+
+Saving is just another command in the sequence. The user explicitly decides what gets saved by
+including `SaveData` commands in their pipeline. Options:
+
+- **Save ground truth only** — Most common. Source (predicted) CSVs are not modified.
+- **Save both sides** — Include `SaveData` commands for source and destination.
+- **Save nothing** — Omit `SaveData` commands. Changes exist only in-memory.
+
+### Relationship to Workspace Save
+
+`SaveData` commands save individual data objects to standalone files. This is distinct from
+workspace save (`WorkspaceManager::save()`), which captures the complete session state.
+
+Both can happen independently:
+
+- `SaveData` during triage commits: saves ground truth data incrementally.
+- Workspace save: captures the full session state for later resumption.
+- Workspace auto-save (crash recovery): happens on a timer, independent of triage.
+
+## Integration with Action Journal
+
+Every command execution is automatically recorded to the Action Journal. The `executeSequence()`
+function accepts an optional journal pointer:
+
+```cpp
+SequenceResult executeSequence(
+    CommandSequenceDescriptor const& seq,
+    CommandContext const& ctx,
+    ActionJournal* journal = nullptr,
+    bool stop_on_error = true)
+{
+    // ... for each command ...
+    auto cmd = createCommand(desc.command_name, resolved_json);
+    auto result = cmd->execute(ctx);
+
+    if (result.success && journal) {
+        journal->record(ActionEntry{
+            .timestamp = now_iso8601(),
+            .action_type = "command",
+            .description = desc.description.value_or(cmd->commandName()),
+            .payload_json = cmd->toJson(),
+            .source_widget = "executeSequence"
+        });
+    }
+    // ...
+}
+```
+
+This means:
+
+- Triage commit operations are automatically logged.
+- The journal is a complete record of all commands executed.
+- Journal entries can be replayed by feeding them back through `createCommand()` + `execute()`.
+- The journal can be exported as a script for batch processing.
+
+## Integration with Undo/Redo
+
+Undo is built directly into the `ICommand` interface. There is no separate `IUndoableCommand`
+hierarchy — every command has `isUndoable()` and `undo()` methods, defaulting to "not undoable."
+Commands opt in by overriding these two methods.
+
+### CommandStack
+
+The `CommandStack` manages the undo/redo history:
+
+```cpp
+class CommandStack {
+public:
+    void push(std::unique_ptr<ICommand> cmd);
+    CommandResult undo(CommandContext const& ctx);
+    CommandResult redo(CommandContext const& ctx);
+
+    bool canUndo() const;
+    bool canRedo() const;
+
+    void markClean();
+    bool isClean() const;
+
+private:
+    std::vector<std::unique_ptr<ICommand>> _undo_stack;
+    std::vector<std::unique_ptr<ICommand>> _redo_stack;
+    int _clean_index = 0;
+};
+```
+
+### Undo Strategies
+
+| Strategy | When to Use | Example |
+|----------|-------------|--------|
+| **Inverse command** | Data mutations with clear inverses | `MoveByTimeRange`: `execute()` records moved IDs, `undo()` moves them back |
+| **Non-undoable** | Destructive or external operations | File save (can't un-save a file) |
+| **Memento adapter (opt-in)** | Destructive widget state changes only | "Reset all display options to defaults" |
+
+### WidgetStateChangeCommand
+
+An opt-in adapter for the rare cases where a widget action is destructive enough to warrant
+undo:
+
+```cpp
+class WidgetStateChangeCommand : public ICommand {
+    std::shared_ptr<EditorState> _state;
+    std::string _before_json;  // Captured before execution
+    std::string _after_json;   // Captured after execution
+
+public:
+    std::string commandName() const override { return "WidgetStateChange"; }
+    std::string toJson() const override { return _after_json; }
+    bool isUndoable() const override { return true; }
+
+    CommandResult execute(CommandContext const&) override {
+        _state->fromJson(_after_json);
+        return CommandResult::ok();
+    }
+
+    CommandResult undo(CommandContext const&) override {
+        _state->fromJson(_before_json);
+        return CommandResult::ok();
+    }
+
+    int mergeId() const override {
+        return static_cast<int>(std::hash<EditorState*>{}(_state.get()) & 0x7FFFFFFF);
+    }
+    bool mergeWith(ICommand const& other) override {
+        auto const* o = dynamic_cast<WidgetStateChangeCommand const*>(&other);
+        if (!o || o->_state != _state) return false;
+        _after_json = o->_after_json;
+        return true;
+    }
+};
+```
+
+### CommandSequenceCommand (Triage Undo)
+
+A triage commit executes multiple commands. For undo purposes, the entire sequence is wrapped
+as a single undoable group:
+
+```cpp
+class CommandSequenceCommand : public ICommand {
+    std::vector<std::unique_ptr<ICommand>> _commands;
+    std::string _name;
+
+public:
+    std::string commandName() const override { return _name; }
+    bool isUndoable() const override {
+        return std::any_of(_commands.begin(), _commands.end(),
+            [](auto const& c) { return c->isUndoable(); });
+    }
+
+    CommandResult execute(CommandContext const& ctx) override {
+        for (auto& cmd : _commands) {
+            auto r = cmd->execute(ctx);
+            if (!r.success) return r;
+        }
+        return CommandResult::ok();
+    }
+
+    CommandResult undo(CommandContext const& ctx) override {
+        for (auto it = _commands.rbegin(); it != _commands.rend(); ++it) {
+            if (!(*it)->isUndoable()) continue;
+            auto r = (*it)->undo(ctx);
+            if (!r.success) return r;
+        }
+        return CommandResult::ok();
+    }
+};
+```
+
+Non-undoable children (`SaveData`) are skipped during undo.
+
+## JSON Console Integration
+
+The command architecture naturally integrates with the planned JSON Console:
+
+```json
+{
+    "type": "command_sequence",
+    "version": "1.0",
+    "payload": {
+        "name": "My Triage Pipeline",
+        "commands": [...]
+    }
+}
+```
+
+### Unified JSON Dispatch
+
+| Type | Executor |
+|------|----------|
+| `"transform_pipeline"` | TransformsV2 pipeline loader |
+| `"table_definition"` | TableView system |
+| `"command_sequence"` | `executeSequence()` |
+| `"data_load"` | LoaderRegistry (or wrapped as `LoadData` command) |
+
+Eventually, `"transform_pipeline"` and `"data_load"` could be subsumed by their command
+wrappers, making the command system the single execution path for all operations.
+
+## Design Principles
+
+1. **Commands are DataManager-level operations.** Transforms are element-level (TransformsV2).
+   Commands are whole-object operations: move, copy, save, load, create intervals. They
+   compose, not compete. Widget/view state changes (`EditorState`) are explicitly **not**
+   commands.
+
+2. **JSON-serializable everything.** Every command descriptor, every parameter struct, every
+   sequence is a plain C++ struct that reflect-cpp can round-trip. No manual JSON construction.
+
+3. **Virtual base class, not a static registry.** A plain factory function maps command names
+   to concrete types. No RAII registration, no `--whole-archive` linker flags.
+
+4. **Two-tier variable substitution.** Static template variables (known at authoring time) and
+   runtime variables (resolved at execution time) use the same `${variable}` syntax.
+
+5. **Triage is just a consumer.** The triage session is not special — it's a state machine that
+   builds a `CommandContext` and calls `executeSequence()`. Any other consumer (CLI, Python,
+   macro recorder) uses the same API.
+
+6. **Persistence is a command, not a side effect.** Saving data is an explicit `SaveData`
+   command in the sequence. The user decides what gets saved and when. Atomic writes prevent
+   corruption.
+
+7. **Undo is opt-in and layered.** Commands work without undo. Undo support is added
+   per-command when valuable, using inverse operations.
+
+8. **Incremental adoption.** Not every operation needs to become a command on day one. Start
+   with the operations needed for triage, then expand as other workflows demand it.
+
+9. **Commands mirror GUI verbs, not internal APIs.** A command's name and parameters should
+   match what the user sees ("MoveByTimeRange" with `source_key` / `destination_key`), not the
+   internal function it calls. Parameter names should be self-explanatory without knowledge of
+   the source code.
+
+## See Also
+
+- [Command Architecture Roadmap](roadmap.qmd) — phased implementation plan
+- [Data Manager](../data_manager.qmd) — core data management documentation
+- [State Management Roadmap](../../../developer/STATE_MANAGEMENT_ROADMAP.md) — related state management plans (Phases 4–6 superseded by this architecture)

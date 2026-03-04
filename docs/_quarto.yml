@@ -79,6 +79,10 @@ website:
             - developer/DataManager/storage_architecture.qmd
             - developer/DataManager/storage_testing_roadmap.qmd
             - developer/DataManager/storage_benchmarking_roadmap.qmd
+            - section: "Command Architecture"
+              href: developer/DataManager/Commands/index.qmd
+              contents:
+                - developer/DataManager/Commands/roadmap.qmd
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd
