@@ -1,0 +1,153 @@
+---
+title: "Variable Substitution & Sequence Execution"
+description: "Two-pass ${variable} substitution and command sequence execution"
+---
+
+## Overview
+
+Variable substitution and sequence execution are the runtime engine of the
+[Command Architecture](index.qmd). Variable substitution resolves `${variable}` placeholders
+in command parameters and names. Sequence execution iterates a `CommandSequenceDescriptor`,
+applying substitution and executing each command in order.
+
+**Source files:**
+
+- `src/DataManager/Commands/VariableSubstitution.hpp` / `.cpp` — `${variable}` string substitution
+- `src/DataManager/Commands/SequenceExecution.hpp` / `.cpp` — `executeSequence()` and `SequenceResult`
+- `src/DataManager/Commands/VariableSubstitution.test.cpp` — Tests for both features
+
+All code lives in the `commands` namespace with no Qt dependency.
+
+## Variable Substitution
+
+### Function
+
+```cpp
+std::string substituteVariables(
+    std::string const & input,
+    std::map<std::string, std::string> const & variables);
+```
+
+Scans `input` for `${variable_name}` patterns and replaces them with values from the
+`variables` map. Unresolved variables are left as-is. Malformed references (missing closing
+brace) are skipped.
+
+### Behavior
+
+- **Single pass:** Replacement values are not re-scanned for variables. A replacement that
+  contains `${...}` will NOT be expanded again.
+- **All string types:** Works on any string — JSON, command names, parameter values.
+- **No type coercion:** Values are substituted as literal strings. Numeric conversion happens
+  during reflect-cpp deserialization of the substituted JSON.
+
+### Pattern
+
+The implementation reuses the same `${variable_name}` pattern established by the TransformsV2
+pipeline variable substitution system (`TransformPipeline::substituteVariables()`).
+
+## Sequence Execution
+
+### SequenceResult
+
+```cpp
+struct SequenceResult {
+    CommandResult result;
+    std::vector<std::unique_ptr<ICommand>> executed_commands;
+    int failed_index = -1;
+};
+```
+
+- `result` — overall success/failure with aggregated affected keys
+- `executed_commands` — retained for undo support (Phase 5)
+- `failed_index` — index of the command that failed (-1 if all succeeded)
+
+### executeSequence()
+
+```cpp
+SequenceResult executeSequence(
+    CommandSequenceDescriptor const & seq,
+    CommandContext const & ctx,
+    bool stop_on_error = true);
+```
+
+Execution steps for each command descriptor:
+
+1. Serialize parameters to JSON string
+2. **Pass 1:** Substitute static variables from `seq.variables`
+3. **Pass 2:** Substitute runtime variables from `ctx.runtime_variables`
+4. Deserialize substituted JSON back to `rfl::Generic`
+5. Apply same two-pass substitution to the command name
+6. Call `createCommand()` to instantiate the concrete command
+7. Call `command->execute(ctx)`
+8. Collect the executed command for undo support
+
+### Error Handling
+
+- **`stop_on_error=true` (default):** Returns immediately on the first error. The
+  `executed_commands` vector contains all commands that completed before the failure, plus
+  the failed command itself.
+- **`stop_on_error=false`:** Continues past failures. The `SequenceResult::result` reflects
+  the last failure, and `failed_index` points to it.
+- **Parameter parse failure:** Always stops immediately (even with `stop_on_error=false`),
+  since malformed parameters indicate a structural problem.
+
+## Examples
+
+### Simple Sequence
+
+```json
+{
+  "name": "Triage Whiskers",
+  "variables": {"whisker": "w0"},
+  "commands": [
+    {
+      "command_name": "MoveByTimeRange",
+      "parameters": {
+        "source_key": "pred_${whisker}",
+        "dest_key": "gt_${whisker}",
+        "start_frame": "${start_frame}",
+        "end_frame": "${end_frame}"
+      }
+    }
+  ]
+}
+```
+
+Static variable `whisker` is resolved from `variables`. Runtime variables `start_frame` and
+`end_frame` come from `CommandContext::runtime_variables` (e.g., populated by the triage
+session).
+
+## Tests
+
+Test file: `src/DataManager/Commands/VariableSubstitution.test.cpp`
+
+**Variable substitution tests:**
+
+- Single variable replacement
+- Multiple variables in one string
+- Unresolved variables left intact
+- Empty variables map
+- String with no variables
+- Empty input string
+- Malformed variable (no closing brace)
+- Adjacent variables
+- Numeric values as strings
+- Replacement values containing `${...}` are not re-expanded
+
+**Sequence execution tests:**
+
+- Empty command list succeeds
+- Unknown command fails with `stop_on_error=true`
+- Unknown command continues with `stop_on_error=false`
+- Static variable substitution in parameters
+- Runtime variable substitution in command names
+- Both static and runtime substitution together
+- Correct `failed_index` reporting
+- Commands with no parameters
+- JSON round-trip with variables
+
+## See Also
+
+- [Command Core Types & Factory](core_types.qmd) — `CommandDescriptor`, `CommandContext`, factory
+- [Command Architecture](index.qmd) — full design document
+- [Command Architecture Roadmap](roadmap.qmd) — implementation plan

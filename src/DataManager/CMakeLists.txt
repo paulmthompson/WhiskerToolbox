@@ -37,6 +37,10 @@ set(DATAMANAGER_SOURCES
         Commands/ICommand.hpp
         Commands/CommandFactory.hpp
         Commands/CommandFactory.cpp
+        Commands/VariableSubstitution.hpp
+        Commands/VariableSubstitution.cpp
+        Commands/SequenceExecution.hpp
+        Commands/SequenceExecution.cpp
 
         loaders/loading_utils.hpp
 

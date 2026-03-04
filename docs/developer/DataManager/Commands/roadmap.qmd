@@ -8,7 +8,7 @@ title: "Command Architecture Roadmap"
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.3 complete (core types, ICommand, factory). Variable substitution, sequence execution, first commands remain. |
+| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.5 complete (core types, ICommand, factory, variable substitution, sequence execution). First commands remain. |
 | **Phase 2:** Triage Session | Not Started | Mark/Commit/Recall state machine consuming command sequences |
 | **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
 | **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
@@ -78,15 +78,15 @@ See [Command Factory](index.qmd#command-factory) in the design document.
 
 ### Step 1.4 — Variable Substitution
 
-- [ ] Implement two-pass `${variable}` substitution (static pass from `CommandSequenceDescriptor::variables`, runtime pass from `CommandContext::runtime_variables`)
-- [ ] Reuse the pattern from TransformsV2 pipeline variable substitution
+- [x] Implement two-pass `${variable}` substitution (static pass from `CommandSequenceDescriptor::variables`, runtime pass from `CommandContext::runtime_variables`)
+- [x] Reuse the pattern from TransformsV2 pipeline variable substitution
 
 See [Variable Substitution](index.qmd#variable-substitution) in the design document.
 
 ### Step 1.5 — Sequence Execution
 
-- [ ] `executeSequence()` free function: iterates descriptors, applies variable substitution, creates + executes commands, collects executed commands in `SequenceResult` for undo
-- [ ] Stop-on-first-error behavior (configurable)
+- [x] `executeSequence()` free function: iterates descriptors, applies variable substitution, creates + executes commands, collects executed commands in `SequenceResult` for undo
+- [x] Stop-on-first-error behavior (configurable)
 
 See [Sequence Execution](index.qmd#sequence-execution) in the design document.
 

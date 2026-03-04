@@ -46,6 +46,10 @@ add_executable(test_data_manager
 
         Lineage/test_lineage_recorder.test.cpp
 
+        # Commands tests
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/CommandFactory.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/VariableSubstitution.test.cpp
+
         test_time_entity.cpp
         test_time_entity_groups.cpp
 

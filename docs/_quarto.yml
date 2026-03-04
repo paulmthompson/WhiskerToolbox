@@ -83,6 +83,8 @@ website:
               href: developer/DataManager/Commands/index.qmd
               contents:
                 - developer/DataManager/Commands/roadmap.qmd
+                - developer/DataManager/Commands/core_types.qmd
+                - developer/DataManager/Commands/sequence_execution.qmd
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd
