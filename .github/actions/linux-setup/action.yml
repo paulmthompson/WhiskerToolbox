@@ -18,6 +18,12 @@ runs:
         key: vcpkg-linux-${{ inputs.compiler }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}
         restore-keys: vcpkg-linux-${{ inputs.compiler }}-
 
+    - name: Free up CI runner disk workspace
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        df -h
+
     - uses: seanmiddleditch/gha-setup-ninja@master
 
     - name: install-cmake
