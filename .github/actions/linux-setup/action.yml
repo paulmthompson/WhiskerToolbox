@@ -19,6 +19,7 @@ runs:
         restore-keys: vcpkg-linux-${{ inputs.compiler }}-
 
     - name: Free up CI runner disk workspace
+      shell: bash
       run: |
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /usr/local/lib/android
