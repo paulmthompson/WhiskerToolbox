@@ -14,6 +14,7 @@
 #include <QTableView>
 #include <QVBoxLayout>
 
+#include <iostream>
 #include <set>
 #include <string>
 

@@ -1,16 +1,18 @@
 #ifndef DIGITAL_INTERVAL_STORAGE_CACHE_HPP
 #define DIGITAL_INTERVAL_STORAGE_CACHE_HPP
 
-#include "Entity/EntityTypes.hpp"
-#include "TimeFrame/interval_data.hpp"
+#include "Entity/EntityId.hpp"        // EntityID
+#include "TimeFrame/interval_data.hpp"// Interval struct
+
+#include <cstddef>  // size_t
 
 /**
  * @brief Storage type enumeration for digital interval storage
  */
 enum class DigitalIntervalStorageType {
-    Owning,  ///< Owns the data in SoA layout
-    View,    ///< References another storage via indices
-    Lazy     ///< Lazy-evaluated transform
+    Owning,///< Owns the data in SoA layout
+    View,  ///< References another storage via indices
+    Lazy   ///< Lazy-evaluated transform
 };
 
 // =============================================================================
@@ -28,11 +30,11 @@ enum class DigitalIntervalStorageType {
  * @note Digital intervals are always sorted by start time.
  */
 struct DigitalIntervalStorageCache {
-    Interval const* intervals_ptr = nullptr;
-    EntityId const* entity_ids_ptr = nullptr;
+    Interval const * intervals_ptr = nullptr;
+    EntityId const * entity_ids_ptr = nullptr;
     size_t cache_size = 0;
-    bool is_contiguous = false;  ///< True if storage is contiguous (owning)
-    
+    bool is_contiguous = false;///< True if storage is contiguous (owning)
+
     /**
      * @brief Check if the cache is valid for fast-path access
      * 
@@ -42,15 +44,15 @@ struct DigitalIntervalStorageCache {
     [[nodiscard]] constexpr bool isValid() const noexcept {
         return is_contiguous;
     }
-    
+
     // Convenience accessors for cached data
-    [[nodiscard]] Interval const& getInterval(size_t idx) const noexcept {
+    [[nodiscard]] Interval const & getInterval(size_t idx) const noexcept {
         return intervals_ptr[idx];
     }
-    
+
     [[nodiscard]] EntityId getEntityId(size_t idx) const noexcept {
         return entity_ids_ptr[idx];
     }
 };
 
-#endif // DIGITAL_INTERVAL_STORAGE_CACHE_HPP
+#endif// DIGITAL_INTERVAL_STORAGE_CACHE_HPP

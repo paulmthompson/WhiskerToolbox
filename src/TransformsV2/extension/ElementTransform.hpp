@@ -4,11 +4,9 @@
 #include "core/ComputeContext.hpp"
 
 #include <concepts>
-#include <functional>
-#include <memory>
-#include <span>
-#include <string>
-#include <tuple>
+#include <functional>   // std::function
+#include <span>         // std::span
+#include <tuple>        // std::tuple
 #include <type_traits>
 
 namespace WhiskerToolbox::Transforms::V2 {

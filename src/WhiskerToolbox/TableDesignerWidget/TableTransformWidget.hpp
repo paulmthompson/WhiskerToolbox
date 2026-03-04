@@ -1,12 +1,15 @@
 #ifndef TABLETRANSFORMWIDGET_HPP
 #define TABLETRANSFORMWIDGET_HPP
 
-#include <QWidget>
 #include <QString>
-#include <vector>
-#include <string>
+#include <QWidget>
 
-namespace Ui { class TableTransformWidget; }
+#include <string>
+#include <vector>
+
+namespace Ui {
+class TableTransformWidget;
+}
 
 /**
  * @brief Widget for configuring and applying transforms to tables
@@ -65,7 +68,7 @@ public:
      * @brief Set the output name for the transformed table
      * @param name The output name to set
      */
-    void setOutputName(const QString& name);
+    void setOutputName(QString const & name);
 
 signals:
     /**
@@ -87,7 +90,7 @@ private:
      * @param text The comma-separated text to parse
      * @return Vector of trimmed strings
      */
-    std::vector<std::string> parseCommaSeparatedList(const QString& text) const;
+    std::vector<std::string> parseCommaSeparatedList(QString const & text) const;
 };
 
-#endif // TABLETRANSFORMWIDGET_HPP
+#endif// TABLETRANSFORMWIDGET_HPP

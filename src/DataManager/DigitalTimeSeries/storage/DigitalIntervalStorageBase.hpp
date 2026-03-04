@@ -3,10 +3,11 @@
 
 #include "DigitalIntervalStorageCache.hpp"
 
-#include "Entity/EntityTypes.hpp"
-#include "TimeFrame/interval_data.hpp"
+#include "Entity/EntityId.hpp"                  // EntityId
+#include "TimeFrame/interval_data.hpp"          // Interval struct
 
-#include <optional>
+#include <optional> // std::optional
+#include <utility>  // std::pair
 
 
 // =============================================================================

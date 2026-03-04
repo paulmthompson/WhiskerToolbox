@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <span>
 #include <cstdint>
+#include <iostream>
 #include <numeric>
 #include <nlohmann/json.hpp>
 

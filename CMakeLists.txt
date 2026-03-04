@@ -31,6 +31,8 @@ option(ENABLE_TIME_TRACE "Enable Clang -ftime-trace for build time profiling" OF
 
 option(ENABLE_FUZZ_TESTING "Enable fuzz testing with Google FuzzTest (Clang only)" OFF)
 
+option(ENABLE_OPTIMIZATION_REPORTS "Enable compiler optimization reports (Clang only)" OFF)
+
 # Configure vcpkg features based on CMake options - MUST be before project() call
 set(VCPKG_MANIFEST_FEATURES "")
 if(ENABLE_CAPNPROTO)

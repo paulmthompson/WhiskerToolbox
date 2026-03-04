@@ -33,6 +33,7 @@
 #include <QTableView>
 
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <numeric>
 #include <vector>

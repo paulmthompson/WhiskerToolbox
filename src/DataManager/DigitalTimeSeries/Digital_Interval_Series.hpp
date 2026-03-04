@@ -59,20 +59,20 @@
  * @see EntityRegistry for entity ID management
  */
 
-#include "DigitalTimeSeries/IntervalWithId.hpp"
-#include "Entity/EntityTypes.hpp"
-#include "Observer/Observer_Data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
-#include "TimeFrame/interval_data.hpp"
+#include "DigitalTimeSeries/IntervalWithId.hpp"     // IntervalWithId struct for element access
+#include "Entity/EntityTypes.hpp"                   // EntityId
+#include "Observer/Observer_Data.hpp"               // ObserverData base class
+#include "TimeFrame/TimeFrame.hpp"                  // TimeFrame and TimeFrameIndex
+#include "TimeFrame/interval_data.hpp"              // Interval struct
 #include "storage/DigitalIntervalStorage.hpp"
 
 #include <cstdint>
-#include <memory>
-#include <optional>
-#include <ranges>
-#include <unordered_set>
-#include <utility>
-#include <vector>
+#include <memory>           // std::shared_ptr
+#include <optional>         // std::optional
+#include <ranges>           // std::ranges::views
+#include <unordered_set>    // std::unordered_set
+#include <utility>          // std::pair
+#include <vector>           // std::vector
 
 
 class EntityRegistry;

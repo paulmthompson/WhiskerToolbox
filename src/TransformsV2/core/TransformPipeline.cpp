@@ -2,6 +2,7 @@
 #include "TransformPipeline.hpp"
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"

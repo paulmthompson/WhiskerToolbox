@@ -10,7 +10,6 @@
 #include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <functional>   // std::function
-#include <iostream>     // std::cerr, std::cout
 #include <memory>       // std::shared_ptr
 #include <optional>     // std::optional
 #include <string>       // std::string
@@ -302,8 +301,6 @@ public:
             },
                                     existing_variant);
             if (found) {
-                std::cerr << "Data with key '" << key
-                          << "' already exists, not setting again." << std::endl;
                 return;// Data already exists, do not set again
             }
         }

@@ -20,10 +20,18 @@ if("${CLANG_OPTIONS}" STREQUAL "")
             -Wdouble-promotion # warn if float is implicit promoted to double
             -Wformat=2 # warn on security issues around functions that format output (ie printf)
             -Wimplicit-fallthrough # warn on statements that fallthrough without an explicit annotation
-            -fsave-optimization-record
-            -Rpass-analysis=loop-vectorize
             -fPIC
     )
+
+    if(ENABLE_OPTIMIZATION_REPORTS)
+        list(APPEND CLANG_OPTIONS 
+        -Rpass=loop-vectorize 
+        -Rpass-missed=loop-vectorize 
+        -Rpass-analysis=loop-vectorize
+        -fsave-optimization-record
+        )
+        message(STATUS "Clang optimization reports: ENABLED (use -Rpass, -Rpass-missed, and -Rpass-analysis)")
+    endif()
     
     if(ENABLE_TIME_TRACE)
         list(APPEND CLANG_OPTIONS -ftime-trace)

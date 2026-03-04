@@ -9,6 +9,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <cmath>
+#include <iostream>
 #include <memory>
 
 // Helper function to generate a circular mask

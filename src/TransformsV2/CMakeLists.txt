@@ -15,6 +15,7 @@ set(TRANSFORM_V2_SOURCES
         core/PipelineLoader.hpp
         core/PipelineLoader.cpp
         core/PipelineValueStore.hpp
+        core/PipelineValueStore.cpp
         core/RangeReductionRegistry.hpp
         core/RegisteredTransforms.cpp
         core/TensorColumnBuilders.hpp
@@ -27,6 +28,8 @@ set(TRANSFORM_V2_SOURCES
         core/TypeChainResolver.cpp
 
         extension/ElementTransform.hpp
+        extension/ParameterBinding.hpp
+        extension/ParameterBinding.cpp
         extension/RangeReductionTypes.hpp
         extension/ValueProjectionTypes.hpp
         extension/ViewAdaptorTypes.hpp

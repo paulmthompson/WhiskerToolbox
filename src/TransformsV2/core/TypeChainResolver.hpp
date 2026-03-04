@@ -12,10 +12,10 @@
 #ifndef WHISKERTOOLBOX_TYPE_CHAIN_RESOLVER_HPP
 #define WHISKERTOOLBOX_TYPE_CHAIN_RESOLVER_HPP
 
-#include <span>
-#include <string>
-#include <typeindex>
-#include <vector>
+#include <span>         // std::span
+#include <string>       // std::string
+#include <typeindex>    // std::type_index
+#include <vector>       // std::vector
 
 namespace WhiskerToolbox::Transforms::V2 {
 

@@ -2,10 +2,12 @@
 
 #include "DataManager.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "TransformsV2/algorithms/SumReduction/SumReduction.hpp"
 #include "TransformsV2/core/DataManagerIntegration.hpp"
 #include "TransformsV2/core/ParameterIO.hpp"
+#include "TransformsV2/detail/ContainerTransform.hpp" // applyElementTransform
 #include "TransformsV2/core/TransformPipeline.hpp"
 
 #include "fixtures/scenarios/mask/area_scenarios.hpp"

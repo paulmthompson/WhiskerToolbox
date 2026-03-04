@@ -16,9 +16,11 @@
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/pipeline/TablePipeline.hpp"
 
-#include <cstdint>
-#include <memory>
 #include <nlohmann/json.hpp>
+
+#include <cstdint>
+#include <iostream>
+#include <memory>
 #include <numeric>
 #include <vector>
 

@@ -13,6 +13,7 @@
 #include <QTableView>
 #include <QVBoxLayout>
 
+#include <iostream>
 #include <set>
 
 PointTableView::PointTableView(

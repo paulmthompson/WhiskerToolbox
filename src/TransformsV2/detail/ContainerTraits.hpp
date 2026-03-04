@@ -3,12 +3,12 @@
 
 #include "TypeTraits/DataTypeTraits.hpp"
 
-#include <memory>
-#include <string>
-#include <type_traits>
-#include <typeindex>
-#include <unordered_map>
-#include <vector>
+#include <memory>           // std::shared_ptr
+#include <string>           // std::string
+#include <type_traits>      
+#include <typeindex>        // std::type_index
+//#include <unordered_map>    // std::unordered_map
+#include <vector>           // std::vector
 
 class MaskData;
 class LineData;

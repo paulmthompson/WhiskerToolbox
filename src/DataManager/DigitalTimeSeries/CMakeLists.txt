@@ -8,6 +8,7 @@ set(digital_subdirectory_sources
         storage/DigitalIntervalStorageBase.hpp
         storage/DigitalIntervalStorage.hpp
         storage/DigitalIntervalStorage.cpp
+        storage/LazyDigitalIntervalStorage.hpp
         storage/OwningDigitalIntervalStorage.hpp
         storage/OwningDigitalIntervalStorage.cpp
         storage/ViewDigitalIntervalStorage.hpp

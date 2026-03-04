@@ -44,7 +44,6 @@
 #include "utils/TimeSeriesConcepts.hpp"
 
 #include <concepts>
-#include <ranges>
 #include <string>
 #include <typeindex>
 #include <vector>

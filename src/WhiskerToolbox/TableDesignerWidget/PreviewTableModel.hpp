@@ -5,7 +5,6 @@
 #include <QStringList>
 #include <QVariant>
 
-#include <optional>
 #include <string>
 #include <vector>
 

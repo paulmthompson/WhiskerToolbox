@@ -1,10 +1,12 @@
 #ifndef TABLEINFOWIDGET_HPP
 #define TABLEINFOWIDGET_HPP
 
-#include <QWidget>
 #include <QString>
+#include <QWidget>
 
-namespace Ui { class TableInfoWidget; }
+namespace Ui {
+class TableInfoWidget;
+}
 
 /**
  * @brief Small widget to edit table name/description and trigger save.
@@ -28,6 +30,4 @@ private:
     Ui::TableInfoWidget * ui;
 };
 
-#endif // TABLEINFOWIDGET_HPP
-
-
+#endif// TABLEINFOWIDGET_HPP

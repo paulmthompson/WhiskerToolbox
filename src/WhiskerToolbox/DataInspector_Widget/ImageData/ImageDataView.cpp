@@ -11,6 +11,8 @@
 #include <QTableView>
 #include <QVBoxLayout>
 
+#include <iostream>
+
 ImageDataView::ImageDataView(
     std::shared_ptr<DataManager> data_manager,
     QWidget * parent)

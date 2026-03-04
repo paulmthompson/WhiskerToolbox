@@ -52,20 +52,20 @@
  * @see PipelineStep.hpp for integration with pipeline execution
  */
 
-#include "core/PipelineValueStore.hpp"
+#include "core/PipelineValueStore.hpp" // For PipelineValueStore
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 #include <nlohmann/json.hpp>
 
-#include <any>
-#include <functional>
-#include <map>
-#include <optional>
-#include <stdexcept>
-#include <string>
-#include <typeindex>
-#include <unordered_map>
+#include <any>              // std::any
+#include <functional>       // std::function
+#include <map>              // std::map
+#include <optional>         // std::optional
+#include <stdexcept>        // std::runtime_error
+#include <string>           // std::string
+#include <typeindex>        // std::type_index
+#include <unordered_map>    // std::unordered_map   
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -180,11 +180,7 @@ using BindingApplicatorFn = std::function<std::any(
  * Each parameter type registers an applicator function during transform registration.
  * This enables type-erased binding application in pipeline runtime.
  */
-inline std::unordered_map<std::type_index, BindingApplicatorFn>&
-getBindingApplicatorRegistry() {
-    static std::unordered_map<std::type_index, BindingApplicatorFn> registry;
-    return registry;
-}
+std::unordered_map<std::type_index, BindingApplicatorFn> & getBindingApplicatorRegistry();
 
 /**
  * @brief Register a binding applicator for a parameter type
@@ -246,27 +242,11 @@ public:
  * @return Type-erased parameters with bound values applied
  * @throws std::runtime_error if no applicator is registered for the type
  */
-inline std::any applyBindingsErased(
+std::any applyBindingsErased(
     std::type_index params_type,
     std::any const& base_params,
     std::map<std::string, std::string> const& bindings,
-    PipelineValueStore const& store)
-{
-    if (bindings.empty()) {
-        return base_params;
-    }
-
-    auto& registry = getBindingApplicatorRegistry();
-    auto it = registry.find(params_type);
-
-    if (it == registry.end()) {
-        throw std::runtime_error(
-            "No binding applicator registered for parameter type: " +
-            std::string(params_type.name()));
-    }
-
-    return it->second(base_params, bindings, store);
-}
+    PipelineValueStore const& store);
 
 /**
  * @brief Try to apply bindings to type-erased parameters
@@ -279,18 +259,11 @@ inline std::any applyBindingsErased(
  * @param store The value store containing bound values
  * @return Parameters with bound values applied, or original params on failure
  */
-inline std::any tryApplyBindingsErased(
+std::any tryApplyBindingsErased(
     std::type_index params_type,
     std::any const& base_params,
     std::map<std::string, std::string> const& bindings,
-    PipelineValueStore const& store) noexcept
-{
-    try {
-        return applyBindingsErased(params_type, base_params, bindings, store);
-    } catch (...) {
-        return base_params;
-    }
-}
+    PipelineValueStore const& store) noexcept;
 
 /**
  * @brief Check if a binding applicator is registered for a parameter type
@@ -298,10 +271,7 @@ inline std::any tryApplyBindingsErased(
  * @param params_type Type index to check
  * @return true if an applicator is registered
  */
-inline bool hasBindingApplicator(std::type_index params_type) {
-    auto& registry = getBindingApplicatorRegistry();
-    return registry.find(params_type) != registry.end();
-}
+bool hasBindingApplicator(std::type_index params_type);
 
 }  // namespace WhiskerToolbox::Transforms::V2
 

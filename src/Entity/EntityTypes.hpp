@@ -13,44 +13,12 @@
 #ifndef ENTITYTYPES_HPP
 #define ENTITYTYPES_HPP
 
+#include "EntityId.hpp" // EntityId definition
+
 #include <cstdint>
 #include <utility> // std::forward
 #include <string>
 
-/**
- * @brief Opaque identifier for a discrete entity (point, line, event, interval) for the current session.
- */
-struct EntityId {
-    EntityId() = default;
-
-    explicit EntityId(uint64_t value)
-        : id{value} {}
-
-    uint64_t id;
-
-    bool operator==(EntityId const & other) const {
-        return id == other.id;
-    }
-
-    bool operator!=(EntityId const & other) const {
-        return id != other.id;
-    }
-
-    bool operator<(EntityId const & other) const {
-        return id < other.id;
-    }
-
-    bool operator>(EntityId const & other) const {
-        return id > other.id;
-    }
-
-    bool operator<=(EntityId const & other) const {
-        return id <= other.id;
-    }
-    bool operator>=(EntityId const & other) const {
-        return id >= other.id;
-    }
-};
 
 /**
  * @brief Hash function specialization for EntityId to enable use in unordered containers.

@@ -5,6 +5,7 @@
 #include "DataManager.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "TransformsV2/algorithms/MaskArea/MaskArea.hpp"
 #include "TransformsV2/algorithms/SumReduction/SumReduction.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"

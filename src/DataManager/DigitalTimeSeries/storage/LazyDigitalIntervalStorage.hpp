@@ -4,13 +4,13 @@
 #include "DigitalIntervalStorageBase.hpp"
 #include "DigitalIntervalStorageCache.hpp"
 
-#include "Entity/EntityTypes.hpp"
-#include "TimeFrame/interval_data.hpp"
+#include "Entity/EntityTypes.hpp"       // EntityId with hash specialization
+#include "TimeFrame/interval_data.hpp"  // Interval struct
 
-#include <algorithm>
-#include <numeric>
-#include <ranges>
-#include <unordered_map>
+#include <algorithm>        // std::ranges::lower_bound, std::ranges::upper_bound, std::min, std::max
+#include <optional>         // std::optional
+#include <ranges>           // std::ranges::random_access_range, std::ranges::views::iota
+#include <unordered_map>    // std::unordered_map
 
 // =============================================================================
 // Lazy Storage (View-based Computation on Demand)

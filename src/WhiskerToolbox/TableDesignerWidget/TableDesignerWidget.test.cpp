@@ -31,10 +31,12 @@
 #include <QMessageBox>
 #include <QRadioButton>
 
-#include <memory>
-#include <vector>
 #include <algorithm>
+#include <iostream>
+#include <memory>
 #include <numeric>
+#include <vector>
+
 
 /**
  * @brief Test fixture for TableDesignerWidget that creates test data and computers

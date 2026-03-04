@@ -21,6 +21,7 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <numeric>
+#include <iostream>
 #include <vector>
 
 /**

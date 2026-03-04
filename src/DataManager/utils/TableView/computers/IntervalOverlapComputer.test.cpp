@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <iostream>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <numeric>
