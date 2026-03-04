@@ -98,10 +98,12 @@ signals:
 
 private slots:
     void _onInspectedKeyChanged(QString const & key);
+    void _onInspectedTimeFrameKeyChanged(QString const & key);
 
 private:
     void _setupUi();
     void _updateViewForKey(QString const & key);
+    void _updateViewForTimeFrame(QString const & key);
     void _createViewForType(DM_DataType type);
     void _clearView();
 

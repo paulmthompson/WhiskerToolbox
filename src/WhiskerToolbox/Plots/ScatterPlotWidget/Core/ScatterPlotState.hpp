@@ -27,9 +27,19 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
+
+/**
+ * @brief Selection interaction mode for the scatter plot
+ */
+enum class ScatterSelectionMode {
+    SinglePoint,   ///< Ctrl+Click to select/deselect individual points
+    Polygon        ///< Draw polygon to select multiple points
+};
 
 /**
  * @brief Serializable state data for ScatterPlotWidget
@@ -44,9 +54,17 @@ struct ScatterPlotStateData {
     std::optional<ScatterAxisSource> x_source;  ///< X-axis data source
     std::optional<ScatterAxisSource> y_source;  ///< Y-axis data source
     bool show_reference_line = false;           ///< Show y=x reference line
+    bool color_by_group = true;                  ///< Color points by their group assignment
 
     /// Glyph style for scatter points (shape, size, color, alpha)
     CorePlotting::GlyphStyleData glyph_style{CorePlotting::GlyphType::Circle, 5.0f, "#3388FF", 0.8f};
+
+    /// Selection mode
+    std::string selection_mode = "single_point";
+
+    /// Indices of currently selected points in the scatter data arrays.
+    /// Not serialized (transient state).
+    rfl::Skip<std::vector<std::size_t>> selected_indices;
 };
 
 /**
@@ -97,6 +115,22 @@ public:
     [[nodiscard]] bool showReferenceLine() const { return _data.show_reference_line; }
     void setShowReferenceLine(bool show);
 
+    // === Color by group ===
+    [[nodiscard]] bool colorByGroup() const { return _data.color_by_group; }
+    void setColorByGroup(bool enabled);
+
+    // === Selection mode ===
+    [[nodiscard]] ScatterSelectionMode selectionMode() const;
+    void setSelectionMode(ScatterSelectionMode mode);
+
+    // === Selection state ===
+    [[nodiscard]] std::vector<std::size_t> const & selectedIndices() const { return _data.selected_indices.value(); }
+    void setSelectedIndices(std::vector<std::size_t> indices);
+    void addSelectedIndex(std::size_t index);
+    void removeSelectedIndex(std::size_t index);
+    void clearSelection();
+    [[nodiscard]] bool isSelected(std::size_t index) const;
+
     // === Glyph style ===
     /** @brief Get glyph style state (for GlyphStyleControls binding) */
     [[nodiscard]] GlyphStyleState * glyphStyleState() { return _glyph_style_state.get(); }
@@ -110,7 +144,10 @@ signals:
     void xSourceChanged();
     void ySourceChanged();
     void referenceLineChanged();
+    void colorByGroupChanged();
     void glyphStyleChanged();
+    void selectionModeChanged();
+    void selectionChanged();
 
 private:
     ScatterPlotStateData _data;

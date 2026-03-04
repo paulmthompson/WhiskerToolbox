@@ -38,6 +38,7 @@ add_executable(test_coreplotting
     ViewStateData.test.cpp
     Colormap.test.cpp
     HeatmapMapper.test.cpp
+    PolygonSelection.test.cpp
     # LineBatch
     LineBatch/LineBatchData.test.cpp
     LineBatch/CpuLineBatchIntersector.test.cpp

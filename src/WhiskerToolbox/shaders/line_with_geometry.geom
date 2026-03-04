@@ -5,17 +5,20 @@ layout(triangle_strip, max_vertices = 4) out;
 
 in vec2 v_position[];
 flat in uint v_line_id[];
+in vec4 v_color_override[];
 
 out vec2 g_position;
 out vec2 g_tex_coord;
 flat out uint g_line_id;
 flat out uint g_is_selected;  // Changed from bool to uint (0 = not selected, 1 = selected)
+out vec4 g_color_override;
 
 uniform float u_line_width;
 uniform vec2 u_viewport_size;
 
 void main() {
     uint line_id = v_line_id[0];  // Both vertices should have the same line ID
+    vec4 color_override = v_color_override[0];
     
     // Get the two vertices of the line segment
     vec2 p0 = v_position[0];
@@ -42,6 +45,7 @@ void main() {
     g_tex_coord = vec2(0.0, 0.0);
     g_line_id = line_id;
     g_is_selected = is_selected;
+    g_color_override = color_override;
     gl_Position = vec4(v0, 0.0, 1.0);
     EmitVertex();
     
@@ -49,6 +53,7 @@ void main() {
     g_tex_coord = vec2(0.0, 1.0);
     g_line_id = line_id;
     g_is_selected = is_selected;
+    g_color_override = color_override;
     gl_Position = vec4(v1, 0.0, 1.0);
     EmitVertex();
     
@@ -56,6 +61,7 @@ void main() {
     g_tex_coord = vec2(1.0, 0.0);
     g_line_id = line_id;
     g_is_selected = is_selected;
+    g_color_override = color_override;
     gl_Position = vec4(v2, 0.0, 1.0);
     EmitVertex();
     
@@ -63,6 +69,7 @@ void main() {
     g_tex_coord = vec2(1.0, 1.0);
     g_line_id = line_id;
     g_is_selected = is_selected;
+    g_color_override = color_override;
     gl_Position = vec4(v3, 0.0, 1.0);
     EmitVertex();
     

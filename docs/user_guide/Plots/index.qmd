@@ -1,0 +1,7 @@
+---
+title: "Plot Widgets"
+---
+
+# Plot Widgets
+
+Overview of the available plot widgets in the user interface.

@@ -4,6 +4,7 @@ in vec2 g_position;
 in vec2 g_tex_coord;
 flat in uint g_line_id;
 flat in uint g_is_selected;  // Changed from bool to uint
+in vec4 g_color_override;
 
 uniform vec4 u_color;
 uniform vec4 u_hover_color;
@@ -15,8 +16,8 @@ uniform bool u_is_selected;  // Legacy - now using g_is_selected from geometry s
 out vec4 FragColor;
 
 void main() {
-    // Use normal color for regular rendering
-    vec4 final_color = u_color;
+    // Color priority: hover > selected > group override > global
+    vec4 final_color = (g_color_override.a > 0.0) ? g_color_override : u_color;
     
     // Check if this specific line is selected (using per-vertex data from geometry shader)
     if (g_is_selected != 0u) {

@@ -50,6 +50,8 @@ target_link_libraries(ScatterPlotWidget PRIVATE Collapsible_Widget)
 target_link_libraries(ScatterPlotWidget PRIVATE GlyphStyleWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE CorePlotting)
 target_link_libraries(ScatterPlotWidget PRIVATE PlottingOpenGL)
+target_link_libraries(ScatterPlotWidget PRIVATE GroupContextMenu)
+
 
 target_include_directories(ScatterPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

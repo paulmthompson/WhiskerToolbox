@@ -166,6 +166,17 @@ public:
      */
     void clearAllGroups();
 
+    /**
+     * @brief Get the generation counter for group changes
+     *
+     * Monotonically increasing counter incremented on every group change.
+     * Useful for widgets to efficiently detect when group membership or
+     * properties have changed without connecting to individual signals.
+     *
+     * @return Current generation counter value
+     */
+    [[nodiscard]] uint64_t generation() const;
+
     // ===== Common Group Operations for Context Menus =====
     /**
      * @brief Create a new group and assign the given entities to it

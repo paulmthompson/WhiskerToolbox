@@ -23,12 +23,14 @@
 #include "Core/TemporalProjectionViewState.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Interaction/GlyphPreview.hpp"
+#include "CorePlotting/Interaction/PolygonInteractionController.hpp"
 #include "CorePlotting/LineBatch/ILineBatchIntersector.hpp"
 #include "CorePlotting/LineBatch/LineBatchData.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "PlottingOpenGL/LineBatch/BatchLineRenderer.hpp"
 #include "PlottingOpenGL/LineBatch/BatchLineStore.hpp"
+#include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "Entity/EntityTypes.hpp"
 
@@ -41,6 +43,9 @@
 #include <vector>
 
 class DataManager;
+class GroupManager;
+class GroupContextMenuHandler;
+class QMenu;
 class QMouseEvent;
 class QWheelEvent;
 class QKeyEvent;
@@ -71,6 +76,12 @@ public:
 
     void setState(std::shared_ptr<TemporalProjectionViewState> state);
     void setDataManager(std::shared_ptr<DataManager> data_manager);
+
+    /**
+     * @brief Set the GroupManager for group-related context menu actions
+     * @param group_manager Pointer to the GroupManager (not owned)
+     */
+    void setGroupManager(GroupManager * group_manager);
     
     [[nodiscard]] std::pair<double, double> getViewBounds() const;
 
@@ -95,7 +106,9 @@ protected:
     void mouseReleaseEvent(QMouseEvent * event) override;
     void mouseDoubleClickEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
+    void keyPressEvent(QKeyEvent * event) override;
     void keyReleaseEvent(QKeyEvent * event) override;
+    void contextMenuEvent(QContextMenuEvent * event) override;
 
 private slots:
     void onStateChanged();
@@ -140,6 +153,16 @@ private:
     bool _selection_remove_mode{false};
     std::unordered_set<EntityId> _selected_entity_ids;
 
+    // --- Polygon selection ---
+    CorePlotting::Interaction::PolygonInteractionController _polygon_controller;
+    PlottingOpenGL::PreviewRenderer _preview_renderer;
+    std::vector<glm::vec2> _polygon_vertices_world;
+
+    // --- Group context menu support ---
+    GroupManager * _group_manager{nullptr};
+    std::unique_ptr<GroupContextMenuHandler> _group_menu_handler;
+    QMenu * _context_menu{nullptr};
+
     void rebuildScene();
     void updateMatrices();
     void applyLineStyle();
@@ -156,6 +179,15 @@ private:
     void cancelLineSelection();
     [[nodiscard]] CorePlotting::Interaction::GlyphPreview buildSelectionPreview() const;
     void applyLineIntersectionResults(std::vector<CorePlotting::LineBatchIndex> const & hit_indices, bool remove);
+
+    // --- Polygon selection ---
+    void handlePolygonCtrlClick(QMouseEvent * event);
+    void completePolygonSelection();
+    void cancelPolygonSelection();
+
+    // --- Group helpers ---
+    void createContextMenu();
+    void applyGroupColorsToScene();
 };
 
 #endif  // TEMPORAL_PROJECTION_OPENGL_WIDGET_HPP

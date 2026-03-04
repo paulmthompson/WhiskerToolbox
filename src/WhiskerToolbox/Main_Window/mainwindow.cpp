@@ -989,13 +989,13 @@ void MainWindow::_registerEditorTypes() {
 
     PSTHWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    LinePlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    LinePlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     HeatmapWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    TemporalProjectionViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    TemporalProjectionViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
-    ScatterPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    ScatterPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     SpectrogramWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

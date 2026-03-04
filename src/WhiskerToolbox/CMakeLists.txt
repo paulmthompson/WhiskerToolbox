@@ -31,6 +31,7 @@ add_subdirectory(TimeScrollBar)
 
 add_subdirectory(Feature_Table_Widget) # Qt, DataManager
 add_subdirectory(Feature_Tree_Widget) # Qt, DataManager
+add_subdirectory(TimeFrame_Table_Widget) # Qt, DataManager
 
 add_subdirectory(TableViewerWidget) # Qt, DataManager
 

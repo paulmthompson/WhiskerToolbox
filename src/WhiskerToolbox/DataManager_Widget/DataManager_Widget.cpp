@@ -22,6 +22,7 @@
 
 #include "NewDataWidget/NewDataWidget.hpp"
 #include "OutputDirectoryWidget/OutputDirectoryWidget.hpp"
+#include "TimeFrame_Table_Widget/TimeFrame_Table_Widget.hpp"
 
 #include <QFileDialog>
 #include <QMenu>
@@ -54,6 +55,9 @@ DataManager_Widget::DataManager_Widget(
 
     ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
     ui->feature_table_widget->setDataManager(_data_manager);
+
+    // Setup TimeFrame table
+    ui->timeframe_table_widget->setDataManager(_data_manager);
 
     // Ensure the feature table doesn't expand beyond available width
     ui->feature_table_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -105,6 +109,16 @@ DataManager_Widget::DataManager_Widget(
                 _selection_context->setSelectedData(SelectedDataKey(key), source);
             }
         });
+
+        // Connect timeframe table selection to SelectionContext
+        // TimeFrame keys are separate from data keys, so use the dedicated timeframe signal
+        connect(ui->timeframe_table_widget, &TimeFrame_Table_Widget::timeFrameSelected,
+                this, [this](QString const & time_key) {
+            if (_selection_context) {
+                SelectionSource source{EditorInstanceId(_state->getInstanceId()), QStringLiteral("timeframe_table")};
+                _selection_context->setTimeFrameFocus(time_key, source);
+            }
+        });
     }
 }
 
@@ -118,6 +132,7 @@ DataManager_Widget::~DataManager_Widget() {
 
 void DataManager_Widget::openWidget() {
     ui->feature_table_widget->populateTable();
+    ui->timeframe_table_widget->populateTable();
     // Refresh timeframes when opening the widget
     if (ui->new_data_widget) {
         ui->new_data_widget->populateTimeframes();

@@ -101,6 +101,12 @@ public:
     void inspectData(QString const & key);
 
     /**
+     * @brief Directly set the TimeFrame key to inspect (bypasses SelectionContext)
+     * @param key TimeFrame key in DataManager
+     */
+    void inspectTimeFrame(QString const & key);
+
+    /**
      * @brief Set the view widget to connect inspectors to views
      * @param view_widget The view widget (can be nullptr)
      * 
@@ -117,14 +123,17 @@ signals:
 
 private slots:
     void _onSelectionChanged(SelectionSource const & source);
+    void _onTimeFrameFocusChanged(QString const & time_key, SelectionSource const & source);
     void _onPinToggled(bool checked);
     void _onInspectedKeyChanged(QString const & key);
+    void _onInspectedTimeFrameKeyChanged(QString const & key);
     void _onStateChanged();
 
 private:
     void _setupUi();
     void _connectSignals();
     void _updateInspectorForKey(QString const & key);
+    void _updateInspectorForTimeFrame(QString const & key);
     void _updateHeaderDisplay();
     void _clearInspector();
     void _createInspectorForType(DM_DataType type);

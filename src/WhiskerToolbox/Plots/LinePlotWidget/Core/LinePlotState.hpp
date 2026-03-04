@@ -211,6 +211,14 @@ public:
     /** @brief Set Y data bounds. Emits viewStateChanged() AND stateChanged(). */
     void setYBounds(double y_min, double y_max);
 
+    // === Group Coloring ===
+
+    /** @brief Whether lines are colored by group assignment */
+    [[nodiscard]] bool colorByGroup() const { return _data.color_by_group; }
+
+    /** @brief Enable/disable coloring lines by group assignment */
+    void setColorByGroup(bool enabled);
+
     // === Serialization ===
 
     /**
@@ -279,6 +287,11 @@ signals:
      * @brief Emitted when view state changes (zoom, pan, or bounds)
      */
     void viewStateChanged();
+
+    /**
+     * @brief Emitted when color_by_group changes
+     */
+    void colorByGroupChanged();
 
 private:
     /**

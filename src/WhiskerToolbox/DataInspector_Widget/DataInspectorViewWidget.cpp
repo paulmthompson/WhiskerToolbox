@@ -6,6 +6,7 @@
 #include "Inspectors/ViewFactory.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QLabel>
 #include <QVBoxLayout>
@@ -35,9 +36,15 @@ void DataInspectorViewWidget::setState(std::shared_ptr<DataInspectorState> state
     if (_state) {
         connect(_state.get(), &DataInspectorState::inspectedDataKeyChanged,
                 this, &DataInspectorViewWidget::_onInspectedKeyChanged);
+        connect(_state.get(), &DataInspectorState::inspectedTimeFrameKeyChanged,
+                this, &DataInspectorViewWidget::_onInspectedTimeFrameKeyChanged);
 
         // Initialize from state
-        _onInspectedKeyChanged(_state->inspectedDataKey());
+        if (!_state->inspectedTimeFrameKey().isEmpty()) {
+            _onInspectedTimeFrameKeyChanged(_state->inspectedTimeFrameKey());
+        } else {
+            _onInspectedKeyChanged(_state->inspectedDataKey());
+        }
     }
 }
 
@@ -47,6 +54,10 @@ void DataInspectorViewWidget::_setupUi() {
 
 void DataInspectorViewWidget::_onInspectedKeyChanged(QString const & key) {
     _updateViewForKey(key);
+}
+
+void DataInspectorViewWidget::_onInspectedTimeFrameKeyChanged(QString const & key) {
+    _updateViewForTimeFrame(key);
 }
 
 void DataInspectorViewWidget::_updateViewForKey(QString const & key) {
@@ -83,6 +94,42 @@ void DataInspectorViewWidget::_updateViewForKey(QString const & key) {
     
     // Try to create a type-specific view using the factory
     _createViewForType(data_type);
+
+    // Set the active key on the view
+    if (_current_data_view) {
+        _current_data_view->setActiveKey(key_std);
+    }
+}
+
+void DataInspectorViewWidget::_updateViewForTimeFrame(QString const & key) {
+    std::string const key_std = key.toStdString();
+
+    if (key_std == _current_key && _current_type == DM_DataType::Time && _current_data_view) {
+        return;  // Already showing this timeframe
+    }
+
+    _current_key = key_std;
+    _clearView();
+
+    if (key.isEmpty() || !_data_manager) {
+        ui->placeholderLabel->setVisible(true);
+        return;
+    }
+
+    ui->placeholderLabel->setVisible(false);
+
+    // Verify the TimeFrame exists
+    auto timeframe = _data_manager->getTime(TimeKey(key_std));
+    if (!timeframe) {
+        auto * label = new QLabel(tr("TimeFrame not found: %1").arg(key), this);
+        label->setAlignment(Qt::AlignCenter);
+        ui->contentLayout->addWidget(label);
+        _placeholder_widget = label;
+        return;
+    }
+
+    // Create TimeFrame view
+    _createViewForType(DM_DataType::Time);
 
     // Set the active key on the view
     if (_current_data_view) {

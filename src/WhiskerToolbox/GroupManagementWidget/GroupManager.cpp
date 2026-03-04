@@ -312,6 +312,10 @@ void GroupManager::clearAllGroups() {
     // Note: We don't emit specific signals here since everything is being cleared
 }
 
+uint64_t GroupManager::generation() const {
+    return m_entity_group_manager->generation();
+}
+
 QColor GroupManager::getNextDefaultColor() const {
     if (DEFAULT_COLORS.isEmpty()) {
         return {128, 128, 128};// Fallback gray

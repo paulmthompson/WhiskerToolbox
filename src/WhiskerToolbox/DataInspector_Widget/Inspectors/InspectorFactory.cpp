@@ -8,6 +8,7 @@
 #include "MaskData/MaskInspector.hpp"
 #include "PointData/PointInspector.hpp"
 #include "TensorData/TensorInspector.hpp"
+#include "TimeFrameData/TimeFrameInspector.hpp"
 
 std::unique_ptr<BaseInspector> InspectorFactory::createInspector(
     DM_DataType type,
@@ -49,6 +50,10 @@ std::unique_ptr<BaseInspector> InspectorFactory::createInspector(
             return std::make_unique<TensorInspector>(
                 std::move(data_manager), group_manager, parent);
 
+        case DM_DataType::Time:
+            return std::make_unique<TimeFrameInspector>(
+                std::move(data_manager), group_manager, parent);
+
         default:
             return nullptr;
     }
@@ -65,6 +70,7 @@ bool InspectorFactory::hasInspector(DM_DataType type) {
         case DM_DataType::DigitalEvent:
         case DM_DataType::DigitalInterval:
         case DM_DataType::Tensor:
+        case DM_DataType::Time:
             return true;
 
         default:

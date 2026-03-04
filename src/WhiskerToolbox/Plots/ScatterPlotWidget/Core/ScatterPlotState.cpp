@@ -6,6 +6,8 @@
 
 #include <rfl/json.hpp>
 
+#include <algorithm>
+
 ScatterPlotState::ScatterPlotState(QObject * parent)
     : EditorState(parent),
       _horizontal_axis_state(std::make_unique<HorizontalAxisState>(this)),
@@ -167,6 +169,76 @@ void ScatterPlotState::setShowReferenceLine(bool show)
         emit referenceLineChanged();
         emit stateChanged();
     }
+}
+
+void ScatterPlotState::setColorByGroup(bool enabled)
+{
+    if (_data.color_by_group != enabled) {
+        _data.color_by_group = enabled;
+        markDirty();
+        emit colorByGroupChanged();
+        emit stateChanged();
+    }
+}
+
+ScatterSelectionMode ScatterPlotState::selectionMode() const
+{
+    if (_data.selection_mode == "polygon") {
+        return ScatterSelectionMode::Polygon;
+    }
+    return ScatterSelectionMode::SinglePoint;
+}
+
+void ScatterPlotState::setSelectionMode(ScatterSelectionMode mode)
+{
+    std::string const mode_str = (mode == ScatterSelectionMode::Polygon) ? "polygon" : "single_point";
+    if (_data.selection_mode != mode_str) {
+        _data.selection_mode = mode_str;
+        // Clear selection when switching modes
+        clearSelection();
+        markDirty();
+        emit selectionModeChanged();
+        emit stateChanged();
+    }
+}
+
+void ScatterPlotState::setSelectedIndices(std::vector<std::size_t> indices)
+{
+    _data.selected_indices.value() = std::move(indices);
+    emit selectionChanged();
+}
+
+void ScatterPlotState::addSelectedIndex(std::size_t index)
+{
+    auto & sel = _data.selected_indices.value();
+    if (std::find(sel.begin(), sel.end(), index) == sel.end()) {
+        sel.push_back(index);
+        emit selectionChanged();
+    }
+}
+
+void ScatterPlotState::removeSelectedIndex(std::size_t index)
+{
+    auto & sel = _data.selected_indices.value();
+    auto it = std::find(sel.begin(), sel.end(), index);
+    if (it != sel.end()) {
+        sel.erase(it);
+        emit selectionChanged();
+    }
+}
+
+void ScatterPlotState::clearSelection()
+{
+    if (!_data.selected_indices.value().empty()) {
+        _data.selected_indices.value().clear();
+        emit selectionChanged();
+    }
+}
+
+bool ScatterPlotState::isSelected(std::size_t index) const
+{
+    auto const & sel = _data.selected_indices.value();
+    return std::find(sel.begin(), sel.end(), index) != sel.end();
 }
 
 std::string ScatterPlotState::toJson() const

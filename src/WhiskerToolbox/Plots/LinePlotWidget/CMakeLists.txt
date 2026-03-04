@@ -46,6 +46,8 @@ target_link_libraries(LinePlotWidget PRIVATE Collapsible_Widget)
 target_link_libraries(LinePlotWidget PRIVATE CorePlotting)
 target_link_libraries(LinePlotWidget PRIVATE NEURALYZER_GEOMETRY)
 target_link_libraries(LinePlotWidget PRIVATE PlottingOpenGL)
+target_link_libraries(LinePlotWidget PRIVATE GroupContextMenu)
+target_link_libraries(LinePlotWidget PRIVATE GroupManagementWidget)
 target_link_libraries(LinePlotWidget PRIVATE glm::glm)
 target_link_libraries(LinePlotWidget PRIVATE GatherResult)
 

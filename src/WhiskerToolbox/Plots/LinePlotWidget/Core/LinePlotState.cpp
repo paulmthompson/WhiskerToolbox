@@ -320,6 +320,16 @@ void LinePlotState::setYBounds(double y_min, double y_max)
     }
 }
 
+void LinePlotState::setColorByGroup(bool enabled)
+{
+    if (_data.color_by_group != enabled) {
+        _data.color_by_group = enabled;
+        markDirty();
+        emit colorByGroupChanged();
+        emit stateChanged();
+    }
+}
+
 std::string LinePlotState::toJson() const
 {
     // Include instance_id in serialization for restoration

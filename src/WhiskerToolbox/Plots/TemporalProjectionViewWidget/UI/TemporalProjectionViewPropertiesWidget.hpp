@@ -78,6 +78,10 @@ private slots:
     // Selection mode
     void _onSelectionModeChanged(int index);
     void _onClearSelectionClicked();
+    void _updateSelectionInstructions();
+
+    // Color by group
+    void _onColorByGroupToggled(bool checked);
 
     // State change handlers
     void _onStatePointKeyAdded(QString const & key);

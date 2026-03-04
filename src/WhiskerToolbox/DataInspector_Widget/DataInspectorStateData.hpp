@@ -24,6 +24,7 @@
  */
 struct DataInspectorStateData {
     std::string inspected_data_key;  ///< Currently inspected data key
+    std::string inspected_timeframe_key;  ///< Currently inspected TimeFrame key (mutually exclusive with data key)
     bool is_pinned = false;          ///< Whether to ignore SelectionContext updates
     std::string display_name = "Data Inspector";  ///< User-visible name
     std::string instance_id;         ///< Unique instance ID (preserved across serialization)

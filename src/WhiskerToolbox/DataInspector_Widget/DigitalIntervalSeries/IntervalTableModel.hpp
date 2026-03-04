@@ -1,79 +1,92 @@
 #ifndef WHISKERTOOLBOX_INTERVALTABLEMODEL_HPP
 #define WHISKERTOOLBOX_INTERVALTABLEMODEL_HPP
 
+/**
+ * @file IntervalTableModel.hpp
+ * @brief Table model for DigitalIntervalSeries data with group support
+ *
+ * Provides a QAbstractTableModel for displaying interval data with columns
+ * for Start, End, and Group name. Supports group filtering via GroupManager.
+ */
+
+#include "Entity/EntityTypes.hpp"
 #include "TimeFrame/interval_data.hpp"
 
 #include <QAbstractTableModel>
+#include <QString>
 
+#include <cstdint>
 #include <vector>
+
+class DigitalIntervalSeries;
+class GroupManager;
+
+/**
+ * @brief Row data for the interval table model
+ */
+struct IntervalTableRow {
+    Interval interval;
+    EntityId entity_id;
+    QString group_name;
+};
 
 class IntervalTableModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
-    explicit IntervalTableModel(QObject * parent = nullptr)
-        : QAbstractTableModel(parent) {}
+    explicit IntervalTableModel(QObject * parent = nullptr);
 
-    void setIntervals(std::vector<Interval> const & intervals) {
-        beginResetModel();
-        _intervals = intervals;
-        endResetModel();
-    }
+    /**
+     * @brief Populate the model from a DigitalIntervalSeries
+     * @param interval_data Pointer to the series (can be nullptr to clear)
+     */
+    void setIntervals(DigitalIntervalSeries const * interval_data);
 
-    [[nodiscard]] Interval getInterval(int row) const {
-        return _intervals[row];
-    }
+    /**
+     * @brief Set the GroupManager for group name resolution
+     * @param group_manager Pointer to GroupManager (can be nullptr)
+     */
+    void setGroupManager(GroupManager * group_manager);
 
-    [[nodiscard]] int rowCount(QModelIndex const & parent) const override {
-        Q_UNUSED(parent);
-        return static_cast<int>(_intervals.size());
-    }
+    /**
+     * @brief Set a group filter
+     * @param group_id Group ID to filter by, or -1 to show all
+     */
+    void setGroupFilter(int group_id);
 
-    [[nodiscard]] int columnCount(QModelIndex const & parent) const override {
-        Q_UNUSED(parent);
-        return 2;// Start and End columns
-    }
+    /**
+     * @brief Clear the group filter (show all groups)
+     */
+    void clearGroupFilter();
 
-    [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override {
-        if (!index.isValid() || role != Qt::DisplayRole) {
-            return QVariant{};
-        }
+    [[nodiscard]] int rowCount(QModelIndex const & parent) const override;
+    [[nodiscard]] int columnCount(QModelIndex const & parent) const override;
+    [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override;
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    [[nodiscard]] Qt::ItemFlags flags(QModelIndex const & index) const override;
 
-        Interval const & interval = _intervals.at(index.row());
-        if (index.column() == 0) {
-            return QVariant::fromValue(interval.start);
-        } else if (index.column() == 1) {
-            return QVariant::fromValue(interval.end);
-        }
+    /**
+     * @brief Get the row data at a specific row
+     * @param row Row index
+     * @return IntervalTableRow data
+     */
+    [[nodiscard]] IntervalTableRow getRowData(int row) const;
 
-        return QVariant{};
-    }
-
-    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override {
-        if (role != Qt::DisplayRole) {
-            return QVariant{};
-        }
-
-        if (orientation == Qt::Horizontal) {
-            if (section == 0) {
-                return QString("Start");
-            } else if (section == 1) {
-                return QString("End");
-            }
-        }
-
-        return QVariant{};
-    }
-
-    [[nodiscard]] Qt::ItemFlags flags(QModelIndex const & index) const override {
-        if (!index.isValid()) {
-            return Qt::ItemIsEnabled;
-        }
-        return QAbstractTableModel::flags(index);
-    }
+    /**
+     * @brief Get the interval at a specific row (convenience)
+     * @param row Row index
+     * @return Interval data
+     */
+    [[nodiscard]] Interval getInterval(int row) const;
 
 private:
-    std::vector<Interval> _intervals;
+    std::vector<IntervalTableRow> _display_data;
+    std::vector<IntervalTableRow> _all_data;
+    DigitalIntervalSeries const * _interval_data_source{nullptr};
+    GroupManager * _group_manager{nullptr};
+    int _filtered_group_id{-1};
+
+    void _applyGroupFilter();
 };
 
 #endif//WHISKERTOOLBOX_INTERVALTABLEMODEL_HPP

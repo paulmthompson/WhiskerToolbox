@@ -7,12 +7,14 @@
 #include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
 #include "Plots/Common/LineStyleControls/LineStyleControls.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
+#include "Plots/Common/SelectionInstructions.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Points/Point_Data.hpp"
 #include "UI/TemporalProjectionViewWidget.hpp"
 
 #include "ui_TemporalProjectionViewPropertiesWidget.h"
 
+#include <QCheckBox>
 #include <QHeaderView>
 #include <QTableWidget>
 #include <QTableWidgetItem>
@@ -92,6 +94,10 @@ TemporalProjectionViewPropertiesWidget::TemporalProjectionViewPropertiesWidget(
     connect(ui->clear_selection_button, &QPushButton::clicked,
             this, &TemporalProjectionViewPropertiesWidget::_onClearSelectionClicked);
 
+    // Connect UI signals — color by group
+    connect(ui->color_by_group_checkbox, &QCheckBox::toggled,
+            this, &TemporalProjectionViewPropertiesWidget::_onColorByGroupToggled);
+
     // Populate combo boxes
     _populatePointComboBox();
     _populateLineComboBox();
@@ -133,10 +139,19 @@ TemporalProjectionViewPropertiesWidget::TemporalProjectionViewPropertiesWidget(
                         ui->selection_mode_combo->setCurrentIndex(1);
                     } else if (mode == "line") {
                         ui->selection_mode_combo->setCurrentIndex(2);
+                    } else if (mode == "polygon") {
+                        ui->selection_mode_combo->setCurrentIndex(3);
                     } else {
                         ui->selection_mode_combo->setCurrentIndex(0);
                     }
                     ui->selection_mode_combo->blockSignals(false);
+                    _updateSelectionInstructions();
+                });
+        connect(_state.get(), &TemporalProjectionViewState::colorByGroupChanged,
+                this, [this]() {
+                    ui->color_by_group_checkbox->blockSignals(true);
+                    ui->color_by_group_checkbox->setChecked(_state->colorByGroup());
+                    ui->color_by_group_checkbox->blockSignals(false);
                 });
 
         _updateUIFromState();
@@ -408,16 +423,54 @@ void TemporalProjectionViewPropertiesWidget::_onSelectionModeChanged(int index)
     case 2:
         _state->setSelectionMode(QStringLiteral("line"));
         break;
+    case 3:
+        _state->setSelectionMode(QStringLiteral("polygon"));
+        break;
     default:
         _state->setSelectionMode(QStringLiteral("none"));
         break;
     }
+    _updateSelectionInstructions();
 }
 
 void TemporalProjectionViewPropertiesWidget::_onClearSelectionClicked()
 {
     if (_plot_widget) {
         _plot_widget->clearSelection();
+    }
+}
+
+void TemporalProjectionViewPropertiesWidget::_updateSelectionInstructions()
+{
+    if (!ui->selection_instructions_label) {
+        return;
+    }
+
+    int const idx = ui->selection_mode_combo->currentIndex();
+    switch (idx) {
+    case 1:  // Point
+        ui->selection_instructions_label->setText(
+            WhiskerToolbox::Plots::SelectionInstructions::singlePoint());
+        break;
+    case 2:  // Line
+        ui->selection_instructions_label->setText(
+            WhiskerToolbox::Plots::SelectionInstructions::lineCrossing());
+        break;
+    case 3:  // Polygon
+        ui->selection_instructions_label->setText(
+            WhiskerToolbox::Plots::SelectionInstructions::polygon());
+        break;
+    default:  // None
+        ui->selection_instructions_label->setText(
+            WhiskerToolbox::Plots::SelectionInstructions::none());
+        break;
+    }
+}
+
+void TemporalProjectionViewPropertiesWidget::_onColorByGroupToggled(bool checked)
+{
+    if (_state) {
+        _state->setColorByGroup(checked);
     }
 }
 
@@ -441,10 +494,18 @@ void TemporalProjectionViewPropertiesWidget::_updateUIFromState()
         ui->selection_mode_combo->setCurrentIndex(1);
     } else if (mode == "line") {
         ui->selection_mode_combo->setCurrentIndex(2);
+    } else if (mode == "polygon") {
+        ui->selection_mode_combo->setCurrentIndex(3);
     } else {
         ui->selection_mode_combo->setCurrentIndex(0);
     }
     ui->selection_mode_combo->blockSignals(false);
+    _updateSelectionInstructions();
+
+    // Color by group
+    ui->color_by_group_checkbox->blockSignals(true);
+    ui->color_by_group_checkbox->setChecked(_state->colorByGroup());
+    ui->color_by_group_checkbox->blockSignals(false);
 
     // Data key tables
     _updatePointDataTable();

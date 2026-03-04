@@ -8,6 +8,7 @@
 #include "DataManager/Tensors/TensorData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
+#include "Plots/Common/SelectionInstructions.hpp"
 #include "Collapsible_Widget/Section.hpp"
 #include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
 #include "UI/ScatterPlotWidget.hpp"
@@ -163,12 +164,48 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
         auto * glyph_layout = new QVBoxLayout();
         glyph_layout->setContentsMargins(4, 4, 4, 4);
         glyph_layout->addWidget(_glyph_style_controls);
+
+        // Color by group checkbox
+        _color_by_group_checkbox = new QCheckBox("Color by group assignment");
+        _color_by_group_checkbox->setToolTip(
+            "When enabled, points are colored according to their group color.\n"
+            "Points not in any group use the default glyph color above.");
+        _color_by_group_checkbox->setChecked(_state->colorByGroup());
+        glyph_layout->addWidget(_color_by_group_checkbox);
+
         _glyph_style_section->setContentLayout(*glyph_layout);
     }
 
     // Insert after reference line section
     int glyph_insert_idx = ui->main_layout->indexOf(_reference_line_section) + 1;
     ui->main_layout->insertWidget(glyph_insert_idx, _glyph_style_section);
+
+    // === Selection Mode Section ===
+    _selection_section = new Section(this, "Selection");
+
+    auto * sel_layout = new QVBoxLayout();
+    sel_layout->setContentsMargins(4, 4, 4, 4);
+    sel_layout->setSpacing(4);
+
+    auto * sel_form = new QFormLayout();
+    sel_form->setContentsMargins(0, 0, 0, 0);
+    _selection_mode_combo = new QComboBox();
+    _selection_mode_combo->addItem("Single Point");
+    _selection_mode_combo->addItem("Polygon");
+    sel_form->addRow("Mode:", _selection_mode_combo);
+    sel_layout->addLayout(sel_form);
+
+    _selection_instructions_label = new QLabel();
+    _selection_instructions_label->setWordWrap(true);
+    _selection_instructions_label->setStyleSheet("color: #888; font-size: 11px;");
+    sel_layout->addWidget(_selection_instructions_label);
+
+    _selection_section->setContentLayout(*sel_layout);
+
+    int sel_insert_idx = ui->main_layout->indexOf(_glyph_style_section) + 1;
+    ui->main_layout->insertWidget(sel_insert_idx, _selection_section);
+
+    _updateSelectionInstructions();
 
     // --- Connections ---
     connect(_x_key_combo, &QComboBox::currentIndexChanged,
@@ -185,6 +222,12 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
             this, &ScatterPlotPropertiesWidget::_onYOffsetChanged);
     connect(_reference_line_checkbox, &QCheckBox::toggled,
             this, &ScatterPlotPropertiesWidget::_onReferenceLineToggled);
+    if (_color_by_group_checkbox) {
+        connect(_color_by_group_checkbox, &QCheckBox::toggled,
+                this, &ScatterPlotPropertiesWidget::_onColorByGroupToggled);
+    }
+    connect(_selection_mode_combo, &QComboBox::currentIndexChanged,
+            this, &ScatterPlotPropertiesWidget::_onSelectionModeChanged);
 
     // Populate initial data
     _populateKeyComboBoxes();
@@ -369,6 +412,41 @@ void ScatterPlotPropertiesWidget::_onReferenceLineToggled(bool checked)
 {
     if (_state) {
         _state->setShowReferenceLine(checked);
+    }
+}
+
+void ScatterPlotPropertiesWidget::_onColorByGroupToggled(bool checked)
+{
+    if (_state) {
+        _state->setColorByGroup(checked);
+    }
+}
+
+void ScatterPlotPropertiesWidget::_onSelectionModeChanged(int index)
+{
+    if (_updating_combos || !_state) {
+        return;
+    }
+    auto mode = (index == 1) ? ScatterSelectionMode::Polygon : ScatterSelectionMode::SinglePoint;
+    _state->setSelectionMode(mode);
+    _updateSelectionInstructions();
+}
+
+void ScatterPlotPropertiesWidget::_updateSelectionInstructions()
+{
+    if (!_selection_instructions_label || !_selection_mode_combo) {
+        return;
+    }
+
+    int const idx = _selection_mode_combo->currentIndex();
+    if (idx == 0) {
+        // Single Point
+        _selection_instructions_label->setText(
+            WhiskerToolbox::Plots::SelectionInstructions::singlePoint());
+    } else {
+        // Polygon
+        _selection_instructions_label->setText(
+            WhiskerToolbox::Plots::SelectionInstructions::polygon());
     }
 }
 
@@ -569,6 +647,19 @@ void ScatterPlotPropertiesWidget::_updateUIFromState()
     // Reference line
     if (_reference_line_checkbox) {
         _reference_line_checkbox->setChecked(_state->showReferenceLine());
+    }
+
+    // Color by group
+    if (_color_by_group_checkbox) {
+        _color_by_group_checkbox->setChecked(_state->colorByGroup());
+    }
+
+    // Selection mode
+    if (_selection_mode_combo) {
+        auto mode = _state->selectionMode();
+        _selection_mode_combo->setCurrentIndex(
+            mode == ScatterSelectionMode::Polygon ? 1 : 0);
+        _updateSelectionInstructions();
     }
 
     _updating_combos = false;

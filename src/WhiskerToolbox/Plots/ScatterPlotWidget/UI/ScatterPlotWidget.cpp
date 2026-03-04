@@ -275,3 +275,10 @@ void ScatterPlotWidget::resizeEvent(QResizeEvent * event)
         _vertical_axis_widget->update();
     }
 }
+
+void ScatterPlotWidget::setGroupManager(GroupManager * group_manager)
+{
+    if (_opengl_widget) {
+        _opengl_widget->setGroupManager(group_manager);
+    }
+}

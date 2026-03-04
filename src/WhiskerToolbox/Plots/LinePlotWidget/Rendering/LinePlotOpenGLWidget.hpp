@@ -51,11 +51,18 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <unordered_set>
 #include <vector>
 
 class DataManager;
+class GroupContextMenuHandler;
+class GroupManager;
+class QContextMenuEvent;
+class QMenu;
 class QMouseEvent;
 class QWheelEvent;
+
+struct EntityId;
 
 /**
  * @brief OpenGL widget for rendering line plots with batch line selection
@@ -85,6 +92,7 @@ public:
 
     void setState(std::shared_ptr<LinePlotState> state);
     void setDataManager(std::shared_ptr<DataManager> data_manager);
+    void setGroupManager(GroupManager * group_manager);
     [[nodiscard]] std::pair<double, double> getViewBounds() const;
 
     /// Currently selected trial indices (0-based into GatherResult)
@@ -112,6 +120,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
     void keyReleaseEvent(QKeyEvent * event) override;
+    void contextMenuEvent(QContextMenuEvent * event) override;
 
 private slots:
     void onStateChanged();
@@ -154,6 +163,12 @@ private:
     bool _selection_remove_mode{false};
     std::vector<std::uint32_t> _selected_trial_indices;
 
+    // --- Group management ---
+    GroupManager * _group_manager{nullptr};
+    std::unique_ptr<GroupContextMenuHandler> _group_menu_handler;
+    QMenu * _context_menu{nullptr};
+    uint64_t _last_group_generation{0};
+
     // --- Cached alignment data (for relative → absolute time conversion) ---
     std::vector<std::int64_t> _cached_alignment_times;
     std::string _cached_series_key;
@@ -178,6 +193,12 @@ private:
     [[nodiscard]] CorePlotting::Interaction::GlyphPreview buildSelectionPreview() const;
     void applyIntersectionResults(std::vector<CorePlotting::LineBatchIndex> const & hit_indices,
                                   bool remove);
+
+    // --- Group helpers ---
+    void createContextMenu();
+    [[nodiscard]] std::unordered_set<EntityId> getSelectedEntities() const;
+    [[nodiscard]] std::optional<EntityId> getEntityIdForTrial(std::uint32_t trial_index) const;
+    void applyGroupColorsToLines();
 };
 
 #endif // LINEPLOT_OPENGLWIDGET_HPP

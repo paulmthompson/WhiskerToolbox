@@ -30,134 +30,11 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **DataManager observer**: Observer registration/removal in properties widget for combo box synchronization; stale key handling clears axis source when selected data key is deleted from DataManager; tested in `ScatterPlotPropertiesWidget.test.cpp`
 - **Double-click-to-navigate**: Point hit testing via shared `SceneHitTester` + `QuadTree<EntityId>` spatial index, `pointDoubleClicked` → `timePositionSelected` → `EditorRegistry::setCurrentTime()` signal chain, yellow highlight glyph for navigated-to point
 - **Glyph customization**: `GlyphStyleData` in `ScatterPlotStateData` with default blue circle style (`#3388FF`, size 5, alpha 0.8); `GlyphStyleState` owned by `ScatterPlotState` with `glyphStyleChanged` signal; `GlyphStyleControls` embedded in properties panel "Glyph Options" collapsible section; rendering uses `toRenderableGlyphType()` and `hexColorToVec4()` from `GlyphStyleConversion.hpp`; full round-trip JSON serialization
+- **Point selection**: Dual selection modes (SinglePoint/Polygon) via combo box in properties panel; SinglePoint mode: Ctrl+Click toggles selection, Shift+Click removes; Polygon mode: Ctrl+Click adds vertices, Enter closes polygon, Backspace undoes, Escape cancels; `selectPointsInPolygon()` utility in `CorePlotting/Selection/`; selected points rendered with distinct style (orange, +4 size); integration with `GroupContextMenuHandler` for right-click group operations; fully tested
 - **Temporal offset for outlier detection**: Per-axis `time_offset` field in `ScatterAxisSource` enables lag-plots ($x(t)$ vs $x(t-1)$); `buildScatterPoints()` applies offsets for all source type combinations; offset spinboxes (-10000 to 10000) in properties panel per axis; points where offset pushes index outside valid range are excluded; tested in `BuildScatterPoints.test.cpp`
 
 **Not yet implemented**:
-polygon selection and group integration (Phase 3), feature coloring (Phase 7).
-
-## Phase 3: Polygon Selection and Group Integration
-
-**Status**: Not started. Depends on shared polygon selection infrastructure.
-
-**Goal**: Allow the user to select multiple points via polygon (lasso) selection and add their
-associated `TimeFrameIndex` entities to an entity group.
-
-### 3.1 Polygon Interaction (Existing Infrastructure)
-
-The polygon drawing interaction is already implemented as a shared component:
-`CorePlotting::Interaction::PolygonInteractionController` (in
-`CorePlotting/Interaction/PolygonInteractionController.hpp/.cpp`). This controller provides:
-
-- Click-based polygon creation: `start()` → repeated `addVertex()` → `complete()`
-- Cursor preview via `updateCursorPosition()` (shows edge from last vertex to cursor)
-- Auto-close by clicking near the first vertex (configurable threshold)
-- Vertex drag mode for modifying existing polygons
-- Undo via `removeLastVertex()`
-- `GlyphPreview` output for rendering the polygon outline during construction
-- Configurable colors, stroke width, vertex size
-
-The ScatterPlotWidget needs to:
-
-1. **Instantiate** a `PolygonInteractionController` in `ScatterPlotOpenGLWidget`
-2. **Wire mouse events**: Ctrl+Click → `addVertex()`, mouse move → `updateCursorPosition()`,
-   Escape → `cancel()`, Ctrl+Double-click → `complete()`
-3. **Render the preview** via `getPreview()` using the existing `PreviewRenderer`
-4. **On completion**, extract `getVertices()` and run point-in-polygon selection
-
-### 3.1.1 Point-in-Polygon Selection
-
-A selection utility performs the actual point containment test after the polygon is closed:
-
-```cpp
-namespace CorePlotting::Selection {
-
-struct PolygonSelectionResult {
-    std::vector<std::size_t> selected_indices;  ///< Indices into the point array
-};
-
-/// Find all points inside the polygon (ray-casting algorithm)
-PolygonSelectionResult selectPointsInPolygon(
-    std::span<glm::vec2 const> polygon_vertices,
-    std::span<float const> x_values,
-    std::span<float const> y_values);
-
-}  // namespace CorePlotting::Selection
-```
-
-This is a pure geometry function with no Qt or OpenGL dependency, placed in
-`CorePlotting/Selection/` for sharing with
-[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd).
-
-### 3.2 Polygon Drawing Interaction
-
-In `ScatterPlotOpenGLWidget`, wire the existing `PolygonInteractionController`:
-
-| Input | Action | Controller Method |
-|-------|--------|-------------------|
-| Ctrl + Click | Begin polygon / add vertex | `start()` or `addVertex()` |
-| Mouse move (while active) | Update preview line | `updateCursorPosition()` |
-| Ctrl + Double-click | Close polygon and execute selection | `complete()` |
-| Escape | Cancel polygon drawing | `cancel()` |
-| Backspace (while drawing) | Undo last vertex | `removeLastVertex()` |
-| Click near first vertex | Auto-close polygon | `addVertex()` returns `ClosedPolygon` |
-| Shift + Ctrl + Click | Remove mode (deselect points in polygon) | New polygon in subtract mode |
-
-The `PolygonInteractionController::getPreview()` returns a `GlyphPreview` with `Type::Polygon`
-that the existing `PreviewRenderer` can render. The preview includes polygon edges, vertex
-markers, and a closure line from the last vertex to the cursor.
-
-### 3.3 Selection State
-
-Track the current selection in state:
-
-```cpp
-struct ScatterPlotStateData {
-    // ... existing fields ...
-    std::vector<std::size_t> selected_indices;  ///< Indices into the point array
-};
-```
-
-Selected points should be rendered with a distinct visual style (e.g., highlighted color,
-larger glyph, or a ring) to distinguish them from unselected points.
-
-### 3.4 Selection → Group Integration
-
-When points are selected, the properties panel should show group management controls:
-
-1. **"Add to Group" button** — enabled when a non-empty selection exists
-2. **Group combo box** — lists existing entity groups from `EntityRegistry`
-3. **"New Group" button** — creates a new group and adds the selected entities
-
-The workflow:
-
-```
-User draws polygon over scatter points
-        ↓
-selectPointsInPolygon() → selected_indices
-        ↓
-Map selected_indices → TimeFrameIndex values via ScatterPointData::time_indices
-        ↓
-Look up EntityIDs for those TimeFrameIndex values
-        ↓
-User selects/creates a group → EntityRegistry::addToGroup(entity_ids)
-```
-
-### 3.5 Shared Group Management Panel
-
-This group management pattern is shared across multiple widgets. As proposed in the
-[LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) Phase 1.3, a shared
-`GroupManagementPanel` widget should be factored into `Plots/Common/` (or a higher-level
-shared widget location):
-
-| Widget | What Gets Added to Group | Source of Selection |
-|--------|-------------------------|-------------------|
-| **ScatterPlotWidget** | `TimeFrameIndex` EntityIDs | Polygon selection |
-| **[LinePlotWidget](../LinePlotWidget/index.qmd)** | Alignment event EntityIDs (trials) | Line selection stroke |
-| **[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)** | Line/Point EntityIDs | Line selection stroke / polygon selection |
-| **DataViewerWidget** | Data entity EntityIDs | (future) row/range selection |
-
-Initial implementation can be done inline in `ScatterPlotPropertiesWidget` and then
-refactored when the second widget needs the same functionality.
+feature coloring (Phase 7), stale key handling (Phase 6.3).
 
 ---
 
@@ -220,13 +97,14 @@ Add to `ScatterPlotPropertiesWidget` in a "Point Coloring" collapsible section:
 
 ## Shared Components Summary
 
-Components that should be factored into shared locations rather than implemented inline:
+Components that have been factored into shared locations or are candidates for sharing:
 
-| Component | Proposed Location | Used By |
-|-----------|-------------------|---------|
-| `selectPointsInPolygon` | `CorePlotting/Selection/` | ScatterPlotWidget, [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
-| `GroupManagementPanel` | `Plots/Common/` | ScatterPlotWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
-| `Colormaps` | `CorePlotting/Colormaps/` | ScatterPlotWidget, [HeatmapWidget](../HeatmapWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd), [LinePlotWidget](../LinePlotWidget/roadmap.qmd) |
+| Component | Status | Location | Used By |
+|-----------|--------|----------|---------|
+| `selectPointsInPolygon` | ✅ **Implemented** | `CorePlotting/Selection/` | ScatterPlotWidget; available for [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
+| `SelectionInstructions` | ✅ **Implemented** | `Plots/Common/SelectionInstructions.hpp` | ScatterPlotWidget, TemporalProjectionViewWidget |
+| `GroupManagementPanel` | ⏸️ **Deferred** | N/A | ScatterPlotWidget uses existing `GroupContextMenuHandler` via right-click; dedicated panel not needed yet |
+| `Colormaps` | ⏳ **Planned** | `CorePlotting/Colormaps/` | ScatterPlotWidget (Phase 7), [HeatmapWidget](../HeatmapWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd), [LinePlotWidget](../LinePlotWidget/roadmap.qmd) |
 
 
 ---

@@ -1,11 +1,13 @@
 #include "ScatterPlotWidgetRegistration.hpp"
 
 #include "Core/ScatterPlotState.hpp"
+#include "Rendering/ScatterPlotOpenGLWidget.hpp"
 #include "UI/ScatterPlotPropertiesWidget.hpp"
 #include "UI/ScatterPlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <iostream>
@@ -13,7 +15,8 @@
 namespace ScatterPlotWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager) {
+                   std::shared_ptr<DataManager> data_manager,
+                   GroupManager * group_manager) {
 
     if (!registry) {
         std::cerr << "ScatterPlotWidgetModule::registerTypes: registry is null" << std::endl;
@@ -23,6 +26,7 @@ void registerTypes(EditorRegistry * registry,
     // Capture dependencies for lambdas
     auto dm = data_manager;
     auto reg = registry;
+    auto gm = group_manager;
 
     registry->registerType({.type_id = QStringLiteral("ScatterPlotWidget"),
                             .display_name = QStringLiteral("Scatter Plot"),
@@ -39,7 +43,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<ScatterPlotState>(); },
 
                             // View factory - creates ScatterPlotWidget (the view component)
-                            .create_view = [dm, reg](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_view = [dm, reg, gm](std::shared_ptr<EditorState> state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<ScatterPlotState>(state);
                                 if (!plot_state) {
                                     std::cerr << "ScatterPlotWidgetModule: Failed to cast state to ScatterPlotState" << std::endl;
@@ -48,6 +52,11 @@ void registerTypes(EditorRegistry * registry,
 
                                 auto * widget = new ScatterPlotWidget(dm);
                                 widget->setState(plot_state);
+                                
+                                // Set the group manager if available
+                                if (gm) {
+                                    widget->setGroupManager(gm);
+                                }
 
                                 return widget;
                             },
@@ -66,7 +75,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Custom editor creation for potential future view/properties coupling
-                            .create_editor_custom = [dm](EditorRegistry * reg)
+                            .create_editor_custom = [dm, gm](EditorRegistry * reg)
                                     -> EditorRegistry::EditorInstance {
                                 // Create the shared state
                                 auto state = std::make_shared<ScatterPlotState>();
@@ -74,6 +83,11 @@ void registerTypes(EditorRegistry * registry,
                                 // Create the view widget
                                 auto * view = new ScatterPlotWidget(dm);
                                 view->setState(state);
+                                
+                                // Set the group manager if available
+                                if (gm) {
+                                    view->setGroupManager(gm);
+                                }
 
                                 // Create the properties widget with the shared state
                                 auto * props = new ScatterPlotPropertiesWidget(state, dm);

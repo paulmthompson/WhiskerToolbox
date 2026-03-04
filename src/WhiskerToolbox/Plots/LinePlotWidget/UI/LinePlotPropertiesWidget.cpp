@@ -6,15 +6,19 @@
 #include "Plots/Common/LineStyleControls/LineStyleControls.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
+#include "Plots/Common/SelectionInstructions.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Collapsible_Widget/Section.hpp"
 #include "UI/LinePlotWidget.hpp"
 
 #include "ui_LinePlotPropertiesWidget.h"
 
+#include <QCheckBox>
 #include <QHeaderView>
+#include <QLabel>
 #include <QTableWidget>
 #include <QTableWidgetItem>
+#include <QVBoxLayout>
 
 #include <algorithm>
 
@@ -94,6 +98,39 @@ LinePlotPropertiesWidget::LinePlotPropertiesWidget(std::shared_ptr<LinePlotState
 
         // Initialize UI from state
         _updateUIFromState();
+    }
+
+    // === Selection Section ===
+    {
+        auto * selection_section = new Section(this, "Selection");
+
+        auto * sel_layout = new QVBoxLayout();
+        sel_layout->setContentsMargins(4, 4, 4, 4);
+        sel_layout->setSpacing(4);
+
+        auto * instructions_label = new QLabel();
+        instructions_label->setWordWrap(true);
+        instructions_label->setStyleSheet("color: #888; font-size: 11px;");
+        instructions_label->setText(WhiskerToolbox::Plots::SelectionInstructions::lineCrossing());
+        sel_layout->addWidget(instructions_label);
+
+        // Color by group checkbox
+        _color_by_group_checkbox = new QCheckBox("Color by group assignment");
+        _color_by_group_checkbox->setToolTip(
+            "When enabled, lines are colored according to their group color.\n"
+            "Lines not in any group use the default line color above.");
+        if (_state) {
+            _color_by_group_checkbox->setChecked(_state->colorByGroup());
+        }
+        sel_layout->addWidget(_color_by_group_checkbox);
+
+        selection_section->setContentLayout(*sel_layout);
+
+        // Insert at the end (before stretcher)
+        ui->main_layout->addWidget(selection_section);
+
+        connect(_color_by_group_checkbox, &QCheckBox::toggled,
+                this, &LinePlotPropertiesWidget::_onColorByGroupToggled);
     }
 }
 
@@ -298,6 +335,13 @@ void LinePlotPropertiesWidget::_onStatePlotSeriesOptionsChanged(QString const & 
     // Update the table; LineStyleControls auto-updates from its bound state
     Q_UNUSED(series_name)
     _updatePlotSeriesTable();
+}
+
+void LinePlotPropertiesWidget::_onColorByGroupToggled(bool checked)
+{
+    if (_state) {
+        _state->setColorByGroup(checked);
+    }
 }
 
 void LinePlotPropertiesWidget::_updateUIFromState()

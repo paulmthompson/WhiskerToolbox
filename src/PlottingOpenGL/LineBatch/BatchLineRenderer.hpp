@@ -74,6 +74,18 @@ public:
      */
     void setHoverLine(std::optional<std::uint32_t> line_index);
 
+    /**
+     * @brief Upload per-line color overrides.
+     *
+     * Each entry corresponds to a line in LineBatchData::lines (0-based).
+     * A color with alpha > 0 overrides the global color for that line.
+     * Alpha == 0 means "use global color" (no override).
+     *
+     * Must be called after syncFromStore() — the number of entries must
+     * equal the number of lines in the current LineBatchData.
+     */
+    void updateLineColorOverrides(std::vector<glm::vec4> const & per_line_colors);
+
     /// Whether GPU SSBOs are used (GL 4.3) vs CPU-side filtering (GL 4.1).
     [[nodiscard]] bool isUsingSSBOs() const { return m_use_ssbos; }
 
@@ -114,6 +126,7 @@ private:
     GLBuffer m_vertex_vbo{GLBuffer::Type::Vertex};
     GLBuffer m_line_id_vbo{GLBuffer::Type::Vertex};
     GLBuffer m_selection_vbo{GLBuffer::Type::Vertex};  // Per-vertex selection flag (GL 4.1 fallback)
+    GLBuffer m_color_override_vbo{GLBuffer::Type::Vertex};  // Per-vertex color override (vec4)
 
     // ── Shader state ───────────────────────────────────────────────────
     bool m_use_ssbos{false};          // True if GL 4.3 SSBOs available
@@ -148,6 +161,7 @@ private:
     void setupVertexAttributes();
     void renderLines(glm::mat4 const & mvp);
     void renderHoverLine(glm::mat4 const & mvp);
+    void uploadDefaultColorOverrides();
 };
 
 } // namespace PlottingOpenGL

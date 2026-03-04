@@ -28,18 +28,21 @@ constexpr char const * VERTEX_SHADER = R"(
 layout(location = 0) in vec2 a_position;
 layout(location = 1) in uint a_line_id;
 layout(location = 2) in uint a_selected;
+layout(location = 3) in vec4 a_color_override;
 
 uniform mat4 u_mvp_matrix;
 
 out vec2 v_position;
 flat out uint v_line_id;
 flat out uint v_selected;
+out vec4 v_color_override;
 
 void main() {
     vec4 ndc_pos = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
     v_position = ndc_pos.xy;
     v_line_id = a_line_id;
     v_selected = a_selected;
+    v_color_override = a_color_override;
     gl_Position = ndc_pos;
 }
 )";
@@ -53,10 +56,12 @@ layout(triangle_strip, max_vertices = 4) out;
 in vec2 v_position[];
 flat in uint v_line_id[];
 flat in uint v_selected[];
+in vec4 v_color_override[];
 
 out vec2 g_position;
 flat out uint g_line_id;
 flat out uint g_is_selected;
+out vec4 g_color_override;
 
 uniform float u_line_width;
 uniform vec2 u_viewport_size;
@@ -64,6 +69,7 @@ uniform vec2 u_viewport_size;
 void main() {
     uint line_id = v_line_id[0];
     uint is_selected = v_selected[0];
+    vec4 color_override = v_color_override[0];
 
     vec2 p0 = v_position[0];
     vec2 p1 = v_position[1];
@@ -78,16 +84,16 @@ void main() {
     vec2 v2 = p1 - perp * half_width_ndc;
     vec2 v3 = p1 + perp * half_width_ndc;
 
-    g_position = v0; g_line_id = line_id; g_is_selected = is_selected;
+    g_position = v0; g_line_id = line_id; g_is_selected = is_selected; g_color_override = color_override;
     gl_Position = vec4(v0, 0.0, 1.0); EmitVertex();
 
-    g_position = v1; g_line_id = line_id; g_is_selected = is_selected;
+    g_position = v1; g_line_id = line_id; g_is_selected = is_selected; g_color_override = color_override;
     gl_Position = vec4(v1, 0.0, 1.0); EmitVertex();
 
-    g_position = v2; g_line_id = line_id; g_is_selected = is_selected;
+    g_position = v2; g_line_id = line_id; g_is_selected = is_selected; g_color_override = color_override;
     gl_Position = vec4(v2, 0.0, 1.0); EmitVertex();
 
-    g_position = v3; g_line_id = line_id; g_is_selected = is_selected;
+    g_position = v3; g_line_id = line_id; g_is_selected = is_selected; g_color_override = color_override;
     gl_Position = vec4(v3, 0.0, 1.0); EmitVertex();
 
     EndPrimitive();
@@ -99,6 +105,7 @@ constexpr char const * FRAGMENT_SHADER = R"(
 
 flat in uint g_line_id;
 flat in uint g_is_selected;
+in vec4 g_color_override;
 
 uniform vec4 u_color;
 uniform vec4 u_hover_color;
@@ -108,7 +115,8 @@ uniform uint u_hover_line_id;
 out vec4 FragColor;
 
 void main() {
-    vec4 final_color = u_color;
+    // Color priority: hover > selected > group override > global
+    vec4 final_color = (g_color_override.a > 0.0) ? g_color_override : u_color;
 
     if (g_is_selected != 0u) {
         final_color = u_selected_color;
@@ -178,7 +186,7 @@ bool BatchLineRenderer::initialize()
 
     // VAO + VBOs
     if (!m_vao.create() || !m_vertex_vbo.create() || !m_line_id_vbo.create()
-        || !m_selection_vbo.create()) {
+        || !m_selection_vbo.create() || !m_color_override_vbo.create()) {
         return false;
     }
 
@@ -193,6 +201,7 @@ void BatchLineRenderer::cleanup()
     m_vertex_vbo.destroy();
     m_line_id_vbo.destroy();
     m_selection_vbo.destroy();
+    m_color_override_vbo.destroy();
     m_vao.destroy();
     if (!m_use_shader_manager) {
         m_embedded_shader.destroy();
@@ -302,8 +311,84 @@ void BatchLineRenderer::syncFromStore()
 
     m_vao.release();
 
+    // Upload default (transparent) color overrides — no group coloring by default
+    uploadDefaultColorOverrides();
+
+    m_vao.release();
+
     m_total_vertices = static_cast<int>(cpu.numSegments() * 2);
     m_canvas_size = {cpu.canvas_width, cpu.canvas_height};
+    m_view_dirty = true;
+}
+
+// ── Color override helpers ─────────────────────────────────────────────
+
+void BatchLineRenderer::uploadDefaultColorOverrides()
+{
+    if (m_total_vertices <= 0) {
+        // After the syncFromStore body we know the new count from segments.
+        // Use the segment count from the CPU mirror.
+        auto const & cpu = m_store.cpuData();
+        auto const num_verts = static_cast<int>(cpu.numSegments() * 2);
+        if (num_verts <= 0) {
+            return;
+        }
+        // Allocate transparent (alpha=0) override for every vertex
+        std::vector<float> zeros(static_cast<size_t>(num_verts) * 4, 0.0f);
+        (void) m_vao.bind();
+        (void) m_color_override_vbo.bind();
+        m_color_override_vbo.allocate(
+            zeros.data(),
+            static_cast<int>(zeros.size() * sizeof(float)));
+        m_color_override_vbo.release();
+        m_vao.release();
+    } else {
+        std::vector<float> zeros(static_cast<size_t>(m_total_vertices) * 4, 0.0f);
+        (void) m_vao.bind();
+        (void) m_color_override_vbo.bind();
+        m_color_override_vbo.allocate(
+            zeros.data(),
+            static_cast<int>(zeros.size() * sizeof(float)));
+        m_color_override_vbo.release();
+        m_vao.release();
+    }
+}
+
+void BatchLineRenderer::updateLineColorOverrides(
+    std::vector<glm::vec4> const & per_line_colors)
+{
+    if (!m_initialized) {
+        return;
+    }
+
+    auto const & cpu = m_store.cpuData();
+    if (cpu.empty()) {
+        return;
+    }
+
+    // Expand per-line colors to per-vertex colors (2 vertices per segment,
+    // same line_id for both vertices).  cpu.line_ids has one entry per segment.
+    std::vector<glm::vec4> per_vertex;
+    per_vertex.reserve(cpu.line_ids.size() * 2);
+
+    for (auto const id : cpu.line_ids) {
+        // line_id is 1-based; per_line_colors is 0-based
+        glm::vec4 color{0.0f, 0.0f, 0.0f, 0.0f};
+        if (id > 0 && (id - 1) < static_cast<std::uint32_t>(per_line_colors.size())) {
+            color = per_line_colors[id - 1];
+        }
+        per_vertex.push_back(color);
+        per_vertex.push_back(color);
+    }
+
+    (void) m_vao.bind();
+    (void) m_color_override_vbo.bind();
+    m_color_override_vbo.allocate(
+        per_vertex.data(),
+        static_cast<int>(per_vertex.size() * sizeof(glm::vec4)));
+    m_color_override_vbo.release();
+    m_vao.release();
+
     m_view_dirty = true;
 }
 
@@ -402,6 +487,12 @@ void BatchLineRenderer::setupVertexAttributes()
     }
     f->glEnableVertexAttribArray(2);
     m_selection_vbo.release();
+
+    // Attribute 3: color override vec4 (per-vertex group/palette color)
+    (void) m_color_override_vbo.bind();
+    f->glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
+    f->glEnableVertexAttribArray(3);
+    m_color_override_vbo.release();
 
     m_vao.release();
 }

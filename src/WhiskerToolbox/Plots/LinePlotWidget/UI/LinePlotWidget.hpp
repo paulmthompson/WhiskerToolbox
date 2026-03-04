@@ -16,6 +16,7 @@
 #include <memory>
 
 class DataManager;
+class GroupManager;
 class LinePlotState;
 class LinePlotOpenGLWidget;
 class RelativeTimeAxisRangeControls;
@@ -55,6 +56,12 @@ public:
      * @param state Shared pointer to the state object
      */
     void setState(std::shared_ptr<LinePlotState> state);
+
+    /**
+     * @brief Set the GroupManager for group-based coloring and context menu
+     * @param group_manager Pointer to the application-wide GroupManager
+     */
+    void setGroupManager(GroupManager * group_manager);
 
     /**
      * @brief Get the current LinePlotState (const)

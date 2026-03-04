@@ -123,6 +123,8 @@ public:
     /**
      * @brief Set the data key to inspect
      * @param key Data key in DataManager (empty string to clear)
+     * 
+     * Setting a data key clears any inspected TimeFrame key.
      */
     void setInspectedDataKey(QString const & key);
 
@@ -131,6 +133,20 @@ public:
      * @return Data key, or empty string if none
      */
     [[nodiscard]] QString inspectedDataKey() const;
+
+    /**
+     * @brief Set the TimeFrame key to inspect
+     * @param key TimeFrame key in DataManager (empty string to clear)
+     * 
+     * Setting a TimeFrame key clears any inspected data key.
+     */
+    void setInspectedTimeFrameKey(QString const & key);
+
+    /**
+     * @brief Get the currently inspected TimeFrame key
+     * @return TimeFrame key, or empty string if none
+     */
+    [[nodiscard]] QString inspectedTimeFrameKey() const;
 
     /**
      * @brief Set pinned state
@@ -181,6 +197,12 @@ signals:
      * @param key The new data key
      */
     void inspectedDataKeyChanged(QString const & key);
+
+    /**
+     * @brief Emitted when the inspected TimeFrame key changes
+     * @param key The new TimeFrame key
+     */
+    void inspectedTimeFrameKeyChanged(QString const & key);
 
     /**
      * @brief Emitted when pinned state changes

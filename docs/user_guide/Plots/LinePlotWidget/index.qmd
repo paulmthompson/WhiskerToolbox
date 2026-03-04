@@ -1,0 +1,7 @@
+---
+title: "LinePlotWidget"
+---
+
+# LinePlotWidget
+
+This section provides user guidance on the LinePlotWidget.

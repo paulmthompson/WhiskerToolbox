@@ -2,12 +2,14 @@
 #include "ui_DigitalIntervalSeriesInspector.h"
 
 #include "DataInspector_Widget/DataInspectorState.hpp"
+#include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "DataExport_Widget/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"
 #include "DigitalIntervalSeriesDataView.hpp"
+#include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <QAction>
 #include <QComboBox>
@@ -24,6 +26,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
+#include <unordered_set>
 
 DigitalIntervalSeriesInspector::DigitalIntervalSeriesInspector(
     std::shared_ptr<DataManager> data_manager,
@@ -47,6 +50,12 @@ DigitalIntervalSeriesInspector::DigitalIntervalSeriesInspector(
 
     // Set initial filename
     _updateFilename();
+
+    // Initialize group filter combo box
+    _populateGroupFilterCombo();
+
+    // Set up group manager signals if group manager exists
+    connectGroupManagerSignals(groupManager(), this, &DigitalIntervalSeriesInspector::_onGroupChanged);
 }
 
 DigitalIntervalSeriesInspector::~DigitalIntervalSeriesInspector() {
@@ -88,11 +97,42 @@ void DigitalIntervalSeriesInspector::updateView() {
 }
 
 void DigitalIntervalSeriesInspector::setDataView(DigitalIntervalSeriesDataView * view) {
-    if (view) {
-        // Set up selection provider to get selected intervals from the view
+    // Disconnect from old view if any
+    if (_data_view) {
+        disconnect(_data_view, &DigitalIntervalSeriesDataView::moveIntervalsRequested, this, nullptr);
+        disconnect(_data_view, &DigitalIntervalSeriesDataView::copyIntervalsRequested, this, nullptr);
+        disconnect(_data_view, &DigitalIntervalSeriesDataView::moveIntervalsToGroupRequested, this, nullptr);
+        disconnect(_data_view, &DigitalIntervalSeriesDataView::removeIntervalsFromGroupRequested, this, nullptr);
+        disconnect(_data_view, &DigitalIntervalSeriesDataView::deleteIntervalsRequested, this, nullptr);
+    }
+
+    _data_view = view;
+    if (_data_view) {
+        // Set up selection provider
         setSelectionProvider([view]() {
             return view->getSelectedIntervals();
         });
+
+        // Set group manager on the view
+        if (groupManager()) {
+            _data_view->setGroupManager(groupManager());
+        }
+
+        // Connect to view signals for move/copy operations
+        connect(_data_view, &DigitalIntervalSeriesDataView::moveIntervalsRequested,
+                this, &DigitalIntervalSeriesInspector::_moveIntervalsToTarget);
+        connect(_data_view, &DigitalIntervalSeriesDataView::copyIntervalsRequested,
+                this, &DigitalIntervalSeriesInspector::_copyIntervalsToTarget);
+
+        // Connect to view signals for group management operations
+        connect(_data_view, &DigitalIntervalSeriesDataView::moveIntervalsToGroupRequested,
+                this, &DigitalIntervalSeriesInspector::_moveIntervalsToGroup);
+        connect(_data_view, &DigitalIntervalSeriesDataView::removeIntervalsFromGroupRequested,
+                this, &DigitalIntervalSeriesInspector::_removeIntervalsFromGroup);
+
+        // Connect to view signal for delete operation
+        connect(_data_view, &DigitalIntervalSeriesDataView::deleteIntervalsRequested,
+                this, &DigitalIntervalSeriesInspector::_deleteSelectedIntervals);
     }
 }
 
@@ -117,6 +157,10 @@ void DigitalIntervalSeriesInspector::_connectSignals() {
             this, &DigitalIntervalSeriesInspector::_onExportTypeChanged);
     connect(ui->csv_interval_saver_widget, &CSVIntervalSaver_Widget::saveIntervalCSVRequested,
             this, &DigitalIntervalSeriesInspector::_handleSaveIntervalCSVRequested);
+
+    // Group filter signals
+    connect(ui->groupFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &DigitalIntervalSeriesInspector::_onGroupFilterChanged);
 }
 
 void DigitalIntervalSeriesInspector::_assignCallbacks() {
@@ -558,4 +602,110 @@ void DigitalIntervalSeriesInspector::_deleteSelectedIntervals() {
     } else {
         std::cout << "DigitalIntervalSeriesInspector: No intervals were deleted." << std::endl;
     }
+}
+
+void DigitalIntervalSeriesInspector::setGroupManager(GroupManager * group_manager) {
+    BaseInspector::setGroupManager(group_manager);
+    if (_data_view) {
+        _data_view->setGroupManager(group_manager);
+    }
+    // Disconnect old connections if any
+    if (groupManager()) {
+        disconnect(groupManager(), nullptr, this, nullptr);
+    }
+    if (group_manager) {
+        connectGroupManagerSignals(group_manager, this, &DigitalIntervalSeriesInspector::_onGroupChanged);
+    }
+    _populateGroupFilterCombo();
+}
+
+void DigitalIntervalSeriesInspector::_onGroupFilterChanged(int index) {
+    if (!_data_view || !groupManager()) {
+        return;
+    }
+
+    if (index == 0) {
+        // "All Groups" selected
+        _data_view->clearGroupFilter();
+    } else {
+        // Specific group selected (index - 1 because index 0 is "All Groups")
+        auto groups = groupManager()->getGroups();
+        auto group_ids = groups.keys();
+        if (index - 1 < group_ids.size()) {
+            int group_id = group_ids[index - 1];
+            _data_view->setGroupFilter(group_id);
+        }
+    }
+}
+
+void DigitalIntervalSeriesInspector::_onGroupChanged() {
+    // Store current selection
+    int current_index = ui->groupFilterCombo->currentIndex();
+    QString current_text;
+    if (current_index >= 0 && current_index < ui->groupFilterCombo->count()) {
+        current_text = ui->groupFilterCombo->itemText(current_index);
+    }
+
+    // Update the group filter combo box when groups change
+    _populateGroupFilterCombo();
+
+    // Restore selection
+    restoreGroupFilterSelection(ui->groupFilterCombo, current_index, current_text);
+}
+
+void DigitalIntervalSeriesInspector::_populateGroupFilterCombo() {
+    populateGroupFilterCombo(ui->groupFilterCombo, groupManager());
+}
+
+void DigitalIntervalSeriesInspector::_moveIntervalsToGroup(int group_id) {
+    if (!_data_view || !groupManager()) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "DigitalIntervalSeriesInspector: No intervals selected to move to group." << std::endl;
+        return;
+    }
+
+    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+
+    // First, remove entities from their current groups
+    groupManager()->ungroupEntities(entity_ids_set);
+
+    // Then, assign entities to the specified group
+    groupManager()->assignEntitiesToGroup(group_id, entity_ids_set);
+
+    // Refresh the view to show updated group information
+    if (_data_view) {
+        _data_view->updateView();
+    }
+
+    std::cout << "DigitalIntervalSeriesInspector: Moved " << selected_entity_ids.size()
+              << " selected intervals to group " << group_id << std::endl;
+}
+
+void DigitalIntervalSeriesInspector::_removeIntervalsFromGroup() {
+    if (!_data_view || !groupManager()) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "DigitalIntervalSeriesInspector: No intervals selected to remove from group." << std::endl;
+        return;
+    }
+
+    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+
+    // Remove entities from all groups
+    groupManager()->ungroupEntities(entity_ids_set);
+
+    // Refresh the view to show updated group information
+    if (_data_view) {
+        _data_view->updateView();
+    }
+
+    std::cout << "DigitalIntervalSeriesInspector: Removed " << selected_entity_ids.size()
+              << " selected intervals from their groups." << std::endl;
 }
