@@ -1,0 +1,126 @@
+---
+title: "Command Core Types & Factory"
+description: "Core type definitions and factory function for the command architecture"
+---
+
+## Overview
+
+The command core types and factory provide the foundational infrastructure for the
+[Command Architecture](index.qmd). These are the building blocks that all concrete commands
+and command consumers depend on.
+
+**Source files:**
+
+- `src/DataManager/Commands/CommandResult.hpp` — Result type for command execution
+- `src/DataManager/Commands/CommandContext.hpp` — Runtime context provided to commands
+- `src/DataManager/Commands/CommandDescriptor.hpp` — JSON-serializable command descriptors
+- `src/DataManager/Commands/ICommand.hpp` — Abstract base class for all commands
+- `src/DataManager/Commands/CommandFactory.hpp` / `.cpp` — Factory function mapping names to commands
+
+All types live in the `commands` namespace and have no Qt dependency.
+
+## Core Types
+
+### CommandResult
+
+Returned by every command's `execute()` and `undo()` methods:
+
+```cpp
+struct CommandResult {
+    bool success = false;
+    std::string error_message;
+    std::vector<std::string> affected_keys;
+
+    static CommandResult ok(std::vector<std::string> keys = {});
+    static CommandResult error(std::string msg);
+};
+```
+
+### CommandContext
+
+Runtime environment passed to commands. Not serialized — constructed at execution time:
+
+```cpp
+struct CommandContext {
+    std::shared_ptr<DataManager> data_manager;
+    std::map<std::string, std::string> runtime_variables;
+    std::function<void(float)> on_progress;
+};
+```
+
+### CommandDescriptor
+
+JSON-serializable description of a single command invocation. Uses reflect-cpp for
+serialization:
+
+```cpp
+struct CommandDescriptor {
+    std::string command_name;
+    std::optional<rfl::Generic> parameters;
+    std::optional<std::string> description;
+};
+```
+
+### CommandSequenceDescriptor
+
+A sequence of commands with optional template variables for `${variable}` substitution:
+
+```cpp
+struct CommandSequenceDescriptor {
+    std::optional<std::string> name;
+    std::optional<std::string> version;
+    std::optional<std::map<std::string, std::string>> variables;
+    std::vector<CommandDescriptor> commands;
+};
+```
+
+## ICommand Base Class
+
+All commands inherit from `ICommand`. The interface provides:
+
+- `execute()` — pure virtual, performs the command's action
+- `commandName()` — pure virtual, returns a human-readable name
+- `toJson()` — pure virtual, serializes parameters to JSON
+- `isUndoable()` — opt-in, defaults to `false`
+- `undo()` — opt-in, defaults to returning an error
+- `mergeId()` / `mergeWith()` — for undo coalescing (Phase 5)
+
+There is no separate `IUndoableCommand` hierarchy. Commands opt into undo support by overriding
+`isUndoable()` and `undo()`.
+
+## Command Factory
+
+A single free function maps command name strings to concrete `ICommand` instances:
+
+```cpp
+std::unique_ptr<ICommand> createCommand(
+    std::string const & name,
+    rfl::Generic const & params);
+```
+
+Returns `nullptr` if the command name is unknown or parameter deserialization fails. Concrete
+commands will be added as `if`-branches in `CommandFactory.cpp` as they are implemented
+(Step 1.7 in the [roadmap](roadmap.qmd)).
+
+::: {.callout-note}
+The factory uses a simple centralized if-chain rather than a static registry. This avoids
+`--whole-archive` linker requirements and keeps the full command list visible in one place.
+See the [design rationale](index.qmd#why-not-a-static-registry) for details.
+:::
+
+## Tests
+
+Test file: `src/DataManager/Commands/CommandFactory.test.cpp`
+
+Tests cover:
+
+- `CommandResult` factory methods (`ok`, `error`)
+- `CommandDescriptor` and `CommandSequenceDescriptor` JSON round-trip serialization
+- Factory returns `nullptr` for unknown and empty command names
+- `ICommand` default behavior (not undoable, undo returns error, merge disabled)
+- Concrete `StubCommand` execution and name reporting
+
+## See Also
+
+- [Command Architecture](index.qmd) — full design document
+- [Command Architecture Roadmap](roadmap.qmd) — implementation plan

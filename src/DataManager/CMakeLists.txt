@@ -31,6 +31,13 @@ set(DATAMANAGER_SOURCES
         DataManagerTypes.hpp
         DataManagerTypes.cpp
 
+        Commands/CommandResult.hpp
+        Commands/CommandContext.hpp
+        Commands/CommandDescriptor.hpp
+        Commands/ICommand.hpp
+        Commands/CommandFactory.hpp
+        Commands/CommandFactory.cpp
+
         loaders/loading_utils.hpp
 
         utils/armadillo_wrap/analog_armadillo.hpp

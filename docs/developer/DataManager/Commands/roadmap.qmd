@@ -8,7 +8,7 @@ title: "Command Architecture Roadmap"
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | Not Started | Core types, ICommand base class, factory, variable substitution, first commands, unit tests |
+| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.3 complete (core types, ICommand, factory). Variable substitution, sequence execution, first commands remain. |
 | **Phase 2:** Triage Session | Not Started | Mark/Commit/Recall state machine consuming command sequences |
 | **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
 | **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
@@ -55,24 +55,24 @@ Phase 1: Command Foundation
 Create `src/DataManager/Commands/` directory and CMake target (`Commands` static library).
 Implement the four core structs, all reflect-cpp serializable:
 
-- [ ] `CommandResult` — success/error + affected keys
-- [ ] `CommandContext` — holds `shared_ptr<DataManager>`, runtime variables, optional progress callback
-- [ ] `CommandDescriptor` — single command invocation (name + parameters + description)
-- [ ] `CommandSequenceDescriptor` — sequence of commands with optional name, version, and template variables
+- [x] `CommandResult` — success/error + affected keys
+- [x] `CommandContext` — holds `shared_ptr<DataManager>`, runtime variables, optional progress callback
+- [x] `CommandDescriptor` — single command invocation (name + parameters + description)
+- [x] `CommandSequenceDescriptor` — sequence of commands with optional name, version, and template variables
 
 See [Core Types](index.qmd#core-types) in the design document.
 
 ### Step 1.2 — ICommand Base Class
 
-- [ ] `ICommand` abstract base with `execute()`, `commandName()`, `toJson()`, `isUndoable()`, `undo()`, `mergeId()`, `mergeWith()`
-- [ ] Default implementations: `isUndoable()` → false, `undo()` → error, `mergeId()` → -1, `mergeWith()` → false
+- [x] `ICommand` abstract base with `execute()`, `commandName()`, `toJson()`, `isUndoable()`, `undo()`, `mergeId()`, `mergeWith()`
+- [x] Default implementations: `isUndoable()` → false, `undo()` → error, `mergeId()` → -1, `mergeWith()` → false
 
 See [ICommand Base Class](index.qmd#icommand-base-class) in the design document.
 
 ### Step 1.3 — Command Factory
 
-- [ ] `createCommand()` free function: maps `command_name` string + `rfl::Generic` parameters → `unique_ptr<ICommand>`
-- [ ] Returns `nullptr` for unknown command names or deserialization failures
+- [x] `createCommand()` free function: maps `command_name` string + `rfl::Generic` parameters → `unique_ptr<ICommand>`
+- [x] Returns `nullptr` for unknown command names or deserialization failures
 
 See [Command Factory](index.qmd#command-factory) in the design document.
 
