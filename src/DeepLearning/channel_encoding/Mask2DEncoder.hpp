@@ -6,6 +6,8 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 
+namespace at { class Tensor; }
+
 namespace dl {
 
 /// Encodes a Mask2D (set of pixel coordinates) into a tensor channel.
@@ -22,7 +24,7 @@ public:
     /// Encode mask pixel set into tensor[batch_index, target_channel, :, :]
     void encode(Mask2D const & mask,
                 ImageSize source_size,
-                torch::Tensor & tensor,
+                at::Tensor & tensor,
                 EncoderParams const & params) const;
 };
 

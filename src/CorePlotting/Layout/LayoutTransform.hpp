@@ -3,7 +3,7 @@
 
 #include <glm/glm.hpp>
 
-#include <cmath>
+#include <cmath> // std::abs
 
 namespace CorePlotting {
 

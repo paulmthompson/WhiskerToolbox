@@ -6,6 +6,8 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
 
+#include "torch/torch.h"
+
 using Catch::Matchers::WithinAbs;
 
 TEST_CASE("TensorToPoint2D - name and output type", "[channel_decoding][TensorToPoint2D]")

@@ -3,6 +3,7 @@
 #include "CoordinateTransform/ViewState.hpp"
 
 #include "CoreGeometry/boundingbox.hpp"
+#include "SpatialIndex/QuadTree.hpp"
 
 #include <stdexcept>
 

@@ -8,6 +8,10 @@
 #include <cstdint>
 #include <vector>
 
+namespace at {
+    class Tensor;
+}
+
 namespace dl {
 
 /// Encodes image pixel data (grayscale or RGB) into one or more tensor channels.
@@ -32,7 +36,7 @@ public:
     void encode(std::vector<uint8_t> const & image_data,
                 ImageSize source_size,
                 int num_channels,
-                torch::Tensor & tensor,
+                at::Tensor & tensor,
                 EncoderParams const & params) const;
 
     /// Encode 32-bit float image data into tensor channels.
@@ -40,7 +44,7 @@ public:
     void encode(std::vector<float> const & image_data,
                 ImageSize source_size,
                 int num_channels,
-                torch::Tensor & tensor,
+                at::Tensor & tensor,
                 EncoderParams const & params) const;
 };
 

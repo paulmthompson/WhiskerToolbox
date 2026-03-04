@@ -7,6 +7,8 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
+#include "torch/torch.h"
+
 using Catch::Matchers::WithinAbs;
 
 TEST_CASE("Line2DEncoder - name and input type", "[channel_encoding][Line2DEncoder]")

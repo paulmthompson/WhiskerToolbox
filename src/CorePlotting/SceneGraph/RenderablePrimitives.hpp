@@ -11,9 +11,9 @@
 #include <glm/glm.hpp>
 
 #include <cstdint>
-#include <unordered_map>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -176,8 +176,8 @@ struct RenderableScene {
      * @return World-space coordinates (X = time, Y = normalized plot position)
      */
     [[nodiscard]] glm::vec2 canvasToWorld(
-        float canvas_x, float canvas_y,
-        int viewport_width, int viewport_height) const;
+            float canvas_x, float canvas_y,
+            int viewport_width, int viewport_height) const;
 
     /**
      * @brief Convert a GlyphPreview to DataCoordinates for committing to DataManager
@@ -206,11 +206,11 @@ struct RenderableScene {
      * @endcode
      */
     [[nodiscard]] Interaction::DataCoordinates previewToDataCoords(
-        Interaction::GlyphPreview const& preview,
-        int viewport_width, int viewport_height,
-        LayoutTransform const& y_transform,
-        std::string const& series_key,
-        std::optional<EntityId> entity_id = std::nullopt) const;
+            Interaction::GlyphPreview const & preview,
+            int viewport_width, int viewport_height,
+            LayoutTransform const & y_transform,
+            std::string const & series_key,
+            std::optional<EntityId> entity_id = std::nullopt) const;
 
     /**
      * @brief Convert rectangle preview to interval coordinates
@@ -224,8 +224,8 @@ struct RenderableScene {
      * @return IntervalCoords with start and end time indices
      */
     [[nodiscard]] Interaction::DataCoordinates::IntervalCoords previewToIntervalCoords(
-        Interaction::GlyphPreview const& rect_preview,
-        int viewport_width, int viewport_height) const;
+            Interaction::GlyphPreview const & rect_preview,
+            int viewport_width, int viewport_height) const;
 
     /**
      * @brief Convert line preview to line coordinates
@@ -240,9 +240,9 @@ struct RenderableScene {
      * @return LineCoords with start and end points in data space
      */
     [[nodiscard]] Interaction::DataCoordinates::LineCoords previewToLineCoords(
-        Interaction::GlyphPreview const& line_preview,
-        int viewport_width, int viewport_height,
-        LayoutTransform const& y_transform) const;
+            Interaction::GlyphPreview const & line_preview,
+            int viewport_width, int viewport_height,
+            LayoutTransform const & y_transform) const;
 
     /**
      * @brief Convert point preview to point coordinates
@@ -254,9 +254,9 @@ struct RenderableScene {
      * @return PointCoords in data space
      */
     [[nodiscard]] Interaction::DataCoordinates::PointCoords previewToPointCoords(
-        Interaction::GlyphPreview const& point_preview,
-        int viewport_width, int viewport_height,
-        LayoutTransform const& y_transform) const;
+            Interaction::GlyphPreview const & point_preview,
+            int viewport_width, int viewport_height,
+            LayoutTransform const & y_transform) const;
 };
 
 }// namespace CorePlotting

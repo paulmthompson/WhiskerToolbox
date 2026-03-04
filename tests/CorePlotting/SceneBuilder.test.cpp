@@ -14,6 +14,7 @@
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CorePlotting/Mappers/MappedElement.hpp"
 #include "CoreGeometry/boundingbox.hpp"
+#include "SpatialIndex/QuadTree.hpp"
 
 using namespace CorePlotting;
 using Catch::Matchers::WithinAbs;

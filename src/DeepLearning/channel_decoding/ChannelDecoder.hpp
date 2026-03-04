@@ -4,7 +4,6 @@
 #include "CoreGeometry/ImageSize.hpp"
 
 #include <string>
-#include <torch/torch.h>
 
 namespace dl {
 

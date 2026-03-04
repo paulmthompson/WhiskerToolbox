@@ -7,6 +7,8 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 
+#include "torch/torch.h"
+
 using Catch::Matchers::WithinAbs;
 
 TEST_CASE("TensorToMask2D - name and output type", "[channel_decoding][TensorToMask2D]")

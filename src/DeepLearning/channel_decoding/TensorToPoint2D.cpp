@@ -1,5 +1,7 @@
 #include "TensorToPoint2D.hpp"
 
+#include "torch/torch.h"
+
 #include <algorithm>
 #include <cmath>
 
@@ -91,7 +93,7 @@ bool is_local_maximum(torch::TensorAccessor<float, 2> const & accessor,
 
 } // anonymous namespace
 
-Point2D<float> TensorToPoint2D::decode(torch::Tensor const & tensor,
+Point2D<float> TensorToPoint2D::decode(at::Tensor const & tensor,
                                        DecoderParams const & params) const
 {
     auto channel = tensor[params.batch_index][params.source_channel];
@@ -120,7 +122,7 @@ Point2D<float> TensorToPoint2D::decode(torch::Tensor const & tensor,
 }
 
 std::vector<Point2D<float>> TensorToPoint2D::decodeMultiple(
-    torch::Tensor const & tensor,
+    at::Tensor const & tensor,
     DecoderParams const & params) const
 {
     auto channel = tensor[params.batch_index][params.source_channel];

@@ -11,11 +11,11 @@
 #ifndef COREPLOTTING_LINEBATCH_ILINEBATCHINTERSECTOR_HPP
 #define COREPLOTTING_LINEBATCH_ILINEBATCHINTERSECTOR_HPP
 
-#include "LineBatchData.hpp"
+#include "LineBatchData.hpp"    // LineBatchData, LineBatchIndex
 
-#include <glm/glm.hpp>
+#include <glm/glm.hpp>  // glm::vec2, glm::mat4
 
-#include <vector>
+#include <vector>    // std::vector
 
 namespace CorePlotting {
 

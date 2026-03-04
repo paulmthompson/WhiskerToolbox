@@ -1,5 +1,7 @@
 #include "Mask2DEncoder.hpp"
 
+#include "torch/torch.h"
+
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -18,7 +20,7 @@ std::string Mask2DEncoder::inputTypeName() const
 
 void Mask2DEncoder::encode(Mask2D const & mask,
                            ImageSize const source_size,
-                           torch::Tensor & tensor,
+                           at::Tensor & tensor,
                            EncoderParams const & params) const
 {
     if (params.mode != RasterMode::Binary) {

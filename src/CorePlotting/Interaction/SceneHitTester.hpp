@@ -71,7 +71,7 @@ public:
     /**
      * @brief Construct with default configuration
      */
-    SceneHitTester() = default;
+    SceneHitTester();
 
     /**
      * @brief Construct with custom configuration

@@ -1,9 +1,9 @@
 #ifndef WHISKERTOOLBOX_CHANNEL_ENCODER_HPP
 #define WHISKERTOOLBOX_CHANNEL_ENCODER_HPP
 
-#include <string>
+#include <string> // std::string
 
-#include <torch/torch.h>
+//#include <torch/torch.h>
 
 namespace dl {
 

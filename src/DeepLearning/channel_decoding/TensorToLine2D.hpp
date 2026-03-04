@@ -5,6 +5,8 @@
 
 #include "CoreGeometry/lines.hpp"
 
+namespace at { class Tensor; }
+
 namespace dl {
 
 /// Decodes a tensor channel into a Line2D by thresholding, skeletonization, and ordering.
@@ -22,7 +24,7 @@ public:
     [[nodiscard]] std::string outputTypeName() const override;
 
     /// Decode tensor channel to ordered polyline
-    [[nodiscard]] Line2D decode(torch::Tensor const & tensor,
+    [[nodiscard]] Line2D decode(at::Tensor const & tensor,
                                 DecoderParams const & params) const;
 };
 

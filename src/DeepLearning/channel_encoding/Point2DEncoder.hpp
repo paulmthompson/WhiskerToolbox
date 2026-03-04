@@ -8,6 +8,8 @@
 
 #include <vector>
 
+namespace at { class Tensor; }
+
 namespace dl {
 
 /// Encodes Point2D<float> data into a tensor channel.
@@ -25,13 +27,13 @@ public:
     /// Encode a single point
     void encode(Point2D<float> point,
                 ImageSize source_size,
-                torch::Tensor & tensor,
+                at::Tensor & tensor,
                 EncoderParams const & params) const;
 
     /// Encode multiple points
     void encode(std::vector<Point2D<float>> const & points,
                 ImageSize source_size,
-                torch::Tensor & tensor,
+                at::Tensor & tensor,
                 EncoderParams const & params) const;
 };
 

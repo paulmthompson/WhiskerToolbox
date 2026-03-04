@@ -13,6 +13,8 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 
+#include "torch/torch.h"
+
 using Catch::Matchers::WithinAbs;
 
 TEST_CASE("Round-trip: Point2D encode→decode (binary)", "[channel_decoding][roundtrip]")

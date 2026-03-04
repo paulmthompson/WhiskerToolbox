@@ -6,6 +6,8 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
 
+#include "torch/torch.h"
+
 #include <vector>
 
 using Catch::Matchers::WithinAbs;

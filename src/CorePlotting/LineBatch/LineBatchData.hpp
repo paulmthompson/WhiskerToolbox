@@ -11,10 +11,10 @@
 #ifndef COREPLOTTING_LINEBATCH_LINEBATCHDATA_HPP
 #define COREPLOTTING_LINEBATCH_LINEBATCHDATA_HPP
 
-#include "Entity/EntityTypes.hpp"
+#include "Entity/EntityId.hpp"  // EntityId
 
-#include <cstdint>
-#include <vector>
+#include <cstdint>      // uint32_t
+#include <vector>       // std::vector
 
 namespace CorePlotting {
 

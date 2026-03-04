@@ -14,16 +14,17 @@
  * @see tensor_data_refactor_proposal.md §5 for design rationale.
  */
 
-#include "TimeFrame/TimeFrame.hpp"
-#include "TimeFrame/TimeIndexStorage.hpp"
-#include "TimeFrame/interval_data.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"   // TimeFrameIndex
+#include "TimeFrame/TimeIndexStorage.hpp" // TimeIndexStorage
+#include "TimeFrame/interval_data.hpp"    // TimeFrameInterval
 
-#include <cstddef>
-#include <memory>
-#include <span>
-#include <stdexcept>
-#include <variant>
-#include <vector>
+#include <cstddef>      // size_t
+#include <memory>       // std::shared_ptr
+#include <span>         // std::span
+#include <variant>      // std::variant 
+#include <vector>       // std::vector
+
+class TimeFrame;
 
 /**
  * @brief Describes what the "row axis" (typically axis 0) of a tensor represents
@@ -128,7 +129,7 @@ public:
     /**
      * @brief Access the TimeFrame (nullptr for Ordinal rows)
      */
-    [[nodiscard]] std::shared_ptr<TimeFrame> timeFrame() const noexcept { return _time_frame; }
+    [[nodiscard]] std::shared_ptr<TimeFrame> timeFrame() const noexcept;
 
     // ========== Row-level labeling ==========
 

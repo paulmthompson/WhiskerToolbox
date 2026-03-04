@@ -5,6 +5,8 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 
+#include "torch/torch.h"
+
 #include <cstdint>
 #include <numeric>
 #include <vector>

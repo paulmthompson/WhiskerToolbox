@@ -6,6 +6,8 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 
+namespace at { class Tensor; }
+
 namespace dl {
 
 /// Encodes a Line2D (ordered polyline) into a tensor channel.
@@ -23,7 +25,7 @@ public:
     /// Encode a polyline into tensor[batch_index, target_channel, :, :]
     void encode(Line2D const & line,
                 ImageSize source_size,
-                torch::Tensor & tensor,
+                at::Tensor & tensor,
                 EncoderParams const & params) const;
 };
 

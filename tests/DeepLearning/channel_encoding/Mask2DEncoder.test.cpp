@@ -7,6 +7,8 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 
+#include "torch/torch.h"
+
 using Catch::Matchers::WithinAbs;
 
 TEST_CASE("Mask2DEncoder - name and input type", "[channel_encoding][Mask2DEncoder]")

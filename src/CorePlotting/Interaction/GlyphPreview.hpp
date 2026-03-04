@@ -3,9 +3,9 @@
 
 #include <glm/glm.hpp>
 
-#include <optional>
-#include <utility>
-#include <vector>
+#include <cmath>    // std::abs, std::min
+#include <optional> // std::optional
+#include <vector>   // std::vector
 
 namespace CorePlotting::Interaction {
 

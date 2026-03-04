@@ -1,5 +1,7 @@
 #include "TensorToLine2D.hpp"
 
+#include <torch/torch.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -211,7 +213,7 @@ Point2D<float> scale_to_target(float const x, float const y,
 
 } // anonymous namespace
 
-Line2D TensorToLine2D::decode(torch::Tensor const & tensor,
+Line2D TensorToLine2D::decode(at::Tensor const & tensor,
                               DecoderParams const & params) const
 {
     auto channel = tensor[params.batch_index][params.source_channel];

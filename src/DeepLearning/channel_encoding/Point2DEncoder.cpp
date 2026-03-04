@@ -1,5 +1,7 @@
 #include "Point2DEncoder.hpp"
 
+#include "torch/torch.h"
+
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -72,7 +74,7 @@ void encode_heatmap(Point2D<float> const scaled_point,
 
 void Point2DEncoder::encode(Point2D<float> const point,
                             ImageSize const source_size,
-                            torch::Tensor & tensor,
+                            at::Tensor & tensor,
                             EncoderParams const & params) const
 {
     if (params.mode != RasterMode::Binary && params.mode != RasterMode::Heatmap) {
@@ -91,7 +93,7 @@ void Point2DEncoder::encode(Point2D<float> const point,
 
 void Point2DEncoder::encode(std::vector<Point2D<float>> const & points,
                             ImageSize const source_size,
-                            torch::Tensor & tensor,
+                            at::Tensor & tensor,
                             EncoderParams const & params) const
 {
     if (params.mode != RasterMode::Binary && params.mode != RasterMode::Heatmap) {

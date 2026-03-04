@@ -1,11 +1,12 @@
 #ifndef COREPLOTTING_INTERACTION_HITTESTRESULT_HPP
 #define COREPLOTTING_INTERACTION_HITTESTRESULT_HPP
 
-#include "Entity/EntityTypes.hpp"
-#include <cstdint>
-#include <limits>
-#include <optional>
-#include <string>
+#include "Entity/EntityId.hpp"
+
+#include <cstdint>      // int64_t
+#include <limits>       // std::numeric_limits
+#include <optional>     // std::optional
+#include <string>       // std::string
 
 namespace CorePlotting {
 

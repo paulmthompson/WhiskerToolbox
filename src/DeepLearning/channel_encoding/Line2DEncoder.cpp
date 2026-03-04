@@ -1,5 +1,7 @@
 #include "Line2DEncoder.hpp"
 
+#include "torch/torch.h"
+
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -120,7 +122,7 @@ void rasterize_segment_heatmap(Point2D<float> const p0, Point2D<float> const p1,
 
 void Line2DEncoder::encode(Line2D const & line,
                            ImageSize const source_size,
-                           torch::Tensor & tensor,
+                           at::Tensor & tensor,
                            EncoderParams const & params) const
 {
     if (params.mode != RasterMode::Binary && params.mode != RasterMode::Heatmap) {

@@ -5,6 +5,8 @@
 
 #include "RowDescriptor.hpp"
 
+#include "TimeFrame/TimeFrame.hpp"
+
 #include <stdexcept>
 #include <string>
 
@@ -79,6 +81,8 @@ std::span<TimeFrameInterval const> RowDescriptor::intervals() const {
     }
     return _intervals;
 }
+
+std::shared_ptr<TimeFrame> RowDescriptor::timeFrame() const noexcept { return _time_frame; }
 
 RowDescriptor::RowLabel RowDescriptor::labelAt(std::size_t row) const {
     if (row >= count()) {

@@ -5,10 +5,9 @@
 
 #include "DimensionDescriptor.hpp"
 
-#include <algorithm>
-#include <numeric>
-#include <stdexcept>
-#include <unordered_set>
+#include <numeric>          // std::accumulate
+#include <stdexcept>        // std::invalid_argument, std::out_of_range
+#include <unordered_set>    // std::unordered_set
 
 DimensionDescriptor::DimensionDescriptor(std::vector<AxisDescriptor> axes)
     : _axes(std::move(axes)) {

@@ -5,6 +5,8 @@
 
 #include "CoreGeometry/masks.hpp"
 
+namespace at { class Tensor; }
+
 namespace dl {
 
 /// Decodes a tensor channel into a Mask2D by thresholding.
@@ -18,7 +20,7 @@ public:
     [[nodiscard]] std::string outputTypeName() const override;
 
     /// Decode tensor channel to mask by thresholding
-    [[nodiscard]] Mask2D decode(torch::Tensor const & tensor,
+    [[nodiscard]] Mask2D decode(at::Tensor const & tensor,
                                 DecoderParams const & params) const;
 };
 

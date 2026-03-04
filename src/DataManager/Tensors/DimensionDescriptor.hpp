@@ -14,14 +14,11 @@
  * @see tensor_data_refactor_proposal.md §4 for design rationale.
  */
 
-#include <algorithm>
-#include <cstddef>
-#include <numeric>
-#include <optional>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <vector>
+#include <cstddef>      // size_t
+#include <optional>     // std::optional
+#include <string>       // std::string
+#include <string_view>  // std::string_view
+#include <vector>       // std::vector
 
 /**
  * @brief Describes a single axis of a tensor

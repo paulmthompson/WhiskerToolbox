@@ -1,7 +1,10 @@
 #include "SceneHitTester.hpp"
 
+#include "SpatialIndex/QuadTree.hpp"
+
 namespace CorePlotting {
 
+SceneHitTester::SceneHitTester() = default;
 HitTestResult SceneHitTester::hitTest(
         float world_x,
         float world_y,

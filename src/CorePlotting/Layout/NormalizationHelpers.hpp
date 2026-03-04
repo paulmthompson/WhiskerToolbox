@@ -3,7 +3,7 @@
 
 #include "LayoutTransform.hpp"
 
-#include <cmath>
+#include <cmath> // std::abs
 
 namespace CorePlotting {
 namespace NormalizationHelpers {

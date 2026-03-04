@@ -16,12 +16,10 @@
 
 #include "TensorStorageBase.hpp"
 
-#include <cstddef>
-#include <numeric>
-#include <span>
-#include <stdexcept>
-#include <string>
-#include <vector>
+#include <cstddef>      // size_t
+#include <span>         // std::span
+#include <string>       // std::string
+#include <vector>       // std::vector
 
 /**
  * @brief Tensor storage backend using a flat std::vector<float> in row-major order

@@ -10,20 +10,20 @@ namespace CorePlotting {
 glm::vec2 RenderableScene::canvasToWorld(
         float canvas_x, float canvas_y,
         int viewport_width, int viewport_height) const {
-    
+
     return CorePlotting::canvasToWorld(
-        canvas_x, canvas_y,
-        viewport_width, viewport_height,
-        view_matrix, projection_matrix);
+            canvas_x, canvas_y,
+            viewport_width, viewport_height,
+            view_matrix, projection_matrix);
 }
 
 Interaction::DataCoordinates RenderableScene::previewToDataCoords(
-        Interaction::GlyphPreview const& preview,
+        Interaction::GlyphPreview const & preview,
         int viewport_width, int viewport_height,
-        LayoutTransform const& y_transform,
-        std::string const& series_key,
+        LayoutTransform const & y_transform,
+        std::string const & series_key,
         std::optional<EntityId> entity_id) const {
-    
+
     Interaction::DataCoordinates result;
     result.series_key = series_key;
     result.entity_id = entity_id;
@@ -58,9 +58,9 @@ Interaction::DataCoordinates RenderableScene::previewToDataCoords(
 }
 
 Interaction::DataCoordinates::IntervalCoords RenderableScene::previewToIntervalCoords(
-        Interaction::GlyphPreview const& rect_preview,
+        Interaction::GlyphPreview const & rect_preview,
         int viewport_width, int viewport_height) const {
-    
+
     Interaction::DataCoordinates::IntervalCoords result;
 
     if (rect_preview.type != Interaction::GlyphPreview::Type::Rectangle) {
@@ -74,9 +74,9 @@ Interaction::DataCoordinates::IntervalCoords RenderableScene::previewToIntervalC
 
     // Convert both edges to world X (time)
     glm::vec2 const left_world = canvasToWorld(
-        left_canvas, 0.0f, viewport_width, viewport_height);
+            left_canvas, 0.0f, viewport_width, viewport_height);
     glm::vec2 const right_world = canvasToWorld(
-        right_canvas, 0.0f, viewport_width, viewport_height);
+            right_canvas, 0.0f, viewport_width, viewport_height);
 
     // Convert world X to time indices
     int64_t const start_time = worldXToTimeIndex(left_world.x);
@@ -90,10 +90,10 @@ Interaction::DataCoordinates::IntervalCoords RenderableScene::previewToIntervalC
 }
 
 Interaction::DataCoordinates::LineCoords RenderableScene::previewToLineCoords(
-        Interaction::GlyphPreview const& line_preview,
+        Interaction::GlyphPreview const & line_preview,
         int viewport_width, int viewport_height,
-        LayoutTransform const& y_transform) const {
-    
+        LayoutTransform const & y_transform) const {
+
     Interaction::DataCoordinates::LineCoords result;
 
     if (line_preview.type != Interaction::GlyphPreview::Type::Line) {
@@ -102,13 +102,13 @@ Interaction::DataCoordinates::LineCoords RenderableScene::previewToLineCoords(
 
     // Convert start point
     glm::vec2 const start_world = canvasToWorld(
-        line_preview.line_start.x, line_preview.line_start.y,
-        viewport_width, viewport_height);
-    
+            line_preview.line_start.x, line_preview.line_start.y,
+            viewport_width, viewport_height);
+
     // Convert end point
     glm::vec2 const end_world = canvasToWorld(
-        line_preview.line_end.x, line_preview.line_end.y,
-        viewport_width, viewport_height);
+            line_preview.line_end.x, line_preview.line_end.y,
+            viewport_width, viewport_height);
 
     // Apply inverse Y transform to get data-space Y values
     result.x1 = start_world.x;
@@ -120,10 +120,10 @@ Interaction::DataCoordinates::LineCoords RenderableScene::previewToLineCoords(
 }
 
 Interaction::DataCoordinates::PointCoords RenderableScene::previewToPointCoords(
-        Interaction::GlyphPreview const& point_preview,
+        Interaction::GlyphPreview const & point_preview,
         int viewport_width, int viewport_height,
-        LayoutTransform const& y_transform) const {
-    
+        LayoutTransform const & y_transform) const {
+
     Interaction::DataCoordinates::PointCoords result;
 
     if (point_preview.type != Interaction::GlyphPreview::Type::Point) {
@@ -132,8 +132,8 @@ Interaction::DataCoordinates::PointCoords RenderableScene::previewToPointCoords(
 
     // Convert point position
     glm::vec2 const world = canvasToWorld(
-        point_preview.point.x, point_preview.point.y,
-        viewport_width, viewport_height);
+            point_preview.point.x, point_preview.point.y,
+            viewport_width, viewport_height);
 
     // Apply inverse Y transform
     result.x = world.x;
@@ -142,4 +142,4 @@ Interaction::DataCoordinates::PointCoords RenderableScene::previewToPointCoords(
     return result;
 }
 
-} // namespace CorePlotting
+}// namespace CorePlotting

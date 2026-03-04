@@ -3,9 +3,9 @@
 
 #include "ChannelEncoder.hpp"
 
-#include <memory>
-#include <string>
-#include <vector>
+#include <memory>   // std::unique_ptr
+#include <string>   // std::string
+#include <vector>   // std::vector
 
 namespace dl {
 

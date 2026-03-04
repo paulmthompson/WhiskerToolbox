@@ -1,5 +1,7 @@
 #include "TensorToMask2D.hpp"
 
+#include "torch/torch.h"
+
 #include <algorithm>
 #include <cmath>
 
@@ -15,7 +17,7 @@ std::string TensorToMask2D::outputTypeName() const
     return "Mask2D";
 }
 
-Mask2D TensorToMask2D::decode(torch::Tensor const & tensor,
+Mask2D TensorToMask2D::decode(at::Tensor const & tensor,
                               DecoderParams const & params) const
 {
     auto channel = tensor[params.batch_index][params.source_channel];

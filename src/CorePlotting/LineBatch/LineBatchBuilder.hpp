@@ -11,17 +11,16 @@
 #ifndef COREPLOTTING_LINEBATCH_LINEBATCHBUILDER_HPP
 #define COREPLOTTING_LINEBATCH_LINEBATCHBUILDER_HPP
 
-#include "LineBatchData.hpp"
+#include "LineBatchData.hpp" // LineBatchData
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-
-#include <cstdint>
-#include <vector>
+#include <cstdint> // int64_t
+#include <vector>  // std::vector
 
 template <typename T>
 class GatherResult;
 
+class AnalogTimeSeries;
+class LineData;
 
 namespace CorePlotting {
 

@@ -1,5 +1,7 @@
 #include "ImageEncoder.hpp"
 
+#include "torch/torch.h"
+
 #include <stdexcept>
 
 namespace dl {
@@ -17,7 +19,7 @@ std::string ImageEncoder::inputTypeName() const
 void ImageEncoder::encode(std::vector<uint8_t> const & image_data,
                           ImageSize const source_size,
                           int const num_channels,
-                          torch::Tensor & tensor,
+                          at::Tensor & tensor,
                           EncoderParams const & params) const
 {
     if (num_channels != 1 && num_channels != 3) {
@@ -105,7 +107,7 @@ void ImageEncoder::encode(std::vector<uint8_t> const & image_data,
 void ImageEncoder::encode(std::vector<float> const & image_data,
                           ImageSize const source_size,
                           int const num_channels,
-                          torch::Tensor & tensor,
+                          at::Tensor & tensor,
                           EncoderParams const & params) const
 {
     if (num_channels != 1 && num_channels != 3) {

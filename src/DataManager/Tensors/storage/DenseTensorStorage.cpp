@@ -8,10 +8,9 @@
 
 #include "DenseTensorStorage.hpp"
 
-#include <algorithm>
-#include <numeric>
-#include <stdexcept>
-#include <string>
+#include <numeric>      // std::accumulate
+#include <stdexcept>    // std::invalid_argument, std::out_of_range
+#include <string>       // std::string  
 
 // =============================================================================
 // Construction
