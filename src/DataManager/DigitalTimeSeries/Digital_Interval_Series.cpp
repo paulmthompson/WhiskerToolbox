@@ -1,4 +1,8 @@
 #include "Digital_Interval_Series.hpp"
+
+#include "storage/OwningDigitalIntervalStorage.hpp"
+#include "storage/ViewDigitalIntervalStorage.hpp"
+
 #include "Entity/EntityRegistry.hpp"
 
 #include <algorithm>

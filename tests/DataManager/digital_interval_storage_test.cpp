@@ -12,6 +12,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "DigitalTimeSeries/storage/DigitalIntervalStorage.hpp"
+#include "DigitalTimeSeries/storage/OwningDigitalIntervalStorage.hpp"
+#include "DigitalTimeSeries/storage/ViewDigitalIntervalStorage.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"

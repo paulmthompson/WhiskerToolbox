@@ -296,6 +296,7 @@ public:
         notifyObservers();
     }
 
+    /*
     template<typename T>
     void createIntervalsFromBool(std::vector<T> const & bool_vector) {
         // Clear existing storage and rebuild
@@ -324,7 +325,7 @@ public:
         _cacheOptimizationPointers();
         notifyObservers();
     }
-
+    */
     // ========== Entity-Based Bulk Operations ==========
 
     /**

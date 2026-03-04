@@ -4,6 +4,14 @@ set(digital_subdirectory_sources
         Digital_Interval_Series.cpp
         Digital_Event_Series.hpp
         Digital_Event_Series.cpp
+        
+        storage/DigitalIntervalStorageBase.hpp
+        storage/DigitalIntervalStorage.hpp
+        storage/DigitalIntervalStorage.cpp
+        storage/OwningDigitalIntervalStorage.hpp
+        storage/OwningDigitalIntervalStorage.cpp
+        storage/ViewDigitalIntervalStorage.hpp
+        storage/ViewDigitalIntervalStorage.cpp
 )
 
 add_library(DigitalTimeSeries STATIC ${digital_subdirectory_sources})
