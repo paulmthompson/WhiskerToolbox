@@ -4,6 +4,7 @@
 add_library(TimeFrame SHARED
     TimeFrame.hpp
     TimeFrame.cpp
+    TimeFrameIndex.hpp
     StrongTimeTypes.hpp
     TimeIndexStorage.hpp
     TimeIndexStorage.cpp

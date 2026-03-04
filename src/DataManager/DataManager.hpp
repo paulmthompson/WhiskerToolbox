@@ -10,6 +10,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <functional>   // std::function
+#include <iostream>     // std::cerr, std::cout
 #include <memory>       // std::shared_ptr
 #include <optional>     // std::optional
 #include <string>       // std::string

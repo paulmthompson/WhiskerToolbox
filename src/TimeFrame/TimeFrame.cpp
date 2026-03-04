@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdint>// For int64_t
+#include <iostream>
 
 TimeFrame::TimeFrame(std::vector<int> const & times) {
     _times = times;
