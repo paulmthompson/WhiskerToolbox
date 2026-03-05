@@ -43,6 +43,14 @@ set(DATAMANAGER_SOURCES
         Commands/SequenceExecution.cpp
         Commands/GetEntityIdsInRange.hpp
         Commands/GetEntityIdsInRange.cpp
+        Commands/MoveByTimeRange.hpp
+        Commands/MoveByTimeRange.cpp
+        Commands/CopyByTimeRange.hpp
+        Commands/CopyByTimeRange.cpp
+        Commands/AddInterval.hpp
+        Commands/AddInterval.cpp
+        Commands/ForEachKey.hpp
+        Commands/ForEachKey.cpp
 
         loaders/loading_utils.hpp
 

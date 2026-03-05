@@ -1,0 +1,197 @@
+---
+title: "Concrete Commands"
+description: "First four command implementations: MoveByTimeRange, CopyByTimeRange, AddInterval, ForEachKey"
+---
+
+## Overview
+
+This page documents the first four concrete `ICommand` implementations. Each command
+has a reflect-cpp–serializable parameter struct and lives in `src/DataManager/Commands/`.
+All commands are registered in the centralized `createCommand()` factory.
+
+**Source files:**
+
+- `src/DataManager/Commands/MoveByTimeRange.hpp` / `.cpp`
+- `src/DataManager/Commands/CopyByTimeRange.hpp` / `.cpp`
+- `src/DataManager/Commands/AddInterval.hpp` / `.cpp`
+- `src/DataManager/Commands/ForEachKey.hpp` / `.cpp`
+- `src/DataManager/Commands/Commands.test.cpp` — Unit tests
+
+All code lives in the `commands` namespace with no Qt dependency.
+
+## MoveByTimeRange
+
+Moves entities within a `[start_frame, end_frame]` range from a source data object to a
+destination data object of the same type. The source object loses the moved entities.
+
+### Parameters
+
+```cpp
+struct MoveByTimeRangeParams {
+    std::string source_key;
+    std::string destination_key;
+    int start_frame;
+    int end_frame;
+};
+```
+
+### Supported Types
+
+Requires the `moveByEntityIds` method, available on:
+
+- `RaggedTimeSeries<T>` (LineData, PointData, MaskData)
+- `DigitalEventSeries`
+
+`DigitalIntervalSeries` does **not** support move.
+
+### Undo
+
+`isUndoable()` returns `true`. The command stores the set of moved `EntityId`s during
+`execute()` and moves them back from destination to source on `undo()`.
+
+### Implementation Notes
+
+The implementation uses `std::visit` with `if constexpr` and a `requires` clause to
+dispatch on the variant type. Because `DataManager.hpp` only forward-declares data types,
+the `.cpp` file must explicitly include the full headers for all supported types.
+
+## CopyByTimeRange
+
+Copies entities within a `[start_frame, end_frame]` range from a source data object to a
+destination. The source remains unmodified.
+
+### Parameters
+
+```cpp
+struct CopyByTimeRangeParams {
+    std::string source_key;
+    std::string destination_key;
+    int start_frame;
+    int end_frame;
+};
+```
+
+### Supported Types
+
+Requires the `copyByEntityIds` method, available on:
+
+- `RaggedTimeSeries<T>` (LineData, PointData, MaskData)
+- `DigitalEventSeries`
+- `DigitalIntervalSeries`
+
+Wider type support than `MoveByTimeRange` because `DigitalIntervalSeries` supports copy
+but not move.
+
+### Undo
+
+Not undoable (default). Copy is non-destructive so undo is less critical.
+
+## AddInterval
+
+Appends an interval to a `DigitalIntervalSeries`, optionally creating the series if it
+does not exist.
+
+### Parameters
+
+```cpp
+struct AddIntervalParams {
+    std::string interval_key;
+    int start_frame;
+    int end_frame;
+    bool create_if_missing = true;
+};
+```
+
+When `create_if_missing` is `true` and the key does not exist in `DataManager`, the
+command creates an empty `DigitalIntervalSeries` with the default `TimeKey("time")`.
+
+### Undo
+
+Not undoable (default).
+
+## ForEachKey
+
+A meta-command that iterates a list of string values, binds each to a template variable,
+and executes a sequence of sub-commands per item. This enables batch operations over
+multiple data keys using a single command descriptor.
+
+### Parameters
+
+```cpp
+struct ForEachKeyParams {
+    std::vector<std::string> items;
+    std::string variable;
+    std::vector<CommandDescriptor> commands;
+};
+```
+
+### Execution
+
+For each item in `items`:
+
+1. Builds a substitution map: `{variable → item}`
+2. For each sub-command descriptor:
+   - Serializes the descriptor parameters to JSON
+   - Applies `substituteVariables()` to resolve `${variable}` references
+   - Deserializes back and creates the command via `createCommand()`
+   - Executes the command
+3. Stops on first error (if any sub-command fails)
+
+### Undo
+
+`isUndoable()` returns `true` if any executed sub-command is undoable. Undo iterates the
+stored sub-commands in **reverse order**, calling `undo()` on each undoable command.
+
+### Example
+
+```json
+{
+  "command_name": "ForEachKey",
+  "parameters": {
+    "items": ["w0", "w1", "w2"],
+    "variable": "whisker",
+    "commands": [
+      {
+        "command_name": "MoveByTimeRange",
+        "parameters": {
+          "source_key": "${whisker}_raw",
+          "destination_key": "${whisker}_labeled",
+          "start_frame": 100,
+          "end_frame": 200
+        }
+      }
+    ]
+  }
+}
+```
+
+This expands to three `MoveByTimeRange` commands: one for `w0_raw → w0_labeled`,
+one for `w1_raw → w1_labeled`, and one for `w2_raw → w2_labeled`.
+
+## Tests
+
+Tests live in `Commands.test.cpp` alongside the command sources.
+
+| Test Group | Command | Sections |
+|------------|---------|----------|
+| Factory | All four | Valid params → non-null, invalid → null |
+| MoveByTimeRange execute | `MoveByTimeRange` | Subset move, move all, move nothing, missing keys, type mismatch |
+| MoveByTimeRange undo | `MoveByTimeRange` | Undo restores source and destination |
+| MoveByTimeRange DigitalEventSeries | `MoveByTimeRange` | Move with DigitalEventSeries data |
+| MoveByTimeRange serialization | `MoveByTimeRange` | `toJson()` round-trip |
+| CopyByTimeRange execute | `CopyByTimeRange` | Subset copy, copy all, copy nothing |
+| CopyByTimeRange DigitalIntervalSeries | `CopyByTimeRange` | Copy with DigitalIntervalSeries data |
+| CopyByTimeRange serialization | `CopyByTimeRange` | `toJson()` round-trip |
+| AddInterval execute | `AddInterval` | Append, create_if_missing, error on missing, accumulate |
+| AddInterval serialization | `AddInterval` | `toJson()` round-trip |
+| ForEachKey execute | `ForEachKey` | Per-item execution, empty items, stop on error, unknown sub-command |
+| ForEachKey undo | `ForEachKey` | Undo reverses MoveByTimeRange sub-commands |
+| ForEachKey serialization | `ForEachKey` | `toJson()` round-trip |
+
+## See Also
+
+- [Command Architecture Design](index.qmd) — Overall architecture and type definitions
+- [Core Types](core_types.qmd) — `CommandResult`, `CommandContext`, `ICommand`
+- [getEntityIdsInRange](get_entity_ids_in_range.qmd) — Query helpers used by Move/Copy commands
+- [Sequence Execution](sequence_execution.qmd) — `executeSequence()` and variable substitution
+- [Roadmap](roadmap.qmd) — Implementation progress

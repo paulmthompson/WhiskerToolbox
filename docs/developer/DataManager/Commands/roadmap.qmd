@@ -4,11 +4,11 @@ title: "Command Architecture Roadmap"
 
 ## Progress Summary
 
-*Last updated: 2026-03-04*
+*Last updated: 2025-07-15*
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.5 complete (core types, ICommand, factory, variable substitution, sequence execution). First commands remain. |
+| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.8 complete (core types, ICommand, factory, variable substitution, sequence execution, helpers, first commands, unit tests). Validation and GUI audit remain. |
 | **Phase 2:** Triage Session | Not Started | Mark/Commit/Recall state machine consuming command sequences |
 | **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
 | **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
@@ -103,24 +103,24 @@ See [getEntityIdsInRange](index.qmd#getentityidsinrange-free-functions) in the d
 
 Implement concrete command classes with parameter structs:
 
-- [ ] `MoveByTimeRange` — moves entities in `[start_frame, end_frame]` between same-type data objects. Captures moved entity IDs for undo.
-- [ ] `CopyByTimeRange` — copies entities (source unmodified). Wider type support than move.
-- [ ] `AddInterval` — appends an interval to a `DigitalIntervalSeries`. Creates the series if `create_if_missing` is true.
-- [ ] `ForEachKey` — meta-command iterating a list of values, binding each to a template variable, and executing sub-commands per item. Undo reverses sub-commands in reverse order.
+- [x] `MoveByTimeRange` — moves entities in `[start_frame, end_frame]` between same-type data objects. Captures moved entity IDs for undo.
+- [x] `CopyByTimeRange` — copies entities (source unmodified). Wider type support than move.
+- [x] `AddInterval` — appends an interval to a `DigitalIntervalSeries`. Creates the series if `create_if_missing` is true.
+- [x] `ForEachKey` — meta-command iterating a list of values, binding each to a template variable, and executing sub-commands per item. Undo reverses sub-commands in reverse order.
 
 See [Commands](index.qmd#commands) in the design document.
 
 ### Step 1.8 — Unit Tests
 
-- [ ] Factory lookup: known command names return non-null; unknown returns null
-- [ ] Variable substitution: static + runtime variables resolve correctly in parameters
-- [ ] Command execution: `MoveByTimeRange` moves entities between data objects
-- [ ] Command execution: `CopyByTimeRange` copies without modifying source
-- [ ] Command execution: `AddInterval` creates/appends intervals
-- [ ] Sequence execution: multi-command sequence runs in order, stops on error
-- [ ] `ForEachKey` expansion: sub-commands execute once per item with correct variable binding
-- [ ] `getEntityIdsInRange` correctness for each supported data type
-- [ ] Error handling: missing keys, type mismatches, empty ranges
+- [x] Factory lookup: known command names return non-null; unknown returns null
+- [x] Variable substitution: static + runtime variables resolve correctly in parameters
+- [x] Command execution: `MoveByTimeRange` moves entities between data objects
+- [x] Command execution: `CopyByTimeRange` copies without modifying source
+- [x] Command execution: `AddInterval` creates/appends intervals
+- [x] Sequence execution: multi-command sequence runs in order, stops on error
+- [x] `ForEachKey` expansion: sub-commands execute once per item with correct variable binding
+- [x] `getEntityIdsInRange` correctness for each supported data type
+- [x] Error handling: missing keys, type mismatches, empty ranges
 
 ### Step 1.9 — Validation (Stretch Goal)
 
