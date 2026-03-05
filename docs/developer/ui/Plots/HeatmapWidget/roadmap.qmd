@@ -221,11 +221,43 @@ The tooltip should show:
 
 ### 8.4 Implementation Approach
 
-- Use a custom `QWidget` subclass as the tooltip (not `QToolTip::showText()`)
-- Position the tooltip near the cursor using `QCursor::pos()`
-- Show/hide with a short delay timer (similar to `EventPlotOpenGLWidget`'s tooltip timer)
-- Reuse the shared rate estimation function for the PSTH portion
-- Reuse `RasterMapper` logic for the raster portion (a simplified version without full scene building)
+The tooltip lifecycle (dwell timer, suppression during pan/zoom, show/hide) is handled by the
+shared [PlotTooltipManager](../Common/TooltipManager/index.qmd) (`Plots/Common/TooltipManager/`).
+The HeatmapWidget provides two callbacks:
+
+1. **Hit test provider**: Converts the screen position to a unit index (row lookup from Y
+   coordinate). Returns a `PlotTooltipHit` with the unit index in `user_data`.
+2. **Content provider**: Receives the hit, renders the PSTH + raster thumbnail into a `QPixmap`
+   via `QPainter`, and returns it as `PlotTooltipContent`. The `PlotTooltipManager` displays
+   the pixmap in its built-in `PixmapPopup` widget.
+
+```cpp
+_tooltip_mgr = std::make_unique<PlotTooltipManager>(this);
+
+_tooltip_mgr->setHitTestProvider([this](QPoint pos) -> std::optional<PlotTooltipHit> {
+    QPointF world = screenToWorld(pos);
+    int unit_index = worldToUnitIndex(world);
+    if (unit_index < 0) return std::nullopt;
+    PlotTooltipHit hit;
+    hit.world_x = static_cast<float>(world.x());
+    hit.world_y = static_cast<float>(world.y());
+    hit.user_data = unit_index;
+    return hit;
+});
+
+_tooltip_mgr->setContentProvider([this](PlotTooltipHit const & hit) -> PlotTooltipContent {
+    int unit_index = std::any_cast<int>(hit.user_data);
+    PlotTooltipContent content;
+    content.pixmap = renderUnitTooltip(unit_index);  // QPainter PSTH + raster
+    return content;
+});
+```
+
+The `renderUnitTooltip()` method:
+
+- Reuses the shared `estimateRate()` from the `EventRateEstimation` library for the PSTH portion
+- Reuses `RasterMapper` logic for the raster portion (a simplified version without full scene building)
+- Renders both subplots into a single `QPixmap` via `QPainter`
 
 This is related to [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 6 (Embeddable PSTH for Tooltips),
 which proposes decoupling the PSTH computation and rendering from the full widget machinery.

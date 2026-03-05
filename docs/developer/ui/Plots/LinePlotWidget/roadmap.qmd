@@ -238,50 +238,54 @@ Generate a small image (e.g., 150×200 pixels) showing:
 
 The image should be rendered off-screen (using `QImage` / `QPainter`) and displayed in a Qt tooltip.
 
-### 4.3 Shared Tooltip Image Infrastructure
+### 4.3 Integration with PlotTooltipManager
 
-The [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd) proposes a tooltip that shows a miniature stacked PSTH + raster for a hovered unit. The tooltip image generation infrastructure is reusable across widgets:
+The tooltip lifecycle (dwell timer, suppression during pan/zoom, show/hide) is handled by the
+shared [PlotTooltipManager](../Common/TooltipManager/index.qmd) (`Plots/Common/TooltipManager/`).
+The LinePlotWidget provides two callbacks:
 
-| Widget | Tooltip Content |
-|--------|----------------|
-| **LinePlotWidget** | Vertical histogram of Y values at hovered time point |
-| **[HeatmapWidget](../HeatmapWidget/index.qmd)** | Miniature PSTH + raster for hovered unit |
-| **[EventPlotWidget](../EventPlotWidget/index.qmd)** | (future) Trial metadata summary |
-
-A shared `PlotTooltipRenderer` could provide:
+1. **Hit test provider**: Converts the screen position to a world X coordinate (relative time).
+   Always succeeds when the cursor is within the plot area, since distributions can be computed
+   at any time point.
+2. **Content provider**: Receives the hit, computes the cross-trial distribution at that time,
+   renders a vertical histogram into a `QPixmap` via `QPainter`, and returns it as
+   `PlotTooltipContent`. The `PlotTooltipManager` displays the pixmap in its built-in
+   `PixmapPopup` widget.
 
 ```cpp
-namespace CorePlotting::Tooltips {
+_tooltip_mgr = std::make_unique<PlotTooltipManager>(this, 100); // 100ms dwell for responsiveness
 
-/// Render a vertical histogram as a QImage
-QImage renderVerticalHistogram(
-    std::vector<double> const & values,
-    int num_bins,
-    double y_min, double y_max,
-    QSize image_size = {150, 200});
+_tooltip_mgr->setHitTestProvider([this](QPoint pos) -> std::optional<PlotTooltipHit> {
+    QPointF world = screenToWorld(pos);
+    PlotTooltipHit hit;
+    hit.world_x = static_cast<float>(world.x());
+    hit.world_y = static_cast<float>(world.y());
+    return hit;
+});
 
-/// Render a miniature plot image from a RenderableScene
-QImage renderMiniPlot(
-    RenderableScene const & scene,
-    CorePlotting::ViewStateData const & view_state,
-    QSize image_size);
-
-/// Show an image tooltip at the given screen position
-void showImageTooltip(QWidget * parent, QPoint global_pos, QImage const & image);
-
-}
+_tooltip_mgr->setContentProvider([this](PlotTooltipHit const & hit) -> PlotTooltipContent {
+    PlotTooltipContent content;
+    content.pixmap = renderDistributionHistogram(hit.world_x);
+    return content;
+});
 ```
 
-This infrastructure should live in a shared location (e.g., `Plots/Common/Tooltips/`) accessible to all plot widgets.
+The [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd) Phase 8 uses the same `PlotTooltipManager`
+with a pixmap content provider for its miniature PSTH + raster tooltips.
+
+| Widget | Tooltip Content | Content Type |
+|--------|----------------|-------------|
+| **[EventPlotWidget](../EventPlotWidget/index.qmd)** | Trial index + time | Text (implemented) |
+| **LinePlotWidget** | Vertical histogram of Y values at hovered time point | Pixmap |
+| **[HeatmapWidget](../HeatmapWidget/index.qmd)** | Miniature PSTH + raster for hovered unit | Pixmap |
+| **[ScatterPlotWidget](../ScatterPlotWidget/index.qmd)** | Point coordinates + TimeFrameIndex | Text |
 
 ### 4.4 Hover Detection
 
-Add hover tracking to `LinePlotOpenGLWidget`:
-
-- On `mouseMoveEvent` (without button press), convert screen position to world coordinates
-- Debounce via a timer (e.g., 100ms) to avoid excessive recomputation
-- When the tooltip timer fires, compute the distribution and show the tooltip
-- Hide the tooltip when the mouse moves away or leaves the widget
+Hover detection is handled by `PlotTooltipManager::onMouseMove()`, called from
+`LinePlotOpenGLWidget::mouseMoveEvent()`. The manager's dwell timer prevents
+expensive distribution computations during rapid mouse movement. Tooltips are
+automatically suppressed during panning via the `is_interacting` parameter.
 
 ### 4.5 Configuration
 

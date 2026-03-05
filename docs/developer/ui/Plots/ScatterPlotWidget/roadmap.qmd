@@ -109,48 +109,58 @@ Components that have been factored into shared locations or are candidates for s
 
 ---
 
-## Phase 8: Hover Tooltip (Deferred)
+## Phase 8: Hover Tooltip
 
-**Status**: Deferred. Depends on hit testing infrastructure.
+**Status**: Ready to implement. Hit testing infrastructure is complete; shared
+[PlotTooltipManager](../Common/TooltipManager/index.qmd) provides dwell timer,
+pan suppression, and display lifecycle.
 
 **Goal**: Show a tooltip with point coordinates and `TimeFrameIndex` when the user hovers
 over a scatter point for a brief dwell time.
 
-**Complexity note**: Hover tooltips require a debounce/dwell timer to avoid flickering
-on fast mouse movements, careful coordinate conversion, and Qt tooltip lifecycle management.
-These concerns are separated from the simpler double-click navigation to keep
-that phase focused.
+### 8.1 Integration with PlotTooltipManager
 
-### 8.1 Dwell Timer
+The tooltip lifecycle (dwell timer, suppression during pan/zoom, show/hide) is handled by
+the shared [PlotTooltipManager](../Common/TooltipManager/index.qmd) (`Plots/Common/TooltipManager/`).
+This is the same infrastructure used by [EventPlotWidget](../EventPlotWidget/index.qmd)
+(text tooltips, already implemented) and planned for [HeatmapWidget](../HeatmapWidget/index.qmd)
+and [LinePlotWidget](../LinePlotWidget/index.qmd) (pixmap tooltips).
 
-Use a `QTimer` (single-shot, ~400 ms) that resets on every `mouseMoveEvent`. When the timer
-fires without a reset, perform a hit test at the last known cursor position using the
-`SceneHitTester` infrastructure:
+The ScatterPlotWidget provides two callbacks:
+
+1. **Hit test provider**: Uses the existing `SceneHitTester` / `QuadTree<EntityId>` to find
+   the nearest point. Returns a `PlotTooltipHit` with world coordinates and the `EntityId`
+   in `user_data`.
+2. **Text provider**: Formats the X/Y values and `TimeFrameIndex` into a tooltip string.
 
 ```cpp
-// In ScatterPlotOpenGLWidget
-QTimer * _hover_timer = nullptr;   // single-shot, ~400 ms
-QPoint _last_cursor_pos;
+_tooltip_mgr = std::make_unique<PlotTooltipManager>(this, 400);
 
-void mouseMoveEvent(QMouseEvent * event) override {
-    _last_cursor_pos = event->pos();
-    _hover_timer->start(400);       // restart on every move
-    // ... existing pan logic ...
-}
-
-void _onHoverTimerFired() {
-    QPointF world = screenToWorld(_last_cursor_pos);
+_tooltip_mgr->setHitTestProvider([this](QPoint pos) -> std::optional<PlotTooltipHit> {
+    QPointF world = screenToWorld(pos);
     auto result = _hit_tester.queryQuadTree(
         static_cast<float>(world.x()),
         static_cast<float>(world.y()),
         _scene);
-    if (result.hasHit() && result.entity_id.has_value()) {
-        // build tooltip string from result.world_x, result.world_y, entity_id
-        // and show via QToolTip::showText()
-    } else {
-        QToolTip::hideText();
-    }
-}
+    if (!result.hasHit() || !result.entity_id.has_value()) return std::nullopt;
+    PlotTooltipHit hit;
+    hit.world_x = result.world_x;
+    hit.world_y = result.world_y;
+    hit.user_data = *result.entity_id;
+    return hit;
+});
+
+_tooltip_mgr->setTextProvider([](PlotTooltipHit const & hit) -> QString {
+    return QString("X: %1\nY: %2")
+        .arg(hit.world_x, 0, 'f', 3)
+        .arg(hit.world_y, 0, 'f', 3);
+});
+
+// In mouseMoveEvent:
+_tooltip_mgr->onMouseMove(event->pos(), _is_panning);
+
+// In leaveEvent:
+_tooltip_mgr->onLeave();
 ```
 
 ### 8.2 Tooltip Content
@@ -163,8 +173,9 @@ The tooltip should display:
 
 ### 8.3 Interaction with Pan/Zoom
 
-Hide the tooltip immediately when a pan or zoom gesture begins, and cancel the pending
-timer to avoid a tooltip appearing mid-pan.
+Pan/zoom suppression is handled automatically by `PlotTooltipManager` — passing
+`is_interacting=true` to `onMouseMove()` stops the dwell timer and hides any visible
+tooltip. No additional widget-side logic is needed.
 
 ---
 
@@ -188,8 +199,9 @@ timer to avoid a tooltip appearing mid-pan.
    infrastructure used by [EventPlotWidget](../EventPlotWidget/index.qmd) for double-click
    navigation and click-to-select. The QuadTree provides `O(log n)` nearest-neighbor lookup,
    scaling well to large point counts without widget-specific spatial indexing code. Navigation
-   uses `mouseDoubleClickEvent`, matching EventPlotWidget. Hover tooltips are deferred to
-   Phase 8 because they require a debounce timer and additional Qt tooltip lifecycle management.
+   uses `mouseDoubleClickEvent`, matching EventPlotWidget. Hover tooltips (Phase 8) use the
+   shared [PlotTooltipManager](../Common/TooltipManager/index.qmd) for dwell timer and
+   lifecycle management.
 
 5. **Two-batch rendering for selection/highlight**: `GlyphRenderer` renders each `RenderableGlyphBatch` in order, with its own `u_point_size` / `u_glyph_size` uniform. Per-instance color is already supported by the shader (`a_instance_color` / `a_color` VBO attribute), but per-instance size is not — size is a per-batch uniform. Therefore, rendering selected/highlighted points at a different size requires a second `addGlyphs()` call. This results in exactly two GPU draw calls (one for unselected, one for selected) regardless of the selection count, with no shader changes needed.
 
