@@ -1,0 +1,163 @@
+---
+title: "Triage Session Widget"
+---
+
+## Overview
+
+The Triage Session Widget provides a structured workflow for reviewing and curating data across
+video frames. It implements a **Mark / Commit / Recall** pattern: you mark a starting frame,
+scrub through the video to review a region, then either commit (execute a batch operation on
+that region) or recall (abort and return to the mark point).
+
+This widget is especially useful for:
+
+- **Line triage** — reviewing deep-learning predictions and moving correct outputs to a
+  ground-truth dataset.
+- **Interval labeling** — inspecting scattered regions of a video and recording which frames
+  have been reviewed.
+- **Multi-step workflows** — chaining several operations (move data, record intervals, run
+  transforms) into a single atomic commit.
+
+The Triage Session Widget is accessed via the menu: **View → Tools → Triage Session**.
+
+## Widget Layout
+
+The widget is divided into four sections:
+
+### Status
+
+Displays the current state of the triage session:
+
+- **Idle** — No marking in progress. Shows the current frame number.
+- **Marking (from X)** — Marking is active from frame X. Shows the current frame number.
+
+### Controls
+
+Three buttons control the triage workflow:
+
+| Button | Enabled When | Action |
+|--------|-------------|--------|
+| **Mark** | Idle | Begin a triage range at the current frame |
+| **Commit** | Marking (with valid pipeline) | Execute the pipeline for `[mark_frame, current_frame]` |
+| **Recall** | Marking | Abort marking and return to Idle without executing anything |
+
+### Pipeline
+
+The pipeline section defines *what happens* when you press Commit. A pipeline is a sequence
+of commands that operate on your data. You can configure the pipeline in two ways:
+
+- **Load JSON** — Load a pre-written pipeline from a `.json` file.
+- **Guided Editor** — Visually build a pipeline by adding commands from a dropdown and
+  filling in parameters with form widgets.
+
+A collapsible **Raw JSON** section shows the underlying JSON representation and can be
+edited directly.
+
+See [Pipeline Configuration](#pipeline-configuration) below for details.
+
+### Tracked Regions
+
+Shows the number of intervals and total frame count in the tracked-regions
+`DigitalIntervalSeries`. This lets you see at a glance how much of the video has been
+triaged.
+
+## The Mark / Commit / Recall Workflow
+
+```
+┌───────┐   Mark    ┌─────────┐   Commit   ┌───────┐
+│ Idle  │ ────────► │ Marking │ ──────────► │ Idle  │
+└───────┘           └─────────┘             └───────┘
+                         │
+                         │ Recall
+                         ▼
+                    ┌───────┐
+                    │ Idle  │
+                    └───────┘
+```
+
+1. **Navigate** to the start of a region you want to process.
+2. **Press Mark.** The widget records the current frame as `mark_frame` and transitions to the
+   Marking state.
+3. **Scrub through the video** to the end of the region you want to process.
+4. **Press Commit.** The pipeline executes with two runtime variables automatically set:
+   - `${mark_frame}` — the frame where you pressed Mark.
+   - `${current_frame}` — the frame where you pressed Commit.
+5. The widget returns to Idle. The tracked-regions counter updates to reflect the committed
+   range.
+
+If you change your mind, press **Recall** to abort and return to Idle without executing
+anything.
+
+## Pipeline Configuration {#pipeline-configuration}
+
+A pipeline is a `CommandSequenceDescriptor` — a JSON document listing commands to execute
+in order. Each command has a `command_name` and a `parameters` object.
+
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `MoveByTimeRange` | Move entities in a frame range from one data object to another |
+| `CopyByTimeRange` | Copy entities in a frame range (source unmodified) |
+| `AddInterval` | Add an interval to a `DigitalIntervalSeries` |
+| `ForEachKey` | Iterate a list and execute sub-commands for each item |
+
+### Variable Substitution
+
+Parameters can reference variables using the `${variable}` syntax:
+
+- **Runtime variables** — `${mark_frame}` and `${current_frame}` are automatically populated
+  by the triage session when you commit.
+- **Template variables** — Define your own in the `variables` section of the pipeline JSON.
+  These are substituted before execution.
+
+### Example Pipeline JSON
+
+```json
+{
+  "name": "Line Triage Pipeline",
+  "version": "1.0",
+  "commands": [
+    {
+      "command_name": "MoveByTimeRange",
+      "description": "Move correct predictions to ground truth",
+      "parameters": {
+        "source_key": "predicted_whisker",
+        "destination_key": "ground_truth_whisker",
+        "start_frame": "${mark_frame}",
+        "end_frame": "${current_frame}"
+      }
+    },
+    {
+      "command_name": "AddInterval",
+      "description": "Record triaged region",
+      "parameters": {
+        "interval_key": "tracked_regions",
+        "start_frame": "${mark_frame}",
+        "end_frame": "${current_frame}",
+        "create_if_missing": true
+      }
+    }
+  ]
+}
+```
+
+### Using the Guided Editor
+
+Instead of writing JSON by hand, you can build a pipeline visually:
+
+1. Click **Add Command...** to open the command picker.
+2. Select a command from the list (e.g., `MoveByTimeRange`).
+3. Fill in the parameter form — text fields for data keys, number fields for frame indices.
+   You can type `${mark_frame}` or `${current_frame}` in text fields to use runtime variables.
+4. Repeat to add more commands.
+5. Use the arrow buttons to reorder commands, or the **×** button to remove one.
+
+The guided editor and raw JSON stay synchronized — edits in one are reflected in the other.
+
+## See Also
+
+- [How-To: Triage Line Data](../../learning-resources/how-to/triage_line_data.qmd) —
+  step-by-step guide for the line triage workflow 
+- [How-To: Label Video Intervals](../../learning-resources/how-to/label_video_intervals.qmd) —
+  step-by-step guide for the interval labeling workflow

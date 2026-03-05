@@ -1,0 +1,173 @@
+---
+title: "How-To: Triage Line Data"
+---
+
+## Goal
+
+You have a deep-learning model that produces line-data predictions (e.g., whisker traces) for
+every frame in a video. Some predictions are correct and some are not. You want to visually
+review the video, identify stretches of correct output, and batch-move those lines from a
+"predicted" data object to a "ground truth" data object — while recording which frames you have
+already reviewed.
+
+## Prerequisites
+
+- A video loaded in the Media Viewer.
+- One or more `LineData` objects containing predictions (e.g., `pred_w0`, `pred_w1`, …).
+- One or more empty `LineData` objects to receive ground truth (e.g., `gt_w0`, `gt_w1`, …).
+  These can be created manually in the Data Manager, or the pipeline can create them
+  implicitly.
+
+## Steps
+
+### 1. Open the Triage Session Widget
+
+Go to **View → Tools → Triage Session** to open the widget. It will appear in the right-side
+panel.
+
+### 2. Create a Pipeline
+
+You need a pipeline that, for each commit, moves lines and records the triaged region. Below
+are two approaches depending on how many whiskers you are triaging.
+
+#### Single Whisker
+
+If you only have one predicted whisker to triage, create a pipeline with two commands:
+
+```json
+{
+  "name": "Single Whisker Triage",
+  "commands": [
+    {
+      "command_name": "MoveByTimeRange",
+      "description": "Move correct predictions to ground truth",
+      "parameters": {
+        "source_key": "pred_w0",
+        "destination_key": "gt_w0",
+        "start_frame": "${mark_frame}",
+        "end_frame": "${current_frame}"
+      }
+    },
+    {
+      "command_name": "AddInterval",
+      "description": "Record triaged region",
+      "parameters": {
+        "interval_key": "tracked_regions",
+        "start_frame": "${mark_frame}",
+        "end_frame": "${current_frame}",
+        "create_if_missing": true
+      }
+    }
+  ]
+}
+```
+
+#### Multiple Whiskers
+
+If you have several whisker predictions (e.g., `pred_w0` through `pred_w4`), use the
+`ForEachKey` command to avoid writing the same `MoveByTimeRange` five times:
+
+```json
+{
+  "name": "5-Whisker Triage",
+  "commands": [
+    {
+      "command_name": "ForEachKey",
+      "description": "Move all whisker predictions to ground truth",
+      "parameters": {
+        "items": ["w0", "w1", "w2", "w3", "w4"],
+        "variable": "whisker",
+        "commands": [
+          {
+            "command_name": "MoveByTimeRange",
+            "parameters": {
+              "source_key": "pred_${whisker}",
+              "destination_key": "gt_${whisker}",
+              "start_frame": "${mark_frame}",
+              "end_frame": "${current_frame}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "command_name": "AddInterval",
+      "description": "Record triaged region",
+      "parameters": {
+        "interval_key": "tracked_regions",
+        "start_frame": "${mark_frame}",
+        "end_frame": "${current_frame}",
+        "create_if_missing": true
+      }
+    }
+  ]
+}
+```
+
+### 3. Load the Pipeline
+
+You can load the pipeline in two ways:
+
+- **From a file:** Click **Load JSON...** and select your saved `.json` file.
+- **Using the guided editor:** Click **Add Command...** and build the pipeline step by step
+  using the form widgets. Type `${mark_frame}` and `${current_frame}` in the frame fields
+  to use runtime variable substitution.
+
+### 4. Review and Commit
+
+Repeat this cycle for each region of the video:
+
+1. **Navigate** in the Media Viewer to the start of a region where predictions look correct.
+2. **Press Mark** in the Triage Session Widget. The status changes to "Marking (from X)".
+3. **Scrub forward** through the video. Watch the predictions overlaid on the video to
+   confirm they are acceptable throughout this stretch.
+4. **Stop** at the last frame where predictions are still good.
+5. **Press Commit.** The pipeline executes:
+   - Lines in `[mark_frame, current_frame]` are moved from each `pred_*` key to the
+     corresponding `gt_*` key.
+   - The interval `[mark_frame, current_frame]` is added to `tracked_regions`.
+6. The widget returns to Idle. The tracked-regions counter updates.
+
+If you realize the predictions in the current region are bad while reviewing, press **Recall**
+to abort and return to Idle without moving any data.
+
+### 5. Monitor Progress
+
+The **Tracked Regions** section at the bottom of the widget shows how many intervals you have
+committed and how many total frames they cover. This gives you a running tally of how much
+of the video has been triaged.
+
+## Tips
+
+- **Save your pipeline to a file** so you can reload it across sessions. The pipeline is also
+  saved automatically with the workspace.
+- **You can triage non-contiguous regions.** There is no requirement to process the video
+  sequentially — jump to any frame, mark, scrub, and commit.
+- **`MoveByTimeRange` is undoable** — if undo support is enabled in a future release, you
+  will be able to reverse commits.
+- **Use template variables** for pipelines you reuse across experiments. Define variable
+  defaults in the `variables` section of the pipeline JSON and only change them at load time.
+
+## Command Reference
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **MoveByTimeRange** | | |
+| `source_key` | string | Data object key to move from |
+| `destination_key` | string | Data object key to move to |
+| `start_frame` | integer | Start frame (inclusive) |
+| `end_frame` | integer | End frame (inclusive) |
+| **AddInterval** | | |
+| `interval_key` | string | `DigitalIntervalSeries` key |
+| `start_frame` | integer | Start frame (inclusive) |
+| `end_frame` | integer | End frame (inclusive) |
+| `create_if_missing` | boolean | Create the series if it doesn't exist (default: `true`) |
+| **ForEachKey** | | |
+| `items` | string[] | List of values to iterate |
+| `variable` | string | Variable name for `${variable}` substitution |
+| `commands` | command[] | Commands to execute per item |
+
+## See Also
+
+- [Triage Session Widget](../../user_guide/triage_session/overview.qmd) — full widget reference
+- [How-To: Label Video Intervals](label_video_intervals.qmd) — interval labeling workflow

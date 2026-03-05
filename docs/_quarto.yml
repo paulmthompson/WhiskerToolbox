@@ -17,7 +17,7 @@ website:
         href: getting-started.qmd
         
       - text: "Learning Resources"
-        href: learning-resources.qmd
+        href: learning-resources/index.qmd
             
       - text: "Reference Guides"
         menu:
@@ -123,7 +123,7 @@ website:
 
     - title: "Learning Resources"
       contents:
-        - learning-resources.qmd
+        - learning-resources/index.qmd
         - section: "Tutorials"
           contents:
             - text: "Keypoint Labeling"
@@ -143,6 +143,10 @@ website:
               href: examples/image_stack_import.qmd
             - text: "Load Tabular Binary Events"
               href: examples/tabular_binary_events.qmd
+            - text: "Triage Line Data"
+              href: learning-resources/how-to/triage_line_data.qmd
+            - text: "Label Video Intervals"
+              href: learning-resources/how-to/label_video_intervals.qmd
 
     - title: "User Guide"
       style: "docked"
@@ -250,6 +254,9 @@ website:
           contents:
             - user_guide/behaviors/whisker.qmd
             - user_guide/behaviors/tongue.qmd
+        - section: "Triage Session"
+          contents:
+            - user_guide/triage_session/overview.qmd
         - section: "Python Console"
           contents:
             - user_guide/python_console.qmd
