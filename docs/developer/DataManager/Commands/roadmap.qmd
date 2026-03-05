@@ -9,7 +9,7 @@ title: "Command Architecture Roadmap"
 | Phase | Status | Notes |
 |-------|--------|-------|
 | **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.12 complete. GUI audit (1.10) remains. |
-| **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3 and 2.6 complete. Keyboard shortcuts (2.4), tracked-regions visualization (2.5), AutoParamWidget extraction (2.7), and guided pipeline editor (2.8) remain. |
+| **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3, 2.6, and 2.7 complete. Keyboard shortcuts (2.4), tracked-regions visualization (2.5), and guided pipeline editor (2.8) remain. |
 | **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
 | **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
@@ -217,12 +217,12 @@ See [UI Sketch](index.qmd#ui-sketch) in the design document.
 
 ### Step 2.7 — Extract AutoParamWidget Library
 
-- [ ] Create `src/WhiskerToolbox/AutoParamWidget/` as a new static library
-- [ ] Move `AutoParamWidget.hpp/.cpp` out of `src/WhiskerToolbox/TransformsV2_Widget/UI/`
-- [ ] Library depends on `Qt6::Widgets` and `ParameterSchema` — no TransformsV2 dependency
-- [ ] Update `TransformsV2_Widget` CMakeLists to depend on `AutoParamWidget` and remove moved sources
-- [ ] Update all TransformsV2_Widget includes to reference the new location
-- [ ] Verify existing TransformsV2_Widget functionality is unaffected
+- [x] Create `src/WhiskerToolbox/AutoParamWidget/` as a new static library
+- [x] Move `AutoParamWidget.hpp/.cpp` out of `src/WhiskerToolbox/TransformsV2_Widget/UI/`
+- [x] Library depends on `Qt6::Widgets` and `ParameterSchema` — no TransformsV2 dependency
+- [x] Update `TransformsV2_Widget` CMakeLists to depend on `AutoParamWidget` and remove moved sources
+- [x] Update all TransformsV2_Widget includes to reference the new location
+- [x] Verify existing TransformsV2_Widget functionality is unaffected
 
 ### Step 2.8 — Guided Pipeline Editor
 

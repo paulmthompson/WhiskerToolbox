@@ -5,6 +5,25 @@ format: html
 
 The **AutoParam** system provides a mechanism to automatically generate Qt-based configuration forms from C++ structs. It leverages compile-time reflection (via `reflect-cpp`) to create a runtime schema, which is then used to build the UI dynamically.
 
+## Source Location
+
+`AutoParamWidget` lives in its own static library at `src/WhiskerToolbox/AutoParamWidget/`.
+It depends only on `Qt6::Widgets` and `ParameterSchema` — it has no dependency on
+TransformsV2 or any other domain library, making it reusable by any widget that needs
+schema-driven parameter forms (e.g., TransformsV2_Widget, TriageSession_Widget).
+
+The CMake target is `AutoParamWidget`. Link it directly when you need the form widget:
+
+```cmake
+target_link_libraries(MyWidget PUBLIC AutoParamWidget)
+```
+
+### Include Path
+
+```cpp
+#include "AutoParamWidget/AutoParamWidget.hpp"
+```
+
 ## Core Components
 
 ### 1. Parameter Structs

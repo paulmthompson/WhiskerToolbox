@@ -4,8 +4,6 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 set(TRANSFORMS_V2_WIDGET_SOURCES
         Core/TransformsV2State.hpp
         Core/TransformsV2State.cpp
-        UI/AutoParamWidget.hpp
-        UI/AutoParamWidget.cpp
         UI/ParamWidgetRegistry.hpp
         UI/PipelineStepListWidget.hpp
         UI/PipelineStepListWidget.cpp
@@ -33,5 +31,6 @@ target_link_libraries(TransformsV2_Widget PUBLIC
         EditorState
         DataManager
         TransformsV2
+        AutoParamWidget
         Collapsible_Widget
 )

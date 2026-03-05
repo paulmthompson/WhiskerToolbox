@@ -1,9 +1,9 @@
 #include "StepConfigPanel.hpp"
-#include "AutoParamWidget.hpp"
+#include "AutoParamWidget/AutoParamWidget.hpp"
 #include "ParamWidgetRegistry.hpp"
 
-#include "TransformsV2/core/ElementRegistry.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
+#include "TransformsV2/core/ElementRegistry.hpp"
 
 #include <QLabel>
 #include <QScrollArea>

@@ -179,10 +179,10 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
 
         row.optional_gate = gate;
 
-        QString label = QString::fromStdString(desc.display_name);
+        QString const label = QString::fromStdString(desc.display_name);
         layout->addRow(label, container);
     } else if (value_widget) {
-        QString label = QString::fromStdString(desc.display_name);
+        QString const label = QString::fromStdString(desc.display_name);
         layout->addRow(label, value_widget);
     }
 
@@ -259,7 +259,7 @@ bool AutoParamWidget::fromJson(std::string const & json) {
     for (auto & row: _field_rows) {
         // Look for this field in the JSON object using the public get() API
         auto field_result = obj->get(row.field_name);
-        bool has_value = static_cast<bool>(field_result);
+        bool const has_value = static_cast<bool>(field_result);
 
         // Handle the optional gate
         if (row.optional_gate) {
@@ -290,7 +290,7 @@ bool AutoParamWidget::fromJson(std::string const & json) {
             }
         } else if (row.combo_box) {
             if (auto const * s = std::get_if<std::string>(&value)) {
-                int idx = row.combo_box->findText(QString::fromStdString(*s));
+                int const idx = row.combo_box->findText(QString::fromStdString(*s));
                 if (idx >= 0) {
                     row.combo_box->setCurrentIndex(idx);
                 }

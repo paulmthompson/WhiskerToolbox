@@ -87,6 +87,9 @@ add_subdirectory(DeepLearning_Widget)
  # Qt, DataManager, EditorState, Geometry
 add_subdirectory(DataTransform_Widget)
 
+# Qt, ParameterSchema - Generic parameter form widget
+add_subdirectory(AutoParamWidget)
+
 # Qt, DataManager, EditorState - TransformsV2 pipeline UI
 add_subdirectory(TransformsV2_Widget)
 

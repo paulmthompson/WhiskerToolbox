@@ -23,19 +23,19 @@
 #include <QPushButton>
 #include <QSpinBox>
 
-#include "UI/AutoParamWidget.hpp"
+#include "AutoParamWidget/AutoParamWidget.hpp"
+#include "Core/TransformsV2State.hpp"
 #include "UI/PipelineStepListWidget.hpp"
 #include "UI/StepConfigPanel.hpp"
 #include "UI/TransformsV2Properties_Widget.hpp"
-#include "Core/TransformsV2State.hpp"
 
 #include "EditorState/SelectionContext.hpp"
 #include "EditorState/StrongTypes.hpp"
 
 #include "DataManager/DataManager.hpp"
 
-#include "TransformsV2/core/ElementRegistry.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
+#include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/core/TypeChainResolver.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
 
@@ -274,7 +274,7 @@ TEST_CASE("PipelineStepListWidget discovers transforms for input types",
 
         bool found_mask_area = false;
         bool found_mask_centroid = false;
-        for (auto const & name : names) {
+        for (auto const & name: names) {
             if (name == "CalculateMaskArea") found_mask_area = true;
             if (name == "CalculateMaskCentroid") found_mask_centroid = true;
         }
@@ -293,7 +293,7 @@ TEST_CASE("PipelineStepListWidget discovers transforms for input types",
         bool found_line_curvature = false;
         bool found_resample = false;
         bool found_flip = false;
-        for (auto const & name : names) {
+        for (auto const & name: names) {
             if (name == "CalculateLineAngle") found_line_angle = true;
             if (name == "CalculateLineCurvature") found_line_curvature = true;
             if (name == "ResampleLine") found_resample = true;
@@ -313,7 +313,7 @@ TEST_CASE("PipelineStepListWidget discovers transforms for input types",
 
         bool found_threshold = false;
         bool found_interval_threshold = false;
-        for (auto const & name : container_names) {
+        for (auto const & name: container_names) {
             if (name == "AnalogEventThreshold") found_threshold = true;
             if (name == "AnalogIntervalThreshold") found_interval_threshold = true;
         }
@@ -417,7 +417,7 @@ TEST_CASE("PipelineStepListWidget discovers transforms for input types",
         auto names = registry.getTransformsForInputType(element_type);
 
         bool found_zscore = false;
-        for (auto const & name : names) {
+        for (auto const & name: names) {
             if (name == "ZScoreNormalizeV2") found_zscore = true;
         }
         CHECK(found_zscore);
@@ -465,7 +465,7 @@ TEST_CASE("StepConfigPanel shows correct config for transforms",
 
         auto labels = panel.findChildren<QLabel *>();
         bool found_name = false;
-        for (auto * label : labels) {
+        for (auto * label: labels) {
             if (label->text().contains("CalculateMaskArea")) {
                 found_name = true;
             }
@@ -483,7 +483,7 @@ TEST_CASE("StepConfigPanel shows correct config for transforms",
         if (!meta->description.empty()) {
             auto labels = panel.findChildren<QLabel *>();
             bool found_desc = false;
-            for (auto * label : labels) {
+            for (auto * label: labels) {
                 if (label->text().toStdString() == meta->description) {
                     found_desc = true;
                 }
@@ -600,7 +600,7 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
         // Find the input key label — it should show the key name
         auto labels = widget.findChildren<QLabel *>();
         bool found_key_label = false;
-        for (auto * label : labels) {
+        for (auto * label: labels) {
             if (label->text() == "my_mask_data") {
                 found_key_label = true;
             }
@@ -618,7 +618,7 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
 
         auto labels = widget.findChildren<QLabel *>();
         bool found_type_label = false;
-        for (auto * label : labels) {
+        for (auto * label: labels) {
             if (label->text() == "LineData") {
                 found_type_label = true;
             }
@@ -667,9 +667,9 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
         // Fire the SelectionContext signal
         SelectionSource source{EditorLib::EditorInstanceId("test"), "test"};
         selection_context->setDataFocus(
-            EditorLib::SelectedDataKey("signal_test_key"),
-            "MaskData",
-            source);
+                EditorLib::SelectedDataKey("signal_test_key"),
+                "MaskData",
+                source);
         QApplication::processEvents();
 
         // State should reflect the focus change
