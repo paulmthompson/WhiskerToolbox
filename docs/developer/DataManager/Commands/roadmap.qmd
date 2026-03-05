@@ -167,9 +167,9 @@ See [Triage Session](index.qmd#triage-session) in the design document.
 
 ### Step 2.3 — TriageSessionWidget (Qt UI)
 
-- [ ] Mark / Commit / Recall buttons with status display
-- [ ] Pipeline display: load JSON, edit JSON, show command summary
-- [ ] Tracked-regions summary: interval count, frame count, remaining frames
+- [x] Mark / Commit / Recall buttons with status display
+- [x] Pipeline display: load JSON, edit JSON, show command summary
+- [x] Tracked-regions summary: interval count, frame count
 
 See [UI Sketch](index.qmd#ui-sketch) in the design document.
 

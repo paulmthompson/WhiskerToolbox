@@ -23,5 +23,6 @@ target_link_libraries(TriageSession_Widget PUBLIC
         Qt6::Gui
         EditorState
         DataManager
+        StateManagement
         TriageSession
 )

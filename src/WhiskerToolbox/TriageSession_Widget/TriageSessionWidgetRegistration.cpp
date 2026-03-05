@@ -19,7 +19,7 @@ void registerTypes(EditorRegistry * registry,
     if (!registry) {
         return;
     }
-    auto dm = data_manager;
+    const auto& dm = std::move(data_manager);
 
     registry->registerType({
             .type_id = QStringLiteral("TriageSessionWidget"),
@@ -40,19 +40,24 @@ void registerTypes(EditorRegistry * registry,
             // No view — properties-only widget
             .create_view = nullptr,
 
-            // Properties factory
-            .create_properties = [](std::shared_ptr<EditorState> const & state) -> QWidget * {
-                auto ts_state = std::dynamic_pointer_cast<TriageSessionState>(state);
-                if (!ts_state) {
-                    return nullptr;
-                }
-                auto * widget = new TriageSessionProperties_Widget(std::move(ts_state));
-                widget->setMinimumSize(300, 200);
-                return widget;
-            },
+            // Properties factory — not used (create_editor_custom provides EditorRegistry)
+            .create_properties = nullptr,
 
-            // No custom editor — using standard create_state + create_properties
-            .create_editor_custom = nullptr,
+            // Custom editor: provides EditorRegistry for time tracking
+            .create_editor_custom = [dm](EditorRegistry * reg)
+                    -> EditorRegistry::EditorInstance {
+                auto state = std::make_shared<TriageSessionState>(dm);
+
+                auto * widget = new TriageSessionProperties_Widget(state, reg);
+                widget->setMinimumSize(300, 200);
+
+                reg->registerState(state);
+
+                return EditorRegistry::EditorInstance{
+                        .state = state,
+                        .view = widget,
+                        .properties = nullptr};
+            },
     });
 }
 

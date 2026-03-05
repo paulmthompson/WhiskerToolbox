@@ -28,7 +28,7 @@ TriageSession_Widget/
 
 - **CMake target:** `TriageSession_Widget` (static library)
 - **Dependencies:** `Qt6::Widgets`, `Qt6::Core`, `Qt6::Gui`, `EditorState`,
-  `DataManager`, `TriageSession`
+  `DataManager`, `StateManagement`, `TriageSession`
 
 ## Architecture
 
@@ -56,24 +56,51 @@ Key design decisions:
 
 ### Registration
 
-Registered via `TriageSessionWidgetModule::registerTypes()`:
+Registered via `TriageSessionWidgetModule::registerTypes()` using `create_editor_custom`
+to provide `EditorRegistry` access for time tracking:
 
 - **Type ID:** `"TriageSessionWidget"`
 - **Display Name:** `"Triage Session"`
 - **Menu Path:** `"View/Tools"`
 - **Zone:** Right (properties as tab)
 - **Allow Multiple:** false
-- **Properties Only:** No view widget, only a properties panel
+- **Custom Editor:** Uses `create_editor_custom` (needs `EditorRegistry` for `timeChanged`)
 
-### Widget UI (Placeholder)
+### Widget UI
 
-The `TriageSessionProperties_Widget` is currently an empty placeholder.
-Step 2.3 of the [Command Architecture Roadmap](../../DataManager/Commands/roadmap.qmd)
-will populate it with:
+The `TriageSessionProperties_Widget` provides the complete triage workflow UI:
 
-- Mark / Commit / Recall buttons with status display
-- Pipeline display: load JSON, edit JSON, show command summary
-- Tracked-regions summary: interval count, frame count, remaining frames
+#### Status Section
+Displays the current state machine state (`Idle` / `Marking`) and the current
+frame number. When marking, also shows the mark frame.
+
+#### Controls Section
+Three buttons for the triage workflow:
+
+- **Mark** — Starts marking from the current frame. Enabled only in `Idle` state.
+- **Commit** — Executes the pipeline for `[mark_frame, current_frame]`. Enabled
+  only in `Marking` state with a valid pipeline loaded.
+- **Recall** — Aborts the current marking and returns to `Idle`. Enabled only
+  in `Marking` state.
+
+#### Pipeline Section
+- **Pipeline name** — Displays the name from `CommandSequenceDescriptor::name`
+- **Load JSON...** button — Opens a file dialog (via `AppFileDialog`) to load a
+  pipeline JSON file
+- **JSON text editor** — Inline editor for viewing/editing pipeline JSON. Changes
+  are parsed and applied in real-time.
+- **Command summary** — Lists all commands in the pipeline with their names and
+  descriptions
+
+#### Tracked Regions Section
+Displays a summary of the tracked regions `DigitalIntervalSeries`:
+
+- Interval count
+- Total frame count across all intervals
+- Shows the tracked regions key if no data exists yet
+
+The summary updates automatically when the time position changes (on each
+`EditorRegistry::timeChanged` signal) to reflect newly committed regions.
 
 ## Signals
 
