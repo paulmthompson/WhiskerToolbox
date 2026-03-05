@@ -15,7 +15,7 @@ For the phased implementation plan, see the [Command Architecture Roadmap](roadm
 
 - Core library: `src/DataManager/Commands/`
 - Triage session (non-Qt): `src/TriageSession/`
-- Triage widget (Qt): `src/WhiskerToolbox/TriageSession/`
+- Triage widget (Qt): `src/WhiskerToolbox/TriageSession_Widget/`
 - Command sequence widget (Qt): `src/WhiskerToolbox/Commands/`
 
 ## Problem Statement
@@ -145,7 +145,7 @@ global `CommandStack`. This would be an EditorState feature, not a command archi
 | `CommandDescriptor`, `CommandSequenceDescriptor` | `src/DataManager/Commands/` | **No** |
 | Concrete commands + `createCommand()` factory | `src/DataManager/Commands/` | **No** |
 | `TriageSession` | `src/TriageSession/` | **No** |
-| `TriageSessionWidget` | `src/WhiskerToolbox/TriageSession/` | Yes |
+| `TriageSessionWidget` | `src/WhiskerToolbox/TriageSession_Widget/` | Yes |
 | `CommandSequenceWidget` | `src/WhiskerToolbox/Commands/` | Yes |
 
 Placing the command library inside `DataManager` (not `WhiskerToolbox`) ensures it is usable
@@ -884,25 +884,33 @@ A complete pipeline for triaging 5 whisker line objects:
 
 ### TriageSessionState (EditorState subclass)
 
-The triage session widget follows the standard EditorState pattern:
+The triage session widget follows the standard EditorState pattern.
+Source: `src/WhiskerToolbox/TriageSession_Widget/Core/TriageSessionState.hpp`
 
 ```cpp
 struct TriageSessionStateData {
-    std::string pipeline_json;          // Serialized CommandSequenceDescriptor
-    std::string tracked_regions_key;    // Key to the tracked-regions interval series
+    std::string instance_id;                                   // Preserved across serialization
+    std::string display_name = "Triage Session";
+    std::optional<std::string> pipeline_json;                  // CommandSequenceDescriptor JSON
+    std::string tracked_regions_key = "tracked_regions";       // DigitalIntervalSeries key
     // State machine is NOT serialized — always starts Idle on load
 };
 
 class TriageSessionState : public EditorState {
     Q_OBJECT
 public:
-    QString getTypeName() const override { return "TriageSession"; }
+    QString getTypeName() const override { return "TriageSessionWidget"; }
     std::string toJson() const override;
     bool fromJson(std::string const& json) override;
 
+    void setPipelineJson(std::string const& json);
+    std::optional<std::string> pipelineJson() const;
+
+    void setTrackedRegionsKey(std::string const& key);
+    std::string trackedRegionsKey() const;
+
 signals:
     void pipelineChanged();
-    void stateChanged();  // Mark/Commit/Recall transitions
 };
 ```
 

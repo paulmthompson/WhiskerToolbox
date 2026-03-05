@@ -59,6 +59,7 @@
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
 #include "TransformsV2_Widget/TransformsV2WidgetRegistration.hpp"
+#include "TriageSession_Widget/TriageSessionWidgetRegistration.hpp"
 #include "TimeScrollBar/TimeScrollBarRegistration.hpp"
 #include "Tongue_Widget/TongueWidgetRegistration.hpp"
 #include "Whisker_Widget/WhiskerWidgetRegistration.hpp"
@@ -948,6 +949,8 @@ void MainWindow::_registerEditorTypes() {
     DataTransformWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TransformsV2WidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    TriageSessionWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     DataImportWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

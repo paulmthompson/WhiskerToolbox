@@ -1,0 +1,89 @@
+---
+title: "TriageSession Widget"
+---
+
+## Overview
+
+The `TriageSession_Widget` provides the Qt UI for the
+[TriageSession](../../TriageSession/index.qmd) core library and integrates it
+into the EditorState/EditorRegistry framework.
+
+## Source Location
+
+`src/WhiskerToolbox/TriageSession_Widget/`
+
+## Directory Structure
+
+```
+TriageSession_Widget/
+├── CMakeLists.txt
+├── TriageSessionWidgetRegistration.hpp/cpp    ← Module registration
+├── Core/
+│   └── TriageSessionState.hpp/cpp             ← EditorState subclass
+└── UI/
+    └── TriageSessionProperties_Widget.hpp/cpp ← Properties panel (placeholder)
+```
+
+## Library
+
+- **CMake target:** `TriageSession_Widget` (static library)
+- **Dependencies:** `Qt6::Widgets`, `Qt6::Core`, `Qt6::Gui`, `EditorState`,
+  `DataManager`, `TriageSession`
+
+## Architecture
+
+### TriageSessionState (EditorState)
+
+Follows the standard EditorState pattern with a reflect-cpp serializable data struct:
+
+```cpp
+struct TriageSessionStateData {
+    std::string instance_id;
+    std::string display_name = "Triage Session";
+    std::optional<std::string> pipeline_json;             // CommandSequenceDescriptor
+    std::string tracked_regions_key = "tracked_regions";  // DigitalIntervalSeries key
+};
+```
+
+Key design decisions:
+
+- **State machine is NOT serialized.** The `TriageSession` state machine always
+  resets to `Idle` on workspace load — never resume mid-triage.
+- **Pipeline JSON is serialized.** The user's configured pipeline persists across
+  workspace save/restore.
+- **Tracked regions key is serialized.** References the `DigitalIntervalSeries`
+  that records which frame ranges have been triaged.
+
+### Registration
+
+Registered via `TriageSessionWidgetModule::registerTypes()`:
+
+- **Type ID:** `"TriageSessionWidget"`
+- **Display Name:** `"Triage Session"`
+- **Menu Path:** `"View/Tools"`
+- **Zone:** Right (properties as tab)
+- **Allow Multiple:** false
+- **Properties Only:** No view widget, only a properties panel
+
+### Widget UI (Placeholder)
+
+The `TriageSessionProperties_Widget` is currently an empty placeholder.
+Step 2.3 of the [Command Architecture Roadmap](../../DataManager/Commands/roadmap.qmd)
+will populate it with:
+
+- Mark / Commit / Recall buttons with status display
+- Pipeline display: load JSON, edit JSON, show command summary
+- Tracked-regions summary: interval count, frame count, remaining frames
+
+## Signals
+
+| Signal | Description |
+|--------|-------------|
+| `pipelineChanged()` | Emitted when the pipeline JSON changes |
+| `stateChanged()` | Standard EditorState signal (tracked regions key, etc.) |
+
+## See Also
+
+- [TriageSession Core Library](../../TriageSession/index.qmd) — non-Qt state machine
+- [Command Architecture](../../DataManager/Commands/index.qmd) — underlying command system
+- [Command Architecture Roadmap](../../DataManager/Commands/roadmap.qmd) — implementation plan

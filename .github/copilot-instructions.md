@@ -146,6 +146,7 @@ The overall structure of the project is divided into several static and dynamic 
 - **`PythonBridge` (`src/python_bindings`)**: Provides pybind11 wrapping for core data types, `DataManager`, and `TimeFrame` objects, as well as an embedded Python interpreter.
 - **`TransformsV2`**: Data conversion architecture (e.g., converts Mask Data to Analog Time Series). Uses static registration.
 - **`Entity` (`src/Entity`)**: Centralized entity registry system assigning unique `EntityID`s to data objects and managing grouping.
+- **`TriageSession` (`src/TriageSession`)**: Mark/Commit/Recall state machine for triage workflows. Consumes the Command Architecture to execute user-configured pipelines over frame ranges. No Qt dependency.
 - **`WhiskerToolbox` (`src/WhiskerToolbox`)**: The main Qt6 GUI application. Driven by a shared `DataManager` instance and built on the `Qt6AdvancedDocking` system. Follows the EditorState architecture pattern with state management, registration, SelectionContext integration, and Zone-based placement.
 - **`EditorState` (`src/WhiskerToolbox/EditorState`)**: Core infrastructure for widget state management, inter-widget communication, and workspace serialization. Every widget houses its serializable state in a subclass of `EditorState`. Supports JSON serialization (reflect-cpp), dirty tracking, and Qt signal-based change notification.
 

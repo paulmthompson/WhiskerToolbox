@@ -96,6 +96,7 @@ website:
             - developer/ui/data_manager/data_manager_widget.qmd
             - developer/ui/data_transform/data_transform_widget.qmd
             - developer/ui/media_widget/media_widget.qmd
+            - developer/ui/TriageSession_Widget/index.qmd
             - section: "Features"
               href: developer/ui/Features/overview.qmd
               contents:

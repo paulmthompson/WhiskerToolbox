@@ -1,0 +1,87 @@
+---
+title: "TriageSession"
+---
+
+## Overview
+
+The `TriageSession` library provides a Mark/Commit/Recall state machine for
+triage workflows. It is a pure C++ library with no Qt dependency, designed as
+a **consumer** of the [Command Architecture](../DataManager/Commands/index.qmd).
+
+## Source Location
+
+`src/TriageSession/`
+
+## Library
+
+- **CMake target:** `TriageSession` (static library)
+- **Alias:** `WhiskerToolbox::TriageSession`
+- **Dependencies:** `DataManager` (for Commands API and data access)
+
+## Architecture
+
+### State Machine
+
+The triage session manages a two-state finite machine:
+
+```
+IDLE  ──[mark()]──►  MARKING  ──[commit()]──►  IDLE
+                        │
+                        └──[recall()]──►  IDLE
+```
+
+- **Idle:** No triage in progress. `mark()` transitions to Marking.
+- **Marking:** A triage range has been started. `commit()` executes the pipeline
+  and transitions to Idle on success. `recall()` aborts and returns to Idle.
+
+### Core Class: `TriageSession`
+
+| Method | Description |
+|--------|-------------|
+| `setPipeline(seq)` | Configure the `CommandSequenceDescriptor` to execute on commit |
+| `pipeline()` | Access the current pipeline |
+| `mark(frame)` | Begin marking from the given `TimeFrameIndex` |
+| `recall()` | Abort marking, return to Idle |
+| `commit(current_frame, dm)` | Execute pipeline for `[mark_frame, current_frame]`, transition to Idle on success |
+| `state()` | Query current state (`Idle` or `Marking`) |
+| `markFrame()` | The frame where marking started (only valid when `Marking`) |
+| `lastCommitCommands()` | Commands from the last successful commit (for undo support) |
+| `takeLastCommitCommands()` | Move ownership of last commit's commands out |
+
+### Commit Flow
+
+On `commit()`, the session:
+
+1. Validates preconditions (must be in Marking state, non-null DataManager, non-empty pipeline)
+2. Creates a `CommandContext` with the DataManager and runtime variables:
+   - `mark_frame` — the frame passed to `mark()`
+   - `current_frame` — the frame passed to `commit()`
+3. Calls `executeSequence()` from the Command Architecture
+4. On success: transitions to Idle and retains executed commands for undo
+5. On failure: remains in Marking state so the user can retry or recall
+
+### Relationship to Command Architecture
+
+`TriageSession` has no knowledge of what commands are in its pipeline. It simply
+populates runtime variables and delegates to `executeSequence()`. Any valid
+`CommandSequenceDescriptor` can serve as a triage pipeline — move commands,
+interval tracking, save commands, or any combination.
+
+## Tests
+
+Test file: `src/TriageSession/TriageSession.test.cpp`
+
+Test coverage includes:
+
+- State machine transitions (Idle → Marking → Idle via commit/recall)
+- No-op behavior (mark when already marking, recall when idle)
+- Commit error handling (not marking, null DataManager, empty pipeline)
+- Successful commit with data verification
+- Command retention after commit (for undo support)
+- Sequential mark/commit cycles
+- Runtime variable population correctness
+
+## See Also
+
+- [Command Architecture](../DataManager/Commands/index.qmd) — the command system that TriageSession consumes
+- [Command Architecture Roadmap](../DataManager/Commands/roadmap.qmd) — phased implementation plan

@@ -160,10 +160,10 @@ See [Triage Session](index.qmd#triage-session) in the design document.
 
 ### Step 2.2 — TriageSessionState (EditorState)
 
-- [ ] `TriageSessionState` EditorState subclass in `src/WhiskerToolbox/TriageSession/`
-- [ ] Serializes pipeline JSON and tracked-regions key
-- [ ] State machine resets to Idle on workspace load (never resume mid-triage)
-- [ ] Signals: `pipelineChanged()`, `stateChanged()`
+- [x] `TriageSessionState` EditorState subclass in `src/WhiskerToolbox/TriageSession_Widget/Core/`
+- [x] Serializes pipeline JSON and tracked-regions key
+- [x] State machine resets to Idle on workspace load (never resume mid-triage)
+- [x] Signals: `pipelineChanged()`, `stateChanged()`
 
 ### Step 2.3 — TriageSessionWidget (Qt UI)
 

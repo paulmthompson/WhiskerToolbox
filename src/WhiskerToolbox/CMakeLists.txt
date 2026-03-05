@@ -90,6 +90,9 @@ add_subdirectory(DataTransform_Widget)
 # Qt, DataManager, EditorState - TransformsV2 pipeline UI
 add_subdirectory(TransformsV2_Widget)
 
+# Qt, DataManager, EditorState, TriageSession - Triage session UI
+add_subdirectory(TriageSession_Widget)
+
 # Qt, DataManager - Shared plot alignment widget
 add_subdirectory(Plots/Common/PlotAlignmentWidget)
 
@@ -295,6 +298,7 @@ target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE MLCore_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataTransform_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE TransformsV2_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE TriageSession_Widget)
 
 # Force whole-archive linking for TransformsV2 to ensure static transform registration
 # (RegisteredTransforms.cpp has file-scope RAII objects that register transforms into
