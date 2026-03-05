@@ -9,7 +9,7 @@ title: "Command Architecture Roadmap"
 | Phase | Status | Notes |
 |-------|--------|-------|
 | **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.12 complete. GUI audit (1.10) remains. |
-| **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3, 2.6, and 2.7 complete. Keyboard shortcuts (2.4), tracked-regions visualization (2.5), and guided pipeline editor (2.8) remain. |
+| **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3, 2.6–2.8 complete. Keyboard shortcuts (2.4) and tracked-regions visualization (2.5) remain. |
 | **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
 | **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
@@ -226,13 +226,13 @@ See [UI Sketch](index.qmd#ui-sketch) in the design document.
 
 ### Step 2.8 — Guided Pipeline Editor
 
-- [ ] Add "Add Command..." button to triage pipeline section
-- [ ] Implement command picker dialog/dropdown populated by `getAvailableCommands()`
-- [ ] Generate `AutoParamWidget` from selected command's `ParameterSchema`
-- [ ] Replace read-only command summary with an editable command list (each row is an expandable `AutoParamWidget` with current parameter values)
-- [ ] Edits to command rows update the `CommandSequenceDescriptor` and raw JSON view
-- [ ] Keep raw JSON editor as a collapsible section for power users
-- [ ] Handle `${variable}` references in text fields (accept both literal values and variable strings)
+- [x] Add "Add Command..." button to triage pipeline section
+- [x] Implement command picker dialog/dropdown populated by `getAvailableCommands()`
+- [x] Generate `AutoParamWidget` from selected command's `ParameterSchema`
+- [x] Replace read-only command summary with an editable command list (each row is an expandable `AutoParamWidget` with current parameter values)
+- [x] Edits to command rows update the `CommandSequenceDescriptor` and raw JSON view
+- [x] Keep raw JSON editor as a collapsible section for power users
+- [x] Handle `${variable}` references in text fields (accept both literal values and variable strings)
 
 ---
 

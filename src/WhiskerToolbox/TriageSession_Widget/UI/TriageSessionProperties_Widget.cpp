@@ -10,6 +10,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "GuidedPipelineEditor.hpp"
 #include "StateManagement/AppFileDialog.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TriageSession/TriageSession.hpp"
@@ -93,17 +94,21 @@ void TriageSessionProperties_Widget::_buildUI() {
     pipeline_button_layout->addStretch();
     pipeline_layout->addLayout(pipeline_button_layout);
 
-    // JSON editor
+    // Guided command editor
+    _guided_editor = new GuidedPipelineEditor(this);
+    pipeline_layout->addWidget(_guided_editor);
+
+    // Collapsible raw JSON editor
+    _json_group = new QGroupBox(tr("Raw JSON"), this);
+    _json_group->setCheckable(true);
+    _json_group->setChecked(false);
+    auto * json_layout = new QVBoxLayout(_json_group);
     _pipeline_text_edit = new QTextEdit(this);
     _pipeline_text_edit->setPlaceholderText(tr("Paste or load a command sequence JSON..."));
     _pipeline_text_edit->setMaximumHeight(200);
     _pipeline_text_edit->setAcceptRichText(false);
-    pipeline_layout->addWidget(_pipeline_text_edit);
-
-    // Command summary
-    _command_summary_label = new QLabel(this);
-    _command_summary_label->setWordWrap(true);
-    pipeline_layout->addWidget(_command_summary_label);
+    json_layout->addWidget(_pipeline_text_edit);
+    pipeline_layout->addWidget(_json_group);
 
     main_layout->addWidget(pipeline_group);
 
@@ -129,6 +134,8 @@ void TriageSessionProperties_Widget::_connectSignals() {
             this, &TriageSessionProperties_Widget::_onLoadPipelineClicked);
     connect(_pipeline_text_edit, &QTextEdit::textChanged,
             this, &TriageSessionProperties_Widget::_onPipelineTextChanged);
+    connect(_guided_editor, &GuidedPipelineEditor::pipelineChanged,
+            this, &TriageSessionProperties_Widget::_onGuidedEditorChanged);
 
     if (_editor_registry) {
         connect(_editor_registry, &EditorRegistry::timeChanged,
@@ -206,15 +213,12 @@ void TriageSessionProperties_Widget::_onPipelineTextChanged() {
 
     if (json_str.empty()) {
         _pipeline_name_label->setText(tr("No pipeline loaded"));
-        _command_summary_label->clear();
         return;
     }
 
     auto result = rfl::json::read<commands::CommandSequenceDescriptor>(json_str);
     if (!result) {
         _pipeline_name_label->setText(tr("Invalid JSON"));
-        _command_summary_label->setText(
-                tr("<span style='color: red;'>Parse error — check JSON syntax</span>"));
         return;
     }
 
@@ -224,6 +228,37 @@ void TriageSessionProperties_Widget::_onPipelineTextChanged() {
     if (_state) {
         _state->setPipelineJson(json_str);
     }
+
+    // Sync to guided editor (without re-triggering)
+    _guided_editor->blockSignals(true);
+    _guided_editor->fromSequence(seq);
+    _guided_editor->blockSignals(false);
+
+    _updateCommandSummary();
+    _updateButtonStates();
+}
+
+void TriageSessionProperties_Widget::_onGuidedEditorChanged() {
+    auto seq = _guided_editor->toSequence();
+
+    // Preserve existing name/version/variables from the current pipeline
+    auto const & current = _session->pipeline();
+    seq.name = current.name;
+    seq.version = current.version;
+    seq.variables = current.variables;
+
+    _session->setPipeline(seq);
+
+    auto const json_str = rfl::json::write(seq);
+
+    if (_state) {
+        _state->setPipelineJson(json_str);
+    }
+
+    // Sync to JSON editor (without re-triggering)
+    _pipeline_text_edit->blockSignals(true);
+    _pipeline_text_edit->setPlainText(QString::fromStdString(json_str));
+    _pipeline_text_edit->blockSignals(false);
 
     _updateCommandSummary();
     _updateButtonStates();
@@ -265,28 +300,12 @@ void TriageSessionProperties_Widget::_updateCommandSummary() {
     // Pipeline name
     if (pipeline.name.has_value()) {
         _pipeline_name_label->setText(QString::fromStdString(*pipeline.name));
+    } else if (pipeline.commands.empty()) {
+        _pipeline_name_label->setText(tr("No pipeline loaded"));
     } else {
-        _pipeline_name_label->setText(tr("Unnamed Pipeline"));
+        _pipeline_name_label->setText(
+                tr("Pipeline (%1 commands)").arg(pipeline.commands.size()));
     }
-
-    // Command list
-    auto const cmd_count = pipeline.commands.size();
-    if (cmd_count == 0) {
-        _command_summary_label->setText(tr("No commands"));
-        return;
-    }
-
-    QString summary = tr("Commands (%1):").arg(cmd_count);
-    int idx = 1;
-    for (auto const & cmd: pipeline.commands) {
-        summary += QStringLiteral("\n  %1. %2").arg(idx).arg(QString::fromStdString(cmd.command_name));
-        if (cmd.description.has_value()) {
-            summary += QStringLiteral(": %1").arg(
-                    QString::fromStdString(*cmd.description));
-        }
-        ++idx;
-    }
-    _command_summary_label->setText(summary);
 }
 
 void TriageSessionProperties_Widget::_updateTrackedRegionsSummary() {
@@ -333,6 +352,10 @@ void TriageSessionProperties_Widget::_syncPipelineFromState() {
         _pipeline_text_edit->blockSignals(true);
         _pipeline_text_edit->setPlainText(QString::fromStdString(*pipeline_json));
         _pipeline_text_edit->blockSignals(false);
+
+        _guided_editor->blockSignals(true);
+        _guided_editor->fromSequence(*result);
+        _guided_editor->blockSignals(false);
 
         _updateCommandSummary();
         _updateButtonStates();

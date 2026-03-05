@@ -21,14 +21,17 @@ TriageSession_Widget/
 ├── Core/
 │   └── TriageSessionState.hpp/cpp             ← EditorState subclass
 └── UI/
-    └── TriageSessionProperties_Widget.hpp/cpp ← Properties panel (placeholder)
+    ├── CommandPickerDialog.hpp/cpp             ← Modal command selection dialog
+    ├── CommandRowWidget.hpp/cpp                ← Expandable command row with AutoParamWidget
+    ├── GuidedPipelineEditor.hpp/cpp            ← Visual command list editor
+    └── TriageSessionProperties_Widget.hpp/cpp  ← Properties panel
 ```
 
 ## Library
 
 - **CMake target:** `TriageSession_Widget` (static library)
-- **Dependencies:** `Qt6::Widgets`, `Qt6::Core`, `Qt6::Gui`, `EditorState`,
-  `DataManager`, `StateManagement`, `TriageSession`
+- **Dependencies:** `Qt6::Widgets`, `Qt6::Core`, `Qt6::Gui`, `AutoParamWidget`,
+  `EditorState`, `DataManager`, `StateManagement`, `TriageSession`
 
 ## Architecture
 
@@ -87,10 +90,23 @@ Three buttons for the triage workflow:
 - **Pipeline name** — Displays the name from `CommandSequenceDescriptor::name`
 - **Load JSON...** button — Opens a file dialog (via `AppFileDialog`) to load a
   pipeline JSON file
-- **JSON text editor** — Inline editor for viewing/editing pipeline JSON. Changes
-  are parsed and applied in real-time.
-- **Command summary** — Lists all commands in the pipeline with their names and
-  descriptions
+- **Guided Pipeline Editor** — Visual command list populated by
+  `commands::getAvailableCommands()`. Each command is an expandable row with an
+  `AutoParamWidget` for parameter editing. Supports add, remove, and reorder.
+  Text fields accept `${variable}` references (e.g. `${mark_frame}`).
+- **Raw JSON** (collapsible) — Inline editor for viewing/editing pipeline JSON
+  directly. Bidirectionally synced with the guided editor. Changes in either
+  direction update the session pipeline and the other view.
+
+##### Guided Editor Components
+
+- **CommandPickerDialog** — Modal dialog listing all registered commands from
+  `commands::getAvailableCommands()`. Shows command description and category.
+- **CommandRowWidget** — Expandable row with command name header, move-up/down
+  buttons, remove button, and a collapsible `AutoParamWidget` for parameters.
+- **GuidedPipelineEditor** — Container managing the list of `CommandRowWidget`s
+  plus an "Add Command..." button. Provides `toSequence()`/`fromSequence()`
+  for bidirectional `CommandSequenceDescriptor` conversion.
 
 #### Tracked Regions Section
 Displays a summary of the tracked regions `DigitalIntervalSeries`:

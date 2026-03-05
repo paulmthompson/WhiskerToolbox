@@ -3,6 +3,12 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 set(TRIAGE_SESSION_WIDGET_SOURCES
         Core/TriageSessionState.hpp
         Core/TriageSessionState.cpp
+        UI/CommandPickerDialog.hpp
+        UI/CommandPickerDialog.cpp
+        UI/CommandRowWidget.hpp
+        UI/CommandRowWidget.cpp
+        UI/GuidedPipelineEditor.hpp
+        UI/GuidedPipelineEditor.cpp
         UI/TriageSessionProperties_Widget.hpp
         UI/TriageSessionProperties_Widget.cpp
         TriageSessionWidgetRegistration.hpp
@@ -21,6 +27,7 @@ target_link_libraries(TriageSession_Widget PUBLIC
         Qt6::Widgets
         Qt6::Core
         Qt6::Gui
+        AutoParamWidget
         EditorState
         DataManager
         StateManagement

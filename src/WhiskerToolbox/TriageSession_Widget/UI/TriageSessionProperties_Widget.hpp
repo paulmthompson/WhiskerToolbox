@@ -16,6 +16,8 @@
 #include <memory>
 
 class EditorRegistry;
+class GuidedPipelineEditor;
+class QGroupBox;
 class QLabel;
 class QPushButton;
 class QTextEdit;
@@ -52,6 +54,7 @@ private slots:
     void _onRecallClicked();
     void _onLoadPipelineClicked();
     void _onPipelineTextChanged();
+    void _onGuidedEditorChanged();
     void _onTimeChanged(TimePosition const & position);
 
 private:
@@ -78,9 +81,10 @@ private:
 
     // Pipeline
     QPushButton * _load_pipeline_button = nullptr;
+    GuidedPipelineEditor * _guided_editor = nullptr;
+    QGroupBox * _json_group = nullptr;
     QTextEdit * _pipeline_text_edit = nullptr;
     QLabel * _pipeline_name_label = nullptr;
-    QLabel * _command_summary_label = nullptr;
 
     // Tracked regions
     QLabel * _tracked_summary_label = nullptr;
