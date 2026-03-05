@@ -1,13 +1,18 @@
 /**
  * @file CommandFactory.hpp
- * @brief Factory function mapping command name strings to concrete ICommand instances
+ * @brief Factory function mapping command name strings to concrete ICommand instances,
+ *        plus introspection query functions for command metadata
  */
 
 #ifndef COMMAND_FACTORY_HPP
 #define COMMAND_FACTORY_HPP
 
+#include "CommandInfo.hpp"
+
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include <rfl.hpp>
 
@@ -27,6 +32,18 @@ bool isKnownCommandName(std::string const & name);
 std::unique_ptr<ICommand> createCommand(
         std::string const & name,
         rfl::Generic const & params);
+
+/// @brief Return metadata for all registered commands.
+///
+/// Each entry includes the command's name, description, category,
+/// undo support flag, supported data types, and a ParameterSchema
+/// generated via extractParameterSchema<T>().
+std::vector<CommandInfo> getAvailableCommands();
+
+/// @brief Return metadata for a single command by name.
+///
+/// Returns std::nullopt if the command name is not recognized.
+std::optional<CommandInfo> getCommandInfo(std::string const & name);
 
 }// namespace commands
 

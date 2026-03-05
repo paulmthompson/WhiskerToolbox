@@ -90,6 +90,7 @@ website:
                 - developer/DataManager/Commands/get_entity_ids_in_range.qmd
                 - developer/DataManager/Commands/commands.qmd
                 - developer/DataManager/Commands/validation.qmd
+                - developer/DataManager/Commands/command_introspection.qmd
         - section: "Triage Session"
           contents:
             - developer/TriageSession/index.qmd

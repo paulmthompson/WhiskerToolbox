@@ -48,6 +48,7 @@ add_executable(test_data_manager
 
         # Commands tests
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/CommandFactory.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/CommandInfo.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/VariableSubstitution.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/GetEntityIdsInRange.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/Commands.test.cpp

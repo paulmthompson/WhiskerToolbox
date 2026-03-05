@@ -34,6 +34,8 @@ set(DATAMANAGER_SOURCES
         Commands/CommandResult.hpp
         Commands/CommandContext.hpp
         Commands/CommandDescriptor.hpp
+        Commands/CommandInfo.hpp
+        Commands/CommandUIHints.hpp
         Commands/ICommand.hpp
         Commands/CommandFactory.hpp
         Commands/CommandFactory.cpp
@@ -267,6 +269,7 @@ target_link_libraries(DataManager PRIVATE StateEstimation)
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(DataManager PUBLIC reflectcpp::reflectcpp)
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::ParameterSchema)
 
 target_link_libraries(DataManager PRIVATE Whisker-Analysis)
 

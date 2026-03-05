@@ -1,17 +1,22 @@
 /**
  * @file CommandFactory.cpp
- * @brief Implementation of the command factory function
+ * @brief Implementation of the command factory and introspection query functions
  */
 
 #include "CommandFactory.hpp"
 
 #include "AddInterval.hpp"
+#include "CommandUIHints.hpp"
 #include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
 #include "ICommand.hpp"
 #include "MoveByTimeRange.hpp"
 
+#include "ParameterSchema/ParameterSchema.hpp"
+
 #include <rfl/json.hpp>
+
+using WhiskerToolbox::Transforms::V2::extractParameterSchema;
 
 namespace commands {
 
@@ -51,6 +56,53 @@ std::unique_ptr<ICommand> createCommand(
     }
 
     return nullptr;
+}
+
+std::vector<CommandInfo> getAvailableCommands() {
+    return {
+            CommandInfo{
+                    .name = "MoveByTimeRange",
+                    .description = "Move entities in a time range from one data object to another of the same type",
+                    .category = "data_mutation",
+                    .supports_undo = true,
+                    .supported_data_types = {"LineData", "PointData", "MaskData", "DigitalEventSeries"},
+                    .parameter_schema = extractParameterSchema<MoveByTimeRangeParams>(),
+            },
+            CommandInfo{
+                    .name = "CopyByTimeRange",
+                    .description = "Copy entities in a time range from one data object to another",
+                    .category = "data_mutation",
+                    .supports_undo = false,
+                    .supported_data_types = {"LineData", "PointData", "MaskData", "DigitalEventSeries"},
+                    .parameter_schema = extractParameterSchema<CopyByTimeRangeParams>(),
+            },
+            CommandInfo{
+                    .name = "AddInterval",
+                    .description = "Append an interval to a DigitalIntervalSeries, creating it if needed",
+                    .category = "data_mutation",
+                    .supports_undo = false,
+                    .supported_data_types = {"DigitalIntervalSeries"},
+                    .parameter_schema = extractParameterSchema<AddIntervalParams>(),
+            },
+            CommandInfo{
+                    .name = "ForEachKey",
+                    .description = "Iterate a list of values, binding each to a template variable and executing sub-commands",
+                    .category = "meta",
+                    .supports_undo = false,
+                    .supported_data_types = {},
+                    .parameter_schema = extractParameterSchema<ForEachKeyParams>(),
+            },
+    };
+}
+
+std::optional<CommandInfo> getCommandInfo(std::string const & name) {
+    auto const all = getAvailableCommands();
+    for (auto & info: all) {
+        if (info.name == name) {
+            return info;
+        }
+    }
+    return std::nullopt;
 }
 
 }// namespace commands

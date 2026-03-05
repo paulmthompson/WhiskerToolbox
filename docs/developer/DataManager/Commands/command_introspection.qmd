@@ -1,0 +1,95 @@
+---
+title: "Command Introspection"
+---
+
+## Overview
+
+The command introspection system provides runtime metadata about registered commands. This
+enables UI components to build command pickers, generate parameter forms, and display
+command documentation — all without hard-coding knowledge of specific commands.
+
+## CommandInfo
+
+`CommandInfo` is a plain struct that holds static metadata for one registered command:
+
+```cpp
+struct CommandInfo {
+    std::string name;                              // "MoveByTimeRange"
+    std::string description;                       // Human-readable description
+    std::string category;                          // "data_mutation", "meta", etc.
+    bool supports_undo = false;                    // Whether the command supports undo
+    std::vector<std::string> supported_data_types; // e.g. {"LineData", "PointData"}
+    ParameterSchema parameter_schema;              // Full field-level schema
+};
+```
+
+**Source:** `src/DataManager/Commands/CommandInfo.hpp`
+
+## Factory Query Functions
+
+Two functions in `CommandFactory.hpp` provide access to command metadata:
+
+```cpp
+/// Return metadata for all registered commands
+std::vector<CommandInfo> getAvailableCommands();
+
+/// Return metadata for a single command, or std::nullopt if unknown
+std::optional<CommandInfo> getCommandInfo(std::string const & name);
+```
+
+These are implemented alongside `createCommand()` in `CommandFactory.cpp`. Adding a new
+command requires one `if`-branch for creation and one entry in `getAvailableCommands()` —
+both in the same file.
+
+## ParameterUIHints Specializations
+
+Each command's parameter struct has a `ParameterUIHints<T>` specialization in
+`CommandUIHints.hpp` that annotates fields with tooltips and UI flags. These are
+automatically applied by `extractParameterSchema<T>()`.
+
+**Source:** `src/DataManager/Commands/CommandUIHints.hpp`
+
+### Current Annotations
+
+| Command | Fields Annotated |
+|---------|-----------------|
+| `MoveByTimeRangeParams` | All 4 fields: tooltips for source_key, destination_key, start_frame, end_frame |
+| `CopyByTimeRangeParams` | All 4 fields: same as MoveByTimeRange |
+| `AddIntervalParams` | All 4 fields: tooltips for interval_key, frames, and create_if_missing |
+| `ForEachKeyParams` | All 3 fields: tooltips for items, variable, commands (commands marked advanced) |
+
+## Usage Example
+
+```cpp
+#include "DataManager/Commands/CommandFactory.hpp"
+
+// List all commands for a picker UI
+auto commands = commands::getAvailableCommands();
+for (auto const & cmd : commands) {
+    // cmd.name, cmd.description, cmd.category for display
+    // cmd.parameter_schema.fields for generating form widgets
+}
+
+// Get schema for a specific command
+auto info = commands::getCommandInfo("MoveByTimeRange");
+if (info) {
+    for (auto const & field : info->parameter_schema.fields) {
+        // field.name, field.type_name, field.tooltip, etc.
+    }
+}
+```
+
+## Registered Commands
+
+| Command | Category | Undo | Supported Types | Fields |
+|---------|----------|------|-----------------|--------|
+| `MoveByTimeRange` | data_mutation | Yes | LineData, PointData, MaskData, DigitalEventSeries | 4 |
+| `CopyByTimeRange` | data_mutation | No | LineData, PointData, MaskData, DigitalEventSeries | 4 |
+| `AddInterval` | data_mutation | No | DigitalIntervalSeries | 4 |
+| `ForEachKey` | meta | No | (any) | 3 |
+
+## See Also
+
+- [ParameterSchema Library](../../ParameterSchema/index.qmd) — shared schema extraction
+- [Command Architecture](index.qmd) — full design document
+- [Roadmap](roadmap.qmd) — implementation progress

@@ -8,7 +8,7 @@ title: "Command Architecture Roadmap"
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.11 complete. GUI audit (1.10) and CommandInfo (1.12) remain. |
+| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.12 complete. GUI audit (1.10) remains. |
 | **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3 and 2.6 complete. Keyboard shortcuts (2.4), tracked-regions visualization (2.5), AutoParamWidget extraction (2.7), and guided pipeline editor (2.8) remain. |
 | **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
 | **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
@@ -157,12 +157,12 @@ See [Command Introspection](index.qmd#command-introspection) in the design docum
 
 ### Step 1.12 — CommandInfo and Factory Query Functions
 
-- [ ] Define `CommandInfo` struct in `src/DataManager/Commands/CommandInfo.hpp`
-- [ ] Add `getAvailableCommands()` to `CommandFactory` — returns `std::vector<CommandInfo>` with one entry per command, including `ParameterSchema` generated via `extractParameterSchema<T>()`
-- [ ] Add `getCommandInfo(name)` to `CommandFactory` — returns `std::optional<CommandInfo>` for a single command
-- [ ] Add `ParameterUIHints<T>` specializations for command param structs (tooltips, field descriptions)
-- [ ] Add `ParameterSchema` as a dependency of the `Commands` CMake target
-- [ ] Unit tests: `getAvailableCommands()` returns all known commands; `getCommandInfo()` returns correct schemas; schema field counts match param struct fields
+- [x] Define `CommandInfo` struct in `src/DataManager/Commands/CommandInfo.hpp`
+- [x] Add `getAvailableCommands()` to `CommandFactory` — returns `std::vector<CommandInfo>` with one entry per command, including `ParameterSchema` generated via `extractParameterSchema<T>()`
+- [x] Add `getCommandInfo(name)` to `CommandFactory` — returns `std::optional<CommandInfo>` for a single command
+- [x] Add `ParameterUIHints<T>` specializations for command param structs (tooltips, field descriptions)
+- [x] Add `ParameterSchema` as a dependency of the `Commands` CMake target
+- [x] Unit tests: `getAvailableCommands()` returns all known commands; `getCommandInfo()` returns correct schemas; schema field counts match param struct fields
 
 ---
 
