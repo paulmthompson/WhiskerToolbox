@@ -145,6 +145,7 @@ The overall structure of the project is divided into several static and dynamic 
 - **`GatherResult` (`src/GatherResult`)**: Interface library used for collecting and consolidating multiple sub-views of data objects.
 - **`PythonBridge` (`src/python_bindings`)**: Provides pybind11 wrapping for core data types, `DataManager`, and `TimeFrame` objects, as well as an embedded Python interpreter.
 - **`TransformsV2`**: Data conversion architecture (e.g., converts Mask Data to Analog Time Series). Uses static registration.
+- **`ParameterSchema` (`src/ParameterSchema`)** *(planned)*: Shared library for compile-time parameter schema extraction from reflect-cpp structs. Provides `ParameterFieldDescriptor`, `ParameterSchema`, `extractParameterSchema<T>()`, and `ParameterUIHints<T>`. Used by both TransformsV2 and the Command Architecture. No Qt dependency.
 - **`Entity` (`src/Entity`)**: Centralized entity registry system assigning unique `EntityID`s to data objects and managing grouping.
 - **`TriageSession` (`src/TriageSession`)**: Mark/Commit/Recall state machine for triage workflows. Consumes the Command Architecture to execute user-configured pipelines over frame ranges. No Qt dependency.
 - **`WhiskerToolbox` (`src/WhiskerToolbox`)**: The main Qt6 GUI application. Driven by a shared `DataManager` instance and built on the `Qt6AdvancedDocking` system. Follows the EditorState architecture pattern with state management, registration, SelectionContext integration, and Zone-based placement.

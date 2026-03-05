@@ -4,12 +4,12 @@ title: "Command Architecture Roadmap"
 
 ## Progress Summary
 
-*Last updated: 2025-07-15*
+*Last updated: 2026-03-05*
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.8 complete (core types, ICommand, factory, variable substitution, sequence execution, helpers, first commands, unit tests). Validation and GUI audit remain. |
-| **Phase 2:** Triage Session | In Progress | Step 2.1 complete (core class with state machine, commit, pipeline config, undo support). Widget and UI remain. |
+| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.9 complete. GUI audit (1.10), ParameterSchema extraction (1.11), and CommandInfo (1.12) remain. |
+| **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3 and 2.6 complete. Keyboard shortcuts (2.4), tracked-regions visualization (2.5), AutoParamWidget extraction (2.7), and guided pipeline editor (2.8) remain. |
 | **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
 | **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
@@ -24,6 +24,7 @@ For the full architectural design, types, and code examples, see the
 Phase 1: Command Foundation
    │
    ├──► Phase 2: Triage Session
+   │       Steps 2.7–2.8 (guided editor) depend on Steps 1.11–1.12
    │
    ├──► Phase 3: Persistence Commands & Save Registry
    │
@@ -39,6 +40,9 @@ Phase 1: Command Foundation
 **Parallelizable work:**
 
 - Phases 2, 3, and 5 are independent of each other and can proceed in parallel after Phase 1.
+- Steps 1.11–1.12 (ParameterSchema extraction + CommandInfo) are prerequisites for Steps
+  2.7–2.8 (AutoParamWidget extraction + guided pipeline editor) but independent of all other
+  Phase 2 work.
 - Phase 4 depends on both Phase 1 and the Action Journal from the State Management Roadmap.
 - Phase 6 can begin once Phases 1, 3, and 4 are complete (Phase 5/undo is not required).
 
@@ -139,6 +143,27 @@ See [Validation](index.qmd#validation) in the design document.
 - [ ] Tag each action: covered by Phase 1 commands, covered by existing systems (TransformsV2, LoaderRegistry), or needs a future command wrapper
 - [ ] Document the audit results for planning future phases
 
+### Step 1.11 — Extract ParameterSchema Library
+
+- [ ] Create `src/ParameterSchema/` as a new static library
+- [ ] Move `ParameterSchema.hpp/.cpp` out of `src/TransformsV2/core/` into `src/ParameterSchema/`
+- [ ] Move `ParameterFieldDescriptor`, `ParameterSchema`, `extractParameterSchema<T>()`, `ParameterUIHints<T>`, and helper functions (`snakeCaseToDisplay`, `parseUnderlyingType`, `extractConstraints`)
+- [ ] Library depends only on reflect-cpp and standard library — no TransformsV2 types
+- [ ] Update TransformsV2 CMakeLists to depend on `ParameterSchema` and remove moved sources
+- [ ] Update all TransformsV2 includes to reference the new location
+- [ ] Verify all existing TransformsV2 tests still pass
+
+See [Command Introspection](index.qmd#command-introspection) in the design document.
+
+### Step 1.12 — CommandInfo and Factory Query Functions
+
+- [ ] Define `CommandInfo` struct in `src/DataManager/Commands/CommandInfo.hpp`
+- [ ] Add `getAvailableCommands()` to `CommandFactory` — returns `std::vector<CommandInfo>` with one entry per command, including `ParameterSchema` generated via `extractParameterSchema<T>()`
+- [ ] Add `getCommandInfo(name)` to `CommandFactory` — returns `std::optional<CommandInfo>` for a single command
+- [ ] Add `ParameterUIHints<T>` specializations for command param structs (tooltips, field descriptions)
+- [ ] Add `ParameterSchema` as a dependency of the `Commands` CMake target
+- [ ] Unit tests: `getAvailableCommands()` returns all known commands; `getCommandInfo()` returns correct schemas; schema field counts match param struct fields
+
 ---
 
 ## Phase 2 — Triage Session
@@ -185,10 +210,29 @@ See [UI Sketch](index.qmd#ui-sketch) in the design document.
 
 ### Step 2.6 — Unit Tests
 
-- [ ] State machine transitions: Idle → Marking → Idle (commit), Marking → Idle (recall)
-- [ ] Commit populates correct runtime variables
-- [ ] Recall resets state without executing commands
-- [ ] Integration test: full triage round-trip with mock DataManager (mark → scrub → commit → verify data moved + interval added)
+- [x] State machine transitions: Idle → Marking → Idle (commit), Marking → Idle (recall)
+- [x] Commit populates correct runtime variables
+- [x] Recall resets state without executing commands
+- [x] Integration test: full triage round-trip with mock DataManager (mark → scrub → commit → verify data moved + interval added)
+
+### Step 2.7 — Extract AutoParamWidget Library
+
+- [ ] Create `src/WhiskerToolbox/AutoParamWidget/` as a new static library
+- [ ] Move `AutoParamWidget.hpp/.cpp` out of `src/WhiskerToolbox/TransformsV2_Widget/UI/`
+- [ ] Library depends on `Qt6::Widgets` and `ParameterSchema` — no TransformsV2 dependency
+- [ ] Update `TransformsV2_Widget` CMakeLists to depend on `AutoParamWidget` and remove moved sources
+- [ ] Update all TransformsV2_Widget includes to reference the new location
+- [ ] Verify existing TransformsV2_Widget functionality is unaffected
+
+### Step 2.8 — Guided Pipeline Editor
+
+- [ ] Add "Add Command..." button to triage pipeline section
+- [ ] Implement command picker dialog/dropdown populated by `getAvailableCommands()`
+- [ ] Generate `AutoParamWidget` from selected command's `ParameterSchema`
+- [ ] Replace read-only command summary with an editable command list (each row is an expandable `AutoParamWidget` with current parameter values)
+- [ ] Edits to command rows update the `CommandSequenceDescriptor` and raw JSON view
+- [ ] Keep raw JSON editor as a collapsible section for power users
+- [ ] Handle `${variable}` references in text fields (accept both literal values and variable strings)
 
 ---
 
@@ -312,6 +356,13 @@ See [CommandSequenceCommand](index.qmd#commandsequencecommand-triage-undo) in th
 
 - [ ] Reusable toolbar component: "Copy as JSON", "Save Configuration..."
 - [ ] Attach to widgets that produce command sequences (triage session, transform widget, etc.)
+
+### Step 6.4 — CommandSequenceWidget
+
+- [ ] Standalone Qt widget (`src/WhiskerToolbox/Commands/`) for building, editing, and running
+  command sequences outside the triage workflow
+- [ ] JSON editor with validation feedback
+- [ ] Command list view with run button
 
 ---
 

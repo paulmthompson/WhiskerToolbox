@@ -144,77 +144,30 @@ global `CommandStack`. This would be an EditorState feature, not a command archi
 | `ICommand`, `CommandResult`, `CommandContext` | `src/DataManager/Commands/` | **No** |
 | `CommandDescriptor`, `CommandSequenceDescriptor` | `src/DataManager/Commands/` | **No** |
 | Concrete commands + `createCommand()` factory | `src/DataManager/Commands/` | **No** |
+| `CommandInfo` + `getAvailableCommands()` | `src/DataManager/Commands/` | **No** |
+| `ParameterSchema` (shared library) | `src/ParameterSchema/` | **No** |
+| `AutoParamWidget` (shared UI library) | `src/WhiskerToolbox/AutoParamWidget/` | Yes |
 | `TriageSession` | `src/TriageSession/` | **No** |
 | `TriageSessionWidget` | `src/WhiskerToolbox/TriageSession_Widget/` | Yes |
-| `CommandSequenceWidget` | `src/WhiskerToolbox/Commands/` | Yes |
+| `CommandSequenceWidget` | `src/WhiskerToolbox/Commands/` *(planned)* | Yes |
 
 Placing the command library inside `DataManager` (not `WhiskerToolbox`) ensures it is usable
 from unit tests, Python bindings, and future CLI tools without pulling in Qt.
 
 ## Core Types
 
-### CommandResult
+The four foundational types are defined in `src/DataManager/Commands/`:
 
-```cpp
-/// @brief Result of executing a command
-struct CommandResult {
-    bool success = false;
-    std::string error_message;
+- **`CommandResult`** — `{success, error_message, affected_keys}` with static `ok()` and
+  `error()` factory methods.
+- **`CommandContext`** — Not serialized. Holds the live `shared_ptr<DataManager>`,
+  a `runtime_variables` map for `${variable}` substitution, and an optional progress callback.
+- **`CommandDescriptor`** — Serializable single-command invocation: `command_name`,
+  optional `rfl::Generic` `parameters`, and an optional human-readable `description`.
+- **`CommandSequenceDescriptor`** — Serializable command list with optional `name`,
+  `version`, and static `variables` map for template substitution.
 
-    /// Keys of data objects that were created or modified
-    std::vector<std::string> affected_keys;
-
-    static CommandResult ok(std::vector<std::string> keys = {}) {
-        return {true, {}, std::move(keys)};
-    }
-    static CommandResult error(std::string msg) {
-        return {false, std::move(msg), {}};
-    }
-};
-```
-
-### CommandContext
-
-Runtime context provided to every command at execution time. This is **not serialized** — it is
-the environment that commands run in.
-
-```cpp
-struct CommandContext {
-    std::shared_ptr<DataManager> data_manager;
-
-    /// Runtime-resolved values (current_frame, mark_frame, etc.)
-    /// Used for ${variable} substitution in command parameters
-    std::map<std::string, std::string> runtime_variables;
-
-    /// Optional progress reporting
-    std::function<void(float)> on_progress;
-};
-```
-
-### CommandDescriptor (JSON-serializable)
-
-A single command invocation as it appears in a JSON file:
-
-```cpp
-struct CommandDescriptor {
-    std::string command_name;                                     // Factory lookup key
-    std::optional<rfl::Generic> parameters;                       // Command-specific params
-    std::optional<std::string> description;                       // Human-readable
-};
-```
-
-### CommandSequenceDescriptor
-
-A sequence of commands, optionally with template variables:
-
-```cpp
-struct CommandSequenceDescriptor {
-    std::optional<std::string> name;
-    std::optional<std::string> version;
-    std::optional<std::map<std::string, std::string>> variables;  // Static template vars
-    std::vector<CommandDescriptor> commands;
-};
-```
+Full signatures and serialization examples: [Core Types & Factory](core_types.qmd).
 
 ## ICommand Interface & Factory
 
@@ -224,87 +177,21 @@ registration is needed.
 
 ### ICommand Base Class
 
-```cpp
-/// @brief Base class for all commands operating on DataManager.
-class ICommand {
-public:
-    virtual ~ICommand() = default;
-
-    /// Execute the command against the DataManager in ctx
-    virtual CommandResult execute(CommandContext const& ctx) = 0;
-
-    /// Human-readable name used for journal entries and UI display
-    virtual std::string commandName() const = 0;
-
-    /// Serialize parameters to JSON (via rfl::json::write on the params struct)
-    virtual std::string toJson() const = 0;
-
-    /// Undo support (opt-in). Default: not undoable.
-    virtual bool isUndoable() const { return false; }
-    virtual CommandResult undo(CommandContext const& ctx) {
-        return CommandResult::error("Command does not support undo");
-    }
-
-    /// For undo merging (Phase 5). Same id = mergeable. -1 = never merge.
-    virtual int mergeId() const { return -1; }
-    virtual bool mergeWith(ICommand const& /*other*/) { return false; }
-};
-```
-
-Every command is a self-contained object: it holds its parameters, implements `execute()`, and
-optionally implements `undo()`. There is **one interface** for both execution and undo — no
+`ICommand` provides pure virtual `execute()`, `commandName()`, and `toJson()` methods, plus
+opt-in `isUndoable()` / `undo()` / `mergeId()` / `mergeWith()` (all defaulting to
+"not undoable" / "not mergeable"). There is **one interface** for both execution and undo — no
 separate `IUndoableCommand` hierarchy.
 
 ### Command Factory
 
-The only place that needs to know about all command types is a single factory function. It maps
-a `command_name` string + `rfl::Generic` parameters to a concrete `ICommand` instance:
-
-```cpp
-/// Create a command from a descriptor's name and rfl::Generic parameters.
-/// Returns nullptr if the command name is unknown or parameters fail to parse.
-std::unique_ptr<ICommand> createCommand(
-    std::string const& name,
-    rfl::Generic const& params);
-```
-
-Implementation (in one `.cpp` file):
-
-```cpp
-std::unique_ptr<ICommand> createCommand(
-    std::string const& name,
-    rfl::Generic const& params)
-{
-    auto const json = rfl::json::write(params);
-
-    if (name == "MoveByTimeRange") {
-        auto p = rfl::json::read<MoveByTimeRangeParams>(json);
-        if (!p) return nullptr;
-        return std::make_unique<MoveByTimeRange>(std::move(*p));
-    }
-    if (name == "CopyByTimeRange") {
-        auto p = rfl::json::read<CopyByTimeRangeParams>(json);
-        if (!p) return nullptr;
-        return std::make_unique<CopyByTimeRange>(std::move(*p));
-    }
-    if (name == "AddInterval") {
-        auto p = rfl::json::read<AddIntervalParams>(json);
-        if (!p) return nullptr;
-        return std::make_unique<AddInterval>(std::move(*p));
-    }
-    if (name == "ForEachKey") {
-        auto p = rfl::json::read<ForEachKeyParams>(json);
-        if (!p) return nullptr;
-        return std::make_unique<ForEachKey>(std::move(*p));
-    }
-    // ... future commands added here
-    return nullptr;
-}
-```
-
-This is deliberately simple. For a set of ~10–15 commands that grows slowly, a centralized
+`createCommand(name, params)` is the only place that needs to know about all command types. It
+maps a `command_name` string + `rfl::Generic` parameters to a concrete `ICommand` instance via
+a simple `if`-chain in `CommandFactory.cpp`. Returns `nullptr` for unknown names or
+deserialization failures. For a set of ~10–15 commands that grows slowly, a centralized
 factory is a feature, not a limitation — you can see every command the system supports in one
 place.
+
+See [Core Types & Factory](core_types.qmd) for the interface definition and current implementation.
 
 ### Why Not a Static Registry?
 
@@ -329,38 +216,14 @@ This means:
 
 ### Sequence Execution
 
-A free function executes a sequence of command descriptors:
+`executeSequence()` iterates a `CommandSequenceDescriptor`, performs two-pass
+`${variable}` substitution on each descriptor, creates commands via the factory, calls
+`execute()` in order, and collects executed commands into a `SequenceResult` for undo support.
+Stop-on-first-error behavior is configurable. Failed sequences report partial state and
+`failed_index`.
 
-```cpp
-/// Execute a sequence of command descriptors. Stops on first error by default.
-/// Returns the commands that were executed (for undo support).
-struct SequenceResult {
-    CommandResult result;
-    std::vector<std::unique_ptr<ICommand>> executed_commands;  // For undo
-};
-
-SequenceResult executeSequence(
-    CommandSequenceDescriptor const& seq,
-    CommandContext const& ctx,
-    bool stop_on_error = true);
-```
-
-Implementation steps:
-
-1. Apply static variable substitution from `seq.variables` to each descriptor's JSON.
-2. Apply runtime variable substitution from `ctx.runtime_variables`.
-3. For each descriptor, call `createCommand()` to instantiate the concrete command.
-4. Call `command->execute(ctx)`.
-5. Collect executed commands into the result (for optional undo later).
-6. Stop on first error if requested.
-
-**Error policy:** If a command fails mid-sequence, `executeSequence()` leaves partial state and
-reports which commands succeeded. The `SequenceResult::executed_commands` vector contains all
-commands that completed successfully before the failure. Automatic rollback is deferred as a
-future option.
-
-Returning the executed `ICommand` objects is key: they may hold undo state (e.g., which entity
-IDs were moved). The caller (triage session, undo stack) can keep them alive.
+Details, `SequenceResult` definition, and error policy:
+[Variable Substitution & Sequence Execution](sequence_execution.qmd).
 
 ### Variable Substitution
 
@@ -377,274 +240,211 @@ deserialization.
 
 ### Validation
 
-A `validateSequence()` function checks a command sequence for errors *before* any commands
-execute:
-
-```cpp
-struct ValidationResult {
-    bool valid = true;
-    std::vector<std::string> warnings;  // Non-fatal issues
-    std::vector<std::string> errors;    // Fatal issues that would cause execution failure
-};
-
-ValidationResult validateSequence(
-    CommandSequenceDescriptor const& seq,
-    CommandContext const& ctx);
-```
-
-Validation checks (in order of increasing specificity):
+`validateSequence()` checks a command sequence *before* any commands execute, returning a
+`ValidationResult` with `valid`, `warnings`, and `errors` fields. Checks run in order:
 
 1. **Structural:** All `command_name` values map to known commands in the factory.
 2. **Deserialization:** Parameters deserialize into the expected params struct without error.
-3. **Variable resolution:** All `${variable}` references resolve to either static variables in
-   `seq.variables` or runtime variables in `ctx.runtime_variables`.
-4. **Data key existence (optional):** Referenced source/destination/data keys exist in the
-   `DataManager`. Optional because some commands create objects on demand.
-5. **Type compatibility (optional):** For move/copy commands, source and destination resolve to
-   the same `DataTypeVariant` alternative.
+3. **Variable resolution:** All `${variable}` references resolve.
+4. **Data key existence (optional):** Referenced keys exist in `DataManager`.
+5. **Type compatibility (optional):** Source and destination have the same `DataTypeVariant`.
 
-Checks 1–3 are cheap and can run without a `DataManager`. Checks 4–5 require a live
-`DataManager` and are appropriate for pre-execution validation.
+Checks 1–3 run without a `DataManager`; checks 4–5 require a live one. Full API and
+`ForEachKey` special handling: [Validation](validation.qmd).
+
+## Command Introspection
+
+The command architecture provides **introspection** — any consumer (UI, CLI, Python bridge)
+can query what commands are available and what parameters each one requires. This enables
+guided pipeline editors, autocompletion, and schema-aware validation.
+
+### The Problem
+
+Without introspection, the only way to build a command sequence is to hand-write JSON with
+knowledge of every command name and parameter field. The centralized factory can *execute*
+commands, but cannot answer:
+
+- "What commands exist?" (no listing function)
+- "What parameters does `MoveByTimeRange` need?" (no schema)
+- "Is this command undoable? What types does it support?" (no metadata)
+
+### CommandInfo
+
+`CommandInfo` provides static metadata for each command:
+
+```cpp
+struct CommandInfo {
+    std::string name;
+    std::string description;
+    std::string category;         // "data_mutation", "meta", "persistence", etc.
+    bool supports_undo = false;
+    std::vector<std::string> supported_data_types;
+    ParameterSchema parameter_schema;  // From shared ParameterSchema library
+};
+```
+
+### Factory Query Functions
+
+Two functions are added to `CommandFactory.hpp`:
+
+```cpp
+/// Return metadata for all registered commands
+std::vector<CommandInfo> getAvailableCommands();
+
+/// Return metadata for a single command, or std::nullopt if unknown
+std::optional<CommandInfo> getCommandInfo(std::string const & name);
+```
+
+These are implemented alongside the existing `createCommand()` if-chain in
+`CommandFactory.cpp`. Adding a new command means adding one `if`-branch to `createCommand()`
+and one entry to `getAvailableCommands()` — both in the same file.
+
+### Shared ParameterSchema Library
+
+`ParameterSchema` is factored out of TransformsV2 into its own library (`src/ParameterSchema/`)
+so that both TransformsV2 and the Command Architecture can depend on it without coupling to
+each other. `ParameterSchema` depends only on reflect-cpp and the standard library.
+
+The `extractParameterSchema<T>()` function template uses `rfl::fields<T>()` to enumerate
+struct fields at compile time, producing `ParameterFieldDescriptor` objects with:
+
+- Field name, type, display name
+- Min/max constraints (from `rfl::Validator`)
+- Allowed values (for enum-like strings)
+- Default value, tooltip, group
+- Optional/advanced flags
+
+Customization is provided by `ParameterUIHints<T>` template specializations, which annotate
+schemas with tooltips, allowed values, display order, and grouping.
+
+### Shared AutoParamWidget Library
+
+`AutoParamWidget` is factored out of `TransformsV2_Widget` into its own shared library
+(`src/WhiskerToolbox/AutoParamWidget/`) so that any widget can generate parameter forms from
+a `ParameterSchema`. It maps field types to Qt widgets:
+
+| Field Type | Qt Widget |
+|---|---|
+| `float` / `double` | `QDoubleSpinBox` (with min/max from validators) |
+| `int` | `QSpinBox` |
+| `bool` | `QCheckBox` |
+| `std::string` (with `allowed_values`) | `QComboBox` |
+| `std::string` (free-form) | `QLineEdit` |
+| `std::optional<T>` | Checkbox-gated inner widget |
+
+Both TransformsV2_Widget and the Triage/Command widgets depend on this shared library.
+
+### Triage Widget: Guided Pipeline Editor
+
+With introspection, the triage widget's pipeline section evolves from a raw JSON text box
+to a guided editor. The raw JSON editor remains available for power users.
+
+**Command picker:** An "Add Command..." button opens a picker populated by
+`getAvailableCommands()`, showing command name + description, grouped by category.
+
+**Parameter form:** Selecting a command generates an `AutoParamWidget` from its
+`ParameterSchema`. The user fills in fields with typed widgets (spin boxes for frame
+numbers, line edits for data keys) with tooltips and constraints, instead of hand-typing
+JSON.
+
+**Editable command list:** Each command in the sequence is shown as an expandable row
+with an `AutoParamWidget` pre-populated from the current parameter values. Edits
+update the underlying `CommandSequenceDescriptor` and the raw JSON view.
+
+```
+┌─────────────────────────────────────────┐
+│ Pipeline: "Triage 5 Whiskers"           │
+│ [Load JSON...] [Add Command...]         │
+│                                         │
+│ ┌─ 1. MoveByTimeRange ─────────── [x] ┐│
+│ │  Source Key:      [pred_w0        ]  ││
+│ │  Destination Key: [gt_w0          ]  ││
+│ │  Start Frame:     [${mark_frame}  ]  ││
+│ │  End Frame:       [${current_frame}] ││
+│ └──────────────────────────────────────┘│
+│ ┌─ 2. AddInterval ─────────────── [x] ┐│
+│ │  Interval Key:    [tracked_regions]  ││
+│ │  Start Frame:     [${mark_frame}  ]  ││
+│ │  End Frame:       [${current_frame}] ││
+│ │  Create if Missing: [✓]             ││
+│ └──────────────────────────────────────┘│
+│                                         │
+│ [▼ Show raw JSON]                       │
+└─────────────────────────────────────────┘
+```
+
+### Design Rationale
+
+This approach reuses the centralized factory without introducing a static registry:
+
+- **No `--whole-archive` linker flags.** The factory file is the single source of truth for
+  both command creation and metadata. No RAII registration objects.
+- **Reuse proven infrastructure.** `ParameterSchema` and `AutoParamWidget` are battle-tested
+  in TransformsV2. Extracting them is a clean refactor with no new template machinery.
+- **Incremental.** Commands work without introspection. The factory query functions and
+  `CommandInfo` are additive — existing code is unaffected.
+- **UI-agnostic.** `CommandInfo` and `ParameterSchema` are non-Qt. Only `AutoParamWidget`
+  requires Qt, and it's a separate library. CLI tools and the Python bridge can use
+  `getAvailableCommands()` directly.
 
 ## Commands
 
+The command library currently has four implemented commands (Phase 1) and three planned for
+future phases:
+
+| Command | Phase | Status | Description |
+|---------|-------|--------|-------------|
+| `MoveByTimeRange` | 1 | Done | Move entities in `[start, end]` between same-type data objects; undoable |
+| `CopyByTimeRange` | 1 | Done | Copy entities without modifying source; wider type support |
+| `AddInterval` | 1 | Done | Append interval to `DigitalIntervalSeries`, create if missing |
+| `ForEachKey` | 1 | Done | Meta-command: iterate a list, bind each to `${variable}`, run sub-commands |
+| `SaveData` | 3 | Planned | Uniform save via `SaverRegistry`; atomic write-ahead pattern |
+| `LoadData` | 3 | Planned | Wraps `LoaderRegistry` for uniform dispatch |
+| `RunTransformPipeline` | future | Planned | Bridges to TransformsV2 for element-level transforms |
+
 ### MoveByTimeRange
 
-Moves all entries in `[start_frame, end_frame]` from one data object to another of the same
-type. Uses `DataManager::getDataVariant()` to resolve keys to type-erased `DataTypeVariant`
-values, then dispatches via `std::visit` + `if constexpr` to call the appropriate typed
-`moveByEntityIds()` method.
-
-**Type support:** `LineData`, `PointData`, `MaskData` (via `RaggedTimeSeries<T>`), and
-`DigitalEventSeries` support `moveByEntityIds()`. Other types (`DigitalIntervalSeries`,
-`AnalogTimeSeries`, `MediaData`, `TensorData`) do not — the command returns an error for
-unsupported types.
-
-```cpp
-struct MoveByTimeRangeParams {
-    std::string source_key;
-    std::string destination_key;
-    int64_t start_frame;
-    int64_t end_frame;
-};
-
-class MoveByTimeRange : public ICommand {
-public:
-    MoveByTimeRangeParams params;
-
-    explicit MoveByTimeRange(MoveByTimeRangeParams p) : params(std::move(p)) {}
-
-    std::string commandName() const override { return "MoveByTimeRange"; }
-    std::string toJson() const override { return rfl::json::write(params); }
-    bool isUndoable() const override { return true; }
-
-    CommandResult execute(CommandContext const& ctx) override {
-        auto src_var = ctx.data_manager->getDataVariant(params.source_key);
-        auto dst_var = ctx.data_manager->getDataVariant(params.destination_key);
-        if (!src_var || !dst_var)
-            return CommandResult::error("Key not found");
-        if (src_var->index() != dst_var->index())
-            return CommandResult::error("Source and destination must be the same data type");
-
-        auto const start = TimeFrameIndex(params.start_frame);
-        auto const end = TimeFrameIndex(params.end_frame);
-
-        return std::visit([&](auto& src_ptr) -> CommandResult {
-            using DataT = std::decay_t<decltype(*src_ptr)>;
-            auto dst_ptr = ctx.data_manager->getData<DataT>(
-                params.destination_key);
-
-            if constexpr (requires(DataT& s, DataT& d,
-                          std::unordered_set<EntityId> const& ids) {
-                              s.moveByEntityIds(d, ids, NotifyObservers::yes);
-                          }) {
-                _moved_ids = getEntityIdsInRange(*src_ptr, start, end);
-                src_ptr->moveByEntityIds(
-                    *dst_ptr, _moved_ids, NotifyObservers::yes);
-                return CommandResult::ok(
-                    {params.source_key, params.destination_key});
-            } else {
-                return CommandResult::error(
-                    "Data type does not support move operations");
-            }
-        }, *src_var);
-    }
-
-    CommandResult undo(CommandContext const& ctx) override {
-        // Move entities back: destination → source using captured _moved_ids
-        // (symmetric inverse of execute)
-        ...
-    }
-
-private:
-    std::unordered_set<EntityId> _moved_ids;  // Captured during execute() for undo
-};
-```
-
-Note how `_moved_ids` is populated during `execute()` and consumed during `undo()`. The command
-object itself is the undo state — no external bookkeeping needed.
+Moves all entries in `[start_frame, end_frame]` from source to destination via
+`moveByEntityIds()`. Captures moved entity IDs during `execute()` for symmetric `undo()` —
+the command object *is* the undo state. Supported types: `LineData`, `PointData`, `MaskData`,
+`DigitalEventSeries`.
 
 #### `getEntityIdsInRange` Free Functions
 
-The `getEntityIdsInRange()` helper is a set of **free functions** (not methods on the data
-types) that leverage existing `std::views` to collect entity IDs in a time range:
-
-```cpp
-/// For RaggedTimeSeries types (LineData, PointData, MaskData).
-template<typename RaggedT>
-    requires requires(RaggedT const& r) { r.flattened_data(); }
-std::unordered_set<EntityId> getEntityIdsInRange(
-    RaggedT const& data, TimeFrameIndex start, TimeFrameIndex end);
-
-/// For DigitalEventSeries.
-std::unordered_set<EntityId> getEntityIdsInRange(
-    DigitalEventSeries const& data, TimeFrameIndex start, TimeFrameIndex end);
-
-/// For DigitalIntervalSeries.
-std::unordered_set<EntityId> getEntityIdsInRange(
-    DigitalIntervalSeries const& data, TimeFrameIndex start, TimeFrameIndex end);
-```
-
-These are pure query functions with no side effects. They live in `src/DataManager/Commands/`
-alongside the commands that use them. No modifications to the core data types are needed — they
-operate on the existing view APIs.
-
-Example JSON:
-
-```json
-{
-    "command_name": "MoveByTimeRange",
-    "parameters": {
-        "source_key": "predicted_whisker_0",
-        "destination_key": "gt_whisker_0",
-        "start_frame": 42000,
-        "end_frame": 43500
-    }
-}
-```
+Pure query helpers that collect `EntityId`s in a time range. Template for
+`RaggedTimeSeries<T>` plus overloads for `DigitalEventSeries` and `DigitalIntervalSeries`. See
+[getEntityIdsInRange Helpers](get_entity_ids_in_range.qmd).
 
 ### CopyByTimeRange
 
-Same shape as `MoveByTimeRange` but uses `copyByEntityIds()`. Source is not modified. Supports a
-wider set of types: `DigitalIntervalSeries` supports `copyByEntityIds()` but not
-`moveByEntityIds()` (due to interval merging losing entity IDs).
+Same shape as `MoveByTimeRange` but uses `copyByEntityIds()`. Source is unmodified. Wider type
+support: `DigitalIntervalSeries` supports copy but not move.
 
-### SaveData
+### SaveData *(Phase 3 — planned)*
 
-Wraps existing saver functions behind a uniform command interface.
-
-```cpp
-struct SaveDataParams {
-    std::string data_key;
-    std::string format;       // "csv_single", "csv_multi", "hdf5", "binary", etc.
-    std::string path;
-    std::optional<rfl::Generic> format_options;  // Forwarded to format-specific saver
-};
-```
-
-Example JSON:
-
-```json
-{
-    "command_name": "SaveData",
-    "parameters": {
-        "data_key": "gt_whisker_0",
-        "format": "csv_single",
-        "path": "/data/output/gt_whisker_0.csv",
-        "format_options": {"delimiter": ",", "precision": 2}
-    }
-}
-```
-
-The `SaveData` command dispatches to the appropriate saver based on the `format` string. A
-`SaverRegistry` (analogous to `LoaderRegistry`) maps format strings to saver functions.
+Will wrap existing savers behind a `SaverRegistry` with an atomic write-ahead pattern.
+Parameters: `data_key`, `format`, `path`, optional `format_options`.
 
 ### AddInterval
 
-Appends an interval to a `DigitalIntervalSeries` in `DataManager`.
+Appends an interval to a `DigitalIntervalSeries`. When `create_if_missing = true` and the key
+does not exist, creates an empty series with the default `TimeKey("time")`.
 
-```cpp
-struct AddIntervalParams {
-    std::string interval_key;
-    int64_t start_frame;
-    int64_t end_frame;
-    bool create_if_missing = true;  // Create the series if it doesn't exist
-};
-```
+### LoadData *(Phase 3 — planned)*
 
-### LoadData (future)
+Will wrap `LoaderRegistry` for uniform dispatch. Parameters: `data_key`, `data_type`,
+`filepath`, `format`, optional `format_options`.
 
-```cpp
-struct LoadDataParams {
-    std::string data_key;
-    std::string data_type;    // "LineData", "MaskData", etc.
-    std::string filepath;
-    std::string format;
-    std::optional<rfl::Generic> format_options;
-};
-```
+### RunTransformPipeline *(future)*
 
-### RunTransformPipeline (future)
-
-```cpp
-struct RunPipelineParams {
-    std::string input_key;
-    std::string output_key;
-    std::optional<rfl::Generic> pipeline;       // Inline PipelineDescriptor
-    std::optional<std::string> pipeline_file;   // Path to pipeline JSON
-};
-```
+Will bridge the command system to TransformsV2. Parameters: `input_key`, `output_key`, and
+either an inline `PipelineDescriptor` or a `pipeline_file` path.
 
 ### ForEachKey (Meta-Command)
 
-Iterates over a list of values and executes a sub-sequence of commands for each, binding the
-current element to a template variable. This eliminates verbose repetition in pipelines that
-operate on multiple data objects identically.
-
-```cpp
-struct ForEachKeyParams {
-    std::vector<std::string> items;          // List of values to iterate
-    std::string variable;                    // Variable name bound to each item
-    std::vector<CommandDescriptor> commands;  // Sub-commands to execute per item
-};
-```
-
-`ForEachKey` is itself an `ICommand`. Its `execute()` implementation iterates `items`, binds
-each value to `${variable}` in the runtime variables, and calls `createCommand()` + `execute()`
-for each sub-command.
-
-Example — triage 5 whiskers with one meta-command:
-
-```json
-{
-    "command_name": "ForEachKey",
-    "parameters": {
-        "items": ["whisker_0", "whisker_1", "whisker_2", "whisker_3", "whisker_4"],
-        "variable": "whisker",
-        "commands": [
-            {
-                "command_name": "MoveByTimeRange",
-                "parameters": {
-                    "source_key": "${pred_prefix}${whisker}",
-                    "destination_key": "${gt_prefix}${whisker}",
-                    "start_frame": "${mark_frame}",
-                    "end_frame": "${current_frame}"
-                }
-            },
-            {
-                "command_name": "SaveData",
-                "parameters": {
-                    "data_key": "${gt_prefix}${whisker}",
-                    "format": "csv_single",
-                    "path": "${output_dir}/${gt_prefix}${whisker}.csv"
-                }
-            }
-        ]
-    }
-}
-```
-
-For undo, `ForEachKey` collects all executed sub-commands and undoes them in reverse order.
+Iterates a list of string values, binds each to `${variable}`, and executes sub-commands per
+item. Undo reverses all undoable sub-commands in reverse order. See
+[Concrete Commands](commands.qmd) for the full parameter struct and JSON example.
 
 ## Triage Session
 
@@ -662,53 +462,15 @@ IDLE  ──[Mark]──►  MARKING  ──[Commit]──►  IDLE
 
 ### Core Class
 
-```cpp
-class TriageSession {
-public:
-    enum class State { Idle, Marking };
-
-    // Configuration (serialized with EditorState)
-    void setPipeline(CommandSequenceDescriptor pipeline);
-    CommandSequenceDescriptor const& pipeline() const;
-
-    // State machine
-    void mark(TimeFrameIndex frame);
-    void recall();  // Reset to Idle; caller should jump to mark frame
-    CommandResult commit(TimeFrameIndex current_frame, std::shared_ptr<DataManager> dm);
-
-    // Query
-    State state() const;
-    TimeFrameIndex markFrame() const;  // Only valid when state == Marking
-
-private:
-    CommandSequenceDescriptor _pipeline;
-    State _state = State::Idle;
-    TimeFrameIndex _mark_frame;
-};
-```
+`TriageSession` provides `setPipeline()`, `mark()`, `recall()`, and `commit()` along with
+state/mark-frame accessors and `lastCommitCommands()` / `takeLastCommitCommands()` for undo
+support. Full API: [TriageSession Core Library](../../TriageSession/index.qmd).
 
 ### Commit Implementation
 
-On `commit()`, the session populates `CommandContext::runtime_variables` with the mark and
-current frame, then delegates to the free `executeSequence()` function:
-
-```cpp
-CommandResult TriageSession::commit(TimeFrameIndex current_frame,
-                                     std::shared_ptr<DataManager> dm) {
-    CommandContext ctx;
-    ctx.data_manager = dm;
-    ctx.runtime_variables["mark_frame"] = std::to_string(_mark_frame.getValue());
-    ctx.runtime_variables["current_frame"] = std::to_string(current_frame.getValue());
-
-    auto [result, commands] = executeSequence(_pipeline, ctx);
-    if (result.success) {
-        _state = State::Idle;
-    }
-    return result;
-}
-```
-
-The triage session has no knowledge of what commands are in its pipeline.
+On `commit()`, the session populates `CommandContext::runtime_variables` with `mark_frame` and
+`current_frame`, then delegates to `executeSequence()`. The triage session has no knowledge
+of what commands are in its pipeline.
 
 ### Tracked Regions
 
@@ -884,35 +646,10 @@ A complete pipeline for triaging 5 whisker line objects:
 
 ### TriageSessionState (EditorState subclass)
 
-The triage session widget follows the standard EditorState pattern.
-Source: `src/WhiskerToolbox/TriageSession_Widget/Core/TriageSessionState.hpp`
-
-```cpp
-struct TriageSessionStateData {
-    std::string instance_id;                                   // Preserved across serialization
-    std::string display_name = "Triage Session";
-    std::optional<std::string> pipeline_json;                  // CommandSequenceDescriptor JSON
-    std::string tracked_regions_key = "tracked_regions";       // DigitalIntervalSeries key
-    // State machine is NOT serialized — always starts Idle on load
-};
-
-class TriageSessionState : public EditorState {
-    Q_OBJECT
-public:
-    QString getTypeName() const override { return "TriageSessionWidget"; }
-    std::string toJson() const override;
-    bool fromJson(std::string const& json) override;
-
-    void setPipelineJson(std::string const& json);
-    std::optional<std::string> pipelineJson() const;
-
-    void setTrackedRegionsKey(std::string const& key);
-    std::string trackedRegionsKey() const;
-
-signals:
-    void pipelineChanged();
-};
-```
+Follows the standard EditorState pattern. `TriageSessionStateData` serializes the pipeline
+JSON and tracked-regions key; the state machine always resets to `Idle` on workspace load.
+Full EditorState class, registration, and Qt UI details:
+[TriageSession Widget](../../ui/TriageSession_Widget/index.qmd).
 
 ## Tracked Regions for Machine Learning
 
