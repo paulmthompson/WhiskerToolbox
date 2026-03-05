@@ -1,0 +1,152 @@
+---
+title: "TooltipManager"
+format: html
+---
+
+# TooltipManager Overview
+
+The **TooltipManager** library (`Plots/Common/TooltipManager/`) provides a shared tooltip lifecycle manager for all plot widgets. It encapsulates the dwell-timer pattern, hit-test delegation, and content display logic that would otherwise be duplicated across every OpenGL plot widget.
+
+# Problem
+
+Every interactive plot widget needs tooltips that:
+
+1. **Wait for stationarity** — only fire after the cursor has been still for a dwell interval (e.g. 500 ms), avoiding expensive per-frame computation
+2. **Hit test** — determine what is under the cursor using spatial data structures (QuadTree, kd-tree, etc.)
+3. **Generate content** — produce text or rendered imagery (glyphs, mini-plots) describing the hovered element
+4. **Suppress during interaction** — disable tooltips while panning, zooming, or dragging
+5. **Clean up on leave** — stop timers and hide popups when the mouse exits the widget
+
+Without a shared component, each widget re-implements the same `QTimer` + `std::optional<QPoint>` + `onTooltipTimer()` + `leaveEvent()` pattern with minor content variations.
+
+# Architecture
+
+```
+WhiskerToolbox/Plots/Common/TooltipManager/
+├── CMakeLists.txt
+├── PlotTooltipManager.hpp   # Public API, callback types, data structs
+└── PlotTooltipManager.cpp   # Timer management, display logic, PixmapPopup
+```
+
+## Key Types
+
+| Type | Purpose |
+|------|---------|
+| `PlotTooltipHit` | Result of a hit test — world coordinates + arbitrary `std::any` payload |
+| `PlotTooltipContent` | Display content — plain text or `QPixmap` for rich tooltips |
+| `TooltipHitTestFn` | Callback: `QPoint → std::optional<PlotTooltipHit>` |
+| `TooltipTextFn` | Callback: `PlotTooltipHit → QString` |
+| `TooltipContentFn` | Callback: `PlotTooltipHit → PlotTooltipContent` |
+| `PlotTooltipManager` | QObject owning the dwell timer and display lifecycle |
+
+## Callback Design
+
+The manager delegates two concerns to the consuming widget via callbacks:
+
+1. **Hit test provider** (`TooltipHitTestFn`) — Called when the dwell timer fires. Performs a spatial query at the pending screen position to determine if anything is under the cursor. Returns `std::nullopt` on miss.
+
+2. **Content provider** (`TooltipContentFn` or `TooltipTextFn`) — Called with the hit result to generate display content. For simple cases, `setTextProvider()` wraps a text callback. For rich tooltips (glyphs, mini-plots), use `setContentProvider()` which can return a `QPixmap`.
+
+Both callbacks are only invoked after the dwell timer fires, so expensive operations (QuadTree lookups, pixmap rendering) never run during rapid mouse movement.
+
+## Lifecycle
+
+```
+mouseMoveEvent → onMouseMove(pos, is_interacting)
+                      │
+                      ├── if interacting: stop timer, hide tooltip
+                      │
+                      └── else: restart dwell timer with new position
+                                      │
+                                      ▼ (after dwell_ms)
+                              onDwellTimerFired()
+                                      │
+                              hit_test_fn(pos) → hit?
+                                      │
+                              content_fn(hit) → content?
+                                      │
+                              display (QToolTip or PixmapPopup)
+                                      
+leaveEvent → onLeave() → stop timer, hide tooltip
+```
+
+## Display Modes
+
+- **Text**: Uses `QToolTip::showText()` — zero allocation, native look
+- **Pixmap**: Uses a lightweight `PixmapPopup` QWidget with `Qt::ToolTip` window flags. Positioned near the cursor with screen-boundary clamping. Created lazily on first use.
+
+# Usage
+
+## Text Tooltip (EventPlotWidget example)
+
+```cpp
+// Constructor
+_tooltip_mgr = std::make_unique<PlotTooltipManager>(this);
+
+_tooltip_mgr->setHitTestProvider(
+    [this](QPoint pos) -> std::optional<PlotTooltipHit> {
+        auto hit = findEventNear(pos);
+        if (!hit) return std::nullopt;
+        QPointF world = screenToWorld(pos);
+        PlotTooltipHit result;
+        result.world_x = static_cast<float>(world.x());
+        result.world_y = static_cast<float>(world.y());
+        result.user_data = *hit;
+        return result;
+    });
+
+_tooltip_mgr->setTextProvider(
+    [](PlotTooltipHit const & hit) -> QString {
+        auto const & data =
+            std::any_cast<std::pair<int, std::string> const &>(hit.user_data);
+        return QString("Trial %1\nTime: %2 ms")
+            .arg(data.first + 1)
+            .arg(hit.world_x, 0, 'f', 1);
+    });
+
+// mouseMoveEvent
+_tooltip_mgr->onMouseMove(event->pos(), _is_panning);
+
+// leaveEvent
+_tooltip_mgr->onLeave();
+```
+
+## Rich Tooltip (future — mini-plot example)
+
+```cpp
+_tooltip_mgr->setContentProvider(
+    [this](PlotTooltipHit const & hit) -> PlotTooltipContent {
+        PlotTooltipContent content;
+        content.pixmap = renderMiniRasterPlot(hit);
+        return content;
+    });
+```
+
+## Configuration
+
+```cpp
+_tooltip_mgr->setDwellTime(300);     // ms before tooltip appears
+_tooltip_mgr->setEnabled(false);     // disable tooltips
+_tooltip_mgr->hide();                // dismiss immediately (e.g. on scene rebuild)
+```
+
+# Consuming Widgets
+
+| Widget | Hit Test Source | Content Type | Status |
+|--------|---------------|-------------|--------|
+| EventPlotWidget | `SceneHitTester` (QuadTree) | Text (trial + time) | Implemented |
+| ScatterPlotWidget | `SceneHitTester` (QuadTree) | Text (coordinates) | Planned |
+| HeatmapWidget | Row index from Y coordinate | Pixmap (mini PSTH + raster) | Planned |
+| LinePlotWidget | Time interpolation | Pixmap (distribution histogram) | Planned |
+
+# Dependencies
+
+- `Qt6::Widgets`, `Qt6::Core`, `Qt6::Gui` — for `QTimer`, `QToolTip`, `QLabel`, `QPixmap`
+- No dependency on `CorePlotting`, `DataManager`, or any widget-specific code
+
+# See Also
+
+- [EventPlotWidget](../../EventPlotWidget/index.qmd) — First consumer of PlotTooltipManager
+- [HeatmapWidget Roadmap](../../HeatmapWidget/roadmap.qmd) — Phase 8: Tooltip with stacked PSTH + raster
+- [ScatterPlotWidget Roadmap](../../ScatterPlotWidget/roadmap.qmd) — Phase 8: Hover tooltip
+- [LinePlotWidget Roadmap](../../LinePlotWidget/roadmap.qmd) — Phase 4: Distribution tooltips

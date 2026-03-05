@@ -106,6 +106,9 @@ add_subdirectory(Plots/Common/HorizontalAxisWidget)
 add_subdirectory(Plots/Common/GlyphStyleWidget)
 add_subdirectory(Plots/Common/LineStyleControls)
 
+# Qt - Shared tooltip manager for plot widgets
+add_subdirectory(Plots/Common/TooltipManager)
+
 # DataManager, GatherResult, PlotAlignmentWidget - shared firing-rate estimation (no Qt)
 add_subdirectory(Plots/Common/EventRateEstimation)
 

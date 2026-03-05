@@ -109,6 +109,9 @@ website:
             - section: "Plot Widgets"
               href: developer/ui/Plots/plot_widget_guide.md
               contents:
+                  - section: "Common"
+                    contents:
+                      - developer/ui/Plots/Common/TooltipManager/index.qmd
                   - developer/ui/Plots/3DPlot/index.qmd
                   - developer/ui/Plots/ACFWidget/index.qmd
                   - developer/ui/Plots/DataViewerWidget/index.qmd

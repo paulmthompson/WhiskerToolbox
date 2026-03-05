@@ -32,7 +32,7 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Per-key line style**: Each `LineData` key has its own `CorePlotting::LineStyleData` (color, thickness, alpha) stored in `OnionSkinViewStateData::line_key_line_styles`; managed at runtime via `LineStyleState` QObject wrappers; editable in a collapsible "Line Style Options" section in the properties panel via `LineStyleControls`; \`alpha\` field sets the maximum alpha before temporal decay; serialized/deserialized as part of the JSON state
 - **Per-key mask contour style**: Each `MaskData` key has its own `CorePlotting::LineStyleData` (color, thickness, alpha) stored in `OnionSkinViewStateData::mask_key_line_styles`; managed at runtime via `LineStyleState` QObject wrappers; editable in a collapsible "Mask Style Options" section in the properties panel via `LineStyleControls`; `alpha` field sets the maximum alpha before temporal decay; serialized/deserialized as part of the JSON state
 
-**Not yet implemented**: SVG export and the cross-widget shared options infrastructure described below.
+**Not yet implemented**: SVG export.
 
 ---
 ## Phase 4: SVG Export
@@ -100,62 +100,8 @@ Add an "Export" section to the properties panel:
 
 ---
 
-## Phase 6: Shared Visual Options Infrastructure
-
-**Status**: **Largely complete** — the core shared glyph infrastructure and the full line style
-infrastructure are both implemented and in use.
-
-The following shared components now exist and are used by OnionSkinViewWidget,
-TemporalProjectionViewWidget, and EventPlotWidget:
-
-| Component | Location | Status |
-|-----------|----------|--------|
-| `CorePlotting::GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` | **Complete** |
-| `CorePlotting::GlyphStyleData` struct | `CorePlotting/DataTypes/GlyphStyleData.hpp` | **Complete** |
-| `CorePlotting::toRenderableGlyphType()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` | **Complete** |
-| `CorePlotting::hexColorToVec4()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` | **Complete** |
-| `GlyphStyleState` | `Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp` | **Complete** |
-| `GlyphStyleControls` | `Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp` | **Complete** |
-| `CorePlotting::LineStyleData` struct | `CorePlotting/DataTypes/LineStyleData.hpp` | **Complete** |
-| `LineStyleState` | `Plots/Common/LineStyleControls/Core/LineStyleState.hpp` | **Complete** |
-| `LineStyleControls` | `Plots/Common/LineStyleControls/LineStyleControls.hpp` | **Complete** |
-| `ColorButton` | `Plots/Common/` | Not started (color button is embedded in `LineStyleControls`) |
-
-### 6.2 Shared UI Widgets
-
-Create reusable property editor widgets:
-
-**`GlyphOptionsWidget`** — A single row or compact section with: glyph type combo, size spinbox,
-color button. Emits `optionsChanged(PointGlyphOptions)`. Used inline in per-key data tables.
-
-**`LineOptionsWidget`** — A single row or compact section with: width spinbox, color button.
-Emits `optionsChanged(LineRenderOptions)`. Used inline in per-key data tables.
-
-These widgets would replace the ad-hoc inline editors in each properties panel, ensuring
-consistent look and behavior across:
-
-- OnionSkinViewWidget (this widget)
-- [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/roadmap.qmd) (Phase 1, 2)
-- [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) (Phase 4)
-- [EventPlotWidget](../EventPlotWidget/roadmap.qmd) (Phase 3)
-
-### 6.3 Migration Path
-
-1. Extract `PointGlyphType` and `PointGlyphOptions` to `CorePlotting/DataTypes/`
-2. Extract `LineRenderOptions` to `CorePlotting/DataTypes/`
-3. Create `GlyphOptionsWidget` and `LineOptionsWidget` in `Plots/Common/`
-4. Refactor existing per-key tables in [LinePlotWidget](../LinePlotWidget/index.qmd) to use shared widgets
-5. Implement Phases 1–3 of this roadmap using the shared infrastructure
-6. Adopt in TemporalProjection / ScatterPlot / EventPlot as those roadmap phases are reached
-
----
-
 ## Priority Order
 
 | Priority | Phase | Status | Dependency |
 |----------|-------|--------|------------|
-| — | Phase 2 — Per-Key Line Options | **Complete** | — |
-| — | Phase 3 — Per-Key Mask Options | **Complete** | Phase 2 |
-| — | Phase 5 — Observer Improvements | **Complete** | — |
 | 1 | Phase 4 — SVG Export | Not started | Phases 2–3 (export should capture per-key styles) |
-| 2 | Phase 6 — Shared Options Infrastructure | Partially complete | — |

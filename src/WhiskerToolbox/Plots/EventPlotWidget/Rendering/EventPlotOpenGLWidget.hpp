@@ -28,17 +28,17 @@
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
+#include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "GatherResult/GatherResult.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
-#include <QTimer>
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -166,11 +166,6 @@ private slots:
      */
     void onViewStateChanged();
 
-    /**
-     * @brief Handle tooltip timer
-     */
-    void onTooltipTimer();
-
 private:
     // State management
     std::shared_ptr<EventPlotState> _state;
@@ -180,8 +175,8 @@ private:
     PlottingOpenGL::SceneRenderer _scene_renderer;
     CorePlotting::RenderableScene _scene;
     CorePlotting::RowLayoutStrategy _layout_strategy;
-    CorePlotting::LayoutResponse _layout_response;  ///< Cached for hit testing
-    CorePlotting::SceneHitTester _hit_tester;       ///< For single-click event selection
+    CorePlotting::LayoutResponse _layout_response;///< Cached for hit testing
+    CorePlotting::SceneHitTester _hit_tester;     ///< For single-click event selection
     bool _scene_dirty{true};
     bool _opengl_initialized{false};
 
@@ -193,14 +188,12 @@ private:
     // Interaction state
     bool _is_panning{false};
     QPoint _last_mouse_pos;
-    QPoint _click_start_pos;                   ///< For click-vs-drag detection
-    static constexpr int DRAG_THRESHOLD = 5;   ///< Pixels moved to count as drag
-    bool _tooltips_enabled{true};
-    QTimer * _tooltip_timer{nullptr};
-    std::optional<QPoint> _pending_tooltip_pos;
+    QPoint _click_start_pos;                ///< For click-vs-drag detection
+    static constexpr int DRAG_THRESHOLD = 5;///< Pixels moved to count as drag
+    std::unique_ptr<WhiskerToolbox::Plots::PlotTooltipManager> _tooltip_mgr;
 
     // Cached alignment times for relative→absolute time conversion
-    std::vector<int64_t> _cached_alignment_times;  ///< Per-trial alignment times (absolute)
+    std::vector<int64_t> _cached_alignment_times;///< Per-trial alignment times (absolute)
 
     // Widget dimensions
     int _widget_width{1};
@@ -251,7 +244,7 @@ private:
      *         event_name is the plot event name (from EventPlotState), not the DataManager key.
      */
     [[nodiscard]] std::optional<std::pair<int, std::string>> findEventNear(
-        QPoint const & screen_pos, float tolerance_pixels = 10.0f) const;
+            QPoint const & screen_pos, float tolerance_pixels = 10.0f) const;
 
     /**
      * @brief Handle single-click selection at the given position
@@ -278,8 +271,8 @@ private:
      * @return GatherResult with trial-aligned views, or empty on error
      */
     [[nodiscard]] GatherResult<DigitalEventSeries> gatherTrialData(
-        std::shared_ptr<DigitalEventSeries> const & source,
-        std::string const & source_key) const;
+            std::shared_ptr<DigitalEventSeries> const & source,
+            std::string const & source_key) const;
 
     /**
      * @brief Compute sort indices for gathered trial data
@@ -292,9 +285,9 @@ private:
      * @param mode The sorting mode to apply
      * @return Permutation vector, or empty if no reordering needed
      */
-    [[nodiscard]] std::vector<size_t> computeSortIndices(
-        GatherResult<DigitalEventSeries> const & gathered,
-        TrialSortMode mode) const;
+    [[nodiscard]] static std::vector<size_t> computeSortIndices(
+            GatherResult<DigitalEventSeries> const & gathered,
+            TrialSortMode mode) ;
 
     /**
      * @brief Update OpenGL clear color from state background color
@@ -302,4 +295,4 @@ private:
     void updateBackgroundColor();
 };
 
-#endif // EVENTPLOT_OPENGLWIDGET_HPP
+#endif// EVENTPLOT_OPENGLWIDGET_HPP
