@@ -199,5 +199,6 @@ private slots:
     void openOnionSkinViewWidget();
     void openPythonWidget();
     void openTransformsV2Widget();
+    void openTriageSessionWidget();
 };
 #endif// MAINWINDOW_HPP

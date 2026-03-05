@@ -417,6 +417,7 @@ void MainWindow::_createActions() {
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
     connect(ui->actionTransforms_V2, &QAction::triggered, this, &MainWindow::openTransformsV2Widget);
+    connect(ui->actionTriage_Session, &QAction::triggered, this, &MainWindow::openTriageSessionWidget);
     connect(ui->actionTerminal_Output, &QAction::triggered, this, &MainWindow::openTerminalWidget);
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
@@ -835,6 +836,10 @@ void MainWindow::openDataTransforms() {
 
 void MainWindow::openTransformsV2Widget() {
     openEditor(QStringLiteral("TransformsV2Widget"));
+}
+
+void MainWindow::openTriageSessionWidget() {
+    openEditor(QStringLiteral("TriageSessionWidget"));
 }
 
 void MainWindow::openDataImport() {

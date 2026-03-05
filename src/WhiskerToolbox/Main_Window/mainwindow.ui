@@ -92,6 +92,7 @@
     <addaction name="actionNew_Media_Widget"/>
     <addaction name="actionData_Transforms"/>
     <addaction name="actionTransforms_V2"/>
+    <addaction name="actionTriage_Session"/>
     <addaction name="actionTerminal_Output"/>
     <addaction name="actionZone_Layout_Manager"/>
     <addaction name="actionTest_Widget"/>
@@ -324,6 +325,11 @@
   <action name="actionPython_Console">
    <property name="text">
     <string>Python Console</string>
+   </property>
+  </action>
+  <action name="actionTriage_Session">
+   <property name="text">
+    <string>Triage Session</string>
    </property>
   </action>
  </widget>
