@@ -1,0 +1,94 @@
+---
+title: "Validation"
+---
+
+## Overview
+
+The validation system provides pre-execution checking of command sequences. It catches
+structural errors, deserialization failures, unresolved variables, missing data keys, and
+type mismatches — all *before* any command runs.
+
+**Source files:**
+
+- `src/DataManager/Commands/Validation.hpp` — public API
+- `src/DataManager/Commands/Validation.cpp` — implementation
+- `src/DataManager/Commands/Validation.test.cpp` — unit tests
+
+## API
+
+### `ValidationResult`
+
+```cpp
+struct ValidationResult {
+    bool valid = true;
+    std::vector<std::string> warnings;  // Non-fatal issues
+    std::vector<std::string> errors;    // Fatal issues
+};
+```
+
+### `validateSequence()`
+
+```cpp
+ValidationResult validateSequence(
+    CommandSequenceDescriptor const& seq,
+    CommandContext const& ctx);
+```
+
+Runs five checks in order:
+
+| # | Check | Requires DataManager | Severity |
+|---|-------|---------------------|----------|
+| 1 | **Structural** — command name is a known factory key | No | Error |
+| 2 | **Deserialization** — parameters parse into the expected struct | No | Error |
+| 3 | **Variable resolution** — all `${variable}` references resolve | No | Error |
+| 4 | **Data key existence** — referenced source/destination keys exist | Yes | Warning |
+| 5 | **Type compatibility** — source and destination have the same type | Yes | Error |
+
+Checks 1–3 are cheap and work without a `DataManager`. Checks 4–5 only run when
+`ctx.data_manager` is non-null.
+
+### `findUnresolvedVariables()`
+
+```cpp
+std::vector<std::string> findUnresolvedVariables(std::string const& input);
+```
+
+Returns variable names (without `${}` delimiters) for any unresolved references in the input
+string.
+
+### `isKnownCommandName()`
+
+```cpp
+bool isKnownCommandName(std::string const& name);
+```
+
+Returns `true` if the name maps to a registered command in the factory. Declared in
+`CommandFactory.hpp`.
+
+## ForEachKey Handling
+
+`ForEachKey` commands receive special treatment during validation:
+
+- The iteration variable (e.g. `item` in `"variable": "item"`) is excluded from the unresolved
+  variable check, since it will be bound at runtime for each iteration.
+- Sub-commands are validated recursively with the iteration variable set to a placeholder value.
+- Errors and warnings from sub-commands are prefixed with the parent command index for
+  traceability.
+
+## Usage Example
+
+```cpp
+commands::CommandSequenceDescriptor seq = loadFromJson(...);
+commands::CommandContext ctx;
+ctx.data_manager = &dm;  // Optional: enables checks 4–5
+
+auto result = commands::validateSequence(seq, ctx);
+if (!result.valid) {
+    for (auto const& err : result.errors) {
+        log_error(err);
+    }
+}
+for (auto const& warn : result.warnings) {
+    log_warning(warn);
+}
+```

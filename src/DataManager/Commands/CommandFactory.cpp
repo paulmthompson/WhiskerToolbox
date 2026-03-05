@@ -15,6 +15,11 @@
 
 namespace commands {
 
+bool isKnownCommandName(std::string const & name) {
+    return name == "MoveByTimeRange" || name == "CopyByTimeRange" ||
+           name == "AddInterval" || name == "ForEachKey";
+}
+
 std::unique_ptr<ICommand> createCommand(
         std::string const & name,
         rfl::Generic const & params) {

@@ -51,6 +51,8 @@ set(DATAMANAGER_SOURCES
         Commands/AddInterval.cpp
         Commands/ForEachKey.hpp
         Commands/ForEachKey.cpp
+        Commands/Validation.hpp
+        Commands/Validation.cpp
 
         loaders/loading_utils.hpp
 

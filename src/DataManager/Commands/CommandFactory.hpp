@@ -15,6 +15,11 @@ namespace commands {
 
 class ICommand;
 
+/// @brief Check if a command name is recognized by the factory.
+///
+/// Returns true for all command names that createCommand() can instantiate.
+bool isKnownCommandName(std::string const & name);
+
 /// @brief Create a command from a descriptor's name and rfl::Generic parameters.
 ///
 /// Returns nullptr if the command name is unknown or parameters fail to parse.

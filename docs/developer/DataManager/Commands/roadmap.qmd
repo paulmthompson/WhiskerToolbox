@@ -124,10 +124,12 @@ See [Commands](index.qmd#commands) in the design document.
 
 ### Step 1.9 — Validation (Stretch Goal)
 
-- [ ] `validateSequence()` function with `ValidationResult` (warnings + errors)
-- [ ] Structural check: all command names are valid factory keys
-- [ ] Deserialization check: parameters parse into expected structs
-- [ ] Variable resolution check: all `${variable}` references resolve
+- [x] `validateSequence()` function with `ValidationResult` (warnings + errors)
+- [x] Structural check: all command names are valid factory keys
+- [x] Deserialization check: parameters parse into expected structs
+- [x] Variable resolution check: all `${variable}` references resolve
+- [x] Data key existence check: warns if referenced keys missing from DataManager
+- [x] Type compatibility check: errors if source/destination types don't match
 
 See [Validation](index.qmd#validation) in the design document.
 
