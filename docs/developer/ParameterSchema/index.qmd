@@ -1,0 +1,132 @@
+---
+title: "ParameterSchema Library"
+---
+
+## Overview
+
+`ParameterSchema` is a lightweight, non-Qt static library at `src/ParameterSchema/` that
+provides compile-time parameter schema extraction for reflect-cpp structs. It is a shared
+dependency used by both **TransformsV2** (for transform parameter forms) and the
+**Command Architecture** (for command introspection and guided pipeline editors).
+
+The library has no Qt dependency and depends only on reflect-cpp and the C++ standard library.
+
+## Source Location
+
+```
+src/ParameterSchema/
+├── CMakeLists.txt
+├── ParameterSchema.hpp   — All types, template function, and helper declarations
+└── ParameterSchema.cpp   — Non-template helper implementations
+```
+
+## Key Types
+
+### `ParameterFieldDescriptor`
+
+Describes a single field in a parameter struct at runtime:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `std::string` | Reflect-cpp field name (snake_case) |
+| `type_name` | `std::string` | Underlying type: `"float"`, `"int"`, `"std::string"`, `"bool"` |
+| `raw_type_name` | `std::string` | Full raw type string from reflect-cpp |
+| `display_name` | `std::string` | Human-readable "Title Case" label |
+| `min_value` / `max_value` | `std::optional<double>` | From `rfl::Validator` constraints |
+| `is_exclusive_min/max` | `bool` | Exclusive vs. inclusive bound |
+| `allowed_values` | `std::vector<std::string>` | For enum-like string fields |
+| `default_value_json` | `std::optional<std::string>` | Default value as JSON string |
+| `tooltip` | `std::string` | UI hint (from `ParameterUIHints`) |
+| `group` | `std::string` | Grouping label for the UI |
+| `is_advanced` | `bool` | Collapsed by default in the UI |
+| `is_optional` | `bool` | True for `std::optional<T>` fields |
+| `is_bound` | `bool` | True if typically populated from a value store |
+
+### `ParameterSchema`
+
+Holds the complete schema for one parameter struct:
+
+```cpp
+struct ParameterSchema {
+    std::string params_type_name;
+    std::vector<ParameterFieldDescriptor> fields;
+
+    ParameterFieldDescriptor * field(std::string const & name);
+    ParameterFieldDescriptor const * field(std::string const & name) const;
+};
+```
+
+### `ParameterUIHints<T>`
+
+A template trait struct for providing custom UI annotations. Specialize it alongside a
+params struct to add tooltips, allowed values, grouping, and ordering without modifying
+the struct itself:
+
+```cpp
+template<>
+struct ParameterUIHints<MyParams> {
+    static void annotate(ParameterSchema & schema) {
+        schema.field("threshold")->tooltip = "Detection threshold (0.0–1.0)";
+        schema.field("mode")->allowed_values = {"Fast", "Accurate"};
+    }
+};
+```
+
+## `extractParameterSchema<T>()`
+
+The core function template. Enumerates all fields of a reflect-cpp struct at compile time,
+parses type strings (stripping `std::optional<>`, `rfl::Validator<>` wrappers), extracts
+validator constraints, and applies any `ParameterUIHints<T>` specialization:
+
+```cpp
+ParameterSchema schema = extractParameterSchema<MyParams>();
+```
+
+This is typically called once per type — either at static registration time (TransformsV2)
+or lazily by the command factory (Command Architecture).
+
+## Helper Functions
+
+| Function | Description |
+|----------|-------------|
+| `snakeCaseToDisplay(s)` | `"scale_factor"` → `"Scale Factor"` |
+| `parseUnderlyingType(s)` | Strips `optional<>` / `Validator<>` to return `"float"`, `"int"`, etc. |
+| `isOptionalType(s)` | True if the type string contains `"optional"` |
+| `hasValidator(s)` | True if the type string contains `"Validator"` |
+| `extractConstraints(s)` | Returns `ConstraintInfo` with `min_value`, `max_value`, exclusivity flags |
+
+## CMake Integration
+
+The CMake target is `WhiskerToolbox::ParameterSchema`. Link it directly when you need
+schema extraction without pulling in TransformsV2:
+
+```cmake
+target_link_libraries(MyTarget PUBLIC WhiskerToolbox::ParameterSchema)
+```
+
+TransformsV2 already links `ParameterSchema` publicly, so any target that links
+`TransformsV2` inherits access to the ParameterSchema headers automatically.
+
+## Namespace
+
+All types live in `WhiskerToolbox::Transforms::V2`. The namespace was preserved during the
+extraction from TransformsV2 to avoid breaking all existing code that uses
+`using namespace WhiskerToolbox::Transforms::V2`.
+
+## Include Path
+
+```cpp
+#include "ParameterSchema/ParameterSchema.hpp"
+```
+
+The library's `target_include_directories` exposes `src/` as the include root, so this
+include works from any target that links `WhiskerToolbox::ParameterSchema` (directly or
+transitively through TransformsV2).
+
+## History
+
+The `ParameterSchema` types were originally defined inside
+`src/TransformsV2/core/ParameterSchema.hpp`. They were extracted into this standalone
+library (Step 1.11 of the Command Architecture Roadmap) to allow the Command Architecture
+(`src/DataManager/Commands/`) and future UI libraries to depend on schema extraction
+without coupling to TransformsV2.

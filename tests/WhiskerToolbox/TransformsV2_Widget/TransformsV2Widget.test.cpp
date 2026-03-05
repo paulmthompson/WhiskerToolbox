@@ -35,7 +35,7 @@
 #include "DataManager/DataManager.hpp"
 
 #include "TransformsV2/core/ElementRegistry.hpp"
-#include "TransformsV2/core/ParameterSchema.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
 #include "TransformsV2/core/TypeChainResolver.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
 

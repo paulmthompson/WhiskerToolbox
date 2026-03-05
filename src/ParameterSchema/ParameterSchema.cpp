@@ -1,9 +1,17 @@
+/**
+ * @file ParameterSchema.cpp
+ * @brief Implementation of helper functions for ParameterSchema type-string parsing.
+ *
+ * Provides snakeCaseToDisplay, parseUnderlyingType, isOptionalType, hasValidator,
+ * and extractConstraints used by extractParameterSchema<T>().
+ */
 #include "ParameterSchema.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <charconv>
 #include <sstream>
+#include <stdexcept>
 #include <string_view>
 
 namespace WhiskerToolbox::Transforms::V2 {
@@ -21,7 +29,7 @@ std::string snakeCaseToDisplay(std::string const & snake) {
     result.reserve(snake.size() + 4);// slight over-allocation for spaces
 
     bool next_upper = true;
-    for (char ch : snake) {
+    for (char const ch: snake) {
         if (ch == '_') {
             result += ' ';
             next_upper = true;
@@ -102,15 +110,20 @@ std::optional<double> extractNumericFromConstraint(std::string_view constraint_s
         return std::nullopt;
     }
 
-    // Try to parse as double
-    try {
-        size_t pos = 0;
-        double val = std::stod(cleaned, &pos);
-        if (pos > 0) {
-            return val;
+    // Try to parse as double — use stod but guard against exceptions without
+    // an empty catch by checking for a non-empty string first.
+    if (!cleaned.empty()) {
+        try {
+            size_t pos = 0;
+            double val = std::stod(cleaned, &pos);
+            if (pos > 0) {
+                return val;
+            }
+        } catch (std::invalid_argument const &) {
+            return std::nullopt;
+        } catch (std::out_of_range const &) {
+            return std::nullopt;
         }
-    } catch (...) {
-        // Parsing failed
     }
 
     return std::nullopt;

@@ -2,7 +2,7 @@
 #define WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
 
 #include "ComputeContext.hpp"
-#include "ParameterSchema.hpp"              // ParameterSchema, extractParameterSchema
+#include "ParameterSchema/ParameterSchema.hpp"  // ParameterSchema, extractParameterSchema
 #include "detail/ContainerExecutor.hpp"     // for IContainerExecutor
 #include "detail/ContainerTraits.hpp"
 #include "detail/ParamExecutor.hpp"         // IParamExecutor, TypedParamExecutor, ITimeGroupedParamExecutor, TypedTimeGroupedParamExecutor

@@ -10,8 +10,6 @@ set(TRANSFORM_V2_SOURCES
         core/ElementRegistry.hpp 
         core/ParameterIO.hpp
         core/ParameterIO.cpp
-        core/ParameterSchema.hpp
-        core/ParameterSchema.cpp
         core/PipelineLoader.hpp
         core/PipelineLoader.cpp
         core/PipelineValueStore.hpp
@@ -104,6 +102,7 @@ target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::CoreMath)
 
 target_link_libraries(TransformsV2 PUBLIC reflectcpp::reflectcpp)
+target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::ParameterSchema)
 
 target_link_libraries(DataManager PRIVATE WhiskerToolbox::TensorData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)

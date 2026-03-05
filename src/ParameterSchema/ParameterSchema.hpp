@@ -1,3 +1,11 @@
+/**
+ * @file ParameterSchema.hpp
+ * @brief Compile-time parameter schema extraction for reflect-cpp structs.
+ *
+ * Provides ParameterFieldDescriptor, ParameterSchema, extractParameterSchema<T>(),
+ * and ParameterUIHints<T> for use by TransformsV2 and the Command Architecture.
+ * No Qt dependency; depends only on reflect-cpp and the standard library.
+ */
 #ifndef WHISKERTOOLBOX_V2_PARAMETER_SCHEMA_HPP
 #define WHISKERTOOLBOX_V2_PARAMETER_SCHEMA_HPP
 
@@ -21,10 +29,10 @@ namespace WhiskerToolbox::Transforms::V2 {
  * validator constraint parsing and optional UI hints.
  */
 struct ParameterFieldDescriptor {
-    std::string name;              ///< Field name from reflect-cpp (e.g., "scale_factor")
-    std::string type_name;         ///< Underlying type: "float", "int", "std::string", "bool"
-    std::string raw_type_name;     ///< Full raw type string from reflect-cpp
-    std::string display_name;      ///< snake_case → "Title Case" for UI display
+    std::string name;         ///< Field name from reflect-cpp (e.g., "scale_factor")
+    std::string type_name;    ///< Underlying type: "float", "int", "std::string", "bool"
+    std::string raw_type_name;///< Full raw type string from reflect-cpp
+    std::string display_name; ///< snake_case → "Title Case" for UI display
 
     // Value range (from rfl::Validator constraints or manual UI hints)
     std::optional<double> min_value;
@@ -40,12 +48,12 @@ struct ParameterFieldDescriptor {
 
     // UI hints
     std::string tooltip;
-    std::string group;           ///< For grouping fields in the UI
-    bool is_advanced = false;    ///< Collapsed by default in the UI
+    std::string group;       ///< For grouping fields in the UI
+    bool is_advanced = false;///< Collapsed by default in the UI
     int display_order = 0;
 
-    bool is_optional = false;    ///< True for std::optional<T> fields
-    bool is_bound = false;       ///< True if typically populated from PipelineValueStore
+    bool is_optional = false;///< True for std::optional<T> fields
+    bool is_bound = false;   ///< True if typically populated from PipelineValueStore
 };
 
 // ============================================================================
@@ -64,7 +72,7 @@ struct ParameterSchema {
 
     /// Find a mutable field descriptor by name (for annotation)
     ParameterFieldDescriptor * field(std::string const & name) {
-        for (auto & f : fields) {
+        for (auto & f: fields) {
             if (f.name == name) return &f;
         }
         return nullptr;
@@ -72,7 +80,7 @@ struct ParameterSchema {
 
     /// Find a const field descriptor by name
     [[nodiscard]] ParameterFieldDescriptor const * field(std::string const & name) const {
-        for (auto const & f : fields) {
+        for (auto const & f: fields) {
             if (f.name == name) return &f;
         }
         return nullptr;
@@ -158,7 +166,7 @@ ParameterSchema extractParameterSchema() {
     auto meta_fields = rfl::fields<Params>();
 
     int order = 0;
-    for (auto const & mf : meta_fields) {
+    for (auto const & mf: meta_fields) {
         ParameterFieldDescriptor desc;
         desc.name = mf.name();
         desc.raw_type_name = mf.type();

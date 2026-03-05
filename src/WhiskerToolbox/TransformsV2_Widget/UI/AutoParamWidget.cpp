@@ -1,6 +1,6 @@
 #include "AutoParamWidget.hpp"
 
-#include "TransformsV2/core/ParameterSchema.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>

@@ -65,6 +65,8 @@ website:
               contents:
                 - developer/transforms_v2/architecture.qmd
                 - developer/transforms_v2/adding_transforms.qmd
+            - section: "ParameterSchema"
+              href: developer/ParameterSchema/index.qmd
         - section: "Data Inspectors"
           contents:
             - developer/ui/data_inspectors/tensor_inspector.qmd

@@ -1,4 +1,4 @@
-#include "TransformsV2/core/ParameterSchema.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
 
 #include "TransformsV2/algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
 #include "TransformsV2/algorithms/LineAngle/LineAngle.hpp"

@@ -8,7 +8,7 @@ title: "Command Architecture Roadmap"
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.9 complete. GUI audit (1.10), ParameterSchema extraction (1.11), and CommandInfo (1.12) remain. |
+| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.11 complete. GUI audit (1.10) and CommandInfo (1.12) remain. |
 | **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3 and 2.6 complete. Keyboard shortcuts (2.4), tracked-regions visualization (2.5), AutoParamWidget extraction (2.7), and guided pipeline editor (2.8) remain. |
 | **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
 | **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
@@ -145,13 +145,13 @@ See [Validation](index.qmd#validation) in the design document.
 
 ### Step 1.11 — Extract ParameterSchema Library
 
-- [ ] Create `src/ParameterSchema/` as a new static library
-- [ ] Move `ParameterSchema.hpp/.cpp` out of `src/TransformsV2/core/` into `src/ParameterSchema/`
-- [ ] Move `ParameterFieldDescriptor`, `ParameterSchema`, `extractParameterSchema<T>()`, `ParameterUIHints<T>`, and helper functions (`snakeCaseToDisplay`, `parseUnderlyingType`, `extractConstraints`)
-- [ ] Library depends only on reflect-cpp and standard library — no TransformsV2 types
-- [ ] Update TransformsV2 CMakeLists to depend on `ParameterSchema` and remove moved sources
-- [ ] Update all TransformsV2 includes to reference the new location
-- [ ] Verify all existing TransformsV2 tests still pass
+- [x] Create `src/ParameterSchema/` as a new static library
+- [x] Move `ParameterSchema.hpp/.cpp` out of `src/TransformsV2/core/` into `src/ParameterSchema/`
+- [x] Move `ParameterFieldDescriptor`, `ParameterSchema`, `extractParameterSchema<T>()`, `ParameterUIHints<T>`, and helper functions (`snakeCaseToDisplay`, `parseUnderlyingType`, `extractConstraints`)
+- [x] Library depends only on reflect-cpp and standard library — no TransformsV2 types
+- [x] Update TransformsV2 CMakeLists to depend on `ParameterSchema` and remove moved sources
+- [x] Update all TransformsV2 includes to reference the new location
+- [x] Verify all existing TransformsV2 tests still pass
 
 See [Command Introspection](index.qmd#command-introspection) in the design document.
 
