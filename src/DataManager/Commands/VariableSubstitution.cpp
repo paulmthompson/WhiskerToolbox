@@ -5,7 +5,59 @@
 
 #include "VariableSubstitution.hpp"
 
+#include <algorithm>
+#include <cctype>
+
 namespace commands {
+
+namespace {
+
+/// @brief Check if a string represents a valid JSON number (integer or float).
+bool isJsonNumber(std::string const & s) {
+    if (s.empty()) {
+        return false;
+    }
+    // Try to match: optional minus, digits, optional decimal part, optional exponent
+    auto it = s.begin();
+    if (*it == '-') {
+        ++it;
+    }
+    if (it == s.end() || !std::isdigit(static_cast<unsigned char>(*it))) {
+        return false;
+    }
+    while (it != s.end() && std::isdigit(static_cast<unsigned char>(*it))) {
+        ++it;
+    }
+    if (it != s.end() && *it == '.') {
+        ++it;
+        if (it == s.end() || !std::isdigit(static_cast<unsigned char>(*it))) {
+            return false;
+        }
+        while (it != s.end() && std::isdigit(static_cast<unsigned char>(*it))) {
+            ++it;
+        }
+    }
+    if (it != s.end() && (*it == 'e' || *it == 'E')) {
+        ++it;
+        if (it != s.end() && (*it == '+' || *it == '-')) {
+            ++it;
+        }
+        if (it == s.end() || !std::isdigit(static_cast<unsigned char>(*it))) {
+            return false;
+        }
+        while (it != s.end() && std::isdigit(static_cast<unsigned char>(*it))) {
+            ++it;
+        }
+    }
+    return it == s.end();
+}
+
+/// @brief Check if a string is a JSON boolean or null literal.
+bool isJsonLiteral(std::string const & s) {
+    return s == "true" || s == "false" || s == "null";
+}
+
+}// namespace
 
 std::string substituteVariables(
         std::string const & input,
@@ -26,8 +78,23 @@ std::string substituteVariables(
         auto const it = variables.find(var_name);
 
         if (it != variables.end()) {
-            result.replace(pos, end_pos - pos + 1, it->second);
-            pos += it->second.length();
+            auto const & value = it->second;
+
+            // Check if ${var} is the entire content of a JSON string value: "..."
+            // If preceding char is '"' and following char is '"', and the replacement
+            // is a JSON number/boolean/null, strip the quotes to preserve JSON typing.
+            bool const has_leading_quote = (pos > 0 && result[pos - 1] == '"');
+            bool const has_trailing_quote = (end_pos + 1 < result.size() && result[end_pos + 1] == '"');
+
+            if (has_leading_quote && has_trailing_quote &&
+                (isJsonNumber(value) || isJsonLiteral(value))) {
+                // Replace the entire "..." including the surrounding quotes
+                result.replace(pos - 1, end_pos - pos + 3, value);
+                pos = pos - 1 + value.length();
+            } else {
+                result.replace(pos, end_pos - pos + 1, value);
+                pos += value.length();
+            }
         } else {
             // Variable not found — leave as-is and skip past it
             pos = end_pos + 1;

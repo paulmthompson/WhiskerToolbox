@@ -20,6 +20,7 @@ add_subdirectory(CorePlotting)
 add_subdirectory(SpatialIndex)
 add_subdirectory(StateEstimation)
 add_subdirectory(DataManager)
+add_subdirectory(TriageSession)
 add_subdirectory(GatherResult)
 
 add_subdirectory(TransformsV2)

@@ -14,7 +14,7 @@ For the phased implementation plan, see the [Command Architecture Roadmap](roadm
 ## Source Location
 
 - Core library: `src/DataManager/Commands/`
-- Triage session (non-Qt): `src/DataManager/TriageSession/`
+- Triage session (non-Qt): `src/TriageSession/`
 - Triage widget (Qt): `src/WhiskerToolbox/TriageSession/`
 - Command sequence widget (Qt): `src/WhiskerToolbox/Commands/`
 
@@ -144,7 +144,7 @@ global `CommandStack`. This would be an EditorState feature, not a command archi
 | `ICommand`, `CommandResult`, `CommandContext` | `src/DataManager/Commands/` | **No** |
 | `CommandDescriptor`, `CommandSequenceDescriptor` | `src/DataManager/Commands/` | **No** |
 | Concrete commands + `createCommand()` factory | `src/DataManager/Commands/` | **No** |
-| `TriageSession` | `src/DataManager/TriageSession/` | **No** |
+| `TriageSession` | `src/TriageSession/` | **No** |
 | `TriageSessionWidget` | `src/WhiskerToolbox/TriageSession/` | Yes |
 | `CommandSequenceWidget` | `src/WhiskerToolbox/Commands/` | Yes |
 

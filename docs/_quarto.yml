@@ -88,6 +88,9 @@ website:
                 - developer/DataManager/Commands/get_entity_ids_in_range.qmd
                 - developer/DataManager/Commands/commands.qmd
                 - developer/DataManager/Commands/validation.qmd
+        - section: "Triage Session"
+          contents:
+            - developer/TriageSession/index.qmd
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd

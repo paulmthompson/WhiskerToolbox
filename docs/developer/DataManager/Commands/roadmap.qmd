@@ -9,7 +9,7 @@ title: "Command Architecture Roadmap"
 | Phase | Status | Notes |
 |-------|--------|-------|
 | **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.8 complete (core types, ICommand, factory, variable substitution, sequence execution, helpers, first commands, unit tests). Validation and GUI audit remain. |
-| **Phase 2:** Triage Session | Not Started | Mark/Commit/Recall state machine consuming command sequences |
+| **Phase 2:** Triage Session | In Progress | Step 2.1 complete (core class with state machine, commit, pipeline config, undo support). Widget and UI remain. |
 | **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
 | **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
@@ -149,10 +149,12 @@ See [Validation](index.qmd#validation) in the design document.
 
 ### Step 2.1 — TriageSession Core Class
 
-- [ ] `TriageSession` non-Qt class in `src/DataManager/TriageSession/`
-- [ ] State machine: `Idle` ↔ `Marking` transitions via `mark()`, `commit()`, `recall()`
-- [ ] `commit()` populates `CommandContext::runtime_variables` with `mark_frame` and `current_frame`, delegates to `executeSequence()`
-- [ ] Pipeline configuration: `setPipeline()` / `pipeline()` accessors
+- [x] `TriageSession` non-Qt class in `src/TriageSession/` (separate static library, not inside DataManager)
+- [x] State machine: `Idle` ↔ `Marking` transitions via `mark()`, `commit()`, `recall()`
+- [x] `commit()` populates `CommandContext::runtime_variables` with `mark_frame` and `current_frame`, delegates to `executeSequence()`
+- [x] Pipeline configuration: `setPipeline()` / `pipeline()` accessors
+- [x] `lastCommitCommands()` / `takeLastCommitCommands()` for undo support
+- [x] Enhanced `substituteVariables()` to handle numeric type coercion for `"${var}"` patterns
 
 See [Triage Session](index.qmd#triage-session) in the design document.
 
