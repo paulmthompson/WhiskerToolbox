@@ -26,5 +26,7 @@ add_subdirectory(DataImport_Widget)
 add_subdirectory(TransformsV2_Widget)
 add_subdirectory(FileExplorer_Widgets)
 
+add_subdirectory(LayoutTesting)
+
 # Docking behavior test programs (manual GUI tests, not automated)
 add_subdirectory(DockingTests)

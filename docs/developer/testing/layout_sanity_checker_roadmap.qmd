@@ -29,10 +29,10 @@ library** that:
 ### Core: `LayoutSanityChecker`
 
 A single header-only (or header + cpp) utility living under a new
-`src/LayoutTesting/` library. No Qt GUI dependency beyond `QtWidgets`.
+`src/WhiskerToolbox/LayoutTesting/` library. No Qt GUI dependency beyond `QtWidgets`.
 
 ```
-src/LayoutTesting/
+src/WhiskerToolbox/LayoutTesting/
 ├── CMakeLists.txt
 ├── LayoutSanityChecker.hpp
 ├── LayoutSanityChecker.cpp
@@ -230,20 +230,76 @@ Randomize widget properties that affect sizing:
 
 ### Phase 1: Core Library + ColormapControls Fix
 
-- [ ] Create `src/LayoutTesting/` with `LayoutViolation` and `LayoutSanityChecker`
-- [ ] Implement checks 1–3 (zero dimension, below minimumSizeHint, extreme aspect ratio)
-- [ ] Implement `getViolations()` static API
-- [ ] Add Catch2 tests for the checker itself
-- [ ] Add resize sweep test for `ColormapControls`
+- [x] Create `src/WhiskerToolbox/LayoutTesting/` with `LayoutViolation` and `LayoutSanityChecker`
+- [x] Implement checks 1–3 (zero dimension, below minimumSizeHint, extreme aspect ratio)
+- [x] Implement `getViolations()` static API
+- [x] Add Catch2 tests for the checker itself
+- [x] Add resize sweep test for `ColormapControls`
 - [ ] Use test output to diagnose and fix the ColormapControls Manual mode layout
-- [ ] Wire global monitor into `main.cpp` under `#ifndef NDEBUG`
+- [x] Wire global monitor into `main.cpp` under `#ifndef NDEBUG`
 
-### Phase 2: Content-Aware Checks
+**Implementation notes:**
+
+- Internal Qt child widgets (objectName starting with `qt_`) are automatically
+  skipped to avoid false positives from platform-specific internal sizing.
+- Third-party framework widgets (class names starting with `ads::`) are skipped
+  entirely — the Advanced Docking System's spacers, title bars, and area widgets
+  are infrastructure we do not control and they legitimately have extreme aspect
+  ratios or zero-dimension spacers.
+- Combo box popup internals (`QComboBoxPrivateContainer`, `QComboBoxListView`)
+  are skipped — these are ephemeral popup widgets with sizes governed by the
+  popup mechanism, not the application layout.
+- `QMenuBar` and `QStatusBar` are excluded from the extreme aspect ratio check
+  via `qobject_cast` — they are inherently designed as wide, thin bars.
+- The offscreen Qt platform (`QT_QPA_PLATFORM=offscreen`) does not enforce
+  `propagateSizeHints()`, so resize sweep tests may not detect all violations
+  that occur on a real display. The checker is most useful when run under XCB
+  or Wayland.
+
+**Known limitation — content-aware squishing:**
+
+Phase 1 checks detect widgets that are below `minimumSizeHint()` or have zero
+dimensions, but they do **not** detect content overflow — e.g. a `QComboBox`
+that is technically above its minimum size but too narrow to display its item
+text without clipping. This is the case for the `color_range_mode_combo` in
+`ColormapControls` when switching to Manual mode: the combo box is squeezed by
+the `QFormLayout` to make room for the vmin/vmax rows, but it remains at or
+above `minimumSizeHint()`. Detecting this requires **Phase 2 Check 6
+(ComboBox content overflow)**.
+
+### Phase 2: Content-Aware Checks + Event-Driven Diffing
 
 - [ ] Add label truncation check (check 4)
 - [ ] Add spinbox content overflow check (check 5)
 - [ ] Add combo box content overflow check (check 6)
+- [ ] Add event-driven violation diffing to the global monitor (see below)
 - [ ] Add resize sweep tests for other property panel widgets
+- [ ] Add mode-toggle tests that assert no *new* violations appear after state changes
+
+**Event-driven violation diffing:** The global monitor currently re-scans the
+entire tree on every layout settle and logs all violations, including
+pre-existing ones (e.g. violations that were already present before a mode
+change). This causes duplicate output. A better approach is to store the
+previous violation set and only emit *newly appeared* violations:
+
+```cpp
+void LayoutSanityChecker::runCheck() {
+    std::vector<LayoutViolation> current;
+    for (QWidget * w : QApplication::topLevelWidgets())
+        for (auto & v : getViolations(w))
+            current.push_back(std::move(v));
+
+    // Emit only violations not present in the previous scan
+    for (auto const & v : current) {
+        if (!containsEquivalent(_previous_violations, v))
+            logViolation(v);
+    }
+    _previous_violations = std::move(current);
+}
+```
+
+This makes the output event-driven: "widget X became squished after you did Y"
+instead of repeating the same violations every 50 ms.
 
 ### Phase 3: Spatial Checks + Dock Fuzzing
 

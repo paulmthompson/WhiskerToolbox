@@ -151,6 +151,9 @@ add_subdirectory(Plots/SpectrogramWidget)
 # Qt, DataManager, EditorState - 3D plot widget
 add_subdirectory(Plots/3DPlot)
 
+# Qt - Layout sanity checking for development and testing
+add_subdirectory(LayoutTesting)
+
 # Qt, DataManager, EditorState, reflectcpp - Test/proof-of-concept widget
 add_subdirectory(Test_Widget)
 
@@ -333,6 +336,7 @@ target_link_libraries(WhiskerToolbox PRIVATE SpectrogramWidget)
 target_link_libraries(WhiskerToolbox PRIVATE 3DPlotWidget)
 target_link_libraries(WhiskerToolbox PRIVATE OnionSkinViewWidget)
 target_link_libraries(WhiskerToolbox PRIVATE Test_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE LayoutTesting)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 

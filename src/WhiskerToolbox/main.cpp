@@ -3,13 +3,13 @@
 #include "color_scheme.hpp"
 
 #include <QApplication>
-#include <qstylefactory.h>
-#include <QFile>
-#include <QPalette>
-#include <QSurfaceFormat>
 #include <QComboBox>
 #include <QEvent>
+#include <QFile>
 #include <QObject>
+#include <QPalette>
+#include <QSurfaceFormat>
+#include <qstylefactory.h>
 
 // Ensure HDF5Explorer registration is linked when HDF5 is enabled
 #ifdef ENABLE_HDF5
@@ -18,23 +18,26 @@
 
 #include "FileExplorer_Widgets/NpyExplorer_Widget/NpyExplorerRegistration.hpp"
 
+#ifndef NDEBUG
+#include "LayoutTesting/LayoutSanityChecker.hpp"
+#endif
+
 // Event filter to disable mouse wheel scrolling on combo boxes
-class ComboBoxWheelFilter : public QObject
-{
+class ComboBoxWheelFilter : public QObject {
 public:
-    explicit ComboBoxWheelFilter(QObject* parent = nullptr) : QObject(parent) {}
+    explicit ComboBoxWheelFilter(QObject * parent = nullptr)
+        : QObject(parent) {}
 
 protected:
-    bool eventFilter(QObject* obj, QEvent* event) override
-    {
+    bool eventFilter(QObject * obj, QEvent * event) override {
         if (event->type() == QEvent::Wheel) {
             // Check if the object is a QComboBox or its descendant
-            if (qobject_cast<QComboBox*>(obj)) {
-                QComboBox* combo = qobject_cast<QComboBox*>(obj);
+            if (qobject_cast<QComboBox *>(obj)) {
+                auto * combo = qobject_cast<QComboBox *>(obj);
                 // Only block wheel events if the combo box doesn't have focus
                 // This allows intentional scrolling when the user has clicked into it
                 if (!combo->hasFocus()) {
-                    return true; // Filter out the event
+                    return true;// Filter out the event
                 }
             }
         }
@@ -43,9 +46,7 @@ protected:
 };
 
 
-
-int main(int argc, char *argv[])
-{
+int main(int argc, char * argv[]) {
     // https://githubuser0xffff.github.io/Qt-Advanced-Docking-System/doc/user-guide.html#opengl--ads
     QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
@@ -76,7 +77,7 @@ int main(int argc, char *argv[])
     QSurfaceFormat format;
     format.setOption(QSurfaceFormat::DebugContext);
     format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setVersion(4, 3); // Use 4.3 for SpatialOverlayOpenGLWidget compatibility
+    format.setVersion(4, 3);// Use 4.3 for SpatialOverlayOpenGLWidget compatibility
     format.setSamples(4);
     format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
     QSurfaceFormat::setDefaultFormat(format);
@@ -84,8 +85,13 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     // Install global event filter to disable accidental mouse wheel scrolling on combo boxes
-    ComboBoxWheelFilter* wheelFilter = new ComboBoxWheelFilter(&a);
+    auto * wheelFilter = new ComboBoxWheelFilter(&a);
     a.installEventFilter(wheelFilter);
+
+#ifndef NDEBUG
+    // Layout sanity checker — logs warnings when widgets are squished below minimumSizeHint
+    LayoutSanityChecker layoutChecker(&a);
+#endif
 
     //a.setStyle("Fusion");
 
@@ -100,7 +106,7 @@ int main(int argc, char *argv[])
 
     QApplication::setStyle(QStyleFactory::create("fusion"));
 
-    QPalette palette = create_palette();
+    QPalette const palette = create_palette();
 
     QApplication::setPalette(palette);
 
@@ -108,5 +114,5 @@ int main(int argc, char *argv[])
 
     w.show();
 
-    return a.exec();
+    return QApplication::exec();
 }
