@@ -12,6 +12,7 @@
 #include "Core/HeatmapState.hpp"
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include "TimeFrame/TimeFrame.hpp"
@@ -21,6 +22,8 @@
 
 #include <glm/glm.hpp>
 #include <memory>
+#include <string>
+#include <vector>
 
 class DataManager;
 class QMouseEvent;
@@ -59,6 +62,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent * event) override;
     void mouseDoubleClickEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
+    void leaveEvent(QEvent * event) override;
 
 private slots:
     void onStateChanged();
@@ -84,10 +88,17 @@ private:
 
     size_t _unit_count{0};
 
+    /// Cached display-order unit keys (reflects current sort order)
+    std::vector<std::string> _display_unit_keys;
+
+    std::unique_ptr<WhiskerToolbox::Plots::PlotTooltipManager> _tooltip_mgr;
+
     int _widget_width{1};
     int _widget_height{1};
 
     void rebuildScene();
+    void setupTooltip();
+    [[nodiscard]] int worldToUnitIndex(QPointF const & world_pos) const;
     void updateMatrices();
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
     void handlePanning(int delta_x, int delta_y);
@@ -95,4 +106,4 @@ private:
     void updateBackgroundColor();
 };
 
-#endif // HEATMAP_OPENGLWIDGET_HPP
+#endif// HEATMAP_OPENGLWIDGET_HPP

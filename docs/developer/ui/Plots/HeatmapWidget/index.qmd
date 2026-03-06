@@ -170,12 +170,11 @@ Double-clicking emits `plotDoubleClicked(time_frame_index)`, which the parent `H
 
 ## Hover
 
-Hovering over a heatmap row identifies the `DigitalEventSeries` corresponding to the Y-axis position under the cursor. A tooltip is displayed containing a miniature visualization for that unit:
+Hovering over a heatmap row displays a tooltip showing the `DigitalEventSeries` key name corresponding to the Y-axis position under the cursor. The tooltip is managed by the shared `PlotTooltipManager` and correctly reflects the current sort order (the cached `_display_unit_keys` vector is updated after each sort).
 
-- A **raster plot** showing individual trial events across aligned trials
-- A **PSTH histogram** showing the unit's firing rate profile over relative time
+**Current implementation**: The tooltip displays the unit key name as plain text.
 
-The tooltip is rendered on-demand using the cached `GatherResult` data from the last scene build, avoiding a full scene rebuild on each hover event. See [roadmap Phase 8](roadmap.qmd) for the full implementation plan, including rendering approach and layout.
+**Planned**: The tooltip will be extended to show a miniature stacked PSTH histogram and raster plot for the hovered unit, rendered on-demand using cached `GatherResult` data. See [roadmap Phase 8](roadmap.qmd) for the full implementation plan, including rendering approach and layout.
 
 ## Selection
 

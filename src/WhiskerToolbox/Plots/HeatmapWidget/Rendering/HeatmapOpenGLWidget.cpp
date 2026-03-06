@@ -25,6 +25,8 @@ HeatmapOpenGLWidget::HeatmapOpenGLWidget(QWidget * parent)
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setSamples(4);
     setFormat(format);
+
+    setupTooltip();
 }
 
 HeatmapOpenGLWidget::~HeatmapOpenGLWidget() {
@@ -155,6 +157,8 @@ void HeatmapOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         }
         _last_mouse_pos = event->pos();
     }
+
+    _tooltip_mgr->onMouseMove(event->pos(), _is_panning);
     event->accept();
 }
 
@@ -184,6 +188,11 @@ void HeatmapOpenGLWidget::wheelEvent(QWheelEvent * event) {
     event->accept();
 }
 
+void HeatmapOpenGLWidget::leaveEvent(QEvent * event) {
+    _tooltip_mgr->onLeave();
+    QOpenGLWidget::leaveEvent(event);
+}
+
 // =============================================================================
 // Slots
 // =============================================================================
@@ -207,6 +216,8 @@ void HeatmapOpenGLWidget::onViewStateChanged() {
 // =============================================================================
 
 void HeatmapOpenGLWidget::rebuildScene() {
+    _tooltip_mgr->hide();
+
     if (!_state || !_data_manager) {
         _scene_renderer.clearScene();
         return;
@@ -215,6 +226,7 @@ void HeatmapOpenGLWidget::rebuildScene() {
     auto const & unit_keys = _state->unitKeys();
     if (unit_keys.empty()) {
         _scene_renderer.clearScene();
+        _display_unit_keys.clear();
         emit unitCountChanged(0);
         return;
     }
@@ -244,19 +256,23 @@ void HeatmapOpenGLWidget::rebuildScene() {
 
     if (!pipeline_result.success || pipeline_result.rows.empty()) {
         _scene_renderer.clearScene();
+        _display_unit_keys.clear();
         emit unitCountChanged(0);
         return;
     }
 
     // Apply row sorting if a non-Manual sort mode is selected
+    auto sorted_keys = std::vector<std::string>(unit_keys);
     auto const sort_mode = _state->sortMode();
     if (sort_mode != HeatmapSortMode::Manual) {
-        auto sorted_keys = std::vector<std::string>(unit_keys);
         auto sort_indices = WhiskerToolbox::Plots::computeSortOrder(
                 pipeline_result, sorted_keys, sort_mode, _state->sortAscending());
         WhiskerToolbox::Plots::applySortOrder(
                 pipeline_result, sorted_keys, sort_indices);
     }
+
+    // Cache the display-order keys for tooltip lookup
+    _display_unit_keys = sorted_keys;
 
     // Build the colored rectangle scene with appropriate colormap and range
     auto const & color_range_config = _state->colorRange();
@@ -343,4 +359,41 @@ void HeatmapOpenGLWidget::updateBackgroundColor() {
     } else {
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
+}
+
+void HeatmapOpenGLWidget::setupTooltip() {
+    _tooltip_mgr = std::make_unique<WhiskerToolbox::Plots::PlotTooltipManager>(this);
+
+    _tooltip_mgr->setHitTestProvider(
+            [this](QPoint pos) -> std::optional<WhiskerToolbox::Plots::PlotTooltipHit> {
+                QPointF const world = screenToWorld(pos);
+                int const unit_index = worldToUnitIndex(world);
+                if (unit_index < 0) {
+                    return std::nullopt;
+                }
+                WhiskerToolbox::Plots::PlotTooltipHit hit;
+                hit.world_x = static_cast<float>(world.x());
+                hit.world_y = static_cast<float>(world.y());
+                hit.user_data = unit_index;
+                return hit;
+            });
+
+    _tooltip_mgr->setTextProvider(
+            [this](WhiskerToolbox::Plots::PlotTooltipHit const & hit) -> QString {
+                auto const unit_index = std::any_cast<int>(hit.user_data);
+                if (unit_index < 0 ||
+                    static_cast<size_t>(unit_index) >= _display_unit_keys.size()) {
+                    return {};
+                }
+                return QString::fromStdString(_display_unit_keys[static_cast<size_t>(unit_index)]);
+            });
+}
+
+int HeatmapOpenGLWidget::worldToUnitIndex(QPointF const & world_pos) const {
+    // Each heatmap row occupies one unit of Y space: row 0 → [0, 1), row 1 → [1, 2), etc.
+    auto const index = static_cast<int>(std::floor(world_pos.y()));
+    if (index < 0 || static_cast<size_t>(index) >= _display_unit_keys.size()) {
+        return -1;
+    }
+    return index;
 }

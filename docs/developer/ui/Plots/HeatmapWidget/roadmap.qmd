@@ -162,7 +162,10 @@ current view. The pinned state is serialized for workspace restoration.
 
 ## Phase 8: Tooltip with Stacked PSTH + Raster
 
-**Status**: Design exploration. Depends on [Phase 1](#phase-1-core-rendering--per-unit-rate-matrix)
+**Status**: In progress. Basic tooltip wiring is complete — hovering over a heatmap row shows
+the unit key name via `PlotTooltipManager`. The tooltip correctly reflects the current sort order.
+PSTH and raster glyph rendering in the tooltip is not yet implemented.
+Depends on [Phase 1](#phase-1-core-rendering--per-unit-rate-matrix)
 and [Phase 7](#phase-7-cross-widget-linking).
 
 **Goal**: When hovering over a heatmap row, display a tooltip containing a miniature stacked
