@@ -30,6 +30,8 @@ set(IO_CORE_SOURCES
     formats/Binary/analogtimeseries/Analog_Time_Series_Binary.cpp
     formats/Binary/digitaltimeseries/Digital_Interval_Series_Binary.hpp
     formats/Binary/digitaltimeseries/Digital_Interval_Series_Binary.cpp
+    formats/CSV/mask/Mask_Data_CSV.hpp
+    formats/CSV/mask/Mask_Data_CSV.cpp
 )
 
 # Create the core IO library
@@ -44,6 +46,7 @@ target_link_libraries(DataManagerIO PUBLIC
     NEURALYZER_GEOMETRY
     LineData # Needed to populate CSV line data
     PointData # Needed for Point loaders
+    MaskData # Needed for Mask RLE CSV loaders
     AnalogTimeSeries # Needed for Analog loaders
     DigitalTimeSeries # Needed for Digital loaders
 )

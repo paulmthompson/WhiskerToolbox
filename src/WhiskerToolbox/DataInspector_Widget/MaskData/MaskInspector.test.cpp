@@ -168,9 +168,10 @@ TEST_CASE("MaskInspector has expected UI", "[MaskInspector]") {
 
         auto * export_type_combo = inspector.findChild<QComboBox *>("export_type_combo");
         REQUIRE(export_type_combo != nullptr);
-        REQUIRE(export_type_combo->count() == 2);  // Should have HDF5 and Image
+        REQUIRE(export_type_combo->count() == 3);  // Should have HDF5, Image, and CSV (RLE)
         REQUIRE(export_type_combo->itemText(0) == QStringLiteral("HDF5"));
         REQUIRE(export_type_combo->itemText(1) == QStringLiteral("Image"));
+        REQUIRE(export_type_combo->itemText(2) == QStringLiteral("CSV (RLE)"));
 
         app->processEvents();
     }
@@ -181,7 +182,7 @@ TEST_CASE("MaskInspector has expected UI", "[MaskInspector]") {
 
         auto * stacked_widget = inspector.findChild<QStackedWidget *>("stacked_saver_options");
         REQUIRE(stacked_widget != nullptr);
-        REQUIRE(stacked_widget->count() == 2);  // Should have HDF5 and Image saver widgets
+        REQUIRE(stacked_widget->count() == 3);  // Should have HDF5, Image, and CSV saver widgets
 
         app->processEvents();
     }

@@ -17,6 +17,10 @@ set(DATAEXPORT_WIDGET_SOURCES
         Masks/Image/ImageMaskSaver_Widget.hpp
         Masks/Image/ImageMaskSaver_Widget.ui
 
+        Masks/CSV/CSVMaskSaver_Widget.cpp
+        Masks/CSV/CSVMaskSaver_Widget.hpp
+        Masks/CSV/CSVMaskSaver_Widget.ui
+
         Lines/CSV/CSVLineSaver_Widget.cpp
         Lines/CSV/CSVLineSaver_Widget.hpp
         Lines/CSV/CSVLineSaver_Widget.ui

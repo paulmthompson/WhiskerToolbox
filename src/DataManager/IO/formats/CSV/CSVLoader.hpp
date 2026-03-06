@@ -12,6 +12,7 @@
  * Supported data types:
  * - IODataType::Line: Line/whisker data (single or multi-file CSV)
  * - IODataType::Points: Point tracking data (simple CSV or DLC format)
+ * - IODataType::Mask: Mask data (RLE-encoded CSV)
  * - IODataType::Analog: Analog time series (single/two column CSV)
  * - IODataType::DigitalEvent: Digital event timestamps (with optional multi-series)
  * - IODataType::DigitalInterval: Digital intervals (start/end column pairs or binary state columns)
@@ -40,10 +41,10 @@ public:
      * For multi-series CSV files (DigitalEvent with identifier, DLC with multiple bodyparts),
      * this returns only the first object. Use loadBatch() for all objects.
      */
-    LoadResult load(std::string const& filepath, 
-                   IODataType dataType, 
-                   nlohmann::json const& config) const override;
-    
+    LoadResult load(std::string const & filepath,
+                    IODataType dataType,
+                    nlohmann::json const & config) const override;
+
     /**
      * @brief Check if batch loading is supported for this format/type
      * 
@@ -52,9 +53,9 @@ public:
      * - Points with DLC format and all_bodyparts=true
      * - DigitalInterval with csv_layout="binary_state" (multiple columns)
      */
-    bool supportsBatchLoading(std::string const& format, 
+    bool supportsBatchLoading(std::string const & format,
                               IODataType dataType) const override;
-    
+
     /**
      * @brief Load all data objects from a multi-series CSV file
      * 
@@ -62,25 +63,25 @@ public:
      * For Points with DLC format, returns one PointData per bodypart.
      * For DigitalInterval with binary_state layout, returns one series per data column.
      */
-    BatchLoadResult loadBatch(std::string const& filepath,
+    BatchLoadResult loadBatch(std::string const & filepath,
                               IODataType dataType,
-                              nlohmann::json const& config) const override;
-    
+                              nlohmann::json const & config) const override;
+
     /**
      * @brief Save data to CSV file
      */
-    LoadResult save(std::string const& filepath, 
-                   IODataType dataType, 
-                   nlohmann::json const& config, 
-                   void const* data) const override;
+    LoadResult save(std::string const & filepath,
+                    IODataType dataType,
+                    nlohmann::json const & config,
+                    void const * data) const override;
 
     /**
      * @brief Check if this loader supports the format/dataType combination
      * 
-     * Supports format "csv" for Line, Points, Analog, DigitalEvent, DigitalInterval
+     * Supports format "csv" for Line, Points, Mask, Analog, DigitalEvent, DigitalInterval
      * Supports format "dlc_csv" for Points (DLC/DeepLabCut format - legacy compatibility)
      */
-    bool supportsFormat(std::string const& format, IODataType dataType) const override;
+    bool supportsFormat(std::string const & format, IODataType dataType) const override;
 
     /**
      * @brief Get loader name for logging
@@ -91,47 +92,47 @@ private:
     /**
      * @brief Load LineData from CSV (single or multi-file)
      */
-    LoadResult loadLineDataCSV(std::string const& filepath, 
-                              nlohmann::json const& config) const;
-    
+    static LoadResult loadLineDataCSV(std::string const & filepath,
+                               nlohmann::json const & config) ;
+
     /**
      * @brief Load PointData from simple CSV format
      */
-    LoadResult loadPointDataCSV(std::string const& filepath, 
-                               nlohmann::json const& config) const;
-    
+    static LoadResult loadPointDataCSV(std::string const & filepath,
+                                nlohmann::json const & config) ;
+
     /**
      * @brief Load PointData from DLC format CSV
      */
-    LoadResult loadPointDataDLC(std::string const& filepath, 
-                               nlohmann::json const& config) const;
-    
+    static LoadResult loadPointDataDLC(std::string const & filepath,
+                                nlohmann::json const & config) ;
+
     /**
      * @brief Load all bodyparts from DLC format CSV
      * @return BatchLoadResult with one LoadResult per bodypart
      */
-    BatchLoadResult loadPointDataDLCBatch(std::string const& filepath, 
-                                          nlohmann::json const& config) const;
-    
+    static BatchLoadResult loadPointDataDLCBatch(std::string const & filepath,
+                                          nlohmann::json const & config) ;
+
     /**
      * @brief Load AnalogTimeSeries from CSV
      */
-    LoadResult loadAnalogCSV(std::string const& filepath, 
-                            nlohmann::json const& config) const;
-    
+    static LoadResult loadAnalogCSV(std::string const & filepath,
+                             nlohmann::json const & config) ;
+
     /**
      * @brief Load DigitalEventSeries from CSV (single series)
      */
-    LoadResult loadDigitalEventCSV(std::string const& filepath, 
-                                  nlohmann::json const& config) const;
-    
+    static LoadResult loadDigitalEventCSV(std::string const & filepath,
+                                   nlohmann::json const & config) ;
+
     /**
      * @brief Load all DigitalEventSeries from CSV with identifiers
      * @return BatchLoadResult with one LoadResult per unique identifier
      */
-    BatchLoadResult loadDigitalEventCSVBatch(std::string const& filepath, 
-                                             nlohmann::json const& config) const;
-    
+    static BatchLoadResult loadDigitalEventCSVBatch(std::string const & filepath,
+                                             nlohmann::json const & config) ;
+
     /**
      * @brief Load DigitalIntervalSeries from CSV
      * 
@@ -141,9 +142,9 @@ private:
      *   cell values represent on/off state (0/1). Intervals extracted from
      *   contiguous "on" regions.
      */
-    LoadResult loadDigitalIntervalCSV(std::string const& filepath, 
-                                     nlohmann::json const& config) const;
-    
+    static LoadResult loadDigitalIntervalCSV(std::string const & filepath,
+                                      nlohmann::json const & config) ;
+
     /**
      * @brief Load DigitalIntervalSeries from binary state CSV layout
      * 
@@ -158,52 +159,65 @@ private:
      * - delimiter: Column separator (default: "\t")
      * - binary_threshold: Values >= this are "on" (default: 0.5)
      */
-    LoadResult loadDigitalIntervalBinaryState(std::string const& filepath, 
-                                              nlohmann::json const& config) const;
-    
+    static LoadResult loadDigitalIntervalBinaryState(std::string const & filepath,
+                                              nlohmann::json const & config) ;
+
     /**
      * @brief Load all columns from binary state CSV as DigitalIntervalSeries
      * 
      * Returns one DigitalIntervalSeries per data column (excluding time column).
      * Each series is named using the column header from the file.
      */
-    BatchLoadResult loadDigitalIntervalBinaryStateBatch(std::string const& filepath,
-                                                        nlohmann::json const& config) const;
-    
+    BatchLoadResult loadDigitalIntervalBinaryStateBatch(std::string const & filepath,
+                                                        nlohmann::json const & config) const;
+
     /**
      * @brief Save LineData to CSV
      */
-    LoadResult saveLineDataCSV(std::string const& filepath,
-                              nlohmann::json const& config,
-                              void const* data) const;
-    
+    static LoadResult saveLineDataCSV(std::string const & filepath,
+                               nlohmann::json const & config,
+                               void const * data) ;
+
     /**
      * @brief Save PointData to CSV
      */
-    LoadResult savePointDataCSV(std::string const& filepath,
-                               nlohmann::json const& config,
-                               void const* data) const;
-    
+    static LoadResult savePointDataCSV(std::string const & filepath,
+                                nlohmann::json const & config,
+                                void const * data) ;
+
     /**
      * @brief Save AnalogTimeSeries to CSV
      */
-    LoadResult saveAnalogCSV(std::string const& filepath,
-                            nlohmann::json const& config,
-                            void const* data) const;
-    
+    static LoadResult saveAnalogCSV(std::string const & filepath,
+                             nlohmann::json const & config,
+                             void const * data) ;
+
     /**
      * @brief Save DigitalEventSeries to CSV
      */
-    LoadResult saveDigitalEventCSV(std::string const& filepath,
-                                  nlohmann::json const& config,
-                                  void const* data) const;
-    
+    static LoadResult saveDigitalEventCSV(std::string const & filepath,
+                                   nlohmann::json const & config,
+                                   void const * data) ;
+
     /**
      * @brief Save DigitalIntervalSeries to CSV
      */
-    LoadResult saveDigitalIntervalCSV(std::string const& filepath,
-                                     nlohmann::json const& config,
-                                     void const* data) const;
+    static LoadResult saveDigitalIntervalCSV(std::string const & filepath,
+                                      nlohmann::json const & config,
+                                      void const * data) ;
+
+    /**
+     * @brief Load MaskData from CSV with RLE encoding
+     */
+    static LoadResult loadMaskDataCSV(std::string const & filepath,
+                               nlohmann::json const & config) ;
+
+    /**
+     * @brief Save MaskData to CSV with RLE encoding
+     */
+    static LoadResult saveMaskDataCSV(std::string const & filepath,
+                               nlohmann::json const & config,
+                               void const * data) ;
 };
 
-#endif // CSV_FORMAT_LOADER_HPP
+#endif// CSV_FORMAT_LOADER_HPP

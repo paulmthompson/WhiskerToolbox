@@ -28,6 +28,7 @@ class MaskInspector;
 
 class ImageMaskSaver_Widget;
 class HDF5MaskSaver_Widget;
+class CSVMaskSaver_Widget;
 class MediaExport_Widget;
 class MaskTableView;
 
@@ -86,6 +87,7 @@ private slots:
     // Export slots
     void _onExportTypeChanged(int index);
     void _handleSaveImageMaskRequested(QString format, nlohmann::json config);
+    void _handleSaveCSVMaskRequested(QString format, nlohmann::json config);
     void _onExportMediaFramesCheckboxToggled(bool checked);
     void _onApplyImageSizeClicked();
     void _onCopyImageSizeClicked();

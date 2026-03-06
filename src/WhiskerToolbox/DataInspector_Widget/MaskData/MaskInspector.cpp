@@ -4,6 +4,8 @@
 #include "MaskTableView.hpp"
 #include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 
+#include "DataExport_Widget/Masks/CSV/CSVMaskSaver_Widget.hpp"
+#include "DataExport_Widget/Masks/Image/ImageMaskSaver_Widget.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/IO/core/LoaderRegistry.hpp"
@@ -92,6 +94,8 @@ void MaskInspector::_connectSignals() {
             this, &MaskInspector::_onExportTypeChanged);
     connect(ui->image_mask_saver_widget, &ImageMaskSaver_Widget::saveImageMaskRequested,
             this, &MaskInspector::_handleSaveImageMaskRequested);
+    connect(ui->csv_mask_saver_widget, &CSVMaskSaver_Widget::saveCSVMaskRequested,
+            this, &MaskInspector::_handleSaveCSVMaskRequested);
     connect(ui->export_media_frames_checkbox, &QCheckBox::toggled,
             this, &MaskInspector::_onExportMediaFramesCheckboxToggled);
     connect(ui->apply_image_size_button, &QPushButton::clicked,
@@ -129,10 +133,16 @@ void MaskInspector::_onExportTypeChanged(int index) {
         ui->stacked_saver_options->setCurrentWidget(ui->hdf5_mask_saver_widget);
     } else if (current_text == "Image") {
         ui->stacked_saver_options->setCurrentWidget(ui->image_mask_saver_widget);
+    } else if (current_text == "CSV (RLE)") {
+        ui->stacked_saver_options->setCurrentWidget(ui->csv_mask_saver_widget);
     }
 }
 
 void MaskInspector::_handleSaveImageMaskRequested(QString format, nlohmann::json config) {
+    _initiateSaveProcess(format, config);
+}
+
+void MaskInspector::_handleSaveCSVMaskRequested(QString format, nlohmann::json config) {
     _initiateSaveProcess(format, config);
 }
 
@@ -152,10 +162,14 @@ void MaskInspector::_initiateSaveProcess(QString const & format, MaskSaverConfig
         return;
     }
 
-    // Update config with full path
+    // Update config with full path (don't prepend if already absolute)
     MaskSaverConfig updated_config = config;
     std::string const parent_dir = config.value("parent_dir", ".");
-    updated_config["parent_dir"] = dataManager()->getOutputPath() + "/" + parent_dir;
+    if (!parent_dir.empty() && parent_dir[0] == '/') {
+        updated_config["parent_dir"] = parent_dir;
+    } else {
+        updated_config["parent_dir"] = dataManager()->getOutputPath() + "/" + parent_dir;
+    }
 
     bool const save_successful = _performRegistrySave(format, updated_config);
 

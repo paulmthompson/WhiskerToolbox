@@ -234,6 +234,11 @@
             <string>Image</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>CSV (RLE)</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>
@@ -245,6 +250,7 @@
         </property>
         <widget class="HDF5MaskSaver_Widget" name="hdf5_mask_saver_widget"/>
         <widget class="ImageMaskSaver_Widget" name="image_mask_saver_widget"/>
+        <widget class="CSVMaskSaver_Widget" name="csv_mask_saver_widget"/>
        </widget>
       </item>
       <item>
@@ -292,6 +298,12 @@
    <class>ImageMaskSaver_Widget</class>
    <extends>QWidget</extends>
    <header>DataExport_Widget/Masks/Image/ImageMaskSaver_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CSVMaskSaver_Widget</class>
+   <extends>QWidget</extends>
+   <header>DataExport_Widget/Masks/CSV/CSVMaskSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

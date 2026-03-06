@@ -1,0 +1,79 @@
+---
+title: "Mask Data CSV (RLE) Loader"
+format: html
+---
+
+# Overview
+
+The Mask Data CSV loader reads and writes mask data using Run-Length Encoding (RLE) in a CSV format. Each row represents one mask at a given frame, with pixel runs encoded as `(y, x_start, length)` triplets.
+
+Source files:
+
+- `src/DataManager/IO/formats/CSV/mask/Mask_Data_CSV.hpp`
+- `src/DataManager/IO/formats/CSV/mask/Mask_Data_CSV.cpp`
+
+# CSV Format
+
+```
+Frame,"y,x_start,length,y,x_start,length,..."
+0,"10,5,3,10,20,2"
+1,"15,0,10"
+```
+
+Each row contains:
+
+- **Frame** — integer frame index (first column).
+- **RLE data** — a quoted string of comma-separated triplets: `y,x_start,length`. Each triplet expands to `length` consecutive pixels starting at `(x_start, y)`.
+
+Multiple masks per frame are supported (one row per mask at the same frame index).
+
+# Options
+
+Loader and saver options are defined as reflect-cpp structs satisfying the `ValidLoaderOptions` concept.
+
+## `CSVMaskRLELoaderOptions`
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `filepath` | `std::string` | (required) | Path to the CSV file |
+| `delimiter` | `std::optional<std::string>` | `","` | Column delimiter |
+| `rle_delimiter` | `std::optional<std::string>` | `","` | Delimiter within RLE data |
+| `has_header` | `std::optional<bool>` | `true` | Whether the file has a header row |
+| `header_identifier` | `std::optional<std::string>` | `"Frame"` | String to detect header row |
+
+## `CSVMaskRLESaverOptions`
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `parent_dir` | `std::string` | (required) | Output directory |
+| `filename` | `std::string` | `"mask_rle.csv"` | Output filename |
+| `delimiter` | `std::string` | `","` | Column delimiter |
+| `rle_delimiter` | `std::string` | `","` | Delimiter within RLE data |
+| `save_header` | `bool` | `true` | Write header row |
+| `header` | `std::string` | `"Frame,RLE"` | Header text |
+
+# CSVLoader Factory Integration
+
+The mask RLE format is accessible through the `CSVLoader` factory with:
+
+- **Data type**: `IODataType::Mask`
+- **Config key**: `"csv_layout"` = `"rle"` (default, currently the only CSV mask layout)
+
+# RLE Encoding / Decoding
+
+## Encoding (`encode_mask_rle`)
+
+Sorts mask points by `(y, x)`, then groups consecutive x-values on the same row into runs. Output: `"y,x_start,length,y,x_start,length,..."`.
+
+## Decoding (`decode_mask_rle`)
+
+Parses the RLE string using `strtoul` for zero-allocation integer parsing, expanding each `(y, x_start, length)` triplet into individual `(x, y)` pixel coordinates.
+
+# Tests
+
+Tests are in `tests/DataManager/IO/formats/CSV/masks/mask_csv_rle.test.cpp` and cover:
+
+- Unit tests for `encode_mask_rle` / `decode_mask_rle` (simple runs, multiple rows, non-contiguous, empty)
+- RLE roundtrip fidelity
+- File save/load roundtrip via direct API
+- CSVLoader factory integration (format support check, load/save cycle)
