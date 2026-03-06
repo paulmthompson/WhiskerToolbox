@@ -1,0 +1,132 @@
+---
+title: "ColormapControls"
+format: html
+---
+
+# ColormapControls
+
+The **ColormapControls** widget is a composable Qt widget for selecting a colormap preset and
+configuring the color range (vmin/vmax) of scalar-to-color mappings. It lives in
+`src/WhiskerToolbox/Plots/Common/ColormapControls/` as a reusable static library.
+
+## Purpose
+
+Any plot widget that maps scalar values to colors needs two user-facing controls:
+
+1. **Colormap selection** — which color palette to use (e.g., Inferno, Viridis, Coolwarm)
+2. **Color range** — how the scalar range maps to the colormap (auto from data, manual vmin/vmax,
+   or symmetric around zero)
+
+`ColormapControls` bundles both into a single embeddable widget, following the same composable
+pattern as `EstimationMethodControls` and `ScalingModeControls` from the
+[RateEstimationControls](../RateEstimationControls/index.qmd) library.
+
+## Consumers
+
+| Widget | Use Case |
+|--------|----------|
+| [HeatmapWidget](../../HeatmapWidget/index.qmd) | Firing rate matrix colormap + range |
+| [SpectrogramWidget](../../SpectrogramWidget/index.qmd) | Power spectrum colormap + range (planned) |
+
+## Architecture
+
+```
+Plots/Common/ColormapControls/
+├── CMakeLists.txt
+├── ColormapControls.hpp
+└── ColormapControls.cpp
+```
+
+### Dependencies
+
+- **`CorePlotting`** (PUBLIC) — provides `ColormapPreset`, `ColormapFunction`, `getLUT()`,
+  `allPresets()`, `presetName()`
+- **`Qt6::Widgets`** (PRIVATE) — `QComboBox`, `QDoubleSpinBox`, `QPainter`, `QIcon`
+
+### Key Types
+
+#### `ColorRangeConfig`
+
+A lightweight struct (defined in `ColormapControls.hpp`) describing how the displayed color
+range is determined:
+
+```cpp
+struct ColorRangeConfig {
+    enum class Mode { Auto, Manual, Symmetric };
+    Mode mode = Mode::Auto;
+    double vmin = 0.0;
+    double vmax = 1.0;
+};
+```
+
+This is intentionally separate from `HeatmapColorRangeConfig` (which lives in `HeatmapState.hpp`)
+to avoid coupling `ColormapControls` to any specific widget's state type. Consumers convert
+between the two at the boundary.
+
+## UI Layout
+
+The widget presents two logical groups in a vertical layout:
+
+```
+┌─────────────────────────────────┐
+│ Colormap        [▼ Inferno ███] │  ← combo with gradient icon
+├─────────────────────────────────┤
+│ Color Range:    [▼ Auto       ] │  ← mode combo
+│ Min:            [  0.0000     ] │  ← visible only in Manual mode
+│ Max:            [  1.0000     ] │  ← visible only in Manual mode
+└─────────────────────────────────┘
+```
+
+Each colormap preset entry in the combo box includes a 64×16 pixel gradient icon rendered from
+the preset's 256-entry LUT, providing a visual preview of the color palette.
+
+## Signal Interface
+
+| Signal | Parameters | When emitted |
+|--------|-----------|-------------|
+| `colormapChanged` | `ColormapPreset preset` | User selects a different colormap |
+| `colorRangeChanged` | `ColorRangeConfig const & config` | User changes range mode or vmin/vmax |
+
+## Programmatic API
+
+| Method | Purpose |
+|--------|---------|
+| `colormapPreset()` | Get the currently selected colormap preset |
+| `setColormapPreset(preset)` | Set preset without emitting signal |
+| `colorRange()` | Get the current `ColorRangeConfig` |
+| `setColorRange(config)` | Set full config without emitting signal |
+| `setColorRangeMode(mode)` | Set just the mode without emitting signal |
+| `setColorRangeBounds(vmin, vmax)` | Set just the bounds without emitting signal |
+
+All `set*` methods use an `_updating_ui` guard to prevent feedback loops when syncing
+from external state changes.
+
+## Usage Example
+
+```cpp
+#include "Plots/Common/ColormapControls/ColormapControls.hpp"
+
+// In a properties widget constructor:
+auto * colormap_controls = new ColormapControls(parent);
+colormap_controls->setColormapPreset(CorePlotting::Colormaps::ColormapPreset::Inferno);
+layout->addWidget(colormap_controls);
+
+connect(colormap_controls, &ColormapControls::colormapChanged,
+        this, [this](CorePlotting::Colormaps::ColormapPreset preset) {
+            _state->setColormapPreset(preset);
+        });
+
+connect(colormap_controls, &ColormapControls::colorRangeChanged,
+        this, [this](ColorRangeConfig const & config) {
+            // Convert to widget-specific config type and apply
+        });
+```
+
+## See Also
+
+- [CorePlotting Colormaps](../../../../CorePlotting/Colormaps/index.qmd) — Underlying colormap
+  infrastructure (presets, LUT evaluation, mapping utilities)
+- [RateEstimationControls](../RateEstimationControls/index.qmd) — Sibling composable controls
+  library for rate estimation method and scaling mode
+- [HeatmapWidget](../../HeatmapWidget/index.qmd) — Primary consumer
+- [Plot Widget Guide](../../plot_widget_guide.md) — Shared plot widget architecture

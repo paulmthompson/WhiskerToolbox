@@ -115,6 +115,9 @@ add_subdirectory(Plots/Common/EventRateEstimation)
 # Qt, EventRateEstimation - Composable UI controls for rate estimation method & scaling
 add_subdirectory(Plots/Common/RateEstimationControls)
 
+# Qt, CorePlotting - Composable colormap selection and color range controls
+add_subdirectory(Plots/Common/ColormapControls)
+
 # Qt, EditorState, reflectcpp - Python integration widget
 add_subdirectory(Python_Widget)
 

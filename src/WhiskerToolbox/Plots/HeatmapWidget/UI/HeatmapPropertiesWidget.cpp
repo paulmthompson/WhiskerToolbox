@@ -4,6 +4,7 @@
 #include "Core/HeatmapState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
+#include "Plots/Common/ColormapControls/ColormapControls.hpp"
 #include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RateEstimationControls/EstimationMethodControls.hpp"
@@ -16,7 +17,6 @@
 
 #include <QCheckBox>
 #include <QComboBox>
-#include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QLabel>
 #include <QTreeWidget>
@@ -225,29 +225,15 @@ void HeatmapPropertiesWidget::_setupScalingSection() {
     _scaling_controls = new ScalingModeControls(_scaling_section);
     _scaling_controls->setScalingMode(_state->scaling());
 
-    // --- Color range mode combo ---
-    _color_range_mode_combo = new QComboBox(_scaling_section);
-    _color_range_mode_combo->setObjectName("color_range_mode_combo");
-    _color_range_mode_combo->addItem("Auto", static_cast<int>(HeatmapColorRangeConfig::Mode::Auto));
-    _color_range_mode_combo->addItem("Manual", static_cast<int>(HeatmapColorRangeConfig::Mode::Manual));
-    _color_range_mode_combo->addItem("Symmetric", static_cast<int>(HeatmapColorRangeConfig::Mode::Symmetric));
-
-    // --- Manual vmin / vmax spinboxes ---
-    _vmin_label = new QLabel("Min", _scaling_section);
-    _vmin_spin = new QDoubleSpinBox(_scaling_section);
-    _vmin_spin->setObjectName("vmin_spin");
-    _vmin_spin->setRange(-1e9, 1e9);
-    _vmin_spin->setDecimals(4);
-    _vmin_spin->setSingleStep(0.1);
-    _vmin_spin->setValue(0.0);
-
-    _vmax_label = new QLabel("Max", _scaling_section);
-    _vmax_spin = new QDoubleSpinBox(_scaling_section);
-    _vmax_spin->setObjectName("vmax_spin");
-    _vmax_spin->setRange(-1e9, 1e9);
-    _vmax_spin->setDecimals(4);
-    _vmax_spin->setSingleStep(0.1);
-    _vmax_spin->setValue(1.0);
+    // --- Colormap & color range controls (composable widget) ---
+    _colormap_controls = new ColormapControls(_scaling_section);
+    _colormap_controls->setColormapPreset(_state->colormapPreset());
+    ColorRangeConfig cr_config;
+    cr_config.mode = static_cast<ColorRangeConfig::Mode>(
+            static_cast<int>(_state->colorRange().mode));
+    cr_config.vmin = _state->colorRange().vmin;
+    cr_config.vmax = _state->colorRange().vmax;
+    _colormap_controls->setColorRange(cr_config);
 
     // --- Layout ---
     auto * layout = new QVBoxLayout();
@@ -255,24 +241,13 @@ void HeatmapPropertiesWidget::_setupScalingSection() {
     layout->setSpacing(4);
     layout->addWidget(_estimation_controls);
     layout->addWidget(_scaling_controls);
-
-    auto * color_form = new QFormLayout();
-    color_form->setContentsMargins(0, 4, 0, 0);
-    color_form->setSpacing(4);
-    color_form->addRow("Color Range:", _color_range_mode_combo);
-    color_form->addRow(_vmin_label, _vmin_spin);
-    color_form->addRow(_vmax_label, _vmax_spin);
-    layout->addLayout(color_form);
+    layout->addWidget(_colormap_controls);
 
     _scaling_section->setContentLayout(*layout);
 
     // Insert after the unit tree but before the spacer
     int const spacer_index = ui->main_layout->indexOf(ui->vertical_spacer);
     ui->main_layout->insertWidget(spacer_index, _scaling_section);
-
-    // --- Sync from state ---
-    _syncScalingFromState();
-    _updateColorRangeVisibility();
 
     // --- Connect signals ---
     connect(_estimation_controls, &EstimationMethodControls::paramsChanged,
@@ -287,35 +262,30 @@ void HeatmapPropertiesWidget::_setupScalingSection() {
                 _state->setScaling(mode);
             });
 
-    connect(_color_range_mode_combo, &QComboBox::currentIndexChanged,
-            this, [this](int index) {
-                if (!_state || index < 0) return;
-                auto mode = static_cast<HeatmapColorRangeConfig::Mode>(
-                        _color_range_mode_combo->itemData(index).toInt());
-                _state->setColorRangeMode(mode);
-                _updateColorRangeVisibility();
-            });
-
-    connect(_vmin_spin, &QDoubleSpinBox::valueChanged,
-            this, [this](double val) {
+    connect(_colormap_controls, &ColormapControls::colormapChanged,
+            this, [this](CorePlotting::Colormaps::ColormapPreset preset) {
                 if (!_state) return;
-                _state->setColorRangeBounds(val, _vmax_spin->value());
+                _state->setColormapPreset(preset);
             });
 
-    connect(_vmax_spin, &QDoubleSpinBox::valueChanged,
-            this, [this](double val) {
+    connect(_colormap_controls, &ColormapControls::colorRangeChanged,
+            this, [this](ColorRangeConfig const & config) {
                 if (!_state) return;
-                _state->setColorRangeBounds(_vmin_spin->value(), val);
+                HeatmapColorRangeConfig hcr;
+                hcr.mode = static_cast<HeatmapColorRangeConfig::Mode>(
+                        static_cast<int>(config.mode));
+                hcr.vmin = config.vmin;
+                hcr.vmax = config.vmax;
+                _state->setColorRange(hcr);
             });
 
-    // Listen for state changes (e.g. z-score auto-switching color range mode)
+    // Listen for state changes (e.g. z-score auto-switching)
     connect(_state.get(), &HeatmapState::scalingChanged,
             this, [this]() { _syncScalingFromState(); });
     connect(_state.get(), &HeatmapState::colorRangeChanged,
-            this, [this]() {
-                _syncScalingFromState();
-                _updateColorRangeVisibility();
-            });
+            this, [this]() { _syncScalingFromState(); });
+    connect(_state.get(), &HeatmapState::colormapChanged,
+            this, [this]() { _syncScalingFromState(); });
     connect(_state.get(), &HeatmapState::estimationParamsChanged,
             this, [this]() { _syncScalingFromState(); });
 }
@@ -329,31 +299,15 @@ void HeatmapPropertiesWidget::_syncScalingFromState() {
     // Sync scaling controls
     _scaling_controls->setScalingMode(_state->scaling());
 
-    // Sync color range combo
-    QSignalBlocker const range_blocker(_color_range_mode_combo);
-    QSignalBlocker const vmin_blocker(_vmin_spin);
-    QSignalBlocker const vmax_blocker(_vmax_spin);
+    // Sync colormap & color range controls
+    _colormap_controls->setColormapPreset(_state->colormapPreset());
 
     auto const & cr = _state->colorRange();
-    int const range_idx = _color_range_mode_combo->findData(static_cast<int>(cr.mode));
-    if (range_idx >= 0) {
-        _color_range_mode_combo->setCurrentIndex(range_idx);
-    }
-
-    // Sync spinboxes
-    _vmin_spin->setValue(cr.vmin);
-    _vmax_spin->setValue(cr.vmax);
-}
-
-void HeatmapPropertiesWidget::_updateColorRangeVisibility() {
-    if (!_state) return;
-
-    bool const is_manual =
-            _state->colorRange().mode == HeatmapColorRangeConfig::Mode::Manual;
-    _vmin_label->setVisible(is_manual);
-    _vmin_spin->setVisible(is_manual);
-    _vmax_label->setVisible(is_manual);
-    _vmax_spin->setVisible(is_manual);
+    ColorRangeConfig cr_config;
+    cr_config.mode = static_cast<ColorRangeConfig::Mode>(static_cast<int>(cr.mode));
+    cr_config.vmin = cr.vmin;
+    cr_config.vmax = cr.vmax;
+    _colormap_controls->setColorRange(cr_config);
 }
 
 // =============================================================================

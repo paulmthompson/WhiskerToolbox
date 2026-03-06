@@ -28,8 +28,9 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Scaling and normalization**: Five scaling modes (Firing Rate Hz, Z-Score, Normalized [0,1], Raw Count, Count/Trial). Uses shared `ScalingMode`/`applyScaling()` from `RateEstimate.hpp`. `HeatmapStateData` extended with `scaling` and `color_range` (Auto/Manual/Symmetric). Auto-switches to Coolwarm colormap for z-score and Symmetric color range. Properties panel has "Scaling & Color Range" collapsible section with `ScalingModeControls` widget and manual vmin/vmax spinboxes.
 - **Rate estimation options** : `EstimationParams` variant (`std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>`) stored directly in `HeatmapStateData::estimation_params`. Lightweight `EstimationParams.hpp` header (no heavy transitive deps) safe to include from state headers. `RateEstimationControls` library provides composable Qt widgets: `EstimationMethodControls` (method combo + stacked per-method parameter pages) and `ScalingModeControls` (scaling mode combo). `HeatmapPropertiesWidget` uses both widgets. Renderer passes `estimationParams()` directly to `estimateRates()` — no intermediate conversion.
 - **Row sorting**: Five sorting modes (Manual, TimeToPeak, PeakRate, MeanRate, Alphabetical) with ascending/descending toggle. `HeatmapSortMode` enum and `sortModeLabel()` / `allSortModes()` utilities defined in `HeatmapState.hpp`. `HeatmapStateData` extended with `sort_mode` and `sort_ascending`. Sorting logic in `HeatmapDataPipeline.hpp/cpp` via `computeSortOrder()` (returns index permutation) and `applySortOrder()` (reorders rows, rate estimates, and unit keys in-place). Applied after `runHeatmapPipeline()` in renderer before colormap mapping. Properties panel has "Sorting" collapsible section with sort mode combo and ascending checkbox. Full serialization round-trip.
+- **Colormap selection UI**: `ColormapControls` composable widget in `Plots/Common/ColormapControls/` with colormap preset combo (gradient icon previews from LUT), color range mode combo (Auto/Manual/Symmetric), and vmin/vmax spinboxes. `HeatmapStateData::colormap` field with `colormapChanged()` signal. Auto-switches to Coolwarm for z-score scaling. Renderer reads colormap from state.
 
-**Not yet implemented**: colorbar display (Phase 4), colormap selection UI (Phase 9), and all cross-widget linking described below.
+**Not yet implemented**: colorbar display (Phase 4) and all cross-widget linking described below.
 
 ---
 
@@ -269,29 +270,23 @@ which proposes decoupling the PSTH computation and rendering from the full widge
 
 ## Phase 9: Colormap Selection UI
 
-**Status**: Not started. Phase 2 (colormap infrastructure) is now complete; this phase can proceed.
+**Status**: Complete. Implemented as a shared `ColormapControls` library in
+`Plots/Common/ColormapControls/`. See [ColormapControls documentation](../Common/ColormapControls/index.qmd).
 
-**Goal**: Allow users to select and preview colormaps from the properties panel.
+**Completed work**:
 
-### 9.1 Colormap Combo Box
-
-Add a combo box to `HeatmapPropertiesWidget` that lists available `ColormapPreset` values.
-Each entry should include a small colored gradient preview (rendered as a `QIcon` using the
-colormap's 256-entry LUT).
-
-### 9.2 State Extension
-
-```cpp
-struct HeatmapStateData {
-    // ... existing fields ...
-    ColormapPreset colormap = ColormapPreset::Inferno;
-};
-```
-
-### 9.3 Auto-Suggestion
-
-When the user switches to z-score scaling, automatically suggest the `Coolwarm` diverging
-colormap (show a prompt or auto-switch with undo capability).
+- **`ColormapControls` widget**: Composable widget with colormap preset combo box (gradient icon
+  previews rendered from LUT) and color range controls (Auto / Manual / Symmetric mode with
+  vmin/vmax spinboxes). Embedded in `HeatmapPropertiesWidget` within the "Rate Estimation &
+  Scaling" collapsible section.
+- **State extension**: `HeatmapStateData::colormap` field (`ColormapPreset`, default `Inferno`).
+  `HeatmapState` provides `colormapPreset()` / `setColormapPreset()` with `colormapChanged()`
+  signal. Full JSON serialization round-trip via `rfl::json`.
+- **Auto-suggestion**: When switching to z-score scaling, the colormap automatically changes to
+  `Coolwarm` and the color range switches to `Symmetric`. Reverting from z-score restores
+  `Inferno` and `Auto`.
+- **Renderer integration**: `HeatmapOpenGLWidget::rebuildScene()` reads the colormap from
+  `_state->colormapPreset()` instead of hard-coding based on scaling mode.
 
 ---
 

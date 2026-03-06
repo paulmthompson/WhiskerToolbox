@@ -277,11 +277,8 @@ void HeatmapOpenGLWidget::rebuildScene() {
     // Build the colored rectangle scene with appropriate colormap and range
     auto const & color_range_config = _state->colorRange();
 
-    // Use Coolwarm for z-score, Inferno otherwise
-    auto const colormap_preset =
-            (config.scaling == WhiskerToolbox::Plots::ScalingMode::ZScore)
-                    ? CorePlotting::Colormaps::ColormapPreset::Coolwarm
-                    : CorePlotting::Colormaps::ColormapPreset::Inferno;
+    // Use colormap preset from state
+    auto const colormap_preset = _state->colormapPreset();
     auto colormap = CorePlotting::Colormaps::getColormap(colormap_preset);
 
     // Map state color range config to CorePlotting::HeatmapColorRange

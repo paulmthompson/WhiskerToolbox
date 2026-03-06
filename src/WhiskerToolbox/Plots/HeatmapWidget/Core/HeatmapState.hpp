@@ -15,6 +15,7 @@
  * @see EditorState for base class documentation
  */
 
+#include "CorePlotting/Colormaps/Colormap.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
@@ -125,6 +126,8 @@ struct HeatmapStateData {
             WhiskerToolbox::Plots::ScalingMode::FiringRateHz;
     WhiskerToolbox::Plots::EstimationParams estimation_params;
     HeatmapColorRangeConfig color_range;
+    CorePlotting::Colormaps::ColormapPreset colormap =
+            CorePlotting::Colormaps::ColormapPreset::Inferno;
     HeatmapSortMode sort_mode = HeatmapSortMode::Manual;
     bool sort_ascending = true;
 };
@@ -222,6 +225,14 @@ public:
     /** @brief Set the full color range config. Emits colorRangeChanged() and stateChanged(). */
     void setColorRange(HeatmapColorRangeConfig const & config);
 
+    // === Colormap ===
+    /** @brief Get the current colormap preset */
+    [[nodiscard]] CorePlotting::Colormaps::ColormapPreset colormapPreset() const {
+        return _data.colormap;
+    }
+    /** @brief Set the colormap preset. Emits colormapChanged() and stateChanged(). */
+    void setColormapPreset(CorePlotting::Colormaps::ColormapPreset preset);
+
     // === Background Color ===
     [[nodiscard]] QString getBackgroundColor() const;
     void setBackgroundColor(QString const & hex_color);
@@ -243,6 +254,7 @@ signals:
     void unitsChanged();           ///< Emitted when the unit list changes (add/remove)
     void scalingChanged();         ///< Emitted when scaling mode changes
     void colorRangeChanged();      ///< Emitted when color range config changes
+    void colormapChanged();        ///< Emitted when colormap preset changes
     void estimationParamsChanged();///< Emitted when estimation params (bin_size) change
     void sortChanged();            ///< Emitted when sort mode or direction changes
 

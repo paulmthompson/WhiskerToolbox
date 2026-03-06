@@ -76,6 +76,7 @@ struct HeatmapStateData {
     WhiskerToolbox::Plots::ScalingMode scaling;      ///< Default: FiringRateHz
     WhiskerToolbox::Plots::EstimationParams estimation_params;  ///< Default: BinningParams{}
     HeatmapColorRangeConfig color_range;             ///< Auto/Manual/Symmetric
+    CorePlotting::Colormaps::ColormapPreset colormap; ///< Default: Inferno
     HeatmapSortMode sort_mode = HeatmapSortMode::Manual;
     bool sort_ascending = true;
 };
@@ -97,7 +98,7 @@ HeatmapState emits category-level signals to minimize coupling complexity:
 | `backgroundColorChanged` | Background color changed || `unitsChanged` | Unit key list added to, removed from, or replaced |
 | `estimationParamsChanged` | `EstimationParams` variant changed (method or parameters) |
 | `scalingChanged` | Scaling mode changed |
-| `colorRangeChanged` | Color range mode or bounds changed || `sortChanged` | Sort mode or direction changed || `stateChanged` (inherited) | Any change requiring scene rebuild |
+| `colorRangeChanged` | Color range mode or bounds changed |\n| `colormapChanged` | Colormap preset changed |\n| `sortChanged` | Sort mode or direction changed || `stateChanged` (inherited) | Any change requiring scene rebuild |
 
 **Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild via `stateChanged()`.
 
@@ -209,7 +210,7 @@ The `HeatmapPropertiesWidget` provides the following collapsible sections:
 3. **Scaling & Estimation** — Composable controls from the `RateEstimationControls` library:
    - **`EstimationMethodControls`**: method combo (Histogram Binning / Gaussian Kernel / Causal Exponential) with a `QStackedWidget` showing per-method parameter spinboxes. Emits `paramsChanged(EstimationParams)` → connected directly to `HeatmapState::setEstimationParams()`. Stub methods show a "Not yet implemented" page.
    - **`ScalingModeControls`**: scaling mode combo auto-populated from `allScalingModes()`. Emits `scalingModeChanged(ScalingMode)` → connected directly to `HeatmapState::setScaling()`.
-   - **Color range mode** combo (Auto / Manual / Symmetric) with vmin/vmax spinboxes (visible only in Manual mode).
+   - **`ColormapControls`** (from [`Plots/Common/ColormapControls`](../Common/ColormapControls/index.qmd)): colormap preset combo (with painted gradient icon previews), color range mode combo (Auto / Manual / Symmetric) with vmin/vmax spinboxes (visible only in Manual mode). Emits `colormapChanged(ColormapPreset)` → `HeatmapState::setColormapPreset()` and `colorRangeChanged(ColorRangeConfig)` → `HeatmapState::setColorRange()`.
 4. **Sorting** — Collapsible section with a sort mode combo box (Manual / Time to Peak / Peak Rate / Mean Rate / Alphabetical) and an ascending/descending checkbox. Sort mode changes emit `sortChanged()` → triggers scene rebuild. Time-to-Peak sorting produces the characteristic "diagonal stripe" pattern for temporal sequence visualization. The sorted order is reflected in the Y-axis row positions.
 5. **Time Axis Range Controls** — `RelativeTimeAxisRangeControls` in a collapsible `Section`.
 6. **Y-Axis Range Controls** — `VerticalAxisRangeControls` in a collapsible `Section`.

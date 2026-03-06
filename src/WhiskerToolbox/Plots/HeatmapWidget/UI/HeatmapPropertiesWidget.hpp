@@ -22,13 +22,13 @@
 #include <memory>
 
 class DataManager;
+class ColormapControls;
 class EstimationMethodControls;
 class Feature_Tree_Widget;
 class HeatmapWidget;
 class PlotAlignmentWidget;
 class QCheckBox;
 class QComboBox;
-class QDoubleSpinBox;
 class QLabel;
 class RelativeTimeAxisRangeControls;
 class ScalingModeControls;
@@ -86,11 +86,7 @@ private:
     Section * _scaling_section{nullptr};
     EstimationMethodControls * _estimation_controls{nullptr};
     ScalingModeControls * _scaling_controls{nullptr};
-    QComboBox * _color_range_mode_combo{nullptr};
-    QDoubleSpinBox * _vmin_spin{nullptr};
-    QDoubleSpinBox * _vmax_spin{nullptr};
-    QLabel * _vmin_label{nullptr};
-    QLabel * _vmax_label{nullptr};
+    ColormapControls * _colormap_controls{nullptr};
 
     // Sorting UI
     Section * _sorting_section{nullptr};
@@ -102,7 +98,6 @@ private:
     void _syncTreeFromState();
     void _setupScalingSection();
     void _syncScalingFromState();
-    void _updateColorRangeVisibility();
     void _setupSortingSection();
     void _syncSortingFromState();
 };

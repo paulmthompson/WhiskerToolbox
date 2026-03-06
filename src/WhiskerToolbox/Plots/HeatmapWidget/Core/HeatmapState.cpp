@@ -253,15 +253,25 @@ void HeatmapState::setScaling(WhiskerToolbox::Plots::ScalingMode scaling) {
     if (_data.scaling != scaling) {
         _data.scaling = scaling;
 
-        // When switching to ZScore, auto-suggest Symmetric color range
+        // When switching to ZScore, auto-suggest Symmetric color range and Coolwarm colormap
         if (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Auto) {
             _data.color_range.mode = HeatmapColorRangeConfig::Mode::Symmetric;
             emit colorRangeChanged();
         }
-        // When switching away from ZScore with Symmetric, revert to Auto
+        if (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore &&
+            _data.colormap != CorePlotting::Colormaps::ColormapPreset::Coolwarm) {
+            _data.colormap = CorePlotting::Colormaps::ColormapPreset::Coolwarm;
+            emit colormapChanged();
+        }
+        // When switching away from ZScore with Symmetric, revert to Auto and Inferno
         if (scaling != WhiskerToolbox::Plots::ScalingMode::ZScore && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Symmetric) {
             _data.color_range.mode = HeatmapColorRangeConfig::Mode::Auto;
             emit colorRangeChanged();
+        }
+        if (scaling != WhiskerToolbox::Plots::ScalingMode::ZScore &&
+            _data.colormap == CorePlotting::Colormaps::ColormapPreset::Coolwarm) {
+            _data.colormap = CorePlotting::Colormaps::ColormapPreset::Inferno;
+            emit colormapChanged();
         }
 
         markDirty();
@@ -325,6 +335,17 @@ void HeatmapState::setColorRange(HeatmapColorRangeConfig const & config) {
     markDirty();
     emit colorRangeChanged();
     emit stateChanged();
+}
+
+// === Colormap ===
+
+void HeatmapState::setColormapPreset(CorePlotting::Colormaps::ColormapPreset preset) {
+    if (_data.colormap != preset) {
+        _data.colormap = preset;
+        markDirty();
+        emit colormapChanged();
+        emit stateChanged();
+    }
 }
 
 // === Serialization ===
