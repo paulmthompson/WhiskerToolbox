@@ -46,7 +46,10 @@ website:
         - developer/fuzz/fuzzing.qmd
         - developer/intro_to_c.qmd
         - developer/analysis/static_analysis.qmd
-        - developer/testing/testing.qmd
+        - section: "Testing"
+          href: developer/testing/testing.qmd
+          contents:
+            - developer/testing/layout_sanity_checker_roadmap.qmd
         - text: "API Reference"
           href: api_reference.qmd
         - section: "Core Libraries"

@@ -1,0 +1,287 @@
+---
+title: "Layout Sanity Checker — Roadmap"
+format: html
+---
+
+## Motivation
+
+Dockable widget panels in WhiskerToolbox can be resized by the user to arbitrary
+dimensions. When a panel is too narrow or too short, child widgets (spinboxes,
+combo boxes, labels) can become "swished" — still visible but too small to
+interact with or read. Qt's layout system does not hard-prevent this; it simply
+compresses widgets below their preferred sizes.
+
+This problem has been observed concretely in `ColormapControls` when switching to
+Manual scaling mode inside a narrow `HeatmapWidget` dock panel. The
+`QDoubleSpinBox` widgets for vmin/vmax become unreadable because the
+`QFormLayout` squeezes them horizontally.
+
+Rather than fixing each occurrence ad-hoc, we want a **reusable diagnostic
+library** that:
+
+1. Detects layout constraint violations at runtime (during development).
+2. Provides a testable API so violations can be asserted against in Catch2.
+3. Enables fuzz-style testing where widgets are resized to many dimensions and
+   mode combinations are exercised, catching regressions automatically.
+
+## Architecture
+
+### Core: `LayoutSanityChecker`
+
+A single header-only (or header + cpp) utility living under a new
+`src/LayoutTesting/` library. No Qt GUI dependency beyond `QtWidgets`.
+
+```
+src/LayoutTesting/
+├── CMakeLists.txt
+├── LayoutSanityChecker.hpp
+├── LayoutSanityChecker.cpp
+└── LayoutViolation.hpp
+```
+
+**Key types:**
+
+```cpp
+struct LayoutViolation {
+    enum class Severity { Critical, Warning, Info };
+
+    Severity    severity;
+    QString     widgetPath;   // "MainWindow/DockWidget/ColormapControls/vmax_spin"
+    QString     className;    // "QDoubleSpinBox"
+    QString     description;  // Human-readable explanation
+    QSize       actual;       // Actual widget size
+    QSize       expected;     // minimumSizeHint or computed minimum
+};
+```
+
+**Two usage modes:**
+
+| Mode | How | Purpose |
+|------|-----|---------|
+| **Global monitor** | Install as event filter on `qApp`; logs violations via `qWarning` | Development-time awareness |
+| **Static query** | `LayoutSanityChecker::getViolations(QWidget * root)` | Catch2 test assertions |
+
+### Widget Path Resolution
+
+Many widgets lack object names. The checker builds a diagnostic path by walking the
+parent chain and using either the object name or the meta-object class name:
+
+```
+MainWindow / QDockWidget / HeatmapWidget / ColormapControls / QDoubleSpinBox
+```
+
+This makes violations immediately actionable — the developer can locate the
+exact widget in the tree.
+
+## Checks
+
+### Phase 1 — Core Checks
+
+These catch the most common and severe problems:
+
+| # | Check | Severity | Description |
+|---|-------|----------|-------------|
+| 1 | **Zero dimension** | Critical | `width() == 0 || height() == 0` on a visible widget |
+| 2 | **Below minimumSizeHint** | Warning | Widget smaller than `minimumSizeHint()` in either axis |
+| 3 | **Extreme aspect ratio** | Warning | Visible widget with aspect ratio > 20:1 or < 1:20 (squished to a line) |
+
+### Phase 2 — Content-Aware Checks
+
+These require inspecting widget-specific properties:
+
+| # | Check | Severity | Description |
+|---|-------|----------|-------------|
+| 4 | **Label text truncation** | Warning | `QLabel::fontMetrics().horizontalAdvance(text()) > width()` |
+| 5 | **Spinbox content overflow** | Warning | Spinbox too narrow to display its maximum value text plus buttons |
+| 6 | **ComboBox content overflow** | Warning | ComboBox too narrow to display the longest item text |
+
+### Phase 3 — Spatial Checks
+
+| # | Check | Severity | Description |
+|---|-------|----------|-------------|
+| 7 | **Clipped children** | Warning | Child widget geometry extends beyond parent `rect()` |
+| 8 | **Overlapping siblings** | Info | Two visible siblings with significantly overlapping geometries |
+
+## Global Monitor Design
+
+The global monitor attaches as an event filter to `qApp` and watches for
+`QEvent::LayoutRequest` and `QEvent::Resize` on top-level windows. When
+triggered, it debounces via a restarting single-shot timer (50 ms) to let
+cascading layout passes settle before running the tree walk.
+
+```cpp
+// Guarded by #ifndef NDEBUG in main.cpp
+LayoutSanityChecker layoutChecker;
+```
+
+This is a **debug-only** facility. It is compiled out in release builds.
+
+## Test Integration
+
+### Unit Tests for the Checker Itself
+
+Verify that the checker correctly detects known-bad layouts:
+
+```cpp
+TEST_CASE("LayoutSanityChecker detects zero-dimension widget", "[ui][layout]") {
+    QWidget parent;
+    auto * child = new QWidget(&parent);
+    child->setFixedSize(0, 50);
+    child->show();
+    parent.show();
+    QCoreApplication::processEvents();
+
+    auto violations = LayoutSanityChecker::getViolations(&parent);
+    REQUIRE_FALSE(violations.empty());
+    REQUIRE(violations[0].severity == LayoutViolation::Severity::Critical);
+}
+```
+
+### Resize Sweep Tests for Existing Widgets
+
+Systematically resize a widget across a range and assert no violations appear:
+
+```cpp
+TEST_CASE("ColormapControls layout resilience", "[ui][layout]") {
+    ColormapControls controls;
+    controls.show();
+    QCoreApplication::processEvents();
+
+    for (int w = 10; w <= 800; w += 10) {
+        controls.resize(w, 300);
+        QCoreApplication::processEvents();
+        auto violations = LayoutSanityChecker::getViolations(&controls);
+        if (!violations.empty()) {
+            INFO("Width: " << w);
+            for (auto const & v : violations) {
+                INFO(v.description.toStdString());
+            }
+            CHECK(violations.empty());
+        }
+    }
+}
+```
+
+### Mode-Toggle Tests
+
+For widgets with mode-dependent visibility (like `ColormapControls` showing/hiding
+spinboxes), exercise each mode at constrained sizes:
+
+```cpp
+SECTION("Manual mode at constrained widths") {
+    for (int w : {50, 100, 150, 200, 300}) {
+        controls.resize(w, 400);
+        controls.setColorRangeMode(ColorRangeConfig::Mode::Manual);
+        QCoreApplication::processEvents();
+        auto v = LayoutSanityChecker::getViolations(&controls);
+        CHECK(v.empty());
+    }
+}
+```
+
+## Fuzz Testing Strategy
+
+### Resize Fuzzing
+
+Systematically sweep width × height dimensions. For each dimension pair:
+
+1. Resize the widget.
+2. Process the event loop.
+3. Collect violations.
+4. Log or assert.
+
+A full sweep for a single widget (10–800 px, step 10, both axes) produces
+~6400 test points. This can be run as a parameterized Catch2 `GENERATE` test.
+
+### State-Space Fuzzing
+
+For widgets with configurable state (combo box selections, checkbox toggles,
+spinbox values), enumerate combinations:
+
+1. Enumerate all combo box items × all checkbox states.
+2. For each state, resize to a set of representative sizes.
+3. Collect and aggregate violations.
+
+This is particularly useful for `ColormapControls` where Manual mode reveals
+additional widgets that Auto mode hides.
+
+### Dock Arrangement Fuzzing
+
+Since WhiskerToolbox uses `Qt6AdvancedDocking`:
+
+1. Programmatically create a set of dock widgets.
+2. Randomly arrange them (side-by-side, tabbed, floating).
+3. Resize the main window to various dimensions.
+4. Walk all visible widgets for violations.
+
+This catches cases where a specific dock arrangement creates an unexpectedly
+narrow panel.
+
+### Property Fuzzing
+
+Randomize widget properties that affect sizing:
+
+- Font size / DPI scaling
+- Spinbox decimal count and range
+- Label text length
+- Locale (affects number formatting width)
+
+## Implementation Phases
+
+### Phase 1: Core Library + ColormapControls Fix
+
+- [ ] Create `src/LayoutTesting/` with `LayoutViolation` and `LayoutSanityChecker`
+- [ ] Implement checks 1–3 (zero dimension, below minimumSizeHint, extreme aspect ratio)
+- [ ] Implement `getViolations()` static API
+- [ ] Add Catch2 tests for the checker itself
+- [ ] Add resize sweep test for `ColormapControls`
+- [ ] Use test output to diagnose and fix the ColormapControls Manual mode layout
+- [ ] Wire global monitor into `main.cpp` under `#ifndef NDEBUG`
+
+### Phase 2: Content-Aware Checks
+
+- [ ] Add label truncation check (check 4)
+- [ ] Add spinbox content overflow check (check 5)
+- [ ] Add combo box content overflow check (check 6)
+- [ ] Add resize sweep tests for other property panel widgets
+
+### Phase 3: Spatial Checks + Dock Fuzzing
+
+- [ ] Add clipped children check (check 7)
+- [ ] Add overlapping siblings check (check 8)
+- [ ] Create dock arrangement fuzzing harness
+- [ ] Integrate with CI as a layout regression gate
+
+## CMake Integration
+
+```cmake
+add_library(LayoutTesting STATIC
+    LayoutSanityChecker.hpp
+    LayoutSanityChecker.cpp
+    LayoutViolation.hpp
+)
+target_link_libraries(LayoutTesting PUBLIC Qt6::Widgets)
+```
+
+Test executables link `LayoutTesting` alongside their widget-under-test.
+The main application links it only in debug builds via a generator expression:
+
+```cmake
+target_link_libraries(WhiskerToolbox PRIVATE
+    $<$<CONFIG:Debug>:LayoutTesting>
+)
+```
+
+## Relationship to ColormapControls Bug
+
+Running the Phase 1 resize sweep on `ColormapControls` in Manual mode is expected
+to identify `vmin_spin` and `vmax_spin` as violating `minimumSizeHint` at narrow
+widths. The fix likely involves one or more of:
+
+1. Setting `setMinimumWidth()` on the spinboxes.
+2. Switching the `QFormLayout` row wrap policy to `WrapAllRows` so labels stack
+   above fields when the container is narrow.
+3. Setting an appropriate `minimumWidth` on `ColormapControls` itself.
+
+The checker output will pinpoint exactly which widgets are undersized and at what
+threshold width the violations begin, providing data-driven guidance for the fix.
