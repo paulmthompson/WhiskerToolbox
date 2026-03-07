@@ -269,37 +269,39 @@ above `minimumSizeHint()`. Detecting this requires **Phase 2 Check 6
 
 ### Phase 2: Content-Aware Checks + Event-Driven Diffing
 
-- [ ] Add label truncation check (check 4)
-- [ ] Add spinbox content overflow check (check 5)
-- [ ] Add combo box content overflow check (check 6)
-- [ ] Add event-driven violation diffing to the global monitor (see below)
-- [ ] Add resize sweep tests for other property panel widgets
-- [ ] Add mode-toggle tests that assert no *new* violations appear after state changes
+- [x] Add label truncation check (check 4)
+- [x] Add spinbox content overflow check (check 5)
+- [x] Add combo box content overflow check (check 6)
+- [x] Add event-driven violation diffing to the global monitor (see below)
+- [x] Add resize sweep tests for other property panel widgets
+- [x] Add mode-toggle tests that assert no *new* violations appear after state changes
 
-**Event-driven violation diffing:** The global monitor currently re-scans the
-entire tree on every layout settle and logs all violations, including
-pre-existing ones (e.g. violations that were already present before a mode
-change). This causes duplicate output. A better approach is to store the
-previous violation set and only emit *newly appeared* violations:
-
-```cpp
-void LayoutSanityChecker::runCheck() {
-    std::vector<LayoutViolation> current;
-    for (QWidget * w : QApplication::topLevelWidgets())
-        for (auto & v : getViolations(w))
-            current.push_back(std::move(v));
-
-    // Emit only violations not present in the previous scan
-    for (auto const & v : current) {
-        if (!containsEquivalent(_previous_violations, v))
-            logViolation(v);
-    }
-    _previous_violations = std::move(current);
-}
-```
-
+**Event-driven violation diffing:** The global monitor stores the previous
+violation set and only emits *newly appeared* violations. This uses
+`LayoutViolation::operator==` which compares severity, widgetPath, and
+description. The `_previous_violations` member is updated after each scan.
 This makes the output event-driven: "widget X became squished after you did Y"
 instead of repeating the same violations every 50 ms.
+
+**Content-aware checks implementation:**
+
+- **Check 4 (Label truncation):** Uses `QLabel::fontMetrics().horizontalAdvance(text())`
+  against `contentsRect().width()`. Rich text labels (`Qt::RichText`) are skipped
+  since their rendered width cannot be computed via simple font metrics.
+- **Check 5 (Spinbox content overflow):** Uses `QAbstractSpinBox::text()` to get
+  the current display string, then compares its rendered width against the
+  edit-field sub-control rect obtained via `QStyle::subControlRect()`.
+- **Check 6 (ComboBox content overflow):** Iterates all items to find the widest
+  text, then compares against the edit-field sub-control rect. This catches the
+  `color_range_mode_combo` squishing described in the Phase 1 known limitation.
+
+**Property panel resize sweep tests added:**
+
+- `GlyphStyleControls` — width sweep 50–500 px
+- `LineStyleControls` — width sweep 50–500 px
+- `EstimationMethodControls` — binning mode width sweep + method transition tests
+  at constrained widths (Binning, Gaussian, CausalExponential)
+- `ColormapControls` — Auto→Manual mode-toggle diffing test at widths 100–500 px
 
 ### Phase 3: Spatial Checks + Dock Fuzzing
 

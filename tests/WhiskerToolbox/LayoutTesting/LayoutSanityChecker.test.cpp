@@ -3,17 +3,20 @@
  * @brief Unit tests for the LayoutSanityChecker
  *
  * Verifies that the checker correctly detects zero-dimension widgets,
- * minimumSizeHint violations, and extreme aspect ratios, and that it
+ * minimumSizeHint violations, extreme aspect ratios, label text truncation,
+ * spinbox content overflow, and combo box content overflow, and that it
  * produces no false positives for healthy layouts.
  */
 
 #include "LayoutTesting/LayoutSanityChecker.hpp"
 
 #include <QApplication>
+#include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QSpinBox>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -216,6 +219,125 @@ TEST_CASE("LayoutSanityChecker skips invisible widgets", "[ui][layout]") {
     // The hidden zero-dimension child should not produce violations
     bool const found = std::any_of(violations.begin(), violations.end(), [](auto const & v) {
         return v.severity == LayoutViolation::Severity::Critical;
+    });
+    REQUIRE_FALSE(found);
+}
+
+// =============================================================================
+// Check 4: Label text truncation
+// =============================================================================
+
+TEST_CASE("LayoutSanityChecker detects label text truncation", "[ui][layout]") {
+    ensureQApp();
+
+    QWidget parent;
+    auto * label = new QLabel("This is a very long label that should not fit in a tiny space", &parent);
+    label->setFixedSize(20, 30);
+    parent.show();
+    label->show();
+    QCoreApplication::processEvents();
+
+    auto violations = LayoutSanityChecker::getViolations(&parent);
+    bool const found = std::any_of(violations.begin(), violations.end(), [](auto const & v) {
+        return v.severity == LayoutViolation::Severity::Warning &&
+               v.description.contains("truncated");
+    });
+    REQUIRE(found);
+}
+
+TEST_CASE("LayoutSanityChecker no truncation for fitting label", "[ui][layout]") {
+    ensureQApp();
+
+    QWidget parent;
+    auto * label = new QLabel("OK", &parent);
+    label->setFixedSize(200, 30);
+    parent.show();
+    label->show();
+    QCoreApplication::processEvents();
+
+    auto violations = LayoutSanityChecker::getViolations(&parent);
+    bool const found = std::any_of(violations.begin(), violations.end(), [](auto const & v) {
+        return v.description.contains("truncated");
+    });
+    REQUIRE_FALSE(found);
+}
+
+// =============================================================================
+// Check 5: Spinbox content overflow
+// =============================================================================
+
+TEST_CASE("LayoutSanityChecker detects spinbox content overflow", "[ui][layout]") {
+    ensureQApp();
+
+    QWidget parent;
+    auto * spin = new QDoubleSpinBox(&parent);
+    spin->setDecimals(4);
+    spin->setRange(-1e9, 1e9);
+    spin->setValue(123456789.1234);
+
+    parent.show();
+    spin->show();
+    QCoreApplication::processEvents();
+
+    // Squeeze the spinbox so its text cannot fit
+    spin->setFixedSize(30, 25);
+    QCoreApplication::processEvents();
+
+    auto violations = LayoutSanityChecker::getViolations(&parent);
+    bool const found = std::any_of(violations.begin(), violations.end(), [](auto const & v) {
+        return v.severity == LayoutViolation::Severity::Warning &&
+               v.description.contains("Spinbox too narrow");
+    });
+    REQUIRE(found);
+}
+
+// =============================================================================
+// Check 6: ComboBox content overflow
+// =============================================================================
+
+TEST_CASE("LayoutSanityChecker detects combo box content overflow", "[ui][layout]") {
+    ensureQApp();
+
+    QWidget parent;
+    auto * combo = new QComboBox(&parent);
+    combo->addItem("Very Long Item Text That Should Not Fit");
+    combo->addItem("Another Extremely Long Option For Testing");
+
+    parent.show();
+    combo->show();
+    QCoreApplication::processEvents();
+
+    // Squeeze the combo box
+    combo->setFixedSize(30, 25);
+    QCoreApplication::processEvents();
+
+    auto violations = LayoutSanityChecker::getViolations(&parent);
+    bool const found = std::any_of(violations.begin(), violations.end(), [](auto const & v) {
+        return v.severity == LayoutViolation::Severity::Warning &&
+               v.description.contains("ComboBox too narrow");
+    });
+    REQUIRE(found);
+}
+
+TEST_CASE("LayoutSanityChecker no overflow for fitting combo box", "[ui][layout]") {
+    ensureQApp();
+
+    QWidget parent;
+    auto * combo = new QComboBox(&parent);
+    combo->addItem("OK");
+    combo->addItem("Hi");
+
+    parent.show();
+    combo->show();
+    QCoreApplication::processEvents();
+
+    // Give it plenty of room
+    combo->setFixedSize(300, 30);
+    QCoreApplication::processEvents();
+
+    auto violations = LayoutSanityChecker::getViolations(&parent);
+    bool const found = std::any_of(violations.begin(), violations.end(), [](auto const & v) {
+        return v.description.contains("ComboBox too narrow");
     });
     REQUIRE_FALSE(found);
 }

@@ -5,11 +5,18 @@
 
 #include "LayoutSanityChecker.hpp"
 
+#include <QAbstractSpinBox>
 #include <QApplication>
+#include <QComboBox>
 #include <QEvent>
+#include <QFontMetrics>
+#include <QFrame>
+#include <QLabel>
 #include <QMenuBar>
+#include <QScrollArea>
 #include <QStatusBar>
 #include <QStringList>
+#include <QStyle>
 #include <QWidget>
 
 #include <algorithm>
@@ -48,6 +55,32 @@ static auto isNaturallyExtreme(QWidget const * widget) -> bool {
            qobject_cast<QStatusBar const *>(widget) != nullptr;
 }
 
+/// Returns true for decorative QFrame separators (HLine / VLine) which are
+/// expected to have near-zero dimension in one axis.
+static auto isDecorativeFrame(QWidget const * widget) -> bool {
+    auto const * frame = qobject_cast<QFrame const *>(widget);
+    if (!frame) {
+        return false;
+    }
+    auto const shape = frame->frameShape();
+    return shape == QFrame::HLine || shape == QFrame::VLine;
+}
+
+/// Returns true if the widget is inside a QScrollArea whose viewport has
+/// zero height (e.g. a collapsed Section). Such widgets are technically
+/// "visible" in Qt's sense but are not physically viewable.
+static auto isClippedByAncestor(QWidget const * widget) -> bool {
+    // Walk up the parent chain. If any ancestor has height 0, the widget
+    // is not physically visible on screen.
+    for (auto const * ancestor = widget->parentWidget(); ancestor != nullptr;
+         ancestor = ancestor->parentWidget()) {
+        if (ancestor->height() == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Debounce interval (ms) for the global monitor
 static constexpr int kDebounceMs = 50;
 
@@ -73,10 +106,9 @@ LayoutSanityChecker::LayoutSanityChecker(QObject * parent)
 bool LayoutSanityChecker::eventFilter(QObject * obj, QEvent * event) {
     if (event->type() == QEvent::LayoutRequest || event->type() == QEvent::Resize) {
         if (obj->isWidgetType()) {
-            auto * widget = dynamic_cast<QWidget *>(obj);
-            if (widget->isWindow()) {
-                scheduleCheck();
-            }
+            // Any visible widget's layout change should trigger a check.
+            // The debounce timer coalesces rapid cascades into a single scan.
+            scheduleCheck();
         }
     }
     return QObject::eventFilter(obj, event);
@@ -88,33 +120,48 @@ void LayoutSanityChecker::scheduleCheck() {
 }
 
 void LayoutSanityChecker::runCheck() {
+    std::vector<LayoutViolation> current;
     for (QWidget * window: QApplication::topLevelWidgets()) {
         auto violations = getViolations(window);
-        for (auto const & v: violations) {
-            switch (v.severity) {
-                case LayoutViolation::Severity::Critical:
-                    qWarning("[Layout] CRITICAL: %s — %s (actual: %dx%d, expected: %dx%d)",
-                             qPrintable(v.widgetPath),
-                             qPrintable(v.description),
-                             v.actual.width(), v.actual.height(),
-                             v.expected.width(), v.expected.height());
-                    break;
-                case LayoutViolation::Severity::Warning:
-                    qWarning("[Layout] WARNING: %s — %s (actual: %dx%d, expected: %dx%d)",
-                             qPrintable(v.widgetPath),
-                             qPrintable(v.description),
-                             v.actual.width(), v.actual.height(),
-                             v.expected.width(), v.expected.height());
-                    break;
-                case LayoutViolation::Severity::Info:
-                    qDebug("[Layout] INFO: %s — %s (actual: %dx%d)",
-                           qPrintable(v.widgetPath),
-                           qPrintable(v.description),
-                           v.actual.width(), v.actual.height());
-                    break;
-            }
+        for (auto & v: violations) {
+            current.push_back(std::move(v));
         }
     }
+
+    // Emit only violations not present in the previous scan
+    for (auto const & v: current) {
+        bool const wasPrevious = std::any_of(
+                _previous_violations.begin(), _previous_violations.end(),
+                [&v](auto const & prev) { return prev == v; });
+        if (wasPrevious) {
+            continue;
+        }
+
+        switch (v.severity) {
+            case LayoutViolation::Severity::Critical:
+                qWarning("[Layout] CRITICAL: %s — %s (actual: %dx%d, expected: %dx%d)",
+                         qPrintable(v.widgetPath),
+                         qPrintable(v.description),
+                         v.actual.width(), v.actual.height(),
+                         v.expected.width(), v.expected.height());
+                break;
+            case LayoutViolation::Severity::Warning:
+                qWarning("[Layout] WARNING: %s — %s (actual: %dx%d, expected: %dx%d)",
+                         qPrintable(v.widgetPath),
+                         qPrintable(v.description),
+                         v.actual.width(), v.actual.height(),
+                         v.expected.width(), v.expected.height());
+                break;
+            case LayoutViolation::Severity::Info:
+                qDebug("[Layout] INFO: %s — %s (actual: %dx%d)",
+                       qPrintable(v.widgetPath),
+                       qPrintable(v.description),
+                       v.actual.width(), v.actual.height());
+                break;
+        }
+    }
+
+    _previous_violations = std::move(current);
 }
 
 // =============================================================================
@@ -156,9 +203,40 @@ void LayoutSanityChecker::walkTree(QWidget * widget, std::vector<LayoutViolation
         return;
     }
 
-    // Skip third-party framework internals (ads:: dock system, combo-box
-    // popup containers) — we do not control their sizing.
+    // Skip checks for third-party framework internals (ads:: dock system,
+    // combo-box popup containers) — we do not control their sizing.
+    // BUT still recurse into their children so we check app widgets nested
+    // inside dock containers.
     if (isThirdPartyInternal(widget)) {
+        for (QObject * child: widget->children()) {
+            if (child->isWidgetType()) {
+                walkTree(dynamic_cast<QWidget *>(child), out);
+            }
+        }
+        return;
+    }
+
+    // Skip widgets inside a collapsed container (e.g. collapsed Section)
+    // — they are technically "visible" but are clipped by a 0-height ancestor.
+    if (isClippedByAncestor(widget)) {
+        return;
+    }
+
+    // Skip widgets that are intentionally collapsed (maximumHeight == 0).
+    // Section's QScrollArea uses this mechanism to hide content.
+    if (widget->maximumHeight() == 0) {
+        return;
+    }
+
+    // Skip decorative QFrame separators — HLine/VLine are expected to have
+    // near-zero dimension in one axis.
+    if (isDecorativeFrame(widget)) {
+        // Still recurse into children (unlikely for separator frames)
+        for (QObject * child: widget->children()) {
+            if (child->isWidgetType()) {
+                walkTree(dynamic_cast<QWidget *>(child), out);
+            }
+        }
         return;
     }
 
@@ -207,6 +285,94 @@ void LayoutSanityChecker::walkTree(QWidget * widget, std::vector<LayoutViolation
                     widget->size(),
                     QSize{},
             });
+        }
+    }
+
+    // ---------- Check 4: Label text truncation ----------
+    if (auto const * label = qobject_cast<QLabel const *>(widget)) {
+        QString const text = label->text();
+        if (!text.isEmpty() && label->textFormat() != Qt::RichText) {
+            int const textWidth = label->fontMetrics().horizontalAdvance(text);
+            // Account for margins/indent
+            int const available = label->contentsRect().width();
+            if (available > 0 && textWidth > available) {
+                out.push_back({
+                        LayoutViolation::Severity::Warning,
+                        path,
+                        QString(className),
+                        QStringLiteral("Label text truncated (needs %1 px, has %2 px)")
+                                .arg(textWidth)
+                                .arg(available),
+                        widget->size(),
+                        QSize{textWidth + (label->width() - available), label->height()},
+                });
+            }
+        }
+    }
+
+    // ---------- Check 5: Spinbox content overflow ----------
+    if (auto const * spinBox = qobject_cast<QAbstractSpinBox const *>(widget)) {
+        // Estimate the widest text the spinbox needs to display
+        QString const currentText = spinBox->text();
+        if (!currentText.isEmpty()) {
+            int const textWidth = spinBox->fontMetrics().horizontalAdvance(currentText + QStringLiteral(" "));
+            // Estimate available text area: total width minus the up/down
+            // button area. QStyle::PM_SpinBoxFrameWidth gives the frame
+            // border, and the button area is approximately the widget height
+            // (buttons are stacked vertically, each roughly square).
+            auto const * style = spinBox->style();
+            int const frame = style->pixelMetric(QStyle::PM_SpinBoxFrameWidth, nullptr, spinBox);
+            int const buttonWidth = spinBox->height();// buttons are ~square, stacked
+            int const available = spinBox->width() - buttonWidth - 2 * frame;
+            if (available <= 0 || textWidth > available) {
+                int const reportedAvailable = std::max(available, 0);
+                out.push_back({
+                        LayoutViolation::Severity::Warning,
+                        path,
+                        QString(className),
+                        QStringLiteral("Spinbox too narrow for content (needs %1 px, has %2 px)")
+                                .arg(textWidth)
+                                .arg(reportedAvailable),
+                        widget->size(),
+                        QSize{widget->width() + (textWidth - available), widget->height()},
+                });
+            }
+        }
+    }
+
+    // ---------- Check 6: ComboBox content overflow ----------
+    if (auto const * combo = qobject_cast<QComboBox const *>(widget)) {
+        // Find the widest item text
+        int maxTextWidth = 0;
+        for (int i = 0; i < combo->count(); ++i) {
+            int const w = combo->fontMetrics().horizontalAdvance(combo->itemText(i));
+            if (w > maxTextWidth) {
+                maxTextWidth = w;
+            }
+        }
+        if (maxTextWidth > 0) {
+            // Estimate the text area: total width minus the dropdown arrow
+            // button and frame. The arrow button width is given by
+            // PM_ComboBoxFrameWidth (frame) plus a platform-dependent arrow
+            // size — we approximate the arrow button as roughly the height
+            // of the combo (it's approximately square).
+            auto const * style = combo->style();
+            int const frame = style->pixelMetric(QStyle::PM_ComboBoxFrameWidth, nullptr, combo);
+            int const arrowWidth = combo->height();// arrow button is ~square
+            int const available = combo->width() - arrowWidth - 2 * frame;
+            if (available <= 0 || maxTextWidth > available) {
+                int const reportedAvailable = std::max(available, 0);
+                out.push_back({
+                        LayoutViolation::Severity::Warning,
+                        path,
+                        QString(className),
+                        QStringLiteral("ComboBox too narrow for content (widest item needs %1 px, has %2 px)")
+                                .arg(maxTextWidth)
+                                .arg(reportedAvailable),
+                        widget->size(),
+                        QSize{widget->width() + (maxTextWidth - available), widget->height()},
+                });
+            }
         }
     }
 

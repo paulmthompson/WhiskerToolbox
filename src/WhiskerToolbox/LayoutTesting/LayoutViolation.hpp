@@ -31,6 +31,13 @@ struct LayoutViolation {
     QString description;///< Human-readable explanation of the violation
     QSize actual;       ///< Actual widget size
     QSize expected;     ///< minimumSizeHint or computed minimum
+
+    /// @brief Equality comparison for violation diffing (compares path + description)
+    [[nodiscard]] bool operator==(LayoutViolation const & other) const {
+        return severity == other.severity &&
+               widgetPath == other.widgetPath &&
+               description == other.description;
+    }
 };
 
 #endif// LAYOUT_VIOLATION_HPP

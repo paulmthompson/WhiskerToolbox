@@ -69,3 +69,67 @@ if(ENABLE_DETAILED_TEST_DISCOVERY)
 else()
     add_test(NAME test_colormap_controls_layout_all COMMAND test_colormap_controls_layout)
 endif()
+
+# ── Property panel layout sweep tests ─────────────────────────────────────────
+
+add_executable(test_property_panel_layout
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/LayoutTesting/PropertyPanelLayout.test.cpp
+)
+
+set_target_properties(test_property_panel_layout PROPERTIES AUTOMOC ON)
+
+target_link_libraries(test_property_panel_layout PRIVATE
+    Catch2::Catch2WithMain
+    LayoutTesting
+    GlyphStyleWidget
+    LineStyleControls
+    RateEstimationControls
+    Qt6::Widgets
+)
+
+target_include_directories(test_property_panel_layout PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Plots/Common/GlyphStyleWidget>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Plots/Common/LineStyleControls>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Plots/Common/RateEstimationControls>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+)
+
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_property_panel_layout PROPERTIES
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_property_panel_layout_all COMMAND test_property_panel_layout)
+endif()
+
+# ── HeatmapProperties layout integration tests ───────────────────────────────
+
+add_executable(test_heatmap_properties_layout
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/LayoutTesting/HeatmapPropertiesLayout.test.cpp
+)
+
+set_target_properties(test_heatmap_properties_layout PROPERTIES AUTOMOC ON)
+
+target_link_libraries(test_heatmap_properties_layout PRIVATE
+    Catch2::Catch2WithMain
+    LayoutTesting
+    Collapsible_Widget
+    ColormapControls
+    RateEstimationControls
+    Qt6::Widgets
+)
+
+target_include_directories(test_heatmap_properties_layout PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Plots/Common>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+)
+
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_heatmap_properties_layout PROPERTIES
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_heatmap_properties_layout_all COMMAND test_heatmap_properties_layout)
+endif()

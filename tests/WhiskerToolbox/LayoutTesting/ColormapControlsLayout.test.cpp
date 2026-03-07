@@ -90,12 +90,12 @@ TEST_CASE("ColormapControls layout resilience — Manual mode width sweep", "[ui
         auto violations = significantViolations(&controls);
         for (auto const & v: violations) {
             std::string const entry = "w=" + std::to_string(w) + " " +
-                                v.widgetPath.toStdString() + " — " +
-                                v.description.toStdString() +
-                                " (actual: " + std::to_string(v.actual.width()) +
-                                "x" + std::to_string(v.actual.height()) +
-                                ", expected: " + std::to_string(v.expected.width()) +
-                                "x" + std::to_string(v.expected.height()) + ")";
+                                      v.widgetPath.toStdString() + " — " +
+                                      v.description.toStdString() +
+                                      " (actual: " + std::to_string(v.actual.width()) +
+                                      "x" + std::to_string(v.actual.height()) +
+                                      ", expected: " + std::to_string(v.expected.width()) +
+                                      "x" + std::to_string(v.expected.height()) + ")";
             all_violations_log.push_back(entry);
         }
     }
@@ -160,6 +160,53 @@ TEST_CASE("ColormapControls layout resilience — mode transitions at constraine
                 }
                 CHECK(violations.empty());
             }
+        }
+    }
+}
+
+TEST_CASE("ColormapControls Auto->Manual introduces no new violations", "[ui][layout][mode-toggle]") {
+    ensureQApp();
+
+    ColormapControls controls;
+    controls.show();
+    QCoreApplication::processEvents();
+
+    std::vector<int> const widths = {100, 150, 200, 300, 500};
+
+    for (int const w: widths) {
+        controls.resize(w, 400);
+
+        // Establish baseline in Auto mode
+        controls.setColorRangeMode(ColorRangeConfig::Mode::Auto);
+        QCoreApplication::processEvents();
+        auto baseline = significantViolations(&controls);
+
+        // Switch to Manual mode — spinboxes appear
+        controls.setColorRangeMode(ColorRangeConfig::Mode::Manual);
+        QCoreApplication::processEvents();
+        auto after = significantViolations(&controls);
+
+        // Find violations that are new (not in baseline)
+        std::vector<LayoutViolation> new_violations;
+        for (auto const & v: after) {
+            bool const was_in_baseline = std::any_of(
+                    baseline.begin(), baseline.end(),
+                    [&v](auto const & b) { return b == v; });
+            if (!was_in_baseline) {
+                new_violations.push_back(v);
+            }
+        }
+
+        if (!new_violations.empty()) {
+            INFO("Width: " << w);
+            for (auto const & v: new_violations) {
+                INFO("  NEW: " << v.widgetPath.toStdString()
+                               << " — " << v.description.toStdString()
+                               << " (actual: " << v.actual.width() << "x" << v.actual.height()
+                               << ", expected: " << v.expected.width() << "x" << v.expected.height()
+                               << ")");
+            }
+            CHECK(new_violations.empty());
         }
     }
 }

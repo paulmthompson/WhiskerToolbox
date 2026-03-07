@@ -4,8 +4,9 @@
  *
  * Provides both a global event-filter monitor (for development-time awareness)
  * and a static getViolations() API for use in Catch2 tests. Detects widgets
- * that are zero-sized, smaller than their minimumSizeHint, or squished to
- * extreme aspect ratios.
+ * that are zero-sized, smaller than their minimumSizeHint, squished to
+ * extreme aspect ratios, or suffering from content overflow (truncated labels,
+ * spinboxes too narrow for their values, combo boxes too narrow for their items).
  */
 
 #ifndef LAYOUT_SANITY_CHECKER_HPP
@@ -64,10 +65,11 @@ protected:
 
 private:
     void scheduleCheck();
-    static void runCheck();
+    void runCheck();
     static void walkTree(QWidget * widget, std::vector<LayoutViolation> & out);
 
     QTimer _debounce_timer;
+    std::vector<LayoutViolation> _previous_violations;
 };
 
 #endif// LAYOUT_SANITY_CHECKER_HPP
