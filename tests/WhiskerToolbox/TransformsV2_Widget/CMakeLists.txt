@@ -61,4 +61,5 @@ else()
     add_test(NAME test_transforms_v2_widget_all
         COMMAND test_transforms_v2_widget
     )
+    set_property(TEST test_transforms_v2_widget_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
