@@ -10,6 +10,7 @@ if (enableAddressSanitizer)
 
     if (UNIX)
         if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+
             message(STATUS "Enabling address sanitizer for Clang (both Debug and Release)")
             set(SANITIZER_FLAGS_ASAN "-fsanitize=address")
             set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${SANITIZER_FLAGS_ASAN}")
@@ -20,9 +21,16 @@ if (enableAddressSanitizer)
             # UBSan only in Debug to avoid issues with dependencies
             message(STATUS "Enabling undefined behavior sanitizer for Clang (Debug only)")
             set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
+
         elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+
             message(STATUS "Enabling address sanitizer for GCC (both Debug and Release)")
-            set(SANITIZER_FLAGS_ASAN "-fsanitize=address -fPIC")
+            # -fno-stack-protector: ASan's stack instrumentation conflicts with GCC's
+            # built-in stack protector canaries, causing spurious "stack smashing detected"
+            # crashes (especially when linking large non-instrumented libraries like OR-Tools).
+            # ASan already provides superior stack buffer overflow detection, making
+            # -fstack-protector redundant.
+            set(SANITIZER_FLAGS_ASAN "-fsanitize=address -fPIC -fno-stack-protector")
             set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${SANITIZER_FLAGS_ASAN}")
             set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${SANITIZER_FLAGS_ASAN}")
             set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SANITIZER_FLAGS_ASAN}")
