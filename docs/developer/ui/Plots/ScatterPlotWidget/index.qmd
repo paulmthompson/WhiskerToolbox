@@ -347,6 +347,28 @@ When the cursor dwells over a scatter point, the nearest point is highlighted to
 
 See [roadmap](roadmap.qmd) Phase 8 for the complete dwell-timer and tooltip implementation plan.
 
+## Hover Tooltip
+
+When the cursor dwells over a scatter point (~500 ms), a tooltip appears showing the point's
+X and Y coordinates and its `TimeFrameIndex`. The tooltip uses the shared
+[PlotTooltipManager](../Common/TooltipManager/index.qmd) (`Plots/Common/TooltipManager/`),
+the same infrastructure used by [EventPlotWidget](../EventPlotWidget/index.qmd).
+
+**Hit test provider**: Reuses the existing `hitTestPointAt()` method (which queries the
+`QuadTree<EntityId>` via `SceneHitTester`) and passes the scatter data index as `user_data`.
+
+**Text provider**: Formats the tooltip as:
+
+```
+X: 1.234
+Y: 5.678
+Index: 42
+```
+
+**Suppression**: Tooltips are automatically suppressed during pan and polygon interaction
+by passing `_is_panning || _polygon_controller->isActive()` to `onMouseMove()`. The tooltip
+is also hidden when the mouse leaves the widget via `leaveEvent()`.
+
 ## Point Selection
 
 Points can be selected via polygon (lasso) drawing. Selected points are visually distinguished from unselected points and can be added to an entity group.

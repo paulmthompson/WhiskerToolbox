@@ -33,6 +33,8 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Point selection**: Dual selection modes (SinglePoint/Polygon) via combo box in properties panel; SinglePoint mode: Ctrl+Click toggles selection, Shift+Click removes; Polygon mode: Ctrl+Click adds vertices, Enter closes polygon, Backspace undoes, Escape cancels; `selectPointsInPolygon()` utility in `CorePlotting/Selection/`; selected points rendered with distinct style (orange, +4 size); integration with `GroupContextMenuHandler` for right-click group operations; fully tested
 - **Temporal offset for outlier detection**: Per-axis `time_offset` field in `ScatterAxisSource` enables lag-plots ($x(t)$ vs $x(t-1)$); `buildScatterPoints()` applies offsets for all source type combinations; offset spinboxes (-10000 to 10000) in properties panel per axis; points where offset pushes index outside valid range are excluded; tested in `BuildScatterPoints.test.cpp`
 
+- **Hover tooltip**: `PlotTooltipManager` integration showing X/Y values and `TimeFrameIndex` on dwell; pan/zoom suppression; text provider with 3-decimal precision
+
 **Not yet implemented**:
 feature coloring (Phase 7), stale key handling (Phase 6.3).
 
@@ -111,71 +113,7 @@ Components that have been factored into shared locations or are candidates for s
 
 ## Phase 8: Hover Tooltip
 
-**Status**: Ready to implement. Hit testing infrastructure is complete; shared
-[PlotTooltipManager](../Common/TooltipManager/index.qmd) provides dwell timer,
-pan suppression, and display lifecycle.
-
-**Goal**: Show a tooltip with point coordinates and `TimeFrameIndex` when the user hovers
-over a scatter point for a brief dwell time.
-
-### 8.1 Integration with PlotTooltipManager
-
-The tooltip lifecycle (dwell timer, suppression during pan/zoom, show/hide) is handled by
-the shared [PlotTooltipManager](../Common/TooltipManager/index.qmd) (`Plots/Common/TooltipManager/`).
-This is the same infrastructure used by [EventPlotWidget](../EventPlotWidget/index.qmd)
-(text tooltips, already implemented) and planned for [HeatmapWidget](../HeatmapWidget/index.qmd)
-and [LinePlotWidget](../LinePlotWidget/index.qmd) (pixmap tooltips).
-
-The ScatterPlotWidget provides two callbacks:
-
-1. **Hit test provider**: Uses the existing `SceneHitTester` / `QuadTree<EntityId>` to find
-   the nearest point. Returns a `PlotTooltipHit` with world coordinates and the `EntityId`
-   in `user_data`.
-2. **Text provider**: Formats the X/Y values and `TimeFrameIndex` into a tooltip string.
-
-```cpp
-_tooltip_mgr = std::make_unique<PlotTooltipManager>(this, 400);
-
-_tooltip_mgr->setHitTestProvider([this](QPoint pos) -> std::optional<PlotTooltipHit> {
-    QPointF world = screenToWorld(pos);
-    auto result = _hit_tester.queryQuadTree(
-        static_cast<float>(world.x()),
-        static_cast<float>(world.y()),
-        _scene);
-    if (!result.hasHit() || !result.entity_id.has_value()) return std::nullopt;
-    PlotTooltipHit hit;
-    hit.world_x = result.world_x;
-    hit.world_y = result.world_y;
-    hit.user_data = *result.entity_id;
-    return hit;
-});
-
-_tooltip_mgr->setTextProvider([](PlotTooltipHit const & hit) -> QString {
-    return QString("X: %1\nY: %2")
-        .arg(hit.world_x, 0, 'f', 3)
-        .arg(hit.world_y, 0, 'f', 3);
-});
-
-// In mouseMoveEvent:
-_tooltip_mgr->onMouseMove(event->pos(), _is_panning);
-
-// In leaveEvent:
-_tooltip_mgr->onLeave();
-```
-
-### 8.2 Tooltip Content
-
-The tooltip should display:
-
-- X and Y values (formatted to a reasonable precision)
-- The `TimeFrameIndex` value
-- Optionally: the absolute time value (`time_frame->getTimeAtIndex(tfi)`)
-
-### 8.3 Interaction with Pan/Zoom
-
-Pan/zoom suppression is handled automatically by `PlotTooltipManager` — passing
-`is_interacting=true` to `onMouseMove()` stops the dwell timer and hides any visible
-tooltip. No additional widget-side logic is needed.
+**Status**: ✅ **Implemented**. See [index.qmd](index.qmd) § Hover Tooltip for documentation.
 
 ---
 

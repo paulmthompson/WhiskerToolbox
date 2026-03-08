@@ -10,15 +10,16 @@
 #include "CorePlotting/Interaction/PolygonInteractionController.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Mappers/MappedElement.hpp"
-#include "CorePlotting/SceneGraph/RenderablePrimitives.hpp" // RenderableScene
+#include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"// RenderableScene
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CorePlotting/Selection/PolygonSelection.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GroupContextMenu/GroupContextMenuHandler.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
+#include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
-#include "Plots/Common/PlotInteractionHelpers.hpp"
 
 #include <QContextMenuEvent>
 #include <QKeyEvent>
@@ -29,6 +30,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
 
 ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
@@ -38,6 +40,36 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     _preview_renderer = std::make_unique<PlottingOpenGL::PreviewRenderer>();
     _scene = std::make_unique<CorePlotting::RenderableScene>();
     _scene_renderer = std::make_unique<PlottingOpenGL::SceneRenderer>();
+
+    // Initialize tooltip manager
+    _tooltip_mgr = std::make_unique<WhiskerToolbox::Plots::PlotTooltipManager>(this);
+
+    _tooltip_mgr->setHitTestProvider(
+            [this](QPoint pos) -> std::optional<WhiskerToolbox::Plots::PlotTooltipHit> {
+                auto const hit_index = hitTestPointAt(pos);
+                if (!hit_index.has_value()) {
+                    return std::nullopt;
+                }
+                QPointF const world = screenToWorld(pos);
+                WhiskerToolbox::Plots::PlotTooltipHit result;
+                result.world_x = static_cast<float>(world.x());
+                result.world_y = static_cast<float>(world.y());
+                result.user_data = *hit_index;// std::size_t index into _scatter_data
+                return result;
+            });
+
+    _tooltip_mgr->setTextProvider(
+            [this](WhiskerToolbox::Plots::PlotTooltipHit const & hit) -> QString {
+                auto const idx = std::any_cast<std::size_t>(hit.user_data);
+                if (idx >= _scatter_data.size()) {
+                    return {};
+                }
+                auto const tfi = _scatter_data.time_indices[idx];
+                return QString("X: %1\nY: %2\nIndex: %3")
+                        .arg(static_cast<double>(hit.world_x), 0, 'f', 3)
+                        .arg(static_cast<double>(hit.world_y), 0, 'f', 3)
+                        .arg(tfi.getValue());
+            });
 
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
@@ -60,7 +92,7 @@ void ScatterPlotOpenGLWidget::setState(std::shared_ptr<ScatterPlotState> state) 
     if (_state) {
         _state->disconnect(this);
     }
-    _state = state;
+    _state = std::move(state);
     if (_state) {
         _cached_view_state = _state->viewState();
         connect(_state.get(), &ScatterPlotState::stateChanged,
@@ -93,7 +125,7 @@ void ScatterPlotOpenGLWidget::setState(std::shared_ptr<ScatterPlotState> state) 
 }
 
 void ScatterPlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
-    _data_manager = data_manager;
+    _data_manager = std::move(data_manager);
     _scene_dirty = true;
     update();
 }
@@ -193,6 +225,9 @@ void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 }
 
 void ScatterPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
+    // Update tooltip manager
+    _tooltip_mgr->onMouseMove(event->pos(), _is_panning || _polygon_controller->isActive());
+
     // Update polygon preview line during polygon selection
     if (_polygon_controller->isActive()) {
         auto const screen_x = static_cast<float>(event->pos().x());
@@ -296,6 +331,11 @@ void ScatterPlotOpenGLWidget::keyPressEvent(QKeyEvent * event) {
         }
     }
     QOpenGLWidget::keyPressEvent(event);
+}
+
+void ScatterPlotOpenGLWidget::leaveEvent(QEvent * event) {
+    _tooltip_mgr->onLeave();
+    QOpenGLWidget::leaveEvent(event);
 }
 
 void ScatterPlotOpenGLWidget::onStateChanged() {
@@ -403,7 +443,7 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
     }
 
     // Build the scene
-    BoundingBox bbox{x_min, y_min, x_max, y_max};
+    BoundingBox const bbox{x_min, y_min, x_max, y_max};
     CorePlotting::SceneBuilder builder;
     builder.setBounds(bbox);
 
@@ -411,10 +451,10 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
     std::vector<CorePlotting::MappedElement> elements;
     elements.reserve(_scatter_data.size());
     for (std::size_t i = 0; i < _scatter_data.size(); ++i) {
-        elements.push_back(CorePlotting::MappedElement{
+        elements.emplace_back(
                 _scatter_data.x_values[i],
                 _scatter_data.y_values[i],
-                EntityId{static_cast<uint64_t>(i)}});
+                EntityId{static_cast<uint64_t>(i)});
     }
 
     auto const & glyph_data = _state->glyphStyleState()->data();
@@ -426,7 +466,7 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
 
     // Separate selected and unselected points into two batches
     auto const & selected_indices = _state->selectedIndices();
-    std::unordered_set<std::size_t> selected_set(selected_indices.begin(), selected_indices.end());
+    std::unordered_set<std::size_t> const selected_set(selected_indices.begin(), selected_indices.end());
 
     std::vector<CorePlotting::MappedElement> unselected_elements;
     std::vector<CorePlotting::MappedElement> selected_elements;
@@ -462,7 +502,7 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
         highlight_style.size = 9.0f;
         highlight_style.color = glm::vec4(1.0f, 0.8f, 0.0f, 1.0f);// Yellow highlight
 
-        std::vector<CorePlotting::MappedElement> highlight_elem{elements[*_navigated_index]};
+        std::vector<CorePlotting::MappedElement> const highlight_elem{elements[*_navigated_index]};
         builder.addGlyphs("scatter_highlight", std::move(highlight_elem), highlight_style);
     }
 
@@ -472,8 +512,8 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
         float const ref_max = std::max(x_max, y_max);
 
         std::vector<CorePlotting::MappedVertex> ref_vertices;
-        ref_vertices.push_back(CorePlotting::MappedVertex{ref_min, ref_min});
-        ref_vertices.push_back(CorePlotting::MappedVertex{ref_max, ref_max});
+        ref_vertices.emplace_back(ref_min, ref_min);
+        ref_vertices.emplace_back(ref_max, ref_max);
 
         CorePlotting::PolyLineStyle ref_style;
         ref_style.thickness = 1.0f;
@@ -647,9 +687,9 @@ std::optional<std::size_t> ScatterPlotOpenGLWidget::hitTestPointAt(QPoint const 
     QPointF const world = screenToWorld(screen_pos);
 
     // Convert pixel tolerance to world units
-    float const world_per_pixel_x = static_cast<float>(
+    auto const world_per_pixel_x = static_cast<float>(
             (_cached_view_state.x_max - _cached_view_state.x_min) / (_widget_width * _cached_view_state.x_zoom));
-    float const world_per_pixel_y = static_cast<float>(
+    auto const world_per_pixel_y = static_cast<float>(
             (_cached_view_state.y_max - _cached_view_state.y_min) / (_widget_height * _cached_view_state.y_zoom));
     float const world_tolerance = 8.0f * std::max(world_per_pixel_x, world_per_pixel_y);
 

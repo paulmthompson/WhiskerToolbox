@@ -50,6 +50,7 @@ target_link_libraries(ScatterPlotWidget PRIVATE Collapsible_Widget)
 target_link_libraries(ScatterPlotWidget PRIVATE GlyphStyleWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE CorePlotting)
 target_link_libraries(ScatterPlotWidget PRIVATE PlottingOpenGL)
+target_link_libraries(ScatterPlotWidget PRIVATE TooltipManager)
 target_link_libraries(ScatterPlotWidget PRIVATE GroupContextMenu)
 
 

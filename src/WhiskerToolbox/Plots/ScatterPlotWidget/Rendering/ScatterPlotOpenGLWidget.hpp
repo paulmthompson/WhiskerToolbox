@@ -24,13 +24,17 @@
 #include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#include <glm/glm.hpp>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+#include <glm/glm.hpp>
 
 #include <memory>
 #include <optional>
 #include <unordered_set>
+
+namespace WhiskerToolbox::Plots {
+class PlotTooltipManager;
+}
 
 class DataManager;
 class GroupManager;
@@ -42,18 +46,18 @@ class QKeyEvent;
 class ScatterPlotState;
 
 namespace CorePlotting {
-    class RenderableScene;
-    class SceneHitTester;
-}
+class RenderableScene;
+class SceneHitTester;
+}// namespace CorePlotting
 
 namespace CorePlotting::Interaction {
 class PolygonInteractionController;
 }
 
 namespace PlottingOpenGL {
-    class PreviewRenderer;
-    class SceneRenderer;
-}
+class PreviewRenderer;
+class SceneRenderer;
+}// namespace PlottingOpenGL
 
 /**
  * @brief OpenGL widget for rendering scatter plots
@@ -97,6 +101,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
     void keyPressEvent(QKeyEvent * event) override;
+    void leaveEvent(QEvent * event) override;
     void contextMenuEvent(QContextMenuEvent * event) override;
 
 private slots:
@@ -125,6 +130,9 @@ private:
     bool _scene_dirty{true};
     bool _opengl_initialized{false};
     ScatterPointData _scatter_data;
+
+    // Tooltip manager
+    std::unique_ptr<WhiskerToolbox::Plots::PlotTooltipManager> _tooltip_mgr;
 
     // Hit testing (double-click-to-navigate)
     std::unique_ptr<CorePlotting::SceneHitTester> _hit_tester;
