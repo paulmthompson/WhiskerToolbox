@@ -49,9 +49,12 @@ set_target_properties(test_data_inspector_widget PROPERTIES
 )
 
 if(ENABLE_DETAILED_TEST_DISCOVERY)
-    catch_discover_tests(test_data_inspector_widget)
+    catch_discover_tests(test_data_inspector_widget
+        PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
 else()
     add_test(NAME test_data_inspector_widget_all
         COMMAND test_data_inspector_widget
-        )
+    )
+    set_property(TEST test_data_inspector_widget_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()

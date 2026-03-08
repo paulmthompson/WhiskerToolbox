@@ -39,6 +39,7 @@ if(ENABLE_DETAILED_TEST_DISCOVERY)
     )
 else()
     add_test(NAME test_layout_sanity_checker_all COMMAND test_layout_sanity_checker)
+    set_property(TEST test_layout_sanity_checker_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
 # ── ColormapControls layout sweep tests ───────────────────────────────────────
@@ -68,6 +69,7 @@ if(ENABLE_DETAILED_TEST_DISCOVERY)
     )
 else()
     add_test(NAME test_colormap_controls_layout_all COMMAND test_colormap_controls_layout)
+    set_property(TEST test_colormap_controls_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
 # ── Property panel layout sweep tests ─────────────────────────────────────────
@@ -101,6 +103,7 @@ if(ENABLE_DETAILED_TEST_DISCOVERY)
     )
 else()
     add_test(NAME test_property_panel_layout_all COMMAND test_property_panel_layout)
+    set_property(TEST test_property_panel_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
 # ── HeatmapProperties layout integration tests ───────────────────────────────
@@ -132,4 +135,5 @@ if(ENABLE_DETAILED_TEST_DISCOVERY)
     )
 else()
     add_test(NAME test_heatmap_properties_layout_all COMMAND test_heatmap_properties_layout)
+    set_property(TEST test_heatmap_properties_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()

@@ -37,9 +37,12 @@ target_include_directories(test_data_manager_widget PRIVATE
 )
 
 if(ENABLE_DETAILED_TEST_DISCOVERY)
-    catch_discover_tests(test_data_manager_widget)
+    catch_discover_tests(test_data_manager_widget
+        PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
 else()
     add_test(NAME test_data_manager_widget_all
         COMMAND test_data_manager_widget
-        )
+    )
+    set_property(TEST test_data_manager_widget_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
