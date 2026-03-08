@@ -21,7 +21,11 @@ target_link_libraries(test_python_engine PRIVATE
     WhiskerToolbox::PythonBridge
 )
 
-catch_discover_tests(test_python_engine)
+# Suppress LeakSanitizer — CPython's internal memory arena has benign leaks
+# (type registration, dict resizing) that are outside our control.
+catch_discover_tests(test_python_engine
+    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+)
 
 # --- Phase 2: binding round-trip tests ---
 add_executable(test_python_bindings
@@ -33,7 +37,9 @@ target_link_libraries(test_python_bindings PRIVATE
     WhiskerToolbox::PythonBridge
 )
 
-catch_discover_tests(test_python_bindings)
+catch_discover_tests(test_python_bindings
+    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+)
 
 # --- Phase 3: PythonBridge integration tests ---
 add_executable(test_python_bridge
@@ -45,7 +51,9 @@ target_link_libraries(test_python_bridge PRIVATE
     WhiskerToolbox::PythonBridge
 )
 
-catch_discover_tests(test_python_bridge)
+catch_discover_tests(test_python_bridge
+    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+)
 
 # --- Phase 5: Script management & environment tests ---
 add_executable(test_python_phase5
@@ -57,7 +65,9 @@ target_link_libraries(test_python_phase5 PRIVATE
     WhiskerToolbox::PythonBridge
 )
 
-catch_discover_tests(test_python_phase5)
+catch_discover_tests(test_python_phase5
+    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+)
 
 # --- Phase 6: Virtual environment support tests ---
 add_executable(test_python_phase6
@@ -69,4 +79,6 @@ target_link_libraries(test_python_phase6 PRIVATE
     WhiskerToolbox::PythonBridge
 )
 
-catch_discover_tests(test_python_phase6)
+catch_discover_tests(test_python_phase6
+    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+)

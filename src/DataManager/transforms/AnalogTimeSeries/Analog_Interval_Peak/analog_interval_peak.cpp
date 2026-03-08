@@ -65,7 +65,7 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
                                       intervals_view[i + 1].value().start - 1);
         }
         // For the last interval, search from its start to its end
-        auto const & last_interval = intervals_view[num_intervals - 1].value();
+        auto const last_interval = intervals_view[num_intervals - 1].value();
         search_ranges.emplace_back(last_interval.start, last_interval.end);
     }
 

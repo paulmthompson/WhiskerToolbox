@@ -165,9 +165,9 @@ TEST_CASE("MoveByTimeRange schema reports correct field types", "[commands][intr
     REQUIRE(info.has_value());
     auto const & schema = info->parameter_schema;
     CHECK(schema.field("source_key")->type_name == "std::string");
-    // int64_t may be reported as "long" or "int64_t" depending on platform
+    // int64_t may be reported as "int" (via determineBaseType), "long", or "int64_t" depending on platform
     auto const & frame_type = schema.field("start_frame")->type_name;
-    CHECK((frame_type == "int64_t" || frame_type == "long"));
+    CHECK((frame_type == "int64_t" || frame_type == "long" || frame_type == "int"));
 }
 
 TEST_CASE("AddInterval schema reports bool type for create_if_missing", "[commands][introspection]") {

@@ -590,24 +590,27 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         auto result = lineGroupToIntervals(line_data, &params);
         REQUIRE(result != nullptr);
 
+        // Result has no TimeFrame set; create a default identity one for querying
+        TimeFrame const identity_tf;
+
         // Check frames in first interval
         for (int i = 0; i <= 4; ++i) {
-            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
         }
 
         // Check frames in gap
         for (int i = 5; i <= 9; ++i) {
-            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
         }
 
         // Check frames in second interval
         for (int i = 10; i <= 14; ++i) {
-            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
         }
 
         // Check frames after
         for (int i = 15; i <= 24; ++i) {
-            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
         }
     }
 
@@ -620,24 +623,27 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         auto result = lineGroupToIntervals(line_data, &params);
         REQUIRE(result != nullptr);
 
+        // Result has no TimeFrame set; create a default identity one for querying
+        TimeFrame const identity_tf;
+
         // Check frames in first interval (should be absent)
         for (int i = 0; i <= 4; ++i) {
-            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
         }
 
         // Check frames in first absence interval
         for (int i = 5; i <= 9; ++i) {
-            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
         }
 
         // Check frames in second interval (should be absent)
         for (int i = 10; i <= 14; ++i) {
-            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
         }
 
         // Check frames in second absence interval
         for (int i = 15; i <= 24; ++i) {
-            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
         }
     }
 }

@@ -204,6 +204,8 @@ TEST_CASE("DigitalTimeSeriesBuilder basic construction", "[fixtures][builders][d
                                  .build();
 
         REQUIRE(intervals != nullptr);
+        // Assign a default TimeFrame so getTimeFrame() is non-null
+        intervals->setTimeFrame(TimeFrameBuilder().withCount(101).build());
         // Just check that we can get intervals in range
         auto interval_view = intervals->getIntervalsInRange(TimeFrameIndex(0),
                                                             TimeFrameIndex(100),
@@ -218,6 +220,8 @@ TEST_CASE("DigitalTimeSeriesBuilder basic construction", "[fixtures][builders][d
                                  .build();
 
         REQUIRE(intervals != nullptr);
+        // Assign a default TimeFrame so getTimeFrame() is non-null
+        intervals->setTimeFrame(TimeFrameBuilder().withCount(101).build());
         auto interval_view = intervals->getIntervalsInRange(TimeFrameIndex(0),
                                                             TimeFrameIndex(100),
                                                             *(intervals->getTimeFrame()));
