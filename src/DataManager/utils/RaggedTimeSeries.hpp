@@ -8,8 +8,8 @@
 #include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
-#include "TimeFrame/interval_data.hpp"
+#include "TimeFrame/TimeFrame.hpp"          // TimeFrame and TimeFrameIndex
+#include "TimeFrame/interval_data.hpp"      // 
 #include "utils/map_timeseries.hpp"
 #include "utils/RaggedStorage.hpp"
 

@@ -48,8 +48,7 @@ if(ENABLE_FFMPEG)
     )
 endif()
 
-# Create the MediaData shared library
-add_library(MediaData SHARED ${MEDIADATA_SOURCES})
+add_library(MediaData STATIC ${MEDIADATA_SOURCES})
 
 # Set up include directories
 target_include_directories(MediaData PUBLIC
@@ -107,10 +106,7 @@ endif()
 
 # Set properties
 set_target_properties(MediaData PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    VERSION 1.0.0
-    SOVERSION 1
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
 # Create alias for consistent naming

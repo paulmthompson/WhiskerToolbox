@@ -15,8 +15,8 @@ set(LINEDATA_SOURCES
     #IO/LMDB/Line_Data_LMDB.cpp
 )
 
-# Create the LineData shared library
-add_library(LineData SHARED ${LINEDATA_SOURCES})
+# Create the LineData static library
+add_library(LineData STATIC ${LINEDATA_SOURCES})
 
 # Set up include directories
 target_include_directories(LineData PUBLIC
@@ -50,10 +50,7 @@ endif()
 
 # Set properties
 set_target_properties(LineData PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    VERSION 1.0.0
-    SOVERSION 1
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
 # Create alias for consistent naming
@@ -68,4 +65,3 @@ add_tests_to_global(lines_test_sources
                     "${CMAKE_SOURCE_DIR}/src/DataManager/Lines" 
                     DATAMANAGER_TEST_SOURCES)
 
-# No longer add sources to DataManager since they're now in the LineData library

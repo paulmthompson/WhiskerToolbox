@@ -17,8 +17,7 @@ set(MASKDATA_SOURCES
     utils/skeletonize.hpp
 )
 
-# Create the MaskData shared library
-add_library(MaskData SHARED ${MASKDATA_SOURCES})
+add_library(MaskData STATIC ${MASKDATA_SOURCES})
 
 # Set up include directories
 target_include_directories(MaskData PUBLIC
@@ -50,10 +49,7 @@ endif()
 
 # Set properties
 set_target_properties(MaskData PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    VERSION 1.0.0
-    SOVERSION 1
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
 # Create alias for consistent naming

@@ -1,6 +1,6 @@
 # ImageProcessing Library CMakeLists.txt
 
-# Create ImageProcessing as a shared library
+# Create ImageProcessing as a static library
 set(IMAGEPROCESSING_SOURCES
     src/OpenCVUtility.cpp
 )
@@ -10,8 +10,7 @@ set(IMAGEPROCESSING_INCLUDES
     include/ImageProcessing/OpenCVUtility.hpp
 )
 
-# Create the ImageProcessing shared library
-add_library(ImageProcessing SHARED ${IMAGEPROCESSING_SOURCES})
+add_library(ImageProcessing STATIC ${IMAGEPROCESSING_SOURCES})
 
 # Find OpenCV
 find_package(OpenCV CONFIG REQUIRED)
@@ -43,9 +42,4 @@ if (MSVC)
 endif()
 
 set_target_properties(ImageProcessing PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-
-install(FILES ${IMAGEPROCESSING_INCLUDES}
-    DESTINATION include/ImageProcessing
-)
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

@@ -71,8 +71,7 @@ set(TENSOR_SOURCES
     ${BACKEND_SOURCES}
 )
 
-# Create the TensorData shared library
-add_library(TensorData SHARED ${TENSOR_SOURCES})
+add_library(TensorData STATIC ${TENSOR_SOURCES})
 
 # Set up include directories
 target_include_directories(TensorData PUBLIC
@@ -128,8 +127,7 @@ endif()
 
 # Set output properties
 set_target_properties(TensorData PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
 # Create alias for consistent naming
