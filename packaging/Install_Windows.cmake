@@ -28,7 +28,6 @@ set(MAIN_TARGETS
     MaskData
     LineData 
     MediaData
-    TimeFrame
     Entity
     DataViewer
     StateEstimation

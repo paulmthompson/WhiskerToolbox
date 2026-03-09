@@ -22,24 +22,3 @@ target_include_directories(SpatialIndex PUBLIC
 )
 
 target_link_libraries(SpatialIndex PUBLIC NEURALYZER_GEOMETRY)
-
-# Set up export target
-install(TARGETS SpatialIndex
-    EXPORT SpatialIndexTargets
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
-)
-
-# Install headers
-install(FILES QuadTree.hpp RTree.hpp KdTree.hpp
-    DESTINATION include/SpatialIndex
-)
-
-# Export target configuration
-install(EXPORT SpatialIndexTargets
-    FILE SpatialIndexTargets.cmake
-    NAMESPACE SpatialIndex::
-    DESTINATION lib/cmake/SpatialIndex
-)
