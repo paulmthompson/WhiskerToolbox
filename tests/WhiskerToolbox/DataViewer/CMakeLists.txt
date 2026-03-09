@@ -51,3 +51,5 @@ else()
         COMMAND test_data_viewer
         )
 endif()
+
+enable_whiskertoolbox_test_pch(test_data_viewer)

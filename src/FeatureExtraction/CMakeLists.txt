@@ -28,3 +28,4 @@ endif()
 set_target_properties(feature_extraction PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+enable_whiskertoolbox_pch(feature_extraction)

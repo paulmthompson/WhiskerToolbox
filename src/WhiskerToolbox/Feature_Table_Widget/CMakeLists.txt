@@ -60,3 +60,4 @@ set_target_properties(Feature_Table_Widget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 ) 
+enable_whiskertoolbox_pch(Feature_Table_Widget)

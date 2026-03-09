@@ -44,3 +44,5 @@ if (WIN32)
 else()
     catch_discover_tests(test_core_geometry)
 endif()
+
+enable_whiskertoolbox_test_pch(test_core_geometry)

@@ -55,3 +55,5 @@ else()
         COMMAND test_MLCore
         )
 endif()
+
+enable_whiskertoolbox_test_pch(test_MLCore)

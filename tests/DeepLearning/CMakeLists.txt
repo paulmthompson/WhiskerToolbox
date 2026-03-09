@@ -60,6 +60,8 @@ else()
         )
 endif()
 
+enable_whiskertoolbox_test_pch(test_channel_encoding)
+
 # --- Channel Decoding Tests ---
 add_executable(test_channel_decoding
     channel_decoding/TensorToPoint2D.test.cpp
@@ -109,6 +111,8 @@ else()
         )
 endif()
 
+enable_whiskertoolbox_test_pch(test_channel_decoding)
+
 # --- Phase 3: Model Wrapper Tests ---
 add_executable(test_model_wrapper
     models_v2/TensorSlotDescriptor.test.cpp
@@ -157,6 +161,8 @@ else()
         )
 endif()
 
+enable_whiskertoolbox_test_pch(test_model_wrapper)
+
 # --- Phase 4: Model Registry Tests ---
 add_executable(test_model_registry
     registry/ModelRegistry.test.cpp
@@ -201,6 +207,8 @@ else()
         COMMAND test_model_registry
         )
 endif()
+
+enable_whiskertoolbox_test_pch(test_model_registry)
 
 # --- Phase 5: Runtime Model Tests ---
 find_package(reflectcpp CONFIG REQUIRED)
@@ -250,6 +258,10 @@ else()
         )
 endif()
 
+enable_whiskertoolbox_test_pch(test_neurosam_model)
+
+
+# --- Runtime model tests  ---
 add_executable(test_runtime_model
     runtime/RuntimeModelSpec.test.cpp
 )
@@ -294,6 +306,8 @@ else()
         COMMAND test_runtime_model
         )
 endif()
+
+enable_whiskertoolbox_test_pch(test_runtime_model)
 
 # ────────────────────────────────────────────────────────────────────────────
 # Standalone test driver for NeuroSAM debugging

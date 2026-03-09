@@ -56,3 +56,4 @@ set_target_properties(DataManagerOpenCV PROPERTIES
 
 # Create alias for consistent naming
 add_library(WhiskerToolbox::DataManagerOpenCV ALIAS DataManagerOpenCV)
+enable_whiskertoolbox_pch(DataManagerOpenCV)

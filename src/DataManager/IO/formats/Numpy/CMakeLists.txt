@@ -49,3 +49,4 @@ set_target_properties(DataManagerNumpy PROPERTIES
 
 # Create alias for consistent naming
 add_library(WhiskerToolbox::DataManagerNumpy ALIAS DataManagerNumpy)
+enable_whiskertoolbox_pch(DataManagerNumpy)

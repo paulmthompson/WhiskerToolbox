@@ -43,3 +43,4 @@ endif()
 
 set_target_properties(ImageProcessing PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+enable_whiskertoolbox_pch(ImageProcessing)

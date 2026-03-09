@@ -46,6 +46,8 @@ else()
                                            ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
+enable_whiskertoolbox_test_pch(test_editor_state)
+
 # EditorState integration tests - tests cross-widget communication patterns
 # These depend on concrete widget state implementations (MediaWidgetState, DataManagerWidgetState, DataTransformWidgetState)
 add_executable(test_editor_state_integration
@@ -86,3 +88,5 @@ else()
         ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
     )
 endif()
+
+enable_whiskertoolbox_test_pch(test_editor_state_integration)

@@ -53,3 +53,4 @@ set_target_properties(RelativeTimeAxisWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+enable_whiskertoolbox_pch(RelativeTimeAxisWidget)

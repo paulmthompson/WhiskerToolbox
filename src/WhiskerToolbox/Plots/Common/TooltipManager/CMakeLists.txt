@@ -46,3 +46,4 @@ set_target_properties(TooltipManager PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+enable_whiskertoolbox_pch(TooltipManager)

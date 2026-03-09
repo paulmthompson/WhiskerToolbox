@@ -43,3 +43,4 @@ if (MSVC)
     target_compile_options(DeepLearning_Widget PRIVATE ${MSVC_WARNINGS})
 endif()
 
+enable_whiskertoolbox_pch(DeepLearning_Widget)

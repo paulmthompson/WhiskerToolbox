@@ -367,3 +367,4 @@ set_target_properties(WhiskerToolbox PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 include(${CMAKE_SOURCE_DIR}/packaging/Install.cmake)
+enable_whiskertoolbox_pch(WhiskerToolbox)

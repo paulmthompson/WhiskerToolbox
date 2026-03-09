@@ -52,22 +52,4 @@ if (MSVC)
     target_compile_options(MediaExport PRIVATE ${MSVC_WARNINGS})
 endif()
 
-# Install rules
-install(TARGETS MediaExport
-    EXPORT MediaExportTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-
-install(FILES 
-    media_export.hpp
-    MediaExport_Widget.hpp
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/MediaExport
-)
-
-install(FILES 
-    MediaExport_Widget.ui
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/MediaExport
-)
+enable_whiskertoolbox_pch(MediaExport)

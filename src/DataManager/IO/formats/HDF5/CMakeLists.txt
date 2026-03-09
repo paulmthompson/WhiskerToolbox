@@ -69,3 +69,4 @@ set_target_properties(DataManagerHDF5 PROPERTIES
 
 # Create alias for consistent naming
 add_library(WhiskerToolbox::DataManagerHDF5 ALIAS DataManagerHDF5)
+enable_whiskertoolbox_pch(DataManagerHDF5)

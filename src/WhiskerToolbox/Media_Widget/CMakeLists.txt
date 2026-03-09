@@ -150,3 +150,4 @@ if (MSVC)
     target_compile_options(Media_Widget PRIVATE ${MSVC_WARNINGS})
 endif()
 
+enable_whiskertoolbox_pch(Media_Widget)

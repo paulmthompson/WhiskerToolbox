@@ -39,3 +39,5 @@ add_library(WhiskerToolbox::ObserverData ALIAS ObserverData)
 
 # Note: Observer test is built from the main test directory to ensure Catch2 is available
 # The test file Observer_Data.test.cpp is kept here for co-location with implementation
+
+enable_whiskertoolbox_pch(ObserverData)

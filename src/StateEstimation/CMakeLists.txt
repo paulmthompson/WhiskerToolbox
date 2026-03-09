@@ -102,3 +102,4 @@ set_target_properties(StateEstimation PROPERTIES
 install(FILES ${STATE_ESTIMATION_INCLUDES}
     DESTINATION include/StateEstimation
 )
+enable_whiskertoolbox_pch(StateEstimation)

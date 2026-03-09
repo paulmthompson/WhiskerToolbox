@@ -31,3 +31,4 @@ set_target_properties(TableViewerWidget PROPERTIES
     AUTOMOC ON
     AUTOUIC ON
 )
+enable_whiskertoolbox_pch(TableViewerWidget)

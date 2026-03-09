@@ -15,3 +15,4 @@ target_include_directories(GroupContextMenu
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
+enable_whiskertoolbox_pch(GroupContextMenu)

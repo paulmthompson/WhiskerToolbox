@@ -54,3 +54,5 @@ else()
         )
     set_property(TEST test_io_widgets_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
+
+enable_whiskertoolbox_test_pch(test_io_widgets)

@@ -81,3 +81,4 @@ set_target_properties(TimeScrollBar PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 ) 
+enable_whiskertoolbox_pch(TimeScrollBar)

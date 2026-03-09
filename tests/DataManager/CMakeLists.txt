@@ -254,3 +254,5 @@ copy_files(test_data_manager
         ${CMAKE_CURRENT_BINARY_DIR}/data
         "${DATA_FILES_TO_COPY}"
 )
+
+enable_whiskertoolbox_test_pch(test_data_manager)

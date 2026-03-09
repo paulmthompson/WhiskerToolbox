@@ -34,3 +34,5 @@ else()
         COMMAND CsvDatasetPreviewModel_test
         )
 endif()
+
+enable_whiskertoolbox_test_pch(CsvDatasetPreviewModel_test)

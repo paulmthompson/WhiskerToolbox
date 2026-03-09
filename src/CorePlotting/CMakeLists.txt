@@ -132,3 +132,4 @@ endif()
 set_target_properties(CorePlotting PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+enable_whiskertoolbox_pch(CorePlotting)

@@ -60,3 +60,5 @@ else()
         LABELS "TemporalProjectionView;EditorState"
     )
 endif()
+
+enable_whiskertoolbox_test_pch(test_temporal_projection_view_widget)

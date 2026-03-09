@@ -50,3 +50,4 @@ set_target_properties(TimeFrame_Table_Widget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+enable_whiskertoolbox_pch(TimeFrame_Table_Widget)

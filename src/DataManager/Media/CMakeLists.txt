@@ -120,3 +120,4 @@ set(MEDIADATA_TEST_SOURCES
 # Add to global test list (following the pattern from Lines/CMakeLists.txt)
 #get_property(test_sources GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES)
 #set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "${test_sources};${MEDIADATA_TEST_SOURCES}")
+enable_whiskertoolbox_pch(MediaData)

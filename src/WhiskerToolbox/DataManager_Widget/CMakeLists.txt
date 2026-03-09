@@ -71,4 +71,5 @@ set_target_properties(DataManager_Widget PROPERTIES
     AUTOMOC ON
     AUTOUIC ON
     AUTORCC ON
-) 
+)
+enable_whiskertoolbox_pch(DataManager_Widget)

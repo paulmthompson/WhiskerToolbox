@@ -50,3 +50,5 @@ if (WIN32)
 else()
     catch_discover_tests(test_entity)
 endif()
+
+enable_whiskertoolbox_pch(test_entity)

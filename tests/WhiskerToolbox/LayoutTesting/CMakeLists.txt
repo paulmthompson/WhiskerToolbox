@@ -42,6 +42,8 @@ else()
     set_property(TEST test_layout_sanity_checker_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
+enable_whiskertoolbox_test_pch(test_layout_sanity_checker)
+
 # ── ColormapControls layout sweep tests ───────────────────────────────────────
 
 add_executable(test_colormap_controls_layout
@@ -71,6 +73,8 @@ else()
     add_test(NAME test_colormap_controls_layout_all COMMAND test_colormap_controls_layout)
     set_property(TEST test_colormap_controls_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
+
+enable_whiskertoolbox_test_pch(test_colormap_controls_layout)
 
 # ── Property panel layout sweep tests ─────────────────────────────────────────
 
@@ -106,6 +110,8 @@ else()
     set_property(TEST test_property_panel_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
+enable_whiskertoolbox_test_pch(test_property_panel_layout)
+
 # ── HeatmapProperties layout integration tests ───────────────────────────────
 
 add_executable(test_heatmap_properties_layout
@@ -137,3 +143,5 @@ else()
     add_test(NAME test_heatmap_properties_layout_all COMMAND test_heatmap_properties_layout)
     set_property(TEST test_heatmap_properties_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
+
+enable_whiskertoolbox_test_pch(test_heatmap_properties_layout)

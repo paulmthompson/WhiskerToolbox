@@ -55,3 +55,5 @@ else()
         )
     set_property(TEST test_scatter_plot_widget_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
+
+enable_whiskertoolbox_test_pch(test_scatter_plot_widget)

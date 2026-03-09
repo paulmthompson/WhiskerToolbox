@@ -45,3 +45,4 @@ target_include_directories(StateManagement
 
 # Add alias for consistent naming
 add_library(WhiskerToolbox::StateManagement ALIAS StateManagement)
+enable_whiskertoolbox_pch(StateManagement)

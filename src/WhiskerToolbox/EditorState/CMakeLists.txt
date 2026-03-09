@@ -38,3 +38,4 @@ target_include_directories(EditorState
 
 # Add alias for consistent naming
 add_library(WhiskerToolbox::EditorState ALIAS EditorState)
+enable_whiskertoolbox_pch(EditorState)

@@ -45,3 +45,4 @@ if (MSVC)
 endif()
 
 add_library(WhiskerToolbox::Scaling_Widget ALIAS Scaling_Widget)
+enable_whiskertoolbox_pch(Scaling_Widget)

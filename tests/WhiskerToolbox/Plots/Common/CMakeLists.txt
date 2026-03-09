@@ -41,6 +41,8 @@ else()
     add_test(NAME test_plot_alignment_gather COMMAND test_plot_alignment_gather)
 endif()
 
+enable_whiskertoolbox_test_pch(test_plot_alignment_gather)
+
 # ── PlotInteractionHelpers tests ──────────────────────────────────────────────
 
 find_package(glm CONFIG REQUIRED)
@@ -68,6 +70,8 @@ if(ENABLE_DETAILED_TEST_DISCOVERY)
 else()
     add_test(NAME test_plot_interaction_helpers COMMAND test_plot_interaction_helpers)
 endif()
+
+enable_whiskertoolbox_test_pch(test_plot_interaction_helpers)
 
 # ── Common DataManager integration tests (template-based) ────────────────────
 
@@ -100,6 +104,8 @@ else()
     )
     set_property(TEST test_event_rate_estimation_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
+
+enable_whiskertoolbox_test_pch(test_event_rate_estimation)
 
 # ── Common DataManager integration tests (template-based) ────────────────────
 
@@ -147,3 +153,5 @@ else()
     )
     set_property(TEST test_plot_widget_common_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
+
+enable_whiskertoolbox_test_pch(test_plot_widget_common)

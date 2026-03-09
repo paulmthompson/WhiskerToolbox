@@ -83,3 +83,5 @@ else()
         COMMAND test_coreplotting
         )
 endif()
+
+enable_whiskertoolbox_test_pch(test_coreplotting)

@@ -16,3 +16,4 @@ target_link_libraries(AutoParamWidget PUBLIC
         Qt6::Widgets
         WhiskerToolbox::ParameterSchema
 )
+enable_whiskertoolbox_pch(AutoParamWidget)

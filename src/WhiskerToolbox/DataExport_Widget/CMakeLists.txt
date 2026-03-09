@@ -89,3 +89,4 @@ set_target_properties(DataExport_Widget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 ) 
+enable_whiskertoolbox_pch(DataExport_Widget)

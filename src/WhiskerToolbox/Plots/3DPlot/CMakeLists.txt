@@ -64,3 +64,4 @@ set_target_properties(3DPlotWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+enable_whiskertoolbox_pch(3DPlotWidget)

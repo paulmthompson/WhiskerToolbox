@@ -79,3 +79,4 @@ set_target_properties(ScatterPlotWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+enable_whiskertoolbox_pch(ScatterPlotWidget)

@@ -52,3 +52,5 @@ set_target_properties(Entity PROPERTIES
 
 # Add alias for consistent naming
 add_library(WhiskerToolbox::Entity ALIAS Entity)
+
+enable_whiskertoolbox_pch(Entity)

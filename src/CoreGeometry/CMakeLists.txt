@@ -80,3 +80,4 @@ endif()
 
 set_target_properties(NEURALYZER_GEOMETRY PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+enable_whiskertoolbox_pch(NEURALYZER_GEOMETRY)

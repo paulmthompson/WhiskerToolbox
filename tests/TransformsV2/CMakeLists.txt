@@ -92,3 +92,5 @@ else()
         COMMAND test_TransformsV2
         )
 endif()
+
+enable_whiskertoolbox_test_pch(test_TransformsV2)

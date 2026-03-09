@@ -34,3 +34,4 @@ target_include_directories(Color_Widget INTERFACE
 
 # Compile definitions
 target_compile_definitions(Color_Widget INTERFACE _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH) 
+enable_whiskertoolbox_pch(Color_Widget)

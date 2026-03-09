@@ -37,3 +37,4 @@ endif()
 set_target_properties(LayoutTesting PROPERTIES
     AUTOMOC ON
 )
+enable_whiskertoolbox_pch(LayoutTesting)

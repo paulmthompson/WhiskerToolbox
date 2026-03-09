@@ -33,3 +33,17 @@ target_link_libraries(TriageSession_Widget PUBLIC
         StateManagement
         TriageSession
 )
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(TriageSession_Widget PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(TriageSession_Widget PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(TriageSession_Widget PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_pch(TriageSession_Widget)

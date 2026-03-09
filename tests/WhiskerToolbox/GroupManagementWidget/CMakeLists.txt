@@ -50,3 +50,5 @@ else()
         )
     set_property(TEST test_group_management_widget_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
+
+enable_whiskertoolbox_test_pch(test_group_management_widget)

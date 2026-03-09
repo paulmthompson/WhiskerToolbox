@@ -69,3 +69,4 @@ add_tests_to_global(masks_test_sources
                     "${CMAKE_SOURCE_DIR}/src/DataManager/Masks" 
                     DATAMANAGER_TEST_SOURCES)
 
+enable_whiskertoolbox_pch(MaskData)

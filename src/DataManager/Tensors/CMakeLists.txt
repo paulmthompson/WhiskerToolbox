@@ -132,3 +132,4 @@ set_target_properties(TensorData PROPERTIES
 
 # Create alias for consistent naming
 add_library(WhiskerToolbox::TensorData ALIAS TensorData)
+enable_whiskertoolbox_pch(TensorData)

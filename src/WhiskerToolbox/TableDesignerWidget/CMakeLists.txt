@@ -56,3 +56,4 @@ set_target_properties(TableDesignerWidget PROPERTIES
     AUTOMOC ON
     AUTOUIC ON
 )
+enable_whiskertoolbox_pch(TableDesignerWidget)

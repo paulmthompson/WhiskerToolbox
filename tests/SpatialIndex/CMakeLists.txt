@@ -25,3 +25,5 @@ target_link_libraries(SpatialIndexTests
 
 # Add test to CTest
 catch_discover_tests(SpatialIndexTests)
+
+enable_whiskertoolbox_test_pch(SpatialIndexTests)

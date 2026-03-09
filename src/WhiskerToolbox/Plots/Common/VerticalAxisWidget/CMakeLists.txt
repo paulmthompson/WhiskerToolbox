@@ -53,3 +53,4 @@ set_target_properties(VerticalAxisWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+enable_whiskertoolbox_pch(VerticalAxisWidget)

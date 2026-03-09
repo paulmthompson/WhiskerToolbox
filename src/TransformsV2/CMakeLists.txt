@@ -113,3 +113,4 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::PointData)
 
 target_link_libraries(TransformsV2 PUBLIC DataManager)
+enable_whiskertoolbox_pch(TransformsV2)

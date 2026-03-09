@@ -82,3 +82,4 @@ if (MSVC)
 endif()
 
 add_library(WhiskerToolbox::MLCore_Widget ALIAS MLCore_Widget)
+enable_whiskertoolbox_pch(MLCore_Widget)

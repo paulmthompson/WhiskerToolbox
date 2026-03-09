@@ -134,3 +134,4 @@ else()
         WT_PYTHON_STDLIB_REL_DIR="lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}"
     )
 endif()
+enable_whiskertoolbox_pch(PythonBridge)

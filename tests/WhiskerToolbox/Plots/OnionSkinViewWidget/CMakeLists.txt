@@ -60,3 +60,5 @@ else()
         LABELS "OnionSkinView;EditorState"
     )
 endif()
+
+enable_whiskertoolbox_test_pch(test_onion_skin_view_widget)

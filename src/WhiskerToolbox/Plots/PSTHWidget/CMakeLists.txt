@@ -74,3 +74,4 @@ set_target_properties(PSTHWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+enable_whiskertoolbox_pch(PSTHWidget)

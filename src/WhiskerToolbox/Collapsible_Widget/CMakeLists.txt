@@ -45,3 +45,4 @@ set_target_properties(Collapsible_Widget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+enable_whiskertoolbox_pch(Collapsible_Widget)

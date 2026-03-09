@@ -19,3 +19,4 @@ target_include_directories(ParameterSchema PUBLIC
 )
 
 target_link_libraries(ParameterSchema PUBLIC reflectcpp::reflectcpp)
+enable_whiskertoolbox_pch(ParameterSchema)

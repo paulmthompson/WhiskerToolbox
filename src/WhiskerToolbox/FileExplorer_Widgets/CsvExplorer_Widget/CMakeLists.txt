@@ -70,3 +70,4 @@ if (MSVC)
 endif()
 
 add_library(WhiskerToolbox::CsvExplorer_Widget ALIAS CsvExplorer_Widget)
+enable_whiskertoolbox_pch(CsvExplorer_Widget)

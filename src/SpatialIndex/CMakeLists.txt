@@ -22,3 +22,4 @@ target_include_directories(SpatialIndex PUBLIC
 )
 
 target_link_libraries(SpatialIndex PUBLIC NEURALYZER_GEOMETRY)
+enable_whiskertoolbox_pch(SpatialIndex)

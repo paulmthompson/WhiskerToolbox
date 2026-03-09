@@ -48,3 +48,4 @@ set_target_properties(ColorPicker_Widget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+enable_whiskertoolbox_pch(ColorPicker_Widget)

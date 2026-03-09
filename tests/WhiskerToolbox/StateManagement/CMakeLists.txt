@@ -67,3 +67,5 @@ if (WIN32)
 else()
     catch_discover_tests(test_state_management PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
+
+enable_whiskertoolbox_test_pch(test_state_management)

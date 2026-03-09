@@ -126,3 +126,4 @@ set_target_properties(ML_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
 )
+enable_whiskertoolbox_pch(ML_Widget)

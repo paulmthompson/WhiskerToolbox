@@ -39,6 +39,8 @@ else()
         )
 endif()
 
+enable_whiskertoolbox_test_pch(DataImportWidgetState_test)
+
 # === DataImportTypeRegistry Unit Tests ===
 # These tests need the full registry with registered widget types
 add_executable(DataImportTypeRegistry_test
@@ -65,3 +67,4 @@ else()
         )
 endif()
 
+enable_whiskertoolbox_test_pch(DataImportTypeRegistry_test)

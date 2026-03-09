@@ -55,3 +55,4 @@ set_target_properties(GroupManagementWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+enable_whiskertoolbox_pch(GroupManagementWidget)
