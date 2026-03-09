@@ -4,16 +4,16 @@ title: "Command Architecture Roadmap"
 
 ## Progress Summary
 
-*Last updated: 2026-03-05*
+*Last updated: 2026-03-09*
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.12 complete. GUI audit (1.10) remains. |
+| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.12 complete. GUI audit (1.10) restructured as on-demand. Steps 1.13–1.14 (testing infrastructure) added. |
 | **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3, 2.6–2.8 complete. Keyboard shortcuts (2.4) and tracked-regions visualization (2.5) remain. |
 | **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
-| **Phase 4:** Action Journal Integration | Not Started | Commands auto-record to journal; journal replay via command execution |
+| **Phase 4:** Action Journal Integration | Not Started | Full journal; builds on CommandRecorder from Step 1.13 |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
-| **Phase 6:** CLI Batch Executor & Macro Recording | Not Started | Headless command sequence execution; record GUI actions as JSON |
+| **Phase 6:** CLI Batch Executor & Macro Recording | Not Started | Headless command sequence execution; builds on golden trace tests from Step 1.14 |
 
 For the full architectural design, types, and code examples, see the
 [Command Architecture Design Document](index.qmd).
@@ -23,18 +23,25 @@ For the full architectural design, types, and code examples, see the
 ```
 Phase 1: Command Foundation
    │
+   ├── Step 1.13 (CommandRecorder + MutationGuard)
+   │       │
+   │       ├──► On-demand widget audits (Step 1.10)
+   │       │       MutationGuard identifies gaps at runtime
+   │       │
+   │       └──► Phase 4: Action Journal Integration
+   │               CommandRecorder generalizes into full journal
+   │
+   ├── Step 1.14 (DataManagerSnapshot + Golden Trace Tests)
+   │       │
+   │       └──► Phase 6: CLI Batch & Macro Recording
+   │               Golden traces generalize into macro recording
+   │
    ├──► Phase 2: Triage Session
    │       Steps 2.7–2.8 (guided editor) depend on Steps 1.11–1.12
    │
    ├──► Phase 3: Persistence Commands & Save Registry
    │
-   ├──► Phase 4: Action Journal Integration
-   │         (also depends on State Mgmt Phase 4)
-   │
-   ├──► Phase 5: Undo/Redo
-   │
-   └──► Phase 6: CLI Batch & Macro Recording
-                    (also depends on Phases 3, 4)
+   └──► Phase 5: Undo/Redo
 ```
 
 **Parallelizable work:**
@@ -43,8 +50,12 @@ Phase 1: Command Foundation
 - Steps 1.11–1.12 (ParameterSchema extraction + CommandInfo) are prerequisites for Steps
   2.7–2.8 (AutoParamWidget extraction + guided pipeline editor) but independent of all other
   Phase 2 work.
-- Phase 4 depends on both Phase 1 and the Action Journal from the State Management Roadmap.
+- Steps 1.13–1.14 (CommandRecorder, MutationGuard, DataManagerSnapshot) are independent of
+  Phases 2, 3, and 5 and can proceed in parallel.
+- Phase 4 depends on both Step 1.13 (CommandRecorder) and the Action Journal from the State
+  Management Roadmap. CommandRecorder is a lightweight precursor that feeds directly into it.
 - Phase 6 can begin once Phases 1, 3, and 4 are complete (Phase 5/undo is not required).
+  Golden trace tests (Step 1.14) provide the replay infrastructure that Phase 6 generalizes.
 
 ---
 
@@ -137,11 +148,34 @@ See [Commands](index.qmd#commands) in the design document.
 
 See [Validation](index.qmd#validation) in the design document.
 
-### Step 1.10 — GUI Verb Audit
+### Step 1.10 — GUI Verb Audit (On-Demand)
 
-- [ ] Walk all widgets and enumerate user-facing actions that modify `DataManager` state
-- [ ] Tag each action: covered by Phase 1 commands, covered by existing systems (TransformsV2, LoaderRegistry), or needs a future command wrapper
-- [ ] Document the audit results for planning future phases
+This step has its own detailed tracking document: [GUI Verb Audit](gui_verb_audit.qmd).
+
+**Strategy change (2026-03-09):** The GUI audit is no longer a blocking prerequisite that must
+be completed exhaustively before other work proceeds. Instead, it uses a hybrid approach:
+
+1. **Quick triage pass** — `grep` for `_data_manager` in each widget's headers to identify
+   which widgets have any `DataManager` interaction at all. Widgets with zero references
+   move to the excluded list immediately.
+2. **Detailed audit on-demand** — When you are about to implement commands for a widget or
+   refactor it, perform the full audit (Phase A–D) at that time.
+3. **Runtime gap detection** — The MutationGuard (Step 1.13) automatically identifies
+   unrecorded `DataManager` mutations at runtime, replacing manual code-reading for
+   gap discovery.
+4. **Golden trace verification** — A widget is considered "done" when all its mutations
+   route through commands and a golden trace test verifies the workflow (Step 1.14).
+
+See the [Definition of Done](#definition-of-done) section for widget completion criteria.
+
+Completed widget audits:
+
+- [x] DataManager_Widget — 3 verbs (2 new commands: `CreateData`, `DeleteData`)
+- [x] DataInspector_Widget — ~30 verbs (10 covered, 14 new commands, 6 future Phase 3)
+
+Remaining widgets are audited on-demand as they are touched. See the
+[GUI Verb Audit](gui_verb_audit.qmd) document for the quick triage results and per-widget
+audit tables.
 
 ### Step 1.11 — Extract ParameterSchema Library
 
@@ -163,6 +197,120 @@ See [Command Introspection](index.qmd#command-introspection) in the design docum
 - [x] Add `ParameterUIHints<T>` specializations for command param structs (tooltips, field descriptions)
 - [x] Add `ParameterSchema` as a dependency of the `Commands` CMake target
 - [x] Unit tests: `getAvailableCommands()` returns all known commands; `getCommandInfo()` returns correct schemas; schema field counts match param struct fields
+
+### Step 1.13 — CommandRecorder and MutationGuard
+
+These are lightweight infrastructure pieces that enable test-driven widget refactoring
+without requiring the full Action Journal (Phase 4).
+
+#### CommandRecorder (Phase 4 Lite)
+
+- [ ] `CommandRecorder` class in `src/DataManager/Commands/`
+- [ ] `record(CommandDescriptor)` — appends a descriptor to the trace
+- [ ] `trace()` — returns the recorded descriptors
+- [ ] `toSequence()` — produces a `CommandSequenceDescriptor` from the trace
+- [ ] `clear()` — resets the recorder
+- [ ] Optional hook in `executeSequence()` — accepts `CommandRecorder*` parameter; records
+  each successfully executed command automatically
+
+```cpp
+class CommandRecorder {
+    std::vector<CommandDescriptor> _trace;
+public:
+    void record(CommandDescriptor desc) { _trace.push_back(std::move(desc)); }
+    [[nodiscard]] auto const& trace() const { return _trace; }
+    [[nodiscard]] CommandSequenceDescriptor toSequence(std::string name = "") const;
+    void clear() { _trace.clear(); }
+};
+```
+
+This is intentionally minimal — ~50 lines of code. It feeds directly into Phase 4 (Action
+Journal) as the recording mechanism, but is useful immediately for golden trace tests.
+
+#### MutationGuard (Strangulation Pattern)
+
+- [ ] Debug-only `thread_local bool g_inside_command` flag in `src/DataManager/Commands/`
+- [ ] `CommandGuard` RAII struct that sets the flag to `true` during `ICommand::execute()`
+- [ ] Instrumentation points in `DataManager` mutating methods (`setData()`, `deleteData()`,
+  etc.) — `qWarning()` when `g_inside_command` is false
+- [ ] Compile-gated to debug builds only (`#ifndef NDEBUG`)
+
+This gives **automated runtime gap detection**: run the app normally, exercise each widget,
+and the console reports exactly which `DataManager` mutations are not routed through commands.
+No manual code reading required.
+
+### Step 1.14 — DataManagerSnapshot and Golden Trace Tests
+
+These provide the test infrastructure for verifying widget command coverage.
+
+#### DataManagerSnapshot
+
+- [ ] `DataManagerSnapshot` struct in `src/DataManager/`
+- [ ] `snapshotDataManager(DataManager const&)` — produces a lightweight summary:
+  - `key_type`: map of data key → type name string
+  - `key_entity_count`: map of data key → number of entities
+  - `key_content_hash`: map of data key → deterministic content hash
+- [ ] `operator==` for snapshot comparison in tests
+- [ ] Does not require full data serialization — entity counts and content hashes detect
+  regressions; full serialization comes with Phase 3 (SaveData/LoadData)
+
+```cpp
+struct DataManagerSnapshot {
+    std::map<std::string, std::string> key_type;
+    std::map<std::string, size_t> key_entity_count;
+    std::map<std::string, std::string> key_content_hash;
+};
+DataManagerSnapshot snapshotDataManager(DataManager const& dm);
+bool operator==(DataManagerSnapshot const&, DataManagerSnapshot const&);
+```
+
+#### Golden Trace Test Pattern
+
+- [ ] Load a recorded `CommandSequenceDescriptor` from a JSON fixture file
+- [ ] Replay against a synthesized (or empty) `DataManager`
+- [ ] Assert final state via `DataManagerSnapshot` comparison
+- [ ] Each refactored widget gets at least one golden trace test for its key workflow
+
+Example:
+
+```cpp
+TEST_CASE("DataManager_Widget CreateData+DeleteData round-trip") {
+    auto dm = std::make_shared<DataManager>();
+    auto sequence = loadSequenceFromFile("traces/datamanager_widget_create_delete.json");
+
+    CommandContext ctx;
+    ctx.data_manager = dm;
+    auto result = executeSequence(sequence, ctx);
+    REQUIRE(result.success);
+
+    REQUIRE(dm->getKeys().size() == 1);
+    REQUIRE(dm->getData<PointData>("my_points") != nullptr);
+}
+```
+
+This is the TDD mechanism for widget refactoring: capture a trace once (manually or via
+`CommandRecorder`), then replay it as a regression test. A widget is "done" when all its
+mutating actions produce golden traces that replay successfully.
+
+---
+
+## Definition of Done
+
+A widget is fully command-ified when all three criteria are met:
+
+1. **Zero direct `DataManager` mutations** — every `setData()`, `deleteData()`,
+   `getData<T>()->addEvent()`, etc. in the widget goes through `createCommand()` +
+   `execute()`. Category C verbs (TransformsV2, LoaderRegistry) are documented but
+   intentionally left as direct calls until Phase 3+.
+
+2. **Zero MutationGuard warnings** — exercising the widget in a debug build produces no
+   `"DataManager mutation outside command"` warnings in the console.
+
+3. **Golden trace test exists** — at least one Catch2 test loads a recorded command sequence
+   (JSON fixture), replays it against synthetic data, and verifies the final
+   `DataManagerSnapshot` matches expectations.
+
+Criteria 2 and 3 require Steps 1.13–1.14 to be implemented first.
 
 ---
 
@@ -274,11 +422,17 @@ See [SaveData](index.qmd#savedata) and [Persistence Safety](index.qmd#persistenc
 
 **Goal:** Commands auto-record to journal; journal can replay command entries.
 
-**Depends on:** Phase 1, State Management Roadmap Phase 4 (Action Journal)
+**Depends on:** Phase 1 (Step 1.13 CommandRecorder), State Management Roadmap Phase 4 (Action Journal)
+
+**Relationship to Step 1.13:** The `CommandRecorder` from Step 1.13 is the minimal precursor
+to the full Action Journal. Phase 4 generalizes the recorder into a persistent, timestamped,
+filterable log with workspace integration. The `executeSequence()` hook added in Step 1.13
+is reused here — the only change is swapping the `CommandRecorder*` parameter for an
+`ActionJournal*` that wraps it with persistence and metadata.
 
 ### Step 4.1 — Journal Hook in executeSequence
 
-- [ ] `executeSequence()` accepts optional `ActionJournal*` parameter
+- [ ] Generalize the `CommandRecorder*` parameter from Step 1.13 into `ActionJournal*`
 - [ ] On successful command execution, record `ActionEntry` with timestamp, command name/description, serialized parameters, source widget
 
 ### Step 4.2 — Journal Replay
@@ -339,7 +493,13 @@ See [CommandSequenceCommand](index.qmd#commandsequencecommand-triage-undo) in th
 
 **Goal:** Execute command sequences headlessly; record GUI actions as commands.
 
-**Depends on:** Phases 1, 3, 4
+**Depends on:** Phases 1 (Steps 1.13–1.14), 3, 4
+
+**Relationship to Steps 1.13–1.14:** The CLI executor is a direct generalization of the golden
+trace test pattern (Step 1.14) — same infrastructure (load JSON, create `DataManager`,
+`executeSequence()`, check results), different entry point (CLI instead of Catch2). The macro
+recorder generalizes `CommandRecorder` (Step 1.13) from a test utility into a user-facing
+feature.
 
 ### Step 6.1 — CLI Executor
 

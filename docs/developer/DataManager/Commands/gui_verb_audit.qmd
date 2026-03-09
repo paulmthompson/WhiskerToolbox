@@ -1,0 +1,553 @@
+---
+title: "GUI Verb Audit (Step 1.10)"
+---
+
+## Overview
+
+This document tracks the audit of widgets in WhiskerToolbox that modify `DataManager` state.
+The goal is to ensure command coverage for all data-mutating operations.
+
+**Strategy (updated 2026-03-09):** The audit follows a hybrid approach rather than
+exhaustively auditing every widget up front:
+
+1. **Quick triage** — A fast `grep`-based pass eliminates widgets with no `DataManager`
+   interaction. This narrows the audit surface immediately.
+2. **Detailed audit on-demand** — Full verb enumeration (Phase A–D) happens when you are
+   about to implement commands for a widget or refactor it.
+3. **Runtime gap detection** — The `MutationGuard` (see [roadmap Step 1.13](roadmap.qmd))
+   automatically logs `DataManager` mutations that bypass the command system at runtime.
+   This replaces manual header-reading for gap discovery.
+4. **Golden trace verification** — A widget is "done" when a recorded command sequence
+   replays successfully and produces the expected `DataManagerSnapshot` (see
+   [roadmap Step 1.14](roadmap.qmd)).
+
+This is the detailed plan for [Step 1.10](roadmap.qmd#step-1.10---gui-verb-audit) in the
+Command Architecture Roadmap.
+
+## Classification Scheme
+
+Every user-facing action that modifies `DataManager` state falls into one of four categories:
+
+| Category | Meaning | Action Required |
+|----------|---------|-----------------|
+| **A — Covered** | An existing command already handles this verb | Refactor widget to dispatch through command |
+| **B — New Command** | No command exists yet; one must be created | Design params struct, implement command, then refactor widget |
+| **C — Existing System** | Handled by an existing non-command system (TransformsV2, LoaderRegistry) and a future command wrapper is planned | No action now; tracked for Phase 3+ |
+| **D — View State** | Does not modify `DataManager`; purely view/EditorState | Not a command candidate — skip |
+
+## Widget Completion Criteria
+
+A widget is fully command-ified when:
+
+| # | Criterion | How to verify |
+|---|-----------|---------------|
+| 1 | **Zero direct `DataManager` mutations** | All `setData()`, `deleteData()`, `getData<T>()->addEvent()`, etc. go through `createCommand()` + `execute()`. Category C verbs (TransformsV2, LoaderRegistry) are intentionally exempt until Phase 3+. |
+| 2 | **Zero `MutationGuard` warnings** | Exercise the widget in a debug build; console shows no `"DataManager mutation outside command"` warnings. |
+| 3 | **Golden trace test exists** | At least one Catch2 test loads a recorded JSON command sequence, replays it against synthetic data, and asserts the final `DataManagerSnapshot`. |
+
+Criteria 2 and 3 require Steps 1.13–1.14 from the [roadmap](roadmap.qmd) to be implemented.
+Until then, criterion 1 (verified by code review) is sufficient to mark a widget as refactored.
+
+## Quick Triage Pass
+
+Before performing detailed audits, run a fast triage to identify which widgets interact with
+`DataManager` at all:
+
+```bash
+# From src/WhiskerToolbox/, find widgets that reference _data_manager in headers
+for dir in */; do
+  count=$(grep -rl '_data_manager\|DataManager' "$dir" --include='*.hpp' 2>/dev/null | wc -l)
+  if [ "$count" -eq 0 ]; then
+    echo "SKIP  $dir"
+  else
+    echo "AUDIT $dir ($count headers)"
+  fi
+done
+```
+
+Widgets printing `SKIP` can be moved directly to the excluded list. Widgets printing `AUDIT`
+need either a detailed audit (if being refactored now) or can wait for runtime gap detection
+via MutationGuard.
+
+## Runtime Gap Detection (Strangulation)
+
+Once Step 1.13 (MutationGuard) is implemented, the audit becomes partially automated:
+
+1. **Run the app in debug mode** with MutationGuard enabled.
+2. **Exercise each widget** — click buttons, trigger actions.
+3. **Console reports gaps** — any `DataManager` mutation not inside a command execution
+   produces a warning: `"DataManager mutation outside command: <key>"`.
+4. **Fix gaps on-demand** — for each warning, either create the missing command or
+   document it as Category C (future Phase 3+).
+
+This replaces the manual process of reading every `.hpp` and `.cpp` file to discover
+mutating slots. The runtime approach catches mutations that static analysis misses
+(e.g., mutations triggered by signal chains across widgets).
+
+## Golden Trace Test Pattern
+
+Once Steps 1.13–1.14 are implemented, each refactored widget gets a golden trace test:
+
+1. **Synthesize initial state** — create a `DataManager` with known data (or start empty).
+2. **Capture a trace** — use `CommandRecorder` while exercising the widget, or hand-write
+   a `CommandSequenceDescriptor` JSON file.
+3. **Save the trace** as a test fixture: `tests/Commands/traces/<widget>_<workflow>.json`.
+4. **Write a Catch2 test** that loads the trace, replays it via `executeSequence()`, and
+   asserts the final `DataManagerSnapshot`.
+5. **The test is the verification** — if any command in the sequence is missing, broken,
+   or produces the wrong result, the test fails.
+
+This is a TDD approach to widget refactoring: the golden trace test defines the expected
+behavior, and implementing/fixing commands makes it pass.
+
+### Future: Property-Based Fuzzing
+
+Once `CommandRecorder` + `DataManagerSnapshot` exist, property-based fuzzing becomes
+possible:
+
+- Generate random valid command sequences
+- Execute on a fresh `DataManager`, snapshot the result
+- Replay the same sequence on another fresh `DataManager`
+- Assert snapshots match (catches non-determinism and state leaks)
+
+This is not a near-term priority but follows naturally from the golden trace infrastructure.
+
+## Repeatable Audit Process
+
+Use this process for each widget. It is designed to be followed mechanically.
+
+**When to perform a detailed audit:** Only when you are about to implement commands for a
+widget or refactor it to use existing commands. Do not audit widgets speculatively — use the
+quick triage pass and MutationGuard for discovery instead.
+
+### Phase A: Discovery (read-only, minimal context)
+
+1. **Tree the widget directory** — `find <widget_dir> -name "*.hpp" | sort` to get all
+   headers. Do not read `.cpp` files yet.
+
+2. **Read headers for slots/signals only** — For each `.hpp`, extract:
+   - Private/public slots (these are the verbs)
+   - Signals (especially those that propagate to parent widgets)
+   - Skip constructors, getters, view-state-only methods
+
+3. **Check `.ui` files** — Look for `QPushButton`, `QAction`, `QMenu` entries that trigger
+   data mutations. Each button/action is a potential verb.
+
+4. **Record findings in the audit table** — Add one row per verb to the widget's section in
+   this document.
+
+### Phase B: Classification
+
+For each discovered verb, classify it:
+
+1. **Does it call `DataManager` mutating methods?** (`setData`, `deleteData`,
+   `moveByEntityIds`, `copyByEntityIds`, `getData<T>()->addEvent()`, etc.)
+   - Yes → Category A, B, or C
+   - No → Category D (skip)
+
+2. **Is there already a command for this?** Check `getAvailableCommands()` or the
+   [commands list](commands.qmd).
+   - Yes → Category A
+   - No → Continue
+
+3. **Is it handled by TransformsV2 / LoaderRegistry / SaverRegistry?**
+   - Yes → Category C (future command wrapper in Phase 3+)
+   - No → Category B (new command needed)
+
+### Phase C: Command Design (for Category B verbs)
+
+For each new command identified:
+
+1. **Define the params struct** — What does the command need to know? Data key(s),
+   frame range, entity IDs, options.
+2. **Decide on undo** — Is the operation destructive enough to warrant undo?
+3. **Check for generalization** — Is this verb a special case of a more general operation?
+   (e.g., "delete selected lines" and "delete selected points" are both "delete by entity
+   IDs" with different types)
+4. **Add to the New Commands section** below.
+
+### Phase D: Widget Refactoring
+
+Once a command exists for a verb:
+
+1. **Widget gets a `CommandContext`** — The widget holds (or can construct) a `CommandContext`
+   with the `DataManager` pointer. This is typically obtained from the widget's existing
+   `_data_manager` member.
+
+2. **Slot creates and executes the command** — The existing slot body is replaced with:
+   ```cpp
+   void MyWidget::_onSomeAction() {
+       SomeCommandParams params;
+       params.source_key = _current_key;
+       params.start_frame = _getStartFrame();
+       // ... fill params from UI state ...
+
+       auto cmd = createCommand("SomeCommand", rfl::generic::write(params));
+       if (!cmd) { /* log error */ return; }
+
+       CommandContext ctx;
+       ctx.data_manager = _data_manager;
+
+       auto result = cmd->execute(ctx);
+       if (!result.success) { /* show error to user */ }
+   }
+   ```
+
+3. **Commands live in `src/DataManager/Commands/`** — All command classes and their params
+   structs are defined there. The widget only needs to include `CommandFactory.hpp` and the
+   relevant params header.
+
+4. **Widget does NOT include `ICommand.hpp` subclass headers directly** — It uses the factory
+   function `createCommand(name, params)` and gets back an opaque `unique_ptr<ICommand>`.
+   This keeps the widget decoupled from command internals.
+
+5. **Verify no regressions** — Run the widget's existing tests (if any) and the command's
+   unit tests.
+
+### Phase E: Golden Trace Verification
+
+After refactoring (Phase D), create a golden trace test:
+
+1. **Record the workflow** — use `CommandRecorder` or hand-write the JSON.
+2. **Write the Catch2 test** — replay the trace, assert the final `DataManagerSnapshot`.
+3. **Verify MutationGuard silence** — run the widget in debug mode and confirm zero
+   warnings.
+4. **Update the Audit Progress table** — mark the widget as "Done" with a ✅ in the
+   "Golden Trace" column.
+
+### Organization Summary
+
+```
+src/DataManager/Commands/
+├── ICommand.hpp              ← interface (already exists)
+├── CommandFactory.hpp/.cpp   ← factory + getAvailableCommands() (already exists)
+├── CommandContext.hpp         ← runtime context (already exists)
+├── MoveByTimeRange.hpp/.cpp  ← concrete command (already exists)
+├── CopyByTimeRange.hpp/.cpp  ← concrete command (already exists)
+├── AddInterval.hpp/.cpp      ← concrete command (already exists)
+├── ForEachKey.hpp/.cpp        ← meta-command (already exists)
+├── DeleteByEntityIds.hpp/.cpp ← NEW (identified by audit)
+├── AddEvent.hpp/.cpp          ← NEW (identified by audit)
+├── RemoveEvent.hpp/.cpp       ← NEW (identified by audit)
+├── ...                        ← more as audit discovers them
+└── CMakeLists.txt
+
+src/WhiskerToolbox/SomeWidget/
+├── SomeWidget.hpp             ← includes CommandFactory.hpp, params headers
+├── SomeWidget.cpp             ← slots call createCommand() + execute()
+└── ...
+```
+
+**Key principle:** Commands are data-layer objects with no Qt dependency. Widgets are
+Qt-layer objects that create and execute commands through the factory. The widget knows
+*which* command to run and *what parameters* to pass, but not *how* the command works internally.
+
+---
+
+## Audit Progress
+
+| Widget | Status | Verbs Found | A (Covered) | B (New Cmd) | C (Future) | D (View) | Golden Trace |
+|--------|--------|-------------|-------------|-------------|------------|----------|-------------|
+| DataManager_Widget | **Audited** | 3 | 0 | 2 | 0 | 1 | Not yet |
+| DataInspector_Widget | **Audited** | ~30 | ~10 | ~14 | ~6 | ~0 | Not yet |
+| DataImport_Widget | Triage pending | — | — | — | — | — | — |
+| DataExport_Widget | Triage pending | — | — | — | — | — | — |
+| DataTransform_Widget | Triage pending | — | — | — | — | — | — |
+| TransformsV2_Widget | Triage pending | — | — | — | — | — | — |
+| Media_Widget | Triage pending | — | — | — | — | — | — |
+| Main_Window | Triage pending | — | — | — | — | — | — |
+| BatchProcessing_Widget | Triage pending | — | — | — | — | — | — |
+| Plots/ | Triage pending | — | — | — | — | — | — |
+| GroupManagementWidget | Triage pending | — | — | — | — | — | — |
+| MLCore_Widget | Triage pending | — | — | — | — | — | — |
+| DeepLearning_Widget | Triage pending | — | — | — | — | — | — |
+| Scaling_Widget | Triage pending | — | — | — | — | — | — |
+| Python_Widget | Triage pending | — | — | — | — | — | — |
+
+Widgets intentionally excluded (no DataManager mutations):
+
+- `AutoParamWidget` — pure UI component
+- `Collapsible_Widget` — pure layout
+- `ColorPicker_Widget` / `Color_Widget` — view state only
+- `EditorState` — infrastructure, not a user widget
+- `Feature_Table_Widget` / `Feature_Tree_Widget` — display only
+- `TimeFrame_Table_Widget` — display only
+- `TimeScrollBar` — navigation only
+- `DataViewer` / `DataViewer_Widget` — read-only visualization
+- `LayoutTesting` — debug infrastructure
+- `StateManagement` — workspace serialization
+- `ZoneManager` — layout management
+- `Export_Widgets` / `MediaExport` — future Phase 3 (SaveData)
+- `FileExplorer_Widgets` — navigation
+- `TriageSession_Widget` — already uses command architecture
+- `GroupContextMenu` — helper for group operations (audited via parent widgets)
+- `Whisker_Widget` — legacy widget, no DataManager mutations
+- `Tongue_Widget` — legacy widget, no DataManager mutations
+- `Grabcut_Widget` — legacy widget, no DataManager mutations
+- `Magic_Eraser_Widget` — legacy widget, no DataManager mutations
+- `ML_Widget` — legacy widget, no DataManager mutations
+- `TableDesignerWidget` — no DataManager mutations
+- `TableViewerWidget` — no DataManager mutations
+- `Terminal_Widget` — no DataManager mutations
+- `Analysis_Dashboard` — no DataManager mutations
+
+---
+
+## Widget Audits
+
+### DataManager_Widget
+
+**Source:** `src/WhiskerToolbox/DataManager_Widget/`
+
+| Verb | Slot/Trigger | Category | Command | Notes |
+|------|-------------|----------|---------|-------|
+| Create new data object | `_createNewData()` via "Create New Data" button | **B** | `CreateData` (new) | Calls `setData<T>()` templated on type; also sets image size for geometry types |
+| Delete data object | `_deleteData()` via right-click context menu | **B** | `DeleteData` (new) | Calls `deleteData(key)` |
+| Set output directory | `_changeOutputDir()` via "Set Output Dir" button | **D** | — | View/config state, not data mutation |
+
+### DataInspector_Widget
+
+**Source:** `src/WhiskerToolbox/DataInspector_Widget/`
+
+This is a large widget with a base inspector pattern and per-type sub-inspectors. The base
+class `BaseInspector` defines common operations; each sub-inspector may add type-specific
+verbs.
+
+#### Common Verbs (across Line, Point, Mask, Event, Interval inspectors)
+
+| Verb | Slot Pattern | Category | Command | Notes |
+|------|-------------|----------|---------|-------|
+| Move data to target | `_onMove*Requested()` | **A** | `MoveByTimeRange` | Already exists; widget should use command factory |
+| Copy data to target | `_onCopy*Requested()` | **A** | `CopyByTimeRange` | Already exists |
+| Delete selected entities | `_onDelete*Requested()` | **B** | `DeleteByEntityIds` (new) | Needs entity ID set, not time range |
+| Move entities to group | `_onMove*ToGroupRequested()` | **B** | `AssignToGroup` (new) | Group membership change |
+| Remove entities from group | `_onRemove*FromGroupRequested()` | **B** | `RemoveFromGroup` (new) | Group membership change |
+| Save to CSV/binary | `_handleSave*Requested()` | **C** | `SaveData` (Phase 3) | Future SaverRegistry command |
+
+#### DigitalEventSeries-Specific
+
+| Verb | Slot/Trigger | Category | Command | Notes |
+|------|-------------|----------|---------|-------|
+| Add event at current time | `_addEventButton()` | **B** | `AddEvent` (new) | Single event insertion |
+| Remove selected event | `_removeEventButton()` | **B** | `RemoveEvent` (new) | Single event removal |
+
+#### DigitalIntervalSeries-Specific
+
+| Verb | Slot/Trigger | Category | Command | Notes |
+|------|-------------|----------|---------|-------|
+| Create interval | `_createIntervalButton()` | **A** | `AddInterval` | Already exists (check param compatibility) |
+| Remove selected interval | `_removeIntervalButton()` | **B** | `RemoveInterval` (new) | Single interval removal |
+| Flip interval (swap start/end) | `_flipIntervalButton()` | **B** | `ModifyInterval` (new) | In-place mutation |
+| Extend interval bounds | `_extendInterval()` | **B** | `ModifyInterval` (new) | Same command, different params |
+
+#### TensorData-Specific
+
+| Verb | Slot/Trigger | Category | Command | Notes |
+|------|-------------|----------|---------|-------|
+| Create tensor via designer | `_onTensorCreated()` | **B** | `CreateData` (new) | May share with DataManager_Widget's CreateData |
+
+---
+
+## New Commands Identified
+
+Commands discovered during the audit that need to be implemented. Ordered by priority
+(most commonly used across widgets first).
+
+### High Priority
+
+#### `CreateData`
+
+Creates a new data object in `DataManager`.
+
+```cpp
+struct CreateDataParams {
+    std::string key;              // Data object name
+    std::string data_type;        // "Point", "Line", "Mask", "Event", "Interval", "AnalogTimeSeries", "Tensor"
+    std::string time_key = "time"; // TimeFrame key
+    // Optional geometry setup
+    std::optional<int> image_width;
+    std::optional<int> image_height;
+};
+```
+
+**Undo:** Yes — `deleteData(key)` reverses creation.
+**Used by:** DataManager_Widget, TensorInspector, potentially others.
+
+#### `DeleteData`
+
+Deletes a data object from `DataManager` by key.
+
+```cpp
+struct DeleteDataParams {
+    std::string key;  // Data object to delete
+};
+```
+
+**Undo:** Possible but complex (would need to snapshot the data). Start as non-undoable.
+**Used by:** DataManager_Widget context menu.
+
+#### `DeleteByEntityIds`
+
+Deletes specific entities from a data object by their entity IDs.
+
+```cpp
+struct DeleteByEntityIdsParams {
+    std::string data_key;
+    std::vector<int64_t> entity_ids;  // EntityIDs to remove
+};
+```
+
+**Undo:** Yes — capture deleted entities for restoration.
+**Used by:** All inspector delete operations.
+
+#### `AddEvent`
+
+Adds a single event to a `DigitalEventSeries`.
+
+```cpp
+struct AddEventParams {
+    std::string event_key;
+    int64_t frame;               // TimeFrameIndex of the event
+    bool create_if_missing = false;
+};
+```
+
+**Undo:** Yes — remove the added event.
+**Used by:** DigitalEventSeriesInspector.
+
+#### `RemoveEvent`
+
+Removes a single event from a `DigitalEventSeries`.
+
+```cpp
+struct RemoveEventParams {
+    std::string event_key;
+    int64_t frame;  // TimeFrameIndex of the event to remove
+};
+```
+
+**Undo:** Yes — re-add the removed event.
+**Used by:** DigitalEventSeriesInspector.
+
+### Medium Priority
+
+#### `RemoveInterval`
+
+Removes an interval from a `DigitalIntervalSeries` by index or by start/end match.
+
+```cpp
+struct RemoveIntervalParams {
+    std::string interval_key;
+    int64_t start_frame;
+    int64_t end_frame;
+};
+```
+
+**Undo:** Yes — re-add the interval.
+**Used by:** DigitalIntervalSeriesInspector.
+
+#### `ModifyInterval`
+
+Modifies an existing interval's bounds (flip, extend).
+
+```cpp
+struct ModifyIntervalParams {
+    std::string interval_key;
+    int64_t original_start;
+    int64_t original_end;
+    int64_t new_start;
+    int64_t new_end;
+};
+```
+
+**Undo:** Yes — restore original bounds.
+**Used by:** DigitalIntervalSeriesInspector.
+
+### Lower Priority (Group Operations)
+
+#### `AssignToGroup`
+
+Assigns entities to a named group.
+
+```cpp
+struct AssignToGroupParams {
+    std::string data_key;
+    std::string group_name;
+    std::vector<int64_t> entity_ids;
+};
+```
+
+**Undo:** Yes — remove from group.
+**Used by:** All inspectors with group support.
+
+#### `RemoveFromGroup`
+
+Removes entities from a named group.
+
+```cpp
+struct RemoveFromGroupParams {
+    std::string data_key;
+    std::string group_name;
+    std::vector<int64_t> entity_ids;
+};
+```
+
+**Undo:** Yes — re-add to group.
+**Used by:** All inspectors with group support.
+
+---
+
+## Implementation Order
+
+The recommended order for implementing new commands and refactoring widgets:
+
+### Wave 1: Core CRUD Commands
+
+1. `CreateData` — enables DataManager_Widget refactoring
+2. `DeleteData` — enables DataManager_Widget refactoring
+3. `AddEvent` — small, self-contained, high utility
+4. `RemoveEvent` — pairs with AddEvent
+
+### Wave 2: Entity-Level Operations
+
+5. `DeleteByEntityIds` — enables all inspector delete operations
+6. `RemoveInterval` — pairs with existing AddInterval
+7. `ModifyInterval` — interval manipulation
+
+### Wave 3: Group Operations
+
+8. `AssignToGroup` — depends on Group infrastructure
+9. `RemoveFromGroup` — pairs with AssignToGroup
+
+### Wave 4: Remaining Widget Audits
+
+Continue the audit for remaining widgets (DataImport_Widget, Media_Widget, etc.) and add
+newly discovered commands as needed. Each widget follows the same Phase A→D process.
+
+---
+
+## LLM Agent Checklist
+
+When auditing and refactoring a widget, follow this checklist:
+
+```
+□ 1. Quick triage: grep for _data_manager / DataManager in headers
+□ 2. If no references: move to excluded list, stop
+□ 3. Tree the widget directory (headers only)
+□ 4. Read each .hpp — extract slots, signals, and .ui button names
+□ 5. Classify each verb (A/B/C/D)
+□ 6. Add rows to the widget's audit table in this document
+□ 7. For Category B verbs: check if a planned command already covers it
+□ 8. If not, add a new entry to the "New Commands Identified" section
+□ 9. Implement the command(s) in src/DataManager/Commands/
+□ 10. Add command to CommandFactory.cpp (one if-branch)
+□ 11. Add to getAvailableCommands() (one entry)
+□ 12. Refactor the widget slots to use createCommand() + execute()
+□ 13. Write command unit tests
+□ 14. Capture golden trace JSON fixture
+□ 15. Write golden trace Catch2 test (replay + assert DataManagerSnapshot)
+□ 16. Verify MutationGuard produces zero warnings for this widget
+□ 17. Update the Audit Progress table (status + Golden Trace column)
+□ 18. Run clang-format + clang-tidy on touched files
+□ 19. Build and test
+```
