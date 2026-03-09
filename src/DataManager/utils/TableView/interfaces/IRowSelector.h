@@ -4,7 +4,6 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "utils/TableView/core/RowDescriptor.h"
-#include "datamanager_export.h"
 
 #include <cstddef>
 #include <vector>
@@ -42,7 +41,7 @@ public:
  * 
  * This implementation defines rows based on a vector of indices.
  */
-class DATAMANAGER_EXPORT IndexSelector : public IRowSelector {
+class IndexSelector : public IRowSelector {
 public:
     /**
      * @brief Constructs an IndexSelector with the given indices.
@@ -78,7 +77,7 @@ private:
  * 
  * This implementation defines rows based on a vector of timestamps.
  */
-class DATAMANAGER_EXPORT TimestampSelector : public IRowSelector {
+class TimestampSelector : public IRowSelector {
 public:
     /**
      * @brief Constructs a TimestampSelector with the given timestamps.
@@ -124,7 +123,7 @@ private:
  * 
  * This implementation defines rows based on a vector of TimeFrameInterval objects.
  */
-class DATAMANAGER_EXPORT IntervalSelector : public IRowSelector {
+class IntervalSelector : public IRowSelector {
 public:
     /**
      * @brief Constructs an IntervalSelector with the given intervals.

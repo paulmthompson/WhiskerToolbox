@@ -1,7 +1,6 @@
 #ifndef TABLE_VIEW_H
 #define TABLE_VIEW_H
 
-#include "datamanager_export.h"
 #include "utils/TableView/columns/ColumnTypeInfo.hpp"
 #include "utils/TableView/columns/Column.h"
 #include "utils/TableView/core/ExecutionPlan.h"
@@ -28,7 +27,7 @@ class TableViewBuilder;
  * individual columns and ExecutionPlans. The TableView handles dependency 
  * resolution and ensures columns are computed in the correct order.
  */
-class DATAMANAGER_EXPORT TableView {
+class TableView {
 public:
 
     // Movable but not copyable

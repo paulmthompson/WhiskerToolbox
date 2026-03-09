@@ -21,7 +21,6 @@ endfunction()
 
 # Install all main targets
 set(MAIN_TARGETS
-    DataManager
     DataManagerIO
     StateEstimation
     WhiskerToolbox

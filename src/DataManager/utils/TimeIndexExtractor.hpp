@@ -13,7 +13,6 @@
  */
 
 #include "TimeFrame/TimeFrame.hpp"
-#include "datamanager_export.h"
 
 #include <memory>
 #include <string>
@@ -27,7 +26,7 @@ class DataManager;
  * Contains the ordered vector of TimeFrameIndex values and the shared
  * TimeFrame associated with that data source.
  */
-struct DATAMANAGER_EXPORT TimeIndexResult {
+struct TimeIndexResult {
     std::vector<TimeFrameIndex> indices;
     std::shared_ptr<TimeFrame> time_frame;
 
@@ -53,7 +52,7 @@ struct DATAMANAGER_EXPORT TimeIndexResult {
  * @return TimeIndexResult with indices and time_frame. Empty if the key
  *         does not exist or the type has no meaningful time indices.
  */
-DATAMANAGER_EXPORT TimeIndexResult extractTimeIndices(
+TimeIndexResult extractTimeIndices(
         DataManager & dm,
         std::string const & key);
 

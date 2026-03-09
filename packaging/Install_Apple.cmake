@@ -1,5 +1,4 @@
 set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
-set(data_manager_path "lib/$<TARGET_FILE_NAME:DataManager>")
 
 # Generate a deployment script to be executed at install time
 qt_generate_deploy_script(
@@ -34,7 +33,6 @@ set(MY_DYLIBS
         "${CMAKE_BINARY_DIR}/libjanelia.dylib"
         "${CMAKE_BINARY_DIR}/libWhisker-Analysis.dylib"
         "${CMAKE_BINARY_DIR}/bin/libqt6advanceddocking.dylib"
-        "${CMAKE_BINARY_DIR}/libDataManager.dylib"
         "${CMAKE_BINARY_DIR}/libStateEstimation.dylib"
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libc10.dylib"
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libomp.dylib"
@@ -58,15 +56,10 @@ endfunction()
 # Example usage of the function
 update_install_name("janelia" "@executable_path/../Frameworks/libjanelia.dylib" "libjanelia.dylib" )
 update_install_name("Whisker-Analysis" "@executable_path/../Frameworks/libWhisker-Analysis.dylib" "libWhisker-Analysis.dylib")
-update_install_name("DataManager" "@executable_path/../Frameworks/libDataManager.dylib" "libDataManager.dylib")
 update_install_name("qt6advanceddocking" "@executable_path/../Frameworks/libqt6advanceddocking.dylib" "bin/libqt6advanceddocking.4.3.1.dylib")
 update_install_name("StateEstimation" "@executable_path/../Frameworks/libStateEstimation.dylib" "libStateEstimation.dylib")
 copy_items_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
 copy_items_during_install("${CMAKE_SOURCE_DIR}/packaging/WhiskerToolbox.icns" "WhiskerToolbox.app/Contents/Resources/")
-
-install(TARGETS DataManager WhiskerToolbox
-        BUNDLE DESTINATION .
-)
 
 install(SCRIPT "${deploy_script}")
 

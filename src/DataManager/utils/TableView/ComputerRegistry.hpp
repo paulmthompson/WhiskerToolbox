@@ -1,7 +1,6 @@
 #ifndef COMPUTER_REGISTRY_HPP
 #define COMPUTER_REGISTRY_HPP
 
-#include "datamanager_export.h"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
 #include "utils/TableView/interfaces/IColumnComputer.h"
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
@@ -406,7 +405,7 @@ using AdapterFactory = std::function<DataSourceVariant(
  * manages adapters that can convert raw data types into interface types
  * suitable for use with computers.
  */
-class DATAMANAGER_EXPORT ComputerRegistry {
+class ComputerRegistry {
 public:
     ComputerRegistry();
 

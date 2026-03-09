@@ -2,7 +2,6 @@
 #define TRANSFORM_PIPELINE_HPP
 
 #include "TimeFrame/StrongTimeTypes.hpp"
-#include "datamanager_export.h"
 
 #include "data_transforms.hpp"
 
@@ -71,7 +70,7 @@ struct PipelineResult {
 /**
  * @brief Factory and execution engine for transformation pipelines
  */
-class DATAMANAGER_EXPORT TransformPipeline {
+class TransformPipeline {
 public:
     /**
      * @brief Construct a new Transform Pipeline object

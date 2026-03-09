@@ -1,7 +1,6 @@
 #ifndef PCA_TRANSFORM_HPP
 #define PCA_TRANSFORM_HPP
 
-#include "datamanager_export.h"
 #include "ITableTransform.hpp"
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
 
@@ -59,7 +58,7 @@ private:
 /**
  * @brief Table-to-table PCA transform.
  */
-class DATAMANAGER_EXPORT PCATransform : public ITableTransform {
+class PCATransform : public ITableTransform {
 public:
     explicit PCATransform(PCAConfig config) : m_config(std::move(config)) {}
 

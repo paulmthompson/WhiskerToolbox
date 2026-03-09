@@ -2,7 +2,6 @@
 #define ANALOG_SCALING_HPP
 
 #include "transforms/data_transforms.hpp"
-#include "datamanager_export.h"
 
 #include <memory>   // std::shared_ptr
 #include <string>   // std::string
@@ -40,7 +39,7 @@ struct AnalogScalingParams : public TransformParametersBase {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-struct DATAMANAGER_EXPORT AnalogStatistics {
+struct AnalogStatistics {
     double mean = 0.0;
     double std_dev = 0.0;
     double min_val = 0.0;
@@ -57,7 +56,7 @@ struct DATAMANAGER_EXPORT AnalogStatistics {
  * @param analog_time_series The AnalogTimeSeries to analyze
  * @return AnalogStatistics structure with computed statistics
  */
-AnalogStatistics DATAMANAGER_EXPORT calculate_analog_statistics(AnalogTimeSeries const * analog_time_series);
+AnalogStatistics calculate_analog_statistics(AnalogTimeSeries const * analog_time_series);
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -230,34 +230,14 @@ add_subdirectory(DigitalTimeSeries)
 add_subdirectory(Masks)
 add_subdirectory(Points)
 
-add_library(DataManager SHARED ${DATAMANAGER_SOURCES}
-    )
-
-include(GenerateExportHeader)
-
-set_target_properties(DataManager
-    PROPERTIES
-    WINDOWS_EXPORT_ALL_SYMBOLS OFF
-)
-
-generate_export_header(DataManager EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/datamanager_export.h)
+add_library(DataManager STATIC ${DATAMANAGER_SOURCES})
 
 target_include_directories(DataManager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" # State Estimation
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
         "${iir_SOURCE_DIR}"   
-    PUBLIC
-        ${CMAKE_CURRENT_BINARY_DIR} #datamanager_export.h
     )
-
-target_sources(
-  DataManager PUBLIC
-    FILE_SET HEADERS
-    BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/datamanager_export.h
-)
-
 
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
@@ -329,5 +309,5 @@ if (MSVC)
 endif()
 
 set_target_properties(DataManager PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+)

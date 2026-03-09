@@ -4,7 +4,6 @@
 
 #include "DataManager/DataManagerFwd.hpp"
 #include "IO/core/IOTypes.hpp"
-#include "datamanager_export.h"
 
 #include <memory>
 #include <string>
