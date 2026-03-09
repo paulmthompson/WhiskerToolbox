@@ -5,6 +5,15 @@ set(digital_subdirectory_sources
         Digital_Event_Series.hpp
         Digital_Event_Series.cpp
         
+                storage/DigitalEventStorageBase.hpp
+        storage/DigitalEventStorage.hpp
+        storage/DigitalEventStorage.cpp
+        storage/LazyDigitalEventStorage.hpp
+        storage/OwningDigitalEventStorage.hpp
+        storage/OwningDigitalEventStorage.cpp
+        storage/ViewDigitalEventStorage.hpp
+        storage/ViewDigitalEventStorage.cpp
+
         storage/DigitalIntervalStorageBase.hpp
         storage/DigitalIntervalStorage.hpp
         storage/DigitalIntervalStorage.cpp
