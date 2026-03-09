@@ -7,7 +7,6 @@ qt_generate_deploy_script(
         CONTENT "
    qt_deploy_runtime_dependencies(
    EXECUTABLE ${executable_path}
-   ADDITIONAL_LIBRARIES ${data_manager_path} ${data_viewer_path}
    GENERATE_QT_CONF
    VERBOSE
    )")
