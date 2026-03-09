@@ -10,11 +10,11 @@
 #define WHISKERTOOLBOX_TEST_PCH_HPP
 
 // ── Project PCH (STL + third-party) ─────────────────────────────────
-#include "whiskertoolbox_pch.hpp"
+#include "../src/whiskertoolbox_pch.hpp"
 
 // ── Catch2 headers ──────────────────────────────────────────────────
-#include <catch2/catch_test_macros.hpp>                    // 174 files
-#include <catch2/matchers/catch_matchers_floating_point.hpp> // 89 files
-#include <catch2/catch_approx.hpp>                         // 16 files
+//#include <catch2/catch_test_macros.hpp>                    // 174 files
+//#include <catch2/matchers/catch_matchers_floating_point.hpp> // 89 files
+//#include <catch2/catch_approx.hpp>                         // 16 files
 
 #endif // WHISKERTOOLBOX_TEST_PCH_HPP
