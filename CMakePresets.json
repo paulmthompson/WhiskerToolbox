@@ -161,6 +161,16 @@
             "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/Clang/Debug"
           }
       },
+      {
+        "name": "clang-relwithdebinfo-base",
+        "inherits": ["clang-base"],
+        "hidden": true,
+        "binaryDir": "${sourceDir}/out/build/Clang/RelWithDebInfo",
+        "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/Clang/RelWithDebInfo"
+          }
+      },
 
       {
         "name": "msvc-base",
@@ -284,6 +294,10 @@
       {
         "name": "linux-clang-debug",
         "inherits": ["linux-base","clang-debug-base"]
+      },
+      {
+        "name": "linux-clang-relwithdebinfo",
+        "inherits": ["linux-base","clang-relwithdebinfo-base"]
       }
     ],
     "buildPresets": [
@@ -336,6 +350,10 @@
       {
         "name": "linux-clang-debug",
         "configurePreset": "linux-clang-debug"
+      },
+      {
+        "name": "linux-clang-relwithdebinfo",
+        "configurePreset": "linux-clang-relwithdebinfo"
       }
 
     ],
@@ -390,6 +408,10 @@
       {
         "name": "linux-clang-debug",
         "configurePreset": "linux-clang-debug"
+      },
+      {
+        "name": "linux-clang-relwithdebinfo",
+        "configurePreset": "linux-clang-relwithdebinfo"
       }
 
     ]

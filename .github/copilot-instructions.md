@@ -191,6 +191,108 @@ If a new static library is created via CMake, you must:
 1. Update `CMakeLists.txt` appropriately.
 2. Add a one or two-sentence description of the new library to the **Project Architecture (Libraries)** section in this document (`.github/copilot-instructions.md`).
 
+### Performing a Code Review
+When asked to review code, focus on concerns that automated tools (clang-tidy, cppcheck, Infer) cannot catch. Do NOT flag formatting, naming, or simple lint issues — those are handled by tooling. Inspect callers and callees of the code under review as necessary to verify correctness.
+
+Produce a structured report of findings (numbered, with severity: **critical**, **warning**, **suggestion**). Then fix the issues directly — do not leave inline comments in the code as the mechanism for reporting.
+
+#### 1. Preconditions and Postconditions
+For every public function and free function in the files under review:
+- **Document:** Ensure `@pre` and `@post` Doxygen tags exist in the header for any non-trivial precondition. Preconditions obvious from the type system (e.g., a `std::string_view` parameter can't be null) do not need `@pre` tags.
+- **Enforce at compile time** where possible: use `static_assert` for type-level constraints (concept satisfaction, size requirements, type traits). Example:
+  ```cpp
+  static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for memcpy");
+  ```
+- **Enforce at runtime** in debug builds: add `assert()` for conditions that can only be checked at runtime (non-null, non-empty, value in range). Place the assert as the first statement in the function body, matching the `@pre` tag. Example:
+  ```cpp
+  /// @pre data must not be empty
+  void process(std::span<float const> data) {
+      assert(!data.empty() && "process: data must not be empty");
+      // ...
+  }
+  ```
+- Do NOT add runtime precondition checks that duplicate what the type system already guarantees.
+
+#### 2. Ownership and Lifetime
+- **Raw pointers:** Verify that ownership semantics are documented. Who creates, who destroys? If a function takes a raw pointer, is it observing or taking ownership? Document with `@param` (e.g., "non-owning pointer, caller retains ownership").
+- **Callback lifetimes:** When `ObserverData` callbacks or `std::function` captures are involved, verify that the registered callback cannot outlive the objects it captures. Check that `CallbackID` is properly unregistered in destructors.
+- **`shared_ptr` vs `unique_ptr`:** Flag `shared_ptr` usage that could be `unique_ptr`. Shared ownership should be justified.
+
+#### 3. Thread Safety
+- If a class or function can be accessed from multiple threads, verify thread-safety guarantees are documented (e.g., "thread-safe", "not thread-safe — caller must synchronize", or "thread-safe for reads, not for writes").
+- Check for unprotected shared mutable state, especially in anything connected to `DataManager`.
+
+#### 4. Error Handling Consistency
+- Verify that error semantics follow project convention: return `std::optional<T>` for recoverable failures, log with `spdlog` for diagnostics, `assert()` for programming errors.
+- Check that callers actually handle `std::optional` returns (not silently calling `.value()` without checking).
+- Exceptions are acceptable in UI/Qt widget code for signaling user-facing errors. Do NOT use exceptions in computation, data processing, or library code — use `std::optional` or error return values instead.
+
+#### 5. Algorithmic Correctness
+- Trace code paths for boundary inputs: empty containers, single-element, maximum size.
+- For scientific/mathematical code, verify numerical correctness and note any precision concerns.
+- Check for off-by-one errors in index arithmetic, especially with `TimeFrameIndex`.
+
+#### 6. API Design
+- Does the function name accurately describe its behavior?
+- Is the function doing one thing? Flag functions that mix query and mutation.
+- Are default parameter values safe, or could they silently produce wrong results?
+
+### Benchmarking and Optimization
+When asked to benchmark or optimize code, choose the appropriate strategy from below.
+
+#### Ad-Hoc Benchmarks (Design Comparison / Algorithm Selection)
+Use this strategy when comparing implementation alternatives (e.g., SoA vs AoS, different loader strategies, alternative algorithms). The goal is to find the optimum or near-optimum approach and document the result.
+
+1. **Establish a baseline:** Before benchmarking candidates, construct a minimal "ground truth" measurement — e.g., how long does raw file I/O take? How fast is a plain loop over the data type? This prevents optimizing against a meaningless reference.
+2. **Write throwaway benchmark code:** Ad-hoc benchmarks do not need to be committed. Write them, run them, record the results, then discard the code.
+3. **Use Google Benchmark** (`ENABLE_BENCHMARK=ON`) for precise timing. Reference `benchmark/` for examples and `cmake/BenchmarkUtils.cmake` for the `add_selective_benchmark()` macro.
+4. **Document the result:** Record findings (winner, margin, conditions) in `docs/developer/benchmark/`. Include the hardware, compiler, and optimization level used.
+
+#### Profiling-Driven Optimization
+Use this strategy when optimizing an existing implementation rather than choosing between alternatives.
+
+**CPU profiling (Hotspot / perf):**
+```bash
+perf record -g ./executable
+hotspot perf.data
+```
+Use `perf report` or `perf annotate` for terminal-based analysis. Look for hot functions, unexpected call counts, and cache misses (`perf stat -e cache-misses`).
+
+**Memory profiling (Heaptrack):**
+```bash
+tools/heaptrack/build/bin/heaptrack ./executable
+heaptrack_print heaptrack.*.gz   # terminal summary
+heaptrack_gui heaptrack.*.gz     # GUI visualization
+```
+Look for allocation hotspots, peak memory usage, and temporary allocations in hot loops.
+
+**Disassembly analysis:**
+Use `objdump` or the assembly output from `-save-temps` to inspect generated code. Use `llvm-mca` for throughput/latency analysis of critical loops:
+```bash
+objdump -d -C -S ./executable | less
+llvm-mca -mcpu=native < snippet.s
+```
+The benchmark infrastructure already enables `-save-temps=obj -fverbose-asm` via `configure_benchmark_for_profiling()`.
+
+#### Causal Profiling (Coz)
+[Coz](https://github.com/plasma-umass/coz) identifies *which* optimizations will actually improve end-to-end performance, rather than just showing where time is spent. Use it when `perf` shows diffuse hotspots and it is unclear what to optimize.
+
+Coz requires a **Release build with debug symbols** (i.e., `RelWithDebInfo`). Use the `linux-clang-relwithdebinfo` preset for this. Instrument the target code with `COZ_PROGRESS` (throughput) or `COZ_BEGIN`/`COZ_END` (latency) markers, then run:
+```bash
+coz run --- ./executable
+```
+
+#### Regression Benchmarks (Google Benchmark Suite)
+The project has a Google Benchmark suite gated behind `ENABLE_BENCHMARK=ON` with per-benchmark toggles (`BENCHMARK_<NAME>=ON`). Use this for **finalized algorithms** that need ongoing performance regression tracking.
+- Existing benchmarks live in `benchmark/` and use fixtures from `benchmark/fixtures/BenchmarkFixtures.hpp`.
+- To add a new regression benchmark, follow the pattern in existing files (e.g., `MaskArea.benchmark.cpp`) and register it in `benchmark/CMakeLists.txt` using `add_selective_benchmark()`.
+- This suite is not actively tracked for regressions at this time.
+
+#### Compiler Optimization Reports
+The `ENABLE_OPTIMIZATION_REPORTS` CMake flag enables Clang's `-fsave-optimization-record` and loop-vectorization diagnostics. Results can be visualized with [optview2](https://github.com/OfekShilon/optview2). A weekly CI workflow (`.github/workflows/optview2.yml`) generates these reports automatically.
+
+This produces very large output. Prefer the targeted profiling approaches above unless specifically investigating vectorization or compiler optimization decisions.
+
 ## Git Hygiene
 
 **IMPORTANT: Never use catch-all commit commands like `git add .` or `git add *`.**
