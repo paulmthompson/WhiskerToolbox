@@ -127,6 +127,7 @@ add_executable(test_data_manager
         IO/formats/CSV/analog/analog_csv_integration.test.cpp
         IO/formats/CSV/analog/analog_csv_unit.test.cpp
         IO/formats/CSV/digitalevents/digital_event_csv_integration.test.cpp
+        IO/formats/CSV/digitalevents/digital_event_csv_unit.test.cpp
         IO/formats/CSV/digitalintervals/digital_interval_csv_integration.test.cpp
         IO/formats/CSV/digitalintervals/digital_interval_csv_unit.test.cpp
         IO/formats/CSV/digitalintervals/digital_interval_binary_state_integration.test.cpp

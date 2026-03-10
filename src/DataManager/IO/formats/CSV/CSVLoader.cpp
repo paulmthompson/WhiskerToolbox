@@ -621,7 +621,10 @@ LoadResult CSVLoader::saveDigitalEventCSV(std::string const & filepath,
         if (config.contains("header")) save_opts.header = config["header"];
         if (config.contains("precision")) save_opts.precision = config["precision"];
 
-        ::save(event_data, save_opts);
+        bool const ok = ::save(event_data, save_opts);
+        if (!ok) {
+            return LoadResult("CSV digital event save failed: write error");
+        }
 
         LoadResult result;
         result.success = true;
