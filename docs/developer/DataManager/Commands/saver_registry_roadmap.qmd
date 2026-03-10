@@ -233,13 +233,22 @@ round-trip fuzz tests.
 
 - [ ] **Unit tests** — Deterministic round-trips for both variants.
 
+**Note:** As part of this step, `Line_Data_CSV.hpp`/`.cpp` were migrated from their legacy
+location (`src/DataManager/Lines/IO/CSV/`) to the format-centric location
+(`src/DataManager/IO/formats/CSV/lines/`). All include paths across the codebase were
+updated accordingly.
+
 ### Files Modified
 
 | File | Action |
 |------|--------|
-| `src/DataManager/Lines/IO/CSV/Line_Data_CSV.hpp` | **Modify** — return `LoadResult` |
-| `src/DataManager/Lines/IO/CSV/Line_Data_CSV.cpp` | **Modify** — atomic write, error returns |
-| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entries |
+| `src/DataManager/IO/formats/CSV/lines/Line_Data_CSV.hpp` | **Migrated + Modified** — moved from `Lines/IO/CSV/`, return `LoadResult` |
+| `src/DataManager/IO/formats/CSV/lines/Line_Data_CSV.cpp` | **Migrated + Modified** — moved from `Lines/IO/CSV/`, atomic write, error returns |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entries, updated include path |
+| `src/DataManager/IO/CMakeLists.txt` | **Modify** — added Line_Data_CSV sources |
+| `src/DataManager/Lines/CMakeLists.txt` | **Modify** — removed Line_Data_CSV sources |
+| `src/DataManager/Lines/IO/JSON/Line_Data_JSON.cpp` | **Modify** — updated include path |
+| `tests/DataManager/IO/line_data_csv.test.cpp` | **Modify** — updated include path |
 | `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_single_roundtrip.cpp` | **Create** |
 | `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_multi_roundtrip.cpp` | **Create** |
 

@@ -104,14 +104,14 @@ struct CSVMultiFileLineSaverOptions {
  * @note This struct uses parent_dir instead of filepath since it loads from a directory.
  */
 struct CSVMultiFileLineLoaderOptions {
-    std::string parent_dir;  // Directory containing CSV files (required)
-    
+    std::string parent_dir;// Directory containing CSV files (required)
+
     std::optional<std::string> delimiter;
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> x_column;
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> y_column;
     std::optional<bool> has_header;
     std::optional<std::string> file_pattern;
-    
+
     // Helper methods to get values with defaults
     std::string getDelimiter() const { return delimiter.value_or(","); }
     int getXColumn() const { return x_column.has_value() ? x_column.value().value() : 0; }
@@ -135,13 +135,13 @@ struct CSVMultiFileLineLoaderOptions {
  * @note This struct conforms to ValidLoaderOptions concept.
  */
 struct CSVSingleFileLineLoaderOptions {
-    std::string filepath;  // Path to the CSV file (required, consistent with DataManager JSON)
-    
+    std::string filepath;// Path to the CSV file (required, consistent with DataManager JSON)
+
     std::optional<std::string> delimiter;
     std::optional<std::string> coordinate_delimiter;
     std::optional<bool> has_header;
     std::optional<std::string> header_identifier;
-    
+
     // Helper methods to get values with defaults
     std::string getDelimiter() const { return delimiter.value_or(","); }
     std::string getCoordinateDelimiter() const { return coordinate_delimiter.value_or(","); }
@@ -151,7 +151,7 @@ struct CSVSingleFileLineLoaderOptions {
 
 // Compile-time validation that CSVSingleFileLineLoaderOptions conforms to loader requirements
 static_assert(WhiskerToolbox::ValidLoaderOptions<CSVSingleFileLineLoaderOptions>,
-    "CSVSingleFileLineLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
+              "CSVSingleFileLineLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 void save_line_as_csv(Line2D const & line, std::string const & filename, int point_precision = 2);
 

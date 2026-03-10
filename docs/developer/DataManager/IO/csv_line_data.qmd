@@ -1,0 +1,46 @@
+---
+title: "CSV Line Data I/O"
+---
+
+## Overview
+
+The CSV line data loader and saver handle reading and writing `LineData` objects
+to/from CSV files. Two variants are supported:
+
+- **Single-file**: All lines across all frames stored in one CSV file with quoted
+  coordinate lists per row.
+- **Multi-file**: One CSV file per frame, each containing X/Y coordinate columns.
+
+## File Location
+
+The CSV line data I/O lives in the format-centric location under the `DataManagerIO` library:
+
+```
+src/DataManager/IO/formats/CSV/lines/
+├── Line_Data_CSV.hpp   # Option structs and function declarations
+└── Line_Data_CSV.cpp   # Implementation
+```
+
+This was migrated from the legacy location `src/DataManager/Lines/IO/CSV/` to consolidate
+all CSV loaders under the `DataManagerIO` shared library, matching the pattern used by
+points, masks, analog, and digital time series.
+
+## Option Structs
+
+### Loader Options
+
+- `CSVSingleFileLineLoaderOptions` — Loads from a single CSV file. Conforms to
+  `ValidLoaderOptions` concept (has a `filepath` field).
+- `CSVMultiFileLineLoaderOptions` — Loads from a directory of per-frame CSV files.
+  Uses `parent_dir` instead of `filepath`.
+
+### Saver Options
+
+- `CSVSingleFileLineSaverOptions` — Saves all frames to a single CSV file.
+- `CSVMultiFileLineSaverOptions` — Saves one CSV file per frame with zero-padded filenames.
+
+## Registration
+
+Both loader and saver are registered through `CSVLoader` in the format-centric loader
+architecture. The `CSVLoader::getSaverInfo()` method returns a `SaverInfo` entry for
+`IODataType::Line` with the single-file saver schema.

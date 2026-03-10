@@ -79,6 +79,7 @@ website:
             - developer/DataManager/data_manager.qmd
             - developer/DataManager/file_io.qmd
             - developer/DataManager/IO/mask_csv_rle.qmd
+            - developer/DataManager/IO/csv_line_data.qmd
             - developer/DataManager/IO/saver_infrastructure.qmd
             - developer/DataManager/data_structures.qmd
             - developer/DataManager/binary_loading_performance.qmd

@@ -5,10 +5,6 @@
 set(LINEDATA_SOURCES
     Line_Data.hpp
     Line_Data.cpp
-    IO/CSV/Line_Data_CSV.hpp
-    IO/CSV/Line_Data_CSV.cpp
-    IO/JSON/Line_Data_JSON.hpp
-    IO/JSON/Line_Data_JSON.cpp
     #IO/RocksDB/Line_Data_RocksDB.hpp  # Commented out - may depend on CapnProto
     #IO/RocksDB/Line_Data_RocksDB.cpp
     #IO/LMDB/Line_Data_LMDB.hpp        # Commented out - may depend on CapnProto
@@ -31,8 +27,6 @@ target_link_libraries(LineData PUBLIC
     WhiskerToolbox::ObserverData  # Observer
     TimeFrame                # TimeFrame  
     Entity                   # Entity
-    nlohmann_json::nlohmann_json  # For JSON support
-    reflectcpp::reflectcpp
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

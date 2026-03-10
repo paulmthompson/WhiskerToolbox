@@ -37,6 +37,8 @@ set(IO_CORE_SOURCES
     formats/CSV/mask/Mask_Data_CSV.cpp
     formats/CSV/points/Point_Data_CSV.hpp
     formats/CSV/points/Point_Data_CSV.cpp
+    formats/CSV/lines/Line_Data_CSV.hpp
+    formats/CSV/lines/Line_Data_CSV.cpp
 )
 
 # Create the core IO library

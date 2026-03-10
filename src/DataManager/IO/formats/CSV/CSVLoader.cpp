@@ -10,11 +10,11 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "Lines/IO/CSV/Line_Data_CSV.hpp"
+#include "IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
-#include "IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "Points/Point_Data.hpp"
+#include "lines/Line_Data_CSV.hpp"
 #include "mask/Mask_Data_CSV.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
@@ -740,7 +740,7 @@ LoadResult CSVLoader::loadDigitalIntervalBinaryState(std::string const & filepat
 }
 
 BatchLoadResult CSVLoader::loadDigitalIntervalBinaryStateBatch(std::string const & filepath,
-                                                               nlohmann::json const & config) const {
+                                                               nlohmann::json const & config) {
     try {
         // Get column names to determine how many data columns exist
         int const header_lines = config.value("header_lines_to_skip", 5);
@@ -882,17 +882,17 @@ LoadResult CSVLoader::saveMaskDataCSV(std::string const & filepath,
 std::vector<SaverInfo> CSVLoader::getSaverInfo() const {
     using WhiskerToolbox::Transforms::V2::extractParameterSchema;
     return {
-        {"csv", IODataType::Points, "CSV point data (frame, x, y)",
-         extractParameterSchema<CSVPointSaverOptions>()},
-        {"csv", IODataType::Analog, "CSV analog time series",
-         extractParameterSchema<CSVAnalogSaverOptions>()},
-        {"csv", IODataType::DigitalEvent, "CSV digital event timestamps",
-         extractParameterSchema<CSVEventSaverOptions>()},
-        {"csv", IODataType::DigitalInterval, "CSV digital intervals (start/end)",
-         extractParameterSchema<CSVIntervalSaverOptions>()},
-        {"csv", IODataType::Mask, "CSV mask RLE data",
-         extractParameterSchema<CSVMaskRLESaverOptions>()},
-        {"csv", IODataType::Line, "CSV line data (single file)",
-         extractParameterSchema<CSVSingleFileLineSaverOptions>()},
+            {"csv", IODataType::Points, "CSV point data (frame, x, y)",
+             extractParameterSchema<CSVPointSaverOptions>()},
+            {"csv", IODataType::Analog, "CSV analog time series",
+             extractParameterSchema<CSVAnalogSaverOptions>()},
+            {"csv", IODataType::DigitalEvent, "CSV digital event timestamps",
+             extractParameterSchema<CSVEventSaverOptions>()},
+            {"csv", IODataType::DigitalInterval, "CSV digital intervals (start/end)",
+             extractParameterSchema<CSVIntervalSaverOptions>()},
+            {"csv", IODataType::Mask, "CSV mask RLE data",
+             extractParameterSchema<CSVMaskRLESaverOptions>()},
+            {"csv", IODataType::Line, "CSV line data (single file)",
+             extractParameterSchema<CSVSingleFileLineSaverOptions>()},
     };
 }

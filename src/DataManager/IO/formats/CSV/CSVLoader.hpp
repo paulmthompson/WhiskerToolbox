@@ -173,8 +173,8 @@ private:
      * Returns one DigitalIntervalSeries per data column (excluding time column).
      * Each series is named using the column header from the file.
      */
-    BatchLoadResult loadDigitalIntervalBinaryStateBatch(std::string const & filepath,
-                                                        nlohmann::json const & config) const;
+    static BatchLoadResult loadDigitalIntervalBinaryStateBatch(std::string const & filepath,
+                                                        nlohmann::json const & config) ;
 
     /**
      * @brief Save LineData to CSV
