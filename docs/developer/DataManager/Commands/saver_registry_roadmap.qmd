@@ -145,17 +145,24 @@ a round-trip fuzz test.
 
 **Matching loader:** `CSVPointLoaderOptions` — **round-trip fuzz test included.**
 
+**Note:** As part of this step, `Point_Data_CSV.hpp`/`.cpp` were migrated from their legacy
+location (`src/DataManager/Points/IO/CSV/`) to the format-centric location
+(`src/DataManager/IO/formats/CSV/points/`). All include paths across the codebase were
+updated accordingly.
+
 ### Tasks
 
-- [ ] **Return type** — Update `save(PointData const*, CSVPointSaverOptions)` to return
-  `LoadResult` instead of `void`. Propagate file-open and write errors.
+- [x] **Return type** — Updated `save(PointData const*, CSVPointSaverOptions)` to return
+  `bool` (success/failure). The `CSVLoader::savePointDataCSV()` wrapper converts this to
+  `LoadResult` for the registry interface.
 
-- [ ] **Atomic writes** — Use `atomicWriteFile()` inside the saver implementation.
+- [x] **Atomic writes** — `save()` now uses `atomicWriteFile()` internally.
 
-- [ ] **Register in CSVLoader** — Override `getSaverInfo()` in `CSVLoader` to include an entry
-  for `IODataType::Points` with `extractParameterSchema<CSVPointSaverOptions>()`.
+- [x] **Register in CSVLoader** — `CSVLoader::getSaverInfo()` returns an entry for
+  `IODataType::Points` with `extractParameterSchema<CSVPointSaverOptions>()`.
 
-- [ ] **`ParameterUIHints<CSVPointSaverOptions>`** — Add tooltips and field descriptions.
+- [x] **`ParameterUIHints<CSVPointSaverOptions>`** — Added tooltips for delimiter, line_delim,
+  save_header, and header fields.
 
 - [ ] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_point_roundtrip.cpp`:
   1. Generate a `PointData` with fuzzed content (random frame indices, random x/y coordinates,
@@ -173,9 +180,12 @@ a round-trip fuzz test.
 
 | File | Action |
 |------|--------|
-| `src/DataManager/Points/IO/CSV/Point_Data_CSV.hpp` | **Modify** — return `LoadResult` |
-| `src/DataManager/Points/IO/CSV/Point_Data_CSV.cpp` | **Modify** — atomic write, error returns |
-| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entry |
+| `src/DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp` | **Migrated + Modified** — moved from `Points/IO/CSV/`, return `bool`, `ParameterUIHints` |
+| `src/DataManager/IO/formats/CSV/points/Point_Data_CSV.cpp` | **Migrated + Modified** — moved from `Points/IO/CSV/`, atomic write, error returns |
+| `src/DataManager/IO/formats/CSV/CSVLoader.hpp` | **Modify** — `getSaverInfo()` override declaration |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` implementation (all CSV savers) |
+| `src/DataManager/IO/CMakeLists.txt` | **Modify** — added Point_Data_CSV sources |
+| `src/DataManager/Points/CMakeLists.txt` | **Modify** — removed Point_Data_CSV sources |
 | `tests/fuzz/unit/DataManager/IO/fuzz_csv_point_roundtrip.cpp` | **Create** — fuzz test |
 | `tests/fuzz/unit/DataManager/IO/CMakeLists.txt` | **Create** — build fuzz test |
 
@@ -197,8 +207,9 @@ round-trip fuzz tests.
 - [ ] **Atomic writes** — Use `atomicWriteFile()` for single-file saver. For multi-file saver,
   atomic write is per-file (each frame file is written atomically).
 
-- [ ] **Register in CSVLoader** — Two `SaverInfo` entries: one for `"csv_single_file_line"` and
-  one for `"csv_multi_file_line"`, both with `IODataType::Line`.
+- [x] **Register in CSVLoader** — `CSVLoader::getSaverInfo()` includes an entry for
+  `IODataType::Line` with `extractParameterSchema<CSVSingleFileLineSaverOptions>()`.
+  (Multi-file variant registration deferred — single-file covers the common case.)
 
 - [ ] **`ParameterUIHints`** — For both option structs.
 
@@ -243,7 +254,8 @@ round-trip fuzz tests.
 
 - [ ] **Atomic writes** — Use `atomicWriteFile()`.
 
-- [ ] **Register in CSVLoader** — `SaverInfo` entry for `IODataType::Analog`.
+- [x] **Register in CSVLoader** — `CSVLoader::getSaverInfo()` includes an entry for
+  `IODataType::Analog` with `extractParameterSchema<CSVAnalogSaverOptions>()`.
 
 - [ ] **`ParameterUIHints<CSVAnalogSaverOptions>`** — Tooltips and field descriptions.
 
@@ -279,7 +291,8 @@ round-trip fuzz tests.
 
 - [ ] **Atomic writes** — Use `atomicWriteFile()`.
 
-- [ ] **Register in CSVLoader** — `SaverInfo` entry for `IODataType::DigitalEvent`.
+- [x] **Register in CSVLoader** — `CSVLoader::getSaverInfo()` includes an entry for
+  `IODataType::DigitalEvent` with `extractParameterSchema<CSVEventSaverOptions>()`.
 
 - [ ] **`ParameterUIHints<CSVEventSaverOptions>`** — Tooltips and field descriptions.
 
@@ -315,7 +328,8 @@ round-trip fuzz tests.
 
 - [ ] **Atomic writes** — Use `atomicWriteFile()`.
 
-- [ ] **Register in CSVLoader** — `SaverInfo` entry for `IODataType::DigitalInterval`.
+- [x] **Register in CSVLoader** — `CSVLoader::getSaverInfo()` includes an entry for
+  `IODataType::DigitalInterval` with `extractParameterSchema<CSVIntervalSaverOptions>()`.
 
 - [ ] **`ParameterUIHints<CSVIntervalSaverOptions>`** — Tooltips and field descriptions.
 
@@ -352,7 +366,8 @@ round-trip fuzz tests.
 
 - [ ] **Atomic writes** — Use `atomicWriteFile()`.
 
-- [ ] **Register in CSVLoader** — `SaverInfo` entry for `IODataType::Mask`.
+- [x] **Register in CSVLoader** — `CSVLoader::getSaverInfo()` includes an entry for
+  `IODataType::Mask` with `extractParameterSchema<CSVMaskRLESaverOptions>()`.
 
 - [ ] **`ParameterUIHints<CSVMaskRLESaverOptions>`** — Tooltips and field descriptions.
 
@@ -620,12 +635,12 @@ the saver's `precision` setting:
 | Step | Description | Status | Round-Trip Fuzz? |
 |------|-------------|--------|------------------|
 | 3.1.1 | SaverRegistry Core Infrastructure | **Complete** | N/A |
-| 3.1.2 | CSV PointData Saver | Not Started | Yes |
-| 3.1.3 | CSV LineData Saver (Single + Multi) | Not Started | Yes (×2) |
-| 3.1.4 | CSV AnalogTimeSeries Saver | Not Started | Yes |
-| 3.1.5 | CSV DigitalEventSeries Saver | Not Started | Yes |
-| 3.1.6 | CSV DigitalIntervalSeries Saver | Not Started | Yes |
-| 3.1.7 | CSV MaskData (RLE) Saver | Not Started | Yes |
+| 3.1.2 | CSV PointData Saver | **In Progress** — registered, atomic write, return type done; fuzz + unit tests remaining | Yes |
+| 3.1.3 | CSV LineData Saver (Single + Multi) | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes (×2) |
+| 3.1.4 | CSV AnalogTimeSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
+| 3.1.5 | CSV DigitalEventSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
+| 3.1.6 | CSV DigitalIntervalSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
+| 3.1.7 | CSV MaskData (RLE) Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
 | 3.1.8 | CapnProto LineData Saver | Not Started | Yes |
 | 3.1.9 | OpenCV MaskData (Image) Saver | Not Started | No (lossy format) |
 | 3.2 | SaveData Command | Not Started | N/A |

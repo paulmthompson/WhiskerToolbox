@@ -88,6 +88,11 @@ public:
      */
     std::string getLoaderName() const override;
 
+    /**
+     * @brief Return metadata for all save operations this loader supports
+     */
+    std::vector<SaverInfo> getSaverInfo() const override;
+
 private:
     /**
      * @brief Load LineData from CSV (single or multi-file)

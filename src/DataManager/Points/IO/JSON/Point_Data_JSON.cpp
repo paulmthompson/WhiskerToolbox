@@ -2,7 +2,7 @@
 #include "Point_Data_JSON.hpp"
 
 #include "Points/Point_Data.hpp"
-#include "Points/IO/CSV/Point_Data_CSV.hpp"
+#include "IO/formats/CSV/points/Point_Data_CSV.hpp"
 
 #include "loaders/loading_utils.hpp"
 #include "utils/json_reflection.hpp"

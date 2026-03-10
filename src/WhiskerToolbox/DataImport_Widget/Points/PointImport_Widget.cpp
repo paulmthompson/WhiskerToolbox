@@ -3,7 +3,7 @@
 #include "ui_PointImport_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
+#include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Points/CSV/CSVPointImport_Widget.hpp"
 #include "Scaling_Widget/Scaling_Widget.hpp"

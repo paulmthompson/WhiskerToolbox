@@ -19,7 +19,7 @@ bool is_number(std::string const & s) {
 }
 
 // Strip trailing carriage return from a string (handles Windows CRLF line endings)
-inline void strip_cr(std::string& s) {
+inline void strip_cr(std::string & s) {
     if (!s.empty() && s.back() == '\r') {
         s.pop_back();
     }
@@ -39,7 +39,7 @@ std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts
     std::string col_value;
 
     std::vector<std::pair<TimeFrameIndex, Point2D<float>>> csv_vector = {};
-    
+
     // Get options with defaults via helper methods
     int const frame_column = opts.getFrameColumn();
     int const x_column = opts.getXColumn();
@@ -126,8 +126,7 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_multiple_po
     return data;
 }
 
-bool save(PointData const * point_data, CSVPointSaverOptions const & opts)
-{
+bool save(PointData const * point_data, CSVPointSaverOptions const & opts) {
     assert(point_data && "save: point_data must not be null");
 
     auto const target_path = std::filesystem::path(opts.parent_dir) / opts.filename;
@@ -137,7 +136,7 @@ bool save(PointData const * point_data, CSVPointSaverOptions const & opts)
             out << opts.header << opts.line_delim;
         }
 
-        for (auto const & [time, entity_id, point] : point_data->flattened_data()) {
+        for (auto const & [time, entity_id, point]: point_data->flattened_data()) {
             out << time.getValue();
             out << opts.delimiter << point.x << opts.delimiter << point.y;
             out << opts.line_delim;
@@ -154,14 +153,14 @@ bool save(PointData const * point_data, CSVPointSaverOptions const & opts)
 std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts) {
     std::fstream file;
     file.open(opts.filepath, std::fstream::in);
-    
+
     if (!file.is_open()) {
         std::cerr << "Error: Could not open file " << opts.filepath << std::endl;
         return {};
     }
 
     std::string ln, ele;
-    
+
     // Get options with defaults via helper methods
     int const frame_column = opts.getFrameColumn();
     float const likelihood_threshold = opts.getLikelihoodThreshold();
@@ -171,7 +170,7 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
 
     // Read bodyparts row (second row)
     getline(file, ln);
-    strip_cr(ln);  // Handle Windows CRLF line endings
+    strip_cr(ln);// Handle Windows CRLF line endings
     std::vector<std::string> bodyparts;
     {
         std::stringstream ss(ln);
@@ -182,7 +181,7 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
 
     // Read coords row (third row)
     getline(file, ln);
-    strip_cr(ln);  // Handle Windows CRLF line endings
+    strip_cr(ln);// Handle Windows CRLF line endings
     std::vector<std::string> dims;
     {
         std::stringstream ss(ln);
@@ -193,25 +192,25 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
 
     // Parse data rows
     std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> data;
-    
+
     while (getline(file, ln)) {
-        strip_cr(ln);  // Handle Windows CRLF line endings
+        strip_cr(ln);// Handle Windows CRLF line endings
         std::stringstream ss(ln);
         size_t col_no = 0;
         TimeFrameIndex frame_no(0);
-        
+
         // Temporary storage for current row's points
         std::map<std::string, Point2D<float>> temp_points;
         std::map<std::string, float> temp_likelihoods;
-        
+
         while (getline(ss, ele, ',')) {
             if (static_cast<int>(col_no) == frame_column) {
                 // For DLC CSV, frame column should already be a pure number, no extraction needed
                 frame_no = TimeFrameIndex(std::stoi(ele));
             } else if (col_no < dims.size() && col_no < bodyparts.size()) {
-                std::string const& bodypart = bodyparts[col_no];
-                std::string const& coord_type = dims[col_no];
-                
+                std::string const & bodypart = bodyparts[col_no];
+                std::string const & coord_type = dims[col_no];
+
                 if (coord_type == "x") {
                     temp_points[bodypart].x = std::stof(ele);
                 } else if (coord_type == "y") {
@@ -222,9 +221,9 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
             }
             ++col_no;
         }
-        
+
         // Only add points that meet the likelihood threshold
-        for (auto const& [bodypart, point] : temp_points) {
+        for (auto const & [bodypart, point]: temp_points) {
             auto likelihood_it = temp_likelihoods.find(bodypart);
             if (likelihood_it != temp_likelihoods.end()) {
                 if (likelihood_it->second >= likelihood_threshold) {
@@ -238,11 +237,11 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
     }
 
     file.close();
-    
+
     std::cout << "Loaded DLC CSV with " << data.size() << " bodyparts" << std::endl;
-    for (auto const& [bodypart, points] : data) {
+    for (auto const & [bodypart, points]: data) {
         std::cout << "  " << bodypart << ": " << points.size() << " points" << std::endl;
     }
-    
+
     return data;
 }

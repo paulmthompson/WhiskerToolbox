@@ -35,6 +35,8 @@ set(IO_CORE_SOURCES
     formats/Binary/digitaltimeseries/Digital_Interval_Series_Binary.cpp
     formats/CSV/mask/Mask_Data_CSV.hpp
     formats/CSV/mask/Mask_Data_CSV.cpp
+    formats/CSV/points/Point_Data_CSV.hpp
+    formats/CSV/points/Point_Data_CSV.cpp
 )
 
 # Create the core IO library

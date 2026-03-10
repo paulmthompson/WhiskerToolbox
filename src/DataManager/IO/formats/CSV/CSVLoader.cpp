@@ -13,10 +13,11 @@
 #include "Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
-#include "Points/IO/CSV/Point_Data_CSV.hpp"
+#include "IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "Points/Point_Data.hpp"
 #include "mask/Mask_Data_CSV.hpp"
 
+#include "ParameterSchema/ParameterSchema.hpp"
 #include "utils/json_reflection.hpp"
 
 #include <filesystem>
@@ -430,7 +431,10 @@ LoadResult CSVLoader::savePointDataCSV(std::string const & filepath,
         if (config.contains("save_header")) save_opts.save_header = config["save_header"];
         if (config.contains("header")) save_opts.header = config["header"];
 
-        ::save(point_data, save_opts);
+        bool const ok = ::save(point_data, save_opts);
+        if (!ok) {
+            return LoadResult("CSV point save failed: I/O error writing file");
+        }
 
         LoadResult result;
         result.success = true;
@@ -869,4 +873,26 @@ LoadResult CSVLoader::saveMaskDataCSV(std::string const & filepath,
     } catch (std::exception const & e) {
         return LoadResult("CSV mask RLE save failed: " + std::string(e.what()));
     }
+}
+
+// ============================================================================
+// Saver Info
+// ============================================================================
+
+std::vector<SaverInfo> CSVLoader::getSaverInfo() const {
+    using WhiskerToolbox::Transforms::V2::extractParameterSchema;
+    return {
+        {"csv", IODataType::Points, "CSV point data (frame, x, y)",
+         extractParameterSchema<CSVPointSaverOptions>()},
+        {"csv", IODataType::Analog, "CSV analog time series",
+         extractParameterSchema<CSVAnalogSaverOptions>()},
+        {"csv", IODataType::DigitalEvent, "CSV digital event timestamps",
+         extractParameterSchema<CSVEventSaverOptions>()},
+        {"csv", IODataType::DigitalInterval, "CSV digital intervals (start/end)",
+         extractParameterSchema<CSVIntervalSaverOptions>()},
+        {"csv", IODataType::Mask, "CSV mask RLE data",
+         extractParameterSchema<CSVMaskRLESaverOptions>()},
+        {"csv", IODataType::Line, "CSV line data (single file)",
+         extractParameterSchema<CSVSingleFileLineSaverOptions>()},
+    };
 }

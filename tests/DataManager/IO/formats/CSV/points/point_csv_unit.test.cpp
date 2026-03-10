@@ -18,7 +18,7 @@
 #include <catch2/catch_approx.hpp>
 
 #include "Points/Point_Data.hpp"
-#include "Points/IO/CSV/Point_Data_CSV.hpp"
+#include "IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "Points/IO/JSON/Point_Data_JSON.hpp"
 
 #include <nlohmann/json.hpp>

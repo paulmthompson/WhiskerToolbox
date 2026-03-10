@@ -18,7 +18,7 @@
  * - Data naming and registration with DataManager
  */
 
-#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
+#include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
 
 #include <QWidget>
 

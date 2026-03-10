@@ -31,14 +31,33 @@ TEST_CASE("getSupportedSaveFormats with dataType returns empty for fresh registr
 }
 
 // ============================================================================
-// Registry with loaders registered (loaders have no savers yet → still empty)
+// Registry with loaders that have no savers → queries return empty
 // ============================================================================
+
+namespace {
+
+/// Minimal stub loader that does NOT override getSaverInfo() (uses default empty).
+class StubLoaderNoSaver : public IFormatLoader {
+public:
+    LoadResult load(std::string const & /*filepath*/,
+                    IODataType /*dataType*/,
+                    nlohmann::json const & /*config*/) const override {
+        return LoadResult("stub-no-saver");
+    }
+
+    bool supportsFormat(std::string const & format,
+                        IODataType dataType) const override {
+        return format == "nosaver" && dataType == IODataType::Line;
+    }
+
+    std::string getLoaderName() const override { return "StubLoaderNoSaver"; }
+};
+
+}// anonymous namespace
 
 TEST_CASE("getSupportedSaveFormats returns empty when loaders have no savers", "[SaverRegistry]") {
     LoaderRegistry registry;
-
-    // Register internal loaders — none override getSaverInfo() yet
-    registerInternalLoaders(registry);
+    registry.registerLoader(std::make_unique<StubLoaderNoSaver>());
 
     auto all = registry.getSupportedSaveFormats();
     REQUIRE(all.empty());
@@ -46,7 +65,7 @@ TEST_CASE("getSupportedSaveFormats returns empty when loaders have no savers", "
 
 TEST_CASE("getSupportedSaveFormats filtered by type returns empty when no savers registered", "[SaverRegistry]") {
     LoaderRegistry registry;
-    registerInternalLoaders(registry);
+    registry.registerLoader(std::make_unique<StubLoaderNoSaver>());
 
     auto line_savers = registry.getSupportedSaveFormats(IODataType::Line);
     REQUIRE(line_savers.empty());
@@ -110,4 +129,23 @@ TEST_CASE("getSupportedSaveFormats filters by data type correctly", "[SaverRegis
 
     auto analog = registry.getSupportedSaveFormats(IODataType::Analog);
     REQUIRE(analog.empty());
+}
+
+// ============================================================================
+// Real internal loaders return CSV savers
+// ============================================================================
+
+TEST_CASE("registerInternalLoaders exposes CSV savers", "[SaverRegistry]") {
+    LoaderRegistry registry;
+    registerInternalLoaders(registry);
+
+    auto all = registry.getSupportedSaveFormats();
+    REQUIRE_FALSE(all.empty());
+
+    auto point_savers = registry.getSupportedSaveFormats(IODataType::Points);
+    REQUIRE_FALSE(point_savers.empty());
+    REQUIRE(point_savers[0].format == "csv");
+
+    auto analog_savers = registry.getSupportedSaveFormats(IODataType::Analog);
+    REQUIRE_FALSE(analog_savers.empty());
 }
