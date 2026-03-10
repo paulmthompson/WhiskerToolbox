@@ -1,11 +1,11 @@
 /**
  * @file analog_csv_unit.test.cpp
  * @brief Unit tests for AnalogTimeSeries CSV direct function calls and legacy APIs
- * 
+ *
  * These tests exercise the CSV loading functions directly without going through
  * the DataManager JSON config interface. They complement the integration tests
  * in analog_csv_integration.test.cpp.
- * 
+ *
  * Tests include:
  * 1. Direct save/load via CSVAnalogSaverOptions/CSVAnalogLoaderOptions
  * 2. Single column format loading via direct function
@@ -51,13 +51,13 @@ protected:
     void createTestAnalogData() {
         // Create test data with time and values
         std::vector<float> const test_values = {
-                1.5f, 2.3f, 3.7f, 4.1f, 5.9f, 6.2f, 7.8f, 8.4f, 9.1f, 10.6f};
+                                                1.5f, 2.3f, 3.7f, 4.1f, 5.9f, 6.2f, 7.8f, 8.4f, 9.1f, 10.6f};
 
         std::vector<TimeFrameIndex> const test_times = {
-                TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20),
-                TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50),
-                TimeFrameIndex(60), TimeFrameIndex(70), TimeFrameIndex(80),
-                TimeFrameIndex(90)};
+                                                        TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20),
+                                                        TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50),
+                                                        TimeFrameIndex(60), TimeFrameIndex(70), TimeFrameIndex(80),
+                                                        TimeFrameIndex(90)};
 
         original_analog_data = std::make_shared<AnalogTimeSeries>(test_values, test_times);
     }
@@ -257,7 +257,9 @@ TEST_CASE("DM - IO - AnalogTimeSeries - CSV round-trip edge cases",
 
     SECTION("Single sample round-trip") {
         base_opts.filename = "single.csv";
-        AnalogTimeSeries const original({42.5f}, {TimeFrameIndex(100)});
+        auto single_sample_vec = std::vector<float>{42.5f};
+        auto single_sample_time = std::vector<TimeFrameIndex>{TimeFrameIndex(100)};
+        AnalogTimeSeries const original(single_sample_vec, single_sample_time);
 
         auto loaded = roundtrip(original, base_opts, true);
         REQUIRE(loaded->getNumSamples() == 1);
@@ -272,8 +274,8 @@ TEST_CASE("DM - IO - AnalogTimeSeries - CSV round-trip edge cases",
         base_opts.filename = "multi.csv";
         std::vector<float> const values = {1.5f, 2.3f, 3.7f, 4.1f, 5.9f};
         std::vector<TimeFrameIndex> const times = {
-                TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20),
-                TimeFrameIndex(30), TimeFrameIndex(40)};
+                                                   TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20),
+                                                   TimeFrameIndex(30), TimeFrameIndex(40)};
         AnalogTimeSeries const original(values, times);
 
         auto loaded = roundtrip(original, base_opts, true);
@@ -295,7 +297,7 @@ TEST_CASE("DM - IO - AnalogTimeSeries - CSV round-trip edge cases",
         base_opts.filename = "negative.csv";
         std::vector<float> const values = {-3.14f, 0.0f, -100.5f, 999.999f};
         std::vector<TimeFrameIndex> const times = {
-                TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3)};
+                                                   TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3)};
         AnalogTimeSeries const original(values, times);
 
         auto loaded = roundtrip(original, base_opts, true);
@@ -319,7 +321,7 @@ TEST_CASE("DM - IO - AnalogTimeSeries - CSV round-trip edge cases",
 
         std::vector<float> const values = {10.0f, 20.0f, 30.0f};
         std::vector<TimeFrameIndex> const times = {
-                TimeFrameIndex(5), TimeFrameIndex(10), TimeFrameIndex(15)};
+                                                   TimeFrameIndex(5), TimeFrameIndex(10), TimeFrameIndex(15)};
         AnalogTimeSeries const original(values, times);
 
         auto loaded = roundtrip(original, base_opts, false);
@@ -339,7 +341,9 @@ TEST_CASE("DM - IO - AnalogTimeSeries - CSV round-trip edge cases",
 
     SECTION("Save returns true on success") {
         base_opts.filename = "success_check.csv";
-        AnalogTimeSeries const original({1.0f}, {TimeFrameIndex(0)});
+        auto single_sample_vec = std::vector<float>{1.0f};
+        auto single_sample_time = std::vector<TimeFrameIndex>{TimeFrameIndex(0)};
+        AnalogTimeSeries const original(single_sample_vec, single_sample_time);
         bool const ok = save(&original, base_opts);
         CHECK(ok);
         CHECK(std::filesystem::exists(test_dir / "success_check.csv"));
