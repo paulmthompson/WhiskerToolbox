@@ -90,3 +90,33 @@ target_link_options(fuzz_csv_line_multi_roundtrip
 )
 
 gtest_discover_tests(fuzz_csv_line_multi_roundtrip)
+
+# CSV AnalogTimeSeries round-trip fuzz test
+
+add_executable(fuzz_csv_analog_roundtrip
+    fuzz_csv_analog_roundtrip.cpp
+)
+
+add_fuzz_test_with_instantiations(fuzz_csv_analog_roundtrip)
+
+target_link_libraries(fuzz_csv_analog_roundtrip
+    PRIVATE
+        DataManager
+        DataManagerIO
+        NEURALYZER_GEOMETRY
+        gtest
+        fuzztest::fuzztest
+        fuzztest::fuzztest_gtest_main
+)
+
+target_compile_options(fuzz_csv_analog_roundtrip
+    PRIVATE
+        -fsanitize=address
+)
+
+target_link_options(fuzz_csv_analog_roundtrip
+    PRIVATE
+        -fsanitize=address
+)
+
+gtest_discover_tests(fuzz_csv_analog_roundtrip)

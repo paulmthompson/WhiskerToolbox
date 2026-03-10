@@ -503,7 +503,10 @@ LoadResult CSVLoader::saveAnalogCSV(std::string const & filepath,
         if (config.contains("header")) save_opts.header = config["header"];
         if (config.contains("precision")) save_opts.precision = config["precision"];
 
-        ::save(const_cast<AnalogTimeSeries *>(analog_data), save_opts);
+        bool const ok = ::save(analog_data, save_opts);
+        if (!ok) {
+            return LoadResult("CSV analog save failed: I/O error writing file");
+        }
 
         LoadResult result;
         result.success = true;

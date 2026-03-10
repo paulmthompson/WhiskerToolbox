@@ -275,32 +275,40 @@ updated accordingly.
 
 ### Tasks
 
-- [ ] **Return type** — Update `save(AnalogTimeSeries*, CSVAnalogSaverOptions)` to return
-  `LoadResult`.
+- [x] **Return type** — Updated `save(AnalogTimeSeries const*, CSVAnalogSaverOptions const&)` to return
+  `bool` (success/failure). The `CSVLoader::saveAnalogCSV()` wrapper converts this to
+  `LoadResult` for the registry interface.
 
-- [ ] **Atomic writes** — Use `atomicWriteFile()`.
+- [x] **Atomic writes** — `save()` now uses `atomicWriteFile()` internally.
 
 - [x] **Register in CSVLoader** — `CSVLoader::getSaverInfo()` includes an entry for
   `IODataType::Analog` with `extractParameterSchema<CSVAnalogSaverOptions>()`.
 
-- [ ] **`ParameterUIHints<CSVAnalogSaverOptions>`** — Tooltips and field descriptions.
+- [x] **`ParameterUIHints<CSVAnalogSaverOptions>`** — Added tooltips for filename, parent_dir,
+  delimiter, line_delim, save_header, header, and precision fields.
 
-- [ ] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_analog_roundtrip.cpp`:
-  1. Generate `AnalogTimeSeries` with fuzzed sample values (varying lengths, NaN handling,
-     large/small values).
+- [x] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_analog_roundtrip.cpp`:
+  1. Generate `AnalogTimeSeries` with fuzzed sample values and time indices.
   2. Save with `CSVAnalogSaverOptions` → load with `CSVAnalogLoaderOptions`.
   3. Compare: same sample count, same values within format precision.
+  Two fuzz tests: `FuzzCsvAnalogRoundTrip` (default comma delimiter) and
+  `FuzzCsvAnalogRoundTripDelimiter` (varying delimiters: comma, space, tab, semicolon).
 
-- [ ] **Unit test** — Deterministic round-trip.
+- [x] **Unit test** — Deterministic round-trip tests added to
+  `tests/DataManager/IO/formats/CSV/analog/analog_csv_unit.test.cpp` with five sections:
+  single sample, multiple samples, negative values, space-delimited round-trip,
+  and save-returns-true verification.
 
 ### Files Modified
 
 | File | Action |
 |------|--------|
-| `src/DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp` | **Modify** |
-| `src/DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.cpp` | **Modify** |
-| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entry |
-| `tests/fuzz/unit/DataManager/IO/fuzz_csv_analog_roundtrip.cpp` | **Create** |
+| `src/DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp` | **Modified** — return `bool`, const refs, `ParameterUIHints`, include `ParameterSchema` |
+| `src/DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.cpp` | **Modified** — atomic write via `atomicWriteFile()`, return `bool` |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modified** — `saveAnalogCSV()` checks `bool` return, removed `const_cast` |
+| `tests/DataManager/IO/formats/CSV/analog/analog_csv_unit.test.cpp` | **Modified** — added deterministic round-trip test sections |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_analog_roundtrip.cpp` | **Create** — round-trip fuzz tests |
+| `tests/fuzz/unit/DataManager/IO/CMakeLists.txt` | **Modified** — added fuzz test target |
 
 ---
 
@@ -663,7 +671,7 @@ the saver's `precision` setting:
 | 3.1.1 | SaverRegistry Core Infrastructure | **Complete** | N/A |
 | 3.1.2 | CSV PointData Saver | **Complete** | Yes |
 | 3.1.3 | CSV LineData Saver (Single + Multi) | **Complete** | Yes (×2) |
-| 3.1.4 | CSV AnalogTimeSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
+| 3.1.4 | CSV AnalogTimeSeries Saver | **Complete** | Yes |
 | 3.1.5 | CSV DigitalEventSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
 | 3.1.6 | CSV DigitalIntervalSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
 | 3.1.7 | CSV MaskData (RLE) Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |

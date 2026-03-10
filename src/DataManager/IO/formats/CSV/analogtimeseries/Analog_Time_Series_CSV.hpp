@@ -1,6 +1,7 @@
 #ifndef ANALOG_TIME_SERIES_CSV_HPP
 #define ANALOG_TIME_SERIES_CSV_HPP
 
+#include "ParameterSchema/ParameterSchema.hpp"
 #include "utils/LoaderOptionsConcepts.hpp"
 
 #include <rfl.hpp>
@@ -23,17 +24,17 @@ class AnalogTimeSeries;
  */
 struct CSVAnalogLoaderOptions {
     std::string filepath;
-    
+
     // Common delimiters: comma, tab, semicolon, pipe, space
     std::optional<std::string> delimiter;
-    
+
     std::optional<bool> has_header;
     std::optional<bool> single_column_format;
-    
+
     // Column indices should be non-negative
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> time_column;
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> data_column;
-    
+
     // Helper methods to get values with defaults
     std::string getDelimiter() const { return delimiter.value_or(","); }
     bool getHasHeader() const { return has_header.value_or(false); }
@@ -44,7 +45,7 @@ struct CSVAnalogLoaderOptions {
 
 // Compile-time validation that CSVAnalogLoaderOptions conforms to loader requirements
 static_assert(WhiskerToolbox::ValidLoaderOptions<CSVAnalogLoaderOptions>,
-    "CSVAnalogLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
+              "CSVAnalogLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 /**
  * @brief load_analog_series_from_csv
@@ -104,13 +105,51 @@ struct CSVAnalogSaverOptions {
 };
 
 /**
- * @brief Saves an AnalogTimeSeries object to a CSV file using specified options.
- * 
- * @param analog_data Pointer to the AnalogTimeSeries object to save.
- * @param opts Configuration options for saving.
+ * @brief Save AnalogTimeSeries to a CSV file.
+ *
+ * Uses atomic writes: data is written to a temporary file and then
+ * renamed over the target to prevent corruption on crash.
+ *
+ * @param analog_data Non-null pointer to the AnalogTimeSeries to save.
+ * @param opts        Saver options (directory, filename, delimiters, header, precision).
+ * @return true on success, false on I/O error.
+ *
+ * @pre analog_data must not be null.
  */
-void save(AnalogTimeSeries * analog_data,
-          CSVAnalogSaverOptions & opts);
+bool save(AnalogTimeSeries const * analog_data,
+          CSVAnalogSaverOptions const & opts);
 
+namespace WhiskerToolbox::Transforms::V2 {
+
+template<>
+struct ParameterUIHints<CSVAnalogSaverOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filename")) {
+            f->tooltip = "Output filename (combined with parent_dir)";
+        }
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory in which to create the output file";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Delimiter between time and data columns";
+        }
+        if (auto * f = schema.field("line_delim")) {
+            f->tooltip = "Line delimiter (newline character)";
+        }
+        if (auto * f = schema.field("save_header")) {
+            f->tooltip = "Whether to write a header row as the first line";
+        }
+        if (auto * f = schema.field("header")) {
+            f->tooltip = "Header text to write when save_header is true";
+        }
+        if (auto * f = schema.field("precision")) {
+            f->tooltip = "Number of decimal places for floating-point data values";
+            f->min_value = 0.0;
+            f->max_value = 15.0;
+        }
+    }
+};
+
+}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// ANALOG_TIME_SERIES_CSV_HPP
