@@ -514,30 +514,48 @@ verifies that saving does not crash and produces valid image files.
 
 ### Tasks
 
-- [ ] **Return type** — Update `save(MaskData const*, ImageMaskSaverOptions)` to return
-  `LoadResult`.
+- [x] **Return type** — Updated `save(MaskData const*, ImageMaskSaverOptions const&)` to
+  return `bool` (success/failure). The `OpenCVFormatLoader::save()` wrapper converts this
+  to `LoadResult` for the registry interface.
 
-- [ ] **Register in OpenCVFormatLoader** — Override `getSaverInfo()` to return one entry
+- [x] **Atomic writes** — `save()` now writes each image to a temp file (with correct image
+  extension prefix `_tmp_`) via `cv::imwrite()`, then atomically renames over the target.
+  On failure, the temp file is removed and the target is left untouched.
+
+- [x] **Register in OpenCVFormatLoader** — Override `getSaverInfo()` to return one entry
   for `IODataType::Mask` with `extractParameterSchema<ImageMaskSaverOptions>()`.
 
-- [ ] **`ParameterUIHints<ImageMaskSaverOptions>`** — Tooltips and field descriptions.
+- [x] **`ParameterUIHints<ImageMaskSaverOptions>`** — Added tooltips for parent_dir,
+  image_format, filename_prefix, frame_number_padding, image_width, image_height,
+  background_value, mask_value, and overwrite_existing fields.
 
-- [ ] **Robustness fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_opencv_mask_save.cpp`:
-  1. Generate `MaskData` with fuzzed masks and fuzzed `ImageMaskSaverOptions` (different
-     formats, dimensions, padding values).
-  2. Save to a temp directory.
-  3. Verify: no crash, output files exist and are valid images (non-zero size).
+- [x] **Robustness fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_opencv_mask_save.cpp`:
+  1. `FuzzOpenCVMaskSave`: Generate `MaskData` with fuzzed masks and fuzzed image dimensions
+     (16–640 × 16–480). Save to a temp directory. Verify no crash, output files exist and
+     have non-zero size, correct file count matches frame count.
+  2. `FuzzOpenCVMaskSaveFormats`: Test with varying image formats (PNG, BMP, TIFF) to verify
+     all supported formats produce valid files.
 
-- [ ] **Unit test** — Save known mask, verify output files exist with expected names.
+- [x] **Unit test** — Deterministic tests added to
+  `tests/DataManager/IO/formats/OpenCV/masks/mask_opencv_unit.test.cpp` with six sections:
+  single mask produces one file, multiple frames produce correct file count, empty MaskData
+  returns true with no files, null pointer returns false, custom prefix and padding,
+  overwrite protection, and BMP format produces valid files.
 
 ### Files Modified
 
 | File | Action |
 |------|--------|
-| `src/DataManager/IO/formats/OpenCV/maskdata/Mask_Data_Image.hpp` | **Modify** |
-| `src/DataManager/IO/formats/OpenCV/maskdata/Mask_Data_Image.cpp` | **Modify** |
-| `src/DataManager/IO/formats/OpenCV/OpenCVFormatLoader.cpp` | **Modify** — `getSaverInfo()` |
-| `tests/fuzz/unit/DataManager/IO/fuzz_opencv_mask_save.cpp` | **Create** |
+| `src/DataManager/IO/formats/OpenCV/maskdata/Mask_Data_Image.hpp` | **Modified** — return `bool`, `ParameterUIHints`, include `ParameterSchema` |
+| `src/DataManager/IO/formats/OpenCV/maskdata/Mask_Data_Image.cpp` | **Modified** — return `bool`, atomic write per image, spdlog logging |
+| `src/DataManager/IO/formats/OpenCV/OpenCVFormatLoader.hpp` | **Modified** — `getSaverInfo()` override declaration |
+| `src/DataManager/IO/formats/OpenCV/OpenCVFormatLoader.cpp` | **Modified** — `getSaverInfo()` implementation, `save()` checks `bool` return |
+| `src/DataManager/IO/formats/OpenCV/CMakeLists.txt` | **Modified** — link `ParameterSchema`, `spdlog` |
+| `tests/DataManager/IO/mask_data_image.test.cpp` | **Modified** — updated `saveImageMaskData()` to use `bool` return |
+| `tests/DataManager/IO/formats/OpenCV/masks/mask_opencv_unit.test.cpp` | **Create** — deterministic unit tests |
+| `tests/fuzz/unit/DataManager/IO/fuzz_opencv_mask_save.cpp` | **Create** — robustness fuzz tests |
+| `tests/fuzz/unit/DataManager/IO/CMakeLists.txt` | **Modified** — added fuzz test target (conditional on `ENABLE_OPENCV`) |
+| `tests/DataManager/CMakeLists.txt` | **Modified** — added unit test source (conditional on `ENABLE_OPENCV`) |
 
 ---
 
@@ -719,7 +737,7 @@ the saver's `precision` setting:
 | 3.1.6 | CSV DigitalIntervalSeries Saver | **Complete** | Yes |
 | 3.1.7 | CSV MaskData (RLE) Saver | **Complete** | Yes |
 | 3.1.8 | CapnProto LineData Saver | **Complete** | Yes |
-| 3.1.9 | OpenCV MaskData (Image) Saver | Not Started | No (lossy format) |
+| 3.1.9 | OpenCV MaskData (Image) Saver | **Complete** | No (lossy format) |
 | 3.2 | SaveData Command | Not Started | N/A |
 | 3.3 | LoadData Command | Not Started | N/A |
 

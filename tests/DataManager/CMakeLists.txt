@@ -175,7 +175,10 @@ if(ENABLE_HDF5)
 endif()
 
 if(ENABLE_OPENCV)
-    target_sources(test_data_manager PRIVATE IO/mask_data_image.test.cpp)
+    target_sources(test_data_manager PRIVATE
+        IO/mask_data_image.test.cpp
+        IO/formats/OpenCV/masks/mask_opencv_unit.test.cpp
+    )
     target_link_libraries(test_data_manager PRIVATE DataManagerOpenCV)
     target_compile_definitions(test_data_manager PUBLIC ENABLE_OPENCV)
 endif()

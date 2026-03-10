@@ -245,3 +245,37 @@ target_link_options(fuzz_capnproto_line_roundtrip
 gtest_discover_tests(fuzz_capnproto_line_roundtrip)
 
 endif()
+
+# OpenCV MaskData image save robustness fuzz test
+
+if(ENABLE_OPENCV)
+
+add_executable(fuzz_opencv_mask_save
+    fuzz_opencv_mask_save.cpp
+)
+
+add_fuzz_test_with_instantiations(fuzz_opencv_mask_save)
+
+target_link_libraries(fuzz_opencv_mask_save
+    PRIVATE
+        DataManager
+        DataManagerOpenCV
+        NEURALYZER_GEOMETRY
+        gtest
+        fuzztest::fuzztest
+        fuzztest::fuzztest_gtest_main
+)
+
+target_compile_options(fuzz_opencv_mask_save
+    PRIVATE
+        -fsanitize=address
+)
+
+target_link_options(fuzz_opencv_mask_save
+    PRIVATE
+        -fsanitize=address
+)
+
+gtest_discover_tests(fuzz_opencv_mask_save)
+
+endif()

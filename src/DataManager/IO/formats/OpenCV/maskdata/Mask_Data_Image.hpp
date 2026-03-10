@@ -1,6 +1,8 @@
 #ifndef MASK_DATA_IMAGE_HPP
 #define MASK_DATA_IMAGE_HPP
 
+#include "ParameterSchema/ParameterSchema.hpp"
+
 #include <memory>
 #include <string>
 
@@ -115,7 +117,45 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts);
  *
  * @param mask_data The MaskData object to save
  * @param opts Options controlling the save behavior
+ * @return true on success, false on error
  */
-void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts);
+bool save(MaskData const * mask_data, ImageMaskSaverOptions const & opts);
 
-#endif// MASK_DATA_IMAGE_HPP 
+namespace WhiskerToolbox::Transforms::V2 {
+
+template<>
+struct ParameterUIHints<ImageMaskSaverOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory where binary image files will be saved";
+        }
+        if (auto * f = schema.field("image_format")) {
+            f->tooltip = "Image format (e.g., PNG, BMP, TIFF)";
+        }
+        if (auto * f = schema.field("filename_prefix")) {
+            f->tooltip = "Optional prefix before the frame number in filenames";
+        }
+        if (auto * f = schema.field("frame_number_padding")) {
+            f->tooltip = "Number of digits for zero-padding frame numbers";
+        }
+        if (auto * f = schema.field("image_width")) {
+            f->tooltip = "Width of the output images in pixels";
+        }
+        if (auto * f = schema.field("image_height")) {
+            f->tooltip = "Height of the output images in pixels";
+        }
+        if (auto * f = schema.field("background_value")) {
+            f->tooltip = "Pixel value for background (non-mask) pixels (0-255)";
+        }
+        if (auto * f = schema.field("mask_value")) {
+            f->tooltip = "Pixel value for mask pixels (0-255)";
+        }
+        if (auto * f = schema.field("overwrite_existing")) {
+            f->tooltip = "If true, overwrite existing files; if false, skip them";
+        }
+    }
+};
+
+}// namespace WhiskerToolbox::Transforms::V2
+
+#endif// MASK_DATA_IMAGE_HPP
