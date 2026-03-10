@@ -28,6 +28,13 @@ function(enable_whiskertoolbox_pch target)
         return()
     endif()
 
+    if(WIN32)
+        get_target_property(_target_type ${target} TYPE)
+        if(_target_type STREQUAL "SHARED_LIBRARY")
+            return()
+        endif()
+    endif()
+
     target_precompile_headers(${target}
         PRIVATE
             ${CMAKE_SOURCE_DIR}/src/whiskertoolbox_pch.hpp
@@ -49,6 +56,13 @@ function(enable_whiskertoolbox_test_pch target)
     if(NOT TARGET ${target})
         message(WARNING "enable_whiskertoolbox_test_pch: target '${target}' does not exist, skipping PCH")
         return()
+    endif()
+
+    if(WIN32)
+        get_target_property(_target_type ${target} TYPE)
+        if(_target_type STREQUAL "SHARED_LIBRARY")
+            return()
+        endif()
     endif()
 
     target_precompile_headers(${target}
