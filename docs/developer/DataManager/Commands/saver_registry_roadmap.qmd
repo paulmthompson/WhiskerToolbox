@@ -413,32 +413,43 @@ updated accordingly.
 
 ### Tasks
 
-- [ ] **Return type** — Update `save(MaskData const*, CSVMaskRLESaverOptions)` to return
-  `LoadResult`.
+- [x] **Return type** — Updated `save(MaskData const*, CSVMaskRLESaverOptions const&)` to
+  return `bool` (success/failure). The `CSVLoader::saveMaskDataCSV()` wrapper converts
+  this to `LoadResult` for the registry interface.
 
-- [ ] **Atomic writes** — Use `atomicWriteFile()`.
+- [x] **Atomic writes** — `save()` now uses `atomicWriteFile()` internally.
 
 - [x] **Register in CSVLoader** — `CSVLoader::getSaverInfo()` includes an entry for
   `IODataType::Mask` with `extractParameterSchema<CSVMaskRLESaverOptions>()`.
 
-- [ ] **`ParameterUIHints<CSVMaskRLESaverOptions>`** — Tooltips and field descriptions.
+- [x] **`ParameterUIHints<CSVMaskRLESaverOptions>`** — Added tooltips for filename, parent_dir,
+  delimiter, rle_delimiter, save_header, and header fields.
 
-- [ ] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_mask_rle_roundtrip.cpp`:
+- [x] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_mask_rle_roundtrip.cpp`:
   1. Generate `MaskData` with fuzzed masks (random pixel coordinates, varying mask sizes
-     per frame, varying frame count).
+     per frame, varying frame count, deduplicated pixels).
   2. Save as RLE CSV with `CSVMaskRLESaverOptions` → load with `CSVMaskRLELoaderOptions`.
   3. Compare: same frame count, same mask pixels per frame (RLE encoding is lossless).
+  Two fuzz tests: `FuzzCsvMaskRleRoundTrip` (default comma delimiter) and
+  `FuzzCsvMaskRleRoundTripDelimiter` (varying delimiters: comma, space, tab, semicolon).
 
-- [ ] **Unit test** — Deterministic round-trip.
+- [x] **Unit test** — Deterministic round-trip tests added to
+  `tests/DataManager/IO/formats/CSV/masks/mask_csv_rle_unit.test.cpp` with six sections:
+  single mask, multiple frames, empty MaskData, large pixel coordinates,
+  no-header round-trip, and CSV file contents verification.
 
 ### Files Modified
 
 | File | Action |
 |------|--------|
-| `src/DataManager/IO/formats/CSV/mask/Mask_Data_CSV.hpp` | **Modify** |
-| `src/DataManager/IO/formats/CSV/mask/Mask_Data_CSV.cpp` | **Modify** |
-| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entry |
-| `tests/fuzz/unit/DataManager/IO/fuzz_csv_mask_rle_roundtrip.cpp` | **Create** |
+| `src/DataManager/IO/formats/CSV/mask/Mask_Data_CSV.hpp` | **Modified** — return `bool`, const ref, `ParameterSchema` include, `ParameterUIHints` |
+| `src/DataManager/IO/formats/CSV/mask/Mask_Data_CSV.cpp` | **Modified** — atomic write via `atomicWriteFile()`, return `bool` |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modified** — `saveMaskDataCSV()` checks `bool` return |
+| `tests/DataManager/IO/formats/CSV/masks/mask_csv_rle.test.cpp` | **Modified** — save calls check `bool` return |
+| `tests/DataManager/IO/formats/CSV/masks/mask_csv_rle_unit.test.cpp` | **Create** — deterministic round-trip unit tests |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_mask_rle_roundtrip.cpp` | **Create** — round-trip fuzz tests |
+| `tests/fuzz/unit/DataManager/IO/CMakeLists.txt` | **Modified** — added fuzz test target |
+| `tests/DataManager/CMakeLists.txt` | **Modified** — added unit test |
 
 ---
 
@@ -692,7 +703,7 @@ the saver's `precision` setting:
 | 3.1.4 | CSV AnalogTimeSeries Saver | **Complete** | Yes |
 | 3.1.5 | CSV DigitalEventSeries Saver | **Complete** | Yes |
 | 3.1.6 | CSV DigitalIntervalSeries Saver | **Complete** | Yes |
-| 3.1.7 | CSV MaskData (RLE) Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
+| 3.1.7 | CSV MaskData (RLE) Saver | **Complete** | Yes |
 | 3.1.8 | CapnProto LineData Saver | Not Started | Yes |
 | 3.1.9 | OpenCV MaskData (Image) Saver | Not Started | No (lossy format) |
 | 3.2 | SaveData Command | Not Started | N/A |

@@ -4,15 +4,16 @@
  */
 #include "Mask_Data_CSV.hpp"
 
+#include "IO/core/AtomicWrite.hpp"
 #include "Masks/Mask_Data.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <stdexcept>
 
 std::string encode_mask_rle(Mask2D const & mask, std::string const & rle_delimiter) {
     if (mask.empty()) {
@@ -156,27 +157,25 @@ std::map<TimeFrameIndex, std::vector<Mask2D>> load(CSVMaskRLELoaderOptions const
     return data_map;
 }
 
-void save(MaskData const * mask_data, CSVMaskRLESaverOptions & opts) {
-    if (!std::filesystem::exists(opts.parent_dir)) {
-        std::filesystem::create_directories(opts.parent_dir);
-        std::cout << "Created directory: " << opts.parent_dir << std::endl;
+bool save(MaskData const * mask_data, CSVMaskRLESaverOptions const & opts) {
+    assert(mask_data && "save: mask_data must not be null");
+
+    auto const target_path = std::filesystem::path(opts.parent_dir) / opts.filename;
+
+    bool const ok = atomicWriteFile(target_path, [&](std::ostream & out) {
+        if (opts.save_header && !opts.header.empty()) {
+            out << opts.header << "\n";
+        }
+
+        for (auto const & [time, entity_id, mask]: mask_data->flattened_data()) {
+            std::string const rle_str = encode_mask_rle(mask, opts.rle_delimiter);
+            out << time.getValue() << opts.delimiter << "\"" << rle_str << "\"\n";
+        }
+        return out.good();
+    });
+
+    if (ok) {
+        std::cout << "Successfully saved mask data (RLE) to " << target_path << std::endl;
     }
-
-    std::string const filename = opts.parent_dir + "/" + opts.filename;
-
-    std::ofstream file(filename);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file for writing: " + filename);
-    }
-
-    if (opts.save_header) {
-        file << opts.header << "\n";
-    }
-
-    for (auto const & [time, entity_id, mask]: mask_data->flattened_data()) {
-        std::string const rle_str = encode_mask_rle(mask, opts.rle_delimiter);
-        file << time.getValue() << opts.delimiter << "\"" << rle_str << "\"\n";
-    }
-
-    file.close();
+    return ok;
 }

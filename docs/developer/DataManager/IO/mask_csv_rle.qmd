@@ -71,9 +71,14 @@ Parses the RLE string using `strtoul` for zero-allocation integer parsing, expan
 
 # Tests
 
-Tests are in `tests/DataManager/IO/formats/CSV/masks/mask_csv_rle.test.cpp` and cover:
+Tests are in `tests/DataManager/IO/formats/CSV/masks/` and cover:
 
-- Unit tests for `encode_mask_rle` / `decode_mask_rle` (simple runs, multiple rows, non-contiguous, empty)
-- RLE roundtrip fidelity
-- File save/load roundtrip via direct API
-- CSVLoader factory integration (format support check, load/save cycle)
+- **`mask_csv_rle.test.cpp`** — Unit tests for `encode_mask_rle` / `decode_mask_rle`
+  (simple runs, multiple rows, non-contiguous, empty), RLE roundtrip fidelity,
+  file save/load roundtrip via direct API, and CSVLoader factory integration.
+- **`mask_csv_rle_unit.test.cpp`** — Deterministic round-trip unit tests for the saver:
+  single mask, multiple frames, empty MaskData, large pixel coordinates,
+  no-header mode, and CSV file contents verification.
+- **`tests/fuzz/unit/DataManager/IO/fuzz_csv_mask_rle_roundtrip.cpp`** — Fuzz tests
+  for save → load → compare round-trip with random pixel coordinates, frame indices,
+  and varying RLE delimiters.

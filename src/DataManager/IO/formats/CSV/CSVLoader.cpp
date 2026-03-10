@@ -879,7 +879,10 @@ LoadResult CSVLoader::saveMaskDataCSV(std::string const & filepath,
         if (config.contains("save_header")) save_opts.save_header = config["save_header"];
         if (config.contains("header")) save_opts.header = config["header"];
 
-        ::save(mask_data, save_opts);
+        bool const ok = ::save(mask_data, save_opts);
+        if (!ok) {
+            return LoadResult("CSV mask RLE save failed: write error");
+        }
 
         LoadResult result;
         result.success = true;
