@@ -47,4 +47,4 @@ if (MSVC)
     target_compile_options(TransformsV2_Widget PRIVATE ${MSVC_WARNINGS})
 endif()
 
-enable_whiskertoolbox_pch(TransformsV2_Widget)
+enable_whiskertoolbox_shared_pch(TransformsV2_Widget)

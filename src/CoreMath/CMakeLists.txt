@@ -41,4 +41,4 @@ set_target_properties(CoreMath PROPERTIES
 
 # Add alias for consistent naming
 add_library(WhiskerToolbox::CoreMath ALIAS CoreMath)
-enable_whiskertoolbox_pch(CoreMath)
+enable_whiskertoolbox_shared_pch(CoreMath)

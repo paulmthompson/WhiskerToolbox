@@ -54,4 +54,4 @@ if (MSVC)
 endif()
 
 set_target_properties(Python_Widget PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC ON)
-enable_whiskertoolbox_pch(Python_Widget)
+enable_whiskertoolbox_shared_pch(Python_Widget)

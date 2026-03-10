@@ -38,4 +38,4 @@ set_target_properties(TimeFrame PROPERTIES
 # Add alias for consistent naming
 add_library(WhiskerToolbox::TimeFrame ALIAS TimeFrame)
 
-enable_whiskertoolbox_pch(TimeFrame)
+enable_whiskertoolbox_shared_pch(TimeFrame)

@@ -72,4 +72,16 @@ else()
     catch_discover_tests(test_StateEstimation)
 endif()
 
-enable_whiskertoolbox_test_pch(test_StateEstimation)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_StateEstimation PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_StateEstimation PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_StateEstimation PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_StateEstimation)

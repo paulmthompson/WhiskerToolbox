@@ -70,4 +70,4 @@ set_target_properties(Test_Widget PROPERTIES
 )
 
 add_library(WhiskerToolbox::Test_Widget ALIAS Test_Widget)
-enable_whiskertoolbox_pch(Test_Widget)
+enable_whiskertoolbox_shared_pch(Test_Widget)

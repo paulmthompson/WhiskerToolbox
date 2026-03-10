@@ -52,4 +52,4 @@ if (MSVC)
     target_compile_options(MediaExport PRIVATE ${MSVC_WARNINGS})
 endif()
 
-enable_whiskertoolbox_pch(MediaExport)
+enable_whiskertoolbox_shared_pch(MediaExport)

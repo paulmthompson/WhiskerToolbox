@@ -41,7 +41,19 @@ else()
     add_test(NAME test_plot_alignment_gather COMMAND test_plot_alignment_gather)
 endif()
 
-enable_whiskertoolbox_test_pch(test_plot_alignment_gather)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_plot_alignment_gather PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_plot_alignment_gather PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_plot_alignment_gather PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_plot_alignment_gather)
 
 # ── PlotInteractionHelpers tests ──────────────────────────────────────────────
 
@@ -71,7 +83,19 @@ else()
     add_test(NAME test_plot_interaction_helpers COMMAND test_plot_interaction_helpers)
 endif()
 
-enable_whiskertoolbox_test_pch(test_plot_interaction_helpers)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_plot_interaction_helpers PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_plot_interaction_helpers PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_plot_interaction_helpers PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_plot_interaction_helpers)
 
 # ── Common DataManager integration tests (template-based) ────────────────────
 
@@ -105,7 +129,19 @@ else()
     set_property(TEST test_event_rate_estimation_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-enable_whiskertoolbox_test_pch(test_event_rate_estimation)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_event_rate_estimation PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_event_rate_estimation PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_event_rate_estimation PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_event_rate_estimation)
 
 # ── Common DataManager integration tests (template-based) ────────────────────
 
@@ -154,4 +190,16 @@ else()
     set_property(TEST test_plot_widget_common_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-enable_whiskertoolbox_test_pch(test_plot_widget_common)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_plot_widget_common PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_plot_widget_common PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_plot_widget_common PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_plot_widget_common)

@@ -70,4 +70,4 @@ if (MSVC)
 endif()
 
 add_library(WhiskerToolbox::NpyExplorer_Widget ALIAS NpyExplorer_Widget)
-enable_whiskertoolbox_pch(NpyExplorer_Widget)
+enable_whiskertoolbox_shared_pch(NpyExplorer_Widget)

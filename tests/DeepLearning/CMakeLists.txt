@@ -60,7 +60,7 @@ else()
         )
 endif()
 
-enable_whiskertoolbox_test_pch(test_channel_encoding)
+enable_whiskertoolbox_shared_test_pch(test_channel_encoding)
 
 # --- Channel Decoding Tests ---
 add_executable(test_channel_decoding
@@ -111,7 +111,7 @@ else()
         )
 endif()
 
-enable_whiskertoolbox_test_pch(test_channel_decoding)
+enable_whiskertoolbox_shared_test_pch(test_channel_decoding)
 
 # --- Phase 3: Model Wrapper Tests ---
 add_executable(test_model_wrapper
@@ -161,7 +161,7 @@ else()
         )
 endif()
 
-enable_whiskertoolbox_test_pch(test_model_wrapper)
+enable_whiskertoolbox_shared_test_pch(test_model_wrapper)
 
 # --- Phase 4: Model Registry Tests ---
 add_executable(test_model_registry
@@ -208,7 +208,7 @@ else()
         )
 endif()
 
-enable_whiskertoolbox_test_pch(test_model_registry)
+enable_whiskertoolbox_shared_test_pch(test_model_registry)
 
 # --- Phase 5: Runtime Model Tests ---
 find_package(reflectcpp CONFIG REQUIRED)
@@ -258,7 +258,7 @@ else()
         )
 endif()
 
-enable_whiskertoolbox_test_pch(test_neurosam_model)
+enable_whiskertoolbox_shared_test_pch(test_neurosam_model)
 
 
 # --- Runtime model tests  ---
@@ -307,7 +307,7 @@ else()
         )
 endif()
 
-enable_whiskertoolbox_test_pch(test_runtime_model)
+enable_whiskertoolbox_shared_test_pch(test_runtime_model)
 
 # ────────────────────────────────────────────────────────────────────────────
 # Standalone test driver for NeuroSAM debugging

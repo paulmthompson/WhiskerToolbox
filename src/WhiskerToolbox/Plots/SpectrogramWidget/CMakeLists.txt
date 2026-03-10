@@ -61,4 +61,4 @@ set_target_properties(SpectrogramWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(SpectrogramWidget)
+enable_whiskertoolbox_shared_pch(SpectrogramWidget)

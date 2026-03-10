@@ -71,4 +71,4 @@ set_target_properties(OnionSkinViewWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(OnionSkinViewWidget)
+enable_whiskertoolbox_shared_pch(OnionSkinViewWidget)

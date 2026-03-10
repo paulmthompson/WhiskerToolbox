@@ -64,4 +64,16 @@ else()
     set_property(TEST test_transforms_v2_widget_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-enable_whiskertoolbox_test_pch(test_transforms_v2_widget)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_transforms_v2_widget PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_transforms_v2_widget PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_transforms_v2_widget PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_transforms_v2_widget)

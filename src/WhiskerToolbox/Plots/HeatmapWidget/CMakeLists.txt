@@ -80,4 +80,4 @@ set_target_properties(HeatmapWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(HeatmapWidget)
+enable_whiskertoolbox_shared_pch(HeatmapWidget)

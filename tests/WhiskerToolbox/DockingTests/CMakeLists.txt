@@ -22,8 +22,6 @@ set_target_properties(BasicDockingTest PROPERTIES
     WIN32_EXECUTABLE FALSE  # Console app for debugging output
 )
 
-enable_whiskertoolbox_pch(BasicDockingTest)
-
 # ==============================================================================
 # Test 2: ZoneManager Docking Test
 # This tests docking behavior when using ZoneManager
@@ -52,8 +50,6 @@ set_target_properties(ZoneManagerDockingTest PROPERTIES
     WIN32_EXECUTABLE FALSE  # Console app for debugging output
 )
 
-enable_whiskertoolbox_pch(ZoneManagerDockingTest)
-
 # ==============================================================================
 # Test 3: Docking Debug Test
 # Detailed debugging output for docking behavior diagnosis
@@ -74,8 +70,6 @@ set_target_properties(DockingDebugTest PROPERTIES
     WIN32_EXECUTABLE FALSE  # Console app for debugging output
 )
 
-enable_whiskertoolbox_pch(DockingDebugTest)
-
 # ==============================================================================
 # Test 4: Minimal Docking Test - No config flags at all
 # ==============================================================================
@@ -94,5 +88,3 @@ set_target_properties(MinimalDockingTest PROPERTIES
     AUTOMOC ON
     WIN32_EXECUTABLE FALSE
 )
-
-enable_whiskertoolbox_pch(MinimalDockingTest) #no catch2

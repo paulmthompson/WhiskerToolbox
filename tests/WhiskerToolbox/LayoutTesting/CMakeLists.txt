@@ -42,7 +42,19 @@ else()
     set_property(TEST test_layout_sanity_checker_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-enable_whiskertoolbox_test_pch(test_layout_sanity_checker)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_layout_sanity_checker PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_layout_sanity_checker PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_layout_sanity_checker PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_layout_sanity_checker)
 
 # ── ColormapControls layout sweep tests ───────────────────────────────────────
 
@@ -74,7 +86,19 @@ else()
     set_property(TEST test_colormap_controls_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-enable_whiskertoolbox_test_pch(test_colormap_controls_layout)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_colormap_controls_layout PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_colormap_controls_layout PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_colormap_controls_layout PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_colormap_controls_layout)
 
 # ── Property panel layout sweep tests ─────────────────────────────────────────
 
@@ -110,7 +134,19 @@ else()
     set_property(TEST test_property_panel_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-enable_whiskertoolbox_test_pch(test_property_panel_layout)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_property_panel_layout PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_property_panel_layout PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_property_panel_layout PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_property_panel_layout)
 
 # ── HeatmapProperties layout integration tests ───────────────────────────────
 
@@ -144,4 +180,16 @@ else()
     set_property(TEST test_heatmap_properties_layout_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-enable_whiskertoolbox_test_pch(test_heatmap_properties_layout)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_heatmap_properties_layout PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_heatmap_properties_layout PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_heatmap_properties_layout PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_heatmap_properties_layout)

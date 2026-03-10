@@ -56,4 +56,16 @@ set_target_properties(TableDesignerWidget PROPERTIES
     AUTOMOC ON
     AUTOUIC ON
 )
-enable_whiskertoolbox_pch(TableDesignerWidget)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(TableDesignerWidget PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(TableDesignerWidget PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(TableDesignerWidget PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_pch(TableDesignerWidget)

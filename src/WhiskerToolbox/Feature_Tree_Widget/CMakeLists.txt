@@ -60,4 +60,4 @@ set_target_properties(Feature_Tree_Widget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(Feature_Tree_Widget)
+enable_whiskertoolbox_shared_pch(Feature_Tree_Widget)

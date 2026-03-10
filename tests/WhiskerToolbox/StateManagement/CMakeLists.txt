@@ -37,6 +37,20 @@ else()
     catch_discover_tests(test_state_management_data PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_state_management_data PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_state_management_data PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_state_management_data PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_state_management_data)
+
 # Qt integration tests (AppPreferences, SessionStore, StateManager — need QCoreApplication)
 add_executable(test_state_management
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/StateManagement/StateManagement.test.cpp
@@ -68,4 +82,16 @@ else()
     catch_discover_tests(test_state_management PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-enable_whiskertoolbox_test_pch(test_state_management)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_state_management PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_state_management PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_state_management PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_state_management)

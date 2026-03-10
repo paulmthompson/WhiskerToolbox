@@ -75,4 +75,4 @@ set_target_properties(EventPlotWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(EventPlotWidget)
+enable_whiskertoolbox_shared_pch(EventPlotWidget)

@@ -26,4 +26,16 @@ target_link_libraries(SpatialIndexTests
 # Add test to CTest
 catch_discover_tests(SpatialIndexTests)
 
-enable_whiskertoolbox_test_pch(SpatialIndexTests)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(SpatialIndexTests PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(SpatialIndexTests PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(SpatialIndexTests PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(SpatialIndexTests)

@@ -46,4 +46,4 @@ if (MSVC)
     target_compile_options(TriageSession_Widget PRIVATE ${MSVC_WARNINGS})
 endif()
 
-enable_whiskertoolbox_pch(TriageSession_Widget)
+enable_whiskertoolbox_shared_pch(TriageSession_Widget)

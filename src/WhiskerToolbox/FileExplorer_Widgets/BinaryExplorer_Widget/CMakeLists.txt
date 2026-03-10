@@ -70,4 +70,4 @@ if (MSVC)
 endif()
 
 add_library(WhiskerToolbox::BinaryExplorer_Widget ALIAS BinaryExplorer_Widget)
-enable_whiskertoolbox_pch(BinaryExplorer_Widget)
+enable_whiskertoolbox_shared_pch(BinaryExplorer_Widget)

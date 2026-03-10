@@ -53,4 +53,4 @@ set_target_properties(PlotAlignmentWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(PlotAlignmentWidget)
+enable_whiskertoolbox_shared_pch(PlotAlignmentWidget)

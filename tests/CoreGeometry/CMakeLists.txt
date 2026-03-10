@@ -45,4 +45,16 @@ else()
     catch_discover_tests(test_core_geometry)
 endif()
 
-enable_whiskertoolbox_test_pch(test_core_geometry)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_core_geometry PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_core_geometry PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_core_geometry PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_core_geometry)

@@ -150,4 +150,4 @@ if (MSVC)
 endif()
 
 add_library(WhiskerToolbox::DataImport_Widget ALIAS DataImport_Widget)
-enable_whiskertoolbox_pch(DataImport_Widget)
+enable_whiskertoolbox_shared_pch(DataImport_Widget)

@@ -72,4 +72,4 @@ set_target_properties(DataManager_Widget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(DataManager_Widget)
+enable_whiskertoolbox_shared_pch(DataManager_Widget)
