@@ -116,7 +116,8 @@ TEST_CASE("SlotSpec - toDescriptor with all fields", "[runtime]")
     auto desc = slot.toDescriptor();
 
     CHECK(desc.name == "image");
-    CHECK(desc.shape == std::vector<int64_t>{3, 256, 256});
+    auto const expected_shape = std::vector<int64_t>{3, 256, 256};
+    CHECK(desc.shape == expected_shape);
     CHECK(desc.description == "Current frame");
     CHECK(desc.recommended_encoder == "ImageEncoder");
     CHECK(desc.recommended_decoder == "TensorToMask2D");
@@ -135,7 +136,8 @@ TEST_CASE("SlotSpec - toDescriptor applies defaults for omitted fields", "[runti
     auto desc = slot.toDescriptor();
 
     CHECK(desc.name == "x");
-    CHECK(desc.shape == std::vector<int64_t>{1, 64, 64});
+    auto const expected_shape = std::vector<int64_t>{1, 64, 64};
+    CHECK(desc.shape == expected_shape);
     CHECK(desc.description.empty());
     CHECK(desc.recommended_encoder.empty());
     CHECK(desc.recommended_decoder.empty());
@@ -163,7 +165,8 @@ TEST_CASE("RuntimeModelSpec - parse full JSON", "[runtime]")
 
     REQUIRE(spec.inputs.size() == 3);
     CHECK(spec.inputs[0].name == "image");
-    CHECK(spec.inputs[0].shape == std::vector<int64_t>{3, 256, 256});
+    auto const expected_image_shape = std::vector<int64_t>{3, 256, 256};
+    CHECK(spec.inputs[0].shape == expected_image_shape);
     CHECK(spec.inputs[0].recommended_encoder.value() == "ImageEncoder");
     CHECK(spec.inputs[0].is_static.value() == false);
     CHECK(spec.inputs[1].name == "memory_images");
@@ -174,7 +177,8 @@ TEST_CASE("RuntimeModelSpec - parse full JSON", "[runtime]")
 
     REQUIRE(spec.outputs.size() == 1);
     CHECK(spec.outputs[0].name == "heatmap");
-    CHECK(spec.outputs[0].shape == std::vector<int64_t>{1, 256, 256});
+    auto const expected_heatmap_shape = std::vector<int64_t>{1, 256, 256};
+    CHECK(spec.outputs[0].shape == expected_heatmap_shape);
     CHECK(spec.outputs[0].recommended_decoder.value() == "TensorToMask2D");
 }
 
@@ -488,7 +492,8 @@ TEST_CASE("RuntimeModel - input/output slots match spec", "[runtime]")
     auto inputs = model.inputSlots();
     REQUIRE(inputs.size() == 3);
     CHECK(inputs[0].name == "image");
-    CHECK(inputs[0].shape == std::vector<int64_t>{3, 256, 256});
+    auto const expected_shape = std::vector<int64_t>{3, 256, 256};
+    CHECK(inputs[0].shape == expected_shape);
     CHECK(inputs[0].recommended_encoder == "ImageEncoder");
     CHECK(inputs[0].is_static == false);
     CHECK(inputs[1].name == "memory_images");

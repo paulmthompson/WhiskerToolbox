@@ -13,8 +13,12 @@
 #include "../src/whiskertoolbox_pch.hpp"
 
 // ── Catch2 headers ──────────────────────────────────────────────────
-//#include <catch2/catch_test_macros.hpp>                    // 174 files
-//#include <catch2/matchers/catch_matchers_floating_point.hpp> // 89 files
-//#include <catch2/catch_approx.hpp>                         // 16 files
+/*
+CHECK and REQUIRE macros will require special attention
+if we use a braced initialize instead of parentheses, e.g. REQUIRE(x == 42) vs REQUIRE({x} == 42).
+*/
+#include <catch2/catch_test_macros.hpp>                    // 174 files
+#include <catch2/matchers/catch_matchers_floating_point.hpp> // 89 files
+#include <catch2/catch_approx.hpp>                         // 16 files
 
 #endif // WHISKERTOOLBOX_TEST_PCH_HPP
