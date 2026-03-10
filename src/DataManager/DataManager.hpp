@@ -473,7 +473,7 @@ using JsonLoadProgressCallback = std::function<bool(int current, int total, std:
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath, JsonLoadProgressCallback progress_callback);
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path);
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path, JsonLoadProgressCallback progress_callback);
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path, const JsonLoadProgressCallback& progress_callback);
 
 std::string convert_data_type_to_string(DM_DataType type);
 

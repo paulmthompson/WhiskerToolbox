@@ -1,7 +1,6 @@
 #include "TableRegistry.hpp"
 
 #include "DataManager.hpp"
-#include "TableObserverBridge.hpp"
 #include "utils/TableView/ComputerRegistry.hpp"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/core/TableView.h"
@@ -477,5 +476,5 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
 
 void TableRegistry::notify(TableEventType type, std::string const & table_id) const {
     TableEvent ev{type, table_id};
-    DataManager__NotifyTableObservers(_data_manager, ev);
+    _data_manager.notifyTableObservers(ev);
 }

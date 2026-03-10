@@ -5,6 +5,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/LoaderOptionsConcepts.hpp"
 
+#include <nlohmann/json.hpp>
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
@@ -122,5 +123,17 @@ static_assert(WhiskerToolbox::ValidLoaderOptions<DLCPointLoaderOptions>,
 
 std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts);
 
+/**
+ * @brief Load multiple PointData objects from DLC CSV format
+ *
+ * Used for loading DeepLabCut multi-bodypart tracking data where each bodypart
+ * becomes a separate PointData object. Parses JSON configuration to extract
+ * DLC loader options, loads the CSV, and applies image size configuration.
+ *
+ * @param file_path Path to the DLC CSV file
+ * @param item JSON configuration with DLC-specific options
+ * @return Map of bodypart name to PointData
+ */
+std::map<std::string, std::shared_ptr<PointData>> load_multiple_PointData_from_dlc(std::string const & file_path, nlohmann::basic_json<> const & item);
 
 #endif// POINT_DATA_CSV_HPP

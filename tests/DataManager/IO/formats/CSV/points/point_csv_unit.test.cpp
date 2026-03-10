@@ -18,7 +18,6 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "IO/formats/CSV/points/Point_Data_CSV.hpp"
-#include "Points/IO/JSON/Point_Data_JSON.hpp"
 #include "Points/Point_Data.hpp"
 
 #include <nlohmann/json.hpp>

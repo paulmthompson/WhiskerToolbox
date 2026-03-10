@@ -4,8 +4,6 @@ set(points_sources
     Point_Data.cpp
     utils/Point_Data_utils.hpp
     utils/Point_Data_utils.cpp
-    IO/JSON/Point_Data_JSON.hpp
-    IO/JSON/Point_Data_JSON.cpp
 )
 
 # Create the PointData static library
@@ -25,8 +23,6 @@ target_link_libraries(PointData PUBLIC
     WhiskerToolbox::ObserverData  # Observer
     TimeFrame                # TimeFrame  
     Entity                   # Entity
-    nlohmann_json::nlohmann_json  # For JSON support
-    reflectcpp::reflectcpp
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

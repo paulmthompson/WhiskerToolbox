@@ -17,12 +17,12 @@
 #include "Media/Media_Data.hpp"
 
 // Data type IO includes
-#include "Points/IO/JSON/Point_Data_JSON.hpp"  // For load_multiple_PointData_from_dlc
+#include "IO/formats/CSV/points/Point_Data_CSV.hpp"// For load_multiple_PointData_from_dlc
 // Tensor numpy loading now handled through the IO registry (DataManagerNumpy library)
 #include "utils/TableView/TableRegistry.hpp"
 
-#include "IO/formats/Binary/common/binary_loaders.hpp"  // For Time data type loading
-#include "IO/formats/CSV/digitaltimeseries/MultiColumnBinaryCSV.hpp"  // For multi-column binary loading
+#include "IO/formats/Binary/common/binary_loaders.hpp"              // For Time data type loading
+#include "IO/formats/CSV/digitaltimeseries/MultiColumnBinaryCSV.hpp"// For multi-column binary loading
 
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -44,6 +44,7 @@
 #include <iostream>
 #include <optional>
 #include <regex>
+#include <utility>
 
 using namespace nlohmann;
 
@@ -104,7 +105,7 @@ bool tryRegistryThenLegacyLoad(
 
                             // For single channel, use the base name
                             //std::string const channel_name = name + "_0";
-                            std::string const channel_name = name;
+                            std::string const& channel_name = name;
                             dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
 
                             if (item.contains("clock")) {
@@ -123,7 +124,7 @@ bool tryRegistryThenLegacyLoad(
                             auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(result.data);
 
                             //std::string const channel_name = name + "_0";
-                            std::string const channel_name = name;
+                            std::string const& channel_name = name;
                             dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
 
                             if (item.contains("clock")) {
@@ -203,39 +204,39 @@ bool tryBatchLoadFromRegistry(
         DM_DataType data_type,
         nlohmann::json const & item,
         std::string const & name) {
-    
+
     if (!item.contains("format")) {
         return false;
     }
-    
+
     std::string const format = item["format"];
     LoaderRegistry & registry = LoaderRegistry::getInstance();
     auto io_data_type = toIODataType(data_type);
-    
+
     // Check if any loader supports batch loading for this format
     if (!registry.isBatchLoadingSupported(format, io_data_type)) {
         return false;
     }
-    
+
     // For DigitalInterval with binary_state layout, only use batch loading when all_columns is true
     // Otherwise, single-column loading should use the regular single-object path
     if (data_type == DM_DataType::DigitalInterval) {
         bool const all_columns = item.value("all_columns", false);
         if (!all_columns) {
-            return false;  // Fall back to single-object loading
+            return false;// Fall back to single-object loading
         }
     }
-    
+
     std::cout << "Using batch loading for " << name << " (format: " << format << ")" << std::endl;
-    
+
     BatchLoadResult batch_result = registry.tryLoadBatch(format, io_data_type, file_path, item);
-    
+
     if (!batch_result.success) {
-        std::cout << "Batch loading failed for " << name << ": " << batch_result.error_message 
+        std::cout << "Batch loading failed for " << name << ": " << batch_result.error_message
                   << ", falling back to legacy loader" << std::endl;
         return false;
     }
-    
+
     // Process each result in the batch
     for (size_t i = 0; i < batch_result.results.size(); ++i) {
         auto const & result = batch_result.results[i];
@@ -243,7 +244,7 @@ bool tryBatchLoadFromRegistry(
             std::cerr << "Batch item " << i << " failed: " << result.error_message << std::endl;
             continue;
         }
-        
+
         std::string channel_name;
 
         if (batch_result.results.size() == 1) {
@@ -257,14 +258,14 @@ bool tryBatchLoadFromRegistry(
                 channel_name = name + "_" + std::to_string(i);
             }
         }
-        
+
         // Handle based on data type
         switch (data_type) {
             case DM_DataType::Analog: {
                 if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(result.data)) {
                     auto analog_data = std::get<std::shared_ptr<AnalogTimeSeries>>(result.data);
                     dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
-                    
+
                     if (item.contains("clock")) {
                         std::string const clock_str = item["clock"];
                         auto const clock = TimeKey(clock_str);
@@ -277,7 +278,7 @@ bool tryBatchLoadFromRegistry(
                 if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(result.data)) {
                     auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(result.data);
                     dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
-                    
+
                     if (item.contains("clock")) {
                         std::string const clock_str = item["clock"];
                         auto const clock = TimeKey(clock_str);
@@ -297,7 +298,7 @@ bool tryBatchLoadFromRegistry(
                 if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(result.data)) {
                     auto interval_data = std::get<std::shared_ptr<DigitalIntervalSeries>>(result.data);
                     dm->setData<DigitalIntervalSeries>(channel_name, interval_data, TimeKey("time"));
-                    
+
                     if (item.contains("clock")) {
                         std::string const clock_str = item["clock"];
                         auto const clock = TimeKey(clock_str);
@@ -307,12 +308,12 @@ bool tryBatchLoadFromRegistry(
                 break;
             }
             default:
-                std::cerr << "Batch loading not supported for data type: " 
+                std::cerr << "Batch loading not supported for data type: "
                           << static_cast<int>(data_type) << std::endl;
                 break;
         }
     }
-    
+
     std::cout << "Batch loaded " << batch_result.results.size() << " objects for " << name << std::endl;
     return true;
 }
@@ -347,7 +348,7 @@ DataManager::DataManager() {
 DataManager::~DataManager() {
     // Clear data objects first to release their references to EntityRegistry
     _data.clear();
-    
+
     // Then clear the EntityRegistry to prevent memory leaks
     if (_entity_registry) {
         _entity_registry->clear();
@@ -552,7 +553,7 @@ TableRegistry const * DataManager::getTableRegistry() const {
 // ===== Table observer channel =====
 int DataManager::addTableObserver(TableObserver callback) {
     if (!callback) return -1;
-    int id = _next_table_observer_id++;
+    int const id = _next_table_observer_id++;
     _table_observers[id] = std::move(callback);
     return id;
 }
@@ -569,7 +570,7 @@ void DataManager::notifyTableObservers(TableEvent const & ev) {
 }
 
 // Provide C-style bridge for TableRegistry to call
-void DataManager__NotifyTableObservers(DataManager & dm, TableEvent const & ev) {
+void DataManager_NotifyTableObservers(DataManager & dm, TableEvent const & ev) {
     dm.notifyTableObservers(ev);
 }
 
@@ -594,21 +595,20 @@ void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey
     // Loop through all _data. If shared_ptr data is already in _data, return
     for (auto const & [existing_key, existing_variant]: _data) {
         // Safely compare only when the variant alternatives match; avoid std::bad_variant_access
-        bool found = std::visit([
-            &data
-        ](auto const & existing_ptr) -> bool {
+        bool const found = std::visit([&data](auto const & existing_ptr) -> bool {
             using PtrT = std::decay_t<decltype(existing_ptr)>;
             if (auto const * incoming_ptr = std::get_if<PtrT>(&data)) {
-                return existing_ptr == *incoming_ptr; // shared_ptr comparison (same pointee address)
+                return existing_ptr == *incoming_ptr;// shared_ptr comparison (same pointee address)
             }
             return false;
-        }, existing_variant);
+        },
+                                existing_variant);
 
         if (found) {
             std::cerr << "Data with key '" << existing_key
                       << "' already exists; not setting duplicate under key '" << key << "'."
                       << std::endl;
-            return; // Data already exists, do not set again
+            return;// Data already exists, do not set again
         }
     }
 
@@ -659,7 +659,7 @@ bool DataManager::deleteData(std::string const & key) {
 
 EntityId DataManager::ensureTimeEntityId(TimeKey const & time_key, TimeFrameIndex index) {
     return _entity_registry->ensureId(
-        time_key.str(), EntityKind::TimeEntity, index, /*local_index=*/0);
+            time_key.str(), EntityKind::TimeEntity, index, /*local_index=*/0);
 }
 
 std::vector<EntityId> DataManager::ensureTimeEntityIds(
@@ -695,7 +695,7 @@ DataManager::getTimeIndicesInGroup(GroupId group_id, TimeKey const & time_key) c
     auto entities = _entity_group_manager->getEntitiesInGroup(group_id);
     result.reserve(entities.size());
 
-    for (auto const & entity_id : entities) {
+    for (auto const & entity_id: entities) {
         auto desc = _entity_registry->get(entity_id);
         if (!desc.has_value() || desc->kind != EntityKind::TimeEntity) {
             continue;
@@ -722,7 +722,7 @@ DataManager::getTimeIndicesInGroupConverted(GroupId group_id, TimeKey const & ta
     auto entities = _entity_group_manager->getEntitiesInGroup(group_id);
     result.reserve(entities.size());
 
-    for (auto const & entity_id : entities) {
+    for (auto const & entity_id: entities) {
         auto desc = _entity_registry->get(entity_id);
         if (!desc.has_value() || desc->kind != EntityKind::TimeEntity) {
             continue;
@@ -740,11 +740,11 @@ DataManager::getTimeIndicesInGroupConverted(GroupId group_id, TimeKey const & ta
         // Look up the source TimeFrame for cross-clock conversion
         auto source_it = _times.find(source_key);
         if (source_it == _times.end() || !source_it->second) {
-            continue; // skip if source clock is not registered
+            continue;// skip if source clock is not registered
         }
 
         result.push_back(
-            convert_time_index(source_idx, source_it->second.get(), target_tf));
+                convert_time_index(source_idx, source_it->second.get(), target_tf));
     }
     return result;
 }
@@ -817,7 +817,7 @@ DM_DataType stringToDataType(std::string const & data_type_str) {
     return DM_DataType::Unknown;
 }
 
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::string const & base_path, JsonLoadProgressCallback progress_callback) {
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::string const & base_path, const JsonLoadProgressCallback& progress_callback) {
     std::vector<DataInfo> data_info_list;
 
     std::map<std::string, std::string> clock_mappings;
@@ -832,7 +832,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
     // Report initial progress to show the dialog immediately
     if (progress_callback) {
-        bool should_continue = progress_callback(0, total_items, "Preparing to load data...");
+        bool const should_continue = progress_callback(0, total_items, "Preparing to load data...");
         if (!should_continue) {
             std::cout << "Loading cancelled by user" << std::endl;
             return data_info_list;
@@ -854,15 +854,15 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             if (!checkRequiredFields(item, {"data_type", "name"})) {
                 continue;
             }
-            
+
             std::string const data_type_str = item["data_type"];
             if (data_type_str != "time") {
                 std::cerr << "Error: 'derived' format is only supported for 'time' data type" << std::endl;
                 continue;
             }
-            
+
             std::string const name = item["name"];
-            
+
             // Get required source_timeframe parameter
             if (!item.contains("source_timeframe")) {
                 std::cerr << "Error: 'derived' format requires 'source_timeframe' parameter" << std::endl;
@@ -875,16 +875,16 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                           << "Make sure it is loaded before the derived TimeFrame." << std::endl;
                 continue;
             }
-            
+
             std::shared_ptr<TimeFrame> derived_timeframe = nullptr;
-            
+
             // Determine the source series name and type
             // Support two formats:
             // 1. source_series + source_type (preferred)
             // 2. interval_series or event_series as key names (legacy)
             std::string series_name;
             std::string series_type;
-            
+
             if (item.contains("source_series") && item.contains("source_type")) {
                 series_name = item["source_series"];
                 series_type = item["source_type"];
@@ -899,7 +899,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                           << "'interval_series'/'event_series' parameter" << std::endl;
                 continue;
             }
-            
+
             // Normalize series_type to handle variants like "interval_series" -> "interval"
             if (series_type == "interval_series" || series_type == "interval") {
                 auto interval_series = dm->getData<DigitalIntervalSeries>(series_name);
@@ -908,11 +908,11 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                               << "Make sure it is loaded before the derived TimeFrame." << std::endl;
                     continue;
                 }
-                
+
                 DerivedTimeFrameFromIntervalsOptions opts;
                 opts.source_timeframe = source_timeframe;
                 opts.interval_series = interval_series;
-                
+
                 // Get optional edge parameter (default: start)
                 std::string const edge_str = item.value("edge", "start");
                 if (edge_str == "end") {
@@ -920,7 +920,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 } else {
                     opts.edge = IntervalEdge::START;
                 }
-                
+
                 derived_timeframe = createDerivedTimeFrame(opts);
             } else if (series_type == "event_series" || series_type == "event") {
                 auto event_series = dm->getData<DigitalEventSeries>(series_name);
@@ -929,30 +929,30 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                               << "Make sure it is loaded before the derived TimeFrame." << std::endl;
                     continue;
                 }
-                
+
                 DerivedTimeFrameFromEventsOptions opts;
                 opts.source_timeframe = source_timeframe;
                 opts.event_series = event_series;
-                
+
                 derived_timeframe = createDerivedTimeFrame(opts);
             } else {
                 std::cerr << "Error: Unknown source_type '" << series_type << "'. "
                           << "Use 'interval', 'interval_series', 'event', or 'event_series'." << std::endl;
                 continue;
             }
-            
+
             if (derived_timeframe) {
                 dm->setTime(TimeKey(name), derived_timeframe, true);
                 std::cout << "Created derived TimeFrame '" << name << "'" << std::endl;
             } else {
                 std::cerr << "Error: Failed to create derived TimeFrame for " << name << std::endl;
             }
-            
+
             // Increment progress counter
             current_item++;
             if (progress_callback) {
-                std::string message = "Created derived TimeFrame: " + name;
-                bool should_continue = progress_callback(current_item, total_items, message);
+                std::string const message = "Created derived TimeFrame: " + name;
+                bool const should_continue = progress_callback(current_item, total_items, message);
                 if (!should_continue) {
                     std::cout << "Loading cancelled by user" << std::endl;
                     return data_info_list;
@@ -966,28 +966,28 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             if (!checkRequiredFields(item, {"data_type", "name"})) {
                 continue;
             }
-            
+
             std::string const data_type_str = item["data_type"];
             if (data_type_str != "time") {
                 std::cerr << "Error: 'max_value' format is only supported for 'time' data type" << std::endl;
                 continue;
             }
-            
+
             std::string const name = item["name"];
-            
+
             // Get required source_data parameter
             if (!item.contains("source_data")) {
                 std::cerr << "Error: 'max_value' format requires 'source_data' parameter" << std::endl;
                 continue;
             }
-            
+
             std::string const source_data_name = item["source_data"];
-            
+
             // Determine start value (default: 0, but can be 1 if specified)
-            int start_value = item.value("start_value", 0);
-            
+            int const start_value = item.value("start_value", 0);
+
             int64_t max_index = -1;
-            
+
             // Try to get max index from DigitalEventSeries
             auto digital_event = dm->getData<DigitalEventSeries>(source_data_name);
             if (digital_event) {
@@ -995,58 +995,58 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                     // Get the last (maximum) TimeFrameIndex
                     auto last_event = *(digital_event->view().end() - 1);
                     max_index = last_event.time().getValue();
-                    std::cout << "Found max TimeFrameIndex " << max_index 
-                             << " in DigitalEventSeries '" << source_data_name << "'" << std::endl;
+                    std::cout << "Found max TimeFrameIndex " << max_index
+                              << " in DigitalEventSeries '" << source_data_name << "'" << std::endl;
                 } else {
-                    std::cerr << "Error: DigitalEventSeries '" << source_data_name 
-                             << "' is empty, cannot determine max value" << std::endl;
+                    std::cerr << "Error: DigitalEventSeries '" << source_data_name
+                              << "' is empty, cannot determine max value" << std::endl;
                     continue;
                 }
             }
-            
+
             // Try to get max index from AnalogTimeSeries if not found yet
             if (max_index < 0) {
                 auto analog_series = dm->getData<AnalogTimeSeries>(source_data_name);
                 if (analog_series) {
-                    auto const& time_indices = analog_series->getTimeSeries();
+                    auto const & time_indices = analog_series->getTimeSeries();
                     if (!time_indices.empty()) {
                         max_index = time_indices.back().getValue();
-                        std::cout << "Found max TimeFrameIndex " << max_index 
-                                 << " in AnalogTimeSeries '" << source_data_name << "'" << std::endl;
+                        std::cout << "Found max TimeFrameIndex " << max_index
+                                  << " in AnalogTimeSeries '" << source_data_name << "'" << std::endl;
                     } else {
-                        std::cerr << "Error: AnalogTimeSeries '" << source_data_name 
-                                 << "' is empty, cannot determine max value" << std::endl;
+                        std::cerr << "Error: AnalogTimeSeries '" << source_data_name
+                                  << "' is empty, cannot determine max value" << std::endl;
                         continue;
                     }
                 }
             }
-            
+
             // If still not found, report error
             if (max_index < 0) {
-                std::cerr << "Error: Source data '" << source_data_name 
-                         << "' not found or is not a DigitalEventSeries or AnalogTimeSeries" << std::endl;
+                std::cerr << "Error: Source data '" << source_data_name
+                          << "' not found or is not a DigitalEventSeries or AnalogTimeSeries" << std::endl;
                 std::cerr << "Make sure the source data is loaded before creating the TimeFrame" << std::endl;
                 continue;
             }
-            
+
             // Create TimeFrame with values from start_value to max_index
             std::vector<int> time_values;
-            int num_values = static_cast<int>(max_index) - start_value + 1;
+            int const num_values = static_cast<int>(max_index) - start_value + 1;
             time_values.reserve(num_values);
             for (int i = start_value; i <= static_cast<int>(max_index); ++i) {
                 time_values.push_back(i);
             }
-            
+
             auto timeframe = std::make_shared<TimeFrame>(time_values);
             dm->setTime(TimeKey(name), timeframe, true);
-            std::cout << "Created TimeFrame '" << name << "' with " << time_values.size() 
-                     << " values [" << start_value << " to " << max_index << "]" << std::endl;
-            
+            std::cout << "Created TimeFrame '" << name << "' with " << time_values.size()
+                      << " values [" << start_value << " to " << max_index << "]" << std::endl;
+
             // Increment progress counter
             current_item++;
             if (progress_callback) {
-                std::string message = "Created max_value TimeFrame: " + name;
-                bool should_continue = progress_callback(current_item, total_items, message);
+                std::string const message = "Created max_value TimeFrame: " + name;
+                bool const should_continue = progress_callback(current_item, total_items, message);
                 if (!should_continue) {
                     std::cout << "Loading cancelled by user" << std::endl;
                     return data_info_list;
@@ -1126,7 +1126,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 }
 
                 // If plugin loading failed, report the error
-                std::cerr << "Error: Failed to load PointData from " << file_path 
+                std::cerr << "Error: Failed to load PointData from " << file_path
                           << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
@@ -1138,7 +1138,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 }
 
                 // If plugin loading failed, report the error
-                std::cerr << "Error: Failed to load MaskData from " << file_path 
+                std::cerr << "Error: Failed to load MaskData from " << file_path
                           << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
@@ -1150,7 +1150,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 }
 
                 // If plugin loading failed, report the error
-                std::cerr << "Error: Failed to load LineData from " << file_path 
+                std::cerr << "Error: Failed to load LineData from " << file_path
                           << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
@@ -1168,7 +1168,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 }
 
                 // If all loading methods failed, report the error
-                std::cerr << "Error: Failed to load AnalogTimeSeries from " << file_path 
+                std::cerr << "Error: Failed to load AnalogTimeSeries from " << file_path
                           << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
@@ -1186,7 +1186,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 }
 
                 // If all loading methods failed, report the error
-                std::cerr << "Error: Failed to load DigitalEventSeries from " << file_path 
+                std::cerr << "Error: Failed to load DigitalEventSeries from " << file_path
                           << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
@@ -1203,7 +1203,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 }
 
                 // If plugin loading failed, report the error
-                std::cerr << "Error: Failed to load DigitalIntervalSeries from " << file_path 
+                std::cerr << "Error: Failed to load DigitalIntervalSeries from " << file_path
                           << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
@@ -1214,7 +1214,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                     break;
                 }
 
-                std::cerr << "Error: Failed to load TensorData from " << file_path 
+                std::cerr << "Error: Failed to load TensorData from " << file_path
                           << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
@@ -1266,7 +1266,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 if (item["format"] == "filename") {
 
                     // Get required parameters
-                    std::string const folder_path = file_path;// file path is required argument
+                    std::string const& folder_path = file_path;// file path is required argument
                     std::string const regex_pattern = item["regex_pattern"];
 
                     // Get optional parameters with defaults
@@ -1306,24 +1306,24 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                     // Load TimeFrame from multi-column binary CSV file
                     MultiColumnBinaryCSVTimeFrameOptions opts;
                     opts.filepath = file_path;
-                    
+
                     // Parse optional fields from JSON
                     if (item.contains("header_lines_to_skip")) {
                         opts.header_lines_to_skip = rfl::Validator<int, rfl::Minimum<0>>(
-                            item["header_lines_to_skip"].get<int>());
+                                item["header_lines_to_skip"].get<int>());
                     }
                     if (item.contains("time_column")) {
                         opts.time_column = rfl::Validator<int, rfl::Minimum<0>>(
-                            item["time_column"].get<int>());
+                                item["time_column"].get<int>());
                     }
                     if (item.contains("delimiter")) {
                         opts.delimiter = item["delimiter"].get<std::string>();
                     }
                     if (item.contains("sampling_rate")) {
                         opts.sampling_rate = rfl::Validator<double, rfl::Minimum<0.0>>(
-                            item["sampling_rate"].get<double>());
+                                item["sampling_rate"].get<double>());
                     }
-                    
+
                     auto timeframe = load(opts);
                     if (timeframe) {
                         dm->setTime(TimeKey(name), timeframe, true);
@@ -1341,7 +1341,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 continue;
         }
         if (item.contains("clock")) {
-            std::string clock_str = item["clock"];
+            std::string const clock_str = item["clock"];
             auto clock = TimeKey(clock_str);
             std::cout << "Setting time for " << name << " to " << clock << std::endl;
             dm->setTimeKey(name, clock);
@@ -1353,8 +1353,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
         // Report progress after loading this item
         if (progress_callback) {
-            std::string message = "Loaded " + data_type_str + ": " + name;
-            bool should_continue = progress_callback(current_item, total_items, message);
+            std::string const message = "Loaded " + data_type_str + ": " + name;
+            bool const should_continue = progress_callback(current_item, total_items, message);
             if (!should_continue) {
                 std::cout << "Loading cancelled by user" << std::endl;
                 return data_info_list;
@@ -1425,7 +1425,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
     // get base path of filepath
     std::string const base_path = std::filesystem::path(json_filepath).parent_path().string();
-    return load_data_from_json_config(dm, j, base_path, progress_callback);
+    return load_data_from_json_config(dm, j, base_path, std::move(progress_callback));
 }
 
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath) {
