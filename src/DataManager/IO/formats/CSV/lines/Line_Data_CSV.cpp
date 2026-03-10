@@ -1,8 +1,10 @@
 #include "Line_Data_CSV.hpp"
 
+#include "IO/core/AtomicWrite.hpp"
 #include "Lines/Line_Data.hpp"
 #include "utils/string_manip.hpp"
 
+#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <cstdlib>
@@ -25,55 +27,52 @@ void save_line_as_csv(Line2D const & line, std::string const & filename, int con
     myfile.close();
 }
 
-void save(
+bool save(
         LineData const * line_data,
-        CSVSingleFileLineSaverOptions & opts) {
+        CSVSingleFileLineSaverOptions const & opts) {
+    assert(line_data && "save: line_data must not be null");
 
-    //Check if directory exists
-    if (!std::filesystem::exists(opts.parent_dir)) {
-        std::filesystem::create_directories(opts.parent_dir);
-        std::cout << "Created directory: " << opts.parent_dir << std::endl;
-    }
+    auto const target_path = std::filesystem::path(opts.parent_dir) / opts.filename;
 
-    std::string const filename = opts.parent_dir + "/" + opts.filename;
-
-    std::ofstream file(filename);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file");
-    }
-
-    // Write the header
-    if (opts.save_header) {
-        file << opts.header << "\n";
-    }
-
-    // Write the data
-    for (auto const & [time, entity_id, line]: line_data->flattened_data()) {
-        std::ostringstream x_values;
-        std::ostringstream y_values;
-
-        for (auto const & point: line) {
-            x_values << std::fixed << std::setprecision(opts.precision) << point.x << opts.delimiter;
-            y_values << std::fixed << std::setprecision(opts.precision) << point.y << opts.delimiter;
+    bool const ok = atomicWriteFile(target_path, [&](std::ostream & out) {
+        // Write the header
+        if (opts.save_header) {
+            out << opts.header << "\n";
         }
 
-        // Remove the trailing delimiter
-        std::string x_str = x_values.str();
-        std::string y_str = y_values.str();
-        if (!x_str.empty()) x_str.pop_back();
-        if (!y_str.empty()) y_str.pop_back();
+        // Write the data
+        for (auto const & [time, entity_id, line]: line_data->flattened_data()) {
+            std::ostringstream x_values;
+            std::ostringstream y_values;
 
-        file << time.getValue() << ",\"" << x_str << "\",\"" << y_str << "\"\n";
+            for (auto const & point: line) {
+                x_values << std::fixed << std::setprecision(opts.precision) << point.x << opts.delimiter;
+                y_values << std::fixed << std::setprecision(opts.precision) << point.y << opts.delimiter;
+            }
+
+            // Remove the trailing delimiter
+            std::string x_str = x_values.str();
+            std::string y_str = y_values.str();
+            if (!x_str.empty()) x_str.pop_back();
+            if (!y_str.empty()) y_str.pop_back();
+
+            out << time.getValue() << ",\"" << x_str << "\",\"" << y_str << "\"\n";
+        }
+        return out.good();
+    });
+
+    if (ok) {
+        std::cout << "Successfully saved line data to " << target_path << std::endl;
     }
-
-    file.close();
+    return ok;
 }
 
-void save(
+bool save(
         LineData const * line_data,
-        CSVMultiFileLineSaverOptions & opts) {
+        CSVMultiFileLineSaverOptions const & opts) {
+    assert(line_data && "save: line_data must not be null");
 
-    // Check if directory exists
+    // Ensure parent directory exists
     if (!std::filesystem::exists(opts.parent_dir)) {
         std::filesystem::create_directories(opts.parent_dir);
         std::cout << "Created directory: " << opts.parent_dir << std::endl;
@@ -81,47 +80,42 @@ void save(
 
     int files_saved = 0;
     int files_skipped = 0;
+    bool any_failure = false;
 
     // Iterate through all timestamps with data
     for (auto const & [time, entity_id, line]: line_data->flattened_data()) {
 
         // Generate filename with zero-padded frame number
         std::string const padded_frame = pad_frame_id(static_cast<int>(time.getValue()), opts.frame_id_padding);
-        std::string const filename = opts.parent_dir + "/" + padded_frame + ".csv";
+        auto const target_path = std::filesystem::path(opts.parent_dir) / (padded_frame + ".csv");
 
         // Check if file exists and handle according to overwrite setting
-        bool const file_exists = std::filesystem::exists(filename);
+        bool const file_exists = std::filesystem::exists(target_path);
         if (file_exists && !opts.overwrite_existing) {
-            std::cout << "Skipping existing file: " << filename << std::endl;
             files_skipped++;
             continue;
         }
 
-        // Log if we're overwriting an existing file
-        if (file_exists && opts.overwrite_existing) {
-            std::cout << "Overwriting existing file: " << filename << std::endl;
-        }
+        bool const ok = atomicWriteFile(target_path, [&](std::ostream & out) {
+            // Write the header if requested
+            if (opts.save_header) {
+                out << opts.header << opts.line_delim;
+            }
 
-        std::ofstream file(filename);
-        if (!file.is_open()) {
-            std::cerr << "Warning: Could not open file " << filename << " for writing" << std::endl;
+            // Write X and Y coordinates in separate columns
+            out << std::fixed << std::setprecision(opts.precision);
+            for (auto const & point: line) {
+                out << point.x << opts.delimiter << point.y << opts.line_delim;
+            }
+            return out.good();
+        });
+
+        if (ok) {
+            files_saved++;
+        } else {
             files_skipped++;
-            continue;
+            any_failure = true;
         }
-
-        // Write the header if requested
-        if (opts.save_header) {
-            file << opts.header << opts.line_delim;
-        }
-
-        // Write X and Y coordinates in separate columns
-        file << std::fixed << std::setprecision(opts.precision);
-        for (auto const & point: line) {
-            file << point.x << opts.delimiter << point.y << opts.line_delim;
-        }
-
-        file.close();
-        files_saved++;
     }
 
     std::cout << "Multi-file CSV save complete: " << files_saved << " files saved";
@@ -129,6 +123,8 @@ void save(
         std::cout << ", " << files_skipped << " timestamps skipped (no lines or file errors)";
     }
     std::cout << std::endl;
+
+    return !any_failure;
 }
 
 std::vector<float> parse_string_to_float_vector(std::string const & str, std::string const & delimiter) {
@@ -171,7 +167,7 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOption
     }
 
     // Use larger buffer for better I/O performance
-    constexpr size_t buffer_size = static_cast<const size_t>(1024 * 1024);// 1MB buffer
+    constexpr auto buffer_size = static_cast<size_t const>(1024 * 1024);// 1MB buffer
     std::vector<char> buffer(buffer_size);
     file.rdbuf()->pubsetbuf(buffer.data(), static_cast<std::streamsize>(buffer_size));
 

@@ -133,6 +133,7 @@ add_executable(test_data_manager
         IO/formats/CSV/digitalintervals/MultiColumnBinaryCSV.test.cpp
         IO/formats/CSV/points/point_csv_integration.test.cpp
         IO/formats/CSV/points/point_csv_unit.test.cpp
+        IO/formats/CSV/lines/line_csv_unit.test.cpp
         IO/formats/CSV/masks/mask_csv_rle.test.cpp
         IO/formats/Binary/analog/analog_binary_integration.test.cpp
         IO/formats/Binary/analog/analog_binary_unit.test.cpp

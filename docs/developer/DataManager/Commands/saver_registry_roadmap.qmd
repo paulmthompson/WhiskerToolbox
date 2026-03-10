@@ -205,33 +205,43 @@ round-trip fuzz tests.
 
 ### Tasks
 
-- [ ] **Return type** — Update both `save(LineData const*, CSVSingleFileLineSaverOptions)` and
-  `save(LineData const*, CSVMultiFileLineSaverOptions)` to return `LoadResult`.
+- [x] **Return type** — Updated both `save(LineData const*, CSVSingleFileLineSaverOptions const&)`
+  and `save(LineData const*, CSVMultiFileLineSaverOptions const&)` to return `bool`
+  (success/failure). The `CSVLoader::saveLineDataCSV()` wrapper converts this to
+  `LoadResult` for the registry interface.
 
-- [ ] **Atomic writes** — Use `atomicWriteFile()` for single-file saver. For multi-file saver,
-  atomic write is per-file (each frame file is written atomically).
+- [x] **Atomic writes** — Single-file saver uses `atomicWriteFile()` for the output file.
+  Multi-file saver uses `atomicWriteFile()` per frame file (each frame file is written
+  atomically).
 
 - [x] **Register in CSVLoader** — `CSVLoader::getSaverInfo()` includes an entry for
   `IODataType::Line` with `extractParameterSchema<CSVSingleFileLineSaverOptions>()`.
   (Multi-file variant registration deferred — single-file covers the common case.)
 
-- [ ] **`ParameterUIHints`** — For both option structs.
+- [x] **`ParameterUIHints`** — Added `ParameterUIHints<CSVSingleFileLineSaverOptions>` with
+  tooltips for delimiter, line_delim, and save_header fields. Added
+  `ParameterUIHints<CSVMultiFileLineSaverOptions>` with tooltips for delimiter and
+  save_header fields.
 
-- [ ] **Round-trip fuzz test (single-file)** —
+- [x] **Round-trip fuzz test (single-file)** —
   `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_single_roundtrip.cpp`:
-  1. Generate `LineData` with fuzzed line lengths (1–100 points), fuzzed coordinates,
-     fuzzed frame indices.
+  1. Generate `LineData` with fuzzed line lengths (1–20 points), fuzzed coordinates
+     (±1e4), fuzzed frame indices (0–10000).
   2. Save with `CSVSingleFileLineSaverOptions` → load with `CSVSingleFileLineLoaderOptions`.
   3. Compare: same frame count, same entity count per frame, same point coordinates within
-     format precision.
+     format precision (tolerance 0.01).
 
-- [ ] **Round-trip fuzz test (multi-file)** —
+- [x] **Round-trip fuzz test (multi-file)** —
   `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_multi_roundtrip.cpp`:
-  1. Generate `LineData` with fuzzed content.
+  1. Generate `LineData` with fuzzed content (one line per unique frame, matching
+     multi-file saver semantics).
   2. Save with `CSVMultiFileLineSaverOptions` → load with `CSVMultiFileLineLoaderOptions`.
   3. Compare as above.
 
-- [ ] **Unit tests** — Deterministic round-trips for both variants.
+- [x] **Unit tests** — Deterministic round-trips for both variants added to
+  `tests/DataManager/IO/formats/CSV/lines/line_csv_unit.test.cpp`. Single-file sections:
+  single point line, multiple points, multiple frames with multiple lines, empty LineData,
+  negative coordinates. Multi-file sections: single frame, multiple frames, no-header mode.
 
 **Note:** As part of this step, `Line_Data_CSV.hpp`/`.cpp` were migrated from their legacy
 location (`src/DataManager/Lines/IO/CSV/`) to the format-centric location
@@ -242,15 +252,18 @@ updated accordingly.
 
 | File | Action |
 |------|--------|
-| `src/DataManager/IO/formats/CSV/lines/Line_Data_CSV.hpp` | **Migrated + Modified** — moved from `Lines/IO/CSV/`, return `LoadResult` |
+| `src/DataManager/IO/formats/CSV/lines/Line_Data_CSV.hpp` | **Migrated + Modified** — moved from `Lines/IO/CSV/`, return `bool`, `ParameterUIHints` |
 | `src/DataManager/IO/formats/CSV/lines/Line_Data_CSV.cpp` | **Migrated + Modified** — moved from `Lines/IO/CSV/`, atomic write, error returns |
-| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entries, updated include path |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entries, updated include path, `saveLineDataCSV()` checks `bool` return |
 | `src/DataManager/IO/CMakeLists.txt` | **Modify** — added Line_Data_CSV sources |
 | `src/DataManager/Lines/CMakeLists.txt` | **Modify** — removed Line_Data_CSV sources |
 | `src/DataManager/Lines/IO/JSON/Line_Data_JSON.cpp` | **Modify** — updated include path |
 | `tests/DataManager/IO/line_data_csv.test.cpp` | **Modify** — updated include path |
-| `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_single_roundtrip.cpp` | **Create** |
-| `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_multi_roundtrip.cpp` | **Create** |
+| `tests/DataManager/IO/formats/CSV/lines/line_csv_unit.test.cpp` | **Create** — deterministic round-trip tests |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_single_roundtrip.cpp` | **Create** — single-file round-trip fuzz test |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_multi_roundtrip.cpp` | **Create** — multi-file round-trip fuzz test |
+| `tests/fuzz/unit/DataManager/IO/CMakeLists.txt` | **Modify** — added fuzz test targets |
+| `tests/DataManager/CMakeLists.txt` | **Modify** — added line_csv_unit.test.cpp |
 
 ---
 
@@ -649,7 +662,7 @@ the saver's `precision` setting:
 |------|-------------|--------|------------------|
 | 3.1.1 | SaverRegistry Core Infrastructure | **Complete** | N/A |
 | 3.1.2 | CSV PointData Saver | **Complete** | Yes |
-| 3.1.3 | CSV LineData Saver (Single + Multi) | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes (×2) |
+| 3.1.3 | CSV LineData Saver (Single + Multi) | **Complete** | Yes (×2) |
 | 3.1.4 | CSV AnalogTimeSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
 | 3.1.5 | CSV DigitalEventSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
 | 3.1.6 | CSV DigitalIntervalSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |

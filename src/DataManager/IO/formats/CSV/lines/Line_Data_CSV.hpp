@@ -3,6 +3,7 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/LoaderOptionsConcepts.hpp"
 
@@ -155,8 +156,20 @@ static_assert(WhiskerToolbox::ValidLoaderOptions<CSVSingleFileLineLoaderOptions>
 
 void save_line_as_csv(Line2D const & line, std::string const & filename, int point_precision = 2);
 
-void save(LineData const * line_data,
-          CSVSingleFileLineSaverOptions & opts);
+/**
+ * @brief Save LineData to a single CSV file.
+ *
+ * Uses atomic writes: data is written to a temporary file and then
+ * renamed over the target to prevent corruption on crash.
+ *
+ * @param line_data Non-null pointer to the LineData to save.
+ * @param opts      Saver options (directory, filename, delimiters, header, precision).
+ * @return true on success, false on I/O error.
+ *
+ * @pre line_data must not be null.
+ */
+bool save(LineData const * line_data,
+          CSVSingleFileLineSaverOptions const & opts);
 
 /**
  * @brief Save LineData to multiple CSV files, one per timestamp
@@ -168,8 +181,22 @@ void save(LineData const * line_data,
  * @param line_data The LineData object to save
  * @param opts Options controlling the save behavior
  */
-void save(LineData const * line_data,
-          CSVMultiFileLineSaverOptions & opts);
+/**
+ * @brief Save LineData to multiple CSV files, one per timestamp.
+ *
+ * Creates one CSV file per timestamp containing X and Y coordinates in separate columns.
+ * Only saves the first line (index 0) at each timestamp.
+ * Filenames are zero-padded frame numbers with .csv extension.
+ * Each per-frame file is written atomically.
+ *
+ * @param line_data Non-null pointer to the LineData to save.
+ * @param opts      Options controlling the save behavior.
+ * @return true on success, false if any file write failed.
+ *
+ * @pre line_data must not be null.
+ */
+bool save(LineData const * line_data,
+          CSVMultiFileLineSaverOptions const & opts);
 
 /**
  * @brief Load LineData from multiple CSV files, one per timestamp
@@ -201,5 +228,65 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load_line_csv(std::string const & 
 
 Line2D load_line_from_csv(std::string const & filename);
 
+namespace WhiskerToolbox::Transforms::V2 {
+
+template<>
+struct ParameterUIHints<CSVSingleFileLineSaverOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filename")) {
+            f->tooltip = "Output filename (combined with parent_dir)";
+        }
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory in which to create the output file";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Delimiter between coordinate values within X/Y lists";
+        }
+        if (auto * f = schema.field("save_header")) {
+            f->tooltip = "Whether to write a header row as the first line";
+        }
+        if (auto * f = schema.field("header")) {
+            f->tooltip = "Header text to write when save_header is true";
+        }
+        if (auto * f = schema.field("precision")) {
+            f->tooltip = "Number of decimal places for floating-point coordinates";
+            f->min_value = 0.0;
+            f->max_value = 15.0;
+        }
+    }
+};
+
+template<>
+struct ParameterUIHints<CSVMultiFileLineSaverOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory where per-frame CSV files will be saved";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Delimiter between X and Y columns";
+        }
+        if (auto * f = schema.field("save_header")) {
+            f->tooltip = "Whether to include a header row in each CSV file";
+        }
+        if (auto * f = schema.field("header")) {
+            f->tooltip = "Header text for each file when save_header is true";
+        }
+        if (auto * f = schema.field("precision")) {
+            f->tooltip = "Number of decimal places for floating-point coordinates";
+            f->min_value = 0.0;
+            f->max_value = 15.0;
+        }
+        if (auto * f = schema.field("frame_id_padding")) {
+            f->tooltip = "Number of digits for zero-padding frame numbers in filenames";
+            f->min_value = 1.0;
+            f->max_value = 10.0;
+        }
+        if (auto * f = schema.field("overwrite_existing")) {
+            f->tooltip = "If true, overwrite existing files; otherwise skip them";
+        }
+    }
+};
+
+}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// LINE_DATA_LOADER_HPP

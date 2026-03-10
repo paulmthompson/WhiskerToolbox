@@ -262,7 +262,10 @@ LoadResult CSVLoader::saveLineDataCSV(std::string const & filepath,
             if (config.contains("header")) save_opts.header = config["header"];
             if (config.contains("precision")) save_opts.precision = config["precision"];
 
-            ::save(line_data, save_opts);
+            bool const ok = ::save(line_data, save_opts);
+            if (!ok) {
+                return LoadResult("CSV line save failed: I/O error writing file");
+            }
 
         } else if (save_type == "multi") {
             CSVMultiFileLineSaverOptions save_opts;
@@ -275,7 +278,10 @@ LoadResult CSVLoader::saveLineDataCSV(std::string const & filepath,
             if (config.contains("frame_id_padding")) save_opts.frame_id_padding = config["frame_id_padding"];
             if (config.contains("overwrite_existing")) save_opts.overwrite_existing = config["overwrite_existing"];
 
-            ::save(line_data, save_opts);
+            bool const ok = ::save(line_data, save_opts);
+            if (!ok) {
+                return LoadResult("CSV multi-file line save failed: I/O error writing files");
+            }
 
         } else {
             return LoadResult("Unsupported CSV save_type: " + save_type);
