@@ -266,6 +266,18 @@ target_link_libraries(WhiskerToolbox PRIVATE Python_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ZoneManager)
 target_link_libraries(WhiskerToolbox PRIVATE StateManagement)
 
+# Force whole-archive linking for MediaData to ensure static media type/loader registration
+# (VideoDataRegistration.cpp, ImageDataRegistration.cpp etc. have file-scope RAII objects
+# that register into MediaDataFactory's singleton; without --whole-archive the linker strips them)
+if(APPLE)
+    target_link_libraries(WhiskerToolbox PRIVATE -Wl,-force_load,$<TARGET_FILE:MediaData>)
+elseif(MSVC)
+    target_link_options(WhiskerToolbox PRIVATE /WHOLEARCHIVE:MediaData)
+    target_link_libraries(WhiskerToolbox PRIVATE MediaData)
+else()
+    target_link_libraries(WhiskerToolbox PRIVATE -Wl,--whole-archive MediaData -Wl,--no-whole-archive)
+endif()
+
 # Force whole-archive linking for DeepLearning to ensure static model registration runs
 # (NeuroSAMModel self-registers via DL_REGISTER_MODEL macro, but linker would strip it
 # since there are no direct symbol references)
