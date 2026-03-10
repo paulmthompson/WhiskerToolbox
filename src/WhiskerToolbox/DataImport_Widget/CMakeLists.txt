@@ -137,17 +137,7 @@ set_target_properties(DataImport_Widget PROPERTIES
 )
 
 # Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataImport_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataImport_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DataImport_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataImport_Widget)
 
 add_library(WhiskerToolbox::DataImport_Widget ALIAS DataImport_Widget)
 enable_whiskertoolbox_shared_pch(DataImport_Widget)
