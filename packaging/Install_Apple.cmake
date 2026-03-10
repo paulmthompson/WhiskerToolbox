@@ -1,3 +1,7 @@
+install(TARGETS WhiskerToolbox
+        BUNDLE DESTINATION .
+)
+
 set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
 
 # Generate a deployment script to be executed at install time
