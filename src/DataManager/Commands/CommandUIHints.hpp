@@ -10,6 +10,7 @@
 #include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
 #include "MoveByTimeRange.hpp"
+#include "SaveData.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
@@ -80,6 +81,25 @@ struct ParameterUIHints<commands::ForEachKeyParams> {
         }
         if (auto * f = schema.field("commands")) {
             f->tooltip = "Sub-commands executed once per item with ${variable} substitution";
+            f->is_advanced = true;
+        }
+    }
+};
+
+template<>
+struct ParameterUIHints<commands::SaveDataParams> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("data_key")) {
+            f->tooltip = "Key of the data object in DataManager to save";
+        }
+        if (auto * f = schema.field("format")) {
+            f->tooltip = "Output format (e.g. \"csv\", \"capnproto\", \"opencv\")";
+        }
+        if (auto * f = schema.field("path")) {
+            f->tooltip = "Output file or directory path";
+        }
+        if (auto * f = schema.field("format_options")) {
+            f->tooltip = "Format-specific options passed to the saver (optional)";
             f->is_advanced = true;
         }
     }

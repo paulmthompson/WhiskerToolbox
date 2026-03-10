@@ -569,42 +569,58 @@ registered at the time.
 
 ### Tasks
 
-- [ ] **`SaveDataParams` struct** — reflect-cpp serializable:
+- [x] **`SaveDataParams` struct** — reflect-cpp serializable:
   ```cpp
   struct SaveDataParams {
-      std::string data_key;            // Key in DataManager
-      std::string format;              // e.g., "csv", "capnproto", "opencv"
-      std::string path;                // Output file/directory path
-      rfl::Generic format_options;     // Format-specific options (optional)
+      std::string data_key;                          // Key in DataManager
+      std::string format;                            // e.g., "csv", "capnproto", "opencv"
+      std::string path;                              // Output file/directory path
+      std::optional<rfl::Generic> format_options;    // Format-specific options (optional)
   };
   ```
 
-- [ ] **`SaveData` command class** — `src/DataManager/Commands/SaveData/`:
-  1. Look up data object by `data_key` in `DataManager`.
-  2. Determine `IODataType` from the data variant.
-  3. Dispatch through `LoaderRegistry::trySave()` with format, type, path, and config.
-  4. Return `CommandResult` with success/error.
-  5. Not undoable (can't un-save a file).
+- [x] **`SaveData` command class** — `src/DataManager/Commands/SaveData.hpp` / `.cpp`:
+  1. Look up data object by `data_key` in `DataManager` via `getType()` and
+     `getDataVariant()`.
+  2. Convert `DM_DataType` to `IODataType` via `toIODataType()`.
+  3. Extract `void const *` from the variant via `std::visit`.
+  4. Convert optional `format_options` from `rfl::Generic` to `nlohmann::json`.
+  5. Dispatch through `LoaderRegistry::getInstance().trySave()`.
+  6. Return `CommandResult` with success/error.
+  7. Not undoable (can't un-save a file).
 
-- [ ] **Register in factory** — Add `"SaveData"` branch to `createCommand()` and entry in
-  `getAvailableCommands()`.
+- [x] **Register in factory** — Added `"SaveData"` branch to `createCommand()`,
+  `isKnownCommandName()`, and `getAvailableCommands()` with `category = "persistence"`.
 
-- [ ] **`ParameterUIHints<SaveDataParams>`** — Tooltips explaining each field.
+- [x] **`ParameterUIHints<SaveDataParams>`** — Tooltips for data_key, format, path,
+  and format_options fields. format_options marked as `is_advanced`.
 
-- [ ] **Unit tests:**
-  - Save a known `PointData` via `SaveData` command, verify file created.
-  - Save with unknown `data_key` → error.
-  - Save with unsupported format → error.
-  - Save in a command sequence (e.g., move + save).
+- [x] **Unit tests** — 11 test cases in `src/DataManager/Commands/SaveData.test.cpp`:
+  - Factory: creation from valid params, with format_options, invalid params,
+    `isKnownCommandName`.
+  - Execution: CSV save creates file, round-trip save→load verifies data integrity,
+    unknown `data_key` → error, unsupported format → error.
+  - Serialization: `toJson()` round-trip.
+  - Integration: factory-based command sequence, `getCommandInfo` metadata.
 
-### Files Created
+- [x] **Developer documentation** — Created `docs/developer/DataManager/Commands/save_data.qmd`,
+  added to `_quarto.yml` navigation.
+
+### Files Created/Modified
 
 | File | Action |
 |------|--------|
-| `src/DataManager/Commands/SaveData/SaveData.hpp` | **Create** |
-| `src/DataManager/Commands/SaveData/SaveData.cpp` | **Create** |
-| `src/DataManager/Commands/CommandFactory.cpp` | **Modify** — add factory branch |
-| `tests/DataManager/Commands/test_save_data.cpp` | **Create** |
+| `src/DataManager/Commands/SaveData.hpp` | **Create** — `SaveDataParams` struct, `SaveData` class |
+| `src/DataManager/Commands/SaveData.cpp` | **Create** — implementation |
+| `src/DataManager/Commands/SaveData.test.cpp` | **Create** — 11 unit tests |
+| `src/DataManager/Commands/CommandFactory.cpp` | **Modify** — add factory branch, introspection entry |
+| `src/DataManager/Commands/CommandUIHints.hpp` | **Modify** — add `ParameterUIHints<SaveDataParams>` |
+| `src/DataManager/Commands/CommandInfo.test.cpp` | **Modify** — update expected command count |
+| `src/DataManager/CMakeLists.txt` | **Modify** — add SaveData source files |
+| `tests/DataManager/CMakeLists.txt` | **Modify** — add SaveData test source |
+| `docs/developer/DataManager/Commands/save_data.qmd` | **Create** — developer documentation |
+| `docs/developer/DataManager/Commands/commands.qmd` | **Modify** — cross-reference to SaveData |
+| `docs/_quarto.yml` | **Modify** — add save_data.qmd to navigation |
 
 ---
 
@@ -738,7 +754,7 @@ the saver's `precision` setting:
 | 3.1.7 | CSV MaskData (RLE) Saver | **Complete** | Yes |
 | 3.1.8 | CapnProto LineData Saver | **Complete** | Yes |
 | 3.1.9 | OpenCV MaskData (Image) Saver | **Complete** | No (lossy format) |
-| 3.2 | SaveData Command | Not Started | N/A |
+| 3.2 | SaveData Command | **Complete** | N/A |
 | 3.3 | LoadData Command | Not Started | N/A |
 
 ## See Also

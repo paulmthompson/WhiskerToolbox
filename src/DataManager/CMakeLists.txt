@@ -53,6 +53,8 @@ set(DATAMANAGER_SOURCES
         Commands/AddInterval.cpp
         Commands/ForEachKey.hpp
         Commands/ForEachKey.cpp
+        Commands/SaveData.hpp
+        Commands/SaveData.cpp
         Commands/Validation.hpp
         Commands/Validation.cpp
 

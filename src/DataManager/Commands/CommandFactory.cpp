@@ -11,6 +11,7 @@
 #include "ForEachKey.hpp"
 #include "ICommand.hpp"
 #include "MoveByTimeRange.hpp"
+#include "SaveData.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
@@ -22,7 +23,8 @@ namespace commands {
 
 bool isKnownCommandName(std::string const & name) {
     return name == "MoveByTimeRange" || name == "CopyByTimeRange" ||
-           name == "AddInterval" || name == "ForEachKey";
+           name == "AddInterval" || name == "ForEachKey" ||
+           name == "SaveData";
 }
 
 std::unique_ptr<ICommand> createCommand(
@@ -53,6 +55,12 @@ std::unique_ptr<ICommand> createCommand(
         auto p = rfl::json::read<ForEachKeyParams>(json);
         if (!p) return nullptr;
         return std::make_unique<ForEachKey>(std::move(*p));
+    }
+
+    if (name == "SaveData") {
+        auto p = rfl::json::read<SaveDataParams>(json);
+        if (!p) return nullptr;
+        return std::make_unique<SaveData>(std::move(*p));
     }
 
     return nullptr;
@@ -91,6 +99,14 @@ std::vector<CommandInfo> getAvailableCommands() {
                     .supports_undo = false,
                     .supported_data_types = {},
                     .parameter_schema = extractParameterSchema<ForEachKeyParams>(),
+            },
+            CommandInfo{
+                    .name = "SaveData",
+                    .description = "Save a data object from DataManager to disk via the LoaderRegistry",
+                    .category = "persistence",
+                    .supports_undo = false,
+                    .supported_data_types = {"PointData", "LineData", "MaskData", "AnalogTimeSeries", "DigitalEventSeries", "DigitalIntervalSeries"},
+                    .parameter_schema = extractParameterSchema<SaveDataParams>(),
             },
     };
 }

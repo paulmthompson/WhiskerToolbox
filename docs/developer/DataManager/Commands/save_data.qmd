@@ -1,0 +1,122 @@
+---
+title: "SaveData Command"
+description: "Persistence command that saves a DataManager object to disk via the LoaderRegistry"
+---
+
+## Overview
+
+`SaveData` is a non-undoable command that saves a data object from `DataManager` to disk.
+It dispatches through `LoaderRegistry::trySave()`, enabling save operations to participate
+in command sequences and triage pipelines.
+
+**Source files:**
+
+- `src/DataManager/Commands/SaveData.hpp` / `.cpp`
+- `src/DataManager/Commands/SaveData.test.cpp`
+
+All code lives in the `commands` namespace with no Qt dependency.
+
+## Parameters
+
+```cpp
+struct SaveDataParams {
+    std::string data_key;                          // Key in DataManager
+    std::string format;                            // e.g., "csv", "capnproto", "opencv"
+    std::string path;                              // Output file/directory path
+    std::optional<rfl::Generic> format_options;    // Format-specific options (optional)
+};
+```
+
+| Field | Description |
+|-------|-------------|
+| `data_key` | Key of the data object in `DataManager` to save |
+| `format` | Output format identifier matching a registered `IFormatLoader` (e.g., `"csv"`, `"capnproto"`, `"opencv"`) |
+| `path` | Full output file path (or directory, depending on saver) |
+| `format_options` | Optional JSON object with format-specific saver options (delimiter, header, etc.) |
+
+## Supported Types
+
+Any data type registered in the `LoaderRegistry` saver infrastructure:
+
+- `PointData` (CSV)
+- `LineData` (CSV single-file, CSV multi-file, CapnProto)
+- `MaskData` (CSV RLE, OpenCV image)
+- `AnalogTimeSeries` (CSV)
+- `DigitalEventSeries` (CSV)
+- `DigitalIntervalSeries` (CSV)
+
+## Undo
+
+Not undoable (`isUndoable()` returns `false`). File writes cannot be reversed.
+
+## Execution Flow
+
+1. Look up the data type via `DataManager::getType(data_key)` → `DM_DataType`.
+2. Convert to `IODataType` via `toIODataType()`.
+3. Extract the raw `void const *` pointer from `DataManager::getDataVariant()`.
+4. Convert `format_options` (if present) from `rfl::Generic` to `nlohmann::json`.
+5. Dispatch through `LoaderRegistry::getInstance().trySave()`.
+6. Return `CommandResult::ok()` on success, `CommandResult::error()` on failure.
+
+## Error Cases
+
+| Condition | Error message |
+|-----------|---------------|
+| `data_key` not found | `"Data key '<key>' not found in DataManager"` |
+| Data variant is null | `"Data pointer for key '<key>' is null"` |
+| `format_options` fails to parse | `"Failed to parse format_options as JSON"` |
+| No registered saver for format/type | Error from `LoaderRegistry::trySave()` |
+
+## JSON Example
+
+```json
+{
+    "command_name": "SaveData",
+    "parameters": {
+        "data_key": "whisker_1",
+        "format": "csv",
+        "path": "/data/output/whisker_1.csv",
+        "format_options": {
+            "delimiter": ",",
+            "save_header": true
+        }
+    }
+}
+```
+
+## Pipeline Example
+
+Save data as the final step in a triage pipeline using `ForEachKey`:
+
+```json
+{
+    "commands": [
+        {
+            "command_name": "ForEachKey",
+            "parameters": {
+                "items": ["whisker_1", "whisker_2"],
+                "variable": "key",
+                "commands": [
+                    {
+                        "command_name": "SaveData",
+                        "parameters": {
+                            "data_key": "${key}",
+                            "format": "csv",
+                            "path": "/data/output/${key}.csv"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
+```
+
+## Tests
+
+11 test cases in `SaveData.test.cpp` covering:
+
+- **Factory tests:** creation from valid params, with format_options, invalid params, `isKnownCommandName`
+- **Execution tests:** successful CSV save, round-trip verification, unknown key error, unsupported format error
+- **Serialization:** `toJson()` round-trip
+- **Integration:** factory-based command sequence, `getCommandInfo` metadata
