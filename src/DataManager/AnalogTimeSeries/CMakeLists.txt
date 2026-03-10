@@ -41,7 +41,7 @@ add_tests_to_global(analog_test_sources
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(AnalogTimeSeries PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++") # why?
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

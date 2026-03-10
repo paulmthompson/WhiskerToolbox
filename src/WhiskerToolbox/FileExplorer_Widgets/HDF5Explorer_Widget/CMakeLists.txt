@@ -76,4 +76,4 @@ if (MSVC)
 endif()
 
 add_library(WhiskerToolbox::HDF5Explorer_Widget ALIAS HDF5Explorer_Widget)
-enable_whiskertoolbox_pch(HDF5Explorer_Widget)
+enable_whiskertoolbox_shared_pch(HDF5Explorer_Widget)

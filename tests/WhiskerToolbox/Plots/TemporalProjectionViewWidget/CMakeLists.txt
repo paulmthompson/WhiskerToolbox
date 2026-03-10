@@ -61,4 +61,16 @@ else()
     )
 endif()
 
-enable_whiskertoolbox_test_pch(test_temporal_projection_view_widget)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_temporal_projection_view_widget PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_temporal_projection_view_widget PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_temporal_projection_view_widget PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_temporal_projection_view_widget)

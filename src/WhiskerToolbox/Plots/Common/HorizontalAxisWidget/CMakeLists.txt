@@ -53,4 +53,4 @@ set_target_properties(HorizontalAxisWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(HorizontalAxisWidget)
+enable_whiskertoolbox_shared_pch(HorizontalAxisWidget)

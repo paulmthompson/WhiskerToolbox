@@ -54,4 +54,4 @@ set_target_properties(Terminal_Widget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(Terminal_Widget)
+enable_whiskertoolbox_shared_pch(Terminal_Widget)

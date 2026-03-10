@@ -39,4 +39,4 @@ target_link_libraries(TriageSession PUBLIC DataManager)
 
 # Add alias for consistent naming
 add_library(WhiskerToolbox::TriageSession ALIAS TriageSession)
-enable_whiskertoolbox_pch(TriageSession)
+enable_whiskertoolbox_shared_pch(TriageSession)

@@ -45,4 +45,4 @@ endif()
 set_target_properties(ColormapControls PROPERTIES
     AUTOMOC ON
 )
-enable_whiskertoolbox_pch(ColormapControls)
+enable_whiskertoolbox_shared_pch(ColormapControls)

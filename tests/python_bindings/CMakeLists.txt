@@ -27,7 +27,19 @@ catch_discover_tests(test_python_engine
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
-enable_whiskertoolbox_test_pch(test_python_engine)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_python_engine PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_python_engine PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_python_engine PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_python_engine)
 
 # --- Phase 2: binding round-trip tests ---
 add_executable(test_python_bindings
@@ -43,7 +55,19 @@ catch_discover_tests(test_python_bindings
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
-enable_whiskertoolbox_test_pch(test_python_bindings)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_python_bindings PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_python_bindings PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_python_bindings PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_python_bindings)
 
 # --- Phase 3: PythonBridge integration tests ---
 add_executable(test_python_bridge
@@ -59,7 +83,19 @@ catch_discover_tests(test_python_bridge
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
-enable_whiskertoolbox_test_pch(test_python_bridge)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_python_bridge PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_python_bridge PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_python_bridge PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_python_bridge)
 
 # --- Phase 5: Script management & environment tests ---
 add_executable(test_python_phase5
@@ -75,7 +111,19 @@ catch_discover_tests(test_python_phase5
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
-enable_whiskertoolbox_test_pch(test_python_phase5)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_python_phase5 PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_python_phase5 PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_python_phase5 PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_python_phase5)
 
 # --- Phase 6: Virtual environment support tests ---
 add_executable(test_python_phase6
@@ -91,4 +139,16 @@ catch_discover_tests(test_python_phase6
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
-enable_whiskertoolbox_test_pch(test_python_phase6)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_python_phase6 PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_python_phase6 PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_python_phase6 PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_python_phase6)

@@ -161,4 +161,4 @@ set_target_properties(DataTransform_Widget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(DataTransform_Widget)
+enable_whiskertoolbox_shared_pch(DataTransform_Widget)

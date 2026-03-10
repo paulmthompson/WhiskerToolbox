@@ -56,4 +56,4 @@ set_target_properties(ZoneManager PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(ZoneManager)
+enable_whiskertoolbox_shared_pch(ZoneManager)

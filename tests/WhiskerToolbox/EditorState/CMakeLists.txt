@@ -46,7 +46,19 @@ else()
                                            ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-enable_whiskertoolbox_test_pch(test_editor_state)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_editor_state PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_editor_state PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_editor_state PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_editor_state)
 
 # EditorState integration tests - tests cross-widget communication patterns
 # These depend on concrete widget state implementations (MediaWidgetState, DataManagerWidgetState, DataTransformWidgetState)
@@ -89,4 +101,16 @@ else()
     )
 endif()
 
-enable_whiskertoolbox_test_pch(test_editor_state_integration)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_editor_state_integration PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_editor_state_integration PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_editor_state_integration PRIVATE ${MSVC_WARNINGS})
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_editor_state_integration)

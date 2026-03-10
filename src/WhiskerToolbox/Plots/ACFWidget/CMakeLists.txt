@@ -70,4 +70,4 @@ set_target_properties(ACFWidget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(ACFWidget)
+enable_whiskertoolbox_shared_pch(ACFWidget)

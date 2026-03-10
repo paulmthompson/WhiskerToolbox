@@ -38,4 +38,19 @@ target_include_directories(EditorState
 
 # Add alias for consistent naming
 add_library(WhiskerToolbox::EditorState ALIAS EditorState)
-enable_whiskertoolbox_pch(EditorState)
+
+# Apply the same compiler flags as the main project
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(EditorState PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(EditorState PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(EditorState PRIVATE ${MSVC_WARNINGS})
+endif()
+
+
+enable_whiskertoolbox_shared_pch(EditorState)

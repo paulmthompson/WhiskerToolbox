@@ -50,4 +50,4 @@ set_target_properties(LineStyleControls PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
-enable_whiskertoolbox_pch(LineStyleControls)
+enable_whiskertoolbox_shared_pch(LineStyleControls)

@@ -85,4 +85,4 @@ else()
     )
 endif()
 
-enable_whiskertoolbox_test_pch(test_plottingopengl)
+enable_whiskertoolbox_shared_test_pch(test_plottingopengl)

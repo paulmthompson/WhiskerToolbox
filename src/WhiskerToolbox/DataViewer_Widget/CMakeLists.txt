@@ -114,4 +114,4 @@ set_target_properties(DataViewer_Widget PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 ) 
-enable_whiskertoolbox_pch(DataViewer_Widget)
+enable_whiskertoolbox_shared_pch(DataViewer_Widget)

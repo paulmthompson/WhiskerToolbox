@@ -21,5 +21,18 @@ target_include_directories(SpatialIndex PUBLIC
     $<INSTALL_INTERFACE:include/SpatialIndex>
 )
 
+# Apply the same compiler flags as the main project
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(SpatialIndex PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(SpatialIndex PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(SpatialIndex PRIVATE ${MSVC_WARNINGS})
+endif()
+
 target_link_libraries(SpatialIndex PUBLIC NEURALYZER_GEOMETRY)
-enable_whiskertoolbox_pch(SpatialIndex)
+enable_whiskertoolbox_shared_pch(SpatialIndex)
