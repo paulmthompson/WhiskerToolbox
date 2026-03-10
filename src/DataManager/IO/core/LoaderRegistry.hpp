@@ -3,6 +3,7 @@
 
 #include "DataLoader.hpp"
 #include "IOTypes.hpp"
+#include "SaverInfo.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -19,25 +20,25 @@
  * DLC files with multiple bodyparts).
  */
 struct BatchLoadResult {
-    std::vector<LoadResult> results;  ///< One LoadResult per loaded data object
-    bool success = false;             ///< True if at least one object was loaded successfully
-    std::string error_message;        ///< Error message if loading failed
-    
+    std::vector<LoadResult> results;///< One LoadResult per loaded data object
+    bool success = false;           ///< True if at least one object was loaded successfully
+    std::string error_message;      ///< Error message if loading failed
+
     /** @brief Default constructor */
     BatchLoadResult() = default;
-    
+
     /**
      * @brief Create an error result
      * @param msg Error message describing the failure
      * @return BatchLoadResult with success=false and error message set
      */
-    static BatchLoadResult error(std::string const& msg) {
+    static BatchLoadResult error(std::string const & msg) {
         BatchLoadResult batch;
         batch.success = false;
         batch.error_message = msg;
         return batch;
     }
-    
+
     /**
      * @brief Create a successful result from a vector of LoadResults
      * @param results Vector of individual LoadResults (moved)
@@ -49,14 +50,14 @@ struct BatchLoadResult {
         batch.success = !batch.results.empty();
         return batch;
     }
-    
+
     /**
      * @brief Get the number of successfully loaded data objects
      * @return Count of results with success=true
      */
     [[nodiscard]] size_t successCount() const {
         size_t count = 0;
-        for (auto const& r : results) {
+        for (auto const & r: results) {
             if (r.success) {
                 ++count;
             }
@@ -78,7 +79,7 @@ struct BatchLoadResult {
 class IFormatLoader {
 public:
     virtual ~IFormatLoader() = default;
-    
+
     /**
      * @brief Load a single data object from file
      * 
@@ -91,10 +92,10 @@ public:
      * @param config JSON configuration for loading
      * @return LoadResult containing loaded data or error
      */
-    virtual LoadResult load(std::string const& filepath, 
-                           IODataType dataType, 
-                           nlohmann::json const& config) const = 0;
-    
+    virtual LoadResult load(std::string const & filepath,
+                            IODataType dataType,
+                            nlohmann::json const & config) const = 0;
+
     /**
      * @brief Check if this loader supports batch loading for the given format/type
      * 
@@ -106,11 +107,11 @@ public:
      * @param dataType Type of data (e.g., IODataType::Analog)
      * @return true if loadBatch() can return multiple objects for this combination
      */
-    virtual bool supportsBatchLoading([[maybe_unused]] std::string const& format, 
+    virtual bool supportsBatchLoading([[maybe_unused]] std::string const & format,
                                       [[maybe_unused]] IODataType dataType) const {
-        return false;  // Default: no batch support
+        return false;// Default: no batch support
     }
-    
+
     /**
      * @brief Load multiple data objects from a single file
      * 
@@ -126,9 +127,9 @@ public:
      * @param config JSON configuration for loading
      * @return BatchLoadResult containing all loaded data objects
      */
-    virtual BatchLoadResult loadBatch(std::string const& filepath,
+    virtual BatchLoadResult loadBatch(std::string const & filepath,
                                       IODataType dataType,
-                                      nlohmann::json const& config) const {
+                                      nlohmann::json const & config) const {
         // Default implementation: wrap single load in BatchLoadResult
         auto result = load(filepath, dataType, config);
         if (result.success) {
@@ -136,7 +137,7 @@ public:
         }
         return BatchLoadResult::error(result.error_message);
     }
-    
+
     /**
      * @brief Save data to file (optional - not all loaders support saving)
      * 
@@ -146,13 +147,13 @@ public:
      * @param data Pointer to the data object to save
      * @return LoadResult indicating success/failure (data field unused)
      */
-    virtual LoadResult save(std::string const& /*filepath*/,
-                           IODataType /*dataType*/,
-                           nlohmann::json const& /*config*/,
-                           void const* /*data*/) const {
+    virtual LoadResult save(std::string const & /*filepath*/,
+                            IODataType /*dataType*/,
+                            nlohmann::json const & /*config*/,
+                            void const * /*data*/) const {
         return LoadResult("Saving not supported by this loader: " + getLoaderName());
     }
-    
+
     /**
      * @brief Check if this loader supports the given format and data type
      * 
@@ -160,12 +161,23 @@ public:
      * @param dataType Type of data (e.g., IODataType::Line, IODataType::Points)
      * @return true if this loader can handle the format/dataType combination
      */
-    virtual bool supportsFormat(std::string const& format, IODataType dataType) const = 0;
-    
+    virtual bool supportsFormat(std::string const & format, IODataType dataType) const = 0;
+
     /**
      * @brief Get the name of this loader (for logging/debugging)
      */
     virtual std::string getLoaderName() const = 0;
+
+    /**
+     * @brief Return metadata for all save operations this loader supports
+     *
+     * Subclasses that implement save() should override this to advertise
+     * their capabilities with typed parameter schemas.
+     *
+     * @return Vector of SaverInfo (one per supported format/dataType save combination).
+     *         Empty by default.
+     */
+    virtual std::vector<SaverInfo> getSaverInfo() const { return {}; }
 };
 
 /**
@@ -175,20 +187,20 @@ class LoaderRegistry {
 public:
     LoaderRegistry() = default;
     ~LoaderRegistry() = default;
-    
+
     // Non-copyable, non-movable for simplicity
-    LoaderRegistry(LoaderRegistry const&) = delete;
-    LoaderRegistry& operator=(LoaderRegistry const&) = delete;
-    LoaderRegistry(LoaderRegistry&&) = delete;
-    LoaderRegistry& operator=(LoaderRegistry&&) = delete;
-    
+    LoaderRegistry(LoaderRegistry const &) = delete;
+    LoaderRegistry & operator=(LoaderRegistry const &) = delete;
+    LoaderRegistry(LoaderRegistry &&) = delete;
+    LoaderRegistry & operator=(LoaderRegistry &&) = delete;
+
     /**
      * @brief Register a loader plugin
      * 
      * @param loader Unique pointer to the loader implementation
      */
     void registerLoader(std::unique_ptr<IFormatLoader> loader);
-    
+
     /**
      * @brief Try to load data using registered loaders
      * 
@@ -201,11 +213,11 @@ public:
      * @param config Full JSON configuration object
      * @return LoadResult with loaded data or error message
      */
-    LoadResult tryLoad(std::string const& format, 
-                      IODataType dataType,
-                      std::string const& filepath, 
-                      nlohmann::json const& config);
-    
+    LoadResult tryLoad(std::string const & format,
+                       IODataType dataType,
+                       std::string const & filepath,
+                       nlohmann::json const & config);
+
     /**
      * @brief Try to save data using registered loaders
      * 
@@ -219,12 +231,12 @@ public:
      * @param data Pointer to the data object to save
      * @return LoadResult indicating success/failure (data field unused)
      */
-    LoadResult trySave(std::string const& format, 
-                      IODataType dataType,
-                      std::string const& filepath, 
-                      nlohmann::json const& config, 
-                      void const* data);
-    
+    LoadResult trySave(std::string const & format,
+                       IODataType dataType,
+                       std::string const & filepath,
+                       nlohmann::json const & config,
+                       void const * data);
+
     /**
      * @brief Check if any registered loader supports the given format/dataType
      * 
@@ -232,8 +244,8 @@ public:
      * @param dataType Type of data
      * @return true if at least one loader supports this combination
      */
-    bool isFormatSupported(std::string const& format, IODataType dataType) const;
-    
+    bool isFormatSupported(std::string const & format, IODataType dataType) const;
+
     /**
      * @brief Try to load multiple data objects from a single file using batch loading
      * 
@@ -250,11 +262,11 @@ public:
      * @param config Full JSON configuration object
      * @return BatchLoadResult with all loaded data objects or error message
      */
-    BatchLoadResult tryLoadBatch(std::string const& format, 
+    BatchLoadResult tryLoadBatch(std::string const & format,
                                  IODataType dataType,
-                                 std::string const& filepath, 
-                                 nlohmann::json const& config);
-    
+                                 std::string const & filepath,
+                                 nlohmann::json const & config);
+
     /**
      * @brief Check if batch loading is supported for the given format/dataType
      * 
@@ -262,8 +274,8 @@ public:
      * @param dataType Type of data
      * @return true if at least one loader supports batch loading for this combination
      */
-    bool isBatchLoadingSupported(std::string const& format, IODataType dataType) const;
-    
+    bool isBatchLoadingSupported(std::string const & format, IODataType dataType) const;
+
     /**
      * @brief Get list of all supported formats for a data type
      * 
@@ -271,14 +283,27 @@ public:
      * @return Vector of format strings supported for this data type
      */
     std::vector<std::string> getSupportedFormats(IODataType dataType) const;
-    
+
+    /**
+     * @brief Query all registered saver capabilities
+     * @return Vector of SaverInfo from all registered loaders
+     */
+    [[nodiscard]] std::vector<SaverInfo> getSupportedSaveFormats() const;
+
+    /**
+     * @brief Query registered saver capabilities filtered by data type
+     * @param dataType Only return savers that handle this data type
+     * @return Filtered vector of SaverInfo
+     */
+    [[nodiscard]] std::vector<SaverInfo> getSupportedSaveFormats(IODataType dataType) const;
+
     /**
      * @brief Get singleton instance
      */
-    static LoaderRegistry& getInstance();
+    static LoaderRegistry & getInstance();
 
 private:
     std::vector<std::unique_ptr<IFormatLoader>> m_loaders;
 };
 
-#endif // LOADER_REGISTRY_HPP
+#endif// LOADER_REGISTRY_HPP

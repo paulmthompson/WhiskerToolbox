@@ -1,6 +1,8 @@
 #ifndef LOADER_REGISTRATION_HPP
 #define LOADER_REGISTRATION_HPP
 
+class LoaderRegistry;
+
 /**
  * @brief Initialize and register all available loaders
  * 
@@ -19,9 +21,15 @@ void registerAllLoaders();
  */
 void registerInternalLoaders();
 
+/// @overload Register internal loaders into a specific registry (for testing).
+void registerInternalLoaders(LoaderRegistry & registry);
+
 /**
  * @brief Register external loaders (with dependencies)
  */
 void registerExternalLoaders();
 
-#endif // LOADER_REGISTRATION_HPP
+/// @overload Register external loaders into a specific registry (for testing).
+void registerExternalLoaders(LoaderRegistry & registry);
+
+#endif// LOADER_REGISTRATION_HPP

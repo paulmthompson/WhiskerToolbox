@@ -1,0 +1,88 @@
+---
+title: "SaverInfo & AtomicWrite"
+---
+
+## Overview
+
+Step 3.1.1 of the [SaverRegistry roadmap](../Commands/saver_registry_roadmap.qmd)
+introduces two pieces of core infrastructure for uniform data saving:
+
+1. **`SaverInfo`** — a metadata struct describing a registered saver's capabilities.
+2. **`AtomicWrite`** — a utility for crash-safe file writes.
+
+These live in `src/DataManager/IO/core/` alongside the existing `LoaderRegistry`.
+
+## SaverInfo
+
+`SaverInfo` (`src/DataManager/IO/core/SaverInfo.hpp`) describes a single saver
+capability within a format loader:
+
+| Field         | Type              | Description |
+|---------------|-------------------|-------------|
+| `format`      | `std::string`     | Format identifier (e.g., `"csv"`, `"capnproto"`) |
+| `data_type`   | `IODataType`      | The data type this saver handles |
+| `description` | `std::string`     | Human-readable summary |
+| `schema`      | `ParameterSchema` | Compile-time extracted parameter schema |
+
+## IFormatLoader::getSaverInfo()
+
+A new virtual method on `IFormatLoader`:
+
+```cpp
+virtual std::vector<SaverInfo> getSaverInfo() const { return {}; }
+```
+
+Subclasses that implement `save()` should override this method to advertise
+their save capabilities along with typed parameter schemas extracted via
+`extractParameterSchema<OptionStruct>()`.
+
+## LoaderRegistry::getSupportedSaveFormats()
+
+Two query methods on `LoaderRegistry` aggregate saver metadata from all
+registered loaders:
+
+```cpp
+std::vector<SaverInfo> getSupportedSaveFormats() const;
+std::vector<SaverInfo> getSupportedSaveFormats(IODataType type) const;
+```
+
+The first returns all saver capabilities; the second filters by data type.
+
+## AtomicWrite
+
+`atomicWriteFile()` (`src/DataManager/IO/core/AtomicWrite.hpp`) provides
+crash-safe file writing:
+
+```cpp
+bool atomicWriteFile(
+    std::filesystem::path const & target_path,
+    std::function<bool(std::ostream &)> const & write_callback);
+```
+
+**Algorithm:**
+
+1. Create parent directories if they don't exist.
+2. Write to `target_path.tmp` via the callback.
+3. If the callback succeeds and the stream is good, rename `.tmp` → target.
+4. On any failure, remove the `.tmp` file and leave the target untouched.
+
+This ensures that a crash mid-write cannot corrupt an existing file.
+
+## Registration Overloads
+
+`registerInternalLoaders()` and `registerExternalLoaders()` now have overloads
+accepting a `LoaderRegistry &` parameter:
+
+```cpp
+void registerInternalLoaders(LoaderRegistry & registry);
+void registerExternalLoaders(LoaderRegistry & registry);
+```
+
+These enable tests to use a fresh (non-singleton) registry instance.
+
+## Tests
+
+- `tests/DataManager/IO/atomic_write.test.cpp` — 6 test cases covering success,
+  failure, directory creation, overwrite, original preservation, and binary data.
+- `tests/DataManager/IO/saver_registry.test.cpp` — 6 test cases verifying empty
+  registry queries, loaders-without-savers queries, and a stub loader with a saver.

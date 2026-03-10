@@ -5,8 +5,8 @@
 // Format-centric loaders - the unified approach
 // CSVLoader handles: Line, Points, Analog, DigitalEvent, DigitalInterval
 // BinaryFormatLoader handles: Analog, DigitalEvent, DigitalInterval
-#include "formats/CSV/CSVLoader.hpp"
 #include "formats/Binary/BinaryFormatLoader.hpp"
+#include "formats/CSV/CSVLoader.hpp"
 
 // Conditional includes based on compile-time options
 #ifdef ENABLE_CAPNPROTO
@@ -28,22 +28,25 @@
 #include <memory>
 
 void registerAllLoaders() {
-   // std::cout << "LoaderRegistration: Registering all loaders..." << std::endl;
-    
+    // std::cout << "LoaderRegistration: Registering all loaders..." << std::endl;
+
     registerInternalLoaders();
     registerExternalLoaders();
-    
-   // std::cout << "LoaderRegistration: All loaders registered." << std::endl;
+
+    // std::cout << "LoaderRegistration: All loaders registered." << std::endl;
 }
 
 void registerInternalLoaders() {
-    LoaderRegistry& registry = LoaderRegistry::getInstance();
-    
+    registerInternalLoaders(LoaderRegistry::getInstance());
+}
+
+void registerInternalLoaders(LoaderRegistry & registry) {
+
     // =========================================================================
     // Format-centric loaders - the unified architecture
     // Each loader handles one file format for all applicable data types
     // =========================================================================
-    
+
     // CSVLoader handles all CSV-based data types:
     // - IODataType::Line: Single/multi-file CSV whisker data
     // - IODataType::Points: Simple CSV or DLC format (with batch loading for multi-bodypart)
@@ -51,7 +54,7 @@ void registerInternalLoaders() {
     // - IODataType::DigitalEvent: Event timestamps (with batch loading for multi-series)
     // - IODataType::DigitalInterval: Start/end column pairs
     registry.registerLoader(std::make_unique<CSVLoader>());
-    
+
     // BinaryFormatLoader handles all binary-based data types:
     // - IODataType::Analog: Multi-channel binary (int16, float32, etc.) with batch loading
     // - IODataType::DigitalEvent: TTL extraction from binary
@@ -60,9 +63,11 @@ void registerInternalLoaders() {
 }
 
 void registerExternalLoaders() {
+    registerExternalLoaders(LoaderRegistry::getInstance());
+}
 
-    LoaderRegistry& registry = LoaderRegistry::getInstance();
-    
+void registerExternalLoaders(LoaderRegistry & registry) {
+
 #ifdef ENABLE_CAPNPROTO
     // Register CapnProto loader if available
     //std::cout << "LoaderRegistration: Registering CapnProto loader..." << std::endl;
@@ -81,7 +86,7 @@ void registerExternalLoaders() {
 
 #ifdef ENABLE_OPENCV
     // Register OpenCV loader if available
-   // std::cout << "LoaderRegistration: Registering OpenCV loader..." << std::endl;
+    // std::cout << "LoaderRegistration: Registering OpenCV loader..." << std::endl;
     registry.registerLoader(std::make_unique<OpenCVFormatLoader>());
 #else
     std::cout << "LoaderRegistration: OpenCV loader not available (ENABLE_OPENCV not defined)" << std::endl;

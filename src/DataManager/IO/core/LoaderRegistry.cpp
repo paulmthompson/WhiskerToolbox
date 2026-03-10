@@ -9,110 +9,110 @@ void LoaderRegistry::registerLoader(std::unique_ptr<IFormatLoader> loader) {
         std::cerr << "LoaderRegistry: Attempted to register null loader" << std::endl;
         return;
     }
-    
+
     //std::cout << "LoaderRegistry: Registered loader '" << loader->getLoaderName() << "'" << std::endl;
     m_loaders.push_back(std::move(loader));
 }
 
-LoadResult LoaderRegistry::tryLoad(std::string const& format, 
-                                  IODataType dataType,
-                                  std::string const& filepath, 
-                                  nlohmann::json const& config) {
+LoadResult LoaderRegistry::tryLoad(std::string const & format,
+                                   IODataType dataType,
+                                   std::string const & filepath,
+                                   nlohmann::json const & config) {
     // Try each registered loader
-    for (auto const& loader : m_loaders) {
+    for (auto const & loader: m_loaders) {
         if (loader->supportsFormat(format, dataType)) {
-            std::cout << "LoaderRegistry: Trying loader '" << loader->getLoaderName() 
-                     << "' for format '" << format << "'" << std::endl;
-            
+            std::cout << "LoaderRegistry: Trying loader '" << loader->getLoaderName()
+                      << "' for format '" << format << "'" << std::endl;
+
             try {
                 LoadResult result = loader->load(filepath, dataType, config);
                 if (result.success) {
-                    std::cout << "LoaderRegistry: Successfully loaded with '" 
-                             << loader->getLoaderName() << "'" << std::endl;
+                    std::cout << "LoaderRegistry: Successfully loaded with '"
+                              << loader->getLoaderName() << "'" << std::endl;
                     return result;
                 } else {
-                    std::cout << "LoaderRegistry: Loader '" << loader->getLoaderName() 
-                             << "' failed: " << result.error_message << std::endl;
+                    std::cout << "LoaderRegistry: Loader '" << loader->getLoaderName()
+                              << "' failed: " << result.error_message << std::endl;
                 }
-            } catch (std::exception const& e) {
-                std::cout << "LoaderRegistry: Loader '" << loader->getLoaderName() 
-                         << "' threw exception: " << e.what() << std::endl;
+            } catch (std::exception const & e) {
+                std::cout << "LoaderRegistry: Loader '" << loader->getLoaderName()
+                          << "' threw exception: " << e.what() << std::endl;
             } catch (...) {
-                std::cout << "LoaderRegistry: Loader '" << loader->getLoaderName() 
-                         << "' threw unknown exception" << std::endl;
+                std::cout << "LoaderRegistry: Loader '" << loader->getLoaderName()
+                          << "' threw unknown exception" << std::endl;
             }
         }
     }
-    
+
     // No loader could handle this format
     std::ostringstream error_msg;
-    error_msg << "No registered loader supports format '" << format 
+    error_msg << "No registered loader supports format '" << format
               << "' for data type " << static_cast<int>(dataType);
     return LoadResult(error_msg.str());
 }
 
-LoadResult LoaderRegistry::trySave(std::string const& format, 
-                                  IODataType dataType,
-                                  std::string const& filepath, 
-                                  nlohmann::json const& config, 
-                                  void const* data) {
+LoadResult LoaderRegistry::trySave(std::string const & format,
+                                   IODataType dataType,
+                                   std::string const & filepath,
+                                   nlohmann::json const & config,
+                                   void const * data) {
     if (!data) {
         return LoadResult("Data pointer is null");
     }
-    
+
     // Try each registered loader
-    for (auto const& loader : m_loaders) {
+    for (auto const & loader: m_loaders) {
         if (loader->supportsFormat(format, dataType)) {
-            std::cout << "LoaderRegistry: Trying to save with loader '" << loader->getLoaderName() 
-                     << "' for format '" << format << "'" << std::endl;
-            
+            std::cout << "LoaderRegistry: Trying to save with loader '" << loader->getLoaderName()
+                      << "' for format '" << format << "'" << std::endl;
+
             try {
                 LoadResult result = loader->save(filepath, dataType, config, data);
                 if (result.success) {
-                    std::cout << "LoaderRegistry: Successfully saved with '" 
-                             << loader->getLoaderName() << "'" << std::endl;
+                    std::cout << "LoaderRegistry: Successfully saved with '"
+                              << loader->getLoaderName() << "'" << std::endl;
                     return result;
                 } else {
-                    std::cout << "LoaderRegistry: Saver '" << loader->getLoaderName() 
-                             << "' failed: " << result.error_message << std::endl;
+                    std::cout << "LoaderRegistry: Saver '" << loader->getLoaderName()
+                              << "' failed: " << result.error_message << std::endl;
                 }
-            } catch (std::exception const& e) {
-                std::cout << "LoaderRegistry: Saver '" << loader->getLoaderName() 
-                         << "' threw exception: " << e.what() << std::endl;
+            } catch (std::exception const & e) {
+                std::cout << "LoaderRegistry: Saver '" << loader->getLoaderName()
+                          << "' threw exception: " << e.what() << std::endl;
             } catch (...) {
-                std::cout << "LoaderRegistry: Saver '" << loader->getLoaderName() 
-                         << "' threw unknown exception" << std::endl;
+                std::cout << "LoaderRegistry: Saver '" << loader->getLoaderName()
+                          << "' threw unknown exception" << std::endl;
             }
         }
     }
-    
+
     // No loader could handle this format for saving
     std::ostringstream error_msg;
-    error_msg << "No registered loader supports saving format '" << format 
+    error_msg << "No registered loader supports saving format '" << format
               << "' for data type " << static_cast<int>(dataType);
     return LoadResult(error_msg.str());
 }
 
-bool LoaderRegistry::isFormatSupported(std::string const& format, IODataType dataType) const {
+bool LoaderRegistry::isFormatSupported(std::string const & format, IODataType dataType) const {
     return std::any_of(m_loaders.begin(), m_loaders.end(),
-                      [&](auto const& loader) {
-                          return loader->supportsFormat(format, dataType);
-                      });
+                       [&](auto const & loader) {
+                           return loader->supportsFormat(format, dataType);
+                       });
 }
 
-BatchLoadResult LoaderRegistry::tryLoadBatch(std::string const& format, 
+BatchLoadResult LoaderRegistry::tryLoadBatch(std::string const & format,
                                              IODataType dataType,
-                                             std::string const& filepath, 
-                                             nlohmann::json const& config) {
+                                             std::string const & filepath,
+                                             nlohmann::json const & config) {
     // Try each registered loader
-    for (auto const& loader : m_loaders) {
+    for (auto const & loader: m_loaders) {
         if (loader->supportsFormat(format, dataType)) {
-            std::cout << "LoaderRegistry: Trying batch loader '" << loader->getLoaderName() 
-                     << "' for format '" << format << "'" << std::endl;
-            
+            std::cout << "LoaderRegistry: Trying batch loader '" << loader->getLoaderName()
+                      << "' for format '" << format << "'" << std::endl;
+
             try {
                 BatchLoadResult result;
-                
+
                 // Check if loader supports batch loading for this format/type
                 if (loader->supportsBatchLoading(format, dataType)) {
                     std::cout << "LoaderRegistry: Using native batch loading" << std::endl;
@@ -127,51 +127,51 @@ BatchLoadResult LoaderRegistry::tryLoadBatch(std::string const& format,
                         result = BatchLoadResult::error(single_result.error_message);
                     }
                 }
-                
+
                 if (result.success) {
-                    std::cout << "LoaderRegistry: Successfully batch loaded " << result.results.size() 
-                             << " object(s) with '" << loader->getLoaderName() << "'" << std::endl;
+                    std::cout << "LoaderRegistry: Successfully batch loaded " << result.results.size()
+                              << " object(s) with '" << loader->getLoaderName() << "'" << std::endl;
                     return result;
                 } else {
-                    std::cout << "LoaderRegistry: Batch loader '" << loader->getLoaderName() 
-                             << "' failed: " << result.error_message << std::endl;
+                    std::cout << "LoaderRegistry: Batch loader '" << loader->getLoaderName()
+                              << "' failed: " << result.error_message << std::endl;
                 }
-            } catch (std::exception const& e) {
-                std::cout << "LoaderRegistry: Batch loader '" << loader->getLoaderName() 
-                         << "' threw exception: " << e.what() << std::endl;
+            } catch (std::exception const & e) {
+                std::cout << "LoaderRegistry: Batch loader '" << loader->getLoaderName()
+                          << "' threw exception: " << e.what() << std::endl;
             } catch (...) {
-                std::cout << "LoaderRegistry: Batch loader '" << loader->getLoaderName() 
-                         << "' threw unknown exception" << std::endl;
+                std::cout << "LoaderRegistry: Batch loader '" << loader->getLoaderName()
+                          << "' threw unknown exception" << std::endl;
             }
         }
     }
-    
+
     // No loader could handle this format
     std::ostringstream error_msg;
-    error_msg << "No registered loader supports batch loading format '" << format 
+    error_msg << "No registered loader supports batch loading format '" << format
               << "' for data type " << static_cast<int>(dataType);
     return BatchLoadResult::error(error_msg.str());
 }
 
-bool LoaderRegistry::isBatchLoadingSupported(std::string const& format, IODataType dataType) const {
+bool LoaderRegistry::isBatchLoadingSupported(std::string const & format, IODataType dataType) const {
     return std::any_of(m_loaders.begin(), m_loaders.end(),
-                      [&](auto const& loader) {
-                          return loader->supportsFormat(format, dataType) && 
-                                 loader->supportsBatchLoading(format, dataType);
-                      });
+                       [&](auto const & loader) {
+                           return loader->supportsFormat(format, dataType) &&
+                                  loader->supportsBatchLoading(format, dataType);
+                       });
 }
 
 std::vector<std::string> LoaderRegistry::getSupportedFormats(IODataType dataType) const {
     std::vector<std::string> formats;
-    
+
     // This is a simplified implementation - in practice you might want to query each loader
     // for its supported formats to avoid hardcoding
-    for (auto const& loader : m_loaders) {
+    for (auto const & loader: m_loaders) {
         // For now, we'll need to check common formats
         // A more sophisticated approach would have loaders expose their supported formats
-        std::vector<std::string> common_formats = {"csv", "capnp", "binary", "hdf5", "json", "image"};
-        
-        for (auto const& format : common_formats) {
+        std::vector<std::string> const common_formats = {"csv", "capnp", "binary", "hdf5", "json", "image"};
+
+        for (auto const & format: common_formats) {
             if (loader->supportsFormat(format, dataType)) {
                 if (std::find(formats.begin(), formats.end(), format) == formats.end()) {
                     formats.push_back(format);
@@ -179,11 +179,34 @@ std::vector<std::string> LoaderRegistry::getSupportedFormats(IODataType dataType
             }
         }
     }
-    
+
     return formats;
 }
 
-LoaderRegistry& LoaderRegistry::getInstance() {
+std::vector<SaverInfo> LoaderRegistry::getSupportedSaveFormats() const {
+    std::vector<SaverInfo> all;
+    for (auto const & loader: m_loaders) {
+        auto infos = loader->getSaverInfo();
+        all.insert(all.end(),
+                   std::make_move_iterator(infos.begin()),
+                   std::make_move_iterator(infos.end()));
+    }
+    return all;
+}
+
+std::vector<SaverInfo> LoaderRegistry::getSupportedSaveFormats(IODataType dataType) const {
+    std::vector<SaverInfo> filtered;
+    for (auto const & loader: m_loaders) {
+        for (auto info: loader->getSaverInfo()) {
+            if (info.data_type == dataType) {
+                filtered.push_back(std::move(info));
+            }
+        }
+    }
+    return filtered;
+}
+
+LoaderRegistry & LoaderRegistry::getInstance() {
     static LoaderRegistry instance;
     return instance;
 }

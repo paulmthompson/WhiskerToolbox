@@ -5,6 +5,9 @@ set(IO_CORE_SOURCES
     core/DataLoader.hpp
     core/IOTypes.hpp
     core/IOFormats.hpp
+    core/SaverInfo.hpp
+    core/AtomicWrite.hpp
+    core/AtomicWrite.cpp
 
     core/LoaderRegistry.hpp
     core/LoaderRegistry.cpp
@@ -44,6 +47,7 @@ target_include_directories(DataManagerIO PUBLIC
 target_link_libraries(DataManagerIO PUBLIC
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
+    ParameterSchema
     LineData # Needed to populate CSV line data
     PointData # Needed for Point loaders
     MaskData # Needed for Mask RLE CSV loaders

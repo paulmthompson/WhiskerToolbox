@@ -86,7 +86,7 @@ and dispatched uniformly with typed option structs and atomic writes.
 
 ### Tasks
 
-- [ ] **Saver metadata struct** — Add `SaverInfo` to `src/DataManager/IO/core/`:
+- [x] **Saver metadata struct** — Add `SaverInfo` to `src/DataManager/IO/core/`:
   ```cpp
   struct SaverInfo {
       std::string format;          // e.g., "csv", "capnproto", "opencv"
@@ -96,7 +96,7 @@ and dispatched uniformly with typed option structs and atomic writes.
   };
   ```
 
-- [ ] **`getSupportedSaveFormats()` query** — Add to `LoaderRegistry`:
+- [x] **`getSupportedSaveFormats()` query** — Add to `LoaderRegistry`:
   ```cpp
   std::vector<SaverInfo> getSupportedSaveFormats() const;
   std::vector<SaverInfo> getSupportedSaveFormats(IODataType type) const;
@@ -106,7 +106,7 @@ and dispatched uniformly with typed option structs and atomic writes.
   virtual std::vector<SaverInfo> getSaverInfo() const { return {}; }
   ```
 
-- [ ] **Atomic write utility** — Create `src/DataManager/IO/core/AtomicWrite.hpp`:
+- [x] **Atomic write utility** — Create `src/DataManager/IO/core/AtomicWrite.hpp`:
   ```cpp
   /// Write data via callback to a temporary file, then atomically rename over target.
   /// Returns true on success, false on error (target untouched on failure).
@@ -117,11 +117,11 @@ and dispatched uniformly with typed option structs and atomic writes.
   Implementation: write to `target_path.tmp`, `fsync()`, `rename()` over target.
   On failure, remove the `.tmp` file and return false.
 
-- [ ] **Uniform saver return type** — Audit all standalone `save()` functions. Those returning
+- [x] **Uniform saver return type** — Audit all standalone `save()` functions. Those returning
   `void` or `bool` should be updated to return `LoadResult` (or a new `SaveResult` alias)
   with success/error information as each saver is touched in subsequent steps.
 
-- [ ] **Unit tests** — `getSupportedSaveFormats()` returns an empty list initially (no savers
+- [x] **Unit tests** — `getSupportedSaveFormats()` returns an empty list initially (no savers
   registered yet). Atomic write utility: success case, failure case (write callback returns
   false), directory creation.
 
@@ -619,7 +619,7 @@ the saver's `precision` setting:
 
 | Step | Description | Status | Round-Trip Fuzz? |
 |------|-------------|--------|------------------|
-| 3.1.1 | SaverRegistry Core Infrastructure | Not Started | N/A |
+| 3.1.1 | SaverRegistry Core Infrastructure | **Complete** | N/A |
 | 3.1.2 | CSV PointData Saver | Not Started | Yes |
 | 3.1.3 | CSV LineData Saver (Single + Multi) | Not Started | Yes (×2) |
 | 3.1.4 | CSV AnalogTimeSeries Saver | Not Started | Yes |
