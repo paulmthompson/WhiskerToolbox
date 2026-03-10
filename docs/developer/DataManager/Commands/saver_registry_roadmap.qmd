@@ -1,0 +1,639 @@
+---
+title: "SaverRegistry & Persistence Commands Roadmap"
+---
+
+## Overview
+
+This roadmap details **Phase 3** of the [Command Architecture Roadmap](roadmap.qmd):
+building a `SaverRegistry` and unified `SaveData` command. The work is broken into incremental
+steps — one per saver — so each step is independently testable and mergeable.
+
+Where a matching loader already exists for the same format and data type, the step includes a
+**round-trip fuzz test** (save → load → compare) to verify data integrity.
+
+## Current State
+
+Saving is currently handled by:
+
+1. **Standalone free functions** (e.g., `save(PointData const*, CSVPointSaverOptions)`) that
+   live alongside their loaders.
+2. **Format-level dispatch** inside each `IFormatLoader` subclass (e.g., `CSVLoader::save()`
+   switches on `IODataType`).
+3. **No unified registry** — callers must know which `IFormatLoader` to use and manually
+   construct a `nlohmann::json` config.
+
+The `IFormatLoader` interface already has a virtual `save()` method (defaulting to
+"not supported"), so format loaders can opt into saving. The `LoaderRegistry` has a
+`trySave()` dispatcher that iterates registered loaders. This means the dispatch mechanism
+exists but is not surfaced through the command architecture.
+
+### What Needs to Change
+
+The existing `LoaderRegistry::trySave()` path works for dispatch but has gaps:
+
+| Gap | Description |
+|-----|-------------|
+| **No `SaveData` command** | Saving cannot be composed into command sequences or triage pipelines |
+| **No saver-specific option structs in the registry** | Callers build `nlohmann::json` configs manually; the registry has no schema awareness |
+| **No atomic writes** | Savers write directly to the target path; a crash mid-write corrupts the file |
+| **No round-trip verification** | No fuzz tests verify that save → load produces identical data |
+| **Inconsistent error handling** | Some savers return `void`, others return `bool`, the registry returns `LoadResult` |
+
+### Design Decision: SaverRegistry vs. Extending LoaderRegistry
+
+Two options:
+
+**Option A — Extend `LoaderRegistry`:** The virtual `save()` method already exists on
+`IFormatLoader`. Add schema introspection and improve error handling in place.
+
+**Option B — Separate `SaverRegistry`:** New `ISaver` interface, separate registry, parallel
+to `LoaderRegistry`.
+
+**Chosen: Option A.** The infrastructure is already there. Duplicating the registry/interface
+pattern doubles the surface area for no functional gain. The `IFormatLoader` name is slightly
+misleading (it also saves), but renaming is cosmetic and can happen later. The steps below
+enhance the existing system rather than replacing it.
+
+## Dependency Graph
+
+```
+Step 3.1.1  SaverRegistry Core Infrastructure
+    │
+    ├──► Step 3.1.2   CSV PointData Saver         (+ round-trip fuzz)
+    ├──► Step 3.1.3   CSV LineData Saver           (+ round-trip fuzz)
+    ├──► Step 3.1.4   CSV AnalogTimeSeries Saver   (+ round-trip fuzz)
+    ├──► Step 3.1.5   CSV DigitalEventSeries Saver (+ round-trip fuzz)
+    ├──► Step 3.1.6   CSV DigitalIntervalSeries Saver (+ round-trip fuzz)
+    ├──► Step 3.1.7   CSV MaskData (RLE) Saver     (+ round-trip fuzz)
+    ├──► Step 3.1.8   CapnProto LineData Saver     (+ round-trip fuzz)
+    ├──► Step 3.1.9   OpenCV MaskData (Image) Saver (no matching loader for exact round-trip)
+    │
+    └──► Step 3.2     SaveData Command (depends on all savers being registered)
+         │
+         └──► Step 3.3  LoadData Command
+```
+
+All saver steps (3.1.2–3.1.9) are independent of each other and can proceed in any order
+after 3.1.1. Step 3.2 (`SaveData` command) requires 3.1.1 and benefits from having savers
+registered but does not strictly require all of them.
+
+---
+
+## Step 3.1.1 — SaverRegistry Core Infrastructure
+
+**Goal:** Establish the registry-level plumbing so that individual savers can be registered
+and dispatched uniformly with typed option structs and atomic writes.
+
+### Tasks
+
+- [ ] **Saver metadata struct** — Add `SaverInfo` to `src/DataManager/IO/core/`:
+  ```cpp
+  struct SaverInfo {
+      std::string format;          // e.g., "csv", "capnproto", "opencv"
+      IODataType data_type;        // e.g., IODataType::Points
+      std::string description;     // Human-readable: "CSV point data (frame, x, y)"
+      ParameterSchema schema;      // From extractParameterSchema<OptionStruct>()
+  };
+  ```
+
+- [ ] **`getSupportedSaveFormats()` query** — Add to `LoaderRegistry`:
+  ```cpp
+  std::vector<SaverInfo> getSupportedSaveFormats() const;
+  std::vector<SaverInfo> getSupportedSaveFormats(IODataType type) const;
+  ```
+  Each `IFormatLoader` subclass provides its saver metadata via a new virtual method:
+  ```cpp
+  virtual std::vector<SaverInfo> getSaverInfo() const { return {}; }
+  ```
+
+- [ ] **Atomic write utility** — Create `src/DataManager/IO/core/AtomicWrite.hpp`:
+  ```cpp
+  /// Write data via callback to a temporary file, then atomically rename over target.
+  /// Returns true on success, false on error (target untouched on failure).
+  bool atomicWriteFile(
+      std::filesystem::path const& target_path,
+      std::function<bool(std::ostream&)> write_callback);
+  ```
+  Implementation: write to `target_path.tmp`, `fsync()`, `rename()` over target.
+  On failure, remove the `.tmp` file and return false.
+
+- [ ] **Uniform saver return type** — Audit all standalone `save()` functions. Those returning
+  `void` or `bool` should be updated to return `LoadResult` (or a new `SaveResult` alias)
+  with success/error information as each saver is touched in subsequent steps.
+
+- [ ] **Unit tests** — `getSupportedSaveFormats()` returns an empty list initially (no savers
+  registered yet). Atomic write utility: success case, failure case (write callback returns
+  false), directory creation.
+
+### Files Created/Modified
+
+| File | Action |
+|------|--------|
+| `src/DataManager/IO/core/SaverInfo.hpp` | **Create** — `SaverInfo` struct |
+| `src/DataManager/IO/core/AtomicWrite.hpp` | **Create** — atomic write utility |
+| `src/DataManager/IO/core/AtomicWrite.cpp` | **Create** — implementation |
+| `src/DataManager/IO/core/LoaderRegistry.hpp` | **Modify** — add `getSaverInfo()` virtual, `getSupportedSaveFormats()` |
+| `src/DataManager/IO/core/LoaderRegistry.cpp` | **Modify** — implement `getSupportedSaveFormats()` |
+| `tests/DataManager/IO/` | **Create** — tests for atomic write and registry queries |
+
+---
+
+## Step 3.1.2 — CSV PointData Saver
+
+**Goal:** Register the existing CSV point saver in the registry with typed options and add
+a round-trip fuzz test.
+
+**Matching loader:** `CSVPointLoaderOptions` — **round-trip fuzz test included.**
+
+### Tasks
+
+- [ ] **Return type** — Update `save(PointData const*, CSVPointSaverOptions)` to return
+  `LoadResult` instead of `void`. Propagate file-open and write errors.
+
+- [ ] **Atomic writes** — Use `atomicWriteFile()` inside the saver implementation.
+
+- [ ] **Register in CSVLoader** — Override `getSaverInfo()` in `CSVLoader` to include an entry
+  for `IODataType::Points` with `extractParameterSchema<CSVPointSaverOptions>()`.
+
+- [ ] **`ParameterUIHints<CSVPointSaverOptions>`** — Add tooltips and field descriptions.
+
+- [ ] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_point_roundtrip.cpp`:
+  1. Generate a `PointData` with fuzzed content (random frame indices, random x/y coordinates,
+     varying number of points per frame).
+  2. Save using `CSVPointSaverOptions` with default settings to a temp directory.
+  3. Load using `CSVPointLoaderOptions` from the same file.
+  4. Compare loaded data to original: same frame count, same point coordinates (within
+     floating-point formatting precision).
+  5. Assert no data loss or corruption.
+
+- [ ] **Unit test** — Deterministic round-trip: create known `PointData`, save, load, verify
+  exact match.
+
+### Files Modified
+
+| File | Action |
+|------|--------|
+| `src/DataManager/Points/IO/CSV/Point_Data_CSV.hpp` | **Modify** — return `LoadResult` |
+| `src/DataManager/Points/IO/CSV/Point_Data_CSV.cpp` | **Modify** — atomic write, error returns |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entry |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_point_roundtrip.cpp` | **Create** — fuzz test |
+| `tests/fuzz/unit/DataManager/IO/CMakeLists.txt` | **Create** — build fuzz test |
+
+---
+
+## Step 3.1.3 — CSV LineData Saver (Single-File and Multi-File)
+
+**Goal:** Register the CSV line savers (both single-file and multi-file variants) and add
+round-trip fuzz tests.
+
+**Matching loaders:** `CSVSingleFileLineLoaderOptions`, `CSVMultiFileLineLoaderOptions` —
+**round-trip fuzz tests included for both variants.**
+
+### Tasks
+
+- [ ] **Return type** — Update both `save(LineData const*, CSVSingleFileLineSaverOptions)` and
+  `save(LineData const*, CSVMultiFileLineSaverOptions)` to return `LoadResult`.
+
+- [ ] **Atomic writes** — Use `atomicWriteFile()` for single-file saver. For multi-file saver,
+  atomic write is per-file (each frame file is written atomically).
+
+- [ ] **Register in CSVLoader** — Two `SaverInfo` entries: one for `"csv_single_file_line"` and
+  one for `"csv_multi_file_line"`, both with `IODataType::Line`.
+
+- [ ] **`ParameterUIHints`** — For both option structs.
+
+- [ ] **Round-trip fuzz test (single-file)** —
+  `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_single_roundtrip.cpp`:
+  1. Generate `LineData` with fuzzed line lengths (1–100 points), fuzzed coordinates,
+     fuzzed frame indices.
+  2. Save with `CSVSingleFileLineSaverOptions` → load with `CSVSingleFileLineLoaderOptions`.
+  3. Compare: same frame count, same entity count per frame, same point coordinates within
+     format precision.
+
+- [ ] **Round-trip fuzz test (multi-file)** —
+  `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_multi_roundtrip.cpp`:
+  1. Generate `LineData` with fuzzed content.
+  2. Save with `CSVMultiFileLineSaverOptions` → load with `CSVMultiFileLineLoaderOptions`.
+  3. Compare as above.
+
+- [ ] **Unit tests** — Deterministic round-trips for both variants.
+
+### Files Modified
+
+| File | Action |
+|------|--------|
+| `src/DataManager/Lines/IO/CSV/Line_Data_CSV.hpp` | **Modify** — return `LoadResult` |
+| `src/DataManager/Lines/IO/CSV/Line_Data_CSV.cpp` | **Modify** — atomic write, error returns |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entries |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_single_roundtrip.cpp` | **Create** |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_line_multi_roundtrip.cpp` | **Create** |
+
+---
+
+## Step 3.1.4 — CSV AnalogTimeSeries Saver
+
+**Goal:** Register the CSV analog saver and add a round-trip fuzz test.
+
+**Matching loader:** `CSVAnalogLoaderOptions` — **round-trip fuzz test included.**
+
+### Tasks
+
+- [ ] **Return type** — Update `save(AnalogTimeSeries*, CSVAnalogSaverOptions)` to return
+  `LoadResult`.
+
+- [ ] **Atomic writes** — Use `atomicWriteFile()`.
+
+- [ ] **Register in CSVLoader** — `SaverInfo` entry for `IODataType::Analog`.
+
+- [ ] **`ParameterUIHints<CSVAnalogSaverOptions>`** — Tooltips and field descriptions.
+
+- [ ] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_analog_roundtrip.cpp`:
+  1. Generate `AnalogTimeSeries` with fuzzed sample values (varying lengths, NaN handling,
+     large/small values).
+  2. Save with `CSVAnalogSaverOptions` → load with `CSVAnalogLoaderOptions`.
+  3. Compare: same sample count, same values within format precision.
+
+- [ ] **Unit test** — Deterministic round-trip.
+
+### Files Modified
+
+| File | Action |
+|------|--------|
+| `src/DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp` | **Modify** |
+| `src/DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.cpp` | **Modify** |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entry |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_analog_roundtrip.cpp` | **Create** |
+
+---
+
+## Step 3.1.5 — CSV DigitalEventSeries Saver
+
+**Goal:** Register the CSV digital event saver and add a round-trip fuzz test.
+
+**Matching loader:** `CSVEventLoaderOptions` — **round-trip fuzz test included.**
+
+### Tasks
+
+- [ ] **Return type** — Update `save(DigitalEventSeries const*, CSVEventSaverOptions)` to
+  return `LoadResult`.
+
+- [ ] **Atomic writes** — Use `atomicWriteFile()`.
+
+- [ ] **Register in CSVLoader** — `SaverInfo` entry for `IODataType::DigitalEvent`.
+
+- [ ] **`ParameterUIHints<CSVEventSaverOptions>`** — Tooltips and field descriptions.
+
+- [ ] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_event_roundtrip.cpp`:
+  1. Generate `DigitalEventSeries` with fuzzed event times (random frame indices, varying
+     event count).
+  2. Save with `CSVEventSaverOptions` → load with `CSVEventLoaderOptions`.
+  3. Compare: same event count, same event times.
+
+- [ ] **Unit test** — Deterministic round-trip.
+
+### Files Modified
+
+| File | Action |
+|------|--------|
+| `src/DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp` | **Modify** |
+| `src/DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.cpp` | **Modify** |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entry |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_event_roundtrip.cpp` | **Create** |
+
+---
+
+## Step 3.1.6 — CSV DigitalIntervalSeries Saver
+
+**Goal:** Register the CSV digital interval saver and add a round-trip fuzz test.
+
+**Matching loader:** `CSVIntervalLoaderOptions` — **round-trip fuzz test included.**
+
+### Tasks
+
+- [ ] **Return type** — Update `save(DigitalIntervalSeries const*, CSVIntervalSaverOptions)` to
+  return `LoadResult`.
+
+- [ ] **Atomic writes** — Use `atomicWriteFile()`.
+
+- [ ] **Register in CSVLoader** — `SaverInfo` entry for `IODataType::DigitalInterval`.
+
+- [ ] **`ParameterUIHints<CSVIntervalSaverOptions>`** — Tooltips and field descriptions.
+
+- [ ] **Round-trip fuzz test** —
+  `tests/fuzz/unit/DataManager/IO/fuzz_csv_interval_roundtrip.cpp`:
+  1. Generate `DigitalIntervalSeries` with fuzzed intervals (random start/end times,
+     varying interval count, adjacent/overlapping intervals).
+  2. Save with `CSVIntervalSaverOptions` → load with `CSVIntervalLoaderOptions`.
+  3. Compare: same interval count, same start/end times.
+
+- [ ] **Unit test** — Deterministic round-trip.
+
+### Files Modified
+
+| File | Action |
+|------|--------|
+| `src/DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp` | **Modify** |
+| `src/DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.cpp` | **Modify** |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entry |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_interval_roundtrip.cpp` | **Create** |
+
+---
+
+## Step 3.1.7 — CSV MaskData (RLE) Saver
+
+**Goal:** Register the CSV RLE mask saver and add a round-trip fuzz test.
+
+**Matching loader:** `CSVMaskRLELoaderOptions` — **round-trip fuzz test included.**
+
+### Tasks
+
+- [ ] **Return type** — Update `save(MaskData const*, CSVMaskRLESaverOptions)` to return
+  `LoadResult`.
+
+- [ ] **Atomic writes** — Use `atomicWriteFile()`.
+
+- [ ] **Register in CSVLoader** — `SaverInfo` entry for `IODataType::Mask`.
+
+- [ ] **`ParameterUIHints<CSVMaskRLESaverOptions>`** — Tooltips and field descriptions.
+
+- [ ] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_mask_rle_roundtrip.cpp`:
+  1. Generate `MaskData` with fuzzed masks (random pixel coordinates, varying mask sizes
+     per frame, varying frame count).
+  2. Save as RLE CSV with `CSVMaskRLESaverOptions` → load with `CSVMaskRLELoaderOptions`.
+  3. Compare: same frame count, same mask pixels per frame (RLE encoding is lossless).
+
+- [ ] **Unit test** — Deterministic round-trip.
+
+### Files Modified
+
+| File | Action |
+|------|--------|
+| `src/DataManager/IO/formats/CSV/mask/Mask_Data_CSV.hpp` | **Modify** |
+| `src/DataManager/IO/formats/CSV/mask/Mask_Data_CSV.cpp` | **Modify** |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entry |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_mask_rle_roundtrip.cpp` | **Create** |
+
+---
+
+## Step 3.1.8 — CapnProto LineData Saver
+
+**Goal:** Register the CapnProto (binary) line saver and add a round-trip fuzz test.
+
+**Matching loader:** `BinaryLineLoaderOptions` — **round-trip fuzz test included.**
+
+### Tasks
+
+- [ ] **Return type** — Verify `save(LineData const&, BinaryLineSaverOptions&)` returns
+  `bool`. Update to return `LoadResult` for consistency.
+
+- [ ] **Atomic writes** — Use `atomicWriteFile()` (binary data written via callback).
+
+- [ ] **Register in CapnProtoFormatLoader** — Override `getSaverInfo()` to return one entry
+  for `IODataType::Line` with `extractParameterSchema<BinaryLineSaverOptions>()`.
+
+- [ ] **Round-trip fuzz test** —
+  `tests/fuzz/unit/DataManager/IO/fuzz_capnproto_line_roundtrip.cpp`:
+  1. Generate `LineData` with fuzzed content (varying line lengths, coordinates, frame
+     indices).
+  2. Save with `BinaryLineSaverOptions` → load with `BinaryLineLoaderOptions`.
+  3. Compare: exact match (binary format is lossless — no floating-point formatting loss).
+
+- [ ] **Unit test** — Deterministic round-trip.
+
+### Files Modified
+
+| File | Action |
+|------|--------|
+| `src/DataManager/IO/formats/CapnProto/linedata/Line_Data_Binary.hpp` | **Modify** |
+| `src/DataManager/IO/formats/CapnProto/linedata/Line_Data_Binary.cpp` | **Modify** |
+| `src/DataManager/IO/formats/CapnProto/CapnProtoFormatLoader.cpp` | **Modify** — `getSaverInfo()` |
+| `tests/fuzz/unit/DataManager/IO/fuzz_capnproto_line_roundtrip.cpp` | **Create** |
+
+---
+
+## Step 3.1.9 — OpenCV MaskData (Image) Saver
+
+**Goal:** Register the OpenCV image mask saver.
+
+**Matching loader:** `ImageMaskLoaderOptions` exists, but the round-trip is not exact because
+the image format introduces pixel-level quantization (mask coordinates → rasterized image →
+re-extracted coordinates). **No round-trip fuzz test** — instead, a property-based fuzz test
+verifies that saving does not crash and produces valid image files.
+
+### Tasks
+
+- [ ] **Return type** — Update `save(MaskData const*, ImageMaskSaverOptions)` to return
+  `LoadResult`.
+
+- [ ] **Register in OpenCVFormatLoader** — Override `getSaverInfo()` to return one entry
+  for `IODataType::Mask` with `extractParameterSchema<ImageMaskSaverOptions>()`.
+
+- [ ] **`ParameterUIHints<ImageMaskSaverOptions>`** — Tooltips and field descriptions.
+
+- [ ] **Robustness fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_opencv_mask_save.cpp`:
+  1. Generate `MaskData` with fuzzed masks and fuzzed `ImageMaskSaverOptions` (different
+     formats, dimensions, padding values).
+  2. Save to a temp directory.
+  3. Verify: no crash, output files exist and are valid images (non-zero size).
+
+- [ ] **Unit test** — Save known mask, verify output files exist with expected names.
+
+### Files Modified
+
+| File | Action |
+|------|--------|
+| `src/DataManager/IO/formats/OpenCV/maskdata/Mask_Data_Image.hpp` | **Modify** |
+| `src/DataManager/IO/formats/OpenCV/maskdata/Mask_Data_Image.cpp` | **Modify** |
+| `src/DataManager/IO/formats/OpenCV/OpenCVFormatLoader.cpp` | **Modify** — `getSaverInfo()` |
+| `tests/fuzz/unit/DataManager/IO/fuzz_opencv_mask_save.cpp` | **Create** |
+
+---
+
+## Step 3.2 — SaveData Command
+
+**Goal:** Create the `SaveData` command that dispatches through the registry, enabling save
+operations to participate in command sequences and triage pipelines.
+
+**Depends on:** Step 3.1.1 (registry infrastructure). Can proceed with whatever savers are
+registered at the time.
+
+### Tasks
+
+- [ ] **`SaveDataParams` struct** — reflect-cpp serializable:
+  ```cpp
+  struct SaveDataParams {
+      std::string data_key;            // Key in DataManager
+      std::string format;              // e.g., "csv", "capnproto", "opencv"
+      std::string path;                // Output file/directory path
+      rfl::Generic format_options;     // Format-specific options (optional)
+  };
+  ```
+
+- [ ] **`SaveData` command class** — `src/DataManager/Commands/SaveData/`:
+  1. Look up data object by `data_key` in `DataManager`.
+  2. Determine `IODataType` from the data variant.
+  3. Dispatch through `LoaderRegistry::trySave()` with format, type, path, and config.
+  4. Return `CommandResult` with success/error.
+  5. Not undoable (can't un-save a file).
+
+- [ ] **Register in factory** — Add `"SaveData"` branch to `createCommand()` and entry in
+  `getAvailableCommands()`.
+
+- [ ] **`ParameterUIHints<SaveDataParams>`** — Tooltips explaining each field.
+
+- [ ] **Unit tests:**
+  - Save a known `PointData` via `SaveData` command, verify file created.
+  - Save with unknown `data_key` → error.
+  - Save with unsupported format → error.
+  - Save in a command sequence (e.g., move + save).
+
+### Files Created
+
+| File | Action |
+|------|--------|
+| `src/DataManager/Commands/SaveData/SaveData.hpp` | **Create** |
+| `src/DataManager/Commands/SaveData/SaveData.cpp` | **Create** |
+| `src/DataManager/Commands/CommandFactory.cpp` | **Modify** — add factory branch |
+| `tests/DataManager/Commands/test_save_data.cpp` | **Create** |
+
+---
+
+## Step 3.3 — LoadData Command
+
+**Goal:** Create the `LoadData` command wrapping `LoaderRegistry` for uniform dispatch from
+command sequences.
+
+**Depends on:** Step 3.1.1 (registry infrastructure).
+
+### Tasks
+
+- [ ] **`LoadDataParams` struct** — reflect-cpp serializable:
+  ```cpp
+  struct LoadDataParams {
+      std::string data_key;            // Key to store in DataManager
+      std::string data_type;           // e.g., "PointData", "LineData"
+      std::string filepath;            // Input file path
+      std::string format;              // e.g., "csv", "hdf5"
+      rfl::Generic format_options;     // Format-specific options (optional)
+  };
+  ```
+
+- [ ] **`LoadData` command class** — `src/DataManager/Commands/LoadData/`:
+  1. Map `data_type` string to `IODataType` enum.
+  2. Dispatch through `LoaderRegistry::tryLoad()` with format, type, filepath, and config.
+  3. Store result in `DataManager` under `data_key`.
+  4. Return `CommandResult` with success/error and `affected_keys = {data_key}`.
+  5. Undoable: `undo()` removes the loaded data key from `DataManager`.
+
+- [ ] **Register in factory** — Add `"LoadData"` branch to `createCommand()` and entry in
+  `getAvailableCommands()`.
+
+- [ ] **`ParameterUIHints<LoadDataParams>`** — Tooltips explaining each field.
+
+- [ ] **Unit tests:**
+  - Load a CSV point file via `LoadData` command, verify data in `DataManager`.
+  - Load with invalid filepath → error.
+  - Load with unknown format → error.
+  - Undo removes loaded data.
+  - Load + Save round-trip via command sequence.
+
+### Files Created
+
+| File | Action |
+|------|--------|
+| `src/DataManager/Commands/LoadData/LoadData.hpp` | **Create** |
+| `src/DataManager/Commands/LoadData/LoadData.cpp` | **Create** |
+| `src/DataManager/Commands/CommandFactory.cpp` | **Modify** — add factory branch |
+| `tests/DataManager/Commands/test_load_data.cpp` | **Create** |
+
+---
+
+## Round-Trip Fuzz Test Strategy
+
+All round-trip fuzz tests follow the same pattern:
+
+```cpp
+void FuzzRoundTrip(/* fuzzed parameters for data generation */) {
+    // 1. Construct data object from fuzzed parameters
+    auto data = generateData(/* ... */);
+
+    // 2. Save to temp directory
+    auto temp_dir = std::filesystem::temp_directory_path() / "whisker_fuzz_XXXXXX";
+    std::filesystem::create_directories(temp_dir);
+
+    SaverOptions save_opts;
+    save_opts.parent_dir = temp_dir.string();
+    // ... configure options
+
+    auto save_result = save(data.get(), save_opts);
+    if (!save_result.success) {
+        std::filesystem::remove_all(temp_dir);
+        return;  // Save failure is acceptable under fuzz — not a crash
+    }
+
+    // 3. Load from same file
+    LoaderOptions load_opts;
+    // ... configure to match save options
+    auto load_result = load(load_opts);
+
+    // 4. Compare
+    if (load_result.success) {
+        auto loaded_data = /* extract from result */;
+        // Verify: same structure, same values (within format precision)
+        ASSERT_EQ(data->size(), loaded_data->size());
+        // ... detailed comparison
+    }
+
+    // 5. Cleanup
+    std::filesystem::remove_all(temp_dir);
+}
+
+FUZZ_TEST(SuiteName, FuzzRoundTrip)
+    .WithDomains(/* ... */);
+```
+
+### Data Generation Domains
+
+| Data Type | Fuzzed Parameters |
+|-----------|-------------------|
+| **PointData** | Frame indices (0–100000), x/y coordinates (-1e6 to 1e6), points per frame (0–50) |
+| **LineData** | Frame indices, points per line (1–200), x/y coordinates, number of lines per frame (1–5) |
+| **AnalogTimeSeries** | Sample values (-1e6 to 1e6), sample count (0–10000) |
+| **DigitalEventSeries** | Event times (0–100000), event count (0–1000) |
+| **DigitalIntervalSeries** | Start/end pairs (non-overlapping, sorted), interval count (0–500) |
+| **MaskData (RLE)** | Frame indices, pixel coordinates within image bounds, pixels per mask (0–1000) |
+| **LineData (CapnProto)** | Same as CSV LineData but expecting exact binary round-trip |
+
+### Precision Considerations
+
+CSV round-trips are subject to floating-point formatting loss. The comparison must account for
+the saver's `precision` setting:
+
+- **Default precision** (typically 1–6 decimal places): compare within `10^(-precision)` tolerance.
+- **Integer fields** (frame indices, event times): compare exactly.
+- **Binary formats** (CapnProto): compare exactly — no formatting loss.
+
+---
+
+## Progress Summary
+
+| Step | Description | Status | Round-Trip Fuzz? |
+|------|-------------|--------|------------------|
+| 3.1.1 | SaverRegistry Core Infrastructure | Not Started | N/A |
+| 3.1.2 | CSV PointData Saver | Not Started | Yes |
+| 3.1.3 | CSV LineData Saver (Single + Multi) | Not Started | Yes (×2) |
+| 3.1.4 | CSV AnalogTimeSeries Saver | Not Started | Yes |
+| 3.1.5 | CSV DigitalEventSeries Saver | Not Started | Yes |
+| 3.1.6 | CSV DigitalIntervalSeries Saver | Not Started | Yes |
+| 3.1.7 | CSV MaskData (RLE) Saver | Not Started | Yes |
+| 3.1.8 | CapnProto LineData Saver | Not Started | Yes |
+| 3.1.9 | OpenCV MaskData (Image) Saver | Not Started | No (lossy format) |
+| 3.2 | SaveData Command | Not Started | N/A |
+| 3.3 | LoadData Command | Not Started | N/A |
+
+## See Also
+
+- [Command Architecture Roadmap](roadmap.qmd) — parent roadmap (Phase 3)
+- [Command Architecture Design Document](index.qmd) — `SaveData` and persistence safety design
+- [File IO](../file_io.qmd) — existing IO documentation
+- [Mask CSV RLE](../IO/mask_csv_rle.qmd) — RLE mask format documentation

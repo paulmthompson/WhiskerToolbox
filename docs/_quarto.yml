@@ -89,6 +89,7 @@ website:
               href: developer/DataManager/Commands/index.qmd
               contents:
                 - developer/DataManager/Commands/roadmap.qmd
+                - developer/DataManager/Commands/saver_registry_roadmap.qmd
                 - developer/DataManager/Commands/core_types.qmd
                 - developer/DataManager/Commands/sequence_execution.qmd
                 - developer/DataManager/Commands/get_entity_ids_in_range.qmd
