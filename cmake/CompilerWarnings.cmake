@@ -65,6 +65,9 @@ if("${MSVC_WARNINGS}" STREQUAL "")
         /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /permissive- # standards conformance mode for MSVC compiler.
         /openmp:llvm
+        /Zc:__cplusplus # Report correct C++ standard version in __cplusplus macro
+        /utf-8 # Set source and execution character set to UTF-8
+
     )
   endif()
 

@@ -141,11 +141,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataInspector_Widget PRIVATE ${GCC_OPTIONS})
+    target_compile_options(DataInspector_Widget PRIVATE ${GCC_WARNINGS})
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(DataInspector_Widget PRIVATE ${MSVC_OPTIONS})
+    target_compile_options(DataInspector_Widget PRIVATE ${MSVC_WARNINGS})
 endif()
 
 set_target_properties(DataInspector_Widget PROPERTIES
