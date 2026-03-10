@@ -164,7 +164,7 @@ updated accordingly.
 - [x] **`ParameterUIHints<CSVPointSaverOptions>`** — Added tooltips for delimiter, line_delim,
   save_header, and header fields.
 
-- [ ] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_point_roundtrip.cpp`:
+- [x] **Round-trip fuzz test** — `tests/fuzz/unit/DataManager/IO/fuzz_csv_point_roundtrip.cpp`:
   1. Generate a `PointData` with fuzzed content (random frame indices, random x/y coordinates,
      varying number of points per frame).
   2. Save using `CSVPointSaverOptions` with default settings to a temp directory.
@@ -172,9 +172,13 @@ updated accordingly.
   4. Compare loaded data to original: same frame count, same point coordinates (within
      floating-point formatting precision).
   5. Assert no data loss or corruption.
+  Two fuzz tests: `FuzzCsvPointRoundTrip` (default comma delimiter) and
+  `FuzzCsvPointRoundTripDelimiter` (varying delimiters: comma, space, tab, semicolon).
 
-- [ ] **Unit test** — Deterministic round-trip: create known `PointData`, save, load, verify
-  exact match.
+- [x] **Unit test** — Deterministic round-trip: create known `PointData`, save, load, verify
+  exact match. Added to `tests/DataManager/IO/formats/CSV/points/point_csv_unit.test.cpp`
+  with five sections: single point, multiple points, empty data, negative coordinates,
+  and space-delimited round-trip.
 
 ### Files Modified
 
@@ -635,7 +639,7 @@ the saver's `precision` setting:
 | Step | Description | Status | Round-Trip Fuzz? |
 |------|-------------|--------|------------------|
 | 3.1.1 | SaverRegistry Core Infrastructure | **Complete** | N/A |
-| 3.1.2 | CSV PointData Saver | **In Progress** — registered, atomic write, return type done; fuzz + unit tests remaining | Yes |
+| 3.1.2 | CSV PointData Saver | **Complete** | Yes |
 | 3.1.3 | CSV LineData Saver (Single + Multi) | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes (×2) |
 | 3.1.4 | CSV AnalogTimeSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
 | 3.1.5 | CSV DigitalEventSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
