@@ -28,16 +28,16 @@
 
 #include "nlohmann/json.hpp"
 
+#include "DataImport_Widget/DataImportWidgetState.hpp"
+#include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataTransform_Widget/DataTransformWidgetState.hpp"
+#include "DataViewer_Widget/Core/DataViewerState.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/EditorState.hpp"
 #include "EditorState/SelectionContext.hpp"
-#include "Test_Widget/TestWidgetState.hpp"
-#include "DataInspector_Widget/DataInspectorState.hpp"
-#include "DataImport_Widget/DataImportWidgetState.hpp"
-#include "DataTransform_Widget/DataTransformWidgetState.hpp"
-#include "DataViewer_Widget/Core/DataViewerState.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Test_Widget/TestWidgetState.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -80,8 +80,8 @@ void ExpectJsonEqual(std::string const & json1, std::string const & json2) {
     auto parsed1 = nlohmann::json::parse(json1);
     auto parsed2 = nlohmann::json::parse(json2);
     EXPECT_EQ(parsed1, parsed2)
-        << "JSON mismatch:\n  First:  " << json1.substr(0, 500)
-        << "\n  Second: " << json2.substr(0, 500);
+            << "JSON mismatch:\n  First:  " << json1.substr(0, 500)
+            << "\n  Second: " << json2.substr(0, 500);
 }
 
 // ============================================================================
@@ -99,11 +99,11 @@ struct StateInfo {
 
 std::vector<StateInfo> extractStateInfo(EditorRegistry const & registry) {
     std::vector<StateInfo> infos;
-    for (auto const & s : registry.allStates()) {
+    for (auto const & s: registry.allStates()) {
         infos.push_back({
-            .instance_id = s->getInstanceId().toStdString(),
-            .type_name = s->getTypeName().toStdString(),
-            .display_name = s->getDisplayName().toStdString(),
+                .instance_id = s->getInstanceId().toStdString(),
+                .type_name = s->getTypeName().toStdString(),
+                .display_name = s->getDisplayName().toStdString(),
         });
     }
     std::sort(infos.begin(), infos.end());
@@ -123,14 +123,14 @@ static std::vector<CorpusEntry> const & corpusEntriesRef() {
 
 static std::vector<std::string> corpusTypeIds() {
     std::vector<std::string> ids;
-    for (auto const & e : corpusEntriesRef()) {
+    for (auto const & e: corpusEntriesRef()) {
         ids.push_back(e.type_id);
     }
     return ids;
 }
 
 static std::vector<Zone> const kAllZones = {
-    Zone::Left, Zone::Center, Zone::Right, Zone::Bottom};
+        Zone::Left, Zone::Center, Zone::Right, Zone::Bottom};
 
 // ============================================================================
 // Helper: create a harness with corpus types registered
@@ -140,7 +140,8 @@ struct CorpusHarness {
     FuzzDockingHarness harness;
     std::shared_ptr<DataManager> dm;
 
-    CorpusHarness() : dm(std::make_shared<DataManager>()) {
+    CorpusHarness()
+        : dm(std::make_shared<DataManager>()) {
         registerCorpusTypes(harness.registry(), kCorpusLevel, dm);
     }
 };
@@ -153,11 +154,11 @@ struct CorpusHarness {
 // Create random real editors, serialize, restore, verify state round-trip.
 
 void FuzzRealWidgetPlacement(
-    std::vector<int> const & type_indices,
-    float left_ratio,
-    float center_ratio,
-    float right_ratio,
-    float bottom_ratio) {
+        std::vector<int> const & type_indices,
+        float left_ratio,
+        float center_ratio,
+        float right_ratio,
+        float bottom_ratio) {
 
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -169,23 +170,22 @@ void FuzzRealWidgetPlacement(
 
     // Apply random zone ratios
     harness.zoneManager()->setZoneWidthRatios(
-        std::clamp(left_ratio, 0.05f, 0.5f),
-        std::clamp(center_ratio, 0.1f, 0.8f),
-        std::clamp(right_ratio, 0.05f, 0.5f));
+            std::clamp(left_ratio, 0.05f, 0.5f),
+            std::clamp(center_ratio, 0.1f, 0.8f),
+            std::clamp(right_ratio, 0.05f, 0.5f));
     harness.zoneManager()->setBottomHeightRatio(
-        std::clamp(bottom_ratio, 0.05f, 0.5f));
+            std::clamp(bottom_ratio, 0.05f, 0.5f));
 
     std::set<std::string> created_single_types;
     int expected_count = 0;
 
     int const n = std::min(static_cast<int>(type_indices.size()), 20);
     for (int i = 0; i < n; ++i) {
-        auto const & type_id = type_ids[
-            static_cast<size_t>(std::abs(type_indices[i])) % type_ids.size()];
+        auto const & type_id = type_ids[static_cast<size_t>(std::abs(type_indices[i])) % type_ids.size()];
 
         auto const & entries = corpusEntriesRef();
         auto const it = std::find_if(entries.begin(), entries.end(),
-            [&](auto const & e) { return e.type_id == type_id; });
+                                     [&](auto const & e) { return e.type_id == type_id; });
         bool const allow_multiple = (it != entries.end()) && it->allow_multiple;
 
         if (!allow_multiple && created_single_types.contains(type_id)) {
@@ -224,19 +224,19 @@ void FuzzRealWidgetPlacement(
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzRealWidgetPlacement)
-    .WithDomains(
-        fuzztest::VectorOf(fuzztest::InRange(0, 10)).WithMaxSize(20),
-        fuzztest::InRange(0.05f, 0.5f),
-        fuzztest::InRange(0.1f, 0.8f),
-        fuzztest::InRange(0.05f, 0.5f),
-        fuzztest::InRange(0.05f, 0.5f));
+        .WithDomains(
+                fuzztest::VectorOf(fuzztest::InRange(0, 10)).WithMaxSize(20),
+                fuzztest::InRange(0.05f, 0.5f),
+                fuzztest::InRange(0.1f, 0.8f),
+                fuzztest::InRange(0.05f, 0.5f),
+                fuzztest::InRange(0.05f, 0.5f));
 
 // ---- FuzzRealWidgetWithZoneOverride ----
 // Place real widgets in explicitly chosen zones.
 
 void FuzzRealWidgetWithZoneOverride(
-    std::vector<int> const & type_indices,
-    std::vector<int> const & zone_choices) {
+        std::vector<int> const & type_indices,
+        std::vector<int> const & zone_choices) {
 
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -249,26 +249,23 @@ void FuzzRealWidgetWithZoneOverride(
     std::set<std::string> created_single_types;
     int expected_count = 0;
 
-    int const n = std::min({
-        static_cast<int>(type_indices.size()),
-        static_cast<int>(zone_choices.size()),
-        20});
+    int const n = std::min({static_cast<int>(type_indices.size()),
+                            static_cast<int>(zone_choices.size()),
+                            20});
 
     for (int i = 0; i < n; ++i) {
-        auto const & type_id = type_ids[
-            static_cast<size_t>(std::abs(type_indices[i])) % type_ids.size()];
+        auto const & type_id = type_ids[static_cast<size_t>(std::abs(type_indices[i])) % type_ids.size()];
 
         auto const & entries = corpusEntriesRef();
         auto const it = std::find_if(entries.begin(), entries.end(),
-            [&](auto const & e) { return e.type_id == type_id; });
+                                     [&](auto const & e) { return e.type_id == type_id; });
         bool const allow_multiple = (it != entries.end()) && it->allow_multiple;
 
         if (!allow_multiple && created_single_types.contains(type_id)) {
             continue;
         }
 
-        Zone const zone = kAllZones[
-            static_cast<size_t>(std::abs(zone_choices[i])) % kAllZones.size()];
+        Zone const zone = kAllZones[static_cast<size_t>(std::abs(zone_choices[i])) % kAllZones.size()];
 
         auto placed = harness.createAndPlaceInZone(type_id, zone);
         if (placed.isValid()) {
@@ -301,22 +298,22 @@ void FuzzRealWidgetWithZoneOverride(
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzRealWidgetWithZoneOverride)
-    .WithDomains(
-        fuzztest::VectorOf(fuzztest::InRange(0, 10)).WithMaxSize(20),
-        fuzztest::VectorOf(fuzztest::InRange(0, 3)).WithMaxSize(20));
+        .WithDomains(
+                fuzztest::VectorOf(fuzztest::InRange(0, 10)).WithMaxSize(20),
+                fuzztest::VectorOf(fuzztest::InRange(0, 3)).WithMaxSize(20));
 
 // ---- FuzzRealWidgetStateValues ----
 // Create a TestWidget, randomize its state fields, then round-trip.
 // This exercises the real TestWidgetState serialization with fuzz values.
 
 void FuzzRealWidgetStateValues(
-    bool show_grid,
-    bool show_crosshair,
-    bool enable_animation,
-    double zoom_level,
-    int grid_spacing,
-    std::string const & label_text,
-    std::string const & highlight_color) {
+        bool show_grid,
+        bool show_crosshair,
+        bool enable_animation,
+        double zoom_level,
+        int grid_spacing,
+        std::string const & label_text,
+        std::string const & highlight_color) {
 
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -334,8 +331,8 @@ void FuzzRealWidgetStateValues(
     test_state->setShowGrid(show_grid);
     test_state->setShowCrosshair(show_crosshair);
     test_state->setEnableAnimation(enable_animation);
-    test_state->setZoomLevel(zoom_level);     // State clamps to [0.1, 5.0]
-    test_state->setGridSpacing(grid_spacing); // State clamps to [10, 200]
+    test_state->setZoomLevel(zoom_level);    // State clamps to [0.1, 5.0]
+    test_state->setGridSpacing(grid_spacing);// State clamps to [10, 200]
     test_state->setLabelText(QString::fromStdString(label_text));
     test_state->setHighlightColor(QString::fromStdString(highlight_color));
 
@@ -371,21 +368,21 @@ void FuzzRealWidgetStateValues(
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzRealWidgetStateValues)
-    .WithDomains(
-        fuzztest::Arbitrary<bool>(),
-        fuzztest::Arbitrary<bool>(),
-        fuzztest::Arbitrary<bool>(),
-        fuzztest::Finite<double>(),
-        fuzztest::Arbitrary<int>(),
-        fuzztest::PrintableAsciiString().WithMaxSize(200),
-        fuzztest::PrintableAsciiString().WithMaxSize(20));
+        .WithDomains(
+                fuzztest::Arbitrary<bool>(),
+                fuzztest::Arbitrary<bool>(),
+                fuzztest::Arbitrary<bool>(),
+                fuzztest::Finite<double>(),
+                fuzztest::Arbitrary<int>(),
+                fuzztest::PrintableAsciiString().WithMaxSize(200),
+                fuzztest::PrintableAsciiString().WithMaxSize(20));
 
 // ---- FuzzRealWidgetDiversePlacement ----
 // Exercises float, close-reopen actions on real widgets.
 
 void FuzzRealWidgetDiversePlacement(
-    std::vector<int> const & type_indices,
-    std::vector<int> const & placement_actions) {
+        std::vector<int> const & type_indices,
+        std::vector<int> const & placement_actions) {
 
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -398,18 +395,16 @@ void FuzzRealWidgetDiversePlacement(
     std::set<std::string> created_single_types;
     int expected_count = 0;
 
-    int const n = std::min({
-        static_cast<int>(type_indices.size()),
-        static_cast<int>(placement_actions.size()),
-        15});
+    int const n = std::min({static_cast<int>(type_indices.size()),
+                            static_cast<int>(placement_actions.size()),
+                            15});
 
     for (int i = 0; i < n; ++i) {
-        auto const & type_id = type_ids[
-            static_cast<size_t>(std::abs(type_indices[i])) % type_ids.size()];
+        auto const & type_id = type_ids[static_cast<size_t>(std::abs(type_indices[i])) % type_ids.size()];
 
         auto const & entries = corpusEntriesRef();
         auto const it = std::find_if(entries.begin(), entries.end(),
-            [&](auto const & e) { return e.type_id == type_id; });
+                                     [&](auto const & e) { return e.type_id == type_id; });
         bool const allow_multiple = (it != entries.end()) && it->allow_multiple;
 
         if (!allow_multiple && created_single_types.contains(type_id)) {
@@ -428,28 +423,35 @@ void FuzzRealWidgetDiversePlacement(
 
         int const action = std::abs(placement_actions[i]) % 3;
         switch (action) {
-        case 1: // Float
-            if (placed.view_dock) {
-                placed.view_dock->setFloating();
-            }
-            break;
-        case 2: // Close and re-open
-            // Closing may remove the state from the registry for some widget
-            // types (e.g., if the controller's cleanup signal fires). This is
-            // expected behavior — adjust expected_count accordingly.
-            if (placed.view_dock) {
-                auto const count_before = harness.registry()->stateCount();
-                placed.view_dock->closeDockWidget();
-                placed.view_dock->toggleView(true);
-                auto const count_after = harness.registry()->stateCount();
-                if (count_after < count_before) {
-                    // State was removed on close — adjust expectation
-                    expected_count -= static_cast<int>(count_before - count_after);
+            case 1:// Float
+                if (placed.view_dock) {
+                    placed.view_dock->setFloating();
                 }
-            }
-            break;
-        default: // 0 = Tab (default placement)
-            break;
+                break;
+            case 2:// Close and re-open
+                // Closing may remove the state from the registry for some widget
+                // types (e.g., if the controller's cleanup signal fires). This is
+                // expected behavior — adjust expected_count accordingly.
+                if (placed.view_dock) {
+                    auto const count_before = harness.registry()->stateCount();
+                    placed.view_dock->closeDockWidget();
+                    // After close, the dock widget may be disconnected from the
+                    // dock manager (dockManager() returns nullptr). Calling
+                    // toggleView(true) in that state crashes inside ADS when it
+                    // tries to create a CFloatingDockContainer with a null
+                    // manager. Only attempt re-open if the manager is still valid.
+                    if (placed.view_dock->dockManager() != nullptr) {
+                        placed.view_dock->toggleView(true);
+                    }
+                    auto const count_after = harness.registry()->stateCount();
+                    if (count_after < count_before) {
+                        // State was removed on close — adjust expectation
+                        expected_count -= static_cast<int>(count_before - count_after);
+                    }
+                }
+                break;
+            default:// 0 = Tab (default placement)
+                break;
         }
     }
 
@@ -470,9 +472,9 @@ void FuzzRealWidgetDiversePlacement(
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzRealWidgetDiversePlacement)
-    .WithDomains(
-        fuzztest::VectorOf(fuzztest::InRange(0, 10)).WithMaxSize(15),
-        fuzztest::VectorOf(fuzztest::InRange(0, 10)).WithMaxSize(15));
+        .WithDomains(
+                fuzztest::VectorOf(fuzztest::InRange(0, 10)).WithMaxSize(15),
+                fuzztest::VectorOf(fuzztest::InRange(0, 10)).WithMaxSize(15));
 
 // ---- FuzzRealWidgetFromGarbageJson ----
 // Create a TestWidget, then attempt to restore from garbage JSON.
@@ -502,7 +504,7 @@ void FuzzRealWidgetFromGarbageJson(std::string const & garbage) {
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzRealWidgetFromGarbageJson)
-    .WithDomains(fuzztest::Arbitrary<std::string>());
+        .WithDomains(fuzztest::Arbitrary<std::string>());
 
 // ============================================================================
 // Deterministic Tests
@@ -549,7 +551,7 @@ TEST(RealWidgetDeterministic, TestWidgetStateFieldPreservation) {
     ASSERT_TRUE(placed.isValid());
 
     auto * test_state = dynamic_cast<TestWidgetState *>(
-        harness.registry()->allStates()[0].get());
+            harness.registry()->allStates()[0].get());
     ASSERT_NE(test_state, nullptr);
 
     // Set non-default values
@@ -567,7 +569,7 @@ TEST(RealWidgetDeterministic, TestWidgetStateFieldPreservation) {
     ASSERT_TRUE(ch2.harness.restoreState(json1));
 
     auto * test_state2 = dynamic_cast<TestWidgetState *>(
-        ch2.harness.registry()->allStates()[0].get());
+            ch2.harness.registry()->allStates()[0].get());
     ASSERT_NE(test_state2, nullptr);
 
     EXPECT_EQ(test_state2->showGrid(), false);
@@ -591,7 +593,7 @@ TEST(RealWidgetDeterministic, TestWidgetTripleRoundTrip) {
     ch1.harness.createAndPlace("TestWidget");
 
     auto * state1 = dynamic_cast<TestWidgetState *>(
-        ch1.harness.registry()->allStates()[0].get());
+            ch1.harness.registry()->allStates()[0].get());
     state1->setShowGrid(false);
     state1->setZoomLevel(3.14);
     state1->setLabelText("Triple Test");
@@ -707,7 +709,7 @@ TEST(RealWidgetDeterministic, EmptyCorpusRoundTrip) {
 // Place TestWidget in each zone and verify round-trip.
 
 TEST(RealWidgetDeterministic, TestWidgetInEachZone) {
-    for (auto const zone : kAllZones) {
+    for (auto const zone: kAllZones) {
         CorpusHarness ch;
         auto & harness = ch.harness;
 
@@ -736,11 +738,11 @@ TEST(RealWidgetDeterministic, TestWidgetInEachZone) {
 
 // ---- FuzzDataInspectorStateValues ----
 void FuzzDataInspectorStateValues(
-    std::string const & inspected_key,
-    bool is_pinned,
-    std::string const & section1,
-    std::string const & section2,
-    std::string const & ui_json_value) {
+        std::string const & inspected_key,
+        bool is_pinned,
+        std::string const & section1,
+        std::string const & section2,
+        std::string const & ui_json_value) {
 
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -794,19 +796,19 @@ void FuzzDataInspectorStateValues(
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzDataInspectorStateValues)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::Arbitrary<bool>(),
-        fuzztest::PrintableAsciiString().WithMaxSize(50),
-        fuzztest::PrintableAsciiString().WithMaxSize(50),
-        fuzztest::PrintableAsciiString().WithMaxSize(200));
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::Arbitrary<bool>(),
+                fuzztest::PrintableAsciiString().WithMaxSize(50),
+                fuzztest::PrintableAsciiString().WithMaxSize(50),
+                fuzztest::PrintableAsciiString().WithMaxSize(200));
 
 // ---- FuzzDataImportStateValues ----
 void FuzzDataImportStateValues(
-    std::string const & import_type,
-    std::string const & last_dir,
-    std::string const & pref_key,
-    std::string const & pref_value) {
+        std::string const & import_type,
+        std::string const & last_dir,
+        std::string const & pref_key,
+        std::string const & pref_value) {
 
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -824,8 +826,8 @@ void FuzzDataImportStateValues(
     state->setLastUsedDirectory(QString::fromStdString(last_dir));
     if (!pref_key.empty()) {
         state->setFormatPreference(
-            QString::fromStdString(pref_key),
-            QString::fromStdString(pref_value));
+                QString::fromStdString(pref_key),
+                QString::fromStdString(pref_value));
     }
 
     auto const json1 = harness.captureState();
@@ -855,17 +857,17 @@ void FuzzDataImportStateValues(
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzDataImportStateValues)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(200),
-        fuzztest::PrintableAsciiString().WithMaxSize(50),
-        fuzztest::PrintableAsciiString().WithMaxSize(50));
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(200),
+                fuzztest::PrintableAsciiString().WithMaxSize(50),
+                fuzztest::PrintableAsciiString().WithMaxSize(50));
 
 // ---- FuzzDataTransformStateValues ----
 void FuzzDataTransformStateValues(
-    std::string const & input_key,
-    std::string const & operation,
-    std::string const & output_name) {
+        std::string const & input_key,
+        std::string const & operation,
+        std::string const & output_name) {
 
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -907,10 +909,10 @@ void FuzzDataTransformStateValues(
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzDataTransformStateValues)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(100));
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(100));
 
 // ---- FuzzMultipleDataInspectors ----
 // DataInspector allows multiple instances — stress test that.
@@ -941,20 +943,20 @@ void FuzzMultipleDataInspectors(int count) {
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzMultipleDataInspectors)
-    .WithDomains(fuzztest::InRange(0, 10));
+        .WithDomains(fuzztest::InRange(0, 10));
 
 // ---- FuzzDataViewerStateValues ----
 void FuzzDataViewerStateValues(
-    int64_t time_start,
-    int64_t time_end,
-    float y_min,
-    float y_max,
-    float global_zoom,
-    bool grid_enabled,
-    int grid_spacing,
-    std::string const & bg_color,
-    std::string const & analog_key,
-    std::string const & analog_color) {
+        int64_t time_start,
+        int64_t time_end,
+        float y_min,
+        float y_max,
+        float global_zoom,
+        bool grid_enabled,
+        int grid_spacing,
+        std::string const & bg_color,
+        std::string const & analog_key,
+        std::string const & analog_color) {
 
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -1018,17 +1020,17 @@ void FuzzDataViewerStateValues(
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzDataViewerStateValues)
-    .WithDomains(
-        fuzztest::Arbitrary<int64_t>(),
-        fuzztest::Arbitrary<int64_t>(),
-        fuzztest::Finite<float>(),
-        fuzztest::Finite<float>(),
-        fuzztest::Finite<float>(),
-        fuzztest::Arbitrary<bool>(),
-        fuzztest::InRange(1, 10000),
-        fuzztest::PrintableAsciiString().WithMaxSize(20),
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(20));
+        .WithDomains(
+                fuzztest::Arbitrary<int64_t>(),
+                fuzztest::Arbitrary<int64_t>(),
+                fuzztest::Finite<float>(),
+                fuzztest::Finite<float>(),
+                fuzztest::Finite<float>(),
+                fuzztest::Arbitrary<bool>(),
+                fuzztest::InRange(1, 10000),
+                fuzztest::PrintableAsciiString().WithMaxSize(20),
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(20));
 
 // ---- FuzzMultipleDataViewers ----
 // DataViewerWidget allows multiple instances — stress test that.
@@ -1059,22 +1061,22 @@ void FuzzMultipleDataViewers(int count) {
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzMultipleDataViewers)
-    .WithDomains(fuzztest::InRange(0, 10));
+        .WithDomains(fuzztest::InRange(0, 10));
 
 // ---- FuzzMediaWidgetStateValues ----
 void FuzzMediaWidgetStateValues(
-    std::string const & media_key,
-    double zoom,
-    double pan_x,
-    double pan_y,
-    int canvas_w,
-    int canvas_h,
-    std::string const & line_key,
-    std::string const & line_color,
-    int line_thickness,
-    int brush_size,
-    float selection_threshold,
-    int tool_mode_idx) {
+        std::string const & media_key,
+        double zoom,
+        double pan_x,
+        double pan_y,
+        int canvas_w,
+        int canvas_h,
+        std::string const & line_key,
+        std::string const & line_color,
+        int line_thickness,
+        int brush_size,
+        float selection_threshold,
+        int tool_mode_idx) {
 
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -1125,7 +1127,7 @@ void FuzzMediaWidgetStateValues(
 
     // Set tool mode
     auto const line_mode = static_cast<LineToolMode>(
-        std::abs(tool_mode_idx) % 5);
+            std::abs(tool_mode_idx) % 5);
     state->setActiveLineMode(line_mode);
 
     auto const json1 = harness.captureState();
@@ -1151,19 +1153,19 @@ void FuzzMediaWidgetStateValues(
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzMediaWidgetStateValues)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::Finite<double>(),
-        fuzztest::Finite<double>(),
-        fuzztest::Finite<double>(),
-        fuzztest::InRange(1, 8192),
-        fuzztest::InRange(1, 8192),
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(20),
-        fuzztest::InRange(1, 20),
-        fuzztest::InRange(1, 200),
-        fuzztest::Finite<float>(),
-        fuzztest::InRange(0, 4));
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::Finite<double>(),
+                fuzztest::Finite<double>(),
+                fuzztest::Finite<double>(),
+                fuzztest::InRange(1, 8192),
+                fuzztest::InRange(1, 8192),
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(20),
+                fuzztest::InRange(1, 20),
+                fuzztest::InRange(1, 200),
+                fuzztest::Finite<float>(),
+                fuzztest::InRange(0, 4));
 
 // ---- FuzzMultipleMediaWidgets ----
 // MediaWidget allows multiple instances — stress test that.
@@ -1194,7 +1196,7 @@ void FuzzMultipleMediaWidgets(int count) {
 }
 
 FUZZ_TEST(RealWidgetFuzz, FuzzMultipleMediaWidgets)
-    .WithDomains(fuzztest::InRange(0, 10));
+        .WithDomains(fuzztest::InRange(0, 10));
 
 // ============================================================================
 // Deterministic Tests — Core Level
@@ -1230,7 +1232,7 @@ TEST(RealWidgetDeterministic, DataInspectorFieldPreservation) {
     ASSERT_TRUE(placed.isValid());
 
     auto * state = dynamic_cast<DataInspectorState *>(
-        harness.registry()->allStates()[0].get());
+            harness.registry()->allStates()[0].get());
     ASSERT_NE(state, nullptr);
 
     state->setInspectedDataKey("my_analog_data");
@@ -1244,7 +1246,7 @@ TEST(RealWidgetDeterministic, DataInspectorFieldPreservation) {
     ASSERT_TRUE(ch2.harness.restoreState(json1));
 
     auto * state2 = dynamic_cast<DataInspectorState *>(
-        ch2.harness.registry()->allStates()[0].get());
+            ch2.harness.registry()->allStates()[0].get());
     ASSERT_NE(state2, nullptr);
 
     EXPECT_EQ(state2->inspectedDataKey(), "my_analog_data");
@@ -1287,7 +1289,7 @@ TEST(RealWidgetDeterministic, DataImportFieldPreservation) {
     ASSERT_TRUE(placed.isValid());
 
     auto * state = dynamic_cast<DataImportWidgetState *>(
-        harness.registry()->allStates()[0].get());
+            harness.registry()->allStates()[0].get());
     ASSERT_NE(state, nullptr);
 
     state->setSelectedImportType("LineData");
@@ -1301,7 +1303,7 @@ TEST(RealWidgetDeterministic, DataImportFieldPreservation) {
     ASSERT_TRUE(ch2.harness.restoreState(json1));
 
     auto * state2 = dynamic_cast<DataImportWidgetState *>(
-        ch2.harness.registry()->allStates()[0].get());
+            ch2.harness.registry()->allStates()[0].get());
     ASSERT_NE(state2, nullptr);
 
     EXPECT_EQ(state2->selectedImportType(), "LineData");
@@ -1344,7 +1346,7 @@ TEST(RealWidgetDeterministic, DataTransformFieldPreservation) {
     ASSERT_TRUE(placed.isValid());
 
     auto * state = dynamic_cast<DataTransformWidgetState *>(
-        harness.registry()->allStates()[0].get());
+            harness.registry()->allStates()[0].get());
     ASSERT_NE(state, nullptr);
 
     state->setSelectedInputDataKey("my_mask_data");
@@ -1357,7 +1359,7 @@ TEST(RealWidgetDeterministic, DataTransformFieldPreservation) {
     ASSERT_TRUE(ch2.harness.restoreState(json1));
 
     auto * state2 = dynamic_cast<DataTransformWidgetState *>(
-        ch2.harness.registry()->allStates()[0].get());
+            ch2.harness.registry()->allStates()[0].get());
     ASSERT_NE(state2, nullptr);
 
     EXPECT_EQ(state2->selectedInputDataKey(), "my_mask_data");
@@ -1477,7 +1479,7 @@ TEST(RealWidgetDeterministic, DataViewerFieldPreservation) {
     ASSERT_TRUE(placed.isValid());
 
     auto * state = dynamic_cast<DataViewerState *>(
-        harness.registry()->allStates()[0].get());
+            harness.registry()->allStates()[0].get());
     ASSERT_NE(state, nullptr);
 
     state->setTimeWindow(100, 5000);
@@ -1509,7 +1511,7 @@ TEST(RealWidgetDeterministic, DataViewerFieldPreservation) {
     ASSERT_TRUE(ch2.harness.restoreState(json1));
 
     auto * state2 = dynamic_cast<DataViewerState *>(
-        ch2.harness.registry()->allStates()[0].get());
+            ch2.harness.registry()->allStates()[0].get());
     ASSERT_NE(state2, nullptr);
 
     EXPECT_EQ(state2->timeWindow(), std::make_pair(int64_t{100}, int64_t{5000}));
@@ -1592,7 +1594,7 @@ TEST(RealWidgetDeterministic, MediaWidgetFieldPreservation) {
     ASSERT_TRUE(placed.isValid());
 
     auto * state = dynamic_cast<MediaWidgetState *>(
-        harness.registry()->allStates()[0].get());
+            harness.registry()->allStates()[0].get());
     ASSERT_NE(state, nullptr);
 
     // Set displayed data key
@@ -1647,7 +1649,7 @@ TEST(RealWidgetDeterministic, MediaWidgetFieldPreservation) {
     ASSERT_TRUE(ch2.harness.restoreState(json1));
 
     auto * state2 = dynamic_cast<MediaWidgetState *>(
-        ch2.harness.registry()->allStates()[0].get());
+            ch2.harness.registry()->allStates()[0].get());
     ASSERT_NE(state2, nullptr);
 
     // Verify primary display
@@ -1752,4 +1754,4 @@ TEST(RealWidgetDeterministic, AllCoreWidgetsRoundTrip) {
     ExpectJsonEqual(json1, json2);
 }
 
-} // namespace
+}// namespace
