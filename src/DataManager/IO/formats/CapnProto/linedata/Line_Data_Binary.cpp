@@ -1,54 +1,38 @@
 #include "Line_Data_Binary.hpp"
 
-#include "common/Serialization.hpp"
+#include "IO/core/AtomicWrite.hpp"
 #include "Lines/Line_Data.hpp"
+#include "common/Serialization.hpp"
 
 #include <capnp/message.h>
 #include <capnp/serialize.h>
 #include <kj/array.h>
+#include <spdlog/spdlog.h>
 
 #include <filesystem>
-#include <fstream>
-#include <iostream>
 #include <vector>
 
 
-bool save(LineData const & data, BinaryLineSaverOptions & opts) {
+bool save(LineData const & data, BinaryLineSaverOptions const & opts) {
 
-    //Check if directory exists
-    if (!std::filesystem::exists(opts.parent_dir)) {
-        std::filesystem::create_directories(opts.parent_dir);
-        std::cout << "Created directory: " << opts.parent_dir << std::endl;
-    }
-
-    std::string file_path = opts.parent_dir + "/" + opts.filename;
+    std::filesystem::path const target_path =
+            std::filesystem::path(opts.parent_dir) / opts.filename;
 
     try {
-
         kj::Array<capnp::word> message_words = IO::CapnProto::serializeLineData(&data);
         kj::ArrayPtr<char const> message_chars = message_words.asChars();
 
-        std::ofstream outfile(file_path, std::ios::binary | std::ios::trunc);
-        if (!outfile.is_open()) {
-            std::cerr << "Error: Could not open file for writing: " << file_path << std::endl;
-            return false;
-        }
-
-        outfile.write(message_chars.begin(), message_chars.size());
-
-        if (outfile.fail()) {
-            std::cerr << "Error: Failed to write all data to file: " << file_path << std::endl;
-            outfile.close();
-            return false;
-        }
-        outfile.close();
-        return true;
+        return atomicWriteFile(target_path, [&](std::ostream & os) -> bool {
+            os.write(message_chars.begin(),
+                     static_cast<std::streamsize>(message_chars.size()));
+            return !os.fail();
+        });
 
     } catch (kj::Exception const & e) {
-        std::cerr << "Cap'n Proto Exception during save: " << e.getDescription().cStr() << std::endl;
+        spdlog::error("Cap'n Proto exception during save: {}", e.getDescription().cStr());
         return false;
     } catch (std::exception const & e) {
-        std::cerr << "Standard Exception during save: " << e.what() << std::endl;
+        spdlog::error("Exception during binary line save: {}", e.what());
         return false;
     }
 }
@@ -61,7 +45,7 @@ std::shared_ptr<LineData> load(BinaryLineLoaderOptions & opts) {
             return nullptr;
         }
 
-        std::streamsize size = infile.tellg();
+        std::streamsize const size = infile.tellg();
         infile.seekg(0, std::ios::beg);
 
         if (size == 0) {

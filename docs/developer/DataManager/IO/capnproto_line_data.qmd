@@ -1,0 +1,73 @@
+---
+title: "CapnProto Binary Line Data I/O"
+---
+
+## Overview
+
+The CapnProto binary line data saver and loader handle reading and writing `LineData`
+objects to/from a binary Cap'n Proto serialization format. This format is lossless —
+floating-point values survive the round-trip without precision loss, unlike CSV formats.
+
+## File Location
+
+```
+src/DataManager/IO/formats/CapnProto/
+├── linedata/
+│   ├── Line_Data_Binary.hpp   # Option structs, function declarations, ParameterUIHints
+│   ├── Line_Data_Binary.cpp   # Implementation (save with atomicWriteFile, load)
+│   └── line_data.capnp        # Cap'n Proto schema definition
+├── common/
+│   ├── Serialization.hpp      # serializeLineData / deserializeLineData
+│   └── Serialization.cpp
+├── CapnProtoFormatLoader.hpp  # IFormatLoader subclass (registry integration)
+└── CapnProtoFormatLoader.cpp  # load/save dispatch, getSaverInfo()
+```
+
+## Option Structs
+
+### Loader Options
+
+```cpp
+struct BinaryLineLoaderOptions {
+    std::string file_path;   // Full path to the .capnp file to load
+};
+```
+
+### Saver Options
+
+```cpp
+struct BinaryLineSaverOptions {
+    std::string filename;         // Output filename (e.g., "line_data.capnp")
+    std::string parent_dir = "."; // Directory in which to create the output file
+};
+```
+
+## Atomic Writes
+
+The `save()` function uses `atomicWriteFile()` to ensure crash safety. The binary data is
+first serialized to memory via `IO::CapnProto::serializeLineData()`, then written to a
+temporary file, and atomically renamed over the target path.
+
+## Registry Integration
+
+The `CapnProtoFormatLoader` class overrides `getSaverInfo()` to register the binary line
+saver with format identifier `"capnp"` and data type `IODataType::Line`. This enables the
+saver to be discovered via `LoaderRegistry::getSupportedSaveFormats()`.
+
+## Round-Trip Guarantee
+
+Because Cap'n Proto uses a binary wire format, the round-trip is exact: saving and loading
+preserves all floating-point values bit-for-bit. This is verified by the fuzz test which
+uses `EXPECT_FLOAT_EQ` (exact comparison) rather than the tolerance-based comparison used
+for CSV round-trips.
+
+## Tests
+
+- **Fuzz test**: `tests/fuzz/unit/DataManager/IO/fuzz_capnproto_line_roundtrip.cpp` —
+  generates random `LineData` with varying frame indices, line lengths, and coordinates,
+  saves to CapnProto format, loads back, and verifies exact match.
+- **Unit test**: `tests/DataManager/IO/formats/CapnProto/line_binary_unit.test.cpp` —
+  deterministic round-trip tests covering single/multiple lines, multiple frames, negative
+  coordinates, and image size preservation.
+- **Legacy test**: `tests/DataManager/IO/line_data_binary.test.cpp` — original fixture-based
+  tests covering save/load through direct functions and DataManager JSON config.

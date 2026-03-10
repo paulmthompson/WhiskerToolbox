@@ -17,22 +17,27 @@ public:
     /**
      * @brief Load data from CapnProto file
      */
-    LoadResult load(std::string const& filepath, 
-                   IODataType dataType, 
-                   nlohmann::json const& config) const override;
-    
+    LoadResult load(std::string const & filepath,
+                    IODataType dataType,
+                    nlohmann::json const & config) const override;
+
     /**
      * @brief Save data to CapnProto file
      */
-    LoadResult save(std::string const& filepath, 
-                   IODataType dataType, 
-                   nlohmann::json const& config, 
-                   void const* data) const override;
+    LoadResult save(std::string const & filepath,
+                    IODataType dataType,
+                    nlohmann::json const & config,
+                    void const * data) const override;
 
     /**
      * @brief Check if this loader supports the format/dataType combination
      */
-    bool supportsFormat(std::string const& format, IODataType dataType) const override;
+    bool supportsFormat(std::string const & format, IODataType dataType) const override;
+
+    /**
+     * @brief Return metadata for all save operations this loader supports
+     */
+    std::vector<SaverInfo> getSaverInfo() const override;
 
     /**
      * @brief Get loader name for logging
@@ -43,8 +48,8 @@ private:
     /**
      * @brief Load LineData from CapnProto file using existing functionality
      */
-    LoadResult loadLineDataCapnProto(std::string const& filepath, 
-                                    nlohmann::json const& config) const;
+    static LoadResult loadLineDataCapnProto(std::string const & filepath,
+                                            nlohmann::json const & config);
 };
 
-#endif // CAPNPROTO_FORMAT_LOADER_HPP
+#endif// CAPNPROTO_FORMAT_LOADER_HPP

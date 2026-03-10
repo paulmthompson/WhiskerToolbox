@@ -210,3 +210,38 @@ target_link_options(fuzz_csv_mask_rle_roundtrip
 )
 
 gtest_discover_tests(fuzz_csv_mask_rle_roundtrip)
+
+# CapnProto LineData round-trip fuzz test
+
+if(ENABLE_CAPNPROTO)
+
+add_executable(fuzz_capnproto_line_roundtrip
+    fuzz_capnproto_line_roundtrip.cpp
+)
+
+add_fuzz_test_with_instantiations(fuzz_capnproto_line_roundtrip)
+
+target_link_libraries(fuzz_capnproto_line_roundtrip
+    PRIVATE
+        DataManager
+        DataManagerIO
+        DataManagerIO_CapnProto
+        NEURALYZER_GEOMETRY
+        gtest
+        fuzztest::fuzztest
+        fuzztest::fuzztest_gtest_main
+)
+
+target_compile_options(fuzz_capnproto_line_roundtrip
+    PRIVATE
+        -fsanitize=address
+)
+
+target_link_options(fuzz_capnproto_line_roundtrip
+    PRIVATE
+        -fsanitize=address
+)
+
+gtest_discover_tests(fuzz_capnproto_line_roundtrip)
+
+endif()

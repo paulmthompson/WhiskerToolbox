@@ -455,37 +455,51 @@ updated accordingly.
 
 ## Step 3.1.8 — CapnProto LineData Saver
 
-**Goal:** Register the CapnProto (binary) line saver and add a round-trip fuzz test.
+**Goal:** Register the CapnProto (binary) line saver in the registry with typed options and add
+a round-trip fuzz test.
 
 **Matching loader:** `BinaryLineLoaderOptions` — **round-trip fuzz test included.**
 
 ### Tasks
 
-- [ ] **Return type** — Verify `save(LineData const&, BinaryLineSaverOptions&)` returns
-  `bool`. Update to return `LoadResult` for consistency.
+- [x] **Return type** — `save(LineData const&, BinaryLineSaverOptions const&)` already returned
+  `bool`. Updated to take `const &` for options (was non-const `&`).
 
-- [ ] **Atomic writes** — Use `atomicWriteFile()` (binary data written via callback).
+- [x] **Atomic writes** — `save()` now uses `atomicWriteFile()` internally, replacing manual
+  file I/O with the project's atomic write utility.
 
-- [ ] **Register in CapnProtoFormatLoader** — Override `getSaverInfo()` to return one entry
+- [x] **Register in CapnProtoFormatLoader** — Override `getSaverInfo()` to return one entry
   for `IODataType::Line` with `extractParameterSchema<BinaryLineSaverOptions>()`.
 
-- [ ] **Round-trip fuzz test** —
-  `tests/fuzz/unit/DataManager/IO/fuzz_capnproto_line_roundtrip.cpp`:
-  1. Generate `LineData` with fuzzed content (varying line lengths, coordinates, frame
-     indices).
-  2. Save with `BinaryLineSaverOptions` → load with `BinaryLineLoaderOptions`.
-  3. Compare: exact match (binary format is lossless — no floating-point formatting loss).
+- [x] **`ParameterUIHints<BinaryLineSaverOptions>`** — Added tooltips for filename and
+  parent_dir fields.
 
-- [ ] **Unit test** — Deterministic round-trip.
+- [x] **Round-trip fuzz test** —
+  `tests/fuzz/unit/DataManager/IO/fuzz_capnproto_line_roundtrip.cpp`:
+  1. Generate `LineData` with fuzzed content (varying line lengths 1–20 points, coordinates
+     ±1e4, frame indices 0–10000).
+  2. Save with `BinaryLineSaverOptions` → load with `BinaryLineLoaderOptions`.
+  3. Compare: exact match using `EXPECT_FLOAT_EQ` (binary format is lossless — no
+     floating-point formatting loss).
+
+- [x] **Unit test** — Deterministic round-trip tests added to
+  `tests/DataManager/IO/formats/CapnProto/line_binary_unit.test.cpp` with six sections:
+  single line single frame, multiple lines per frame, multiple frames, negative coordinates
+  preserved, image size preserved, and save-returns-true verification.
 
 ### Files Modified
 
 | File | Action |
 |------|--------|
-| `src/DataManager/IO/formats/CapnProto/linedata/Line_Data_Binary.hpp` | **Modify** |
-| `src/DataManager/IO/formats/CapnProto/linedata/Line_Data_Binary.cpp` | **Modify** |
-| `src/DataManager/IO/formats/CapnProto/CapnProtoFormatLoader.cpp` | **Modify** — `getSaverInfo()` |
-| `tests/fuzz/unit/DataManager/IO/fuzz_capnproto_line_roundtrip.cpp` | **Create** |
+| `src/DataManager/IO/formats/CapnProto/linedata/Line_Data_Binary.hpp` | **Modified** — `const &` opts, `ParameterUIHints`, `ParameterSchema` include |
+| `src/DataManager/IO/formats/CapnProto/linedata/Line_Data_Binary.cpp` | **Modified** — atomic write via `atomicWriteFile()`, spdlog logging |
+| `src/DataManager/IO/formats/CapnProto/CapnProtoFormatLoader.hpp` | **Modified** — `getSaverInfo()` override declaration |
+| `src/DataManager/IO/formats/CapnProto/CapnProtoFormatLoader.cpp` | **Modified** — `getSaverInfo()` implementation |
+| `src/DataManager/IO/formats/CapnProto/CMakeLists.txt` | **Modified** — link `ParameterSchema`, `spdlog`, added include path for `IO/core/` |
+| `tests/fuzz/unit/DataManager/IO/fuzz_capnproto_line_roundtrip.cpp` | **Create** — round-trip fuzz test |
+| `tests/fuzz/unit/DataManager/IO/CMakeLists.txt` | **Modified** — added fuzz test target (conditional on `ENABLE_CAPNPROTO`) |
+| `tests/DataManager/IO/formats/CapnProto/line_binary_unit.test.cpp` | **Create** — deterministic round-trip unit tests |
+| `tests/DataManager/CMakeLists.txt` | **Modified** — added unit test source |
 
 ---
 
@@ -704,7 +718,7 @@ the saver's `precision` setting:
 | 3.1.5 | CSV DigitalEventSeries Saver | **Complete** | Yes |
 | 3.1.6 | CSV DigitalIntervalSeries Saver | **Complete** | Yes |
 | 3.1.7 | CSV MaskData (RLE) Saver | **Complete** | Yes |
-| 3.1.8 | CapnProto LineData Saver | Not Started | Yes |
+| 3.1.8 | CapnProto LineData Saver | **Complete** | Yes |
 | 3.1.9 | OpenCV MaskData (Image) Saver | Not Started | No (lossy format) |
 | 3.2 | SaveData Command | Not Started | N/A |
 | 3.3 | LoadData Command | Not Started | N/A |

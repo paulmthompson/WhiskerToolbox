@@ -160,7 +160,10 @@ if(ENABLE_FFMPEG)
 endif()
 
 if(ENABLE_CAPNPROTO)
-    target_sources(test_data_manager PRIVATE IO/line_data_binary.test.cpp)
+    target_sources(test_data_manager PRIVATE
+        IO/line_data_binary.test.cpp
+        IO/formats/CapnProto/line_binary_unit.test.cpp
+    )
     target_link_libraries(test_data_manager PRIVATE DataManagerIO_CapnProto)
     target_compile_definitions(test_data_manager PRIVATE ENABLE_CAPNPROTO)
 endif()

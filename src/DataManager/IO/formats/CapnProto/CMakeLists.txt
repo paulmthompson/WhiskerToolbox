@@ -30,6 +30,7 @@ add_library(DataManagerIO_CapnProto SHARED ${CAPNPROTO_PLUGIN_SOURCES})
 
 target_include_directories(DataManagerIO_CapnProto PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../..>"  # src/DataManager for IO/core/ headers
     ${CMAKE_CURRENT_BINARY_DIR}  # For generated CapnProto headers
 )
 
@@ -38,6 +39,8 @@ target_link_libraries(DataManagerIO_CapnProto PRIVATE
     WhiskerToolbox::LineData  # Link to LineData library instead of accessing headers
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
+    ParameterSchema
+    spdlog::spdlog
 )
 
 if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
