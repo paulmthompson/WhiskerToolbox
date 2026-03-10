@@ -367,33 +367,41 @@ updated accordingly.
 
 ### Tasks
 
-- [ ] **Return type** — Update `save(DigitalIntervalSeries const*, CSVIntervalSaverOptions)` to
-  return `LoadResult`.
+- [x] **Return type** — Updated `save(DigitalIntervalSeries const*, CSVIntervalSaverOptions const&)` to
+  return `bool` (success/failure). The `CSVLoader::saveDigitalIntervalCSV()` wrapper converts
+  this to `LoadResult` for the registry interface.
 
-- [ ] **Atomic writes** — Use `atomicWriteFile()`.
+- [x] **Atomic writes** — `save()` now uses `atomicWriteFile()` internally.
 
 - [x] **Register in CSVLoader** — `CSVLoader::getSaverInfo()` includes an entry for
   `IODataType::DigitalInterval` with `extractParameterSchema<CSVIntervalSaverOptions>()`.
 
-- [ ] **`ParameterUIHints<CSVIntervalSaverOptions>`** — Tooltips and field descriptions.
+- [x] **`ParameterUIHints<CSVIntervalSaverOptions>`** — Added tooltips for filename, parent_dir,
+  delimiter, line_delim, save_header, and header fields.
 
-- [ ] **Round-trip fuzz test** —
+- [x] **Round-trip fuzz test** —
   `tests/fuzz/unit/DataManager/IO/fuzz_csv_interval_roundtrip.cpp`:
   1. Generate `DigitalIntervalSeries` with fuzzed intervals (random start/end times,
-     varying interval count, adjacent/overlapping intervals).
+     non-overlapping, varying interval count).
   2. Save with `CSVIntervalSaverOptions` → load with `CSVIntervalLoaderOptions`.
   3. Compare: same interval count, same start/end times.
+  Two fuzz tests: `FuzzCsvIntervalRoundTrip` (default comma delimiter) and
+  `FuzzCsvIntervalRoundTripDelimiter` (varying delimiters: comma, space, tab, semicolon).
 
-- [ ] **Unit test** — Deterministic round-trip.
+- [x] **Unit test** — Existing deterministic round-trip tests in
+  `tests/DataManager/IO/formats/CSV/digitalintervals/digital_interval_csv_unit.test.cpp`
+  updated to verify `bool` return from save.
 
 ### Files Modified
 
 | File | Action |
 |------|--------|
-| `src/DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp` | **Modify** |
-| `src/DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.cpp` | **Modify** |
-| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modify** — `getSaverInfo()` entry |
-| `tests/fuzz/unit/DataManager/IO/fuzz_csv_interval_roundtrip.cpp` | **Create** |
+| `src/DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp` | **Modified** — return `bool`, const ref, `ParameterSchema` include, `ParameterUIHints` |
+| `src/DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.cpp` | **Modified** — atomic write via `atomicWriteFile()`, return `bool`, removed `check_dir_and_get_full_path` |
+| `src/DataManager/IO/formats/CSV/CSVLoader.cpp` | **Modified** — `saveDigitalIntervalCSV()` checks `bool` return |
+| `tests/fuzz/unit/DataManager/IO/fuzz_csv_interval_roundtrip.cpp` | **Create** — round-trip fuzz tests |
+| `tests/fuzz/unit/DataManager/IO/CMakeLists.txt` | **Modified** — added fuzz test target |
+| `tests/DataManager/IO/formats/CSV/digitalintervals/digital_interval_csv_unit.test.cpp` | **Modified** — save calls check `bool` return |
 
 ---
 
@@ -683,7 +691,7 @@ the saver's `precision` setting:
 | 3.1.3 | CSV LineData Saver (Single + Multi) | **Complete** | Yes (×2) |
 | 3.1.4 | CSV AnalogTimeSeries Saver | **Complete** | Yes |
 | 3.1.5 | CSV DigitalEventSeries Saver | **Complete** | Yes |
-| 3.1.6 | CSV DigitalIntervalSeries Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
+| 3.1.6 | CSV DigitalIntervalSeries Saver | **Complete** | Yes |
 | 3.1.7 | CSV MaskData (RLE) Saver | **In Progress** — registered in CSVLoader; return type, atomic write, fuzz tests remaining | Yes |
 | 3.1.8 | CapnProto LineData Saver | Not Started | Yes |
 | 3.1.9 | OpenCV MaskData (Image) Saver | Not Started | No (lossy format) |

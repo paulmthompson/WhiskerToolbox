@@ -150,3 +150,33 @@ target_link_options(fuzz_csv_event_roundtrip
 )
 
 gtest_discover_tests(fuzz_csv_event_roundtrip)
+
+# CSV DigitalIntervalSeries round-trip fuzz test
+
+add_executable(fuzz_csv_interval_roundtrip
+    fuzz_csv_interval_roundtrip.cpp
+)
+
+add_fuzz_test_with_instantiations(fuzz_csv_interval_roundtrip)
+
+target_link_libraries(fuzz_csv_interval_roundtrip
+    PRIVATE
+        DataManager
+        DataManagerIO
+        NEURALYZER_GEOMETRY
+        gtest
+        fuzztest::fuzztest
+        fuzztest::fuzztest_gtest_main
+)
+
+target_compile_options(fuzz_csv_interval_roundtrip
+    PRIVATE
+        -fsanitize=address
+)
+
+target_link_options(fuzz_csv_interval_roundtrip
+    PRIVATE
+        -fsanitize=address
+)
+
+gtest_discover_tests(fuzz_csv_interval_roundtrip)

@@ -689,10 +689,13 @@ LoadResult CSVLoader::saveDigitalIntervalCSV(std::string const & filepath,
         if (config.contains("save_header")) save_opts.save_header = config["save_header"];
         if (config.contains("header")) save_opts.header = config["header"];
 
-        ::save(interval_data, save_opts);
+        bool const ok = ::save(interval_data, save_opts);
 
         LoadResult result;
-        result.success = true;
+        result.success = ok;
+        if (!ok) {
+            result.error_message = "CSV digital interval save failed: write error";
+        }
         return result;
 
     } catch (std::exception const & e) {
