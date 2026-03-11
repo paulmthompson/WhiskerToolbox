@@ -28,10 +28,22 @@ bool isKnownCommandName(std::string const & name);
 /// @brief Create a command from a descriptor's name and rfl::Generic parameters.
 ///
 /// Returns nullptr if the command name is unknown or parameters fail to parse.
-/// This is the single place that maps command name strings to concrete command types.
+/// Delegates to createCommandFromJson() after serializing and normalizing the JSON.
 std::unique_ptr<ICommand> createCommand(
         std::string const & name,
         rfl::Generic const & params);
+
+/// @brief Create a command from a name and a pre-built JSON parameter string.
+///
+/// Applies integer normalization to handle the rfl::Generic round-trip issue
+/// (whole-number doubles like 10.0 are converted to 10 before deserialization).
+/// Prefer this overload when a JSON string is already available to avoid an
+/// unnecessary rfl::Generic round-trip.
+///
+/// Returns nullptr if the command name is unknown or parameters fail to parse.
+std::unique_ptr<ICommand> createCommandFromJson(
+        std::string const & name,
+        std::string const & params_json);
 
 /// @brief Return metadata for all registered commands.
 ///

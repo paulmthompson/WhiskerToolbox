@@ -5,9 +5,12 @@ description: "First four command implementations: MoveByTimeRange, CopyByTimeRan
 
 ## Overview
 
-This page documents the first four concrete `ICommand` implementations. Each command
-has a reflect-cpp–serializable parameter struct and lives in `src/DataManager/Commands/`.
-All commands are registered in the centralized `createCommand()` factory.
+This page documents the first four concrete `ICommand` implementations for data mutation
+and meta operations. Each command has a reflect-cpp–serializable parameter struct and lives
+in `src/DataManager/Commands/`. All commands are registered in the centralized
+`createCommand()` factory.
+
+For the persistence command (`SaveData`), see [SaveData Command](save_data.qmd).
 
 **Source files:**
 

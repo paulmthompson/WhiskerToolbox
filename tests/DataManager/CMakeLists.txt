@@ -52,7 +52,14 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/VariableSubstitution.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/GetEntityIdsInRange.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/Commands.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveData.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveDataDigitalEvent.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/LoadData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/Validation.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/CommandRecorder.test.cpp
+
+        # DataManagerSnapshot tests
+        ${CMAKE_SOURCE_DIR}/src/DataManager/DataManagerSnapshot.test.cpp
 
         test_time_entity.cpp
         test_time_entity_groups.cpp
@@ -127,6 +134,7 @@ add_executable(test_data_manager
         IO/formats/CSV/analog/analog_csv_integration.test.cpp
         IO/formats/CSV/analog/analog_csv_unit.test.cpp
         IO/formats/CSV/digitalevents/digital_event_csv_integration.test.cpp
+        IO/formats/CSV/digitalevents/digital_event_csv_unit.test.cpp
         IO/formats/CSV/digitalintervals/digital_interval_csv_integration.test.cpp
         IO/formats/CSV/digitalintervals/digital_interval_csv_unit.test.cpp
         IO/formats/CSV/digitalintervals/digital_interval_binary_state_integration.test.cpp
@@ -135,6 +143,7 @@ add_executable(test_data_manager
         IO/formats/CSV/points/point_csv_unit.test.cpp
         IO/formats/CSV/lines/line_csv_unit.test.cpp
         IO/formats/CSV/masks/mask_csv_rle.test.cpp
+        IO/formats/CSV/masks/mask_csv_rle_unit.test.cpp
         IO/formats/Binary/analog/analog_binary_integration.test.cpp
         IO/formats/Binary/analog/analog_binary_unit.test.cpp
         IO/formats/Binary/digitalintervals/digital_interval_binary_integration.test.cpp
@@ -158,7 +167,10 @@ if(ENABLE_FFMPEG)
 endif()
 
 if(ENABLE_CAPNPROTO)
-    target_sources(test_data_manager PRIVATE IO/line_data_binary.test.cpp)
+    target_sources(test_data_manager PRIVATE
+        IO/line_data_binary.test.cpp
+        IO/formats/CapnProto/line_binary_unit.test.cpp
+    )
     target_link_libraries(test_data_manager PRIVATE DataManagerIO_CapnProto)
     target_compile_definitions(test_data_manager PRIVATE ENABLE_CAPNPROTO)
 endif()
@@ -170,7 +182,10 @@ if(ENABLE_HDF5)
 endif()
 
 if(ENABLE_OPENCV)
-    target_sources(test_data_manager PRIVATE IO/mask_data_image.test.cpp)
+    target_sources(test_data_manager PRIVATE
+        IO/mask_data_image.test.cpp
+        IO/formats/OpenCV/masks/mask_opencv_unit.test.cpp
+    )
     target_link_libraries(test_data_manager PRIVATE DataManagerOpenCV)
     target_compile_definitions(test_data_manager PUBLIC ENABLE_OPENCV)
 endif()

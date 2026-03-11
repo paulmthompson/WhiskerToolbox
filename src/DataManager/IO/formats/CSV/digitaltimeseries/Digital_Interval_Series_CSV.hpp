@@ -1,6 +1,7 @@
 #ifndef DIGITAL_INTERVAL_SERIES_CSV_HPP
 #define DIGITAL_INTERVAL_SERIES_CSV_HPP
 
+#include "ParameterSchema/ParameterSchema.hpp"
 #include "TimeFrame/interval_data.hpp"
 
 #include <string>
@@ -83,12 +84,46 @@ struct CSVIntervalSaverOptions {
 
 
 /**
- * @brief Saves a DigitalIntervalSeries object to a CSV file using specified options.
- * 
- * @param interval_data Pointer to the DigitalIntervalSeries object to save.
- * @param opts Configuration options for saving.
+ * @brief Save DigitalIntervalSeries to a CSV file.
+ *
+ * Uses atomic writes: data is written to a temporary file and then
+ * renamed over the target to prevent corruption on crash.
+ *
+ * @param interval_data Non-null pointer to the DigitalIntervalSeries to save.
+ * @param opts          Saver options (directory, filename, delimiters, header).
+ * @return true on success, false on I/O error.
+ *
+ * @pre interval_data must not be null.
  */
-void save(DigitalIntervalSeries const * interval_data,
+bool save(DigitalIntervalSeries const * interval_data,
           CSVIntervalSaverOptions const & opts);
+
+namespace WhiskerToolbox::Transforms::V2 {
+
+template<>
+struct ParameterUIHints<CSVIntervalSaverOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filename")) {
+            f->tooltip = "Output filename (combined with parent_dir)";
+        }
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory in which to create the output file";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Delimiter between start and end columns";
+        }
+        if (auto * f = schema.field("line_delim")) {
+            f->tooltip = "Line delimiter (newline character)";
+        }
+        if (auto * f = schema.field("save_header")) {
+            f->tooltip = "Whether to write a header row as the first line";
+        }
+        if (auto * f = schema.field("header")) {
+            f->tooltip = "Header text to write when save_header is true";
+        }
+    }
+};
+
+}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// DIGITAL_INTERVAL_SERIES_CSV_HPP

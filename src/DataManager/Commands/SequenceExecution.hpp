@@ -15,6 +15,7 @@
 
 namespace commands {
 
+class CommandRecorder;
 class ICommand;
 struct CommandSequenceDescriptor;
 
@@ -39,11 +40,14 @@ struct SequenceResult {
 /// @param seq The command sequence descriptor (JSON-deserialized)
 /// @param ctx Runtime context with DataManager and runtime variables
 /// @param stop_on_error If true, stop on the first command failure (default: true)
+/// @param recorder Optional CommandRecorder to record each successfully executed command's
+///        descriptor. Pass nullptr (default) to disable recording.
 /// @return SequenceResult containing the overall result and executed commands
 SequenceResult executeSequence(
         CommandSequenceDescriptor const & seq,
         CommandContext const & ctx,
-        bool stop_on_error = true);
+        bool stop_on_error = true,
+        CommandRecorder * recorder = nullptr);
 
 }// namespace commands
 

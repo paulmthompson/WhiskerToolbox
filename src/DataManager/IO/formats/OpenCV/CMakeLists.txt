@@ -29,8 +29,10 @@ target_link_libraries(DataManagerOpenCV PRIVATE
  #   DataManagerIO            # For LoaderRegistry access
     NEURALYZER_GEOMETRY      # CoreGeometry for Point2D
     nlohmann_json::nlohmann_json  # For JSON config parsing
+    ParameterSchema
     WhiskerToolbox::MaskData
     opencv_core opencv_imgproc opencv_imgcodecs  # OpenCV components
+    spdlog::spdlog
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

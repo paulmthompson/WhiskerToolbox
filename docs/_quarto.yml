@@ -80,6 +80,8 @@ website:
             - developer/DataManager/file_io.qmd
             - developer/DataManager/IO/mask_csv_rle.qmd
             - developer/DataManager/IO/csv_line_data.qmd
+            - developer/DataManager/IO/capnproto_line_data.qmd
+            - developer/DataManager/IO/opencv_mask_image.qmd
             - developer/DataManager/IO/saver_infrastructure.qmd
             - developer/DataManager/data_structures.qmd
             - developer/DataManager/binary_loading_performance.qmd
@@ -91,14 +93,17 @@ website:
               href: developer/DataManager/Commands/index.qmd
               contents:
                 - developer/DataManager/Commands/roadmap.qmd
-                - developer/DataManager/Commands/saver_registry_roadmap.qmd
                 - developer/DataManager/Commands/core_types.qmd
                 - developer/DataManager/Commands/sequence_execution.qmd
                 - developer/DataManager/Commands/get_entity_ids_in_range.qmd
                 - developer/DataManager/Commands/commands.qmd
+                - developer/DataManager/Commands/save_data.qmd
+                - developer/DataManager/Commands/load_data.qmd
                 - developer/DataManager/Commands/validation.qmd
                 - developer/DataManager/Commands/command_introspection.qmd
                 - developer/DataManager/Commands/gui_verb_audit.qmd
+                - developer/DataManager/Commands/widget_save_refactoring_guide.qmd
+                - developer/DataManager/Commands/data_manager_snapshot.qmd
         - section: "Triage Session"
           contents:
             - developer/TriageSession/index.qmd

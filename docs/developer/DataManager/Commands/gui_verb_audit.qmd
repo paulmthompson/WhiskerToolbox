@@ -32,8 +32,12 @@ Every user-facing action that modifies `DataManager` state falls into one of fou
 |----------|---------|-----------------|
 | **A — Covered** | An existing command already handles this verb | Refactor widget to dispatch through command |
 | **B — New Command** | No command exists yet; one must be created | Design params struct, implement command, then refactor widget |
-| **C — Existing System** | Handled by an existing non-command system (TransformsV2, LoaderRegistry) and a future command wrapper is planned | No action now; tracked for Phase 3+ |
+| **C — Existing System** | Handled by TransformsV2 or another non-command system; a future command wrapper is planned | No action now; tracked for future phases |
 | **D — View State** | Does not modify `DataManager`; purely view/EditorState | Not a command candidate — skip |
+
+**Note (2026-03-11):** Phase 3 (Persistence Commands) is complete. Save/Load operations
+previously classified as Category C are now **Category A** — the `SaveData` and `LoadData`
+commands exist and can be dispatched through the command factory.
 
 ## Widget Completion Criteria
 
@@ -41,12 +45,12 @@ A widget is fully command-ified when:
 
 | # | Criterion | How to verify |
 |---|-----------|---------------|
-| 1 | **Zero direct `DataManager` mutations** | All `setData()`, `deleteData()`, `getData<T>()->addEvent()`, etc. go through `createCommand()` + `execute()`. Category C verbs (TransformsV2, LoaderRegistry) are intentionally exempt until Phase 3+. |
+| 1 | **Zero direct `DataManager` mutations** | All `setData()`, `deleteData()`, `getData<T>()->addEvent()`, etc. go through `createCommand()` + `execute()`. Save/Load verbs should use `SaveData`/`LoadData` commands. TransformsV2 verbs are exempt until a future `RunTransform` command exists. |
 | 2 | **Zero `MutationGuard` warnings** | Exercise the widget in a debug build; console shows no `"DataManager mutation outside command"` warnings. |
 | 3 | **Golden trace test exists** | At least one Catch2 test loads a recorded JSON command sequence, replays it against synthetic data, and asserts the final `DataManagerSnapshot`. |
 
-Criteria 2 and 3 require Steps 1.13–1.14 from the [roadmap](roadmap.qmd) to be implemented.
-Until then, criterion 1 (verified by code review) is sufficient to mark a widget as refactored.
+All three criteria are now testable — Steps 1.13 (MutationGuard) and 1.14 (DataManagerSnapshot
++ golden traces) are implemented.
 
 ## Quick Triage Pass
 
@@ -219,16 +223,22 @@ After refactoring (Phase D), create a golden trace test:
 
 ```
 src/DataManager/Commands/
-├── ICommand.hpp              ← interface (already exists)
-├── CommandFactory.hpp/.cpp   ← factory + getAvailableCommands() (already exists)
-├── CommandContext.hpp         ← runtime context (already exists)
-├── MoveByTimeRange.hpp/.cpp  ← concrete command (already exists)
-├── CopyByTimeRange.hpp/.cpp  ← concrete command (already exists)
-├── AddInterval.hpp/.cpp      ← concrete command (already exists)
-├── ForEachKey.hpp/.cpp        ← meta-command (already exists)
-├── DeleteByEntityIds.hpp/.cpp ← NEW (identified by audit)
-├── AddEvent.hpp/.cpp          ← NEW (identified by audit)
-├── RemoveEvent.hpp/.cpp       ← NEW (identified by audit)
+├── ICommand.hpp              ← interface
+├── CommandFactory.hpp/.cpp   ← factory + getAvailableCommands()
+├── CommandContext.hpp         ← runtime context
+├── CommandRecorder.hpp/.cpp  ← trace recording
+├── MutationGuard.hpp/.cpp    ← debug-only gap detection
+├── MoveByTimeRange.hpp/.cpp  ← concrete command (undoable)
+├── CopyByTimeRange.hpp/.cpp  ← concrete command
+├── AddInterval.hpp/.cpp      ← concrete command
+├── ForEachKey.hpp/.cpp        ← meta-command
+├── SaveData.hpp/.cpp          ← persistence command
+├── LoadData.hpp/.cpp          ← persistence command (undoable)
+├── DeleteByEntityIds.hpp/.cpp ← NOT YET IMPLEMENTED (audit-identified)
+├── AddEvent.hpp/.cpp          ← NOT YET IMPLEMENTED (audit-identified)
+├── RemoveEvent.hpp/.cpp       ← NOT YET IMPLEMENTED (audit-identified)
+├── CreateData.hpp/.cpp        ← NOT YET IMPLEMENTED (audit-identified)
+├── DeleteData.hpp/.cpp        ← NOT YET IMPLEMENTED (audit-identified)
 ├── ...                        ← more as audit discovers them
 └── CMakeLists.txt
 
@@ -249,7 +259,7 @@ Qt-layer objects that create and execute commands through the factory. The widge
 | Widget | Status | Verbs Found | A (Covered) | B (New Cmd) | C (Future) | D (View) | Golden Trace |
 |--------|--------|-------------|-------------|-------------|------------|----------|-------------|
 | DataManager_Widget | **Audited** | 3 | 0 | 2 | 0 | 1 | Not yet |
-| DataInspector_Widget | **Audited** | ~30 | ~10 | ~14 | ~6 | ~0 | Not yet |
+| DataInspector_Widget | **Audited** | ~30 | ~16 | ~14 | ~0 | ~0 | Not yet |
 | DataImport_Widget | Triage pending | — | — | — | — | — | — |
 | DataExport_Widget | Triage pending | — | — | — | — | — | — |
 | DataTransform_Widget | Triage pending | — | — | — | — | — | — |
@@ -277,7 +287,7 @@ Widgets intentionally excluded (no DataManager mutations):
 - `LayoutTesting` — debug infrastructure
 - `StateManagement` — workspace serialization
 - `ZoneManager` — layout management
-- `Export_Widgets` / `MediaExport` — future Phase 3 (SaveData)
+- `Export_Widgets` / `MediaExport` — save operations now covered by `SaveData` command
 - `FileExplorer_Widgets` — navigation
 - `TriageSession_Widget` — already uses command architecture
 - `GroupContextMenu` — helper for group operations (audited via parent widgets)
@@ -322,7 +332,7 @@ verbs.
 | Delete selected entities | `_onDelete*Requested()` | **B** | `DeleteByEntityIds` (new) | Needs entity ID set, not time range |
 | Move entities to group | `_onMove*ToGroupRequested()` | **B** | `AssignToGroup` (new) | Group membership change |
 | Remove entities from group | `_onRemove*FromGroupRequested()` | **B** | `RemoveFromGroup` (new) | Group membership change |
-| Save to CSV/binary | `_handleSave*Requested()` | **C** | `SaveData` (Phase 3) | Future SaverRegistry command |
+| Save to CSV/binary | `_handleSave*Requested()` | **A** | `SaveData` | Phase 3 complete — command exists, widget should dispatch through it |
 
 #### DigitalEventSeries-Specific
 
@@ -350,8 +360,11 @@ verbs.
 
 ## New Commands Identified
 
-Commands discovered during the audit that need to be implemented. Ordered by priority
-(most commonly used across widgets first).
+Commands discovered during the audit that need to be implemented. **None of these are
+implemented yet** — they are designs ready for implementation. See the
+[roadmap](roadmap.qmd#widget-command-ification-ongoing) for the implementation wave plan.
+
+Ordered by priority (most commonly used across widgets first).
 
 ### High Priority
 

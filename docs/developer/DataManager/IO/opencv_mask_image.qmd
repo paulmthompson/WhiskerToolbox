@@ -1,0 +1,90 @@
+---
+title: "OpenCV Binary Image Mask I/O"
+---
+
+## Overview
+
+The OpenCV binary image mask saver and loader handle reading and writing `MaskData`
+objects to/from directories of binary (black and white) image files. Each frame
+produces a separate image file where mask pixels are drawn with a configurable
+intensity value.
+
+This format involves pixel-level rasterization — mask coordinates are drawn onto
+a fixed-size image canvas, so the save/load round-trip is **not exact**. Coordinates
+may shift slightly due to image resize operations when the source mask's image size
+differs from the output dimensions.
+
+## File Location
+
+```
+src/DataManager/IO/formats/OpenCV/
+├── maskdata/
+│   ├── Mask_Data_Image.hpp   # Option structs, function declarations, ParameterUIHints
+│   └── Mask_Data_Image.cpp   # Implementation (save with atomic write, load)
+├── OpenCVFormatLoader.hpp    # IFormatLoader subclass (registry integration)
+├── OpenCVFormatLoader.cpp    # load/save dispatch, getSaverInfo()
+└── CMakeLists.txt            # DataManagerOpenCV shared library
+```
+
+## Option Structs
+
+### Loader Options
+
+```cpp
+struct ImageMaskLoaderOptions {
+    std::string directory_path = ".";       // Directory containing binary image files
+    std::string file_pattern = "*.png";     // Glob pattern for matching files
+    std::string filename_prefix = "";       // Prefix before frame number in filenames
+    int frame_number_padding = 0;           // Expected zero-padding digits
+    int threshold_value = 128;              // Pixel threshold for binary conversion
+    bool invert_mask = false;               // Invert mask polarity
+};
+```
+
+### Saver Options
+
+```cpp
+struct ImageMaskSaverOptions {
+    std::string parent_dir = ".";           // Output directory
+    std::string image_format = "PNG";       // Image format (PNG, BMP, TIFF)
+    std::string filename_prefix = "";       // Prefix before frame number
+    int frame_number_padding = 4;           // Zero-padding digits for frame numbers
+    int image_width = 640;                  // Output image width in pixels
+    int image_height = 480;                 // Output image height in pixels
+    int background_value = 0;              // Pixel value for background (0-255)
+    int mask_value = 255;                  // Pixel value for mask pixels (0-255)
+    bool overwrite_existing = false;       // Overwrite existing files or skip
+};
+```
+
+## Registry Integration
+
+The `OpenCVFormatLoader` registers with the `LoaderRegistry` and reports saver
+capabilities through `getSaverInfo()`:
+
+- **Format:** `"image"`
+- **Data type:** `IODataType::Mask`
+- **Schema:** Extracted from `ImageMaskSaverOptions` via `extractParameterSchema()`
+
+## Atomic Writes
+
+The saver writes each image to a temporary file (`_tmp_<filename>`) with the
+correct image extension (so OpenCV can determine the codec), then atomically
+renames it over the target path. On failure, the temporary file is removed and
+the target is left untouched.
+
+## Tests
+
+- **Unit tests:** `tests/DataManager/IO/formats/OpenCV/masks/mask_opencv_unit.test.cpp`
+  (Catch2) — single mask, multiple frames, empty data, null pointer, custom prefix,
+  overwrite protection, BMP format.
+- **Fuzz tests:** `tests/fuzz/unit/DataManager/IO/fuzz_opencv_mask_save.cpp`
+  (GoogleTest/FuzzTest) — robustness testing with fuzzed dimensions, pixel counts,
+  and image formats; no round-trip verification due to lossy format.
+- **Integration tests:** `tests/DataManager/IO/mask_data_image.test.cpp`
+  (Catch2) — existing save/load/DataManager integration tests.
+
+## See Also
+
+- [SaverRegistry Infrastructure](saver_infrastructure.qmd)
+- [Mask CSV RLE I/O](mask_csv_rle.qmd)

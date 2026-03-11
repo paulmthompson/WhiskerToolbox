@@ -9,10 +9,10 @@
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>
+#include <spdlog/spdlog.h>
 
 #include <algorithm>
 #include <filesystem>
-#include <iostream>
 #include <regex>
 #include <vector>
 
@@ -27,15 +27,15 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
 
     // Get list of image files matching the pattern
     std::vector<std::filesystem::path> image_files;
-    std::string pattern = opts.file_pattern;
+    std::string const pattern = opts.file_pattern;
 
     // Convert wildcard pattern to regex
-    std::string regex_pattern = std::regex_replace(pattern, std::regex("\\*"), ".*");
-    std::regex file_regex(regex_pattern, std::regex_constants::icase);
+    std::string const regex_pattern = std::regex_replace(pattern, std::regex("\\*"), ".*");
+    std::regex const file_regex(regex_pattern, std::regex_constants::icase);
 
     for (auto const & entry: std::filesystem::directory_iterator(opts.directory_path)) {
         if (entry.is_regular_file()) {
-            std::string filename = entry.path().filename().string();
+            std::string const filename = entry.path().filename().string();
             if (std::regex_match(filename, file_regex)) {
                 image_files.push_back(entry.path());
             }
@@ -60,7 +60,7 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
     std::vector<ImageSize> mask_sizes;
 
     for (auto const & file_path: image_files) {
-        std::string filename = file_path.filename().string();
+        std::string const filename = file_path.filename().string();
         std::string stem = file_path.stem().string();// Remove extension
 
         // Remove prefix if specified
@@ -101,7 +101,7 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 // Get pixel intensity (0-255)
-                uint8_t pixel_value = image.at<uint8_t>(y, x);
+                uint8_t const pixel_value = image.at<uint8_t>(y, x);
 
                 // Apply threshold and inversion logic
                 bool is_mask_pixel;
@@ -113,7 +113,7 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
 
                 if (is_mask_pixel) {
                     //mask_points.emplace_back(static_cast<float>(x), static_cast<float>(y)); // This fails on mac
-                    mask_points.push_back(Point2D<uint32_t>{static_cast<uint32_t>(x), static_cast<uint32_t>(y)});
+                    mask_points.emplace_back(static_cast<uint32_t>(x), static_cast<uint32_t>(y));
                 }
             }
         }
@@ -154,24 +154,27 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
     return mask_data;
 }
 
-void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
+bool save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
     if (!mask_data) {
-        std::cerr << "Error: MaskData pointer is null" << std::endl;
-        return;
+        spdlog::error("MaskData pointer is null");
+        return false;
     }
 
     // Create output directory if it doesn't exist
-    if (!std::filesystem::exists(opts.parent_dir)) {
-        std::filesystem::create_directories(opts.parent_dir);
-        std::cout << "Created directory: " << opts.parent_dir << std::endl;
+    std::error_code ec;
+    std::filesystem::create_directories(opts.parent_dir, ec);
+    if (ec) {
+        spdlog::error("Failed to create directory '{}': {}", opts.parent_dir, ec.message());
+        return false;
     }
 
     int files_saved = 0;
     int files_skipped = 0;
+    bool had_error = false;
 
     auto mask_data_size = mask_data->getImageSize();
 
-    std::cout << "Saving mask images to directory: " << opts.parent_dir << std::endl;
+    spdlog::info("Saving mask images to directory: {}", opts.parent_dir);
 
     // Iterate through all masks with their timestamps
     for (auto const & [time, entity_id, mask]: mask_data->flattened_data()) {
@@ -181,15 +184,15 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
         output_img.setTo(opts.background_value);
 
         // Resize each mask and draw it on the output image
-        ImageSize dest_size{opts.image_width, opts.image_height};
+        ImageSize const dest_size{opts.image_width, opts.image_height};
 
         // Resize the mask using our new resize function
-        Mask2D resized_mask = resize_mask(mask, mask_data_size, dest_size);
+        Mask2D const resized_mask = resize_mask(mask, mask_data_size, dest_size);
 
         // Draw the resized mask on the output image
         for (Point2D<uint32_t> const & point: resized_mask) {
-            int x = static_cast<int>(point.x);
-            int y = static_cast<int>(point.y);
+            int const x = static_cast<int>(point.x);
+            int const y = static_cast<int>(point.y);
 
             // Check bounds (should already be valid after resize, but be safe)
             if (x >= 0 && x < opts.image_width && y >= 0 && y < opts.image_height) {
@@ -212,30 +215,40 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
         filename += extension;
 
         // Full path
-        std::filesystem::path full_path = std::filesystem::path(opts.parent_dir) / filename;
+        std::filesystem::path const full_path = std::filesystem::path(opts.parent_dir) / filename;
 
         // Check if file exists and handle according to overwrite setting
         if (std::filesystem::exists(full_path) && !opts.overwrite_existing) {
-            std::cout << "Skipping existing file: " << full_path.string() << std::endl;
+            spdlog::debug("Skipping existing file: {}", full_path.string());
             files_skipped++;
             continue;
         }
 
-        // Save the image using OpenCV
-        if (cv::imwrite(full_path.string(), output_img)) {
-            files_saved++;
-            if (std::filesystem::exists(full_path) && opts.overwrite_existing) {
-                std::cout << "Overwritten existing file: " << full_path.string() << std::endl;
+        // Atomic write: save to temp file with correct extension, then rename over target
+        std::filesystem::path const temp_path =
+                std::filesystem::path(opts.parent_dir) / ("_tmp_" + filename);
+
+        if (cv::imwrite(temp_path.string(), output_img)) {
+            std::error_code rename_ec;
+            std::filesystem::rename(temp_path, full_path, rename_ec);
+            if (rename_ec) {
+                spdlog::error("Failed to rename temp file to '{}': {}",
+                              full_path.string(), rename_ec.message());
+                std::filesystem::remove(temp_path, rename_ec);
+                had_error = true;
+            } else {
+                files_saved++;
             }
         } else {
-            std::cerr << "Warning: Failed to save image: " << full_path.string() << std::endl;
-            files_skipped++;
+            spdlog::warn("Failed to save image: {}", full_path.string());
+            std::error_code remove_ec;
+            std::filesystem::remove(temp_path, remove_ec);
+            had_error = true;
         }
     }
 
-    std::cout << "Image mask saving complete: " << files_saved << " files saved";
-    if (files_skipped > 0) {
-        std::cout << ", " << files_skipped << " files skipped";
-    }
-    std::cout << std::endl;
+    spdlog::info("Image mask saving complete: {} files saved, {} files skipped",
+                 files_saved, files_skipped);
+
+    return !had_error;
 }

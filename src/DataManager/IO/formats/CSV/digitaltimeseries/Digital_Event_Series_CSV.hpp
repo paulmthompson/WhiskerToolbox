@@ -1,9 +1,11 @@
 #ifndef DIGITAL_EVENT_SERIES_CSV_HPP
 #define DIGITAL_EVENT_SERIES_CSV_HPP
 
+#include "ParameterSchema/ParameterSchema.hpp"
+
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 class DigitalEventSeries;
 
@@ -38,14 +40,14 @@ struct CSVEventLoaderOptions {
     std::string delimiter = ",";
     bool has_header = false;
     int event_column = 0;
-    int identifier_column = -1; // -1 means no identifier column
+    int identifier_column = -1;// -1 means no identifier column
     std::string base_name = "events";
-    
+
     /// Scale factor to apply to timestamps. Applied BEFORE conversion to integer.
     /// For example, if timestamps are in seconds and you want sample indices at 30kHz,
     /// set scale=30000. The timestamp 0.01493 becomes 0.01493 * 30000 = 447.9 → 448.
     float scale = 1.0f;
-    
+
     /// If true, divide by scale instead of multiplying.
     bool scale_divide = false;
 };
@@ -102,12 +104,51 @@ struct CSVEventSaverOptions {
 std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions const & options);
 
 /**
- * @brief Saves a DigitalEventSeries object to a CSV file using specified options.
- * 
- * @param event_data Pointer to the DigitalEventSeries object to save.
- * @param opts Configuration options for saving.
+ * @brief Save DigitalEventSeries to a CSV file.
+ *
+ * Uses atomic writes: data is written to a temporary file and then
+ * renamed over the target to prevent corruption on crash.
+ *
+ * @param event_data Non-null pointer to the DigitalEventSeries to save.
+ * @param opts       Saver options (directory, filename, delimiters, header, precision).
+ * @return true on success, false on I/O error.
+ *
+ * @pre event_data must not be null.
  */
-void save(DigitalEventSeries const * event_data,
+bool save(DigitalEventSeries const * event_data,
           CSVEventSaverOptions const & opts);
 
-#endif// DIGITAL_EVENT_SERIES_CSV_HPP 
+namespace WhiskerToolbox::Transforms::V2 {
+
+template<>
+struct ParameterUIHints<CSVEventSaverOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filename")) {
+            f->tooltip = "Output filename (combined with parent_dir)";
+        }
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory in which to create the output file";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Delimiter between columns (if multiple columns)";
+        }
+        if (auto * f = schema.field("line_delim")) {
+            f->tooltip = "Line delimiter (newline character)";
+        }
+        if (auto * f = schema.field("save_header")) {
+            f->tooltip = "Whether to write a header row as the first line";
+        }
+        if (auto * f = schema.field("header")) {
+            f->tooltip = "Header text to write when save_header is true";
+        }
+        if (auto * f = schema.field("precision")) {
+            f->tooltip = "Number of decimal places for floating-point event times";
+            f->min_value = 0.0;
+            f->max_value = 15.0;
+        }
+    }
+};
+
+}// namespace WhiskerToolbox::Transforms::V2
+
+#endif// DIGITAL_EVENT_SERIES_CSV_HPP

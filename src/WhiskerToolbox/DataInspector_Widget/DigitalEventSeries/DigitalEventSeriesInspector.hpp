@@ -19,22 +19,17 @@
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
-#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
 #include "Entity/EntityTypes.hpp"
 
 #include <memory>
 #include <string>
-#include <variant>
 
 namespace Ui {
 class DigitalEventSeriesInspector;
 }
 
-class CSVEventSaver_Widget;
 class DigitalEventSeriesDataView;
 class GroupManager;
-
-using EventSaverOptionsVariant = std::variant<CSVEventSaverOptions>;
 
 /**
  * @brief Inspector widget for DigitalEventSeries
@@ -88,14 +83,9 @@ public:
     void setGroupManager(GroupManager * group_manager);
 
 private:
-    enum SaverType { CSV };
-
     void _connectSignals();
     void _calculateEvents();
     void _assignCallbacks();
-
-    void _initiateSaveProcess(SaverType saver_type, EventSaverOptionsVariant & options_variant);
-    bool _performActualCSVSave(CSVEventSaverOptions const & options);
 
     /**
      * @brief Generate appropriate filename based on active key and export type
@@ -161,7 +151,6 @@ private slots:
     void _removeEventButton();
 
     void _onExportTypeChanged(int index);
-    void _handleSaveEventCSVRequested(CSVEventSaverOptions options);
 
     void _onGroupFilterChanged(int index);
     void _onGroupChanged();

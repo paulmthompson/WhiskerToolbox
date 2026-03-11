@@ -1,0 +1,132 @@
+---
+title: "LoadData Command"
+description: "Persistence command that loads data from disk into DataManager via the LoaderRegistry"
+---
+
+## Overview
+
+`LoadData` is an undoable command that loads a data object from disk into `DataManager`.
+It dispatches through `LoaderRegistry::tryLoad()`, enabling load operations to participate
+in command sequences and triage pipelines.
+
+**Source files:**
+
+- `src/DataManager/Commands/LoadData.hpp` / `.cpp`
+- `src/DataManager/Commands/LoadData.test.cpp`
+
+All code lives in the `commands` namespace with no Qt dependency.
+
+## Parameters
+
+```cpp
+struct LoadDataParams {
+    std::string data_key;                       // Key to store in DataManager
+    std::string data_type;                      // e.g., "PointData", "LineData"
+    std::string filepath;                       // Input file path
+    std::string format;                         // e.g., "csv", "capnproto"
+    std::optional<rfl::Generic> format_options; // Format-specific options (optional)
+};
+```
+
+| Field | Description |
+|-------|-------------|
+| `data_key` | Key under which the loaded data will be stored in `DataManager` |
+| `data_type` | Data type string — one of `"PointData"`, `"LineData"`, `"MaskData"`, `"AnalogTimeSeries"`, `"DigitalEventSeries"`, `"DigitalIntervalSeries"`, `"TensorData"` |
+| `filepath` | Path to the input file to load |
+| `format` | Format identifier matching a registered `IFormatLoader` (e.g., `"csv"`, `"capnproto"`) |
+| `format_options` | Optional JSON object with format-specific loader options |
+
+## Supported Types
+
+Any data type registered in the `LoaderRegistry`:
+
+- `PointData` (CSV)
+- `LineData` (CSV single-file, CSV multi-file, CapnProto)
+- `MaskData` (CSV RLE, OpenCV image)
+- `AnalogTimeSeries` (CSV)
+- `DigitalEventSeries` (CSV)
+- `DigitalIntervalSeries` (CSV)
+- `TensorData` (HDF5, NumPy)
+
+## Undo
+
+Undoable. `undo()` calls `DataManager::deleteData(data_key)` to remove the loaded data.
+
+## Execution Flow
+
+1. Map `data_type` string to `IODataType` enum via an internal lookup.
+2. Convert `format_options` (if present) from `rfl::Generic` to `nlohmann::json`.
+3. Dispatch through `LoaderRegistry::getInstance().tryLoad()`.
+4. Convert the `LoadedDataVariant` in the result to a `DataTypeVariant`.
+5. Store in `DataManager` under `data_key` via `setData()`.
+6. Return `CommandResult::ok({data_key})` on success with the data key as an affected key.
+
+## Error Cases
+
+| Condition | Error message |
+|-----------|---------------|
+| Unknown `data_type` string | `"Unknown data_type '<type>'"` |
+| `format_options` fails to parse | `"Failed to parse format_options as JSON"` |
+| No registered loader for format/type | Error from `LoaderRegistry::tryLoad()` |
+| Loaded type cannot be stored | `"Loaded data type cannot be stored in DataManager"` |
+| Undo called without prior execute | `"LoadData was not executed successfully"` |
+
+## JSON Example
+
+```json
+{
+    "command_name": "LoadData",
+    "parameters": {
+        "data_key": "whisker_points",
+        "data_type": "PointData",
+        "filepath": "/data/input/whiskers.csv",
+        "format": "csv",
+        "format_options": {
+            "column_delim": ","
+        }
+    }
+}
+```
+
+## Pipeline Example
+
+Load and save data in a pipeline:
+
+```json
+{
+    "commands": [
+        {
+            "command_name": "LoadData",
+            "parameters": {
+                "data_key": "raw_points",
+                "data_type": "PointData",
+                "filepath": "/data/input/points.csv",
+                "format": "csv"
+            }
+        },
+        {
+            "command_name": "SaveData",
+            "parameters": {
+                "data_key": "raw_points",
+                "format": "csv",
+                "path": "/data/output/points_copy.csv"
+            }
+        }
+    ]
+}
+```
+
+## Tests
+
+11 test cases in `LoadData.test.cpp` covering:
+
+- **Factory tests:** creation from valid params, with format_options, invalid params, `isKnownCommandName`
+- **Execution tests:** successful CSV load, unknown data_type error, invalid filepath error, unknown format error, undo removes data
+- **Serialization tests:** `toJson()` round-trip
+- **Integration tests:** factory-based command sequence, `getCommandInfo` metadata, Load+Save round-trip
+
+## See Also
+
+- [SaveData Command](save_data.qmd) — the complementary persistence command for saving
+- [Command Architecture](index.qmd) — overall command system design
+- [Command Architecture Roadmap](roadmap.qmd) — Phase 3 (Step 3.3)

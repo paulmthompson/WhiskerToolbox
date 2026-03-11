@@ -20,7 +20,8 @@ TEST_CASE("getAvailableCommands returns all known commands", "[commands][introsp
     auto const all = getAvailableCommands();
 
     std::vector<std::string> const expected_names = {
-            "MoveByTimeRange", "CopyByTimeRange", "AddInterval", "ForEachKey"};
+            "MoveByTimeRange", "CopyByTimeRange", "AddInterval", "ForEachKey",
+            "SaveData", "LoadData"};
 
     REQUIRE(all.size() == expected_names.size());
 

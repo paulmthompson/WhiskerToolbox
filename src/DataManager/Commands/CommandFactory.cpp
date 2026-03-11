@@ -10,7 +10,10 @@
 #include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
 #include "ICommand.hpp"
+#include "LoadData.hpp"
 #include "MoveByTimeRange.hpp"
+#include "SaveData.hpp"
+#include "VariableSubstitution.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
@@ -22,14 +25,22 @@ namespace commands {
 
 bool isKnownCommandName(std::string const & name) {
     return name == "MoveByTimeRange" || name == "CopyByTimeRange" ||
-           name == "AddInterval" || name == "ForEachKey";
+           name == "AddInterval" || name == "ForEachKey" ||
+           name == "SaveData" || name == "LoadData";
 }
 
 std::unique_ptr<ICommand> createCommand(
         std::string const & name,
         rfl::Generic const & params) {
 
-    auto const json = rfl::json::write(params);
+    return createCommandFromJson(name, rfl::json::write(params));
+}
+
+std::unique_ptr<ICommand> createCommandFromJson(
+        std::string const & name,
+        std::string const & params_json) {
+
+    auto const json = normalizeJsonNumbers(params_json);
 
     if (name == "MoveByTimeRange") {
         auto p = rfl::json::read<MoveByTimeRangeParams>(json);
@@ -53,6 +64,18 @@ std::unique_ptr<ICommand> createCommand(
         auto p = rfl::json::read<ForEachKeyParams>(json);
         if (!p) return nullptr;
         return std::make_unique<ForEachKey>(std::move(*p));
+    }
+
+    if (name == "SaveData") {
+        auto p = rfl::json::read<SaveDataParams>(json);
+        if (!p) return nullptr;
+        return std::make_unique<SaveData>(std::move(*p));
+    }
+
+    if (name == "LoadData") {
+        auto p = rfl::json::read<LoadDataParams>(json);
+        if (!p) return nullptr;
+        return std::make_unique<LoadData>(std::move(*p));
     }
 
     return nullptr;
@@ -91,6 +114,22 @@ std::vector<CommandInfo> getAvailableCommands() {
                     .supports_undo = false,
                     .supported_data_types = {},
                     .parameter_schema = extractParameterSchema<ForEachKeyParams>(),
+            },
+            CommandInfo{
+                    .name = "SaveData",
+                    .description = "Save a data object from DataManager to disk via the LoaderRegistry",
+                    .category = "persistence",
+                    .supports_undo = false,
+                    .supported_data_types = {"PointData", "LineData", "MaskData", "AnalogTimeSeries", "DigitalEventSeries", "DigitalIntervalSeries"},
+                    .parameter_schema = extractParameterSchema<SaveDataParams>(),
+            },
+            CommandInfo{
+                    .name = "LoadData",
+                    .description = "Load data from disk into DataManager via the LoaderRegistry",
+                    .category = "persistence",
+                    .supports_undo = true,
+                    .supported_data_types = {"PointData", "LineData", "MaskData", "AnalogTimeSeries", "DigitalEventSeries", "DigitalIntervalSeries", "TensorData"},
+                    .parameter_schema = extractParameterSchema<LoadDataParams>(),
             },
     };
 }

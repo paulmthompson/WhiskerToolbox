@@ -16,6 +16,7 @@
 #define MASK_DATA_CSV_HPP
 
 #include "CoreGeometry/masks.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/LoaderOptionsConcepts.hpp"
 
@@ -114,9 +115,43 @@ std::map<TimeFrameIndex, std::vector<Mask2D>> load(CSVMaskRLELoaderOptions const
 /**
  * @brief Save MaskData to a single CSV file with RLE encoding
  *
- * @param mask_data The MaskData object to save
- * @param opts Options controlling the save behavior
+ * Uses atomic writes: data is written to a temporary file and then
+ * renamed over the target to prevent corruption on crash.
+ *
+ * @param mask_data Non-null pointer to the MaskData to save.
+ * @param opts      Saver options (directory, filename, delimiters, header).
+ * @return true on success, false on I/O error.
+ *
+ * @pre mask_data must not be null.
  */
-void save(MaskData const * mask_data, CSVMaskRLESaverOptions & opts);
+bool save(MaskData const * mask_data, CSVMaskRLESaverOptions const & opts);
+
+namespace WhiskerToolbox::Transforms::V2 {
+
+template<>
+struct ParameterUIHints<CSVMaskRLESaverOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filename")) {
+            f->tooltip = "Output filename (combined with parent_dir)";
+        }
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory in which to create the output file";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Delimiter between columns (frame and RLE data)";
+        }
+        if (auto * f = schema.field("rle_delimiter")) {
+            f->tooltip = "Delimiter between values within RLE triplet data";
+        }
+        if (auto * f = schema.field("save_header")) {
+            f->tooltip = "Whether to write a header row as the first line";
+        }
+        if (auto * f = schema.field("header")) {
+            f->tooltip = "Header text to write when save_header is true";
+        }
+    }
+};
+
+}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// MASK_DATA_CSV_HPP

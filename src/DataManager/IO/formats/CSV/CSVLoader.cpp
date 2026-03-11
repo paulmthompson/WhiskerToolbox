@@ -621,7 +621,10 @@ LoadResult CSVLoader::saveDigitalEventCSV(std::string const & filepath,
         if (config.contains("header")) save_opts.header = config["header"];
         if (config.contains("precision")) save_opts.precision = config["precision"];
 
-        ::save(event_data, save_opts);
+        bool const ok = ::save(event_data, save_opts);
+        if (!ok) {
+            return LoadResult("CSV digital event save failed: write error");
+        }
 
         LoadResult result;
         result.success = true;
@@ -686,10 +689,13 @@ LoadResult CSVLoader::saveDigitalIntervalCSV(std::string const & filepath,
         if (config.contains("save_header")) save_opts.save_header = config["save_header"];
         if (config.contains("header")) save_opts.header = config["header"];
 
-        ::save(interval_data, save_opts);
+        bool const ok = ::save(interval_data, save_opts);
 
         LoadResult result;
-        result.success = true;
+        result.success = ok;
+        if (!ok) {
+            result.error_message = "CSV digital interval save failed: write error";
+        }
         return result;
 
     } catch (std::exception const & e) {
@@ -873,7 +879,10 @@ LoadResult CSVLoader::saveMaskDataCSV(std::string const & filepath,
         if (config.contains("save_header")) save_opts.save_header = config["save_header"];
         if (config.contains("header")) save_opts.header = config["header"];
 
-        ::save(mask_data, save_opts);
+        bool const ok = ::save(mask_data, save_opts);
+        if (!ok) {
+            return LoadResult("CSV mask RLE save failed: write error");
+        }
 
         LoadResult result;
         result.success = true;

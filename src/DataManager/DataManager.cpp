@@ -105,7 +105,7 @@ bool tryRegistryThenLegacyLoad(
 
                             // For single channel, use the base name
                             //std::string const channel_name = name + "_0";
-                            std::string const& channel_name = name;
+                            std::string const & channel_name = name;
                             dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
 
                             if (item.contains("clock")) {
@@ -124,7 +124,7 @@ bool tryRegistryThenLegacyLoad(
                             auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(result.data);
 
                             //std::string const channel_name = name + "_0";
-                            std::string const& channel_name = name;
+                            std::string const & channel_name = name;
                             dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
 
                             if (item.contains("clock")) {
@@ -356,6 +356,7 @@ DataManager::~DataManager() {
 }
 
 void DataManager::reset() {
+    commands::warnIfOutsideCommand("reset");
     std::cout << "DataManager: Resetting to initial state..." << std::endl;
 
     // Clear all data objects except media (which we'll reset)
@@ -592,6 +593,7 @@ std::optional<DataTypeVariant> DataManager::getDataVariant(std::string const & k
 }
 
 void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey const & time_key) {
+    commands::warnIfOutsideCommand("setData");
     // Loop through all _data. If shared_ptr data is already in _data, return
     for (auto const & [existing_key, existing_variant]: _data) {
         // Safely compare only when the variant alternatives match; avoid std::bad_variant_access
@@ -602,7 +604,7 @@ void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey
             }
             return false;
         },
-                                existing_variant);
+                                      existing_variant);
 
         if (found) {
             std::cerr << "Data with key '" << existing_key
@@ -636,6 +638,7 @@ void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey
 }
 
 bool DataManager::deleteData(std::string const & key) {
+    commands::warnIfOutsideCommand("deleteData");
     // Check if the key exists
     if (_data.find(key) == _data.end()) {
         std::cerr << "Error: Data key not found in DataManager: " << key << std::endl;
@@ -817,7 +820,7 @@ DM_DataType stringToDataType(std::string const & data_type_str) {
     return DM_DataType::Unknown;
 }
 
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::string const & base_path, const JsonLoadProgressCallback& progress_callback) {
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::string const & base_path, JsonLoadProgressCallback const & progress_callback) {
     std::vector<DataInfo> data_info_list;
 
     std::map<std::string, std::string> clock_mappings;
@@ -1266,7 +1269,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 if (item["format"] == "filename") {
 
                     // Get required parameters
-                    std::string const& folder_path = file_path;// file path is required argument
+                    std::string const & folder_path = file_path;// file path is required argument
                     std::string const regex_pattern = item["regex_pattern"];
 
                     // Get optional parameters with defaults
@@ -1411,7 +1414,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
     return load_data_from_json_config(dm, j, base_path, nullptr);
 }
 
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath, JsonLoadProgressCallback progress_callback) {
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath, const JsonLoadProgressCallback& progress_callback) {
     // Open JSON file
     std::ifstream ifs(json_filepath);
     if (!ifs.is_open()) {
@@ -1425,7 +1428,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
     // get base path of filepath
     std::string const base_path = std::filesystem::path(json_filepath).parent_path().string();
-    return load_data_from_json_config(dm, j, base_path, std::move(progress_callback));
+    return load_data_from_json_config(dm, j, base_path, progress_callback);
 }
 
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath) {

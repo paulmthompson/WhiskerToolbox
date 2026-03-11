@@ -7,7 +7,9 @@
 
 #include "CommandDescriptor.hpp"
 #include "CommandFactory.hpp"
+#include "CommandRecorder.hpp"
 #include "ICommand.hpp"
+#include "MutationGuard.hpp"
 #include "VariableSubstitution.hpp"
 
 #include <rfl/json.hpp>
@@ -17,7 +19,8 @@ namespace commands {
 SequenceResult executeSequence(
         CommandSequenceDescriptor const & seq,
         CommandContext const & ctx,
-        bool stop_on_error) {
+        bool stop_on_error,
+        CommandRecorder * recorder) {
 
     SequenceResult seq_result;
     std::vector<std::string> all_affected_keys;
@@ -26,31 +29,20 @@ SequenceResult executeSequence(
         auto const & desc = seq.commands[static_cast<size_t>(i)];
 
         // Resolve parameters with two-pass variable substitution
-        rfl::Generic resolved_params;
+        std::string resolved_json;
         if (desc.parameters.has_value()) {
             // Serialize to JSON string for substitution
-            auto json_str = rfl::json::write(desc.parameters.value());
+            resolved_json = rfl::json::write(desc.parameters.value());
 
             // Pass 1: Static variables from the sequence descriptor
             if (seq.variables.has_value()) {
-                json_str = substituteVariables(json_str, seq.variables.value());
+                resolved_json = substituteVariables(resolved_json, seq.variables.value());
             }
 
             // Pass 2: Runtime variables from the context
             if (!ctx.runtime_variables.empty()) {
-                json_str = substituteVariables(json_str, ctx.runtime_variables);
+                resolved_json = substituteVariables(resolved_json, ctx.runtime_variables);
             }
-
-            // Deserialize back to rfl::Generic
-            auto parsed = rfl::json::read<rfl::Generic>(json_str);
-            if (!parsed) {
-                seq_result.result = CommandResult::error(
-                        "Failed to parse substituted parameters for command '" +
-                        desc.command_name + "' (index " + std::to_string(i) + ")");
-                seq_result.failed_index = i;
-                return seq_result;
-            }
-            resolved_params = std::move(parsed.value());
         }
 
         // Also substitute variables in the command name itself
@@ -62,8 +54,9 @@ SequenceResult executeSequence(
             resolved_name = substituteVariables(resolved_name, ctx.runtime_variables);
         }
 
-        // Create the command via factory
-        auto cmd = createCommand(resolved_name, resolved_params);
+        // Create the command via factory (using JSON string directly to avoid
+        // the rfl::Generic round-trip that converts integers to doubles)
+        auto cmd = createCommandFromJson(resolved_name, resolved_json);
         if (!cmd) {
             seq_result.result = CommandResult::error(
                     "Unknown command '" + resolved_name + "' (index " +
@@ -75,8 +68,12 @@ SequenceResult executeSequence(
             continue;
         }
 
-        // Execute the command
-        auto cmd_result = cmd->execute(ctx);
+        // Execute the command inside a CommandGuard scope
+        CommandResult cmd_result;
+        {
+            CommandGuard const guard;
+            cmd_result = cmd->execute(ctx);
+        }
         if (!cmd_result.success) {
             seq_result.result = CommandResult::error(
                     "Command '" + resolved_name + "' failed (index " +
@@ -87,6 +84,21 @@ SequenceResult executeSequence(
                 seq_result.executed_commands.push_back(std::move(cmd));
                 return seq_result;
             }
+        }
+
+        // Record the resolved descriptor on success
+        if (cmd_result.success && recorder != nullptr) {
+            CommandDescriptor resolved_desc;
+            resolved_desc.command_name = resolved_name;
+            resolved_desc.description = desc.description;
+            // Parse the resolved JSON to rfl::Generic for storage in the descriptor.
+            // This may convert integers to doubles, but createCommandFromJson()
+            // applies normalizeJsonNumbers() on replay, so the round-trip is safe.
+            auto parsed_for_record = rfl::json::read<rfl::Generic>(resolved_json);
+            if (parsed_for_record) {
+                resolved_desc.parameters = std::move(parsed_for_record.value());
+            }
+            recorder->record(std::move(resolved_desc));
         }
 
         all_affected_keys.insert(

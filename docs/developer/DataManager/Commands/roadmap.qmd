@@ -4,417 +4,222 @@ title: "Command Architecture Roadmap"
 
 ## Progress Summary
 
-*Last updated: 2026-03-09*
+*Last updated: 2026-03-11*
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.12 complete. GUI audit (1.10) restructured as on-demand. Steps 1.13–1.14 (testing infrastructure) added. |
-| **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3, 2.6–2.8 complete. Keyboard shortcuts (2.4) and tracked-regions visualization (2.5) remain. |
-| **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
-| **Phase 4:** Action Journal Integration | Not Started | Full journal; builds on CommandRecorder from Step 1.13 |
+| **Phase 1:** Command Foundation | **Complete** | 6 commands, factory, validation, variable substitution, recorder, mutation guard, golden traces |
+| **Phase 2:** Triage Session | **Nearly Complete** | Core, widget, guided editor all done. Keyboard shortcuts (2.4) and tracked-regions overlay (2.5) remain. |
+| **Phase 3:** Persistence & Save Registry | **Complete** | SaverRegistry, 8 savers (CSV ×6, CapnProto, OpenCV), SaveData + LoadData commands, round-trip fuzz tests |
+| **Phase 4:** Action Journal Integration | Not Started | Generalizes CommandRecorder into persistent, timestamped journal |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
-| **Phase 6:** CLI Batch Executor & Macro Recording | Not Started | Headless command sequence execution; builds on golden trace tests from Step 1.14 |
+| **Phase 6:** CLI Batch & Macro Recording | Not Started | Headless command execution; generalizes golden trace tests |
+| **Widget Command-ification** | Ongoing | 9 new commands identified via audit; none yet implemented. See [GUI Verb Audit](gui_verb_audit.qmd). |
 
 For the full architectural design, types, and code examples, see the
 [Command Architecture Design Document](index.qmd).
 
-## Dependency Graph
+## What Exists Today
+
+### Registered Commands (6)
+
+| Command | Category | Undoable | Description |
+|---------|----------|----------|-------------|
+| `MoveByTimeRange` | data_mutation | Yes | Move entities in a frame range between same-type data objects |
+| `CopyByTimeRange` | data_mutation | No | Copy entities (source unmodified) |
+| `AddInterval` | data_mutation | No | Append interval to `DigitalIntervalSeries`; creates series if missing |
+| `ForEachKey` | meta | No | Iterate a list of values, execute sub-commands per item |
+| `SaveData` | persistence | No | Save a data object via `LoaderRegistry::trySave()` |
+| `LoadData` | persistence | Yes | Load a data object via `LoaderRegistry::tryLoad()` |
+
+### Infrastructure
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `CommandFactory` | `src/DataManager/Commands/` | `createCommand()`, `createCommandFromJson()`, `getAvailableCommands()`, `getCommandInfo()` |
+| `CommandRecorder` | `src/DataManager/Commands/` | Records executed commands for replay; hook in `executeSequence()` |
+| `MutationGuard` | `src/DataManager/Commands/` | Debug-only: warns when `DataManager` is mutated outside a command |
+| `DataManagerSnapshot` | `src/DataManager/` | Lightweight state snapshot (type, entity count, content hash) for golden trace tests |
+| `ParameterSchema` | `src/ParameterSchema/` | Compile-time parameter schema extraction from reflect-cpp structs |
+| `AutoParamWidget` | `src/WhiskerToolbox/AutoParamWidget/` | Dynamic Qt form builder from `ParameterSchema` |
+| `TriageSession` | `src/TriageSession/` | Mark/Commit/Recall state machine using command sequences |
+| `SaverRegistry` | `src/DataManager/IO/core/` | `SaverInfo`, `AtomicWrite`, `getSupportedSaveFormats()` |
+| `Validation` | `src/DataManager/Commands/` | `validateSequence()` — structural, type, and variable checks |
+| `VariableSubstitution` | `src/DataManager/Commands/` | Two-pass `${variable}` substitution + `normalizeJsonNumbers()` |
+
+### Test Coverage
+
+- **Command unit tests**: 25+ test cases (factory, move, copy, interval, forEach, error handling)
+- **CommandRecorder tests**: 19 test cases (record/clear, JSON serialization, executeSequence integration, MutationGuard)
+- **Validation tests**: 10+ test cases (structural, deserialization, variable resolution, type compatibility)
+- **Variable substitution tests**: 10+ test cases (static/runtime variables, integer normalization)
+- **SaveData/LoadData tests**: 22 test cases (factory, execution, undo, serialization, round-trip)
+- **Saver fuzz tests**: 9 fuzz test files (CSV round-trip for all 6 types, CapnProto lines, OpenCV masks)
+- **TriageSession tests**: State machine transitions, runtime variable population, integration
+- **Golden trace tests**: CopyByTimeRange, MoveByTimeRange, AddInterval, multi-command sequences, replay determinism
+
+## Dependency Graph (Remaining Work)
 
 ```
-Phase 1: Command Foundation
+Completed Foundation (Phases 1, 3)
    │
-   ├── Step 1.13 (CommandRecorder + MutationGuard)
-   │       │
-   │       ├──► On-demand widget audits (Step 1.10)
-   │       │       MutationGuard identifies gaps at runtime
-   │       │
-   │       └──► Phase 4: Action Journal Integration
-   │               CommandRecorder generalizes into full journal
+   ├──► Phase 2 Remaining: Keyboard shortcuts (2.4), tracked-regions viz (2.5)
    │
-   ├── Step 1.14 (DataManagerSnapshot + Golden Trace Tests)
-   │       │
-   │       └──► Phase 6: CLI Batch & Macro Recording
-   │               Golden traces generalize into macro recording
+   ├──► Widget Command-ification (ongoing, on-demand)
+   │       Uses: MutationGuard for gap detection, golden traces for verification
+   │       Blocked commands: CreateData, DeleteData, AddEvent, RemoveEvent, etc.
    │
-   ├──► Phase 2: Triage Session
-   │       Steps 2.7–2.8 (guided editor) depend on Steps 1.11–1.12
+   ├──► Phase 4: Action Journal
+   │       Depends on: CommandRecorder (done)
+   │       Generalizes recorder into persistent timestamped log
    │
-   ├──► Phase 3: Persistence Commands & Save Registry
+   ├──► Phase 5: Undo/Redo
+   │       Independent of Phases 2, 4, 6
+   │       MoveByTimeRange already supports undo; needs CommandStack
    │
-   └──► Phase 5: Undo/Redo
+   └──► Phase 6: CLI Batch & Macro Recording
+           Depends on: Phases 3 (done), 4
+           Generalizes golden trace tests into CLI tool
 ```
 
-**Parallelizable work:**
-
-- Phases 2, 3, and 5 are independent of each other and can proceed in parallel after Phase 1.
-- Steps 1.11–1.12 (ParameterSchema extraction + CommandInfo) are prerequisites for Steps
-  2.7–2.8 (AutoParamWidget extraction + guided pipeline editor) but independent of all other
-  Phase 2 work.
-- Steps 1.13–1.14 (CommandRecorder, MutationGuard, DataManagerSnapshot) are independent of
-  Phases 2, 3, and 5 and can proceed in parallel.
-- Phase 4 depends on both Step 1.13 (CommandRecorder) and the Action Journal from the State
-  Management Roadmap. CommandRecorder is a lightweight precursor that feeds directly into it.
-- Phase 6 can begin once Phases 1, 3, and 4 are complete (Phase 5/undo is not required).
-  Golden trace tests (Step 1.14) provide the replay infrastructure that Phase 6 generalizes.
+**Parallelizable:** Phases 4, 5, and widget command-ification can proceed independently.
+Phase 6 requires Phase 4.
 
 ---
 
-## Phase 1 — Command Foundation
-
-**Goal:** Minimal, testable core. No Qt dependency.
-
-**Depends on:** Nothing
-
-### Step 1.1 — Core Types
-
-Create `src/DataManager/Commands/` directory and CMake target (`Commands` static library).
-Implement the four core structs, all reflect-cpp serializable:
-
-- [x] `CommandResult` — success/error + affected keys
-- [x] `CommandContext` — holds `shared_ptr<DataManager>`, runtime variables, optional progress callback
-- [x] `CommandDescriptor` — single command invocation (name + parameters + description)
-- [x] `CommandSequenceDescriptor` — sequence of commands with optional name, version, and template variables
-
-See [Core Types](index.qmd#core-types) in the design document.
-
-### Step 1.2 — ICommand Base Class
-
-- [x] `ICommand` abstract base with `execute()`, `commandName()`, `toJson()`, `isUndoable()`, `undo()`, `mergeId()`, `mergeWith()`
-- [x] Default implementations: `isUndoable()` → false, `undo()` → error, `mergeId()` → -1, `mergeWith()` → false
-
-See [ICommand Base Class](index.qmd#icommand-base-class) in the design document.
-
-### Step 1.3 — Command Factory
-
-- [x] `createCommand()` free function: maps `command_name` string + `rfl::Generic` parameters → `unique_ptr<ICommand>`
-- [x] Returns `nullptr` for unknown command names or deserialization failures
-
-See [Command Factory](index.qmd#command-factory) in the design document.
-
-### Step 1.4 — Variable Substitution
-
-- [x] Implement two-pass `${variable}` substitution (static pass from `CommandSequenceDescriptor::variables`, runtime pass from `CommandContext::runtime_variables`)
-- [x] Reuse the pattern from TransformsV2 pipeline variable substitution
-
-See [Variable Substitution](index.qmd#variable-substitution) in the design document.
-
-### Step 1.5 — Sequence Execution
-
-- [x] `executeSequence()` free function: iterates descriptors, applies variable substitution, creates + executes commands, collects executed commands in `SequenceResult` for undo
-- [x] Stop-on-first-error behavior (configurable)
-
-See [Sequence Execution](index.qmd#sequence-execution) in the design document.
-
-### Step 1.6 — `getEntityIdsInRange` Helpers
-
-- [x] Free function template for `RaggedTimeSeries<T>` types (LineData, PointData, MaskData) using `flattened_data()`
-- [x] Overload for `DigitalEventSeries` using `view()`
-- [x] Overload for `DigitalIntervalSeries` collecting IDs of overlapping intervals
-- [x] These are pure query functions living in `src/DataManager/Commands/`
-
-See [getEntityIdsInRange](index.qmd#getentityidsinrange-free-functions) in the design document.
-
-### Step 1.7 — First Four Commands
-
-Implement concrete command classes with parameter structs:
-
-- [x] `MoveByTimeRange` — moves entities in `[start_frame, end_frame]` between same-type data objects. Captures moved entity IDs for undo.
-- [x] `CopyByTimeRange` — copies entities (source unmodified). Wider type support than move.
-- [x] `AddInterval` — appends an interval to a `DigitalIntervalSeries`. Creates the series if `create_if_missing` is true.
-- [x] `ForEachKey` — meta-command iterating a list of values, binding each to a template variable, and executing sub-commands per item. Undo reverses sub-commands in reverse order.
-
-See [Commands](index.qmd#commands) in the design document.
-
-### Step 1.8 — Unit Tests
-
-- [x] Factory lookup: known command names return non-null; unknown returns null
-- [x] Variable substitution: static + runtime variables resolve correctly in parameters
-- [x] Command execution: `MoveByTimeRange` moves entities between data objects
-- [x] Command execution: `CopyByTimeRange` copies without modifying source
-- [x] Command execution: `AddInterval` creates/appends intervals
-- [x] Sequence execution: multi-command sequence runs in order, stops on error
-- [x] `ForEachKey` expansion: sub-commands execute once per item with correct variable binding
-- [x] `getEntityIdsInRange` correctness for each supported data type
-- [x] Error handling: missing keys, type mismatches, empty ranges
-
-### Step 1.9 — Validation (Stretch Goal)
-
-- [x] `validateSequence()` function with `ValidationResult` (warnings + errors)
-- [x] Structural check: all command names are valid factory keys
-- [x] Deserialization check: parameters parse into expected structs
-- [x] Variable resolution check: all `${variable}` references resolve
-- [x] Data key existence check: warns if referenced keys missing from DataManager
-- [x] Type compatibility check: errors if source/destination types don't match
-
-See [Validation](index.qmd#validation) in the design document.
-
-### Step 1.10 — GUI Verb Audit (On-Demand)
-
-This step has its own detailed tracking document: [GUI Verb Audit](gui_verb_audit.qmd).
-
-**Strategy change (2026-03-09):** The GUI audit is no longer a blocking prerequisite that must
-be completed exhaustively before other work proceeds. Instead, it uses a hybrid approach:
-
-1. **Quick triage pass** — `grep` for `_data_manager` in each widget's headers to identify
-   which widgets have any `DataManager` interaction at all. Widgets with zero references
-   move to the excluded list immediately.
-2. **Detailed audit on-demand** — When you are about to implement commands for a widget or
-   refactor it, perform the full audit (Phase A–D) at that time.
-3. **Runtime gap detection** — The MutationGuard (Step 1.13) automatically identifies
-   unrecorded `DataManager` mutations at runtime, replacing manual code-reading for
-   gap discovery.
-4. **Golden trace verification** — A widget is considered "done" when all its mutations
-   route through commands and a golden trace test verifies the workflow (Step 1.14).
-
-See the [Definition of Done](#definition-of-done) section for widget completion criteria.
-
-Completed widget audits:
-
-- [x] DataManager_Widget — 3 verbs (2 new commands: `CreateData`, `DeleteData`)
-- [x] DataInspector_Widget — ~30 verbs (10 covered, 14 new commands, 6 future Phase 3)
-
-Remaining widgets are audited on-demand as they are touched. See the
-[GUI Verb Audit](gui_verb_audit.qmd) document for the quick triage results and per-widget
-audit tables.
-
-### Step 1.11 — Extract ParameterSchema Library
-
-- [x] Create `src/ParameterSchema/` as a new static library
-- [x] Move `ParameterSchema.hpp/.cpp` out of `src/TransformsV2/core/` into `src/ParameterSchema/`
-- [x] Move `ParameterFieldDescriptor`, `ParameterSchema`, `extractParameterSchema<T>()`, `ParameterUIHints<T>`, and helper functions (`snakeCaseToDisplay`, `parseUnderlyingType`, `extractConstraints`)
-- [x] Library depends only on reflect-cpp and standard library — no TransformsV2 types
-- [x] Update TransformsV2 CMakeLists to depend on `ParameterSchema` and remove moved sources
-- [x] Update all TransformsV2 includes to reference the new location
-- [x] Verify all existing TransformsV2 tests still pass
-
-See [Command Introspection](index.qmd#command-introspection) in the design document.
-
-### Step 1.12 — CommandInfo and Factory Query Functions
-
-- [x] Define `CommandInfo` struct in `src/DataManager/Commands/CommandInfo.hpp`
-- [x] Add `getAvailableCommands()` to `CommandFactory` — returns `std::vector<CommandInfo>` with one entry per command, including `ParameterSchema` generated via `extractParameterSchema<T>()`
-- [x] Add `getCommandInfo(name)` to `CommandFactory` — returns `std::optional<CommandInfo>` for a single command
-- [x] Add `ParameterUIHints<T>` specializations for command param structs (tooltips, field descriptions)
-- [x] Add `ParameterSchema` as a dependency of the `Commands` CMake target
-- [x] Unit tests: `getAvailableCommands()` returns all known commands; `getCommandInfo()` returns correct schemas; schema field counts match param struct fields
-
-### Step 1.13 — CommandRecorder and MutationGuard
-
-These are lightweight infrastructure pieces that enable test-driven widget refactoring
-without requiring the full Action Journal (Phase 4).
-
-#### CommandRecorder (Phase 4 Lite)
-
-- [ ] `CommandRecorder` class in `src/DataManager/Commands/`
-- [ ] `record(CommandDescriptor)` — appends a descriptor to the trace
-- [ ] `trace()` — returns the recorded descriptors
-- [ ] `toSequence()` — produces a `CommandSequenceDescriptor` from the trace
-- [ ] `clear()` — resets the recorder
-- [ ] Optional hook in `executeSequence()` — accepts `CommandRecorder*` parameter; records
-  each successfully executed command automatically
-
-```cpp
-class CommandRecorder {
-    std::vector<CommandDescriptor> _trace;
-public:
-    void record(CommandDescriptor desc) { _trace.push_back(std::move(desc)); }
-    [[nodiscard]] auto const& trace() const { return _trace; }
-    [[nodiscard]] CommandSequenceDescriptor toSequence(std::string name = "") const;
-    void clear() { _trace.clear(); }
-};
-```
-
-This is intentionally minimal — ~50 lines of code. It feeds directly into Phase 4 (Action
-Journal) as the recording mechanism, but is useful immediately for golden trace tests.
-
-#### MutationGuard (Strangulation Pattern)
-
-- [ ] Debug-only `thread_local bool g_inside_command` flag in `src/DataManager/Commands/`
-- [ ] `CommandGuard` RAII struct that sets the flag to `true` during `ICommand::execute()`
-- [ ] Instrumentation points in `DataManager` mutating methods (`setData()`, `deleteData()`,
-  etc.) — `qWarning()` when `g_inside_command` is false
-- [ ] Compile-gated to debug builds only (`#ifndef NDEBUG`)
-
-This gives **automated runtime gap detection**: run the app normally, exercise each widget,
-and the console reports exactly which `DataManager` mutations are not routed through commands.
-No manual code reading required.
-
-### Step 1.14 — DataManagerSnapshot and Golden Trace Tests
-
-These provide the test infrastructure for verifying widget command coverage.
-
-#### DataManagerSnapshot
-
-- [ ] `DataManagerSnapshot` struct in `src/DataManager/`
-- [ ] `snapshotDataManager(DataManager const&)` — produces a lightweight summary:
-  - `key_type`: map of data key → type name string
-  - `key_entity_count`: map of data key → number of entities
-  - `key_content_hash`: map of data key → deterministic content hash
-- [ ] `operator==` for snapshot comparison in tests
-- [ ] Does not require full data serialization — entity counts and content hashes detect
-  regressions; full serialization comes with Phase 3 (SaveData/LoadData)
-
-```cpp
-struct DataManagerSnapshot {
-    std::map<std::string, std::string> key_type;
-    std::map<std::string, size_t> key_entity_count;
-    std::map<std::string, std::string> key_content_hash;
-};
-DataManagerSnapshot snapshotDataManager(DataManager const& dm);
-bool operator==(DataManagerSnapshot const&, DataManagerSnapshot const&);
-```
-
-#### Golden Trace Test Pattern
-
-- [ ] Load a recorded `CommandSequenceDescriptor` from a JSON fixture file
-- [ ] Replay against a synthesized (or empty) `DataManager`
-- [ ] Assert final state via `DataManagerSnapshot` comparison
-- [ ] Each refactored widget gets at least one golden trace test for its key workflow
-
-Example:
-
-```cpp
-TEST_CASE("DataManager_Widget CreateData+DeleteData round-trip") {
-    auto dm = std::make_shared<DataManager>();
-    auto sequence = loadSequenceFromFile("traces/datamanager_widget_create_delete.json");
-
-    CommandContext ctx;
-    ctx.data_manager = dm;
-    auto result = executeSequence(sequence, ctx);
-    REQUIRE(result.success);
-
-    REQUIRE(dm->getKeys().size() == 1);
-    REQUIRE(dm->getData<PointData>("my_points") != nullptr);
-}
-```
-
-This is the TDD mechanism for widget refactoring: capture a trace once (manually or via
-`CommandRecorder`), then replay it as a regression test. A widget is "done" when all its
-mutating actions produce golden traces that replay successfully.
+## Completed Phases (Summary)
+
+### Phase 1 — Command Foundation (Complete)
+
+All 14 steps complete. Delivered:
+
+- **Core types** (Steps 1.1–1.3): `CommandResult`, `CommandContext`, `CommandDescriptor`,
+  `CommandSequenceDescriptor`, `ICommand` base class, `CommandFactory` with
+  `createCommand()` / `createCommandFromJson()`.
+- **Execution engine** (Steps 1.4–1.5): Two-pass `${variable}` substitution,
+  `executeSequence()` with stop-on-error, `SequenceResult` for undo.
+- **Query helpers** (Step 1.6): `getEntityIdsInRange()` for `RaggedTimeSeries<T>`,
+  `DigitalEventSeries`, and `DigitalIntervalSeries`.
+- **First commands** (Step 1.7): `MoveByTimeRange`, `CopyByTimeRange`, `AddInterval`,
+  `ForEachKey`.
+- **Validation** (Step 1.9): `validateSequence()` with structural, deserialization,
+  variable, key existence, and type compatibility checks.
+- **GUI verb audit** (Step 1.10): On-demand hybrid strategy. DataManager_Widget and
+  DataInspector_Widget audited. See [GUI Verb Audit](gui_verb_audit.qmd).
+- **ParameterSchema** (Step 1.11): Extracted to `src/ParameterSchema/` as standalone library.
+- **CommandInfo** (Step 1.12): `getAvailableCommands()`, `getCommandInfo()`, per-command
+  `ParameterUIHints`.
+- **CommandRecorder + MutationGuard** (Step 1.13): Trace recording with `executeSequence()`
+  hook; debug-only strangulation pattern for runtime gap detection.
+- **DataManagerSnapshot + Golden Traces** (Step 1.14): Lightweight snapshot comparison;
+  golden trace test pattern for widget verification.
+
+**Known pitfall (resolved):** `rfl::Generic` stores integers as `double`, causing round-trip
+failures. Fixed via `normalizeJsonNumbers()` in `VariableSubstitution` and
+`createCommandFromJson()` in `CommandFactory`.
+
+See the [design document](index.qmd) for architecture details.
+
+### Phase 3 — Persistence Commands & Save Registry (Complete)
+
+All steps complete. Delivered:
+
+- **SaverRegistry infrastructure** (Step 3.1.1): `SaverInfo` metadata, `AtomicWrite` utility,
+  `getSupportedSaveFormats()` on `LoaderRegistry`.
+  See [SaverInfo & AtomicWrite](../../IO/saver_infrastructure.qmd).
+- **8 format savers** (Steps 3.1.2–3.1.9):
+
+  | Format | Data Type | Fuzz Tested |
+  |--------|-----------|-------------|
+  | CSV | PointData | Yes (round-trip + delimiter) |
+  | CSV | LineData (single-file) | Yes (round-trip + delimiter) |
+  | CSV | LineData (multi-file) | Yes (round-trip) |
+  | CSV | AnalogTimeSeries | Yes (round-trip + delimiter) |
+  | CSV | DigitalEventSeries | Yes (round-trip + delimiter) |
+  | CSV | DigitalIntervalSeries | Yes (round-trip + delimiter) |
+  | CSV | MaskData (RLE) | Yes (round-trip + delimiter) |
+  | CapnProto | LineData | Yes (exact binary round-trip) |
+  | OpenCV (Image) | MaskData | Yes (robustness) |
+
+- **SaveData command** (Step 3.2): Dispatches via `LoaderRegistry::trySave()`. Not undoable.
+  See [SaveData Command](save_data.qmd).
+- **LoadData command** (Step 3.3): Dispatches via `LoaderRegistry::tryLoad()`. Undoable
+  (undo calls `deleteData()`). See [LoadData Command](load_data.qmd).
 
 ---
 
-## Definition of Done
-
-A widget is fully command-ified when all three criteria are met:
-
-1. **Zero direct `DataManager` mutations** — every `setData()`, `deleteData()`,
-   `getData<T>()->addEvent()`, etc. in the widget goes through `createCommand()` +
-   `execute()`. Category C verbs (TransformsV2, LoaderRegistry) are documented but
-   intentionally left as direct calls until Phase 3+.
-
-2. **Zero MutationGuard warnings** — exercising the widget in a debug build produces no
-   `"DataManager mutation outside command"` warnings in the console.
-
-3. **Golden trace test exists** — at least one Catch2 test loads a recorded command sequence
-   (JSON fixture), replays it against synthetic data, and verifies the final
-   `DataManagerSnapshot` matches expectations.
-
-Criteria 2 and 3 require Steps 1.13–1.14 to be implemented first.
-
----
-
-## Phase 2 — Triage Session
+## Phase 2 — Triage Session (Nearly Complete)
 
 **Goal:** Mark/Commit/Recall workflow using command sequences.
 
-**Depends on:** Phase 1
+**Completed steps:**
 
-### Step 2.1 — TriageSession Core Class
+- **TriageSession core** (Step 2.1): `Idle ↔ Marking` state machine in `src/TriageSession/`.
+  `commit()` populates runtime variables (`mark_frame`, `current_frame`) and delegates to
+  `executeSequence()`. Retains last commit commands for undo support.
+- **TriageSessionState** (Step 2.2): EditorState subclass with pipeline/tracked-regions
+  serialization.
+- **TriageSessionWidget** (Step 2.3): Mark/Commit/Recall buttons, pipeline display,
+  tracked-regions summary.
+- **Unit tests** (Step 2.6): State machine transitions, runtime variable population,
+  full triage round-trip integration test.
+- **AutoParamWidget extraction** (Step 2.7): Extracted to `src/WhiskerToolbox/AutoParamWidget/`
+  with `Qt6::Widgets` + `ParameterSchema` dependencies only.
+- **Guided Pipeline Editor** (Step 2.8): Command picker dialog, editable command list with
+  `AutoParamWidget` rows, bidirectional sync with raw JSON editor.
 
-- [x] `TriageSession` non-Qt class in `src/TriageSession/` (separate static library, not inside DataManager)
-- [x] State machine: `Idle` ↔ `Marking` transitions via `mark()`, `commit()`, `recall()`
-- [x] `commit()` populates `CommandContext::runtime_variables` with `mark_frame` and `current_frame`, delegates to `executeSequence()`
-- [x] Pipeline configuration: `setPipeline()` / `pipeline()` accessors
-- [x] `lastCommitCommands()` / `takeLastCommitCommands()` for undo support
-- [x] Enhanced `substituteVariables()` to handle numeric type coercion for `"${var}"` patterns
+### Remaining Steps
 
-See [Triage Session](index.qmd#triage-session) in the design document.
-
-### Step 2.2 — TriageSessionState (EditorState)
-
-- [x] `TriageSessionState` EditorState subclass in `src/WhiskerToolbox/TriageSession_Widget/Core/`
-- [x] Serializes pipeline JSON and tracked-regions key
-- [x] State machine resets to Idle on workspace load (never resume mid-triage)
-- [x] Signals: `pipelineChanged()`, `stateChanged()`
-
-### Step 2.3 — TriageSessionWidget (Qt UI)
-
-- [x] Mark / Commit / Recall buttons with status display
-- [x] Pipeline display: load JSON, edit JSON, show command summary
-- [x] Tracked-regions summary: interval count, frame count
-
-See [UI Sketch](index.qmd#ui-sketch) in the design document.
-
-### Step 2.4 — Keyboard Shortcuts
+#### Step 2.4 — Keyboard Shortcuts
 
 - [ ] **M** — Mark (start a triage range)
 - [ ] **C** — Commit (execute pipeline for `[mark_frame, current_frame]`)
 - [ ] **R** — Recall (abort, jump back to mark frame)
 
-### Step 2.5 — Tracked-Regions Visualization
+#### Step 2.5 — Tracked-Regions Visualization
 
 - [ ] Render tracked-regions `DigitalIntervalSeries` as shaded overlay on the timeline/scrubber
 
-### Step 2.6 — Unit Tests
-
-- [x] State machine transitions: Idle → Marking → Idle (commit), Marking → Idle (recall)
-- [x] Commit populates correct runtime variables
-- [x] Recall resets state without executing commands
-- [x] Integration test: full triage round-trip with mock DataManager (mark → scrub → commit → verify data moved + interval added)
-
-### Step 2.7 — Extract AutoParamWidget Library
-
-- [x] Create `src/WhiskerToolbox/AutoParamWidget/` as a new static library
-- [x] Move `AutoParamWidget.hpp/.cpp` out of `src/WhiskerToolbox/TransformsV2_Widget/UI/`
-- [x] Library depends on `Qt6::Widgets` and `ParameterSchema` — no TransformsV2 dependency
-- [x] Update `TransformsV2_Widget` CMakeLists to depend on `AutoParamWidget` and remove moved sources
-- [x] Update all TransformsV2_Widget includes to reference the new location
-- [x] Verify existing TransformsV2_Widget functionality is unaffected
-
-### Step 2.8 — Guided Pipeline Editor
-
-- [x] Add "Add Command..." button to triage pipeline section
-- [x] Implement command picker dialog/dropdown populated by `getAvailableCommands()`
-- [x] Generate `AutoParamWidget` from selected command's `ParameterSchema`
-- [x] Replace read-only command summary with an editable command list (each row is an expandable `AutoParamWidget` with current parameter values)
-- [x] Edits to command rows update the `CommandSequenceDescriptor` and raw JSON view
-- [x] Keep raw JSON editor as a collapsible section for power users
-- [x] Handle `${variable}` references in text fields (accept both literal values and variable strings)
-
 ---
 
-## Phase 3 — Persistence Commands & Save Registry
+## Widget Command-ification (Ongoing)
 
-**Goal:** Unified `SaveData` command wrapping all existing saver functions.
+**Goal:** Route all `DataManager` mutations through commands. Audited on-demand per widget.
 
-**Depends on:** Phase 1
+**Strategy:** See [GUI Verb Audit](gui_verb_audit.qmd) for the full audit process, widget
+tables, and command designs.
 
-### Step 3.1 — SaverRegistry
+### Definition of Done
 
-- [ ] `SaverRegistry` class mapping format strings to saver functions (analogous to `LoaderRegistry`)
-- [ ] Register existing savers: CSV single-file, CSV multi-file for LineData, PointData, DigitalEventSeries, DigitalIntervalSeries, AnalogTimeSeries
+A widget is fully command-ified when:
 
-### Step 3.2 — SaveData Command
+1. **Zero direct `DataManager` mutations** — all `setData()`, `deleteData()`, etc. go through
+   `createCommand()` + `execute()`.
+2. **Zero MutationGuard warnings** — exercising the widget in a debug build produces no
+   console warnings.
+3. **Golden trace test exists** — at least one Catch2 test replays a recorded command
+   sequence and asserts the final `DataManagerSnapshot`.
 
-- [ ] `SaveDataParams` struct: data_key, format, path, optional format_options
-- [ ] `SaveData` command dispatches to `SaverRegistry` based on format string
-- [ ] Atomic write-ahead pattern: write to `.tmp`, `fsync()`, `rename()` over target
-- [ ] Deserialize format-specific option structs from `format_options`
+### Audited Widgets
 
-See [SaveData](index.qmd#savedata) and [Persistence Safety](index.qmd#persistence-safety) in the design document.
+| Widget | Verbs | Covered | New Cmds Needed | Golden Trace |
+|--------|-------|---------|-----------------|--------------|
+| DataManager_Widget | 3 | 0 | 2 (`CreateData`, `DeleteData`) | Not yet |
+| DataInspector_Widget | ~30 | ~10 | ~14 | Not yet |
 
-### Step 3.3 — LoadData Command
+### Commands Still Needed
 
-- [ ] `LoadDataParams` struct: data_key, data_type, filepath, format, optional format_options
-- [ ] `LoadData` command wraps `LoaderRegistry` for unified dispatch
+9 commands identified by audit but not yet implemented. See
+[New Commands Identified](gui_verb_audit.qmd#new-commands-identified) for full designs.
 
-### Step 3.4 — Unit Tests
+**Wave 1 — Core CRUD:** `CreateData`, `DeleteData`, `AddEvent`, `RemoveEvent`
 
-- [ ] Save round-trip: save data object, reload, verify contents match
-- [ ] Atomic write safety: verify `.tmp` → `rename()` pattern
-- [ ] Format dispatch: correct saver called for each format string
-- [ ] Error handling: unknown format, missing data key, write permission failure
+**Wave 2 — Entity Operations:** `DeleteByEntityIds`, `RemoveInterval`, `ModifyInterval`
+
+**Wave 3 — Group Operations:** `AssignToGroup`, `RemoveFromGroup`
+
+Remaining widgets (DataImport, DataExport, Media, etc.) are audited on-demand as they are
+touched. MutationGuard provides automated runtime gap detection.
 
 ---
 
@@ -422,18 +227,17 @@ See [SaveData](index.qmd#savedata) and [Persistence Safety](index.qmd#persistenc
 
 **Goal:** Commands auto-record to journal; journal can replay command entries.
 
-**Depends on:** Phase 1 (Step 1.13 CommandRecorder), State Management Roadmap Phase 4 (Action Journal)
+**Depends on:** CommandRecorder (done)
 
-**Relationship to Step 1.13:** The `CommandRecorder` from Step 1.13 is the minimal precursor
-to the full Action Journal. Phase 4 generalizes the recorder into a persistent, timestamped,
-filterable log with workspace integration. The `executeSequence()` hook added in Step 1.13
-is reused here — the only change is swapping the `CommandRecorder*` parameter for an
-`ActionJournal*` that wraps it with persistence and metadata.
+Generalizes the `CommandRecorder` into a persistent, timestamped, filterable log with
+workspace integration. The `executeSequence()` hook from Step 1.13 is reused — the change
+is swapping `CommandRecorder*` for `ActionJournal*` with persistence and metadata.
 
 ### Step 4.1 — Journal Hook in executeSequence
 
-- [ ] Generalize the `CommandRecorder*` parameter from Step 1.13 into `ActionJournal*`
-- [ ] On successful command execution, record `ActionEntry` with timestamp, command name/description, serialized parameters, source widget
+- [ ] Generalize the `CommandRecorder*` parameter into `ActionJournal*`
+- [ ] On successful command execution, record `ActionEntry` with timestamp, command
+  name/description, serialized parameters, source widget
 
 ### Step 4.2 — Journal Replay
 
@@ -450,7 +254,7 @@ is reused here — the only change is swapping the `CommandRecorder*` parameter 
 
 **Goal:** CommandStack, EditorState memento undo, inverse-command undo for data mutations.
 
-**Depends on:** Phase 1
+**Depends on:** Phase 1 (done)
 
 ### Step 5.1 — CommandStack
 
@@ -476,10 +280,10 @@ See [WidgetStateChangeCommand](index.qmd#widgetstatechangecommand) in the design
 
 See [CommandSequenceCommand](index.qmd#commandsequencecommand-triage-undo) in the design document.
 
-### Step 5.4 — MoveByTimeRange Undo
+### Step 5.4 — MoveByTimeRange Undo Verification
 
-- [ ] Verify `MoveByTimeRange` correctly captures entity IDs during `execute()` and moves them back during `undo()`
 - [ ] Integration test: move → undo → verify original state restored
+  (`MoveByTimeRange` already reports `isUndoable() = true`)
 
 ### Step 5.5 — UI Integration
 
@@ -493,13 +297,11 @@ See [CommandSequenceCommand](index.qmd#commandsequencecommand-triage-undo) in th
 
 **Goal:** Execute command sequences headlessly; record GUI actions as commands.
 
-**Depends on:** Phases 1 (Steps 1.13–1.14), 3, 4
+**Depends on:** Phases 3 (done), 4
 
-**Relationship to Steps 1.13–1.14:** The CLI executor is a direct generalization of the golden
-trace test pattern (Step 1.14) — same infrastructure (load JSON, create `DataManager`,
-`executeSequence()`, check results), different entry point (CLI instead of Catch2). The macro
-recorder generalizes `CommandRecorder` (Step 1.13) from a test utility into a user-facing
-feature.
+Generalizes the golden trace test pattern (load JSON → create `DataManager` →
+`executeSequence()` → check results) into a CLI tool. The macro recorder generalizes
+`CommandRecorder` from a test utility into a user-facing feature.
 
 ### Step 6.1 — CLI Executor
 
@@ -534,28 +336,23 @@ command-first architecture. The key differences:
 
 | State Mgmt Roadmap (old) | Command Architecture (this doc) |
 |---|---|
-| Phase 4: Action Journal records ad-hoc action types | Phase 4 here: Action Journal records `CommandDescriptor`s — standardized, replayable |
-| Phase 5: `Command` interface with `execute()`/`undo()` as standalone pattern | Phases 1+5 here: `ICommand` virtual base with factory, `CommandStack` layered on top |
-| Phase 6: `SessionReplayer` replays workspace provenance | Phase 6 here: CLI executor replays `CommandSequenceDescriptor` — same mechanism as triage |
-| No concept of triage or batch operations | Triage Session is Phase 2; demonstrates the architecture's power |
-| `JSONConsole_Widget` dispatches by type | JSON Console dispatches to `executeSequence()` for command sequences |
+| Phase 4: Action Journal records ad-hoc action types | Phase 4 here: records `CommandDescriptor`s — standardized, replayable |
+| Phase 5: `Command` interface with `execute()`/`undo()` | Phases 1+5 here: `ICommand` base with factory, `CommandStack` layered on top |
+| Phase 6: `SessionReplayer` replays workspace provenance | Phase 6 here: CLI executor replays `CommandSequenceDescriptor` |
+| No concept of triage or batch operations | Triage Session (Phase 2) demonstrates the architecture |
 
-Ideas **carried forward** from the State Management Roadmap (not lost):
+Ideas **carried forward** from the State Management Roadmap:
 
-- **Action Journal** (`ActionEntry`, append-only log, JSONL format, query/filter) — Phase 4 here
-- **JSON Console Widget** (`JSONEditor` component, schema validation, multi-type dispatch) — integrated via JSON Console Integration section
-- **CommandStack** (undo/redo, clean state, merge) — Phase 5 here
+- **Action Journal** (`ActionEntry`, append-only log, JSONL format, query/filter) — Phase 4
+- **CommandStack** (undo/redo, clean state, merge) — Phase 5
 - **Memento-based EditorState undo** (`WidgetStateChangeCommand`) — Phase 5
-- **Command merging** for sequential similar operations — Phase 5 (built into `ICommand::mergeWith()`)
-- **Journal compaction** (filter undone entries on save) — Phase 4
-- **ConfigExportToolbar** ("Copy as JSON", "Send to Console", "Save Configuration...") — Phase 6
-- **Session replay / batch processing** via parameterized journal replay — Phase 6
+- **Command merging** for sequential similar operations — Phase 5 (`ICommand::mergeWith()`)
+- **ConfigExportToolbar** ("Copy as JSON", "Save Configuration...") — Phase 6
+- **Session replay / batch processing** — Phase 6
 - **Incremental adoption** (not every operation needs to be a command immediately) — design principle
-
-The State Management Roadmap should be updated to reference this document for Phases 4–6 and
-remove the detailed designs that now live here.
 
 ## See Also
 
 - [Command Architecture Design Document](index.qmd) — full architecture, types, and code examples
+- [GUI Verb Audit](gui_verb_audit.qmd) — widget audit tables and new command designs
 - [Data Manager](../data_manager.qmd) — core data management documentation

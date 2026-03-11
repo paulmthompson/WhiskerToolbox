@@ -28,6 +28,8 @@ add_subdirectory(Tensors)
 set(DATAMANAGER_SOURCES
         DataManager.hpp
         DataManager.cpp
+        DataManagerSnapshot.hpp
+        DataManagerSnapshot.cpp
         DataManagerTypes.hpp
         DataManagerTypes.cpp
 
@@ -53,8 +55,16 @@ set(DATAMANAGER_SOURCES
         Commands/AddInterval.cpp
         Commands/ForEachKey.hpp
         Commands/ForEachKey.cpp
+        Commands/SaveData.hpp
+        Commands/SaveData.cpp
+        Commands/LoadData.hpp
+        Commands/LoadData.cpp
         Commands/Validation.hpp
         Commands/Validation.cpp
+        Commands/CommandRecorder.hpp
+        Commands/CommandRecorder.cpp
+        Commands/MutationGuard.hpp
+        Commands/MutationGuard.cpp
 
         loaders/loading_utils.hpp
 

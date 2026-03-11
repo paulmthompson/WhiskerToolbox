@@ -1,0 +1,94 @@
+---
+title: "DataManagerSnapshot"
+---
+
+## Overview
+
+`DataManagerSnapshot` is a lightweight summary of a `DataManager`'s state, designed for
+golden trace tests. It captures three maps per data key:
+
+- **`key_type`** — data key → type name string (e.g. `"line"`, `"points"`, `"analog"`)
+- **`key_entity_count`** — data key → number of entities/elements
+- **`key_content_hash`** — data key → deterministic FNV-1a hex hash of content
+
+The "media" key is always excluded since it is not command-managed.
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `src/DataManager/DataManagerSnapshot.hpp` | Struct definition and `snapshotDataManager()` declaration |
+| `src/DataManager/DataManagerSnapshot.cpp` | Implementation: entity counting, FNV-1a content hashing |
+| `src/DataManager/DataManagerSnapshot.test.cpp` | Unit tests and golden trace tests |
+
+## Entity Count Methods
+
+Each data type uses a specific method to count entities:
+
+| Data Type | Method |
+|-----------|--------|
+| `PointData` | `getTotalEntryCount()` |
+| `LineData` | `getTotalEntryCount()` |
+| `MaskData` | `getTotalEntryCount()` |
+| `AnalogTimeSeries` | `getNumSamples()` |
+| `RaggedAnalogTimeSeries` | `getTotalValueCount()` |
+| `DigitalEventSeries` | `size()` |
+| `DigitalIntervalSeries` | `size()` |
+| `TensorData` | `numRows()` |
+
+## Content Hashing
+
+Content hashes use the FNV-1a 64-bit algorithm for determinism and speed. Each data type
+feeds its values into the hash in iteration order:
+
+- **Points/Lines/Masks**: time index + coordinate values
+- **AnalogTimeSeries**: time index + sample value
+- **RaggedAnalogTimeSeries**: time index + value (via `elements()`)
+- **DigitalEventSeries**: time index (via `view()`)
+- **DigitalIntervalSeries**: start/end values (via `view()`)
+- **TensorData**: row count + column count (lightweight fingerprint)
+
+Negative zero is normalized to positive zero for float inputs to ensure determinism.
+
+## Golden Trace Test Pattern
+
+Golden trace tests verify command sequences produce expected DataManager states:
+
+```cpp
+TEST_CASE("golden trace: CopyByTimeRange copies line entities") {
+    auto dm = std::make_shared<DataManager>();
+    // ... set up data ...
+
+    auto const json = R"({
+        "commands": [{
+            "command_name": "CopyByTimeRange",
+            "parameters": {
+                "source_key": "src", "destination_key": "dst",
+                "start_frame": 0, "end_frame": 100
+            }
+        }]
+    })";
+
+    auto seq = rfl::json::read<CommandSequenceDescriptor>(json).value();
+    CommandContext ctx;
+    ctx.data_manager = dm;
+    auto result = executeSequence(seq, ctx);
+    REQUIRE(result.result.success);
+
+    auto snap = snapshotDataManager(*dm);
+    CHECK(snap.key_entity_count.at("dst") == expected_count);
+}
+```
+
+This pattern enables TDD for widget command coverage: capture a trace, replay it as a
+regression test, and verify the final state with snapshot comparison.
+
+## Test Coverage
+
+The test file includes 15 test cases covering:
+
+- **Basic snapshot**: empty DataManager, single data types, multiple data types
+- **Equality/Determinism**: identical DMs produce equal snapshots, different data produces
+  different hashes, empty objects have zero count
+- **Golden traces**: CopyByTimeRange, MoveByTimeRange, AddInterval (with `create_if_missing`),
+  multi-command sequences with variable substitution, replay determinism verification

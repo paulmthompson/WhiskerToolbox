@@ -104,4 +104,89 @@ std::string substituteVariables(
     return result;
 }
 
+std::string normalizeJsonNumbers(std::string const & json) {
+    std::string result;
+    result.reserve(json.size());
+
+    size_t i = 0;
+    while (i < json.size()) {
+        // Skip strings verbatim (including escape sequences)
+        if (json[i] == '"') {
+            result += '"';
+            ++i;
+            while (i < json.size() && json[i] != '"') {
+                if (json[i] == '\\' && i + 1 < json.size()) {
+                    result += json[i];
+                    result += json[i + 1];
+                    i += 2;
+                } else {
+                    result += json[i];
+                    ++i;
+                }
+            }
+            if (i < json.size()) {
+                result += '"';
+                ++i;
+            }
+            continue;
+        }
+
+        // Detect numeric tokens outside of strings
+        if (json[i] == '-' || (json[i] >= '0' && json[i] <= '9')) {
+            auto const start = i;
+            if (json[i] == '-') {
+                ++i;
+            }
+            while (i < json.size() && json[i] >= '0' && json[i] <= '9') {
+                ++i;
+            }
+
+            auto const decimal_start = i;
+            bool has_decimal = false;
+            if (i < json.size() && json[i] == '.') {
+                has_decimal = true;
+                ++i;
+                while (i < json.size() && json[i] >= '0' && json[i] <= '9') {
+                    ++i;
+                }
+            }
+
+            bool has_exponent = false;
+            if (i < json.size() && (json[i] == 'e' || json[i] == 'E')) {
+                has_exponent = true;
+                ++i;
+                if (i < json.size() && (json[i] == '+' || json[i] == '-')) {
+                    ++i;
+                }
+                while (i < json.size() && json[i] >= '0' && json[i] <= '9') {
+                    ++i;
+                }
+            }
+
+            // Normalize: if decimal part is all zeros and no exponent, emit integer
+            if (has_decimal && !has_exponent) {
+                bool all_zeros = true;
+                for (size_t j = decimal_start + 1; j < i; ++j) {
+                    if (json[j] != '0') {
+                        all_zeros = false;
+                        break;
+                    }
+                }
+                if (all_zeros && decimal_start > start) {
+                    result.append(json, start, decimal_start - start);
+                    continue;
+                }
+            }
+
+            result.append(json, start, i - start);
+            continue;
+        }
+
+        result += json[i];
+        ++i;
+    }
+
+    return result;
+}
+
 }// namespace commands

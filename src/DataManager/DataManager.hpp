@@ -3,6 +3,7 @@
 
 #include "DataManagerTypes.hpp"
 
+#include "Commands/MutationGuard.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -268,6 +269,7 @@ public:
 
     template<typename T>
     void setData(std::string const & key, TimeKey const & time_key) {
+        commands::warnIfOutsideCommand("setData");
         _data[key] = std::make_shared<T>();
         setTimeKey(key, time_key);
 
@@ -287,6 +289,7 @@ public:
 
     template<typename T>
     void setData(std::string const & key, std::shared_ptr<T> data, TimeKey const & time_key) {
+        commands::warnIfOutsideCommand("setData");
         // Loop through all _data. If shared_ptr data is already in _data, return
         for (auto const & [existing_key, existing_variant]: _data) {
             bool found = std::visit([&data](auto const & existing_ptr) -> bool {
@@ -372,7 +375,7 @@ public:
      * @return Vector of EntityIds, one per index in [start, end]
      */
     [[nodiscard]] std::vector<EntityId> ensureTimeEntityIds(
-        TimeKey const & time_key, TimeFrameIndex start, TimeFrameIndex end);
+            TimeKey const & time_key, TimeFrameIndex start, TimeFrameIndex end);
 
     /**
      * @brief Resolve a TimeEntity's EntityId back to its (TimeKey, TimeFrameIndex).
@@ -430,14 +433,14 @@ public:
      * The LineageRegistry tracks relationships between derived data containers
      * and their source containers, enabling entity propagation.
      */
-    [[nodiscard]] WhiskerToolbox::Entity::Lineage::LineageRegistry * getLineageRegistry() const { 
-        return _lineage_registry.get(); 
+    [[nodiscard]] WhiskerToolbox::Entity::Lineage::LineageRegistry * getLineageRegistry() const {
+        return _lineage_registry.get();
     }
 
 private:
     std::unordered_map<TimeKey, std::shared_ptr<TimeFrame>> _times;
 
-    ObserverData _manager_observers; 
+    ObserverData _manager_observers;
 
     std::unordered_map<std::string, DataTypeVariant>
             _data;
@@ -471,9 +474,9 @@ private:
 using JsonLoadProgressCallback = std::function<bool(int current, int total, std::string const & message)>;
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
-std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath, JsonLoadProgressCallback progress_callback);
+std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath, const JsonLoadProgressCallback& progress_callback);
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path);
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path, const JsonLoadProgressCallback& progress_callback);
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path, JsonLoadProgressCallback const & progress_callback);
 
 std::string convert_data_type_to_string(DM_DataType type);
 

@@ -157,7 +157,8 @@ TEST_CASE_METHOD(MaskCSVRLETestFixture,
     CSVMaskRLESaverOptions save_opts;
     save_opts.parent_dir = test_dir.string();
     save_opts.filename = "test_mask_rle.csv";
-    save(original_mask_data.get(), save_opts);
+    bool const save_ok = save(original_mask_data.get(), save_opts);
+    REQUIRE(save_ok);
 
     REQUIRE(std::filesystem::exists(csv_filepath));
 
