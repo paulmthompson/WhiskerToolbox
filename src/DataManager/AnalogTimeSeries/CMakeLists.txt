@@ -5,8 +5,12 @@ set(analog_subdirectory_sources
     Analog_Time_Series.cpp
     storage/AnalogDataStorage.hpp
     storage/AnalogDataStorage.cpp
+    storage/MemoryMappedAnalogDataStorage.hpp
+    storage/MemoryMappedAnalogDataStorage.cpp
+
     RaggedAnalogTimeSeries.hpp
     RaggedAnalogTimeSeries.cpp
+    
     utils/statistics.hpp
     utils/statistics.cpp
 )

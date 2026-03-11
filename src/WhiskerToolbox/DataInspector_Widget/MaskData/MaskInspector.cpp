@@ -7,8 +7,9 @@
 #include "DataExport_Widget/Masks/CSV/CSVMaskSaver_Widget.hpp"
 #include "DataExport_Widget/Masks/Image/ImageMaskSaver_Widget.hpp"
 #include "CoreGeometry/ImageSize.hpp"
+#include "DataManager/Commands/CommandContext.hpp"
+#include "DataManager/Commands/SaveData.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/IO/core/LoaderRegistry.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "Entity/EntityTypes.hpp"
@@ -20,6 +21,9 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QStackedWidget>
+
+#include <nlohmann/json.hpp>
+#include <rfl/json.hpp>
 
 #include <filesystem>
 #include <iostream>
@@ -92,10 +96,122 @@ void MaskInspector::_connectSignals() {
     // Connect export functionality
     connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MaskInspector::_onExportTypeChanged);
+    auto const performSave = [this](QString format, nlohmann::json config) {
+        if (_active_key.empty()) {
+            QMessageBox::warning(this, "No Data Selected",
+                                 "Please select a MaskData item to save.");
+            return;
+        }
+
+        auto mask_data_ptr = dataManager()->getData<MaskData>(_active_key);
+        if (!mask_data_ptr) {
+            QMessageBox::critical(this, "Error",
+                                 "Could not retrieve MaskData for saving. Key: " +
+                                         QString::fromStdString(_active_key));
+            return;
+        }
+
+        // Update config with full path (don't prepend if already absolute)
+        std::string const parent_dir_raw = config.value("parent_dir", ".");
+        std::string const parent_dir = (!parent_dir_raw.empty() && parent_dir_raw[0] == '/')
+                                              ? parent_dir_raw
+                                              : (dataManager()->getOutputPath() + "/" + parent_dir_raw);
+
+        nlohmann::json updated_config = config;
+        updated_config["parent_dir"] = parent_dir;
+
+        // Build path for SaveData: CSV uses full file path, Image uses directory
+        std::string path;
+        std::string const format_str = format.toStdString();
+        if (format_str == "csv") {
+            std::string const filename = config.value("filename", "mask_output.csv");
+            path = (std::filesystem::path(parent_dir) / filename).string();
+        } else {
+            path = parent_dir;
+        }
+
+        // Serialize format options to rfl::Generic
+        auto const opts_json = updated_config.dump();
+        auto format_opts = rfl::json::read<rfl::Generic>(opts_json);
+
+        commands::SaveDataParams params{
+                .data_key = _active_key,
+                .format = format_str,
+                .path = path,
+        };
+        if (format_opts) {
+            params.format_options = format_opts.value();
+        }
+
+        commands::CommandContext ctx;
+        ctx.data_manager = dataManager();
+
+        commands::SaveData cmd(std::move(params));
+        auto result = cmd.execute(ctx);
+
+        if (!result.success) {
+            QMessageBox::critical(this, "Save Error",
+                                 QString("Failed to save mask data: %1")
+                                         .arg(QString::fromStdString(result.error_message)));
+            return;
+        }
+
+        QMessageBox::information(this, "Save Successful",
+                                 QString("Mask data saved successfully to: %1")
+                                         .arg(QString::fromStdString(parent_dir)));
+
+        // Optional media frames export
+        if (ui->export_media_frames_checkbox->isChecked()) {
+            auto times_with_data = mask_data_ptr->getTimesWithData();
+            std::vector<size_t> frame_ids_to_export;
+            frame_ids_to_export.reserve(times_with_data.size());
+            for (auto frame_id : times_with_data) {
+                frame_ids_to_export.push_back(static_cast<size_t>(frame_id.getValue()));
+            }
+
+            if (frame_ids_to_export.empty()) {
+                QMessageBox::information(this, "No Frames",
+                                         "No masks found in data, so no media frames to export.");
+                return;
+            }
+
+            auto media_ptr = dataManager()->getData<MediaData>("media");
+            if (!media_ptr) {
+                QMessageBox::warning(this, "Media Not Available",
+                                     "Could not access media for exporting frames.");
+                return;
+            }
+
+            MediaExportOptions options = ui->media_export_options_widget->getOptions();
+            options.image_save_dir = parent_dir;
+
+            try {
+                std::filesystem::create_directories(options.image_save_dir);
+            } catch (std::exception const & e) {
+                QMessageBox::critical(this, "Export Error",
+                                     QString("Failed to create output directory: %1\n%2")
+                                             .arg(QString::fromStdString(options.image_save_dir))
+                                             .arg(QString::fromStdString(e.what())));
+                return;
+            }
+
+            int frames_exported = 0;
+            for (size_t const frame_id : frame_ids_to_export) {
+                save_image(media_ptr.get(), static_cast<int>(frame_id), options);
+                frames_exported++;
+            }
+
+            QMessageBox::information(this, "Media Export",
+                                    QString("Exported %1 media frames to: %2/%3")
+                                            .arg(frames_exported)
+                                            .arg(QString::fromStdString(options.image_save_dir))
+                                            .arg(QString::fromStdString(options.image_folder)));
+        }
+    };
     connect(ui->image_mask_saver_widget, &ImageMaskSaver_Widget::saveImageMaskRequested,
-            this, &MaskInspector::_handleSaveImageMaskRequested);
+            this, performSave);
     connect(ui->csv_mask_saver_widget, &CSVMaskSaver_Widget::saveCSVMaskRequested,
-            this, &MaskInspector::_handleSaveCSVMaskRequested);
+            this, performSave);
     connect(ui->export_media_frames_checkbox, &QCheckBox::toggled,
             this, &MaskInspector::_onExportMediaFramesCheckboxToggled);
     connect(ui->apply_image_size_button, &QPushButton::clicked,
@@ -138,140 +254,8 @@ void MaskInspector::_onExportTypeChanged(int index) {
     }
 }
 
-void MaskInspector::_handleSaveImageMaskRequested(QString format, nlohmann::json config) {
-    _initiateSaveProcess(format, config);
-}
-
-void MaskInspector::_handleSaveCSVMaskRequested(QString format, nlohmann::json config) {
-    _initiateSaveProcess(format, config);
-}
-
 void MaskInspector::_onExportMediaFramesCheckboxToggled(bool checked) {
     ui->media_export_options_widget->setVisible(checked);
-}
-
-void MaskInspector::_initiateSaveProcess(QString const & format, MaskSaverConfig const & config) {
-    if (_active_key.empty()) {
-        QMessageBox::warning(this, "No Data Selected", "Please select a MaskData item to save.");
-        return;
-    }
-
-    auto mask_data_ptr = dataManager()->getData<MaskData>(_active_key);
-    if (!mask_data_ptr) {
-        QMessageBox::critical(this, "Error", "Could not retrieve MaskData for saving. Key: " + QString::fromStdString(_active_key));
-        return;
-    }
-
-    // Update config with full path (don't prepend if already absolute)
-    MaskSaverConfig updated_config = config;
-    std::string const parent_dir = config.value("parent_dir", ".");
-    if (!parent_dir.empty() && parent_dir[0] == '/') {
-        updated_config["parent_dir"] = parent_dir;
-    } else {
-        updated_config["parent_dir"] = dataManager()->getOutputPath() + "/" + parent_dir;
-    }
-
-    bool const save_successful = _performRegistrySave(format, updated_config);
-
-    if (!save_successful) {
-        return;
-    }
-
-    if (ui->export_media_frames_checkbox->isChecked()) {
-        auto times_with_data = mask_data_ptr->getTimesWithData();
-        std::vector<size_t> frame_ids_to_export;
-        frame_ids_to_export.reserve(times_with_data.size());
-        for (auto frame_id: times_with_data) {
-            frame_ids_to_export.push_back(static_cast<size_t>(frame_id.getValue()));
-        }
-
-        if (frame_ids_to_export.empty()) {
-            QMessageBox::information(this, "No Frames", "No masks found in data, so no media frames to export.");
-        } else {
-            auto media_ptr = dataManager()->getData<MediaData>("media");
-            if (!media_ptr) {
-                QMessageBox::warning(this, "Media Not Available", "Could not access media for exporting frames.");
-                return;
-            }
-
-            MediaExportOptions options = ui->media_export_options_widget->getOptions();
-            // Use the same parent directory used for mask saving
-            std::string const base_output_dir = updated_config.value("parent_dir", dataManager()->getOutputPath());
-            options.image_save_dir = base_output_dir;
-
-            try {
-                std::filesystem::create_directories(options.image_save_dir);
-            } catch (std::exception const & e) {
-                QMessageBox::critical(this, "Export Error", QString("Failed to create output directory: %1\n%2").arg(QString::fromStdString(options.image_save_dir)).arg(QString::fromStdString(e.what())));
-                return;
-            }
-
-            int frames_exported = 0;
-            for (size_t const frame_id: frame_ids_to_export) {
-                save_image(media_ptr.get(), static_cast<int>(frame_id), options);
-                frames_exported++;
-            }
-
-            QMessageBox::information(this,
-                                     "Media Export",
-                                     QString("Exported %1 media frames to: %2/%3")
-                                             .arg(frames_exported)
-                                             .arg(QString::fromStdString(options.image_save_dir))
-                                             .arg(QString::fromStdString(options.image_folder)));
-        }
-    }
-}
-
-bool MaskInspector::_performRegistrySave(QString const & format, MaskSaverConfig const & config) {
-    auto mask_data_ptr = dataManager()->getData<MaskData>(_active_key);
-    if (!mask_data_ptr) {
-        QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve MaskData for saving. Key: " + QString::fromStdString(_active_key));
-        return false;
-    }
-
-    // Check if format is supported through registry
-    LoaderRegistry & registry = LoaderRegistry::getInstance();
-    std::string format_str = format.toStdString();
-
-    if (!registry.isFormatSupported(format_str, IODataType::Mask)) {
-        QMessageBox::warning(this, "Format Not Supported",
-                             QString("Format '%1' saving is not available. This may require additional plugins to be enabled.\n\n"
-                                     "To enable format support:\n"
-                                     "1. Ensure required libraries are available in your build environment\n"
-                                     "2. Build with appropriate -DENABLE_* flags\n"
-                                     "3. Restart the application")
-                                     .arg(format));
-
-        std::cout << "Format '" << format_str << "' saving not available - plugin not registered" << std::endl;
-        return false;
-    }
-
-    try {
-        // Use registry to save through the new save interface
-        LoadResult result = registry.trySave(format_str,
-                                             IODataType::Mask,
-                                             "",// filepath not used for directory-based saving
-                                             config,
-                                             mask_data_ptr.get());
-
-        if (result.success) {
-            std::string save_location = config.value("parent_dir", ".");
-            QMessageBox::information(this, "Save Successful",
-                                     QString("Mask data saved successfully to: %1").arg(QString::fromStdString(save_location)));
-            std::cout << "Mask data saved successfully using " << format_str << " format" << std::endl;
-            return true;
-        } else {
-            QMessageBox::critical(this, "Save Error",
-                                  QString("Failed to save mask data: %1").arg(QString::fromStdString(result.error_message)));
-            std::cerr << "Failed to save mask data: " << result.error_message << std::endl;
-            return false;
-        }
-
-    } catch (std::exception const & e) {
-        QMessageBox::critical(this, "Save Error", "Failed to save mask data: " + QString::fromStdString(e.what()));
-        std::cerr << "Failed to save mask data: " << e.what() << std::endl;
-        return false;
-    }
 }
 
 void MaskInspector::_updateImageSizeDisplay() {

@@ -15,6 +15,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_data_inspector_widget
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/AnalogTimeSeries/AnalogTimeSeriesInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/DigitalEventSeries/DigitalEventSeriesInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/DigitalIntervalSeries/DigitalIntervalSeriesInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/LineData/LineInspector.test.cpp
@@ -26,6 +27,7 @@ target_link_libraries(test_data_inspector_widget PRIVATE
     Catch2::Catch2WithMain 
     DataInspector_Widget 
     DataManager 
+    DataManagerIO
     GroupManagementWidget
     Entity
     Qt6::Widgets
@@ -35,7 +37,8 @@ target_link_libraries(test_data_inspector_widget PRIVATE
 )
 
 target_include_directories(test_data_inspector_widget PRIVATE
-        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DataManager>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataInspector_Widget>"

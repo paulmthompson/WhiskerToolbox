@@ -7,6 +7,8 @@
 #include "TimeFrame/TimeIndexStorage.hpp"
 #include "TypeTraits/DataTypeTraits.hpp"
 #include "storage/AnalogDataStorage.hpp"
+#include "storage/MmapAnalogConfig.hpp"
+#include "storage/LazyAnalogDataStorage.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -219,19 +221,16 @@ public:
             std::shared_ptr<TimeIndexStorage> time_storage) {
         size_t num_samples = std::ranges::size(view);
 
-        // Validate that view size matches time storage
         if (num_samples != time_storage->size()) {
             throw std::runtime_error(
-                    "View size (" + std::to_string(num_samples) +
-                    ") does not match time storage size (" +
-                    std::to_string(time_storage->size()) + ")");
+                    "View size (" + std::to_string(num_samples)
+                    + ") does not match time storage size ("
+                    + std::to_string(time_storage->size()) + ")");
         }
 
-        // Create lazy storage
         auto lazy_storage = LazyViewStorage<ViewType>(std::move(view), num_samples);
-        DataStorageWrapper storage_wrapper(std::move(lazy_storage));
+        AnalogDataStorageWrapper storage_wrapper(std::move(lazy_storage));
 
-        // Use private constructor with shared time storage
         return std::shared_ptr<AnalogTimeSeries>(
                 new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_storage)));
     }
@@ -636,149 +635,7 @@ public:
 
 protected:
 private:
-    /**
-     * @brief Type-erased wrapper for analog data storage
-     * 
-     * Provides uniform interface to different storage backends (vector, mmap, view, etc.)
-     * while enabling compile-time optimizations through template instantiation.
-     * 
-     * Uses shared_ptr internally to enable zero-copy view creation via aliasing constructor.
-     * When creating a view from a VectorAnalogDataStorage, the view can share ownership
-     * of the source data without copying.
-     */
-    class DataStorageWrapper {
-    public:
-        template<typename DataStorageImpl>
-        explicit DataStorageWrapper(DataStorageImpl storage)
-            : _impl(std::make_shared<StorageModel<DataStorageImpl>>(std::move(storage))) {}
-
-        // Default constructor creates empty vector storage
-        DataStorageWrapper()
-            : _impl(std::make_shared<StorageModel<VectorAnalogDataStorage>>(
-                  VectorAnalogDataStorage{std::vector<float>{}})) {}
-
-        // Copy and move semantics - shared_ptr allows sharing
-        DataStorageWrapper(DataStorageWrapper&&) noexcept = default;
-        DataStorageWrapper& operator=(DataStorageWrapper&&) noexcept = default;
-        DataStorageWrapper(DataStorageWrapper const&) = default;
-        DataStorageWrapper& operator=(DataStorageWrapper const&) = default;
-
-        [[nodiscard]] size_t size() const { return _impl->size(); }
-
-        [[nodiscard]] float getValueAt(size_t index) const {
-            return _impl->getValueAt(index);
-        }
-
-        [[nodiscard]] std::span<float const> getSpan() const {
-            return _impl->getSpan();
-        }
-
-        [[nodiscard]] std::span<float const> getSpanRange(size_t start, size_t end) const {
-            return _impl->getSpanRange(start, end);
-        }
-
-        [[nodiscard]] bool isContiguous() const {
-            return _impl->isContiguous();
-        }
-
-        [[nodiscard]] float const * tryGetContiguousPointer() const {
-            return _impl->tryGetContiguousPointer();
-        }
-
-        [[nodiscard]] AnalogStorageType getStorageType() const {
-            return _impl->getStorageType();
-        }
-
-        [[nodiscard]] bool isView() const {
-            return getStorageType() == AnalogStorageType::View;
-        }
-
-        [[nodiscard]] bool isLazy() const {
-            return getStorageType() == AnalogStorageType::LazyView;
-        }
-
-        /**
-         * @brief Get shared pointer to vector storage for creating views
-         * 
-         * If this wrapper contains vector storage, uses aliasing constructor to share
-         * ownership. If this wrapper contains a view, returns the view's existing source.
-         * Returns nullptr for other storage types (mmap, lazy).
-         * 
-         * @return shared_ptr to VectorAnalogDataStorage, or nullptr if not available
-         */
-        [[nodiscard]] std::shared_ptr<VectorAnalogDataStorage const> getSharedVectorStorage() const {
-            // Check if we have view storage - return its existing source
-            if (auto const* view_model = dynamic_cast<StorageModel<ViewAnalogDataStorage> const*>(_impl.get())) {
-                return view_model->_storage.source();
-            }
-
-            // Check if we have vector storage - use aliasing constructor for zero-copy sharing
-            if (auto vector_model = std::dynamic_pointer_cast<StorageModel<VectorAnalogDataStorage> const>(_impl)) {
-                // Aliasing constructor: shares ownership with _impl but points to the inner storage
-                return std::shared_ptr<VectorAnalogDataStorage const>(vector_model, &vector_model->_storage);
-            }
-
-            // Other storage types (mmap, lazy) - no shared vector storage available
-            return nullptr;
-        }
-
-    private:
-        struct StorageConcept {
-            virtual ~StorageConcept() = default;
-            virtual size_t size() const = 0;
-            virtual float getValueAt(size_t index) const = 0;
-            virtual std::span<float const> getSpan() const = 0;
-            virtual std::span<float const> getSpanRange(size_t start, size_t end) const = 0;
-            virtual bool isContiguous() const = 0;
-            virtual float const * tryGetContiguousPointer() const = 0;
-            virtual AnalogStorageType getStorageType() const = 0;
-        };
-
-        template<typename DataStorageImpl>
-        struct StorageModel : StorageConcept {
-            DataStorageImpl _storage;
-
-            explicit StorageModel(DataStorageImpl storage)
-                : _storage(std::move(storage)) {}
-
-            size_t size() const override {
-                return _storage.size();
-            }
-
-            float getValueAt(size_t index) const override {
-                return _storage.getValueAt(index);
-            }
-
-            std::span<float const> getSpan() const override {
-                return _storage.getSpan();
-            }
-
-            std::span<float const> getSpanRange(size_t start, size_t end) const override {
-                return _storage.getSpanRange(start, end);
-            }
-
-            bool isContiguous() const override {
-                return _storage.isContiguous();
-            }
-
-            float const * tryGetContiguousPointer() const override {
-                if constexpr (std::is_same_v<DataStorageImpl, VectorAnalogDataStorage>) {
-                    return _storage.data();
-                } else if constexpr (std::is_same_v<DataStorageImpl, ViewAnalogDataStorage>) {
-                    return _storage.data();
-                }
-                return nullptr;
-            }
-
-            AnalogStorageType getStorageType() const override {
-                return _storage.getStorageType();
-            }
-        };
-
-        std::shared_ptr<StorageConcept> _impl;
-    };
-
-    DataStorageWrapper _data_storage;
+    AnalogDataStorageWrapper _data_storage;
     std::shared_ptr<TimeIndexStorage> _time_storage;
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
 
@@ -786,10 +643,10 @@ private:
     float const * _contiguous_data_ptr{nullptr};
 
     // Private constructors for factory methods
-    AnalogTimeSeries(DataStorageWrapper storage, std::vector<TimeFrameIndex> time_vector);
+    AnalogTimeSeries(AnalogDataStorageWrapper storage, std::vector<TimeFrameIndex> time_vector);
 
     // Constructor for reusing shared time storage (efficient for lazy views)
-    AnalogTimeSeries(DataStorageWrapper storage, std::shared_ptr<TimeIndexStorage> time_storage)
+    AnalogTimeSeries(AnalogDataStorageWrapper storage, std::shared_ptr<TimeIndexStorage> time_storage)
         : _data_storage(std::move(storage)),
           _time_storage(std::move(time_storage)) {
         _cacheOptimizationPointers();
@@ -806,7 +663,8 @@ private:
      * Called in constructors and setData methods.
      */
     void _cacheOptimizationPointers() {
-        _contiguous_data_ptr = _data_storage.tryGetContiguousPointer();
+        auto cache = _data_storage.tryGetCache();
+        _contiguous_data_ptr = cache.isValid() ? cache.data_ptr : nullptr;
     }
 
     /**

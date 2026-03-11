@@ -1,5 +1,8 @@
 #include "Digital_Event_Series.hpp"
 
+#include "storage/OwningDigitalEventStorage.hpp"
+#include "storage/ViewDigitalEventStorage.hpp"
+
 #include "Entity/EntityRegistry.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 

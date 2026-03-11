@@ -54,6 +54,8 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/Commands.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveDataDigitalEvent.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveDataDigitalInterval.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveDataAnalog.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/LoadData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/Validation.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/CommandRecorder.test.cpp

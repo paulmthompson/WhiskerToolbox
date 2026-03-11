@@ -17,11 +17,9 @@
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
-#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"// For CSVIntervalSaverOptions
-#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"               // For context menu utilities
-#include "TimeFrame/interval_data.hpp"
-#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
 #include "Entity/EntityTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"// For TimePosition
+#include "TimeFrame/interval_data.hpp"
 
 #include <functional>
 #include <string>
@@ -31,10 +29,8 @@
 namespace Ui {
 class DigitalIntervalSeriesInspector;
 }
-class CSVIntervalSaver_Widget;
-class DigitalIntervalSeriesDataView;
 
-using IntervalSaverOptionsVariant = std::variant<CSVIntervalSaverOptions>;// Will expand if more types are added
+class DigitalIntervalSeriesDataView;
 
 /**
  * @brief Inspector widget for DigitalIntervalSeries
@@ -52,9 +48,9 @@ public:
      * @param parent Parent widget
      */
     explicit DigitalIntervalSeriesInspector(
-        std::shared_ptr<DataManager> data_manager,
-        GroupManager * group_manager = nullptr,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            GroupManager * group_manager = nullptr,
+            QWidget * parent = nullptr);
 
     ~DigitalIntervalSeriesInspector() override;
 
@@ -101,15 +97,10 @@ private:
     int64_t _interval_end{0};// Track both start and end for bidirectional support
     std::function<std::vector<Interval>()> _selection_provider;
 
-    enum SaverType { CSV };// Enum for different saver types
-
     void _connectSignals();
 
     void _calculateIntervals();
     void _assignCallbacks();
-
-    void _initiateSaveProcess(SaverType saver_type, IntervalSaverOptionsVariant & options_variant);
-    bool _performActualCSVSave(CSVIntervalSaverOptions & options);
 
     std::vector<Interval> _getSelectedIntervals();
 
@@ -190,14 +181,12 @@ private:
     [[nodiscard]] int64_t _getCurrentTimeInSeriesFrame() const;
 
 private slots:
-
     void _createIntervalButton();
     void _removeIntervalButton();
     void _flipIntervalButton();
     void _extendInterval();
 
     void _onExportTypeChanged(int index);
-    void _handleSaveIntervalCSVRequested(CSVIntervalSaverOptions options);
 
     void _mergeIntervalsButton();
     void _cancelIntervalButton();
@@ -207,4 +196,4 @@ private slots:
     void _onGroupChanged();
 };
 
-#endif // DIGITAL_INTERVAL_SERIES_INSPECTOR_HPP
+#endif// DIGITAL_INTERVAL_SERIES_INSPECTOR_HPP

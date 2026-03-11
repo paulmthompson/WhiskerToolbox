@@ -4,12 +4,15 @@
 #include "PointTableView.hpp"
 
 #include "DataManager.hpp"
+#include "DataManager/Commands/CommandContext.hpp"
+#include "DataManager/Commands/SaveData.hpp"
+#include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataExport_Widget/Points/CSV/CSVPointSaver_Widget.hpp"
+#include "Inspectors/GroupFilterHelper.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
 #include "MediaExport/media_export.hpp"
-#include "Inspectors/GroupFilterHelper.hpp"
 #include "Entity/EntityTypes.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
@@ -25,6 +28,8 @@
 #include <iostream>
 #include <unordered_set>
 
+#include <rfl/json.hpp>
+
 PointInspector::PointInspector(
     std::shared_ptr<DataManager> data_manager,
     GroupManager * group_manager,
@@ -37,7 +42,101 @@ PointInspector::PointInspector(
             this, &PointInspector::_onExportTypeChanged);
 
     connect(ui->csv_point_saver_widget, &CSVPointSaver_Widget::saveCSVRequested,
-            this, &PointInspector::_handleSaveCSVRequested);
+            this, [this](CSVPointSaverOptions options) {
+                if (_active_key.empty() || !dataManager()->getData<PointData>(_active_key)) {
+                    QMessageBox::warning(this, "No Data", "No active point data to save.");
+                    return;
+                }
+
+                auto output_path = dataManager()->getOutputPath();
+                if (output_path.empty()) {
+                    QMessageBox::warning(this, "Warning",
+                                         "Please set an output directory in the Data Manager settings");
+                    return;
+                }
+
+                auto filename = options.filename;
+                auto const filepath = (std::filesystem::path(output_path) / filename).string();
+
+                options.parent_dir = output_path;
+                options.filename = filename;
+
+                auto const opts_json = rfl::json::write(options);
+                auto format_opts = rfl::json::read<rfl::Generic>(opts_json);
+
+                commands::SaveDataParams params{
+                        .data_key = _active_key,
+                        .format = "csv",
+                        .path = filepath,
+                };
+                if (format_opts) {
+                    params.format_options = format_opts.value();
+                }
+
+                commands::CommandContext ctx;
+                ctx.data_manager = dataManager();
+
+                commands::SaveData cmd(std::move(params));
+                auto result = cmd.execute(ctx);
+
+                if (!result.success) {
+                    QMessageBox::critical(this, "Save Error",
+                                          QString("Failed to save: %1").arg(
+                                                  QString::fromStdString(result.error_message)));
+                    return;
+                }
+
+                QMessageBox::information(this, "Save Successful",
+                                         QString::fromStdString("Points data saved to " + output_path + "/" + filename));
+
+                if (ui->export_media_frames_checkbox->isChecked()) {
+                    auto point_data_ptr = dataManager()->getData<PointData>(_active_key);
+                    if (point_data_ptr) {
+                        auto times_with_data = point_data_ptr->getTimesWithData();
+                        std::vector<size_t> frame_ids_to_export;
+                        frame_ids_to_export.reserve(times_with_data.size());
+                        for (auto frame_id : times_with_data) {
+                            frame_ids_to_export.push_back(static_cast<size_t>(frame_id.getValue()));
+                        }
+
+                        if (!frame_ids_to_export.empty()) {
+                            auto media_ptr = dataManager()->getData<MediaData>("media");
+                            if (!media_ptr) {
+                                QMessageBox::warning(this, "Media Not Available",
+                                                    "Could not access media for exporting frames.");
+                            } else {
+                                MediaExportOptions media_opts = ui->media_export_options_widget->getOptions();
+                                media_opts.image_save_dir = output_path;
+
+                                try {
+                                    std::filesystem::create_directories(media_opts.image_save_dir);
+                                } catch (std::exception const & e) {
+                                    QMessageBox::critical(this, "Export Error",
+                                                         QString("Failed to create output directory: %1\n%2")
+                                                                 .arg(QString::fromStdString(media_opts.image_save_dir))
+                                                                 .arg(QString::fromStdString(e.what())));
+                                    return;
+                                }
+
+                                int frames_exported = 0;
+                                for (size_t const frame_id : frame_ids_to_export) {
+                                    save_image(media_ptr.get(), static_cast<int>(frame_id), media_opts);
+                                    frames_exported++;
+                                }
+
+                                QMessageBox::information(this, "Media Export",
+                                                        QString("Exported %1 media frames to: %2/%3")
+                                                                .arg(frames_exported)
+                                                                .arg(QString::fromStdString(media_opts.image_save_dir))
+                                                                .arg(QString::fromStdString(media_opts.image_folder)));
+                            }
+                        } else {
+                            QMessageBox::information(this, "No Frames",
+                                                     "No points found in data, so no media frames to export.");
+                        }
+                    }
+                }
+            });
 
     connect(ui->export_media_frames_checkbox, &QCheckBox::toggled,
             this, &PointInspector::_onExportMediaFramesCheckboxToggled);
@@ -161,101 +260,6 @@ void PointInspector::_onExportTypeChanged(int index) {
     if (current_text == "CSV") {
         ui->stacked_saver_options->setCurrentWidget(ui->csv_point_saver_widget);
     }
-}
-
-void PointInspector::_handleSaveCSVRequested(CSVPointSaverOptions csv_options) {
-    PointSaverOptionsVariant options_variant = csv_options;
-    _initiateSaveProcess(SaverType::CSV, options_variant);
-}
-
-void PointInspector::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsVariant & options_variant) {
-    if (_active_key.empty() || !dataManager()->getData<PointData>(_active_key)) {
-        QMessageBox::warning(this, "No Data", "No active point data to save.");
-        return;
-    }
-
-    auto point_data_ptr = dataManager()->getData<PointData>(_active_key);
-    if (!point_data_ptr) {
-        QMessageBox::critical(this, "Error", "Could not retrieve data for saving.");
-        return;
-    }
-
-    bool save_successful = false;
-    switch (saver_type) {
-        case SaverType::CSV: {
-            auto & specific_csv_options = std::get<CSVPointSaverOptions>(options_variant);
-            specific_csv_options.parent_dir = dataManager()->getOutputPath();
-            save_successful = _performActualCSVSave(specific_csv_options);
-            break;
-        }
-    }
-
-    if (!save_successful) {
-        QMessageBox::critical(this, "Save Error", "Failed to save point data.");
-        return;
-    }
-
-    if (ui->export_media_frames_checkbox->isChecked()) {
-        auto times_with_data = point_data_ptr->getTimesWithData();
-        std::vector<size_t> frame_ids_to_export;
-        frame_ids_to_export.reserve(times_with_data.size());
-        for (auto frame_id: times_with_data) {
-            frame_ids_to_export.push_back(static_cast<size_t>(frame_id.getValue()));
-        }
-
-        if (!frame_ids_to_export.empty()) {
-            auto media_ptr = dataManager()->getData<MediaData>("media");
-            if (!media_ptr) {
-                QMessageBox::warning(this, "Media Not Available", "Could not access media for exporting frames.");
-            } else {
-                // Derive output dir from point save options (CSV in this branch)
-                std::string base_output_dir;
-                if (std::holds_alternative<CSVPointSaverOptions>(options_variant)) {
-                    base_output_dir = std::get<CSVPointSaverOptions>(options_variant).parent_dir;
-                } else {
-                    base_output_dir = dataManager()->getOutputPath();
-                }
-
-                MediaExportOptions options = ui->media_export_options_widget->getOptions();
-                options.image_save_dir = base_output_dir;
-
-                try {
-                    std::filesystem::create_directories(options.image_save_dir);
-                } catch (std::exception const & e) {
-                    QMessageBox::critical(this, "Export Error", QString("Failed to create output directory: %1\n%2").arg(QString::fromStdString(options.image_save_dir)).arg(QString::fromStdString(e.what())));
-                    return;
-                }
-
-                int frames_exported = 0;
-                for (size_t const frame_id: frame_ids_to_export) {
-                    save_image(media_ptr.get(), static_cast<int>(frame_id), options);
-                    frames_exported++;
-                }
-
-                QMessageBox::information(this,
-                                         "Media Export",
-                                         QString("Exported %1 media frames to: %2/%3")
-                                                 .arg(frames_exported)
-                                                 .arg(QString::fromStdString(options.image_save_dir))
-                                                 .arg(QString::fromStdString(options.image_folder)));
-            }
-        } else {
-            QMessageBox::information(this, "No Frames", "No points found in data, so no media frames to export.");
-        }
-    }
-}
-
-bool PointInspector::_performActualCSVSave(CSVPointSaverOptions & options) {
-    auto point_data_ptr = dataManager()->getData<PointData>(_active_key);
-    if (!point_data_ptr) {
-        std::cerr << "_performActualCSVSave: Critical - Could not get PointData for key: " << _active_key << std::endl;
-        return false;
-    }
-
-    save(point_data_ptr.get(), options);
-    QMessageBox::information(this, "Save Successful", QString::fromStdString("Points data saved to " + options.parent_dir + "/" + options.filename));
-    std::cout << "Point data saved to: " << options.parent_dir << "/" << options.filename << std::endl;
-    return true;
 }
 
 void PointInspector::_onExportMediaFramesCheckboxToggled(bool checked) {

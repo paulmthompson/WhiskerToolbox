@@ -1,512 +1,160 @@
 #ifndef ANALOG_DATA_STORAGE_HPP
 #define ANALOG_DATA_STORAGE_HPP
 
+#include "AnalogDataStorageBase.hpp"
+#include "AnalogDataStorageCache.hpp"
+#include "VectorAnalogDataStorage.hpp"
+#include "ViewAnalogDataStorage.hpp"
+
 #include <cstddef>
-#include <cstring>
-#include <filesystem>
 #include <memory>
 #include <span>
-#include <stdexcept>
 #include <type_traits>
 #include <vector>
 
-#ifdef _WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#ifdef ABSOLUTE//In some analog transforms
-#undef ABSOLUTE
-#endif
-#ifdef IGNORE// in parameters
-#undef IGNORE
-#endif
-#else
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
-
 /**
- * @brief Storage type enumeration for runtime type identification
+ * @brief Type-erased wrapper for analog data storage.
+ *
+ * Provides a uniform interface to different storage backends (vector, mmap, view, etc.)
+ * while enabling compile-time optimizations through template instantiation.
+ *
+ * Uses shared_ptr internally to enable zero-copy view creation via aliasing constructor.
+ * When creating a view from a VectorAnalogDataStorage, the view can share ownership
+ * of the source data without copying.
  */
-enum class AnalogStorageType {
-    Vector,
-    MemoryMapped,
-    View,     // View-based storage (references parent)
-    LazyView, // View-based lazy storage
-    Custom
-};
-
-/**
- * @brief CRTP base class for analog data storage strategies
- * 
- * Uses Curiously Recurring Template Pattern to eliminate virtual function overhead
- * while maintaining a polymorphic interface. Derived classes implement the actual
- * storage strategy (contiguous vector, memory-mapped file, etc.).
- * 
- * @tparam Derived The concrete storage implementation type
- */
-template<typename Derived>
-class AnalogDataStorageBase {
+class AnalogDataStorageWrapper {
 public:
-    /**
-     * @brief Get the value at a specific index using CRTP dispatch
-     * 
-     * Zero-overhead call to derived implementation. The compiler fully inlines
-     * this when the type is known at compile time.
-     * 
-     * @param index The index to access
-     * @return float value at the given index
-     */
-    [[nodiscard]] float getValueAt(size_t index) const {
-        return static_cast<Derived const *>(this)->getValueAtImpl(index);
+    template<typename DataStorageImpl>
+    explicit AnalogDataStorageWrapper(DataStorageImpl storage)
+        : _impl(std::make_shared<StorageModel<DataStorageImpl>>(std::move(storage))) {}
+
+    // Default constructor creates empty vector storage
+    AnalogDataStorageWrapper()
+        : _impl(std::make_shared<StorageModel<VectorAnalogDataStorage>>(
+                  VectorAnalogDataStorage{std::vector<float>{}})) {}
+
+    // Copy and move semantics - shared_ptr allows sharing
+    AnalogDataStorageWrapper(AnalogDataStorageWrapper &&) noexcept = default;
+    AnalogDataStorageWrapper & operator=(AnalogDataStorageWrapper &&) noexcept = default;
+    AnalogDataStorageWrapper(AnalogDataStorageWrapper const &) = default;
+    AnalogDataStorageWrapper & operator=(AnalogDataStorageWrapper const &) = default;
+
+    [[nodiscard]] std::size_t size() const { return _impl->size(); }
+
+    [[nodiscard]] float getValueAt(std::size_t index) const {
+        return _impl->getValueAt(index);
     }
 
-    /**
-     * @brief Get the number of samples using CRTP dispatch
-     * 
-     * @return size_t number of samples in storage
-     */
-    [[nodiscard]] size_t size() const {
-        return static_cast<Derived const *>(this)->sizeImpl();
-    }
-
-    /**
-     * @brief Get a span over all data (if contiguous) using CRTP dispatch
-     * 
-     * Returns a non-empty span only if data is stored contiguously in memory.
-     * For non-contiguous storage (e.g., strided memory-mapped files), returns empty span.
-     * 
-     * @return std::span<float const> view over contiguous data, or empty span
-     */
     [[nodiscard]] std::span<float const> getSpan() const {
-        return static_cast<Derived const *>(this)->getSpanImpl();
+        return _impl->getSpan();
     }
 
-    /**
-     * @brief Get a span over a range of data (if contiguous)
-     * 
-     * @param start Starting index (inclusive)
-     * @param end Ending index (exclusive)
-     * @return std::span<float const> view over the range, or empty span if not contiguous
-     */
-    [[nodiscard]] std::span<float const> getSpanRange(size_t start, size_t end) const {
-        return static_cast<Derived const *>(this)->getSpanRangeImpl(start, end);
+    [[nodiscard]] std::span<float const> getSpanRange(std::size_t start, std::size_t end) const {
+        return _impl->getSpanRange(start, end);
     }
 
-    /**
-     * @brief Check if data is stored contiguously in memory
-     * 
-     * @return true if data is contiguous (allows span access and pointer arithmetic)
-     * @return false if data is non-contiguous (requires indexed access)
-     */
     [[nodiscard]] bool isContiguous() const {
-        return static_cast<Derived const *>(this)->isContiguousImpl();
+        return _impl->isContiguous();
+    }
+
+    [[nodiscard]] AnalogStorageType getStorageType() const {
+        return _impl->getStorageType();
+    }
+
+    [[nodiscard]] bool isView() const {
+        return getStorageType() == AnalogStorageType::View;
+    }
+
+    [[nodiscard]] bool isLazy() const {
+        return getStorageType() == AnalogStorageType::LazyView;
     }
 
     /**
-     * @brief Get the storage type identifier
-     * 
-     * Pure virtual to require implementation. Used for runtime type identification
-     * when storage is accessed through type-erased interface.
-     * 
-     * @return AnalogStorageType identifying the concrete storage type
+     * @brief Try to get a cache for fast-path contiguous access.
      */
-    [[nodiscard]] virtual AnalogStorageType getStorageType() const = 0;
+    [[nodiscard]] AnalogDataStorageCache tryGetCache() const {
+        return _impl->tryGetCache();
+    }
 
-protected:
-    // Protected destructor prevents polymorphic deletion through base pointer
-    ~AnalogDataStorageBase() = default;
-};
-
-/**
- * @brief Contiguous vector-based analog data storage using CRTP
- * 
- * High-performance implementation for in-memory contiguous data.
- * Provides zero-overhead access when type is known at compile time,
- * and efficient span-based operations for contiguous data access.
- */
-class VectorAnalogDataStorage : public AnalogDataStorageBase<VectorAnalogDataStorage> {
-public:
     /**
-     * @brief Construct storage from a vector of float values
-     * 
-     * @param data Vector of analog data values (moved into storage)
+     * @brief Get shared pointer to vector storage for creating views.
+     *
+     * If this wrapper contains vector storage, uses aliasing constructor to share
+     * ownership. If this wrapper contains a view, returns the view's existing source.
+     * Returns nullptr for other storage types (mmap, lazy).
+     *
+     * @return shared_ptr to VectorAnalogDataStorage, or nullptr if not available.
      */
-    explicit VectorAnalogDataStorage(std::vector<float> data)
-        : _data(std::move(data)) {}
-
-    virtual ~VectorAnalogDataStorage() = default;
-
-    // CRTP implementation methods (called by base class)
-
-    [[nodiscard]] float getValueAtImpl(size_t index) const {
-        return _data[index];
-    }
-
-    [[nodiscard]] size_t sizeImpl() const {
-        return _data.size();
-    }
-
-    [[nodiscard]] std::span<float const> getSpanImpl() const {
-        return _data;
-    }
-
-    [[nodiscard]] std::span<float const> getSpanRangeImpl(size_t start, size_t end) const {
-        if (start >= end || end > _data.size()) {
-            return {};
+    [[nodiscard]] std::shared_ptr<VectorAnalogDataStorage const> getSharedVectorStorage() const {
+        // Check if we have view storage - return its existing source
+        if (auto const * view_model = dynamic_cast<StorageModel<ViewAnalogDataStorage> const *>(_impl.get())) {
+            return view_model->_storage.source();
         }
-        return std::span<float const>(_data.data() + start, end - start);
-    }
 
-    [[nodiscard]] bool isContiguousImpl() const {
-        return true;
-    }
+        // Check if we have vector storage - use aliasing constructor for zero-copy sharing
+        if (auto vector_model = std::dynamic_pointer_cast<StorageModel<VectorAnalogDataStorage> const>(_impl)) {
+            // Aliasing constructor: shares ownership with _impl but points to the inner storage
+            return std::shared_ptr<VectorAnalogDataStorage const>(vector_model, &vector_model->_storage);
+        }
 
-    [[nodiscard]] AnalogStorageType getStorageType() const override {
-        return AnalogStorageType::Vector;
-    }
-
-    // Direct access methods for specific optimizations
-
-    /**
-     * @brief Get direct access to underlying vector
-     * 
-     * Use with caution - bypasses abstraction. Useful for specific algorithms
-     * that need to work with std::vector directly.
-     * 
-     * @return const reference to the underlying std::vector<float>
-     */
-    [[nodiscard]] std::vector<float> const & getVector() const {
-        return _data;
-    }
-
-    /**
-     * @brief Get raw pointer to contiguous data
-     * 
-     * Enables maximum performance for pointer-based algorithms.
-     * 
-     * @return const pointer to first element
-     */
-    [[nodiscard]] float const * data() const {
-        return _data.data();
+        // Other storage types (mmap, lazy) - no shared vector storage available
+        return nullptr;
     }
 
 private:
-    std::vector<float> _data;
-};
+    struct StorageConcept {
+        virtual ~StorageConcept() = default;
+        virtual std::size_t size() const = 0;
+        virtual float getValueAt(std::size_t index) const = 0;
+        virtual std::span<float const> getSpan() const = 0;
+        virtual std::span<float const> getSpanRange(std::size_t start, std::size_t end) const = 0;
+        virtual bool isContiguous() const = 0;
+        virtual AnalogStorageType getStorageType() const = 0;
+        virtual AnalogDataStorageCache tryGetCache() const = 0;
+    };
 
-/**
- * @brief View-based analog data storage that references another storage
- * 
- * Holds a shared_ptr to a source VectorAnalogDataStorage and start/end indices
- * into that source. Enables zero-copy filtered views for range queries.
- * 
- * Unlike lazy storage, view storage provides contiguous span access when the
- * underlying source is contiguous (which VectorAnalogDataStorage always is).
- */
-class ViewAnalogDataStorage : public AnalogDataStorageBase<ViewAnalogDataStorage> {
-public:
-    /**
-     * @brief Construct a view referencing source storage
-     * 
-     * @param source Shared pointer to source vector storage
-     * @param start_index Starting index (inclusive)
-     * @param end_index Ending index (exclusive)
-     */
-    ViewAnalogDataStorage(
-        std::shared_ptr<VectorAnalogDataStorage const> source,
-        size_t start_index,
-        size_t end_index)
-        : _source(std::move(source))
-        , _start_index(start_index)
-        , _end_index(end_index) {
-        if (_start_index > _end_index) {
-            throw std::invalid_argument("ViewAnalogDataStorage: start_index > end_index");
+    template<typename DataStorageImpl>
+    struct StorageModel : StorageConcept {
+        DataStorageImpl _storage;
+
+        explicit StorageModel(DataStorageImpl storage)
+            : _storage(std::move(storage)) {}
+
+        std::size_t size() const override {
+            return _storage.size();
         }
-        if (_end_index > _source->size()) {
-            throw std::out_of_range("ViewAnalogDataStorage: end_index exceeds source size");
+
+        float getValueAt(std::size_t index) const override {
+            return _storage.getValueAt(index);
         }
-    }
-    
-    virtual ~ViewAnalogDataStorage() = default;
-    
-    // CRTP implementation methods
 
-    [[nodiscard]] float getValueAtImpl(size_t index) const {
-        return _source->getValueAt(_start_index + index);
-    }
-
-    [[nodiscard]] size_t sizeImpl() const {
-        return _end_index - _start_index;
-    }
-
-    /**
-     * @brief Get span over the view's data range
-     * 
-     * Since source is contiguous, we can provide efficient span access.
-     */
-    [[nodiscard]] std::span<float const> getSpanImpl() const {
-        return std::span<float const>(
-            _source->data() + _start_index, 
-            _end_index - _start_index);
-    }
-
-    [[nodiscard]] std::span<float const> getSpanRangeImpl(size_t start, size_t end) const {
-        if (start > end || end > sizeImpl()) {
-            throw std::out_of_range("ViewAnalogDataStorage: invalid range");
+        std::span<float const> getSpan() const override {
+            return _storage.getSpan();
         }
-        return std::span<float const>(
-            _source->data() + _start_index + start,
-            end - start);
-    }
 
-    [[nodiscard]] bool isContiguousImpl() const {
-        return true;  // Views into contiguous source are also contiguous
-    }
-
-    [[nodiscard]] AnalogStorageType getStorageType() const override {
-        return AnalogStorageType::View;
-    }
-
-    /**
-     * @brief Get the source storage
-     */
-    [[nodiscard]] std::shared_ptr<VectorAnalogDataStorage const> const& source() const {
-        return _source;
-    }
-
-    /**
-     * @brief Get raw pointer to contiguous data
-     */
-    [[nodiscard]] float const* data() const {
-        return _source->data() + _start_index;
-    }
-
-    /**
-     * @brief Get the start index in source storage
-     */
-    [[nodiscard]] size_t startIndex() const { return _start_index; }
-
-    /**
-     * @brief Get the end index in source storage
-     */
-    [[nodiscard]] size_t endIndex() const { return _end_index; }
-
-private:
-    std::shared_ptr<VectorAnalogDataStorage const> _source;
-    size_t _start_index;
-    size_t _end_index;
-};
-
-/**
- * @brief Type conversion strategies for memory-mapped data
- */
-enum class MmapDataType {
-    Float32,// 32-bit floating point (no conversion needed)
-    Float64,// 64-bit floating point (double)
-    Int8,   // 8-bit signed integer
-    UInt8,  // 8-bit unsigned integer
-    Int16,  // 16-bit signed integer
-    UInt16, // 16-bit unsigned integer
-    Int32,  // 32-bit signed integer
-    UInt32  // 32-bit unsigned integer
-};
-
-/**
- * @brief Configuration for memory-mapped analog data storage
- */
-struct MmapStorageConfig {
-    std::filesystem::path file_path;               ///< Path to binary data file
-    size_t header_size = 0;                        ///< Bytes to skip at file start
-    size_t offset = 0;                             ///< Sample offset within data region
-    size_t stride = 1;                             ///< Stride between samples (in elements, not bytes)
-    size_t num_samples = 0;                        ///< Number of samples to read (0 = auto-detect)
-    MmapDataType data_type = MmapDataType::Float32;///< Underlying data type
-    float scale_factor = 1.0f;                     ///< Multiplicative scale for conversion
-    float offset_value = 0.0f;                     ///< Additive offset for conversion
-};
-
-/**
- * @brief Memory-mapped file analog data storage using CRTP
- * 
- * Provides efficient access to large binary files without loading entire dataset
- * into memory. Supports:
- * - Strided access (e.g., reading one channel from interleaved multi-channel data)
- * - Type conversion from various integer/float formats to float32
- * - Scale and offset transformations
- * - Cross-platform memory mapping (POSIX mmap and Windows MapViewOfFile)
- * 
- * Example use case: 384-channel electrophysiology data stored as int16
- * with channels interleaved - can efficiently access a single channel.
- */
-class MemoryMappedAnalogDataStorage : public AnalogDataStorageBase<MemoryMappedAnalogDataStorage> {
-public:
-    /**
-     * @brief Construct memory-mapped storage from configuration
-     * 
-     * @param config Configuration specifying file path, layout, and conversion
-     * @throws std::runtime_error if file cannot be opened or mapped
-     */
-    explicit MemoryMappedAnalogDataStorage(MmapStorageConfig config);
-
-    /**
-     * @brief Destructor - unmaps file and releases resources
-     */
-    virtual ~MemoryMappedAnalogDataStorage();
-
-    // Disable copy (would require complex mapping logic)
-    MemoryMappedAnalogDataStorage(MemoryMappedAnalogDataStorage const &) = delete;
-    MemoryMappedAnalogDataStorage & operator=(MemoryMappedAnalogDataStorage const &) = delete;
-
-    // Enable move
-    MemoryMappedAnalogDataStorage(MemoryMappedAnalogDataStorage &&) noexcept;
-    MemoryMappedAnalogDataStorage & operator=(MemoryMappedAnalogDataStorage &&) noexcept;
-
-    // CRTP implementation methods
-
-    [[nodiscard]] float getValueAtImpl(size_t index) const;
-
-    [[nodiscard]] size_t sizeImpl() const {
-        return _num_samples;
-    }
-
-    [[nodiscard]] std::span<float const> getSpanImpl() const {
-        // Memory-mapped data with stride or type conversion is not contiguous as float
-        return {};
-    }
-
-    [[nodiscard]] std::span<float const> getSpanRangeImpl(size_t start, size_t end) const {
-        // Non-contiguous storage cannot provide spans
-        return {};
-    }
-
-    [[nodiscard]] bool isContiguousImpl() const {
-        // Only contiguous if stride=1 and native float32 (no conversion)
-        return _config.stride == 1 && _config.data_type == MmapDataType::Float32 && _config.scale_factor == 1.0f && _config.offset_value == 0.0f;
-    }
-
-    [[nodiscard]] AnalogStorageType getStorageType() const override {
-        return AnalogStorageType::MemoryMapped;
-    }
-
-    /**
-     * @brief Get configuration used for this storage
-     */
-    [[nodiscard]] MmapStorageConfig const & getConfig() const {
-        return _config;
-    }
-
-private:
-    void _openAndMapFile();
-    void _closeAndUnmap();
-    [[nodiscard]] size_t _getElementSize() const;
-    [[nodiscard]] float _convertToFloat(void const * ptr) const;
-
-    MmapStorageConfig _config;
-    size_t _num_samples;
-    size_t _element_size;
-
-#ifdef _WIN32
-    HANDLE _file_handle = INVALID_HANDLE_VALUE;
-    HANDLE _map_handle = NULL;
-    void * _mapped_data = nullptr;
-#else
-    int _file_descriptor = -1;
-    void * _mapped_data = nullptr;
-    size_t _mapped_size = 0;
-#endif
-};
-
-/**
- * @brief Lazy view-based analog data storage
- * 
- * Stores a computation pipeline as a random-access view that transforms data
- * on-demand. Enables efficient composition of transforms without materializing
- * intermediate results. Works with any random-access range that yields float values.
- * 
- * @tparam ViewType Type of the random-access range view
- * 
- * @example Z-score normalization applied lazily:
- * @code
- * auto base_series = ;
- * auto view = base_series->view() 
- *     | std::views::transform([mean, std](auto tv) {
- *         return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, (tv.value() - mean) / std};
- *     });
- * auto normalized = AnalogTimeSeries::createFromView(view, base_series->getTimeStorage());
- * @endcode
- */
-template<typename ViewType>
-class LazyViewStorage : public AnalogDataStorageBase<LazyViewStorage<ViewType>> {
-public:
-    /**
-     * @brief Construct lazy storage from a random-access view
-     * 
-     * @param view Random-access range view (must support operator[])
-     * @param num_samples Number of samples (must match view size)
-     * 
-     * @throws std::invalid_argument if view is not random-access
-     */
-    explicit LazyViewStorage(ViewType view, size_t num_samples)
-        : _view(std::move(view))
-        , _num_samples(num_samples) {
-        static_assert(std::ranges::random_access_range<ViewType>,
-                      "LazyViewStorage requires random access range");
-    }
-
-    virtual ~LazyViewStorage() = default;
-
-    // CRTP implementation methods
-
-    [[nodiscard]] float getValueAtImpl(size_t index) const {
-        auto element = _view[index];
-
-        // Support both TimeValuePoint (with value() method) and std::pair<TimeFrameIndex, float>
-        if constexpr (requires { element.value(); }) {
-            return element.value();// TimeValuePoint
-        } else {
-            return element.second;// std::pair
+        std::span<float const> getSpanRange(std::size_t start, std::size_t end) const override {
+            return _storage.getSpanRange(start, end);
         }
-    }
 
-    [[nodiscard]] size_t sizeImpl() const {
-        return _num_samples;
-    }
+        bool isContiguous() const override {
+            return _storage.isContiguous();
+        }
 
-    [[nodiscard]] std::span<float const> getSpanImpl() const {
-        // Lazy transforms are never contiguous in memory
-        return {};
-    }
+        AnalogStorageType getStorageType() const override {
+            return _storage.getStorageTypeImpl();
+        }
 
-    [[nodiscard]] std::span<float const> getSpanRangeImpl(size_t start, size_t end) const {
-        // Non-contiguous storage cannot provide spans
-        return {};
-    }
+        AnalogDataStorageCache tryGetCache() const override {
+            if constexpr (requires { _storage.tryGetCacheImpl(); }) {
+                return _storage.tryGetCacheImpl();
+            } else {
+                return AnalogDataStorageCache{};
+            }
+        }
+    };
 
-    [[nodiscard]] bool isContiguousImpl() const {
-        return false;// Lazy transforms are not stored contiguously
-    }
-
-    [[nodiscard]] AnalogStorageType getStorageType() const override {
-        return AnalogStorageType::LazyView;
-    }
-
-    /**
-     * @brief Get reference to underlying view (for advanced use)
-     */
-    [[nodiscard]] ViewType const & getView() const {
-        return _view;
-    }
-
-private:
-    ViewType _view;
-    size_t _num_samples;
+    std::shared_ptr<StorageConcept> _impl;
 };
 
 #endif// ANALOG_DATA_STORAGE_HPP
+

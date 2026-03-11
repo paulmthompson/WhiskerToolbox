@@ -4,6 +4,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/storage/AnalogDataStorage.hpp"
+#include "AnalogTimeSeries/storage/MemoryMappedAnalogDataStorage.hpp"
 
 #include <algorithm>
 #include <filesystem>

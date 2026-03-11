@@ -1,24 +1,26 @@
 #include "LineInspector.hpp"
 #include "ui_LineInspector.h"
 
-#include "LineTableView.hpp"
-#include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 #include "DataInspector_Widget/DataInspectorState.hpp"
+#include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
+#include "LineTableView.hpp"
 
 #include "DataManager.hpp"
-#include "DataManager/IO/core/LoaderRegistry.hpp"
-#include "DataManager/IO/core/IOTypes.hpp"
+#include "DataManager/Commands/CommandContext.hpp"
+#include "DataManager/Commands/SaveData.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 
-#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "DataExport_Widget/Lines/Binary/BinaryLineSaver_Widget.hpp"
 #include "DataExport_Widget/Lines/CSV/CSVLineSaver_Widget.hpp"
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
-#include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 #include "MediaExport/media_export.hpp"
+#include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
+
+#include <rfl/json.hpp>
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -37,11 +39,11 @@
 #include <vector>
 
 LineInspector::LineInspector(
-    std::shared_ptr<DataManager> data_manager,
-    GroupManager * group_manager,
-    QWidget * parent)
-    : BaseInspector(std::move(data_manager), group_manager, parent)
-    , _ui(new Ui::LineInspector) {
+        std::shared_ptr<DataManager> data_manager,
+        GroupManager * group_manager,
+        QWidget * parent)
+    : BaseInspector(std::move(data_manager), group_manager, parent),
+      _ui(new Ui::LineInspector) {
     _ui->setupUi(this);
     _setupUi();
     _connectSignals();
@@ -49,7 +51,7 @@ LineInspector::LineInspector(
     // Setup collapsible export section
     _ui->export_section->autoSetContentLayout();
     _ui->export_section->setTitle("Export Options");
-    _ui->export_section->toggle(false);  // Start collapsed
+    _ui->export_section->toggle(false);// Start collapsed
 
     _onExportTypeChanged(_ui->export_type_combo->currentIndex());
     _ui->media_export_options_widget->setVisible(_ui->export_media_frames_checkbox->isChecked());
@@ -105,12 +107,145 @@ void LineInspector::_connectSignals() {
     // Export signals
     connect(_ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LineInspector::_onExportTypeChanged);
+
+    auto performSave = [this](QString const & format, nlohmann::json config) {
+        if (_active_key.empty()) {
+            QMessageBox::warning(this, "No Data Selected",
+                                 "Please select a LineData item to save.");
+            return;
+        }
+
+        auto line_data_ptr = dataManager()->getData<LineData>(_active_key);
+        if (!line_data_ptr) {
+            QMessageBox::critical(this, "Error",
+                                  "Could not retrieve LineData for saving. Key: " +
+                                          QString::fromStdString(_active_key));
+            return;
+        }
+
+        // Update config with full path
+        std::string parent_dir = config.value("parent_dir", ".");
+        if (parent_dir == "." || (!parent_dir.empty() && parent_dir[0] != '/')) {
+            if (parent_dir == ".") {
+                config["parent_dir"] = dataManager()->getOutputPath();
+            } else {
+                config["parent_dir"] =
+                        dataManager()->getOutputPath() + "/" + parent_dir;
+            }
+        }
+
+        // Build filepath for SaveData
+        std::string filepath;
+        std::string const save_type = config.value("save_type", "single");
+        if (save_type == "single") {
+            std::string const dir = config.value("parent_dir", ".");
+            std::string const filename = config.value("filename", "line_data.csv");
+            filepath = dir + "/" + filename;
+        } else {
+            filepath = config.value("parent_dir", ".");
+        }
+
+        // Convert nlohmann::json config to rfl::Generic for format_options
+        std::optional<rfl::Generic> format_opts;
+        {
+            auto const json_str = config.dump();
+            auto parsed = rfl::json::read<rfl::Generic>(json_str);
+            if (parsed) {
+                format_opts = std::move(*parsed);
+            }
+        }
+
+        commands::SaveDataParams params{
+                .data_key = _active_key,
+                .format = format.toStdString(),
+                .path = filepath,
+        };
+        if (format_opts) {
+            params.format_options = std::move(*format_opts);
+        }
+
+        commands::CommandContext ctx;
+        ctx.data_manager = dataManager();
+
+        commands::SaveData cmd(std::move(params));
+        auto result = cmd.execute(ctx);
+
+        if (!result.success) {
+            QMessageBox::critical(this, "Save Error",
+                                  QString("Failed to save line data: %1")
+                                          .arg(QString::fromStdString(
+                                                  result.error_message)));
+            return;
+        }
+
+        std::string const save_location = config.value("parent_dir", ".");
+        QMessageBox::information(this, "Save Successful",
+                                 QString("Line data saved successfully to: %1")
+                                         .arg(QString::fromStdString(save_location)));
+
+        // Media export (if checkbox enabled)
+        if (_ui->export_media_frames_checkbox->isChecked()) {
+            auto times_with_data = line_data_ptr->getTimesWithData();
+            std::vector<size_t> frame_ids_to_export;
+            frame_ids_to_export.reserve(times_with_data.size());
+            for (auto frame_id: times_with_data) {
+                frame_ids_to_export.push_back(
+                        static_cast<size_t>(frame_id.getValue()));
+            }
+
+            if (frame_ids_to_export.empty()) {
+                QMessageBox::information(this, "No Frames",
+                                         "No lines found in data, so no media "
+                                         "frames to export.");
+                return;
+            }
+
+            auto media_ptr = dataManager()->getData<MediaData>("media");
+            if (!media_ptr) {
+                QMessageBox::warning(this, "Media Not Available",
+                                     "Could not access media for exporting frames.");
+                return;
+            }
+
+            MediaExportOptions options =
+                    _ui->media_export_options_widget->getOptions();
+            options.image_save_dir = save_location;
+
+            try {
+                std::filesystem::create_directories(options.image_save_dir);
+            } catch (std::exception const & e) {
+                QMessageBox::critical(this, "Export Error",
+                                      QString("Failed to create output directory: "
+                                              "%1\n%2")
+                                              .arg(QString::fromStdString(
+                                                      options.image_save_dir))
+                                              .arg(QString::fromStdString(e.what())));
+                return;
+            }
+
+            int frames_exported = 0;
+            for (size_t const frame_id: frame_ids_to_export) {
+                save_image(media_ptr.get(), static_cast<int>(frame_id), options);
+                frames_exported++;
+            }
+
+            QMessageBox::information(
+                    this, "Media Export",
+                    QString("Exported %1 media frames to: %2/%3")
+                            .arg(frames_exported)
+                            .arg(QString::fromStdString(options.image_save_dir))
+                            .arg(QString::fromStdString(options.image_folder)));
+        }
+    };
+
     connect(_ui->csv_line_saver_widget, &CSVLineSaver_Widget::saveCSVRequested,
-            this, &LineInspector::_handleSaveCSVRequested);
-    connect(_ui->csv_line_saver_widget, &CSVLineSaver_Widget::saveMultiFileCSVRequested,
-            this, &LineInspector::_handleSaveMultiFileCSVRequested);
-    connect(_ui->binary_line_saver_widget, &BinaryLineSaver_Widget::saveBinaryRequested,
-            this, &LineInspector::_handleSaveBinaryRequested);
+            this, performSave);
+    connect(_ui->csv_line_saver_widget,
+            &CSVLineSaver_Widget::saveMultiFileCSVRequested,
+            this, performSave);
+    connect(_ui->binary_line_saver_widget,
+            &BinaryLineSaver_Widget::saveBinaryRequested,
+            this, performSave);
     connect(_ui->export_media_frames_checkbox, &QCheckBox::toggled,
             this, &LineInspector::_onExportMediaFramesCheckboxToggled);
 
@@ -139,161 +274,8 @@ void LineInspector::_onExportTypeChanged(int index) {
     }
 }
 
-void LineInspector::_handleSaveCSVRequested(QString const & format, nlohmann::json const & config) {
-    _initiateSaveProcess(format, config);
-}
-
-void LineInspector::_handleSaveMultiFileCSVRequested(QString const & format, nlohmann::json const & config) {
-    _initiateSaveProcess(format, config);
-}
-
-void LineInspector::_handleSaveBinaryRequested(QString const & format, nlohmann::json const & config) {
-    _initiateSaveProcess(format, config);
-}
-
 void LineInspector::_onExportMediaFramesCheckboxToggled(bool checked) {
     _ui->media_export_options_widget->setVisible(checked);
-}
-
-void LineInspector::_initiateSaveProcess(QString const & format, LineSaverConfig const & config) {
-    if (_active_key.empty()) {
-        QMessageBox::warning(this, "No Data Selected", "Please select a LineData item to save.");
-        return;
-    }
-
-    auto line_data_ptr = dataManager()->getData<LineData>(_active_key);
-    if (!line_data_ptr) {
-        QMessageBox::critical(this, "Error", "Could not retrieve LineData for saving. Key: " + QString::fromStdString(_active_key));
-        return;
-    }
-
-    // Update config with full path
-    LineSaverConfig updated_config = config;
-    std::string parent_dir = config.value("parent_dir", ".");
-
-    // Only prepend output path if parent_dir is relative (starts with "." or doesn't start with "/")
-    if (parent_dir == "." || (!parent_dir.empty() && parent_dir[0] != '/')) {
-        if (parent_dir == ".") {
-            updated_config["parent_dir"] = dataManager()->getOutputPath();
-        } else {
-            updated_config["parent_dir"] = dataManager()->getOutputPath() + "/" + parent_dir;
-        }
-    }
-    // If parent_dir is absolute, use it as-is
-
-    bool const save_successful = _performRegistrySave(format, updated_config);
-
-    if (!save_successful) {
-        return;
-    }
-
-    if (_ui->export_media_frames_checkbox->isChecked()) {
-        auto times_with_data = line_data_ptr->getTimesWithData();
-        std::vector<size_t> frame_ids_to_export;
-        frame_ids_to_export.reserve(times_with_data.size());
-        for (auto frame_id: times_with_data) {
-            frame_ids_to_export.push_back(static_cast<size_t>(frame_id.getValue()));
-        }
-
-        if (frame_ids_to_export.empty()) {
-            QMessageBox::information(this, "No Frames", "No lines found in data, so no media frames to export.");
-        } else {
-            auto media_ptr = dataManager()->getData<MediaData>("media");
-            if (!media_ptr) {
-                QMessageBox::warning(this, "Media Not Available", "Could not access media for exporting frames.");
-                return;
-            }
-
-            MediaExportOptions options = _ui->media_export_options_widget->getOptions();
-            // Use the same parent directory used for line saving
-            std::string const base_output_dir = updated_config.value("parent_dir", dataManager()->getOutputPath());
-            options.image_save_dir = base_output_dir;
-
-            try {
-                std::filesystem::create_directories(options.image_save_dir);
-            } catch (std::exception const & e) {
-                QMessageBox::critical(this, "Export Error", QString("Failed to create output directory: %1\n%2").arg(QString::fromStdString(options.image_save_dir)).arg(QString::fromStdString(e.what())));
-                return;
-            }
-
-            int frames_exported = 0;
-            for (size_t const frame_id: frame_ids_to_export) {
-                save_image(media_ptr.get(), static_cast<int>(frame_id), options);
-                frames_exported++;
-            }
-
-            QMessageBox::information(this,
-                                     "Media Export",
-                                     QString("Exported %1 media frames to: %2/%3")
-                                             .arg(frames_exported)
-                                             .arg(QString::fromStdString(options.image_save_dir))
-                                             .arg(QString::fromStdString(options.image_folder)));
-        }
-    }
-}
-
-bool LineInspector::_performRegistrySave(QString const & format, LineSaverConfig const & config) {
-    auto line_data_ptr = dataManager()->getData<LineData>(_active_key);
-    if (!line_data_ptr) {
-        QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve LineData for saving. Key: " + QString::fromStdString(_active_key));
-        return false;
-    }
-
-    // Check if format is supported through registry
-    LoaderRegistry & registry = LoaderRegistry::getInstance();
-    std::string const format_str = format.toStdString();
-
-    if (!registry.isFormatSupported(format_str, IODataType::Line)) {
-        QMessageBox::warning(this, "Format Not Supported",
-                             QString("Format '%1' saving is not available. This may require additional plugins to be enabled.\n\n"
-                                     "To enable format support:\n"
-                                     "1. Ensure required libraries are available in your build environment\n"
-                                     "2. Build with appropriate -DENABLE_* flags\n"
-                                     "3. Restart the application")
-                                     .arg(format));
-
-        std::cout << "Format '" << format_str << "' saving not available - plugin not registered" << std::endl;
-        return false;
-    }
-
-    try {
-        // Construct filepath for the registry (though CSVLoader doesn't use it directly)
-        std::string const save_type = config.value("save_type", "single");
-        std::string filepath;
-
-        if (save_type == "single") {
-            std::string const parent_dir = config.value("parent_dir", ".");
-            std::string const filename = config.value("filename", "line_data.csv");
-            filepath = parent_dir + "/" + filename;
-        } else if (save_type == "multi") {
-            filepath = config.value("parent_dir", ".");
-        }
-
-        // Use registry to save through the new save interface
-        LoadResult const result = registry.trySave(format_str,
-                                                   IODataType::Line,
-                                                   filepath,
-                                                   config,
-                                                   line_data_ptr.get());
-
-        if (result.success) {
-            std::string const save_location = config.value("parent_dir", ".");
-            QMessageBox::information(this, "Save Successful",
-                                     QString("Line data saved successfully to: %1").arg(QString::fromStdString(save_location)));
-            std::cout << "Line data saved successfully using " << format_str << " format" << std::endl;
-            return true;
-        } else {
-            QMessageBox::critical(this, "Save Error",
-                                  QString("Failed to save line data: %1").arg(QString::fromStdString(result.error_message)));
-            std::cerr << "Failed to save line data: " << result.error_message << std::endl;
-            return false;
-        }
-
-    } catch (std::exception const & e) {
-        QMessageBox::critical(this, "Save Error", "Failed to save line data: " + QString::fromStdString(e.what()));
-        std::cerr << "Failed to save line data: " << e.what() << std::endl;
-        return false;
-    }
 }
 
 void LineInspector::_onApplyImageSizeClicked() {
@@ -588,19 +570,19 @@ void LineInspector::setDataView(LineTableView * view) {
         if (groupManager()) {
             _data_view->setGroupManager(groupManager());
         }
-        
+
         // Connect to view signals for move/copy operations
         connect(_data_view, &LineTableView::moveLinesRequested,
                 this, &LineInspector::_onMoveLinesRequested);
         connect(_data_view, &LineTableView::copyLinesRequested,
                 this, &LineInspector::_onCopyLinesRequested);
-        
+
         // Connect to view signals for group management operations
         connect(_data_view, &LineTableView::moveLinesToGroupRequested,
                 this, &LineInspector::_onMoveLinesToGroupRequested);
         connect(_data_view, &LineTableView::removeLinesFromGroupRequested,
                 this, &LineInspector::_onRemoveLinesFromGroupRequested);
-        
+
         // Connect to view signal for delete operation
         connect(_data_view, &LineTableView::deleteLinesRequested,
                 this, &LineInspector::_onDeleteLinesRequested);
@@ -768,7 +750,7 @@ void LineInspector::_onDeleteLinesRequested() {
     int total_lines_deleted = 0;
 
     // Delete each selected line individually
-    for (EntityId const entity_id : selected_entity_ids) {
+    for (EntityId const entity_id: selected_entity_ids) {
         if (entity_id != EntityId(0)) {
             bool const success = line_data->clearByEntityId(entity_id, NotifyObservers::No);
             if (success) {

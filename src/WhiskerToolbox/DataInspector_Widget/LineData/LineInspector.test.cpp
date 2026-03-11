@@ -1,10 +1,12 @@
-
 #include "LineInspector.hpp"
 #include "LineTableView.hpp"
 #include "LineTableModel.hpp"
 
+#include "DataExport_Widget/Lines/CSV/CSVLineSaver_Widget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+#include "IO/core/LoaderRegistration.hpp"
+#include "IO/formats/CSV/lines/Line_Data_CSV.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
@@ -16,14 +18,18 @@
 
 #include <QApplication>
 #include <QComboBox>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QTableView>
 #include <QAbstractItemModel>
 #include <QItemSelectionModel>
 #include <QSignalSpy>
 #include <QTest>
+#include <QTimer>
 
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <numeric>
 #include <set>
@@ -40,6 +46,32 @@ void ensureQApplication()
         static std::array<char *, 1> argv = {app_name};
         new QApplication(argc, argv.data());// NOLINT: Intentionally leaked
     }
+}
+
+struct RegistryInitializer {
+    RegistryInitializer()
+    {
+        static bool initialized = false;
+        if (!initialized) {
+            registerInternalLoaders();
+            initialized = true;
+        }
+    }
+};
+
+[[maybe_unused]] RegistryInitializer const g_registry_init{};
+
+std::filesystem::path makeTempDir()
+{
+    auto dir = std::filesystem::temp_directory_path() / "whisker_line_inspector_save_test";
+    std::filesystem::create_directories(dir);
+    return dir;
+}
+
+void cleanupTempDir(std::filesystem::path const & dir)
+{
+    std::error_code ec;
+    std::filesystem::remove_all(dir, ec);
 }
 }// namespace
 
@@ -85,6 +117,92 @@ TEST_CASE("LineInspector has expected UI", "[LineInspector]") {
         REQUIRE(group_filter_combo->itemText(0) == QStringLiteral("All Groups"));
 
         app->processEvents();
+    }
+}
+
+TEST_CASE("LineInspector saves data from DataManager", "[LineInspector][save]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Save button exports LineData to CSV") {
+        auto temp_dir = makeTempDir();
+        auto data_manager = std::make_shared<DataManager>();
+        data_manager->setOutputPath(temp_dir.string());
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create LineData with some lines
+        auto line_data = std::make_shared<LineData>();
+        line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+
+        auto create_line = [](float base_y) -> Line2D {
+            Line2D line;
+            line.push_back(Point2D<float>{10.0f, base_y});
+            line.push_back(Point2D<float>{20.0f, base_y + 5.0f});
+            line.push_back(Point2D<float>{30.0f, base_y + 10.0f});
+            return line;
+        };
+
+        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(10), create_line(20.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(20), create_line(30.0f), NotifyObservers::No);
+        line_data->rebuildAllEntityIds();
+
+        data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+
+        LineInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setActiveKey("test_lines");
+
+        app->processEvents();
+
+        // Set filename for export
+        auto * csv_saver = inspector.findChild<CSVLineSaver_Widget *>("csv_line_saver_widget");
+        REQUIRE(csv_saver != nullptr);
+        auto * filename_edit = csv_saver->findChild<QLineEdit *>("save_filename_edit");
+        REQUIRE(filename_edit != nullptr);
+        filename_edit->setText(QStringLiteral("saved_lines.csv"));
+
+        // Schedule dialog dismissal before clicking save (QMessageBox blocks)
+        QTimer::singleShot(50, []() {
+            if (auto * w = QApplication::activeModalWidget()) {
+                w->close();
+            }
+        });
+
+        auto * save_button = csv_saver->findChild<QPushButton *>("save_action_button");
+        REQUIRE(save_button != nullptr);
+        save_button->click();
+
+        app->processEvents();
+
+        auto const filepath = temp_dir / "saved_lines.csv";
+        REQUIRE(std::filesystem::exists(filepath));
+
+        // Verify file content: load back and check line data
+        CSVSingleFileLineLoaderOptions load_opts;
+        load_opts.filepath = filepath.string();
+        auto loaded = load(load_opts);
+
+        REQUIRE(loaded.size() == 3);  // 3 frames with data
+        REQUIRE(loaded.count(TimeFrameIndex(0)) == 1);
+        REQUIRE(loaded.count(TimeFrameIndex(10)) == 1);
+        REQUIRE(loaded.count(TimeFrameIndex(20)) == 1);
+
+        // Verify line content at frame 0
+        auto const & lines_at_0 = loaded.at(TimeFrameIndex(0));
+        REQUIRE(lines_at_0.size() == 1);
+        REQUIRE(lines_at_0[0].size() == 3);  // 3 points per line
+        REQUIRE(lines_at_0[0][0].x == Catch::Approx(10.0f));
+        REQUIRE(lines_at_0[0][0].y == Catch::Approx(10.0f));
+
+        cleanupTempDir(temp_dir);
     }
 }
 

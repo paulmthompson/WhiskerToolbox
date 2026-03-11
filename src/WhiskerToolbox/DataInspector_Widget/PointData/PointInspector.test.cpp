@@ -3,7 +3,9 @@
 #include "PointTableView.hpp"
 #include "PointTableModel.hpp"
 
+#include "DataExport_Widget/Points/CSV/CSVPointSaver_Widget.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -16,14 +18,18 @@
 
 #include <QApplication>
 #include <QComboBox>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QTableView>
 #include <QAbstractItemModel>
 #include <QItemSelectionModel>
 #include <QSignalSpy>
 #include <QTest>
+#include <QTimer>
 
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <numeric>
 #include <set>
@@ -40,6 +46,19 @@ void ensureQApplication()
         static std::array<char *, 1> argv = {app_name};
         new QApplication(argc, argv.data());// NOLINT: Intentionally leaked
     }
+}
+
+std::filesystem::path makeTempDir()
+{
+    auto dir = std::filesystem::temp_directory_path() / "whisker_point_inspector_save_test";
+    std::filesystem::create_directories(dir);
+    return dir;
+}
+
+void cleanupTempDir(std::filesystem::path const & dir)
+{
+    std::error_code ec;
+    std::filesystem::remove_all(dir, ec);
 }
 }// namespace
 
@@ -85,6 +104,83 @@ TEST_CASE("PointInspector has expected UI", "[PointInspector]") {
         REQUIRE(group_filter_combo->itemText(0) == QStringLiteral("All Groups"));
 
         app->processEvents();
+    }
+}
+
+TEST_CASE("PointInspector saves data from DataManager", "[PointInspector][save]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Save button exports PointData to CSV") {
+        auto temp_dir = makeTempDir();
+        auto data_manager = std::make_shared<DataManager>();
+        data_manager->setOutputPath(temp_dir.string());
+
+        // Create timeframe and point data
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        auto point_data = std::make_shared<PointData>();
+        point_data->setIdentityContext("test_points", data_manager->getEntityRegistry());
+
+        point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{100.5f, 200.5f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(25), Point2D<float>{30.0f, 40.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(42), Point2D<float>{50.25f, 60.75f}, NotifyObservers::No);
+        point_data->rebuildAllEntityIds();
+
+        data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
+
+        PointInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setActiveKey("test_points");
+
+        app->processEvents();
+
+        // Set filename for export
+        auto * csv_saver = inspector.findChild<CSVPointSaver_Widget *>("csv_point_saver_widget");
+        REQUIRE(csv_saver != nullptr);
+        auto * filename_edit = csv_saver->findChild<QLineEdit *>("save_filename_edit");
+        REQUIRE(filename_edit != nullptr);
+        filename_edit->setText(QStringLiteral("saved_points.csv"));
+
+        // Schedule dialog dismissal before clicking save (QMessageBox blocks)
+        QTimer::singleShot(50, []() {
+            if (auto * w = QApplication::activeModalWidget()) {
+                w->close();
+            }
+        });
+
+        auto * save_button = csv_saver->findChild<QPushButton *>("save_action_button");
+        REQUIRE(save_button != nullptr);
+        save_button->click();
+
+        app->processEvents();
+
+        auto const filepath = temp_dir / "saved_points.csv";
+        REQUIRE(std::filesystem::exists(filepath));
+
+        // Verify file content: load back and check point data
+        CSVPointLoaderOptions load_opts;
+        load_opts.filepath = filepath.string();
+        load_opts.frame_column = 0;
+        load_opts.x_column = 1;
+        load_opts.y_column = 2;
+        load_opts.column_delim = ",";
+
+        auto const loaded = load(load_opts);
+        REQUIRE(loaded.size() == 3);
+        REQUIRE(loaded.at(TimeFrameIndex(10)).x == Catch::Approx(100.5f));
+        REQUIRE(loaded.at(TimeFrameIndex(10)).y == Catch::Approx(200.5f));
+        REQUIRE(loaded.at(TimeFrameIndex(25)).x == Catch::Approx(30.0f));
+        REQUIRE(loaded.at(TimeFrameIndex(25)).y == Catch::Approx(40.0f));
+        REQUIRE(loaded.at(TimeFrameIndex(42)).x == Catch::Approx(50.25f));
+        REQUIRE(loaded.at(TimeFrameIndex(42)).y == Catch::Approx(60.75f));
+
+        cleanupTempDir(temp_dir);
     }
 }
 
