@@ -143,12 +143,28 @@ enum class RecurrentInitMode {
 /// for sequential frame-by-frame processing.
 ///
 /// The prediction at frame t becomes an input at frame t+1.
+///
+/// When `target_memory_index >= 0`, the recurrent output is injected into a
+/// specific position along the sequence dimension of the input slot rather
+/// than replacing the entire slot tensor. This enables hybrid sequence inputs
+/// where some positions are static captures and others are recurrent.
 struct RecurrentBindingData {
     std::string input_slot_name;        ///< Model input slot to feed into
     std::string output_slot_name;       ///< Model output slot to read from
     std::string init_mode_str = "Zeros";///< "Zeros", "StaticCapture", or "FirstOutput"
     std::string init_data_key;          ///< DataManager key for StaticCapture init mode
     int init_frame = -1;                ///< Frame to capture for StaticCapture init mode
+
+    /// Target position along the sequence dimension for hybrid mode.
+    /// When >= 0, the recurrent output is placed at this specific sequence
+    /// position instead of replacing the entire input slot tensor.
+    /// When < 0 (default), the recurrent output replaces the full slot.
+    int target_memory_index = -1;
+
+    /// Whether this binding targets a specific sequence position.
+    [[nodiscard]] bool hasTargetMemoryIndex() const {
+        return target_memory_index >= 0;
+    }
 
     /// Get the init mode as an enum.
     [[nodiscard]] RecurrentInitMode initMode() const {

@@ -122,29 +122,29 @@ A single sequence slot (e.g., `memory_images` with shape `[5, 3, 256, 256]` and
 and others fed recurrently from the model's previous output. Example: 4 user-selected 
 reference frames at positions 0–3 and the model's own prediction at position 4.
 
-- [ ] **Per-position source tagging** — Extend the binding model so each position along 
+- [x] **Per-position source tagging** — Extend the binding model so each position along 
   `sequence_dim` independently declares its source. `StaticInputData` entries already 
   target a `memory_index`; add an optional `target_memory_index` to 
   `RecurrentBindingData` so it can inject into a specific sequence position rather than 
   replacing the entire slot tensor
-- [ ] **Hybrid tensor assembly** — Update `SlotAssembler` to compose a single sequence 
+- [x] **Hybrid tensor assembly** — Update `SlotAssembler` to compose a single sequence 
   tensor from mixed sources in one pass:
     1. Start with the full `[batch, seq, ...]` tensor (zeros)
     2. Fill static positions from the tensor cache (Phase 2/3)
     3. Fill recurrent position(s) from the carried-forward output tensor (Phase 4)
     4. Validate: error if any position is claimed by both a static entry and a recurrent 
        binding, or if a position has no source at all (warn on zero-filled gaps)
-- [ ] **t=0 init for recurrent positions only** — In hybrid mode, the init strategy 
+- [x] **t=0 init for recurrent positions only** — In hybrid mode, the init strategy 
   (`zeros`, `static_capture`, `first_output`) applies only to the recurrent position(s). 
   Static positions are always populated regardless of frame index
-- [ ] **Batch constraint propagation** — Hybrid slots with any recurrent position force 
+- [x] **Batch constraint propagation** — Hybrid slots with any recurrent position force 
   batch=1 (same as Phase 4). If all recurrent positions are removed, batch constraint 
   relaxes back to the static/dynamic default
-- [ ] **UI: unified sequence editor** — Each row in the sequence entry manager (Phase 3) 
+- [x] **UI: unified sequence editor** — Each row in the sequence entry manager (Phase 3) 
   gains a source-type selector: **Static** (capture controls) or **Recurrent** (output 
   slot + init mode). The panel visually distinguishes the two types (e.g., static rows 
   show the captured frame thumbnail, recurrent rows show the output mapping)
-- [ ] **Validation & diagnostics** — At assembly time, warn if the recurrent output 
+- [x] **Validation & diagnostics** — At assembly time, warn if the recurrent output 
   tensor shape doesn't match the target sequence position slice. Surface mismatches in 
   the Properties widget status area
 

@@ -1,0 +1,128 @@
+---
+title: "Hybrid Sequence Inputs (Phase 5)"
+---
+
+## Overview
+
+Phase 5 of the Input Pipeline Architecture enables **hybrid sequence inputs**: 
+a single sequence slot (e.g., `memory_images` with shape `[5, 3, 256, 256]` and 
+`sequence_dim=0`) can have mixed sourcing where some positions are filled from 
+static captures and others are fed recurrently from the model's previous output.
+
+This is essential for architectures like NeuroSAM, where 4 user-selected 
+reference frames occupy positions 0–3 and the model's own prediction at 
+position 4 is fed back recurrently.
+
+## Data Model
+
+### RecurrentBindingData.target_memory_index
+
+The `RecurrentBindingData` struct gains a new field:
+
+```cpp
+int target_memory_index = -1;
+```
+
+- **`-1` (default)**: Whole-slot replacement — the recurrent output replaces 
+  the entire input tensor. This is the original Phase 4 behavior.
+- **`>= 0`**: Position-specific injection — the recurrent output is placed at 
+  this specific position along the slot's `sequence_dim` axis.
+
+The helper `hasTargetMemoryIndex()` tests whether a binding targets a specific 
+position.
+
+## Assembly Logic
+
+### Position Claiming
+
+Before assembling a sequence slot's static entries, `assembleInputs()` builds 
+a map of "recurrent-claimed" positions — sequence positions that will be filled 
+by recurrent injection rather than static data.
+
+```
+recurrentClaimedPositions(recurrent_bindings) 
+  → map<slot_name, set<memory_index>>
+```
+
+During static assembly:
+
+1. Positions claimed by recurrent bindings are **skipped** and a diagnostic 
+   message is emitted if a static entry also targets that position.
+2. Recurrent-claimed positions are counted toward the fill total for 
+   gap-warning purposes.
+3. If a slot has **only** recurrent-claimed positions (no static entries), 
+   a zero tensor is still created so recurrent injection has a target.
+
+### Hybrid Injection in runRecurrentSequence()
+
+During the frame loop:
+
+1. `assembleInputs()` fills static positions normally (skipping 
+   recurrent-claimed ones).
+2. Recurrent tensors are injected **per-position** using 
+   `tensor.select(full_seq_dim, target_memory_index)` rather than 
+   replacing the entire slot tensor.
+3. Output tensors are cached per-binding for the next frame.
+
+### t=0 Initialization
+
+For hybrid bindings, the init tensor shape is the **per-element** shape 
+(excluding the sequence dimension) rather than the full slot shape. The 
+three init modes (`Zeros`, `StaticCapture`, `FirstOutput`) apply only to 
+the recurrent position(s). Static positions are always populated from 
+their configured sources regardless of frame index.
+
+## Batch Constraint
+
+Any recurrent position (whether whole-slot or position-specific) forces 
+`batch_size = 1`. When all recurrent positions are removed, the batch 
+constraint relaxes back to the model's default.
+
+## Validation
+
+At the start of `runRecurrentSequence()`, the following checks are performed 
+for each hybrid binding:
+
+- The input slot must have a `sequence_dim`.
+- The `target_memory_index` must be within the sequence length.
+- The output slot's shape must match the per-element shape of the input slot 
+  at the target position (warning on mismatch).
+
+During assembly, a warning is emitted if a position is claimed by both a 
+static entry and a recurrent binding.
+
+## UI: Unified Sequence Editor
+
+Each row in the sequence entry manager (from Phase 3) now has a **Source Type** 
+selector with two options:
+
+- **Static**: Shows the existing capture controls (source combo, 
+  Relative/Absolute mode, time offset, capture button).
+- **Recurrent**: Shows the output slot combo and init mode selector. 
+  The static controls are hidden.
+
+The recurrent section that previously appeared separately for all static 
+slots now only appears for **non-sequence** static inputs. Sequence slots 
+handle recurrent bindings inline per-position.
+
+## Example Configuration
+
+For a NeuroSAM-style model with `memory_images` shape `[5, 3, 256, 256]`:
+
+| Position | Source     | Configuration |
+|----------|-----------|---------------|
+| 0        | Static    | Frame 10, Absolute capture |
+| 1        | Static    | Frame 50, Absolute capture |
+| 2        | Static    | Frame 90, Absolute capture |
+| 3        | Static    | Frame 130, Absolute capture |
+| 4        | Recurrent | Output: decoder_output, Init: Zeros |
+
+## Files Modified
+
+- `DeepLearningBindingData.hpp` — Added `target_memory_index` and 
+  `hasTargetMemoryIndex()` to `RecurrentBindingData`
+- `SlotAssembler.cpp` — Hybrid assembly, per-position recurrent injection, 
+  validation
+- `DeepLearningPropertiesWidget.cpp` — Unified sequence editor with 
+  Static/Recurrent source type, updated batch constraint propagation
+- `BindingData.test.cpp` — Phase 5 test cases

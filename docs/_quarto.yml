@@ -64,6 +64,7 @@ website:
                 - developer/DeepLearning/aot_inductor_tutorial.qmd
                 - developer/DeepLearning/static_input_capture.qmd
                 - developer/DeepLearning/recurrent_inputs.qmd
+                - developer/DeepLearning/hybrid_sequence_inputs.qmd
                 - developer/DeepLearning/roadmap.qmd
             - section: "Transforms V2"
               href: developer/transforms_v2/index.qmd

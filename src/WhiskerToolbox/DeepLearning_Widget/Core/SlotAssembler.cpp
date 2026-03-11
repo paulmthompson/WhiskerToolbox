@@ -35,6 +35,7 @@
 #include <filesystem>
 #include <iostream>
 #include <limits>
+#include <set>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -238,6 +239,23 @@ void encodeDynamicSlot(
     }
 }
 
+/// Build a set of recurrent-claimed positions for each sequence slot.
+///
+/// Returns a map from slot_name -> set of memory_index values that are
+/// claimed by a recurrent binding (i.e., should NOT be filled by static
+/// assembly because the recurrent injection will fill them).
+std::unordered_map<std::string, std::set<int>>
+recurrentClaimedPositions(
+        std::vector<RecurrentBindingData> const & recurrent_bindings) {
+    std::unordered_map<std::string, std::set<int>> result;
+    for (auto const & rb: recurrent_bindings) {
+        if (rb.hasTargetMemoryIndex()) {
+            result[rb.input_slot_name].insert(rb.target_memory_index);
+        }
+    }
+    return result;
+}
+
 std::unordered_map<std::string, torch::Tensor>
 assembleInputs(
         DataManager & dm,
@@ -245,6 +263,7 @@ assembleInputs(
         std::vector<SlotBindingData> const & input_bindings,
         std::vector<StaticInputData> const & static_inputs,
         std::unordered_map<std::string, torch::Tensor> const & static_cache,
+        std::vector<RecurrentBindingData> const & recurrent_bindings,
         int current_frame,
         int batch_size) {
 
@@ -307,11 +326,21 @@ assembleInputs(
         grouped[si.slot_name].push_back(&si);
     }
 
+    // ── Build recurrent-claimed position map for hybrid mode ──
+    auto const claimed = recurrentClaimedPositions(recurrent_bindings);
+
     // Process all static/memory input slots (including boolean masks)
     for (auto const & slot: input_slot_vec) {
         if (!slot.is_static) continue;// skip dynamic inputs
 
         auto const & entries = grouped[slot.name];// may be empty
+
+        // Positions in this slot claimed by recurrent bindings
+        std::set<int> const * slot_claimed = nullptr;
+        {
+            auto it = claimed.find(slot.name);
+            if (it != claimed.end()) slot_claimed = &it->second;
+        }
 
         if (slot.is_boolean_mask) {
             // Boolean mask: always create, even if no entries
@@ -365,6 +394,11 @@ assembleInputs(
                 // Track which positions have been filled for gap warnings
                 int filled_count = 0;
 
+                // Count recurrent-claimed positions as "will be filled"
+                if (slot_claimed) {
+                    filled_count += static_cast<int>(slot_claimed->size());
+                }
+
                 for (auto const * entry: entries) {
                     if (entry->data_key.empty()) continue;
                     if (entry->memory_index >= static_cast<int>(seq_len)) {
@@ -373,6 +407,17 @@ assembleInputs(
                                   << " exceeds sequence length "
                                   << seq_len << " for slot '"
                                   << slot.name << "'\n";
+                        continue;
+                    }
+
+                    // Skip positions claimed by recurrent bindings
+                    if (slot_claimed &&
+                        slot_claimed->contains(entry->memory_index)) {
+                        std::cerr << "SlotAssembler: position "
+                                  << entry->memory_index
+                                  << " in slot '" << slot.name
+                                  << "' is claimed by both static and "
+                                     "recurrent sources; skipping static\n";
                         continue;
                     }
 
@@ -440,6 +485,16 @@ assembleInputs(
                               << " sequence positions filled; unfilled "
                                  "positions are zero-padded\n";
                 }
+                // For hybrid slots: also create the tensor when there are
+                // only recurrent-claimed positions but no static entries.
+            } else if (entries.empty() && slot_claimed && !slot_claimed->empty()) {
+                // Hybrid-only: create a zero tensor for the slot so that
+                // recurrent injection has a target tensor to fill into.
+                std::vector<int64_t> tensor_shape = {batch_size};
+                tensor_shape.insert(tensor_shape.end(),
+                                    slot.shape.begin(), slot.shape.end());
+                result[slot.name] = torch::zeros(tensor_shape,
+                                                 toTorchDType(slot.dtype));
             } else {
                 // ── Non-sequence static slot (original behavior) ──
                 for (auto const * entry: entries) {
@@ -742,6 +797,7 @@ void SlotAssembler::runSingleFrame(
             dm, *_impl->model,
             input_bindings, static_inputs,
             _impl->static_cache,
+            {},// no recurrent bindings in single-frame mode
             current_frame, /*batch_size=*/1);
 
     auto outputs = _impl->model->forward(inputs);
@@ -797,18 +853,29 @@ void SlotAssembler::runRecurrentSequence(
                     "SlotAssembler::runRecurrentSequence: unknown input slot '" + rb.input_slot_name + "'");
         }
 
+        // For hybrid mode (target_memory_index >= 0), the init tensor is
+        // per-element (excluding sequence dim) rather than whole-slot.
+        std::vector<int64_t> init_shape = {1};
+        if (rb.hasTargetMemoryIndex() && input_slot->hasSequenceDim()) {
+            // Per-element shape for the recurrent position
+            auto const elem = perElementShape(*input_slot);
+            init_shape.insert(init_shape.end(), elem.begin(), elem.end());
+        } else {
+            init_shape.insert(init_shape.end(),
+                              input_slot->shape.begin(),
+                              input_slot->shape.end());
+        }
+
         if (mode == RecurrentInitMode::Zeros) {
-            // Create an all-zeros tensor with shape {1, ...slot.shape}
-            std::vector<int64_t> tensor_shape = {1};
-            tensor_shape.insert(tensor_shape.end(),
-                                input_slot->shape.begin(),
-                                input_slot->shape.end());
             _impl->recurrent_cache[key] =
-                    torch::zeros(tensor_shape, toTorchDType(input_slot->dtype));
+                    torch::zeros(init_shape, toTorchDType(input_slot->dtype));
 
         } else if (mode == RecurrentInitMode::StaticCapture) {
-            // Use a captured tensor from DataManager
-            auto const static_key = staticCacheKey(rb.input_slot_name, 0);
+            // For hybrid mode, use the target_memory_index as cache key
+            int const mem_idx = rb.hasTargetMemoryIndex()
+                                        ? rb.target_memory_index
+                                        : 0;
+            auto const static_key = staticCacheKey(rb.input_slot_name, mem_idx);
             auto cache_it = _impl->static_cache.find(static_key);
             if (cache_it != _impl->static_cache.end()) {
                 _impl->recurrent_cache[key] = cache_it->second.clone();
@@ -817,7 +884,7 @@ void SlotAssembler::runRecurrentSequence(
                 if (!rb.init_data_key.empty() && rb.init_frame >= 0) {
                     StaticInputData temp_entry;
                     temp_entry.slot_name = rb.input_slot_name;
-                    temp_entry.memory_index = 0;
+                    temp_entry.memory_index = mem_idx;
                     temp_entry.data_key = rb.init_data_key;
                     temp_entry.setCaptureMode(CaptureMode::Absolute);
 
@@ -830,28 +897,56 @@ void SlotAssembler::runRecurrentSequence(
                     }
                 }
                 // If still missing, fall back to zeros
-                if (_impl->recurrent_cache.find(key) == _impl->recurrent_cache.end()) {
+                if (!_impl->recurrent_cache.contains(key)) {
                     std::cerr << "SlotAssembler: StaticCapture init failed for '"
                               << rb.input_slot_name
                               << "', falling back to zeros\n";
-                    std::vector<int64_t> tensor_shape = {1};
-                    tensor_shape.insert(tensor_shape.end(),
-                                        input_slot->shape.begin(),
-                                        input_slot->shape.end());
                     _impl->recurrent_cache[key] =
-                            torch::zeros(tensor_shape,
+                            torch::zeros(init_shape,
                                          toTorchDType(input_slot->dtype));
                 }
             }
 
         } else if (mode == RecurrentInitMode::FirstOutput) {
             // Will be filled after the first forward pass below
-            std::vector<int64_t> tensor_shape = {1};
-            tensor_shape.insert(tensor_shape.end(),
-                                input_slot->shape.begin(),
-                                input_slot->shape.end());
             _impl->recurrent_cache[key] =
-                    torch::zeros(tensor_shape, toTorchDType(input_slot->dtype));
+                    torch::zeros(init_shape, toTorchDType(input_slot->dtype));
+        }
+    }
+
+    // ── Validate hybrid bindings ──
+    for (auto const & rb: recurrent_bindings) {
+        if (!rb.hasTargetMemoryIndex()) continue;
+
+        auto const * input_slot = findSlot(input_slot_vec, rb.input_slot_name);
+        if (!input_slot || !input_slot->hasSequenceDim()) {
+            std::cerr << "SlotAssembler: recurrent binding for '"
+                      << rb.input_slot_name
+                      << "' has target_memory_index="
+                      << rb.target_memory_index
+                      << " but the slot has no sequence dimension\n";
+            continue;
+        }
+
+        auto const seq_len = sequenceLength(*input_slot);
+        if (rb.target_memory_index >= static_cast<int>(seq_len)) {
+            std::cerr << "SlotAssembler: recurrent binding target_memory_index "
+                      << rb.target_memory_index
+                      << " exceeds sequence length " << seq_len
+                      << " for slot '" << rb.input_slot_name << "'\n";
+        }
+
+        // Validate shape compatibility with output slot
+        auto const * output_slot = findSlot(output_slot_vec, rb.output_slot_name);
+        if (output_slot) {
+            auto const elem = perElementShape(*input_slot);
+            if (output_slot->shape != elem) {
+                std::cerr << "SlotAssembler: shape mismatch — output slot '"
+                          << rb.output_slot_name << "' shape does not match "
+                          << "per-element shape of input slot '"
+                          << rb.input_slot_name << "' at position "
+                          << rb.target_memory_index << "\n";
+            }
         }
     }
 
@@ -864,18 +959,36 @@ void SlotAssembler::runRecurrentSequence(
         }
 
         // 1. Assemble dynamic + static inputs (batch_size = 1)
+        //    In hybrid mode, assembleInputs skips recurrent-claimed positions.
         auto inputs = assembleInputs(
                 dm, *_impl->model,
                 input_bindings, static_inputs,
                 _impl->static_cache,
+                recurrent_bindings,
                 frame, /*batch_size=*/1);
 
         // 2. Inject recurrent tensors into the input map
         for (auto const & rb: recurrent_bindings) {
             auto const key = recurrentCacheKey(rb.input_slot_name);
-            auto it = _impl->recurrent_cache.find(key);
-            if (it != _impl->recurrent_cache.end()) {
-                inputs[rb.input_slot_name] = it->second;
+            auto cache_it = _impl->recurrent_cache.find(key);
+            if (cache_it == _impl->recurrent_cache.end()) continue;
+
+            if (rb.hasTargetMemoryIndex()) {
+                // Hybrid mode: inject into specific sequence position
+                auto const * input_slot = findSlot(input_slot_vec,
+                                                   rb.input_slot_name);
+                if (!input_slot || !input_slot->hasSequenceDim()) continue;
+
+                auto slot_it = inputs.find(rb.input_slot_name);
+                if (slot_it == inputs.end()) continue;
+
+                int const full_seq_dim = input_slot->sequence_dim + 1;
+                auto target_slice = slot_it->second.select(
+                        full_seq_dim, rb.target_memory_index);
+                target_slice.copy_(cache_it->second);
+            } else {
+                // Whole-slot replacement (original Phase 4 behavior)
+                inputs[rb.input_slot_name] = cache_it->second;
             }
         }
 
@@ -897,8 +1010,8 @@ void SlotAssembler::runRecurrentSequence(
                     if (rb.initMode() == RecurrentInitMode::FirstOutput) {
                         auto out_it = outputs.find(rb.output_slot_name);
                         if (out_it != outputs.end()) {
-                            auto const key = recurrentCacheKey(rb.input_slot_name);
-                            _impl->recurrent_cache[key] = out_it->second.detach();
+                            auto const rkey = recurrentCacheKey(rb.input_slot_name);
+                            _impl->recurrent_cache[rkey] = out_it->second.detach();
                         }
                     }
                 }
@@ -909,8 +1022,8 @@ void SlotAssembler::runRecurrentSequence(
                     if (rb.initMode() != RecurrentInitMode::FirstOutput) {
                         auto out_it = outputs.find(rb.output_slot_name);
                         if (out_it != outputs.end()) {
-                            auto const key = recurrentCacheKey(rb.input_slot_name);
-                            _impl->recurrent_cache[key] = out_it->second.detach();
+                            auto const rkey = recurrentCacheKey(rb.input_slot_name);
+                            _impl->recurrent_cache[rkey] = out_it->second.detach();
                         }
                     }
                 }
@@ -927,8 +1040,8 @@ void SlotAssembler::runRecurrentSequence(
         for (auto const & rb: recurrent_bindings) {
             auto out_it = outputs.find(rb.output_slot_name);
             if (out_it != outputs.end()) {
-                auto const key = recurrentCacheKey(rb.input_slot_name);
-                _impl->recurrent_cache[key] = out_it->second.detach();
+                auto const rkey = recurrentCacheKey(rb.input_slot_name);
+                _impl->recurrent_cache[rkey] = out_it->second.detach();
             }
         }
     }

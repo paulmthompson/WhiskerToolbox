@@ -273,3 +273,81 @@ TEST_CASE("staticCacheKey - sequence entries produce unique keys per position",
     CHECK(keys[2] == "memory_images:2");
     CHECK(keys[3] == "memory_images:3");
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// Phase 5: Hybrid Sequence Inputs — RecurrentBindingData.target_memory_index
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("RecurrentBindingData - target_memory_index defaults to -1",
+          "[binding_data][hybrid]") {
+    RecurrentBindingData const rb;
+    CHECK(rb.target_memory_index == -1);
+    CHECK_FALSE(rb.hasTargetMemoryIndex());
+}
+
+TEST_CASE("RecurrentBindingData - hasTargetMemoryIndex with valid index",
+          "[binding_data][hybrid]") {
+    RecurrentBindingData rb;
+    rb.target_memory_index = 0;
+    CHECK(rb.hasTargetMemoryIndex());
+
+    rb.target_memory_index = 3;
+    CHECK(rb.hasTargetMemoryIndex());
+}
+
+TEST_CASE("RecurrentBindingData - hasTargetMemoryIndex with negative index",
+          "[binding_data][hybrid]") {
+    RecurrentBindingData rb;
+    rb.target_memory_index = -1;
+    CHECK_FALSE(rb.hasTargetMemoryIndex());
+
+    rb.target_memory_index = -5;
+    CHECK_FALSE(rb.hasTargetMemoryIndex());
+}
+
+TEST_CASE("RecurrentBindingData - hybrid binding has all fields",
+          "[binding_data][hybrid]") {
+    RecurrentBindingData rb;
+    rb.input_slot_name = "memory_images";
+    rb.output_slot_name = "decoder_output";
+    rb.target_memory_index = 4;
+    rb.setInitMode(RecurrentInitMode::Zeros);
+
+    CHECK(rb.input_slot_name == "memory_images");
+    CHECK(rb.output_slot_name == "decoder_output");
+    CHECK(rb.target_memory_index == 4);
+    CHECK(rb.hasTargetMemoryIndex());
+    CHECK(rb.initMode() == RecurrentInitMode::Zeros);
+}
+
+TEST_CASE("RecurrentBindingData - whole-slot vs position-specific",
+          "[binding_data][hybrid]") {
+    RecurrentBindingData whole_slot;
+    whole_slot.input_slot_name = "memory_images";
+    whole_slot.output_slot_name = "output";
+    // target_memory_index defaults to -1 (whole slot)
+
+    RecurrentBindingData position_specific;
+    position_specific.input_slot_name = "memory_images";
+    position_specific.output_slot_name = "output";
+    position_specific.target_memory_index = 2;
+
+    CHECK_FALSE(whole_slot.hasTargetMemoryIndex());
+    CHECK(position_specific.hasTargetMemoryIndex());
+}
+
+TEST_CASE("RecurrentBindingData - hybrid with StaticCapture init",
+          "[binding_data][hybrid]") {
+    RecurrentBindingData rb;
+    rb.input_slot_name = "memory_images";
+    rb.output_slot_name = "decoder_output";
+    rb.target_memory_index = 4;
+    rb.setInitMode(RecurrentInitMode::StaticCapture);
+    rb.init_data_key = "media/video_1";
+    rb.init_frame = 42;
+
+    CHECK(rb.initMode() == RecurrentInitMode::StaticCapture);
+    CHECK(rb.init_data_key == "media/video_1");
+    CHECK(rb.init_frame == 42);
+    CHECK(rb.hasTargetMemoryIndex());
+}
