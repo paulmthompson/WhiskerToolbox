@@ -1,0 +1,347 @@
+---
+title: "Refactoring Guide: Widget Export to SaveData Command"
+description: "Step-by-step guide for refactoring a widget's direct save call to use the SaveData command architecture"
+---
+
+## Overview
+
+This guide documents how to refactor a data inspector widget from calling a format-specific
+save function directly to dispatching through the `SaveData` command. The concrete example
+is `DigitalEventSeriesInspector`, but the pattern applies to any widget that exports data.
+
+### Before
+
+```
+Widget → CSVEventSaverOptions → ::save(data, options)
+```
+
+The widget directly includes the format-specific header, constructs format-specific options,
+and calls the save function. This creates a tight coupling between the widget and the
+file format implementation.
+
+### After
+
+```
+Widget → SaveDataParams → SaveData::execute() → LoaderRegistry → CSVLoader → ::save()
+```
+
+The widget constructs generic `SaveDataParams` with serialized format options (as
+`rfl::Generic`), creates a `SaveData` command, and executes it. The command dispatches
+through the `LoaderRegistry`, which routes to the correct format saver. The widget no
+longer needs to know about the specific save function or its options struct.
+
+## Benefits
+
+1. **Decoupled headers** — The widget header no longer includes format-specific types
+   (`CSVEventSaverOptions`). This reduces compile-time dependencies and makes the widget
+   independent of save format implementation details.
+
+2. **Command architecture integration** — Save operations can be recorded by the
+   `CommandRecorder`, replayed in triage pipelines, and included in golden trace tests.
+
+3. **Uniform error handling** — The `CommandResult` type provides consistent success/error
+   reporting across all save operations.
+
+4. **Extensible** — Adding a new export format only requires registering a new saver in the
+   `LoaderRegistry`. The widget code doesn't change.
+
+## Step-by-Step Guide
+
+### Step 1: Remove Format-Specific Types from the Header
+
+**Before** (`DigitalEventSeriesInspector.hpp`):
+
+```cpp
+#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
+// ...
+#include <variant>
+
+// ...
+using EventSaverOptionsVariant = std::variant<CSVEventSaverOptions>;
+
+class DigitalEventSeriesInspector : public BaseInspector {
+    // ...
+private:
+    enum SaverType { CSV };
+    void _initiateSaveProcess(SaverType saver_type, EventSaverOptionsVariant & options_variant);
+    bool _performActualCSVSave(CSVEventSaverOptions const & options);
+
+private slots:
+    void _handleSaveEventCSVRequested(CSVEventSaverOptions options);
+};
+```
+
+**After**:
+
+```cpp
+// No format-specific includes
+// No variant include (unless used elsewhere)
+
+class DigitalEventSeriesInspector : public BaseInspector {
+    // ...
+private:
+    // No SaverType enum
+    // No format-specific save methods
+    // No format-specific slot declarations
+};
+```
+
+The following items are removed from the header:
+
+- `#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"`
+- `#include <variant>`
+- `using EventSaverOptionsVariant = ...`
+- `enum SaverType { CSV }`
+- `_initiateSaveProcess()` declaration
+- `_performActualCSVSave()` declaration
+- `_handleSaveEventCSVRequested()` slot declaration
+
+### Step 2: Add Command Includes to the Implementation
+
+**In the `.cpp` file**, add the command headers:
+
+```cpp
+#include "DataManager/Commands/CommandContext.hpp"
+#include "DataManager/Commands/SaveData.hpp"
+
+#include <rfl/json.hpp>
+#include <filesystem>
+```
+
+The format-specific include (`Digital_Event_Series_CSV.hpp`) is no longer needed directly.
+It arrives transitively through the saver widget header (`CSVEventSaver_Widget.hpp`), which
+the `.cpp` still includes for the Qt signal connection.
+
+### Step 3: Replace the Signal/Slot Connection with a Lambda
+
+The saver widget (`CSVEventSaver_Widget`) emits a signal carrying the format-specific
+options type (`CSVEventSaverOptions`). Since this type is no longer in the inspector header,
+use a lambda in `_connectSignals()` to handle the conversion.
+
+**Before**:
+
+```cpp
+connect(ui->csv_event_saver_widget, &CSVEventSaver_Widget::saveEventCSVRequested,
+        this, &DigitalEventSeriesInspector::_handleSaveEventCSVRequested);
+```
+
+**After**:
+
+```cpp
+connect(ui->csv_event_saver_widget, &CSVEventSaver_Widget::saveEventCSVRequested,
+        this, [this](CSVEventSaverOptions options) {
+            // ... command execution (see Step 4)
+        });
+```
+
+The lambda body has access to the `CSVEventSaverOptions` type because the `.cpp` includes
+`CSVEventSaver_Widget.hpp` which transitively includes the CSV header. The inspector header
+remains free of format-specific types.
+
+### Step 4: Implement the Command Execution in the Lambda
+
+The lambda replaces three old methods (`_handleSaveEventCSVRequested`,
+`_initiateSaveProcess`, `_performActualCSVSave`) with a single, linear flow:
+
+```cpp
+[this](CSVEventSaverOptions options) {
+    // 1. Validate output directory
+    auto output_path = dataManager()->getOutputPath();
+    if (output_path.empty()) {
+        QMessageBox::warning(this, "Warning",
+                             "Please set an output directory in the Data Manager settings");
+        return;
+    }
+
+    // 2. Build the full file path
+    auto filename = ui->filename_edit->text().toStdString();
+    auto const filepath = (std::filesystem::path(output_path) / filename).string();
+
+    // 3. Set path fields on the options struct
+    //    (the CSVLoader extracts these from format_options)
+    options.parent_dir = output_path;
+    options.filename = filename;
+
+    // 4. Serialize the format-specific options to rfl::Generic
+    auto const opts_json = rfl::json::write(options);
+    auto format_opts = rfl::json::read<rfl::Generic>(opts_json);
+
+    // 5. Construct SaveDataParams
+    commands::SaveDataParams params{
+            .data_key = _active_key,
+            .format = "csv",
+            .path = filepath,
+    };
+    if (format_opts) {
+        params.format_options = format_opts.value();
+    }
+
+    // 6. Build CommandContext and execute
+    commands::CommandContext ctx;
+    ctx.data_manager = dataManager();
+
+    commands::SaveData cmd(std::move(params));
+    auto result = cmd.execute(ctx);
+
+    // 7. Report result to user
+    if (result.success) {
+        QMessageBox::information(this, "Success", "Events saved successfully to CSV");
+    } else {
+        QMessageBox::critical(this, "Error",
+                              QString("Failed to save: %1").arg(
+                                      QString::fromStdString(result.error_message)));
+    }
+}
+```
+
+#### Key conversion: Format options → `rfl::Generic`
+
+The `SaveData` command accepts format-specific options as `std::optional<rfl::Generic>`.
+To convert a concrete options struct (like `CSVEventSaverOptions`):
+
+1. Serialize the struct to a JSON string with `rfl::json::write(options)`
+2. Parse it back as `rfl::Generic` with `rfl::json::read<rfl::Generic>(json_str)`
+3. Assign to `SaveDataParams::format_options`
+
+This works for any struct that reflect-cpp can serialize (aggregate structs with public
+fields).
+
+### Step 5: Remove Old Save Methods
+
+Delete the following method implementations from the `.cpp` file:
+
+- `_handleSaveEventCSVRequested()`
+- `_initiateSaveProcess()`
+- `_performActualCSVSave()`
+
+These are fully replaced by the lambda in Step 4.
+
+### Step 6: Write Tests
+
+Create a test file that verifies the `SaveData` command works for the data type.
+The test doesn't need Qt — it tests the command layer directly:
+
+```cpp
+TEST_CASE("SaveData saves DigitalEventSeries to CSV",
+          "[commands][SaveData][DigitalEvent]") {
+    // Setup: create a DataManager with test events
+    auto dm = std::make_shared<DataManager>();
+    dm->setData<DigitalEventSeries>("spikes", TimeKey("time"));
+    auto events = dm->getData<DigitalEventSeries>("spikes");
+    events->addEvent(TimeFrameIndex(100));
+    events->addEvent(TimeFrameIndex(200));
+
+    // Execute the command
+    commands::CommandContext ctx;
+    ctx.data_manager = dm;
+
+    commands::SaveData cmd(commands::SaveDataParams{
+            .data_key = "spikes",
+            .format = "csv",
+            .path = "/tmp/test_events.csv",
+    });
+    auto result = cmd.execute(ctx);
+
+    REQUIRE(result.success);
+    REQUIRE(std::filesystem::exists("/tmp/test_events.csv"));
+}
+```
+
+For a round-trip test, load the saved file back and verify the data matches:
+
+```cpp
+TEST_CASE("SaveData round-trips DigitalEventSeries through CSV",
+          "[commands][SaveData][DigitalEvent]") {
+    // ... save as above ...
+
+    // Load back
+    CSVEventLoaderOptions load_opts;
+    load_opts.filepath = filepath;
+    load_opts.has_header = true;
+    auto loaded = load(load_opts);
+
+    REQUIRE(loaded.size() == 1);
+    REQUIRE(loaded[0]->size() == original_event_count);
+}
+```
+
+## Data Flow Diagram
+
+```
+┌──────────────────────┐
+│  CSVEventSaver_Widget│
+│  (UI for CSV options)│
+└──────────┬───────────┘
+           │ signal: saveEventCSVRequested(CSVEventSaverOptions)
+           ▼
+┌──────────────────────────────────────────────┐
+│  DigitalEventSeriesInspector (lambda)         │
+│                                              │
+│  1. Get output path from DataManager         │
+│  2. Build filepath = output_path / filename  │
+│  3. rfl::json::write(options) → JSON string  │
+│  4. rfl::json::read<rfl::Generic>(json)      │
+│  5. Construct SaveDataParams                 │
+│  6. Create SaveData command                  │
+│  7. Execute with CommandContext              │
+└──────────────────────┬───────────────────────┘
+                       │ cmd.execute(ctx)
+                       ▼
+┌──────────────────────────────────────────────┐
+│  SaveData::execute()                         │
+│                                              │
+│  1. Get data type from DataManager           │
+│  2. Get raw data pointer from variant        │
+│  3. Convert format_options → nlohmann::json  │
+│  4. Call LoaderRegistry::trySave()           │
+└──────────────────────┬───────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────┐
+│  LoaderRegistry::trySave()                   │
+│                                              │
+│  Routes to CSVLoader::save() based on        │
+│  format="csv" + IODataType::DigitalEvent     │
+└──────────────────────┬───────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────┐
+│  CSVLoader::saveDigitalEventCSV()            │
+│                                              │
+│  Extracts fields from nlohmann::json config  │
+│  into CSVEventSaverOptions struct, then      │
+│  calls ::save(event_data, save_opts)         │
+└──────────────────────┬───────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────┐
+│  ::save() in Digital_Event_Series_CSV.cpp    │
+│                                              │
+│  Atomic write of event times to CSV file     │
+└──────────────────────────────────────────────┘
+```
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `src/WhiskerToolbox/DataInspector_Widget/DigitalEventSeries/DigitalEventSeriesInspector.hpp` | Removed format-specific include, variant type alias, SaverType enum, direct-save helper declarations, and CSV slot declaration |
+| `src/WhiskerToolbox/DataInspector_Widget/DigitalEventSeries/DigitalEventSeriesInspector.cpp` | Replaced direct CSV save with SaveData command execution via lambda; removed three old methods |
+| `src/DataManager/Commands/SaveDataDigitalEvent.test.cpp` | New test file: 5 test cases covering save, round-trip, format options, factory, and error handling |
+| `tests/DataManager/CMakeLists.txt` | Added new test file to build |
+
+## Checklist for Other Widgets
+
+When applying this pattern to other inspector widgets (AnalogTimeSeries, LineData, etc.):
+
+- [ ] Remove format-specific `#include` from the inspector header
+- [ ] Remove format-specific type aliases (variants, option structs) from header
+- [ ] Remove direct-save method declarations from header
+- [ ] Remove format-specific slot declarations from header
+- [ ] Add `SaveData.hpp`, `CommandContext.hpp`, `<rfl/json.hpp>`, `<filesystem>` includes to `.cpp`
+- [ ] Replace `connect(widget, &signal, this, &slot)` with lambda-based connect
+- [ ] In the lambda: serialize options → `rfl::Generic`, build `SaveDataParams`, execute `SaveData`
+- [ ] Remove old save method implementations from `.cpp`
+- [ ] Write tests for `SaveData` with the specific data type
+- [ ] Run `clang-format` and `clang-tidy` on changed files
+- [ ] Verify build and test pass

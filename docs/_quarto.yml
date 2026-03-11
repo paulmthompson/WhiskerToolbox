@@ -102,6 +102,7 @@ website:
                 - developer/DataManager/Commands/validation.qmd
                 - developer/DataManager/Commands/command_introspection.qmd
                 - developer/DataManager/Commands/gui_verb_audit.qmd
+                - developer/DataManager/Commands/widget_save_refactoring_guide.qmd
                 - developer/DataManager/Commands/data_manager_snapshot.qmd
         - section: "Triage Session"
           contents:
