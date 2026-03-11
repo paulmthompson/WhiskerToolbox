@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <stdexcept>
 
 OwningDigitalEventStorage::OwningDigitalEventStorage(std::vector<TimeFrameIndex> events)
     : _events(std::move(events)) {

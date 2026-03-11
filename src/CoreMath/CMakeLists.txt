@@ -19,18 +19,7 @@ target_include_directories(CoreMath PUBLIC
 
 target_link_libraries(CoreMath PRIVATE NEURALYZER_GEOMETRY armadillo)
 
-# Apply the same compiler flags as the main project
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(CoreMath PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(CoreMath PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(CoreMath PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(CoreMath)
 
 # Set target properties to match the main project
 set_target_properties(CoreMath PROPERTIES

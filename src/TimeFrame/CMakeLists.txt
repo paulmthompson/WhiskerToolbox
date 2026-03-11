@@ -17,18 +17,7 @@ target_include_directories(TimeFrame PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Apply the same compiler flags as the main project
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(TimeFrame PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(TimeFrame PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(TimeFrame PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(TimeFrame)
 
 # Set target properties to match the main project
 set_target_properties(TimeFrame PROPERTIES

@@ -31,18 +31,7 @@ set_target_properties(Scaling_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(Scaling_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(Scaling_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(Scaling_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(Scaling_Widget)
 
 add_library(WhiskerToolbox::Scaling_Widget ALIAS Scaling_Widget)
 enable_whiskertoolbox_shared_pch(Scaling_Widget)

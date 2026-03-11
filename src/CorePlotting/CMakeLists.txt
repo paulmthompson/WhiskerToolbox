@@ -116,20 +116,9 @@ target_link_libraries(CorePlotting PRIVATE TransformsV2)
 
 target_link_libraries(CorePlotting PUBLIC glm::glm)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(CorePlotting PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(CorePlotting PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(CorePlotting PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(CorePlotting)
 
 set_target_properties(CorePlotting PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-enable_whiskertoolbox_pch(CorePlotting)
+enable_whiskertoolbox_shared_pch(CorePlotting)

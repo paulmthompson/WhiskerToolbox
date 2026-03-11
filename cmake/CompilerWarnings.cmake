@@ -99,5 +99,16 @@ if("${MSVC_WARNINGS}" STREQUAL "")
      )
    endif()
 
+function(set_target_compiler_warnings target_name)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(${target_name} PRIVATE ${CLANG_OPTIONS})
+    endif()
 
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(${target_name} PRIVATE ${GCC_WARNINGS})
+    endif()
 
+    if (MSVC)
+        target_compile_options(${target_name} PRIVATE ${MSVC_WARNINGS})
+    endif()
+endfunction()

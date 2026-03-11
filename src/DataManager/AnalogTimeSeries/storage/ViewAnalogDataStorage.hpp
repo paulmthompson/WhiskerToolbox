@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <span>
+#include <stdexcept>
 
 /**
  * @brief View-based analog data storage that references another storage.

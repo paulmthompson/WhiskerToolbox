@@ -72,16 +72,8 @@ else()
     catch_discover_tests(test_StateEstimation)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_StateEstimation PRIVATE ${CLANG_OPTIONS})
-endif()
+set_target_compiler_warnings(test_StateEstimation)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_StateEstimation PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_StateEstimation PRIVATE ${MSVC_WARNINGS})
-endif()
-
-enable_whiskertoolbox_shared_test_pch(test_StateEstimation)
+#enable_whiskertoolbox_shared_test_pch(test_StateEstimation)
+# I get this in clang CI (but not local)
+# error: signed integer overflow handling differs in PCH file vs. current file

@@ -1,6 +1,5 @@
 #include "Line_Data_Binary.hpp"
 
-#include "IO/core/AtomicWrite.hpp"
 #include "Lines/Line_Data.hpp"
 #include "common/Serialization.hpp"
 
@@ -15,24 +14,40 @@
 
 bool save(LineData const & data, BinaryLineSaverOptions const & opts) {
 
-    std::filesystem::path const target_path =
-            std::filesystem::path(opts.parent_dir) / opts.filename;
+    //Check if directory exists
+    if (!std::filesystem::exists(opts.parent_dir)) {
+        std::filesystem::create_directories(opts.parent_dir);
+        std::cout << "Created directory: " << opts.parent_dir << std::endl;
+    }
+
+    std::string file_path = opts.parent_dir + "/" + opts.filename;
 
     try {
+
         kj::Array<capnp::word> message_words = IO::CapnProto::serializeLineData(&data);
         kj::ArrayPtr<char const> message_chars = message_words.asChars();
 
-        return atomicWriteFile(target_path, [&](std::ostream & os) -> bool {
-            os.write(message_chars.begin(),
-                     static_cast<std::streamsize>(message_chars.size()));
-            return !os.fail();
-        });
+        std::ofstream outfile(file_path, std::ios::binary | std::ios::trunc);
+        if (!outfile.is_open()) {
+            std::cerr << "Error: Could not open file for writing: " << file_path << std::endl;
+            return false;
+        }
+
+        outfile.write(message_chars.begin(), message_chars.size());
+
+        if (outfile.fail()) {
+            std::cerr << "Error: Failed to write all data to file: " << file_path << std::endl;
+            outfile.close();
+            return false;
+        }
+        outfile.close();
+        return true;
 
     } catch (kj::Exception const & e) {
-        spdlog::error("Cap'n Proto exception during save: {}", e.getDescription().cStr());
+        std::cerr << "Cap'n Proto Exception during save: " << e.getDescription().cStr() << std::endl;
         return false;
     } catch (std::exception const & e) {
-        spdlog::error("Exception during binary line save: {}", e.what());
+        std::cerr << "Standard Exception during save: " << e.what() << std::endl;
         return false;
     }
 }
