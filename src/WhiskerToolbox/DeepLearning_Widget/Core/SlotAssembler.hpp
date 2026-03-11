@@ -94,6 +94,35 @@ public:
     /// @param total_frames Total number of frames to process
     using ProgressCallback = std::function<void(int current_frame, int total_frames)>;
 
+    /// Run independent (non-recurrent) inference over a range of frames.
+    ///
+    /// For each frame in [start_frame, end_frame]:
+    ///   1. Assemble dynamic + static inputs for that frame
+    ///   2. Call forward()
+    ///   3. Decode outputs into DataManager at that frame
+    ///
+    /// Unlike recurrent inference, each frame is independent — no output is
+    /// carried forward to the next frame's input.
+    ///
+    /// @param dm DataManager for encoding inputs / writing outputs
+    /// @param input_bindings Dynamic input slot bindings
+    /// @param static_inputs Static (memory) input entries
+    /// @param output_bindings Output slot bindings
+    /// @param start_frame First frame to process (inclusive)
+    /// @param end_frame Last frame to process (inclusive)
+    /// @param source_image_size Original image dimensions
+    /// @param progress Optional callback for progress reporting
+    /// @throws std::runtime_error on inference failure
+    void runBatchRange(
+            DataManager & dm,
+            std::vector<SlotBindingData> const & input_bindings,
+            std::vector<StaticInputData> const & static_inputs,
+            std::vector<OutputBindingData> const & output_bindings,
+            int start_frame,
+            int end_frame,
+            ImageSize source_image_size,
+            ProgressCallback const & progress = nullptr);
+
     /// Run sequential recurrent inference over a range of frames.
     ///
     /// For each frame in [start_frame, start_frame + frame_count):

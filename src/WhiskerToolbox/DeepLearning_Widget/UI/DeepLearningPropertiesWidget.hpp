@@ -71,6 +71,11 @@ signals:
     /// @param total Total number of frames
     void recurrentProgressChanged(int current, int total);
 
+    /// Emitted during batch inference to report progress.
+    /// @param current 0-based index of the frame being processed
+    /// @param total Total number of frames to process
+    void batchProgressChanged(int current, int total);
+
 private slots:
     void _onModelComboChanged(int index);
     void _onWeightsBrowseClicked();

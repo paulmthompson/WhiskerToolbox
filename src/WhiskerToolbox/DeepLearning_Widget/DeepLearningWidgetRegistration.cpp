@@ -14,13 +14,13 @@
 namespace DeepLearningWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   const std::shared_ptr<DataManager>& data_manager) {
+                   std::shared_ptr<DataManager> const & data_manager) {
     if (!registry) {
         std::cerr << "DeepLearningWidgetModule::registerTypes: registry is null" << std::endl;
         return;
     }
 
-    auto const & dm = std::move(data_manager);
+    auto const & dm = data_manager;
     auto reg = registry;
 
     registry->registerType({.type_id = QStringLiteral("DeepLearningWidget"),
@@ -91,6 +91,10 @@ void registerTypes(EditorRegistry * registry,
 
                                 // Connect recurrent progress reporting
                                 QObject::connect(props, &DeepLearningPropertiesWidget::recurrentProgressChanged,
+                                                 view, &DeepLearningViewWidget::updateRecurrentProgress);
+
+                                // Connect batch progress reporting
+                                QObject::connect(props, &DeepLearningPropertiesWidget::batchProgressChanged,
                                                  view, &DeepLearningViewWidget::updateRecurrentProgress);
 
                                 // Register the state

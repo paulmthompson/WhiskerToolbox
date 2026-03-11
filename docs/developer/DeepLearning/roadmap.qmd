@@ -172,10 +172,10 @@ model compilation story and multi-mode switching are clean.
 The widget currently supports single-frame inference. Batch processing over multiple frames 
 is partially implemented.
 
-- [ ] **Implement "Run Batch" action** — Loop over `batch_size` consecutive frames, encode 
-  each at its batch index, call `forward()` once, decode each output element back into 
-  the DataManager. The `_onRunBatch()` handler currently shows a "not yet implemented" dialog.
-- [ ] **Progress reporting** — Show a progress bar in the View widget during batch processing
+- [x] **Implement "Run Batch" action** — Loop over frames in a user-specified range 
+  [start_frame, end_frame], encode each, call `forward()`, decode each output back into 
+  the DataManager. The user selects the range via a dialog with start/end frame spinboxes.
+- [x] **Progress reporting** — Show a progress bar in the View widget during batch processing
 - [ ] **TimeFrame integration** — Ensure batch inference correctly resolves time offsets for 
   memory/static inputs relative to each frame being processed
 

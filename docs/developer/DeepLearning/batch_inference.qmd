@@ -1,0 +1,49 @@
+---
+title: "Batch Range Inference"
+---
+
+## Overview
+
+Batch range inference runs a model independently on every frame in a 
+user-specified range `[start_frame, end_frame]`. Unlike recurrent inference 
+(where each frame's output feeds into the next), batch range inference treats 
+each frame as a standalone prediction — no state is carried between frames.
+
+## User Workflow
+
+1. Configure model and slot bindings as for single-frame inference.
+2. Click **▶▶ Run Batch** in the Properties panel.
+3. A dialog prompts for **Start frame** and **End frame**.
+4. The View widget's progress bar shows per-frame progress.
+5. On completion, all predictions are written to the DataManager at their 
+   respective frame indices.
+
+## Architecture
+
+### SlotAssembler::runBatchRange()
+
+The core loop lives in `SlotAssembler::runBatchRange()`. For each frame in the 
+range:
+
+1. `assembleInputs()` — encode dynamic and static inputs for the frame
+2. `model->forward()` — run the model
+3. `decodeOutputs()` — decode output tensors into the DataManager at the frame
+
+A `ProgressCallback` is invoked before each frame so the UI can update.
+
+### Progress Reporting
+
+The `DeepLearningPropertiesWidget` emits `batchProgressChanged(int, int)` from 
+the progress callback. This signal is connected to 
+`DeepLearningViewWidget::updateRecurrentProgress()`, which drives the shared 
+`QProgressBar`. `QCoreApplication::processEvents()` is called after each 
+progress emission to ensure the UI repaints during the synchronous loop.
+
+### Key Files
+
+| File | Role |
+|------|------|
+| `SlotAssembler.hpp / .cpp` | `runBatchRange()` implementation |
+| `DeepLearningPropertiesWidget.cpp` | `_onRunBatch()` handler and dialog |
+| `DeepLearningViewWidget.cpp` | Progress bar update slot |
+| `DeepLearningWidgetRegistration.cpp` | Signal/slot wiring |

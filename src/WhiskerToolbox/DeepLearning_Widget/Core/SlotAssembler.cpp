@@ -808,6 +808,57 @@ void SlotAssembler::runSingleFrame(
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// Instance: batch range inference
+// ════════════════════════════════════════════════════════════════════════════
+
+void SlotAssembler::runBatchRange(
+        DataManager & dm,
+        std::vector<SlotBindingData> const & input_bindings,
+        std::vector<StaticInputData> const & static_inputs,
+        std::vector<OutputBindingData> const & output_bindings,
+        int start_frame,
+        int end_frame,
+        ImageSize source_image_size,
+        ProgressCallback const & progress) {
+
+    if (!isModelReady()) {
+        throw std::runtime_error("SlotAssembler::runBatchRange: "
+                                 "model not loaded or weights missing");
+    }
+    if (end_frame < start_frame) {
+        throw std::runtime_error("SlotAssembler::runBatchRange: "
+                                 "end_frame must be >= start_frame");
+    }
+
+    int const total_frames = end_frame - start_frame + 1;
+
+    for (int i = 0; i < total_frames; ++i) {
+        int const frame = start_frame + i;
+
+        if (progress) {
+            progress(i, total_frames);
+        }
+
+        auto inputs = assembleInputs(
+                dm, *_impl->model,
+                input_bindings, static_inputs,
+                _impl->static_cache,
+                {},// no recurrent bindings
+                frame, /*batch_size=*/1);
+
+        auto outputs = _impl->model->forward(inputs);
+
+        decodeOutputs(
+                dm, outputs, output_bindings,
+                *_impl->model, frame, source_image_size);
+    }
+
+    if (progress) {
+        progress(total_frames, total_frames);
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // Instance: recurrent tensor cache
 // ════════════════════════════════════════════════════════════════════════════
 

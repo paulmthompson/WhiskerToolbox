@@ -10,6 +10,7 @@
 #include "DataManager/Points/Point_Data.hpp"
 
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QGridLayout>
@@ -1482,11 +1483,80 @@ void DeepLearningPropertiesWidget::_onRunBatch() {
         return;
     }
 
-    // TODO: Implement batch inference with progress reporting.
-    QMessageBox::information(
-            this, tr("Batch Inference"),
-            tr("Batch inference is not yet implemented.\n"
-               "Use \"Run Frame\" for single-frame inference."));
+    _syncBindingsFromUi();
+
+    int const current = _state->currentFrame();
+
+    // Ask user for frame range
+    auto * start_spin = new QSpinBox(this);
+    start_spin->setRange(0, 999999);
+    start_spin->setValue(current);
+
+    auto * end_spin = new QSpinBox(this);
+    end_spin->setRange(0, 999999);
+    end_spin->setValue(current + _state->batchSize());
+
+    QMessageBox dialog(this);
+    dialog.setWindowTitle(tr("Batch Inference"));
+    dialog.setText(tr("Run inference independently on each frame in the range."));
+    dialog.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+
+    auto * layout = qobject_cast<QGridLayout *>(dialog.layout());
+    if (layout) {
+        layout->addWidget(new QLabel(tr("Start frame:"), &dialog), 2, 0);
+        layout->addWidget(start_spin, 2, 1);
+        layout->addWidget(new QLabel(tr("End frame:"), &dialog), 3, 0);
+        layout->addWidget(end_spin, 3, 1);
+    }
+
+    if (dialog.exec() != QMessageBox::Ok) return;
+
+    int const start_frame = start_spin->value();
+    int const end_frame = end_spin->value();
+
+    if (end_frame < start_frame) {
+        QMessageBox::warning(this, tr("Invalid Range"),
+                             tr("End frame must be >= start frame."));
+        return;
+    }
+
+    // Determine source image size
+    ImageSize source_size{256, 256};
+    for (auto const & binding: _state->inputBindings()) {
+        auto media = _data_manager->getData<MediaData>(binding.data_key);
+        if (media) {
+            source_size = media->getImageSize();
+            break;
+        }
+    }
+
+    try {
+        _assembler->runBatchRange(
+                *_data_manager,
+                _state->inputBindings(),
+                _state->staticInputs(),
+                _state->outputBindings(),
+                start_frame,
+                end_frame,
+                source_size,
+                [this](int current, int total) {
+                    emit batchProgressChanged(current, total);
+                    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+                });
+
+        int const total = end_frame - start_frame + 1;
+        _weights_status_label->setText(
+                tr("\u2713 Batch inference complete (%1 frames, %2\u2013%3)")
+                        .arg(total)
+                        .arg(start_frame)
+                        .arg(end_frame));
+        _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
+
+    } catch (std::exception const & e) {
+        QMessageBox::critical(
+                this, tr("Inference Error"),
+                tr("Batch inference failed:\n%1").arg(QString::fromUtf8(e.what())));
+    }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -1807,7 +1877,7 @@ void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
 
     // ── Step 3: Determine the most restrictive constraint ──
     // Priority: recurrent bindings → model RecurrentOnly → model Fixed → model Dynamic
-    bool lock_to_one = has_recurrent || model_locked;
+    bool const lock_to_one = has_recurrent || model_locked;
     QString tooltip;
 
     if (has_recurrent) {
