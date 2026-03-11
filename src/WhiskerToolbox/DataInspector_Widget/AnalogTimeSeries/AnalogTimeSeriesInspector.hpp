@@ -15,11 +15,9 @@
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
-#include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 
 #include <memory>
 #include <string>
-#include <variant>
 
 class QComboBox;
 class QLineEdit;
@@ -29,9 +27,6 @@ class CSVAnalogSaver_Widget;
 namespace Ui {
 class AnalogTimeSeriesInspector;
 }
-
-// Define the variant type for saver options
-using AnalogSaverOptionsVariant = std::variant<CSVAnalogSaverOptions>;// Will expand if more types are added
 
 /**
  * @brief Inspector widget for AnalogTimeSeries
@@ -70,17 +65,12 @@ public:
     [[nodiscard]] bool supportsGroupFiltering() const override { return false; }
 
 private:
-    enum SaverType { CSV };// Enum for different saver types
-
     void _connectSignals();
-    void _initiateSaveProcess(SaverType saver_type, AnalogSaverOptionsVariant & options_variant);
-    bool _performActualCSVSave(CSVAnalogSaverOptions & options);
 
     Ui::AnalogTimeSeriesInspector * ui;
 
 private slots:
     void _onExportTypeChanged(int index);
-    void _handleSaveAnalogCSVRequested(CSVAnalogSaverOptions options);
 };
 
 #endif// ANALOG_TIME_SERIES_INSPECTOR_HPP

@@ -3,8 +3,10 @@
 
 #include "DataExport_Widget/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
+#include "DataManager/Commands/CommandContext.hpp"
+#include "DataManager/Commands/SaveData.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 
 #include <QComboBox>
 #include <QLineEdit>
@@ -12,7 +14,7 @@
 #include <QStackedWidget>
 
 #include <filesystem>
-#include <iostream>
+#include <rfl/json.hpp>
 
 AnalogTimeSeriesInspector::AnalogTimeSeriesInspector(
         std::shared_ptr<DataManager> data_manager,
@@ -55,7 +57,50 @@ void AnalogTimeSeriesInspector::_connectSignals() {
             this, &AnalogTimeSeriesInspector::_onExportTypeChanged);
 
     connect(ui->csv_analog_saver_widget, &CSVAnalogSaver_Widget::saveAnalogCSVRequested,
-            this, &AnalogTimeSeriesInspector::_handleSaveAnalogCSVRequested);
+            this, [this](CSVAnalogSaverOptions options) {
+                auto filename = ui->filename_edit->text().toStdString();
+                if (filename.empty()) {
+                    QMessageBox::warning(this, "Filename Missing", "Please enter a filename.");
+                    return;
+                }
+
+                auto output_path = dataManager()->getOutputPath();
+                if (output_path.empty()) {
+                    QMessageBox::warning(this, "Warning",
+                                         "Please set an output directory in the Data Manager settings");
+                    return;
+                }
+
+                auto const filepath = (std::filesystem::path(output_path) / filename).string();
+
+                options.parent_dir = output_path;
+                options.filename = filename;
+
+                auto const opts_json = rfl::json::write(options);
+                auto format_opts = rfl::json::read<rfl::Generic>(opts_json);
+
+                commands::SaveDataParams params{
+                        .data_key = _active_key,
+                        .format = "csv",
+                        .path = filepath,
+                };
+                if (format_opts) {
+                    params.format_options = format_opts.value();
+                }
+
+                commands::CommandContext ctx;
+                ctx.data_manager = dataManager();
+
+                commands::SaveData cmd(std::move(params));
+                auto result = cmd.execute(ctx);
+
+                if (result.success) {
+                    QMessageBox::information(this, "Success", "Analog time series saved successfully to CSV");
+                } else {
+                    QMessageBox::critical(this, "Error",
+                                          QString("Failed to save: %1").arg(QString::fromStdString(result.error_message)));
+                }
+            });
 }
 
 void AnalogTimeSeriesInspector::_onExportTypeChanged(int index) {
@@ -64,62 +109,5 @@ void AnalogTimeSeriesInspector::_onExportTypeChanged(int index) {
         ui->stacked_saver_options->setCurrentWidget(ui->csv_analog_saver_widget);
     } else {
         // Handle other export types if added in the future
-    }
-}
-
-void AnalogTimeSeriesInspector::_handleSaveAnalogCSVRequested(CSVAnalogSaverOptions options) {
-    options.filename = ui->filename_edit->text().toStdString();
-    if (options.filename.empty()) {
-        QMessageBox::warning(this, "Filename Missing", "Please enter a filename.");
-        return;
-    }
-    AnalogSaverOptionsVariant options_variant = options;
-    _initiateSaveProcess(SaverType::CSV, options_variant);
-}
-
-void AnalogTimeSeriesInspector::_initiateSaveProcess(SaverType saver_type, AnalogSaverOptionsVariant & options_variant) {
-    if (_active_key.empty()) {
-        QMessageBox::warning(this, "No Data Selected", "Please select an AnalogTimeSeries item to save.");
-        return;
-    }
-
-    auto analog_data_ptr = dataManager()->getData<AnalogTimeSeries>(_active_key);
-    if (!analog_data_ptr) {
-        QMessageBox::critical(this, "Error", "Could not retrieve AnalogTimeSeries for saving. Key: " + QString::fromStdString(_active_key));
-        return;
-    }
-
-    bool save_successful = false;
-
-    switch (saver_type) {
-        case SaverType::CSV: {
-            CSVAnalogSaverOptions & specific_csv_options = std::get<CSVAnalogSaverOptions>(options_variant);
-            specific_csv_options.parent_dir = dataManager()->getOutputPath();
-            save_successful = _performActualCSVSave(specific_csv_options);
-            break;
-        }
-            // Future saver types can be added here
-    }
-
-    if (!save_successful) {
-        return;
-    }
-    // No media export for analog data as per requirements
-}
-
-bool AnalogTimeSeriesInspector::_performActualCSVSave(CSVAnalogSaverOptions & options) {
-    auto analog_data_ptr = dataManager()->getData<AnalogTimeSeries>(_active_key);
-    if (!analog_data_ptr) {
-        QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve AnalogTimeSeries for saving during actual save. Key: " + QString::fromStdString(_active_key));
-        return false;
-    }
-
-    try {
-        save(analog_data_ptr.get(), options);
-        return true;
-    } catch (std::exception const & e) {
-        QMessageBox::critical(this, "Save Error", "Failed to save analog data: " + QString::fromStdString(e.what()));
-        std::cerr << "Failed to save analog data (CSV): " << e.what() << std::endl;
-        return false;
     }
 }
