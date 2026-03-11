@@ -12,6 +12,7 @@
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
+#include <QGridLayout>
 #include <QGroupBox>
 
 #include "StateManagement/AppFileDialog.hpp"
@@ -64,6 +65,10 @@ DeepLearningPropertiesWidget::~DeepLearningPropertiesWidget() {
         _data_manager->removeObserver(_dm_observer_id);
         _dm_observer_id = -1;
     }
+}
+
+SlotAssembler * DeepLearningPropertiesWidget::assembler() const {
+    return _assembler.get();
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -161,19 +166,27 @@ void DeepLearningPropertiesWidget::_buildUi() {
 
         _run_single_btn = new QPushButton(tr("\u25B6 Run Frame"), this);
         _run_batch_btn = new QPushButton(tr("\u25B6\u25B6 Run Batch"), this);
+        _run_recurrent_btn = new QPushButton(tr("\u21BB Recurrent"), this);
+        _run_recurrent_btn->setToolTip(
+                tr("Run sequential recurrent inference over a range of frames.\n"
+                   "Each frame's output feeds into the next frame's input."));
         _predict_current_frame_btn = new QPushButton(tr("\u25B6 Current"), this);
         _predict_current_frame_btn->setToolTip(tr("Predict at current time position from timeline"));
         _run_single_btn->setEnabled(false);
         _run_batch_btn->setEnabled(false);
+        _run_recurrent_btn->setEnabled(false);
         _predict_current_frame_btn->setEnabled(false);
         bar->addWidget(_run_single_btn);
         bar->addWidget(_predict_current_frame_btn);
         bar->addWidget(_run_batch_btn);
+        bar->addWidget(_run_recurrent_btn);
 
         connect(_run_single_btn, &QPushButton::clicked,
                 this, &DeepLearningPropertiesWidget::_onRunSingleFrame);
         connect(_run_batch_btn, &QPushButton::clicked,
                 this, &DeepLearningPropertiesWidget::_onRunBatch);
+        connect(_run_recurrent_btn, &QPushButton::clicked,
+                this, &DeepLearningPropertiesWidget::_onRunRecurrentSequence);
         connect(_predict_current_frame_btn, &QPushButton::clicked,
                 this, &DeepLearningPropertiesWidget::_onPredictCurrentFrame);
 
@@ -286,6 +299,7 @@ void DeepLearningPropertiesWidget::_loadModelIfReady() {
     bool const ready = _assembler->isModelReady();
     _run_single_btn->setEnabled(ready);
     _run_batch_btn->setEnabled(ready);
+    _run_recurrent_btn->setEnabled(ready);
     _predict_current_frame_btn->setEnabled(ready && _current_time_position.has_value());
 }
 
@@ -371,6 +385,24 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
     for (auto const & slot: inputs) {
         if (slot.is_boolean_mask) {
             _dynamic_layout->addWidget(_buildBooleanMaskGroup(slot));
+        }
+    }
+
+    // ── Recurrent (feedback) inputs ──
+    // Show a recurrent binding panel for each static input slot that could
+    // serve as a recurrent feedback target. The user maps an output slot
+    // to the static input slot so the output at frame t feeds into t+1.
+    bool has_recurrent = false;
+    for (auto const & slot: inputs) {
+        if (slot.is_static && !slot.is_boolean_mask) {
+            if (!has_recurrent) {
+                _dynamic_layout->addWidget(
+                        new QLabel(tr("<b>Recurrent (Feedback) Inputs</b>"),
+                                   _dynamic_container));
+                has_recurrent = true;
+            }
+            _dynamic_layout->addWidget(
+                    _buildRecurrentInputGroup(slot, outputs));
         }
     }
 
@@ -1163,6 +1195,42 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
         }
     }
     _state->setStaticInputs(std::move(static_inputs));
+
+    // ── Recurrent bindings ──
+    std::vector<RecurrentBindingData> recurrent_bindings;
+    for (auto const & slot: _current_info->inputs) {
+        if (!slot.is_static || slot.is_boolean_mask) continue;
+
+        auto * output_combo = _dynamic_container->findChild<QComboBox *>(
+                QString::fromStdString("recurrent_output_" + slot.name));
+        auto * init_combo = _dynamic_container->findChild<QComboBox *>(
+                QString::fromStdString("recurrent_init_" + slot.name));
+
+        if (!output_combo || !init_combo) continue;
+
+        auto const output_name = output_combo->currentData().toString().toStdString();
+        if (output_name.empty()) continue;// "(None)" or empty
+
+        RecurrentBindingData rb;
+        rb.input_slot_name = slot.name;
+        rb.output_slot_name = output_name;
+        rb.init_mode_str = init_combo->currentData().toString().toStdString();
+
+        // If StaticCapture, pick up init_data_key and init_frame from
+        // any existing static input for this slot
+        if (rb.initMode() == RecurrentInitMode::StaticCapture) {
+            for (auto const & si: _state->staticInputs()) {
+                if (si.slot_name == slot.name) {
+                    rb.init_data_key = si.data_key;
+                    rb.init_frame = si.captured_frame;
+                    break;
+                }
+            }
+        }
+
+        recurrent_bindings.push_back(std::move(rb));
+    }
+    _state->setRecurrentBindings(std::move(recurrent_bindings));
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -1398,6 +1466,229 @@ void DeepLearningPropertiesWidget::_updateCaptureButtonState(
         status->setText(tr("Not captured"));
         status->setStyleSheet(
                 QStringLiteral("color: gray; font-size: 10px;"));
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Recurrent Input Panel
+// ────────────────────────────────────────────────────────────────────────────
+
+QGroupBox * DeepLearningPropertiesWidget::_buildRecurrentInputGroup(
+        dl::TensorSlotDescriptor const & input_slot,
+        std::vector<dl::TensorSlotDescriptor> const & output_slots) {
+
+    auto * group = new QGroupBox(
+            QString::fromStdString(input_slot.name) + tr(" (recurrent)"),
+            _dynamic_container);
+    auto * form = new QFormLayout(group);
+
+    auto * info = new QLabel(
+            tr("Map a model output to this input slot.\n"
+               "The output at frame t becomes the input at frame t+1."),
+            group);
+    info->setWordWrap(true);
+    info->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
+    form->addRow(info);
+
+    // Output slot selector
+    auto * output_combo = new QComboBox(group);
+    output_combo->setObjectName(
+            QString::fromStdString("recurrent_output_" + input_slot.name));
+    output_combo->addItem(tr("(None)"), QString{});
+    for (auto const & out: output_slots) {
+        output_combo->addItem(
+                QString::fromStdString(out.name),
+                QString::fromStdString(out.name));
+    }
+
+    // Restore from state
+    for (auto const & rb: _state->recurrentBindings()) {
+        if (rb.input_slot_name == input_slot.name) {
+            int const idx = output_combo->findData(
+                    QString::fromStdString(rb.output_slot_name));
+            if (idx >= 0) output_combo->setCurrentIndex(idx);
+            break;
+        }
+    }
+    form->addRow(tr("Output slot:"), output_combo);
+
+    // Initialization mode
+    auto * init_combo = new QComboBox(group);
+    init_combo->setObjectName(
+            QString::fromStdString("recurrent_init_" + input_slot.name));
+    init_combo->addItem(tr("Zeros"), QStringLiteral("Zeros"));
+    init_combo->addItem(tr("Static Capture"), QStringLiteral("StaticCapture"));
+    init_combo->addItem(tr("First Output"), QStringLiteral("FirstOutput"));
+    init_combo->setToolTip(
+            tr("How to initialize this input at t=0:\n"
+               "• Zeros: all-zeros tensor\n"
+               "• Static Capture: use a previously captured tensor\n"
+               "• First Output: run model once with zeros, use output as init"));
+
+    // Restore from state
+    for (auto const & rb: _state->recurrentBindings()) {
+        if (rb.input_slot_name == input_slot.name) {
+            int const idx = init_combo->findData(
+                    QString::fromStdString(rb.init_mode_str));
+            if (idx >= 0) init_combo->setCurrentIndex(idx);
+            break;
+        }
+    }
+    form->addRow(tr("Init mode:"), init_combo);
+
+    // Status label
+    auto * status = new QLabel(group);
+    status->setObjectName(
+            QString::fromStdString("recurrent_status_" + input_slot.name));
+    status->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
+
+    auto const slot_name = input_slot.name;
+    auto updateStatus = [this, output_combo, status, slot_name] {
+        auto const out_name = output_combo->currentData().toString().toStdString();
+        if (out_name.empty()) {
+            status->setText(tr("No feedback configured"));
+        } else {
+            status->setText(
+                    tr("Feedback: %1 \u2192 %2")
+                            .arg(QString::fromStdString(out_name))
+                            .arg(QString::fromStdString(slot_name)));
+        }
+        _updateBatchSizeConstraint();
+    };
+    updateStatus();
+    form->addRow(status);
+
+    connect(output_combo, &QComboBox::currentIndexChanged, this,
+            [updateStatus](int) { updateStatus(); });
+    connect(init_combo, &QComboBox::currentIndexChanged, this,
+            [updateStatus](int) { updateStatus(); });
+
+    return group;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Batch Size Constraint
+// ────────────────────────────────────────────────────────────────────────────
+
+void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
+    if (!_dynamic_container || !_batch_size_spin || !_current_info) return;
+
+    // Check if any recurrent output combo has a non-empty selection
+    bool has_recurrent = false;
+    for (auto const & slot: _current_info->inputs) {
+        if (!slot.is_static || slot.is_boolean_mask) continue;
+        auto * output_combo = _dynamic_container->findChild<QComboBox *>(
+                QString::fromStdString("recurrent_output_" + slot.name));
+        if (output_combo) {
+            auto const out_name = output_combo->currentData().toString().toStdString();
+            if (!out_name.empty()) {
+                has_recurrent = true;
+                break;
+            }
+        }
+    }
+
+    if (has_recurrent) {
+        _batch_size_spin->setValue(1);
+        _batch_size_spin->setEnabled(false);
+        _batch_size_spin->setToolTip(
+                tr("Batch size is locked to 1 when recurrent bindings are active.\n"
+                   "Sequential frame-by-frame processing requires batch=1."));
+    } else {
+        _batch_size_spin->setEnabled(true);
+        _batch_size_spin->setToolTip(QString{});
+        if (_current_info->max_batch_size > 0) {
+            _batch_size_spin->setMaximum(_current_info->max_batch_size);
+        } else {
+            _batch_size_spin->setMaximum(9999);
+        }
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Run Recurrent Sequence
+// ────────────────────────────────────────────────────────────────────────────
+
+void DeepLearningPropertiesWidget::_onRunRecurrentSequence() {
+    if (!_assembler->isModelReady()) {
+        QMessageBox::warning(this, tr("Not Ready"),
+                             tr("Model weights not loaded."));
+        return;
+    }
+
+    _syncBindingsFromUi();
+
+    auto const & recurrent = _state->recurrentBindings();
+    if (recurrent.empty()) {
+        QMessageBox::warning(this, tr("No Recurrent Bindings"),
+                             tr("Configure at least one recurrent feedback binding\n"
+                                "by selecting an output slot in the Recurrent Inputs section."));
+        return;
+    }
+
+    int const start_frame = _state->currentFrame();
+    int const frame_count = _state->batchSize() > 1 ? _state->batchSize() : _batch_size_spin->maximum();
+
+    // Ask user for frame count
+    auto * frame_count_spin = new QSpinBox(this);
+    frame_count_spin->setRange(1, 999999);
+    frame_count_spin->setValue(std::min(100, frame_count));
+
+    QMessageBox dialog(this);
+    dialog.setWindowTitle(tr("Recurrent Inference"));
+    dialog.setText(tr("Run recurrent inference starting at frame %1.\n"
+                      "How many frames to process?")
+                           .arg(start_frame));
+    dialog.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+
+    auto * layout = qobject_cast<QGridLayout *>(dialog.layout());
+    if (layout) {
+        layout->addWidget(new QLabel(tr("Frame count:"), &dialog), 2, 0);
+        layout->addWidget(frame_count_spin, 2, 1);
+    }
+
+    if (dialog.exec() != QMessageBox::Ok) return;
+
+    int const count = frame_count_spin->value();
+
+    // Determine source image size
+    ImageSize source_size{256, 256};
+    for (auto const & binding: _state->inputBindings()) {
+        auto media = _data_manager->getData<MediaData>(binding.data_key);
+        if (media) {
+            source_size = media->getImageSize();
+            break;
+        }
+    }
+
+    try {
+        // Clear previous recurrent state
+        _assembler->clearRecurrentCache();
+
+        _assembler->runRecurrentSequence(
+                *_data_manager,
+                _state->inputBindings(),
+                _state->staticInputs(),
+                _state->outputBindings(),
+                recurrent,
+                start_frame,
+                count,
+                source_size,
+                [this](int current, int total) {
+                    emit recurrentProgressChanged(current, total);
+                });
+
+        _weights_status_label->setText(
+                tr("\u2713 Recurrent inference complete (%1 frames from %2)")
+                        .arg(count)
+                        .arg(start_frame));
+        _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
+
+    } catch (std::exception const & e) {
+        QMessageBox::critical(
+                this, tr("Inference Error"),
+                tr("Recurrent inference failed:\n%1")
+                        .arg(QString::fromUtf8(e.what())));
     }
 }
 

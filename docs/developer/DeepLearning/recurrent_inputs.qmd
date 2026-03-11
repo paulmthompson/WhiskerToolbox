@@ -1,0 +1,109 @@
+---
+title: "Recurrent (Feedback) Inputs"
+---
+
+## Overview
+
+Recurrent inputs enable sequential frame-by-frame inference where the model's 
+output at frame *t* feeds back into an input slot at frame *t+1*. This is 
+essential for architectures like NeuroSAM that track objects across video frames 
+by conditioning each prediction on the previous one.
+
+## Architecture
+
+### RecurrentBindingData
+
+The `RecurrentBindingData` struct (in `DeepLearningBindingData.hpp`) maps a model 
+output slot to an input slot:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `input_slot_name` | `string` | Model input slot to feed the tensor into |
+| `output_slot_name` | `string` | Model output slot to read the tensor from |
+| `init_mode_str` | `string` | How to initialize at t=0: `"Zeros"`, `"StaticCapture"`, or `"FirstOutput"` |
+| `init_data_key` | `string` | DataManager key for `StaticCapture` init mode |
+| `init_frame` | `int` | Frame number for `StaticCapture` init mode |
+
+### Initialization Modes
+
+At t=0, the recurrent input slot needs an initial tensor since no previous 
+output exists. Three strategies are supported:
+
+1. **Zeros** — All-zeros tensor matching the input slot shape. Simple default.
+2. **StaticCapture** — Use a previously captured tensor (e.g., a ground-truth 
+   mask at a reference frame). Falls back to zeros if no capture exists.
+3. **FirstOutput** — Run the model once with zeros, use the raw output tensor 
+   as the initial state, then start the real sequence from frame 1. The t=0 
+   output is *not* decoded into DataManager.
+
+### Sequential Inference Loop
+
+`SlotAssembler::runRecurrentSequence()` implements the frame loop:
+
+```
+for each frame in [start_frame, start_frame + frame_count):
+    1. Assemble dynamic + static inputs (batch_size = 1)
+    2. Inject recurrent tensors from cache into input map
+    3. Call model.forward()
+    4. Decode outputs into DataManager
+    5. Cache output tensors for next frame's recurrent inputs
+```
+
+Batch size is forced to 1 during recurrent inference because each frame 
+depends on the previous frame's output — parallel batching is impossible.
+
+### Recurrent Cache
+
+The recurrent tensor cache lives in `SlotAssembler::Impl::recurrent_cache` 
+alongside the existing static tensor cache. Keys use the format 
+`"recurrent:input_slot_name"` (via `recurrentCacheKey()`).
+
+The cache is cleared:
+- When the model is reset (`resetModel()`)
+- At the start of each `runRecurrentSequence()` call
+- Explicitly via `clearRecurrentCache()`
+
+## UI Integration
+
+### Properties Widget
+
+Each static (non-boolean-mask) input slot gets a "Recurrent" panel with:
+
+- **Output slot combo** — Select which output slot feeds into this input
+- **Init mode combo** — Select initialization strategy (Zeros / Static Capture / First Output)
+- **Status label** — Shows the configured feedback mapping
+
+When any recurrent binding is active:
+- Batch size spinbox is locked to 1 and disabled
+- An explanatory tooltip explains why
+
+### View Widget
+
+The progress bar (normally hidden) shows frame-by-frame progress during 
+recurrent inference: "Frame N / M".
+
+### Run Action
+
+The "↻ Recurrent" button in the bottom bar triggers 
+`_onRunRecurrentSequence()`, which:
+
+1. Prompts the user for how many frames to process
+2. Clears the recurrent cache
+3. Calls `runRecurrentSequence()` with progress reporting
+4. Updates the status label on completion
+
+## State Persistence
+
+`RecurrentBindingData` entries are stored in `DeepLearningStateData::recurrent_bindings` 
+and serialized via reflect-cpp. They are cleared when the model changes 
+(model-specific bindings).
+
+## Batch Size Constraints
+
+Recurrent bindings force `batch_size = 1`. This is enforced both:
+- **In the UI**: spinbox disabled with tooltip explanation
+- **In the engine**: `runRecurrentSequence()` always passes `batch_size=1` 
+  to `assembleInputs()`
+
+This constraint exists because the output at frame *t* must be computed 
+before it can feed into frame *t+1* — the frames are inherently sequential.

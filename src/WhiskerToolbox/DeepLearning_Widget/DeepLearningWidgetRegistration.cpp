@@ -14,13 +14,13 @@
 namespace DeepLearningWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager) {
+                   const std::shared_ptr<DataManager>& data_manager) {
     if (!registry) {
         std::cerr << "DeepLearningWidgetModule::registerTypes: registry is null" << std::endl;
         return;
     }
 
-    const auto& dm = std::move(data_manager);
+    auto const & dm = std::move(data_manager);
     auto reg = registry;
 
     registry->registerType({.type_id = QStringLiteral("DeepLearningWidget"),
@@ -40,7 +40,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<DeepLearningState>(); },
 
                             // View factory - creates DeepLearningViewWidget (main visualization)
-                            .create_view = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                            .create_view = [dm](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto dl_state = std::dynamic_pointer_cast<DeepLearningState>(state);
                                 if (!dl_state) {
                                     std::cerr << "DeepLearningWidgetModule: Failed to cast state to DeepLearningState" << std::endl;
@@ -52,7 +52,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Properties factory - creates DeepLearningPropertiesWidget
-                            .create_properties = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                            .create_properties = [dm](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto dl_state = std::dynamic_pointer_cast<DeepLearningState>(state);
                                 if (!dl_state) {
                                     std::cerr << "DeepLearningWidgetModule: Failed to cast state to DeepLearningState (properties)" << std::endl;
@@ -88,6 +88,10 @@ void registerTypes(EditorRegistry * registry,
                                 // Connect static cache changes to view widget preview
                                 QObject::connect(props, &DeepLearningPropertiesWidget::staticCacheChanged,
                                                  view, &DeepLearningViewWidget::refreshCachePreview);
+
+                                // Connect recurrent progress reporting
+                                QObject::connect(props, &DeepLearningPropertiesWidget::recurrentProgressChanged,
+                                                 view, &DeepLearningViewWidget::updateRecurrentProgress);
 
                                 // Register the state
                                 reg->registerState(state);

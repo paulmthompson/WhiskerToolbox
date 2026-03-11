@@ -56,7 +56,7 @@ namespace DeepLearningWidgetModule {
  * @param data_manager Shared DataManager for widget construction.
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager);
+                   const std::shared_ptr<DataManager>& data_manager);
 
 }// namespace DeepLearningWidgetModule
 

@@ -26,7 +26,7 @@ bool DeepLearningState::fromJson(std::string const & json) {
         std::cerr << "DeepLearningState::fromJson: parse error\n";
         return false;
     }
-    _data = std::move(result.value());
+    _data = result.value();
     if (!_data.instance_id.empty()) {
         setInstanceId(QString::fromStdString(_data.instance_id));
     }
@@ -38,6 +38,7 @@ bool DeepLearningState::fromJson(std::string const & json) {
     emit inputBindingsChanged();
     emit outputBindingsChanged();
     emit staticInputsChanged();
+    emit recurrentBindingsChanged();
     return true;
 }
 
@@ -54,6 +55,7 @@ void DeepLearningState::setSelectedModelId(std::string const & id) {
         _data.input_bindings.clear();
         _data.output_bindings.clear();
         _data.static_inputs.clear();
+        _data.recurrent_bindings.clear();
         markDirty();
         emit modelChanged();
     }
@@ -123,4 +125,18 @@ void DeepLearningState::setStaticInputs(std::vector<StaticInputData> inputs) {
     _data.static_inputs = std::move(inputs);
     markDirty();
     emit staticInputsChanged();
+}
+
+std::vector<RecurrentBindingData> const & DeepLearningState::recurrentBindings() const {
+    return _data.recurrent_bindings;
+}
+
+void DeepLearningState::setRecurrentBindings(std::vector<RecurrentBindingData> bindings) {
+    _data.recurrent_bindings = std::move(bindings);
+    markDirty();
+    emit recurrentBindingsChanged();
+}
+
+bool DeepLearningState::hasRecurrentBindings() const {
+    return !_data.recurrent_bindings.empty();
 }

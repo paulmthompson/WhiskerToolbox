@@ -32,6 +32,7 @@ struct DeepLearningStateData {
     std::vector<SlotBindingData> input_bindings;
     std::vector<OutputBindingData> output_bindings;
     std::vector<StaticInputData> static_inputs;
+    std::vector<RecurrentBindingData> recurrent_bindings;
     std::string instance_id;
     std::string display_name = "Deep Learning";
 };
@@ -82,6 +83,13 @@ public:
     [[nodiscard]] std::vector<StaticInputData> const & staticInputs() const;
     void setStaticInputs(std::vector<StaticInputData> inputs);
 
+    // ── Recurrent Bindings ──
+    [[nodiscard]] std::vector<RecurrentBindingData> const & recurrentBindings() const;
+    void setRecurrentBindings(std::vector<RecurrentBindingData> bindings);
+
+    /// Whether any recurrent bindings are active (forces batch_size=1).
+    [[nodiscard]] bool hasRecurrentBindings() const;
+
 signals:
     void modelChanged();
     void weightsPathChanged();
@@ -90,9 +98,10 @@ signals:
     void inputBindingsChanged();
     void outputBindingsChanged();
     void staticInputsChanged();
+    void recurrentBindingsChanged();
 
 private:
     DeepLearningStateData _data;
 };
 
-#endif // DEEP_LEARNING_STATE_HPP
+#endif// DEEP_LEARNING_STATE_HPP

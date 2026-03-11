@@ -94,25 +94,25 @@ images along a sequence dimension).
 Map a model output slot back to an input slot for sequential frame-by-frame processing. 
 The prediction at frame t becomes an input at frame t+1.
 
-- [ ] **`RecurrentBindingData` struct** — New binding type with fields: `input_slot_name`, 
+- [x] **`RecurrentBindingData` struct** — New binding type with fields: `input_slot_name`, 
   `output_slot_name`, `init_mode` (`"zeros"` | `"static_capture"` | `"first_output"`), 
   optional `init_data_key` and `init_frame` for the `static_capture` init mode
-- [ ] **Sequential inference loop** — When recurrent bindings exist, `SlotAssembler` runs 
+- [x] **Sequential inference loop** — When recurrent bindings exist, `SlotAssembler` runs 
   a sequential loop: for each frame, assemble inputs (injecting the previous output 
   tensor into the recurrent input slot), call `forward()`, decode, carry the output 
   tensor forward
-- [ ] **t=0 initialization** — Implement the three init strategies:
+- [x] **t=0 initialization** — Implement the three init strategies:
     - `zeros`: start with an all-zeros tensor matching the input slot shape
     - `static_capture`: use a user-provided captured tensor (e.g., ground-truth mask at 
       a reference frame)
     - `first_output`: run the model once with zeros, discard the decoded result, use the 
       raw output tensor as the initial state for the real sequence
-- [ ] **Auto-constrain batch_size = 1** — When any `RecurrentBindingData` is present, 
+- [x] **Auto-constrain batch_size = 1** — When any `RecurrentBindingData` is present, 
   force `batch_size = 1` in the widget and disable the batch size spinbox. Display 
   an explanatory tooltip
-- [ ] **UI: recurrent binding panel** — Combo boxes to map an output slot to an input 
+- [x] **UI: recurrent binding panel** — Combo boxes to map an output slot to an input 
   slot, plus init mode selector and optional capture controls for `static_capture`
-- [ ] **Progress reporting** — Show per-frame progress bar during sequential recurrent 
+- [x] **Progress reporting** — Show per-frame progress bar during sequential recurrent 
   inference (frame N of M)
 
 #### Phase 5: Hybrid Sequence Inputs (Static + Recurrent)

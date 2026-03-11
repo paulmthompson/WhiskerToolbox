@@ -95,4 +95,70 @@ struct StaticInputData {
     }
 };
 
+// ════════════════════════════════════════════════════════════════════════════
+// Recurrent (Feedback) Inputs — Phase 4
+// ════════════════════════════════════════════════════════════════════════════
+
+/// Initialization mode for a recurrent (feedback) input at t=0.
+///
+/// - Zeros: start with an all-zeros tensor matching the input slot shape.
+/// - StaticCapture: use a user-provided captured tensor (e.g., ground-truth
+///   mask at a reference frame).
+/// - FirstOutput: run the model once with zeros, discard the decoded result,
+///   use the raw output tensor as the initial state for the real sequence.
+enum class RecurrentInitMode {
+    Zeros,        ///< Initialize with all-zeros tensor
+    StaticCapture,///< Use a user-captured tensor from a specific frame
+    FirstOutput   ///< Run once with zeros, use raw output as initial state
+};
+
+/// Convert RecurrentInitMode to a string for serialization.
+[[nodiscard]] inline std::string recurrentInitModeToString(RecurrentInitMode mode) {
+    switch (mode) {
+        case RecurrentInitMode::StaticCapture:
+            return "StaticCapture";
+        case RecurrentInitMode::FirstOutput:
+            return "FirstOutput";
+        default:
+            return "Zeros";
+    }
+}
+
+/// Convert a string to RecurrentInitMode (defaults to Zeros on unknown input).
+[[nodiscard]] inline RecurrentInitMode recurrentInitModeFromString(std::string const & s) {
+    if (s == "StaticCapture") return RecurrentInitMode::StaticCapture;
+    if (s == "FirstOutput") return RecurrentInitMode::FirstOutput;
+    return RecurrentInitMode::Zeros;
+}
+
+/// Build a cache key for a recurrent binding's carried tensor.
+///
+/// Format: "recurrent:input_slot_name"
+[[nodiscard]] inline std::string recurrentCacheKey(
+        std::string const & input_slot_name) {
+    return "recurrent:" + input_slot_name;
+}
+
+/// Serializable binding that maps a model output slot back to an input slot
+/// for sequential frame-by-frame processing.
+///
+/// The prediction at frame t becomes an input at frame t+1.
+struct RecurrentBindingData {
+    std::string input_slot_name;        ///< Model input slot to feed into
+    std::string output_slot_name;       ///< Model output slot to read from
+    std::string init_mode_str = "Zeros";///< "Zeros", "StaticCapture", or "FirstOutput"
+    std::string init_data_key;          ///< DataManager key for StaticCapture init mode
+    int init_frame = -1;                ///< Frame to capture for StaticCapture init mode
+
+    /// Get the init mode as an enum.
+    [[nodiscard]] RecurrentInitMode initMode() const {
+        return recurrentInitModeFromString(init_mode_str);
+    }
+
+    /// Set the init mode from an enum.
+    void setInitMode(RecurrentInitMode mode) {
+        init_mode_str = recurrentInitModeToString(mode);
+    }
+};
+
 #endif// DEEP_LEARNING_BINDING_DATA_HPP

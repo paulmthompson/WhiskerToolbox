@@ -152,6 +152,84 @@ TEST_CASE("staticCacheKey - different slots produce different keys",
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// RecurrentInitMode
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("RecurrentInitMode - recurrentInitModeToString round trips",
+          "[binding_data][recurrent]") {
+    CHECK(recurrentInitModeToString(RecurrentInitMode::Zeros) == "Zeros");
+    CHECK(recurrentInitModeToString(RecurrentInitMode::StaticCapture) == "StaticCapture");
+    CHECK(recurrentInitModeToString(RecurrentInitMode::FirstOutput) == "FirstOutput");
+}
+
+TEST_CASE("RecurrentInitMode - recurrentInitModeFromString round trips",
+          "[binding_data][recurrent]") {
+    CHECK(recurrentInitModeFromString("Zeros") == RecurrentInitMode::Zeros);
+    CHECK(recurrentInitModeFromString("StaticCapture") == RecurrentInitMode::StaticCapture);
+    CHECK(recurrentInitModeFromString("FirstOutput") == RecurrentInitMode::FirstOutput);
+}
+
+TEST_CASE("RecurrentInitMode - recurrentInitModeFromString defaults to Zeros on unknown",
+          "[binding_data][recurrent]") {
+    CHECK(recurrentInitModeFromString("") == RecurrentInitMode::Zeros);
+    CHECK(recurrentInitModeFromString("unknown") == RecurrentInitMode::Zeros);
+    CHECK(recurrentInitModeFromString("zeros") == RecurrentInitMode::Zeros);// case-sensitive
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// recurrentCacheKey
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("recurrentCacheKey - generates correct format",
+          "[binding_data][recurrent]") {
+    CHECK(recurrentCacheKey("memory_output") == "recurrent:memory_output");
+    CHECK(recurrentCacheKey("encoder_image") == "recurrent:encoder_image");
+}
+
+TEST_CASE("recurrentCacheKey - different slots produce different keys",
+          "[binding_data][recurrent]") {
+    CHECK(recurrentCacheKey("a") != recurrentCacheKey("b"));
+}
+
+TEST_CASE("recurrentCacheKey - does not collide with staticCacheKey",
+          "[binding_data][recurrent]") {
+    // Static uses "slot:index", recurrent uses "recurrent:slot"
+    CHECK(recurrentCacheKey("slot") != staticCacheKey("slot", 0));
+    CHECK(recurrentCacheKey("slot") != staticCacheKey("recurrent", 0));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// RecurrentBindingData defaults
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("RecurrentBindingData - defaults",
+          "[binding_data][recurrent]") {
+    RecurrentBindingData const rb;
+    CHECK(rb.input_slot_name.empty());
+    CHECK(rb.output_slot_name.empty());
+    CHECK(rb.init_mode_str == "Zeros");
+    CHECK(rb.init_data_key.empty());
+    CHECK(rb.init_frame == -1);
+    CHECK(rb.initMode() == RecurrentInitMode::Zeros);
+}
+
+TEST_CASE("RecurrentBindingData - setInitMode updates string",
+          "[binding_data][recurrent]") {
+    RecurrentBindingData rb;
+    rb.setInitMode(RecurrentInitMode::StaticCapture);
+    CHECK(rb.init_mode_str == "StaticCapture");
+    CHECK(rb.initMode() == RecurrentInitMode::StaticCapture);
+
+    rb.setInitMode(RecurrentInitMode::FirstOutput);
+    CHECK(rb.init_mode_str == "FirstOutput");
+    CHECK(rb.initMode() == RecurrentInitMode::FirstOutput);
+
+    rb.setInitMode(RecurrentInitMode::Zeros);
+    CHECK(rb.init_mode_str == "Zeros");
+    CHECK(rb.initMode() == RecurrentInitMode::Zeros);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // StaticInputData for sequence entries
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -179,7 +257,7 @@ TEST_CASE("staticCacheKey - sequence entries produce unique keys per position",
           "[binding_data][sequence]") {
     std::vector<std::string> keys;
     keys.reserve(4);
-for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 4; ++i) {
         keys.push_back(staticCacheKey("memory_images", i));
     }
 

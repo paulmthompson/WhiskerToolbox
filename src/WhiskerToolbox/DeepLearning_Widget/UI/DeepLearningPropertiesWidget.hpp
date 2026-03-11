@@ -14,8 +14,10 @@
  * so this header and translation unit never include <torch/torch.h>.
  */
 
-#include "DeepLearning_Widget/Core/SlotAssembler.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "Core/SlotAssembler.hpp"// SlotAssembler, ModelDisplayInfo
+
+#include "TimeFrame/TimeFrame.hpp"           // TimePosition
+#include "models_v2/TensorSlotDescriptor.hpp"// TensorSlotDescriptor, ModelDisplayInfo
 
 #include <QWidget>
 
@@ -24,7 +26,6 @@
 #include <string>
 #include <vector>
 
-// Clean forward declarations — no libtorch dependency.
 class QComboBox;
 class QDoubleSpinBox;
 class QGroupBox;
@@ -49,7 +50,7 @@ public:
     ~DeepLearningPropertiesWidget() override;
 
     /// Non-owning access to the SlotAssembler for cache preview queries.
-    [[nodiscard]] SlotAssembler * assembler() const { return _assembler.get(); }
+    [[nodiscard]] SlotAssembler * assembler() const;
 
 public slots:
     /**
@@ -65,12 +66,18 @@ signals:
     /// Emitted when the static tensor cache changes (capture/clear).
     void staticCacheChanged();
 
+    /// Emitted during recurrent inference to report progress.
+    /// @param current 0-based frame being processed
+    /// @param total Total number of frames
+    void recurrentProgressChanged(int current, int total);
+
 private slots:
     void _onModelComboChanged(int index);
     void _onWeightsBrowseClicked();
     void _onWeightsPathEdited();
     void _onRunSingleFrame();
     void _onRunBatch();
+    void _onRunRecurrentSequence();
     void _onPredictCurrentFrame();
     void _onCaptureStaticInput(std::string const & slot_name);
     void _onCaptureSequenceEntry(
@@ -91,6 +98,9 @@ private:
     QGroupBox * _buildStaticInputGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildBooleanMaskGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildOutputGroup(dl::TensorSlotDescriptor const & slot);
+    QGroupBox * _buildRecurrentInputGroup(
+            dl::TensorSlotDescriptor const & input_slot,
+            std::vector<dl::TensorSlotDescriptor> const & output_slots);
 
     /// Add one sequence entry row (index, source, mode, capture button)
     /// inside a sequence slot's entry container.
@@ -108,6 +118,7 @@ private:
     void _updateWeightsStatus();
     void _loadModelIfReady();
     void _updateCaptureButtonState(std::string const & slot_name);
+    void _updateBatchSizeConstraint();
 
     std::shared_ptr<DeepLearningState> _state;
     std::shared_ptr<DataManager> _data_manager;
@@ -122,6 +133,7 @@ private:
     QSpinBox * _batch_size_spin = nullptr;
     QPushButton * _run_single_btn = nullptr;
     QPushButton * _run_batch_btn = nullptr;
+    QPushButton * _run_recurrent_btn = nullptr;
     QPushButton * _predict_current_frame_btn = nullptr;
 
     // Dynamic content container

@@ -91,6 +91,9 @@ void DeepLearningViewWidget::_clearPreviewArea() {
 void DeepLearningViewWidget::refreshCachePreview() {
     _clearPreviewArea();
 
+    // Also hide progress bar when cache is refreshed (inference done)
+    _progress_bar->setVisible(false);
+
     if (!_assembler) {
         auto * label = new QLabel(tr("No assembler connected"), _preview_area);
         label->setAlignment(Qt::AlignCenter);
@@ -199,4 +202,21 @@ void DeepLearningViewWidget::_onModelChanged() {
         summary += QString::fromStdString(info->outputs[i].name);
     }
     _model_info_label->setText(summary);
+}
+
+void DeepLearningViewWidget::updateRecurrentProgress(int current, int total) {
+    if (total <= 0) {
+        _progress_bar->setVisible(false);
+        return;
+    }
+
+    _progress_bar->setVisible(true);
+    _progress_bar->setRange(0, total);
+    _progress_bar->setValue(current);
+    _progress_bar->setFormat(
+            tr("Frame %1 / %2").arg(current + 1).arg(total));
+
+    if (current >= total) {
+        _progress_bar->setVisible(false);
+    }
 }

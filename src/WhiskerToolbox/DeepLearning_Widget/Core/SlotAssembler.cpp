@@ -49,6 +49,12 @@ struct SlotAssembler::Impl {
     /// Cached tensors for Absolute-mode static inputs.
     /// Key: "slot_name:memory_index" (from staticCacheKey()).
     std::unordered_map<std::string, torch::Tensor> static_cache;
+
+    /// Cached tensors for recurrent (feedback) inputs.
+    /// Key: "recurrent:input_slot_name" (from recurrentCacheKey()).
+    /// Stores the output tensor from the previous frame that will be
+    /// injected into the input slot on the next frame.
+    std::unordered_map<std::string, torch::Tensor> recurrent_cache;
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -624,6 +630,7 @@ void SlotAssembler::resetModel() {
     _impl->model.reset();
     _impl->model_id.clear();
     _impl->static_cache.clear();
+    _impl->recurrent_cache.clear();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -742,6 +749,194 @@ void SlotAssembler::runSingleFrame(
     decodeOutputs(
             dm, outputs, output_bindings,
             *_impl->model, current_frame, source_image_size);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Instance: recurrent tensor cache
+// ════════════════════════════════════════════════════════════════════════════
+
+void SlotAssembler::clearRecurrentCache() {
+    _impl->recurrent_cache.clear();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Instance: recurrent sequence inference
+// ════════════════════════════════════════════════════════════════════════════
+
+void SlotAssembler::runRecurrentSequence(
+        DataManager & dm,
+        std::vector<SlotBindingData> const & input_bindings,
+        std::vector<StaticInputData> const & static_inputs,
+        std::vector<OutputBindingData> const & output_bindings,
+        std::vector<RecurrentBindingData> const & recurrent_bindings,
+        int start_frame,
+        int frame_count,
+        ImageSize source_image_size,
+        ProgressCallback const & progress) {
+
+    if (!isModelReady()) {
+        throw std::runtime_error("SlotAssembler::runRecurrentSequence: "
+                                 "model not loaded or weights missing");
+    }
+    if (recurrent_bindings.empty()) {
+        throw std::runtime_error("SlotAssembler::runRecurrentSequence: "
+                                 "no recurrent bindings provided");
+    }
+
+    auto const input_slot_vec = _impl->model->inputSlots();
+    auto const output_slot_vec = _impl->model->outputSlots();
+
+    // ── t=0 initialization: populate recurrent cache ──
+    for (auto const & rb: recurrent_bindings) {
+        auto const key = recurrentCacheKey(rb.input_slot_name);
+        auto const mode = rb.initMode();
+
+        auto const * input_slot = findSlot(input_slot_vec, rb.input_slot_name);
+        if (!input_slot) {
+            throw std::runtime_error(
+                    "SlotAssembler::runRecurrentSequence: unknown input slot '" + rb.input_slot_name + "'");
+        }
+
+        if (mode == RecurrentInitMode::Zeros) {
+            // Create an all-zeros tensor with shape {1, ...slot.shape}
+            std::vector<int64_t> tensor_shape = {1};
+            tensor_shape.insert(tensor_shape.end(),
+                                input_slot->shape.begin(),
+                                input_slot->shape.end());
+            _impl->recurrent_cache[key] =
+                    torch::zeros(tensor_shape, toTorchDType(input_slot->dtype));
+
+        } else if (mode == RecurrentInitMode::StaticCapture) {
+            // Use a captured tensor from DataManager
+            auto const static_key = staticCacheKey(rb.input_slot_name, 0);
+            auto cache_it = _impl->static_cache.find(static_key);
+            if (cache_it != _impl->static_cache.end()) {
+                _impl->recurrent_cache[key] = cache_it->second.clone();
+            } else {
+                // If not captured yet, try to encode from init_data_key / init_frame
+                if (!rb.init_data_key.empty() && rb.init_frame >= 0) {
+                    StaticInputData temp_entry;
+                    temp_entry.slot_name = rb.input_slot_name;
+                    temp_entry.memory_index = 0;
+                    temp_entry.data_key = rb.init_data_key;
+                    temp_entry.setCaptureMode(CaptureMode::Absolute);
+
+                    if (captureStaticInput(dm, temp_entry, rb.init_frame,
+                                           source_image_size)) {
+                        auto it2 = _impl->static_cache.find(static_key);
+                        if (it2 != _impl->static_cache.end()) {
+                            _impl->recurrent_cache[key] = it2->second.clone();
+                        }
+                    }
+                }
+                // If still missing, fall back to zeros
+                if (_impl->recurrent_cache.find(key) == _impl->recurrent_cache.end()) {
+                    std::cerr << "SlotAssembler: StaticCapture init failed for '"
+                              << rb.input_slot_name
+                              << "', falling back to zeros\n";
+                    std::vector<int64_t> tensor_shape = {1};
+                    tensor_shape.insert(tensor_shape.end(),
+                                        input_slot->shape.begin(),
+                                        input_slot->shape.end());
+                    _impl->recurrent_cache[key] =
+                            torch::zeros(tensor_shape,
+                                         toTorchDType(input_slot->dtype));
+                }
+            }
+
+        } else if (mode == RecurrentInitMode::FirstOutput) {
+            // Will be filled after the first forward pass below
+            std::vector<int64_t> tensor_shape = {1};
+            tensor_shape.insert(tensor_shape.end(),
+                                input_slot->shape.begin(),
+                                input_slot->shape.end());
+            _impl->recurrent_cache[key] =
+                    torch::zeros(tensor_shape, toTorchDType(input_slot->dtype));
+        }
+    }
+
+    // ── Sequential frame loop ──
+    for (int f = 0; f < frame_count; ++f) {
+        int const frame = start_frame + f;
+
+        if (progress) {
+            progress(f, frame_count);
+        }
+
+        // 1. Assemble dynamic + static inputs (batch_size = 1)
+        auto inputs = assembleInputs(
+                dm, *_impl->model,
+                input_bindings, static_inputs,
+                _impl->static_cache,
+                frame, /*batch_size=*/1);
+
+        // 2. Inject recurrent tensors into the input map
+        for (auto const & rb: recurrent_bindings) {
+            auto const key = recurrentCacheKey(rb.input_slot_name);
+            auto it = _impl->recurrent_cache.find(key);
+            if (it != _impl->recurrent_cache.end()) {
+                inputs[rb.input_slot_name] = it->second;
+            }
+        }
+
+        // 3. Forward pass
+        auto outputs = _impl->model->forward(inputs);
+
+        // 4. For FirstOutput mode on t=0: use raw output, skip decoding
+        if (f == 0) {
+            bool has_first_output = false;
+            for (auto const & rb: recurrent_bindings) {
+                if (rb.initMode() == RecurrentInitMode::FirstOutput) {
+                    has_first_output = true;
+                    break;
+                }
+            }
+            if (has_first_output) {
+                // Cache outputs for recurrent slots that use FirstOutput
+                for (auto const & rb: recurrent_bindings) {
+                    if (rb.initMode() == RecurrentInitMode::FirstOutput) {
+                        auto out_it = outputs.find(rb.output_slot_name);
+                        if (out_it != outputs.end()) {
+                            auto const key = recurrentCacheKey(rb.input_slot_name);
+                            _impl->recurrent_cache[key] = out_it->second.detach();
+                        }
+                    }
+                }
+                // Skip decoding for t=0 in FirstOutput mode — the output
+                // is just used as initialization, not as a real prediction
+                // Re-carry non-FirstOutput recurrent outputs
+                for (auto const & rb: recurrent_bindings) {
+                    if (rb.initMode() != RecurrentInitMode::FirstOutput) {
+                        auto out_it = outputs.find(rb.output_slot_name);
+                        if (out_it != outputs.end()) {
+                            auto const key = recurrentCacheKey(rb.input_slot_name);
+                            _impl->recurrent_cache[key] = out_it->second.detach();
+                        }
+                    }
+                }
+                continue;// Skip to next frame
+            }
+        }
+
+        // 5. Decode outputs into DataManager
+        decodeOutputs(
+                dm, outputs, output_bindings,
+                *_impl->model, frame, source_image_size);
+
+        // 6. Cache output tensors for next frame's recurrent inputs
+        for (auto const & rb: recurrent_bindings) {
+            auto out_it = outputs.find(rb.output_slot_name);
+            if (out_it != outputs.end()) {
+                auto const key = recurrentCacheKey(rb.input_slot_name);
+                _impl->recurrent_cache[key] = out_it->second.detach();
+            }
+        }
+    }
+
+    // Final progress callback
+    if (progress) {
+        progress(frame_count, frame_count);
+    }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
