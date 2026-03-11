@@ -53,6 +53,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/GetEntityIdsInRange.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/Commands.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveData.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/LoadData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/Validation.test.cpp
 
         test_time_entity.cpp

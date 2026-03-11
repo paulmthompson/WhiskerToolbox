@@ -633,44 +633,60 @@ command sequences.
 
 ### Tasks
 
-- [ ] **`LoadDataParams` struct** — reflect-cpp serializable:
+- [x] **`LoadDataParams` struct** — reflect-cpp serializable:
   ```cpp
   struct LoadDataParams {
-      std::string data_key;            // Key to store in DataManager
-      std::string data_type;           // e.g., "PointData", "LineData"
-      std::string filepath;            // Input file path
-      std::string format;              // e.g., "csv", "hdf5"
-      rfl::Generic format_options;     // Format-specific options (optional)
+      std::string data_key;                       // Key to store in DataManager
+      std::string data_type;                      // e.g., "PointData", "LineData"
+      std::string filepath;                       // Input file path
+      std::string format;                         // e.g., "csv", "capnproto"
+      std::optional<rfl::Generic> format_options; // Format-specific options (optional)
   };
   ```
 
-- [ ] **`LoadData` command class** — `src/DataManager/Commands/LoadData/`:
-  1. Map `data_type` string to `IODataType` enum.
-  2. Dispatch through `LoaderRegistry::tryLoad()` with format, type, filepath, and config.
-  3. Store result in `DataManager` under `data_key`.
-  4. Return `CommandResult` with success/error and `affected_keys = {data_key}`.
-  5. Undoable: `undo()` removes the loaded data key from `DataManager`.
+- [x] **`LoadData` command class** — `src/DataManager/Commands/LoadData.hpp` / `.cpp`:
+  1. Map `data_type` string to `IODataType` enum via internal `parseDataType()`.
+  2. Convert optional `format_options` from `rfl::Generic` to `nlohmann::json`,
+     injecting `filepath` into the config (required by most loaders).
+  3. Dispatch through `LoaderRegistry::getInstance().tryLoad()`.
+  4. Convert `LoadedDataVariant` to `DataTypeVariant` via `std::visit`.
+  5. Store result in `DataManager` under `data_key` via `setData()`.
+  6. Return `CommandResult::ok({data_key})` with the data key as an affected key.
+  7. Undoable: `undo()` calls `DataManager::deleteData(data_key)`.
 
-- [ ] **Register in factory** — Add `"LoadData"` branch to `createCommand()` and entry in
-  `getAvailableCommands()`.
+- [x] **Register in factory** — Added `"LoadData"` branch to `createCommand()`,
+  `isKnownCommandName()`, and `getAvailableCommands()` with `category = "persistence"`
+  and `supports_undo = true`.
 
-- [ ] **`ParameterUIHints<LoadDataParams>`** — Tooltips explaining each field.
+- [x] **`ParameterUIHints<LoadDataParams>`** — Tooltips for data_key, data_type, filepath,
+  format, and format_options fields. format_options marked as `is_advanced`.
 
-- [ ] **Unit tests:**
-  - Load a CSV point file via `LoadData` command, verify data in `DataManager`.
-  - Load with invalid filepath → error.
-  - Load with unknown format → error.
-  - Undo removes loaded data.
-  - Load + Save round-trip via command sequence.
+- [x] **Unit tests** — 11 test cases in `src/DataManager/Commands/LoadData.test.cpp`:
+  - Factory: creation from valid params, with format_options, invalid params,
+    `isKnownCommandName`.
+  - Execution: CSV load creates PointData in DataManager, nonexistent file handling,
+    unknown data_type → error, unknown format → error, undo removes loaded data.
+  - Serialization: `toJson()` round-trip.
+  - Integration: factory-based command sequence, `getCommandInfo` metadata,
+    Load+Save round-trip via command sequence.
 
-### Files Created
+- [x] **Developer documentation** — Created `docs/developer/DataManager/Commands/load_data.qmd`,
+  added to `_quarto.yml` navigation.
+
+### Files Created/Modified
 
 | File | Action |
 |------|--------|
-| `src/DataManager/Commands/LoadData/LoadData.hpp` | **Create** |
-| `src/DataManager/Commands/LoadData/LoadData.cpp` | **Create** |
-| `src/DataManager/Commands/CommandFactory.cpp` | **Modify** — add factory branch |
-| `tests/DataManager/Commands/test_load_data.cpp` | **Create** |
+| `src/DataManager/Commands/LoadData.hpp` | **Create** — `LoadDataParams` struct, `LoadData` class |
+| `src/DataManager/Commands/LoadData.cpp` | **Create** — implementation |
+| `src/DataManager/Commands/LoadData.test.cpp` | **Create** — 11 unit tests |
+| `src/DataManager/Commands/CommandFactory.cpp` | **Modify** — add factory branch, introspection entry |
+| `src/DataManager/Commands/CommandUIHints.hpp` | **Modify** — add `ParameterUIHints<LoadDataParams>` |
+| `src/DataManager/Commands/CommandInfo.test.cpp` | **Modify** — update expected command count |
+| `src/DataManager/CMakeLists.txt` | **Modify** — add LoadData source files |
+| `tests/DataManager/CMakeLists.txt` | **Modify** — add LoadData test source |
+| `docs/developer/DataManager/Commands/load_data.qmd` | **Create** — developer documentation |
+| `docs/_quarto.yml` | **Modify** — add load_data.qmd to navigation |
 
 ---
 
@@ -755,7 +771,7 @@ the saver's `precision` setting:
 | 3.1.8 | CapnProto LineData Saver | **Complete** | Yes |
 | 3.1.9 | OpenCV MaskData (Image) Saver | **Complete** | No (lossy format) |
 | 3.2 | SaveData Command | **Complete** | N/A |
-| 3.3 | LoadData Command | Not Started | N/A |
+| 3.3 | LoadData Command | **Complete** | N/A |
 
 ## See Also
 

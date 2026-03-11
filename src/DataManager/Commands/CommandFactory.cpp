@@ -10,6 +10,7 @@
 #include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
 #include "ICommand.hpp"
+#include "LoadData.hpp"
 #include "MoveByTimeRange.hpp"
 #include "SaveData.hpp"
 
@@ -24,7 +25,7 @@ namespace commands {
 bool isKnownCommandName(std::string const & name) {
     return name == "MoveByTimeRange" || name == "CopyByTimeRange" ||
            name == "AddInterval" || name == "ForEachKey" ||
-           name == "SaveData";
+           name == "SaveData" || name == "LoadData";
 }
 
 std::unique_ptr<ICommand> createCommand(
@@ -61,6 +62,12 @@ std::unique_ptr<ICommand> createCommand(
         auto p = rfl::json::read<SaveDataParams>(json);
         if (!p) return nullptr;
         return std::make_unique<SaveData>(std::move(*p));
+    }
+
+    if (name == "LoadData") {
+        auto p = rfl::json::read<LoadDataParams>(json);
+        if (!p) return nullptr;
+        return std::make_unique<LoadData>(std::move(*p));
     }
 
     return nullptr;
@@ -107,6 +114,14 @@ std::vector<CommandInfo> getAvailableCommands() {
                     .supports_undo = false,
                     .supported_data_types = {"PointData", "LineData", "MaskData", "AnalogTimeSeries", "DigitalEventSeries", "DigitalIntervalSeries"},
                     .parameter_schema = extractParameterSchema<SaveDataParams>(),
+            },
+            CommandInfo{
+                    .name = "LoadData",
+                    .description = "Load data from disk into DataManager via the LoaderRegistry",
+                    .category = "persistence",
+                    .supports_undo = true,
+                    .supported_data_types = {"PointData", "LineData", "MaskData", "AnalogTimeSeries", "DigitalEventSeries", "DigitalIntervalSeries", "TensorData"},
+                    .parameter_schema = extractParameterSchema<LoadDataParams>(),
             },
     };
 }

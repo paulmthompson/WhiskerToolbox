@@ -99,6 +99,7 @@ website:
                 - developer/DataManager/Commands/get_entity_ids_in_range.qmd
                 - developer/DataManager/Commands/commands.qmd
                 - developer/DataManager/Commands/save_data.qmd
+                - developer/DataManager/Commands/load_data.qmd
                 - developer/DataManager/Commands/validation.qmd
                 - developer/DataManager/Commands/command_introspection.qmd
                 - developer/DataManager/Commands/gui_verb_audit.qmd

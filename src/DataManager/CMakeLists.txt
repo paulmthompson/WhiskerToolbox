@@ -55,6 +55,8 @@ set(DATAMANAGER_SOURCES
         Commands/ForEachKey.cpp
         Commands/SaveData.hpp
         Commands/SaveData.cpp
+        Commands/LoadData.hpp
+        Commands/LoadData.cpp
         Commands/Validation.hpp
         Commands/Validation.cpp
 

@@ -9,6 +9,7 @@
 #include "AddInterval.hpp"
 #include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
+#include "LoadData.hpp"
 #include "MoveByTimeRange.hpp"
 #include "SaveData.hpp"
 
@@ -100,6 +101,28 @@ struct ParameterUIHints<commands::SaveDataParams> {
         }
         if (auto * f = schema.field("format_options")) {
             f->tooltip = "Format-specific options passed to the saver (optional)";
+            f->is_advanced = true;
+        }
+    }
+};
+
+template<>
+struct ParameterUIHints<commands::LoadDataParams> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("data_key")) {
+            f->tooltip = "Key to store the loaded data under in DataManager";
+        }
+        if (auto * f = schema.field("data_type")) {
+            f->tooltip = "Data type to load (e.g. \"PointData\", \"LineData\", \"MaskData\")";
+        }
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to the input file to load";
+        }
+        if (auto * f = schema.field("format")) {
+            f->tooltip = "Input format (e.g. \"csv\", \"capnproto\")";
+        }
+        if (auto * f = schema.field("format_options")) {
+            f->tooltip = "Format-specific loader options (optional)";
             f->is_advanced = true;
         }
     }
