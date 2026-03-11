@@ -28,6 +28,145 @@ These require Python model export as a prerequisite.
 - [ ] **End-to-end UI test** — Select a model in the widget, configure bindings, execute 
   inference, verify results appear in DataManager
 
+### Input Pipeline Architecture
+
+The input system supports three distinct input modes: **Dynamic**, **Static**, and 
+**Recurrent**. Each mode has different batch-size implications, different assembly 
+semantics in `SlotAssembler`, and different UI requirements. This section tracks the 
+staged implementation plan.
+
+#### Phase 1: Dynamic Input Time Offsets
+
+Dynamic inputs (`SlotBindingData`) currently read at `current_frame + batch_index`. 
+Adding a `time_offset` field lets users specify temporal offsets (e.g., "read one frame 
+behind") without the static input machinery.
+
+- [ ] **Add `time_offset` to `SlotBindingData`** — New `int time_offset = 0` field. During 
+  assembly, each frame encodes at `current_frame + batch_index + time_offset`
+- [ ] **Update `SlotAssembler::assembleInputs()`** — Apply `time_offset` in the dynamic 
+  input encoding loop
+- [ ] **UI: time offset spinbox** — Add a spinbox for each dynamic input slot in the 
+  Properties widget
+- [ ] **Tests** — Verify that negative offsets clamp to frame 0, positive offsets 
+  clamp to max frame
+
+#### Phase 2: Static Input Capture & Preview
+
+`StaticInputData` currently re-encodes at `current_frame + time_offset` every invocation. 
+True "capture once, reuse forever" requires caching the encoded tensor.
+
+- [ ] **Absolute vs relative capture mode** — Add a `capture_mode` field to 
+  `StaticInputData`: `Relative` (current behavior, re-encodes each run at 
+  `current_frame + time_offset`) vs `Absolute` (encode once at a fixed frame, cache 
+  the tensor)
+- [ ] **Tensor cache in SlotAssembler** — Store captured tensors in 
+  `map<string, Tensor> _static_cache` keyed by `slot_name + memory_index`. Skip 
+  re-encoding when a cached tensor exists for an `Absolute`-mode entry
+- [ ] **"Capture Current Frame" button** — Widget action: encodes the current frame's data 
+  for a static slot and stores it in the cache. User navigates to the desired frame, 
+  clicks capture, and the tensor is frozen
+- [ ] **Static tensor preview in ViewWidget** — Render color-mapped thumbnails of cached 
+  static tensors so the user can verify what the model will see as its memory input
+- [ ] **Batch dimension expansion** — For `Absolute`-mode static inputs, `.expand()` the 
+  cached tensor along the batch dimension so batch_size can be > 1
+- [ ] **Cache invalidation** — Clear cached tensors when the user changes `data_key`, 
+  re-captures, or switches models
+
+#### Phase 3: Multi-Frame Sequence Inputs
+
+Support stacking multiple captured frames along a slot's `sequence_dim` axis. This 
+enables architectures like NeuroSAM that consume N memory frames (e.g., 4 reference 
+images along a sequence dimension).
+
+- [ ] **Sequence packing** — When `TensorSlotDescriptor::sequence_dim >= 0`, assemble 
+  multiple `StaticInputData` entries along that axis using `memory_index` to place 
+  each capture at the correct position
+- [ ] **UI: sequence entry manager** — Add/remove/reorder buttons for sequence slots in 
+  the Properties widget. Each entry shows its `memory_index`, source `data_key`, and 
+  captured frame number
+- [ ] **Variable-length sequences** — Handle cases where the user captures fewer frames 
+  than the sequence dimension size (zero-pad unused positions) and surface a warning
+- [ ] **Boolean mask alignment** — Ensure `is_boolean_mask` slots with `sequence_dim` 
+  correctly set active/inactive flags for each sequence position
+
+#### Phase 4: Recurrent (Feedback) Inputs
+
+Map a model output slot back to an input slot for sequential frame-by-frame processing. 
+The prediction at frame t becomes an input at frame t+1.
+
+- [ ] **`RecurrentBindingData` struct** — New binding type with fields: `input_slot_name`, 
+  `output_slot_name`, `init_mode` (`"zeros"` | `"static_capture"` | `"first_output"`), 
+  optional `init_data_key` and `init_frame` for the `static_capture` init mode
+- [ ] **Sequential inference loop** — When recurrent bindings exist, `SlotAssembler` runs 
+  a sequential loop: for each frame, assemble inputs (injecting the previous output 
+  tensor into the recurrent input slot), call `forward()`, decode, carry the output 
+  tensor forward
+- [ ] **t=0 initialization** — Implement the three init strategies:
+    - `zeros`: start with an all-zeros tensor matching the input slot shape
+    - `static_capture`: use a user-provided captured tensor (e.g., ground-truth mask at 
+      a reference frame)
+    - `first_output`: run the model once with zeros, discard the decoded result, use the 
+      raw output tensor as the initial state for the real sequence
+- [ ] **Auto-constrain batch_size = 1** — When any `RecurrentBindingData` is present, 
+  force `batch_size = 1` in the widget and disable the batch size spinbox. Display 
+  an explanatory tooltip
+- [ ] **UI: recurrent binding panel** — Combo boxes to map an output slot to an input 
+  slot, plus init mode selector and optional capture controls for `static_capture`
+- [ ] **Progress reporting** — Show per-frame progress bar during sequential recurrent 
+  inference (frame N of M)
+
+#### Phase 5: Hybrid Sequence Inputs (Static + Recurrent)
+
+A single sequence slot (e.g., `memory_images` with shape `[5, 3, 256, 256]` and 
+`sequence_dim=0`) may need mixed sourcing: some positions filled from static captures 
+and others fed recurrently from the model's previous output. Example: 4 user-selected 
+reference frames at positions 0–3 and the model's own prediction at position 4.
+
+- [ ] **Per-position source tagging** — Extend the binding model so each position along 
+  `sequence_dim` independently declares its source. `StaticInputData` entries already 
+  target a `memory_index`; add an optional `target_memory_index` to 
+  `RecurrentBindingData` so it can inject into a specific sequence position rather than 
+  replacing the entire slot tensor
+- [ ] **Hybrid tensor assembly** — Update `SlotAssembler` to compose a single sequence 
+  tensor from mixed sources in one pass:
+    1. Start with the full `[batch, seq, ...]` tensor (zeros)
+    2. Fill static positions from the tensor cache (Phase 2/3)
+    3. Fill recurrent position(s) from the carried-forward output tensor (Phase 4)
+    4. Validate: error if any position is claimed by both a static entry and a recurrent 
+       binding, or if a position has no source at all (warn on zero-filled gaps)
+- [ ] **t=0 init for recurrent positions only** — In hybrid mode, the init strategy 
+  (`zeros`, `static_capture`, `first_output`) applies only to the recurrent position(s). 
+  Static positions are always populated regardless of frame index
+- [ ] **Batch constraint propagation** — Hybrid slots with any recurrent position force 
+  batch=1 (same as Phase 4). If all recurrent positions are removed, batch constraint 
+  relaxes back to the static/dynamic default
+- [ ] **UI: unified sequence editor** — Each row in the sequence entry manager (Phase 3) 
+  gains a source-type selector: **Static** (capture controls) or **Recurrent** (output 
+  slot + init mode). The panel visually distinguishes the two types (e.g., static rows 
+  show the captured frame thumbnail, recurrent rows show the output mapping)
+- [ ] **Validation & diagnostics** — At assembly time, warn if the recurrent output 
+  tensor shape doesn't match the target sequence position slice. Surface mismatches in 
+  the Properties widget status area
+
+#### Phase 6: Batch Size & AOT Inductor Compatibility
+
+Different input modes impose different batch-size constraints. This phase ensures the 
+model compilation story and multi-mode switching are clean.
+
+- [ ] **Model batch mode metadata** — Extend `ModelBase` (or `TensorSlotDescriptor`) with 
+  a `BatchMode` concept: `Fixed(N)`, `Dynamic(min, max)`, or `RecurrentOnly` (fixed 1). 
+  Models report which modes they support
+- [ ] **Multi-variant model loading** — Support loading separate `.pt2` files for 
+  different batch configurations (e.g., `neurosam_recurrent.pt2` compiled with batch=1, 
+  `neurosam_batched.pt2` compiled with batch=8 or dynamic batch). The widget 
+  auto-selects the variant based on active bindings
+- [ ] **Dynamic-shape AOT export documentation** — Document the `torch.export` workflow 
+  with `dynamic_shapes={...: {0: Dim("batch")}}` for users who want a single `.pt2` 
+  supporting variable batch sizes
+- [ ] **Widget batch-size logic** — Auto-detect constraints: recurrent bindings → batch=1; 
+  all-static or all-dynamic → clamp to `model.maxBatchSize()`; mixed → use the most 
+  restrictive constraint. Surface the reasoning in the UI
+
 ### Batch Inference
 
 The widget currently supports single-frame inference. Batch processing over multiple frames 
