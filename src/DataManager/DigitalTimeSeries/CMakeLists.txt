@@ -13,6 +13,15 @@ set(digital_subdirectory_sources
         storage/OwningDigitalIntervalStorage.cpp
         storage/ViewDigitalIntervalStorage.hpp
         storage/ViewDigitalIntervalStorage.cpp
+        storage/DigitalEventStorageBase.hpp
+        storage/DigitalEventStorageCache.hpp
+        storage/DigitalEventStorage.hpp
+        storage/DigitalEventStorage.cpp
+        storage/LazyDigitalEventStorage.hpp
+        storage/OwningDigitalEventStorage.hpp
+        storage/OwningDigitalEventStorage.cpp
+        storage/ViewDigitalEventStorage.hpp
+        storage/ViewDigitalEventStorage.cpp
 )
 
 add_library(DigitalTimeSeries STATIC ${digital_subdirectory_sources})
