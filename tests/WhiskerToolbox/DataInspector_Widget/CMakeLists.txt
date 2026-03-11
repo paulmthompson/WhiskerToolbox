@@ -15,6 +15,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_data_inspector_widget
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/AnalogTimeSeries/AnalogTimeSeriesInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/DigitalEventSeries/DigitalEventSeriesInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/DigitalIntervalSeries/DigitalIntervalSeriesInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/LineData/LineInspector.test.cpp
