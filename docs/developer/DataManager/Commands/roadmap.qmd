@@ -4,11 +4,11 @@ title: "Command Architecture Roadmap"
 
 ## Progress Summary
 
-*Last updated: 2026-03-09*
+*Last updated: 2026-03-10*
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.12 complete. GUI audit (1.10) restructured as on-demand. Steps 1.13–1.14 (testing infrastructure) added. |
+| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.13 complete. GUI audit (1.10) restructured as on-demand. Step 1.14 (golden trace tests) remaining. |
 | **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3, 2.6–2.8 complete. Keyboard shortcuts (2.4) and tracked-regions visualization (2.5) remain. |
 | **Phase 3:** Persistence Commands & Save Registry | Complete | SaverRegistry infrastructure, 8 savers (CSV ×6, CapnProto, OpenCV), SaveData + LoadData commands, round-trip fuzz tests |
 | **Phase 4:** Action Journal Integration | Not Started | Full journal; builds on CommandRecorder from Step 1.13 |
@@ -205,12 +205,12 @@ without requiring the full Action Journal (Phase 4).
 
 #### CommandRecorder (Phase 4 Lite)
 
-- [ ] `CommandRecorder` class in `src/DataManager/Commands/`
-- [ ] `record(CommandDescriptor)` — appends a descriptor to the trace
-- [ ] `trace()` — returns the recorded descriptors
-- [ ] `toSequence()` — produces a `CommandSequenceDescriptor` from the trace
-- [ ] `clear()` — resets the recorder
-- [ ] Optional hook in `executeSequence()` — accepts `CommandRecorder*` parameter; records
+- [x] `CommandRecorder` class in `src/DataManager/Commands/`
+- [x] `record(CommandDescriptor)` — appends a descriptor to the trace
+- [x] `trace()` — returns the recorded descriptors
+- [x] `toSequence()` — produces a `CommandSequenceDescriptor` from the trace
+- [x] `clear()` — resets the recorder
+- [x] Optional hook in `executeSequence()` — accepts `CommandRecorder*` parameter; records
   each successfully executed command automatically
 
 ```cpp
@@ -229,15 +229,40 @@ Journal) as the recording mechanism, but is useful immediately for golden trace 
 
 #### MutationGuard (Strangulation Pattern)
 
-- [ ] Debug-only `thread_local bool g_inside_command` flag in `src/DataManager/Commands/`
-- [ ] `CommandGuard` RAII struct that sets the flag to `true` during `ICommand::execute()`
-- [ ] Instrumentation points in `DataManager` mutating methods (`setData()`, `deleteData()`,
+- [x] Debug-only `thread_local bool g_inside_command` flag in `src/DataManager/Commands/`
+- [x] `CommandGuard` RAII struct that sets the flag to `true` during `ICommand::execute()`
+- [x] Instrumentation points in `DataManager` mutating methods (`setData()`, `deleteData()`,
   etc.) — `qWarning()` when `g_inside_command` is false
-- [ ] Compile-gated to debug builds only (`#ifndef NDEBUG`)
+- [x] Compile-gated to debug builds only (`#ifndef NDEBUG`)
 
 This gives **automated runtime gap detection**: run the app normally, exercise each widget,
 and the console reports exactly which `DataManager` mutations are not routed through commands.
 No manual code reading required.
+
+#### Implementation Note: rfl::Generic Integer Round-Trip
+
+`rfl::Generic` stores all JSON numbers as `double`. When a `rfl::Generic` containing integer
+values goes through a `write → read<rfl::Generic>` round-trip, integers like `10` become
+`double(10.0)`. When this is subsequently serialized to JSON, the output is `10.0`, which
+fails to deserialize into `int64_t` fields via `rfl::json::read<T>()`.
+
+**Fix applied (2026-03-10):**
+
+1. **`normalizeJsonNumbers()`** (`VariableSubstitution.hpp/cpp`): Scans a JSON string and
+   converts whole-number floating-point values (e.g., `10.0`, `-5.00`) to integers
+   (`10`, `-5`), while leaving fractional values (`10.5`), strings, and exponent notation
+   untouched.
+
+2. **`createCommandFromJson()`** (`CommandFactory.hpp/cpp`): New overload that accepts a
+   pre-built JSON parameter string. Applies `normalizeJsonNumbers()` before deserialization.
+   The original `createCommand(name, rfl::Generic)` now delegates to this function.
+
+3. **`executeSequence()` optimization**: After variable substitution, the substituted JSON
+   string is passed directly to `createCommandFromJson()`, skipping the unnecessary
+   `rfl::Generic → JSON → rfl::Generic` round-trip that previously caused the integer loss.
+
+This means both literal integers in `rfl::Generic` parameters **and** `${variable}`
+substitution work correctly. Tests verify both paths.
 
 ### Step 1.14 — DataManagerSnapshot and Golden Trace Tests
 

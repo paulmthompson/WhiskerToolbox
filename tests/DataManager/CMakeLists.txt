@@ -55,6 +55,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/LoadData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/Validation.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/CommandRecorder.test.cpp
 
         test_time_entity.cpp
         test_time_entity_groups.cpp

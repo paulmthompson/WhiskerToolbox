@@ -13,6 +13,7 @@
 #include "LoadData.hpp"
 #include "MoveByTimeRange.hpp"
 #include "SaveData.hpp"
+#include "VariableSubstitution.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
@@ -32,7 +33,14 @@ std::unique_ptr<ICommand> createCommand(
         std::string const & name,
         rfl::Generic const & params) {
 
-    auto const json = rfl::json::write(params);
+    return createCommandFromJson(name, rfl::json::write(params));
+}
+
+std::unique_ptr<ICommand> createCommandFromJson(
+        std::string const & name,
+        std::string const & params_json) {
+
+    auto const json = normalizeJsonNumbers(params_json);
 
     if (name == "MoveByTimeRange") {
         auto p = rfl::json::read<MoveByTimeRangeParams>(json);

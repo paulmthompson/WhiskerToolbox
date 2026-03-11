@@ -59,6 +59,10 @@ set(DATAMANAGER_SOURCES
         Commands/LoadData.cpp
         Commands/Validation.hpp
         Commands/Validation.cpp
+        Commands/CommandRecorder.hpp
+        Commands/CommandRecorder.cpp
+        Commands/MutationGuard.hpp
+        Commands/MutationGuard.cpp
 
         loaders/loading_utils.hpp
 
