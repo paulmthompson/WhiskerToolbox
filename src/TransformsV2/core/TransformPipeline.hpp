@@ -757,7 +757,7 @@ public:
         auto const * head_meta = registry.getMetadata(head_step.transform_name);
 
         // Build Head Function: InputElement -> ElementVariant
-        auto head_fn = [this, step = head_step, meta = head_meta](InputElement const & input) -> ElementVariant {
+        auto head_fn = [step = head_step, meta = head_meta](InputElement const & input) -> ElementVariant {
             auto & reg = ElementRegistry::instance();
             // Wrap input in std::any to pass through the generic interface
             std::any input_any{input};

@@ -77,7 +77,7 @@ struct PipelineStep {
         if (meta && !meta->is_time_grouped) {
             // Element transform executor
             element_executor = [name = transform_name, p = this->params](
-                                       ElementVariant const & input, std::any const &) -> ElementVariant {
+                                       ElementVariant const & /*input*/, std::any const &) -> ElementVariant {
                 // This will be called with the correct types by the pipeline
                 // The actual execution is deferred until we know InputElement and OutputElement
                 return ElementVariant{};// Placeholder - will be replaced by specialized executor
@@ -85,7 +85,7 @@ struct PipelineStep {
         } else if (meta && meta->is_time_grouped) {
             // Time-grouped transform executor
             time_grouped_executor = [name = transform_name, p = this->params](
-                                            BatchVariant const & input, std::any const &) -> BatchVariant {
+                                            BatchVariant const & /*input*/, std::any const &) -> BatchVariant {
                 return BatchVariant{};// Placeholder
             };
         }
