@@ -28,6 +28,8 @@ add_subdirectory(Tensors)
 set(DATAMANAGER_SOURCES
         DataManager.hpp
         DataManager.cpp
+        DataManagerSnapshot.hpp
+        DataManagerSnapshot.cpp
         DataManagerTypes.hpp
         DataManagerTypes.cpp
 

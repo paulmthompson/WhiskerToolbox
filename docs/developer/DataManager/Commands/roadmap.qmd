@@ -4,11 +4,11 @@ title: "Command Architecture Roadmap"
 
 ## Progress Summary
 
-*Last updated: 2026-03-10*
+*Last updated: 2026-03-11*
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.13 complete. GUI audit (1.10) restructured as on-demand. Step 1.14 (golden trace tests) remaining. |
+| **Phase 1:** Command Foundation | Complete | Steps 1.1–1.14 complete. GUI audit (1.10) restructured as on-demand. |
 | **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3, 2.6–2.8 complete. Keyboard shortcuts (2.4) and tracked-regions visualization (2.5) remain. |
 | **Phase 3:** Persistence Commands & Save Registry | Complete | SaverRegistry infrastructure, 8 savers (CSV ×6, CapnProto, OpenCV), SaveData + LoadData commands, round-trip fuzz tests |
 | **Phase 4:** Action Journal Integration | Not Started | Full journal; builds on CommandRecorder from Step 1.13 |
@@ -270,13 +270,13 @@ These provide the test infrastructure for verifying widget command coverage.
 
 #### DataManagerSnapshot
 
-- [ ] `DataManagerSnapshot` struct in `src/DataManager/`
-- [ ] `snapshotDataManager(DataManager const&)` — produces a lightweight summary:
+- [x] `DataManagerSnapshot` struct in `src/DataManager/`
+- [x] `snapshotDataManager(DataManager&)` — produces a lightweight summary:
   - `key_type`: map of data key → type name string
   - `key_entity_count`: map of data key → number of entities
-  - `key_content_hash`: map of data key → deterministic content hash
-- [ ] `operator==` for snapshot comparison in tests
-- [ ] Does not require full data serialization — entity counts and content hashes detect
+  - `key_content_hash`: map of data key → deterministic FNV-1a content hash
+- [x] `operator==` for snapshot comparison in tests (defaulted)
+- [x] Does not require full data serialization — entity counts and content hashes detect
   regressions; full serialization comes with Phase 3 (SaveData/LoadData)
 
 ```cpp
@@ -291,10 +291,11 @@ bool operator==(DataManagerSnapshot const&, DataManagerSnapshot const&);
 
 #### Golden Trace Test Pattern
 
-- [ ] Load a recorded `CommandSequenceDescriptor` from a JSON fixture file
-- [ ] Replay against a synthesized (or empty) `DataManager`
-- [ ] Assert final state via `DataManagerSnapshot` comparison
-- [ ] Each refactored widget gets at least one golden trace test for its key workflow
+- [x] Load a recorded `CommandSequenceDescriptor` from inline JSON
+- [x] Replay against a synthesized `DataManager`
+- [x] Assert final state via `DataManagerSnapshot` comparison
+- [x] Golden trace tests for: CopyByTimeRange, MoveByTimeRange, AddInterval,
+  multi-command variable substitution, replay determinism
 
 Example:
 
