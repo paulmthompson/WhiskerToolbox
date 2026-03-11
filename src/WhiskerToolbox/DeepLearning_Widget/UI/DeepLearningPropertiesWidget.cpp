@@ -238,10 +238,20 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
         if (_current_info) {
             _model_desc_label->setText(
                     QString::fromStdString(_current_info->description));
-            int const pref = _current_info->preferred_batch_size;
-            _batch_size_spin->setValue(pref > 0 ? pref : 1);
-            if (_current_info->max_batch_size > 0) {
-                _batch_size_spin->setMaximum(_current_info->max_batch_size);
+
+            // Set initial batch size from model's batch mode
+            auto const & mode = _current_info->batch_mode;
+            if (auto const * f = std::get_if<dl::FixedBatch>(&mode)) {
+                _batch_size_spin->setValue(f->size);
+            } else if (std::holds_alternative<dl::RecurrentOnlyBatch>(mode)) {
+                _batch_size_spin->setValue(1);
+            } else {
+                int const pref = _current_info->preferred_batch_size;
+                _batch_size_spin->setValue(pref > 0 ? pref : 1);
+            }
+            int const max_b = dl::maxBatchSizeFromMode(mode);
+            if (max_b > 0) {
+                _batch_size_spin->setMaximum(max_b);
             }
         }
         _assembler->loadModel(model_id);
@@ -1760,14 +1770,18 @@ QGroupBox * DeepLearningPropertiesWidget::_buildRecurrentInputGroup(
 void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
     if (!_dynamic_container || !_batch_size_spin || !_current_info) return;
 
-    // Check if any recurrent output combo has a non-empty selection
-    // (whole-slot recurrent from non-sequence static inputs)
+    // ── Step 1: Check model-level batch mode ──
+    auto const & mode = _current_info->batch_mode;
+    bool const model_locked = dl::isBatchLocked(mode);
+    int const model_max = dl::maxBatchSizeFromMode(mode);
+    int const model_min = dl::minBatchSizeFromMode(mode);
+
+    // ── Step 2: Check if any recurrent bindings are active in the UI ──
     bool has_recurrent = false;
     for (auto const & slot: _current_info->inputs) {
         if (!slot.is_static || slot.is_boolean_mask) continue;
 
         if (slot.hasSequenceDim()) {
-            // Check sequence entries for Recurrent source type
             auto const prefix = QString::fromStdString(
                     "seq_srctype_" + slot.name + "_");
             for (auto * combo: _dynamic_container->findChildren<QComboBox *>()) {
@@ -1791,20 +1805,49 @@ void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
         if (has_recurrent) break;
     }
 
+    // ── Step 3: Determine the most restrictive constraint ──
+    // Priority: recurrent bindings → model RecurrentOnly → model Fixed → model Dynamic
+    bool lock_to_one = has_recurrent || model_locked;
+    QString tooltip;
+
     if (has_recurrent) {
+        tooltip = tr("Batch size is locked to 1 when recurrent bindings are active.\n"
+                     "Sequential frame-by-frame processing requires batch=1.");
+    } else if (std::holds_alternative<dl::RecurrentOnlyBatch>(mode)) {
+        tooltip = tr("Model requires batch size = 1 (recurrent-only mode).");
+    } else if (auto const * f = std::get_if<dl::FixedBatch>(&mode)) {
+        if (f->size == 1) {
+            tooltip = tr("Model is compiled for fixed batch size = 1.");
+        }
+    }
+
+    if (lock_to_one) {
         _batch_size_spin->setValue(1);
         _batch_size_spin->setEnabled(false);
+        _batch_size_spin->setToolTip(tooltip);
+    } else if (auto const * f = std::get_if<dl::FixedBatch>(&mode)) {
+        // Fixed batch: lock spinbox to that value
+        _batch_size_spin->setRange(f->size, f->size);
+        _batch_size_spin->setValue(f->size);
+        _batch_size_spin->setEnabled(false);
         _batch_size_spin->setToolTip(
-                tr("Batch size is locked to 1 when recurrent bindings are active.\n"
-                   "Sequential frame-by-frame processing requires batch=1."));
+                tr("Model is compiled for fixed batch size = %1.")
+                        .arg(f->size));
     } else {
+        // Dynamic batch: allow range
         _batch_size_spin->setEnabled(true);
-        _batch_size_spin->setToolTip(QString{});
-        if (_current_info->max_batch_size > 0) {
-            _batch_size_spin->setMaximum(_current_info->max_batch_size);
+        _batch_size_spin->setMinimum(model_min > 0 ? model_min : 1);
+        if (model_max > 0) {
+            _batch_size_spin->setMaximum(model_max);
         } else {
             _batch_size_spin->setMaximum(9999);
         }
+        auto const & bm = std::get<dl::DynamicBatch>(mode);
+        tooltip = tr("Batch mode: Dynamic(%1, %2)")
+                          .arg(bm.min_size)
+                          .arg(bm.max_size > 0 ? QString::number(bm.max_size)
+                                               : tr("unlimited"));
+        _batch_size_spin->setToolTip(tooltip);
     }
 }
 

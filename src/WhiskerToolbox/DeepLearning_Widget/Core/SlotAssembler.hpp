@@ -43,6 +43,7 @@ struct ModelDisplayInfo {
     std::vector<dl::TensorSlotDescriptor> outputs;
     int preferred_batch_size = 0;
     int max_batch_size = 0;
+    dl::BatchMode batch_mode = dl::DynamicBatch{1, 0};///< Rich batch-size constraint
 };
 
 /// Bridge between DataManager data and model tensor I/O.

@@ -10,8 +10,21 @@
 
 namespace dl {
 
-TensorSlotDescriptor SlotSpec::toDescriptor() const
-{
+BatchMode BatchModeSpec::toBatchMode() const {
+    if (recurrent_only.has_value() && recurrent_only.value()) {
+        return RecurrentOnlyBatch{};
+    }
+    if (fixed.has_value()) {
+        return FixedBatch{fixed.value()};
+    }
+    if (dynamic.has_value()) {
+        return DynamicBatch{dynamic->min, dynamic->max};
+    }
+    // Default: unlimited dynamic
+    return DynamicBatch{1, 0};
+}
+
+TensorSlotDescriptor SlotSpec::toDescriptor() const {
     TensorSlotDescriptor desc;
     desc.name = name;
     desc.shape = shape;
@@ -25,14 +38,12 @@ TensorSlotDescriptor SlotSpec::toDescriptor() const
 }
 
 rfl::Result<RuntimeModelSpec>
-RuntimeModelSpec::fromJson(std::string const & json_str)
-{
+RuntimeModelSpec::fromJson(std::string const & json_str) {
     return rfl::json::read<RuntimeModelSpec>(json_str);
 }
 
 rfl::Result<RuntimeModelSpec>
-RuntimeModelSpec::fromJsonFile(std::filesystem::path const & path)
-{
+RuntimeModelSpec::fromJsonFile(std::filesystem::path const & path) {
     std::ifstream file(path);
     if (!file.is_open()) {
         return rfl::Error("Failed to open file: " + path.string());
@@ -57,36 +68,42 @@ RuntimeModelSpec::fromJsonFile(std::filesystem::path const & path)
         }
     }
 
+    // Resolve relative weights_variants paths
+    if (spec.weights_variants.has_value()) {
+        for (auto & variant: spec.weights_variants.value()) {
+            std::filesystem::path variant_p(variant.path);
+            if (variant_p.is_relative()) {
+                variant.path = (path.parent_path() / variant_p).string();
+            }
+        }
+    }
+
     return spec;
 }
 
-std::string RuntimeModelSpec::toJson() const
-{
+std::string RuntimeModelSpec::toJson() const {
     return rfl::json::write(*this);
 }
 
-std::vector<TensorSlotDescriptor> RuntimeModelSpec::inputDescriptors() const
-{
+std::vector<TensorSlotDescriptor> RuntimeModelSpec::inputDescriptors() const {
     std::vector<TensorSlotDescriptor> descs;
     descs.reserve(inputs.size());
-    for (auto const & slot : inputs) {
+    for (auto const & slot: inputs) {
         descs.push_back(slot.toDescriptor());
     }
     return descs;
 }
 
-std::vector<TensorSlotDescriptor> RuntimeModelSpec::outputDescriptors() const
-{
+std::vector<TensorSlotDescriptor> RuntimeModelSpec::outputDescriptors() const {
     std::vector<TensorSlotDescriptor> descs;
     descs.reserve(outputs.size());
-    for (auto const & slot : outputs) {
+    for (auto const & slot: outputs) {
         descs.push_back(slot.toDescriptor());
     }
     return descs;
 }
 
-std::vector<std::string> RuntimeModelSpec::validate() const
-{
+std::vector<std::string> RuntimeModelSpec::validate() const {
     std::vector<std::string> errors;
 
     if (model_id.empty()) {
@@ -142,7 +159,52 @@ std::vector<std::string> RuntimeModelSpec::validate() const
         errors.emplace_back("max_batch_size must be >= 0");
     }
 
+    // Validate batch_mode
+    if (batch_mode.has_value()) {
+        auto const & bm = batch_mode.value();
+        int modes_set = 0;
+        if (bm.fixed.has_value()) ++modes_set;
+        if (bm.dynamic.has_value()) ++modes_set;
+        if (bm.recurrent_only.has_value() && bm.recurrent_only.value()) ++modes_set;
+
+        if (modes_set > 1) {
+            errors.emplace_back("batch_mode: only one of fixed, dynamic, or recurrent_only may be set");
+        }
+        if (bm.fixed.has_value() && bm.fixed.value() < 1) {
+            errors.emplace_back("batch_mode.fixed must be >= 1");
+        }
+        if (bm.dynamic.has_value()) {
+            if (bm.dynamic->min < 1) {
+                errors.emplace_back("batch_mode.dynamic.min must be >= 1");
+            }
+            if (bm.dynamic->max > 0 && bm.dynamic->max < bm.dynamic->min) {
+                errors.emplace_back("batch_mode.dynamic.max must be >= min (or 0 for unlimited)");
+            }
+        }
+    }
+
+    // Validate weights_variants
+    if (weights_variants.has_value()) {
+        std::set<int> batch_sizes_seen;
+        for (std::size_t i = 0; i < weights_variants->size(); ++i) {
+            auto const & variant = (*weights_variants)[i];
+            if (variant.path.empty()) {
+                errors.push_back("weights_variants[" + std::to_string(i) +
+                                 "]: path must not be empty");
+            }
+            if (variant.batch_size < 1) {
+                errors.push_back("weights_variants[" + std::to_string(i) +
+                                 "]: batch_size must be >= 1");
+            }
+            if (!batch_sizes_seen.insert(variant.batch_size).second) {
+                errors.push_back("weights_variants[" + std::to_string(i) +
+                                 "]: duplicate batch_size " +
+                                 std::to_string(variant.batch_size));
+            }
+        }
+    }
+
     return errors;
 }
 
-} // namespace dl
+}// namespace dl

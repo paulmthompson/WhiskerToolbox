@@ -32,6 +32,49 @@ struct SlotSpec {
     [[nodiscard]] TensorSlotDescriptor toDescriptor() const;
 };
 
+/// JSON-serializable batch mode specification.
+///
+/// Maps to `dl::BatchMode` at runtime. Exactly one of `fixed`, `dynamic`,
+/// or `recurrent_only` should be set.
+///
+/// JSON examples:
+/// @code{.json}
+///   "batch_mode": { "fixed": 4 }
+///   "batch_mode": { "dynamic": { "min": 1, "max": 8 } }
+///   "batch_mode": { "recurrent_only": true }
+/// @endcode
+struct BatchModeSpec {
+    std::optional<int> fixed;///< Fixed(N)
+    struct DynamicSpec {
+        int min = 1;
+        int max = 0;///< 0 = unlimited
+    };
+    std::optional<DynamicSpec> dynamic;///< Dynamic(min, max)
+    std::optional<bool> recurrent_only;///< RecurrentOnly
+
+    /// Convert to a BatchMode variant, defaulting to Dynamic(1, 0).
+    [[nodiscard]] BatchMode toBatchMode() const;
+};
+
+/// JSON-serializable weights variant for multi-batch-size model loading.
+///
+/// Each variant specifies a weights file and the batch size it was compiled
+/// for. The widget auto-selects the variant matching the active batch size.
+///
+/// JSON example:
+/// @code{.json}
+///   "weights_variants": [
+///     { "path": "model_batch1.pt2", "batch_size": 1, "label": "recurrent" },
+///     { "path": "model_batch8.pt2", "batch_size": 8, "label": "batched" }
+///   ]
+/// @endcode
+struct WeightsVariant {
+    std::string path;                  ///< Path to weights file
+    int batch_size = 1;                ///< Batch size this variant was compiled for
+    std::optional<std::string> label;  ///< Optional human-readable label
+    std::optional<std::string> backend;///< Optional backend override
+};
+
 /// JSON-serializable specification for a runtime-defined model.
 ///
 /// Allows users to specify an ExecuTorch model's inputs and outputs via JSON
@@ -46,6 +89,11 @@ struct SlotSpec {
 ///   "weights_path": "model.pte",
 ///   "preferred_batch_size": 1,
 ///   "max_batch_size": 1,
+///   "batch_mode": { "dynamic": { "min": 1, "max": 8 } },
+///   "weights_variants": [
+///     { "path": "model_batch1.pt2", "batch_size": 1, "label": "recurrent" },
+///     { "path": "model_batch8.pt2", "batch_size": 8, "label": "batched" }
+///   ],
 ///   "inputs": [
 ///     { "name": "image", "shape": [3, 256, 256], "recommended_encoder": "ImageEncoder" }
 ///   ],
@@ -59,9 +107,11 @@ struct RuntimeModelSpec {
     std::string display_name;
     std::optional<std::string> description;
     std::optional<std::string> weights_path;
-    std::optional<std::string> backend;  ///< "auto", "torchscript", "aotinductor", "executorch"
+    std::optional<std::string> backend;///< "auto", "torchscript", "aotinductor", "executorch"
     std::optional<int> preferred_batch_size;
     std::optional<int> max_batch_size;
+    std::optional<BatchModeSpec> batch_mode;                    ///< Rich batch-size constraint
+    std::optional<std::vector<WeightsVariant>> weights_variants;///< Multi-variant weights
     std::vector<SlotSpec> inputs;
     std::vector<SlotSpec> outputs;
 
@@ -88,6 +138,6 @@ struct RuntimeModelSpec {
     [[nodiscard]] std::vector<std::string> validate() const;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_RUNTIME_MODEL_SPEC_HPP
+#endif// WHISKERTOOLBOX_RUNTIME_MODEL_SPEC_HPP

@@ -54,6 +54,7 @@ public:
         std::vector<TensorSlotDescriptor> outputs;
         int preferred_batch_size = 0;
         int max_batch_size = 0;
+        BatchMode batch_mode = DynamicBatch{1, 0};///< Rich batch-size constraint
     };
 
     /// Get the singleton instance.
@@ -122,7 +123,7 @@ private:
     mutable std::map<std::string, ModelInfo> _info_cache;
 };
 
-} // namespace dl
+}// namespace dl
 
 /// Helper macro for convenient self-registration of a ModelBase subclass.
 ///
@@ -137,17 +138,17 @@ private:
 ///
 /// The model class must have a default constructor and implement `modelId()`.
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
-#define DL_REGISTER_MODEL(ModelClass)                                          \
-    namespace {                                                                \
-    [[maybe_unused]] bool const registered_##ModelClass = [] {                 \
-        auto instance = std::make_unique<ModelClass>();                         \
-        auto id = instance->modelId();                                         \
-        dl::ModelRegistry::instance().registerModel(                           \
-            std::move(id),                                                     \
-            [] { return std::make_unique<ModelClass>(); });                     \
-        return true;                                                           \
-    }();                                                                       \
+#define DL_REGISTER_MODEL(ModelClass)                           \
+    namespace {                                                 \
+    [[maybe_unused]] bool const registered_##ModelClass = [] {  \
+        auto instance = std::make_unique<ModelClass>();         \
+        auto id = instance->modelId();                          \
+        dl::ModelRegistry::instance().registerModel(            \
+                std::move(id),                                  \
+                [] { return std::make_unique<ModelClass>(); }); \
+        return true;                                            \
+    }();                                                        \
     }
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
-#endif // WHISKERTOOLBOX_MODEL_REGISTRY_HPP
+#endif// WHISKERTOOLBOX_MODEL_REGISTRY_HPP

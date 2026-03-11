@@ -153,17 +153,17 @@ reference frames at positions 0–3 and the model's own prediction at position 4
 Different input modes impose different batch-size constraints. This phase ensures the 
 model compilation story and multi-mode switching are clean.
 
-- [ ] **Model batch mode metadata** — Extend `ModelBase` (or `TensorSlotDescriptor`) with 
+- [x] **Model batch mode metadata** — Extend `ModelBase` (or `TensorSlotDescriptor`) with 
   a `BatchMode` concept: `Fixed(N)`, `Dynamic(min, max)`, or `RecurrentOnly` (fixed 1). 
   Models report which modes they support
-- [ ] **Multi-variant model loading** — Support loading separate `.pt2` files for 
+- [x] **Multi-variant model loading** — Support loading separate `.pt2` files for 
   different batch configurations (e.g., `neurosam_recurrent.pt2` compiled with batch=1, 
   `neurosam_batched.pt2` compiled with batch=8 or dynamic batch). The widget 
   auto-selects the variant based on active bindings
-- [ ] **Dynamic-shape AOT export documentation** — Document the `torch.export` workflow 
+- [x] **Dynamic-shape AOT export documentation** — Document the `torch.export` workflow 
   with `dynamic_shapes={...: {0: Dim("batch")}}` for users who want a single `.pt2` 
   supporting variable batch sizes
-- [ ] **Widget batch-size logic** — Auto-detect constraints: recurrent bindings → batch=1; 
+- [x] **Widget batch-size logic** — Auto-detect constraints: recurrent bindings → batch=1; 
   all-static or all-dynamic → clamp to `model.maxBatchSize()`; mixed → use the most 
   restrictive constraint. Surface the reasoning in the UI
 

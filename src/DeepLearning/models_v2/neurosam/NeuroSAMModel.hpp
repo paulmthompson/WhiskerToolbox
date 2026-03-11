@@ -52,6 +52,7 @@ public:
 
     [[nodiscard]] int preferredBatchSize() const override;
     [[nodiscard]] int maxBatchSize() const override;
+    [[nodiscard]] dl::BatchMode batchMode() const override;
 
     std::unordered_map<std::string, torch::Tensor>
     forward(std::unordered_map<std::string, torch::Tensor> const & inputs) override;
@@ -79,6 +80,6 @@ private:
     std::vector<std::string> _input_order;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_NEUROSAM_MODEL_HPP
+#endif// WHISKERTOOLBOX_NEUROSAM_MODEL_HPP

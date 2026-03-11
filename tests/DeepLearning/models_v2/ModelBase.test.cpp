@@ -16,17 +16,14 @@ public:
 
     std::vector<dl::TensorSlotDescriptor> inputSlots() const override {
         return {
-            {.name = "image", .shape = {3, 64, 64}, .description = "Input image",
-             .recommended_encoder = "ImageEncoder"},
-            {.name = "mask", .shape = {1, 64, 64}, .description = "Input mask",
-             .recommended_encoder = "Mask2DEncoder", .is_static = true},
+                {.name = "image", .shape = {3, 64, 64}, .description = "Input image", .recommended_encoder = "ImageEncoder"},
+                {.name = "mask", .shape = {1, 64, 64}, .description = "Input mask", .recommended_encoder = "Mask2DEncoder", .is_static = true},
         };
     }
 
     std::vector<dl::TensorSlotDescriptor> outputSlots() const override {
         return {
-            {.name = "heatmap", .shape = {1, 64, 64}, .description = "Output heatmap",
-             .recommended_decoder = "TensorToMask2D"},
+                {.name = "heatmap", .shape = {1, 64, 64}, .description = "Output heatmap", .recommended_decoder = "TensorToMask2D"},
         };
     }
 
@@ -75,10 +72,9 @@ public:
     }
 };
 
-} // anonymous namespace
+}// anonymous namespace
 
-TEST_CASE("ModelBase - DummyModel metadata", "[ModelBase]")
-{
+TEST_CASE("ModelBase - DummyModel metadata", "[ModelBase]") {
     DummyModel model;
 
     CHECK(model.modelId() == "dummy");
@@ -86,8 +82,7 @@ TEST_CASE("ModelBase - DummyModel metadata", "[ModelBase]")
     CHECK(model.description() == "A test-only model");
 }
 
-TEST_CASE("ModelBase - input/output slot descriptors", "[ModelBase]")
-{
+TEST_CASE("ModelBase - input/output slot descriptors", "[ModelBase]") {
     DummyModel model;
 
     auto inputs = model.inputSlots();
@@ -107,8 +102,7 @@ TEST_CASE("ModelBase - input/output slot descriptors", "[ModelBase]")
     CHECK(outputs[0].recommended_decoder == "TensorToMask2D");
 }
 
-TEST_CASE("ModelBase - weight loading and readiness", "[ModelBase]")
-{
+TEST_CASE("ModelBase - weight loading and readiness", "[ModelBase]") {
     DummyModel model;
 
     CHECK(model.isReady() == false);
@@ -116,8 +110,7 @@ TEST_CASE("ModelBase - weight loading and readiness", "[ModelBase]")
     CHECK(model.isReady() == true);
 }
 
-TEST_CASE("ModelBase - batch size defaults", "[ModelBase]")
-{
+TEST_CASE("ModelBase - batch size defaults", "[ModelBase]") {
     SECTION("DummyModel with custom batch sizes") {
         DummyModel model;
         CHECK(model.preferredBatchSize() == 1);
@@ -131,8 +124,27 @@ TEST_CASE("ModelBase - batch size defaults", "[ModelBase]")
     }
 }
 
-TEST_CASE("ModelBase - forward pass with DummyModel", "[ModelBase]")
-{
+TEST_CASE("ModelBase - batchMode default", "[ModelBase]") {
+    SECTION("DummyModel returns DynamicBatch with maxBatchSize") {
+        DummyModel model;
+        auto mode = model.batchMode();
+        REQUIRE(std::holds_alternative<dl::DynamicBatch>(mode));
+        auto const & dyn = std::get<dl::DynamicBatch>(mode);
+        CHECK(dyn.min_size == 1);
+        CHECK(dyn.max_size == 8);
+    }
+
+    SECTION("MinimalModel returns DynamicBatch unlimited") {
+        MinimalModel model;
+        auto mode = model.batchMode();
+        REQUIRE(std::holds_alternative<dl::DynamicBatch>(mode));
+        auto const & dyn = std::get<dl::DynamicBatch>(mode);
+        CHECK(dyn.min_size == 1);
+        CHECK(dyn.max_size == 0);
+    }
+}
+
+TEST_CASE("ModelBase - forward pass with DummyModel", "[ModelBase]") {
     DummyModel model;
     model.loadWeights("/fake/path.pte");
 
@@ -140,27 +152,25 @@ TEST_CASE("ModelBase - forward pass with DummyModel", "[ModelBase]")
     auto mask = torch::ones({1, 1, 64, 64});
 
     std::unordered_map<std::string, torch::Tensor> inputs{
-        {"image", image},
-        {"mask", mask}
-    };
+            {"image", image},
+            {"mask", mask}};
 
     auto outputs = model.forward(inputs);
 
     REQUIRE(outputs.count("heatmap") == 1);
     auto heatmap = outputs.at("heatmap");
     CHECK(heatmap.dim() == 4);
-    CHECK(heatmap.size(0) == 1);  // batch
-    CHECK(heatmap.size(1) == 1);  // channels
-    CHECK(heatmap.size(2) == 64); // height
-    CHECK(heatmap.size(3) == 64); // width
+    CHECK(heatmap.size(0) == 1); // batch
+    CHECK(heatmap.size(1) == 1); // channels
+    CHECK(heatmap.size(2) == 64);// height
+    CHECK(heatmap.size(3) == 64);// width
 
     // Sigmoid output should be in [0, 1]
     CHECK(heatmap.min().item<float>() >= 0.0f);
     CHECK(heatmap.max().item<float>() <= 1.0f);
 }
 
-TEST_CASE("ModelBase - forward with batch > 1", "[ModelBase]")
-{
+TEST_CASE("ModelBase - forward with batch > 1", "[ModelBase]") {
     DummyModel model;
     model.loadWeights("/fake/path.pte");
 
@@ -173,8 +183,7 @@ TEST_CASE("ModelBase - forward with batch > 1", "[ModelBase]")
     CHECK(outputs.at("heatmap").size(0) == batch_size);
 }
 
-TEST_CASE("ModelBase - forward with missing input returns empty", "[ModelBase]")
-{
+TEST_CASE("ModelBase - forward with missing input returns empty", "[ModelBase]") {
     DummyModel model;
     model.loadWeights("/fake/path.pte");
 

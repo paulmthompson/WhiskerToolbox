@@ -141,3 +141,51 @@ TEST_CASE("TensorSlotDescriptor - boolean mask for sequence slots",
     CHECK(mask_slot.is_static);
     CHECK(mask_slot.shape[0] == 4);
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// BatchMode (Phase 6)
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("BatchMode - FixedBatch", "[BatchMode]") {
+    dl::BatchMode mode = dl::FixedBatch{4};
+
+    CHECK(dl::maxBatchSizeFromMode(mode) == 4);
+    CHECK(dl::minBatchSizeFromMode(mode) == 4);
+    CHECK_FALSE(dl::isBatchLocked(mode));
+    CHECK(dl::batchModeDescription(mode) == "Fixed(4)");
+}
+
+TEST_CASE("BatchMode - FixedBatch size=1 is locked", "[BatchMode]") {
+    dl::BatchMode mode = dl::FixedBatch{1};
+
+    CHECK(dl::isBatchLocked(mode));
+    CHECK(dl::maxBatchSizeFromMode(mode) == 1);
+    CHECK(dl::minBatchSizeFromMode(mode) == 1);
+}
+
+TEST_CASE("BatchMode - DynamicBatch unlimited", "[BatchMode]") {
+    dl::BatchMode mode = dl::DynamicBatch{1, 0};
+
+    CHECK(dl::maxBatchSizeFromMode(mode) == 0);
+    CHECK(dl::minBatchSizeFromMode(mode) == 1);
+    CHECK_FALSE(dl::isBatchLocked(mode));
+    CHECK(dl::batchModeDescription(mode) == "Dynamic(1, unlimited)");
+}
+
+TEST_CASE("BatchMode - DynamicBatch bounded", "[BatchMode]") {
+    dl::BatchMode mode = dl::DynamicBatch{2, 16};
+
+    CHECK(dl::maxBatchSizeFromMode(mode) == 16);
+    CHECK(dl::minBatchSizeFromMode(mode) == 2);
+    CHECK_FALSE(dl::isBatchLocked(mode));
+    CHECK(dl::batchModeDescription(mode) == "Dynamic(2, 16)");
+}
+
+TEST_CASE("BatchMode - RecurrentOnlyBatch", "[BatchMode]") {
+    dl::BatchMode mode = dl::RecurrentOnlyBatch{};
+
+    CHECK(dl::isBatchLocked(mode));
+    CHECK(dl::maxBatchSizeFromMode(mode) == 1);
+    CHECK(dl::minBatchSizeFromMode(mode) == 1);
+    CHECK(dl::batchModeDescription(mode) == "RecurrentOnly");
+}

@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "models_v2/neurosam/NeuroSAMModel.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
+#include "models_v2/neurosam/NeuroSAMModel.hpp"
 #include "registry/ModelRegistry.hpp"
 
 #include <torch/torch.h>
@@ -12,20 +12,17 @@
 
 // ─── Metadata Tests ─────────────────────────────────────────────
 
-TEST_CASE("NeuroSAMModel - modelId", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - modelId", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     CHECK(model.modelId() == "neurosam");
 }
 
-TEST_CASE("NeuroSAMModel - displayName", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - displayName", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     CHECK(model.displayName() == "NeuroSAM");
 }
 
-TEST_CASE("NeuroSAMModel - description is non-empty", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - description is non-empty", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     CHECK_FALSE(model.description().empty());
     CHECK(model.description().find("Segment-Anything") != std::string::npos);
@@ -33,29 +30,25 @@ TEST_CASE("NeuroSAMModel - description is non-empty", "[NeuroSAMModel]")
 
 // ─── Batch Size Tests ───────────────────────────────────────────
 
-TEST_CASE("NeuroSAMModel - preferredBatchSize is 1", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - preferredBatchSize is 1", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     CHECK(model.preferredBatchSize() == 1);
 }
 
-TEST_CASE("NeuroSAMModel - maxBatchSize is 1", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - maxBatchSize is 1", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     CHECK(model.maxBatchSize() == 1);
 }
 
 // ─── Input Slot Tests ───────────────────────────────────────────
 
-TEST_CASE("NeuroSAMModel - has 3 input slots", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - has 3 input slots", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     auto inputs = model.inputSlots();
     REQUIRE(inputs.size() == 3);
 }
 
-TEST_CASE("NeuroSAMModel - encoder_image slot", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - encoder_image slot", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     auto inputs = model.inputSlots();
     REQUIRE(inputs.size() >= 1);
@@ -71,8 +64,7 @@ TEST_CASE("NeuroSAMModel - encoder_image slot", "[NeuroSAMModel]")
     CHECK_FALSE(slot.description.empty());
 }
 
-TEST_CASE("NeuroSAMModel - memory_images slot", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - memory_images slot", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     auto inputs = model.inputSlots();
     REQUIRE(inputs.size() >= 2);
@@ -87,8 +79,7 @@ TEST_CASE("NeuroSAMModel - memory_images slot", "[NeuroSAMModel]")
     CHECK(slot.sequence_dim == -1);
 }
 
-TEST_CASE("NeuroSAMModel - memory_masks slot", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - memory_masks slot", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     auto inputs = model.inputSlots();
     REQUIRE(inputs.size() >= 3);
@@ -105,15 +96,13 @@ TEST_CASE("NeuroSAMModel - memory_masks slot", "[NeuroSAMModel]")
 
 // ─── Output Slot Tests ──────────────────────────────────────────
 
-TEST_CASE("NeuroSAMModel - has 1 output slot", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - has 1 output slot", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     auto outputs = model.outputSlots();
     REQUIRE(outputs.size() == 1);
 }
 
-TEST_CASE("NeuroSAMModel - probability_map output slot", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - probability_map output slot", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     auto outputs = model.outputSlots();
     REQUIRE(outputs.size() == 1);
@@ -131,29 +120,26 @@ TEST_CASE("NeuroSAMModel - probability_map output slot", "[NeuroSAMModel]")
 
 // ─── Weight Loading / Readiness Tests ───────────────────────────
 
-TEST_CASE("NeuroSAMModel - not ready without weights", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - not ready without weights", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     CHECK(model.isReady() == false);
 }
 
-TEST_CASE("NeuroSAMModel - loadWeights with nonexistent file throws", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - loadWeights with nonexistent file throws", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     CHECK_THROWS_AS(
-        model.loadWeights("/nonexistent/path/model.pte"),
-        std::runtime_error);
+            model.loadWeights("/nonexistent/path/model.pte"),
+            std::runtime_error);
     CHECK(model.isReady() == false);
 }
 
-TEST_CASE("NeuroSAMModel - forward without weights throws", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - forward without weights throws", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
 
     std::unordered_map<std::string, torch::Tensor> inputs{
-        {"encoder_image", torch::randn({1, 3, 256, 256})},
-        {"memory_images", torch::randn({1, 3, 256, 256})},
-        {"memory_masks", torch::randn({1, 1, 256, 256})},
+            {"encoder_image", torch::randn({1, 3, 256, 256})},
+            {"memory_images", torch::randn({1, 3, 256, 256})},
+            {"memory_masks", torch::randn({1, 1, 256, 256})},
     };
 
     CHECK_THROWS_AS(model.forward(inputs), std::runtime_error);
@@ -161,8 +147,7 @@ TEST_CASE("NeuroSAMModel - forward without weights throws", "[NeuroSAMModel]")
 
 // ─── Forward Validation Tests (no weights needed) ───────────────
 
-TEST_CASE("NeuroSAMModel - forward with missing input throws", "[NeuroSAMModel][integration]")
-{
+TEST_CASE("NeuroSAMModel - forward with missing input throws", "[NeuroSAMModel][integration]") {
     // This test verifies input validation logic.
     // Even if weights were loaded, missing inputs should be caught before execution.
     // Since we can't actually load weights in unit tests, we verify the error message.
@@ -170,8 +155,8 @@ TEST_CASE("NeuroSAMModel - forward with missing input throws", "[NeuroSAMModel][
 
     // Missing memory_masks
     std::unordered_map<std::string, torch::Tensor> incomplete_inputs{
-        {"encoder_image", torch::randn({1, 3, 256, 256})},
-        {"memory_images", torch::randn({1, 3, 256, 256})},
+            {"encoder_image", torch::randn({1, 3, 256, 256})},
+            {"memory_images", torch::randn({1, 3, 256, 256})},
     };
 
     // Should throw because model isn't ready AND inputs are incomplete
@@ -180,16 +165,14 @@ TEST_CASE("NeuroSAMModel - forward with missing input throws", "[NeuroSAMModel][
 
 // ─── Constants Tests ────────────────────────────────────────────
 
-TEST_CASE("NeuroSAMModel - constants are correct", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - constants are correct", "[NeuroSAMModel]") {
     CHECK(dl::NeuroSAMModel::kModelSize == 256);
     CHECK(dl::NeuroSAMModel::kImageChannels == 3);
     CHECK(dl::NeuroSAMModel::kMaskChannels == 1);
     CHECK(dl::NeuroSAMModel::kOutputChannels == 1);
 }
 
-TEST_CASE("NeuroSAMModel - slot name constants match slot descriptors", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - slot name constants match slot descriptors", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     auto inputs = model.inputSlots();
     auto outputs = model.outputSlots();
@@ -202,8 +185,7 @@ TEST_CASE("NeuroSAMModel - slot name constants match slot descriptors", "[NeuroS
 
 // ─── Slot Element Count Tests ───────────────────────────────────
 
-TEST_CASE("NeuroSAMModel - slot numElements correct", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - slot numElements correct", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     auto inputs = model.inputSlots();
     auto outputs = model.outputSlots();
@@ -223,22 +205,20 @@ TEST_CASE("NeuroSAMModel - slot numElements correct", "[NeuroSAMModel]")
 
 // ─── No Sequence Dimension Tests ────────────────────────────────
 
-TEST_CASE("NeuroSAMModel - no slots have sequence dimension", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - no slots have sequence dimension", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
 
-    for (auto const & slot : model.inputSlots()) {
+    for (auto const & slot: model.inputSlots()) {
         CHECK(slot.hasSequenceDim() == false);
     }
-    for (auto const & slot : model.outputSlots()) {
+    for (auto const & slot: model.outputSlots()) {
         CHECK(slot.hasSequenceDim() == false);
     }
 }
 
 // ─── Move Semantics Test ────────────────────────────────────────
 
-TEST_CASE("NeuroSAMModel - move constructor", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - move constructor", "[NeuroSAMModel]") {
     dl::NeuroSAMModel original;
     CHECK(original.modelId() == "neurosam");
 
@@ -248,8 +228,7 @@ TEST_CASE("NeuroSAMModel - move constructor", "[NeuroSAMModel]")
     CHECK(moved.outputSlots().size() == 1);
 }
 
-TEST_CASE("NeuroSAMModel - move assignment", "[NeuroSAMModel]")
-{
+TEST_CASE("NeuroSAMModel - move assignment", "[NeuroSAMModel]") {
     dl::NeuroSAMModel original;
     dl::NeuroSAMModel target;
 
@@ -260,14 +239,12 @@ TEST_CASE("NeuroSAMModel - move assignment", "[NeuroSAMModel]")
 
 // ─── Registry Integration Tests ─────────────────────────────────
 
-TEST_CASE("NeuroSAMModel - registered in ModelRegistry", "[NeuroSAMModel][ModelRegistry]")
-{
+TEST_CASE("NeuroSAMModel - registered in ModelRegistry", "[NeuroSAMModel][ModelRegistry]") {
     auto & registry = dl::ModelRegistry::instance();
     CHECK(registry.hasModel("neurosam"));
 }
 
-TEST_CASE("NeuroSAMModel - can be created via registry", "[NeuroSAMModel][ModelRegistry]")
-{
+TEST_CASE("NeuroSAMModel - can be created via registry", "[NeuroSAMModel][ModelRegistry]") {
     auto & registry = dl::ModelRegistry::instance();
     auto model = registry.create("neurosam");
     REQUIRE(model != nullptr);
@@ -275,8 +252,7 @@ TEST_CASE("NeuroSAMModel - can be created via registry", "[NeuroSAMModel][ModelR
     CHECK(model->displayName() == "NeuroSAM");
 }
 
-TEST_CASE("NeuroSAMModel - ModelInfo from registry", "[NeuroSAMModel][ModelRegistry]")
-{
+TEST_CASE("NeuroSAMModel - ModelInfo from registry", "[NeuroSAMModel][ModelRegistry]") {
     auto & registry = dl::ModelRegistry::instance();
     auto info = registry.getModelInfo("neurosam");
     REQUIRE(info.has_value());
@@ -290,8 +266,23 @@ TEST_CASE("NeuroSAMModel - ModelInfo from registry", "[NeuroSAMModel][ModelRegis
     CHECK(info->max_batch_size == 1);
 }
 
-TEST_CASE("NeuroSAMModel - registry slot lookup", "[NeuroSAMModel][ModelRegistry]")
-{
+TEST_CASE("NeuroSAMModel - batchMode is RecurrentOnly", "[NeuroSAMModel]") {
+    dl::NeuroSAMModel model;
+    auto mode = model.batchMode();
+    CHECK(std::holds_alternative<dl::RecurrentOnlyBatch>(mode));
+    CHECK(dl::isBatchLocked(mode));
+    CHECK(dl::maxBatchSizeFromMode(mode) == 1);
+}
+
+TEST_CASE("NeuroSAMModel - registry ModelInfo has RecurrentOnly batch_mode",
+          "[NeuroSAMModel][ModelRegistry]") {
+    auto & registry = dl::ModelRegistry::instance();
+    auto info = registry.getModelInfo("neurosam");
+    REQUIRE(info.has_value());
+    CHECK(std::holds_alternative<dl::RecurrentOnlyBatch>(info->batch_mode));
+}
+
+TEST_CASE("NeuroSAMModel - registry slot lookup", "[NeuroSAMModel][ModelRegistry]") {
     auto & registry = dl::ModelRegistry::instance();
 
     auto const * encoder_image = registry.getInputSlot("neurosam", "encoder_image");
@@ -311,8 +302,7 @@ TEST_CASE("NeuroSAMModel - registry slot lookup", "[NeuroSAMModel][ModelRegistry
     CHECK(nonexistent == nullptr);
 }
 
-TEST_CASE("NeuroSAMModel - registry creates independent instances", "[NeuroSAMModel][ModelRegistry]")
-{
+TEST_CASE("NeuroSAMModel - registry creates independent instances", "[NeuroSAMModel][ModelRegistry]") {
     auto & registry = dl::ModelRegistry::instance();
     auto model1 = registry.create("neurosam");
     auto model2 = registry.create("neurosam");

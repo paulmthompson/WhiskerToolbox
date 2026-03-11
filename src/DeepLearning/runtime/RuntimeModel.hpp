@@ -47,6 +47,18 @@ public:
 
     [[nodiscard]] int preferredBatchSize() const override;
     [[nodiscard]] int maxBatchSize() const override;
+    [[nodiscard]] dl::BatchMode batchMode() const override;
+
+    /// Select and load the best weights variant for the given batch size.
+    ///
+    /// Searches `weights_variants` for an exact batch_size match. If none
+    /// is found, falls back to the default `weights_path`.
+    ///
+    /// @return true if a variant was found and loaded successfully
+    bool loadWeightsForBatchSize(int batch_size);
+
+    /// Get the list of available weights variants (if any).
+    [[nodiscard]] std::vector<WeightsVariant> weightsVariants() const;
 
     std::unordered_map<std::string, torch::Tensor>
     forward(std::unordered_map<std::string, torch::Tensor> const & inputs) override;
@@ -58,11 +70,11 @@ private:
     RuntimeModelSpec _spec;
     std::vector<TensorSlotDescriptor> _input_slots;
     std::vector<TensorSlotDescriptor> _output_slots;
-    std::vector<std::string> _input_order;   ///< Ordered input names for executeNamed()
-    std::vector<std::string> _output_order;  ///< Ordered output names
+    std::vector<std::string> _input_order; ///< Ordered input names for executeNamed()
+    std::vector<std::string> _output_order;///< Ordered output names
     ModelExecution _execution;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_RUNTIME_MODEL_HPP
+#endif// WHISKERTOOLBOX_RUNTIME_MODEL_HPP

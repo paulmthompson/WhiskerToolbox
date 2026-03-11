@@ -1,0 +1,143 @@
+---
+title: "Batch Mode & Multi-Variant Model Loading"
+---
+
+## Overview
+
+Phase 6 of the Deep Learning input pipeline introduces a structured `BatchMode` type 
+that models use to declare their batch-size constraints, and a multi-variant weights 
+system that allows a single model definition to load different compiled artifacts 
+depending on the active batch size.
+
+## BatchMode
+
+Every `ModelBase` subclass reports its batch-size constraints via `batchMode()`. The 
+return type is `dl::BatchMode`, a `std::variant` with three alternatives:
+
+| Mode | Meaning | Example |
+|------|---------|---------|
+| `FixedBatch{N}` | Model is compiled for exactly N samples per call | AOT-compiled `.pt2` with fixed shapes |
+| `DynamicBatch{min, max}` | Model accepts a range of batch sizes (max=0 → unlimited) | TorchScript model with dynamic shapes |
+| `RecurrentOnlyBatch{}` | Batch size is locked to 1 (sequential feedback loop) | NeuroSAM |
+
+### C++ API
+
+```cpp
+// In your ModelBase subclass:
+dl::BatchMode batchMode() const override {
+    return dl::RecurrentOnlyBatch{};   // or FixedBatch{4}, DynamicBatch{1, 8}
+}
+
+// Querying:
+auto mode = model->batchMode();
+bool locked = dl::isBatchLocked(mode);          // true for RecurrentOnly or Fixed(1)
+int  max    = dl::maxBatchSizeFromMode(mode);   // 0 = unlimited
+int  min    = dl::minBatchSizeFromMode(mode);
+auto desc   = dl::batchModeDescription(mode);   // "RecurrentOnly", "Fixed(4)", etc.
+```
+
+### JSON Specification (RuntimeModelSpec)
+
+Runtime-defined models specify batch mode in their JSON spec:
+
+```json
+{
+  "model_id": "my_model",
+  "display_name": "My Model",
+  "batch_mode": { "fixed": 4 },
+  "inputs": [...],
+  "outputs": [...]
+}
+```
+
+Supported formats:
+
+- `{ "fixed": N }` — Fixed batch size
+- `{ "dynamic": { "min": 1, "max": 8 } }` — Dynamic range (max=0 for unlimited)
+- `{ "recurrent_only": true }` — Recurrent-only
+
+If `batch_mode` is omitted, the legacy `preferred_batch_size` / `max_batch_size` fields 
+are used to construct a `DynamicBatch`.
+
+## Widget Batch-Size Logic
+
+The Properties widget automatically determines the batch-size spinbox constraints by 
+combining the model's `BatchMode` with the active binding configuration:
+
+1. **Recurrent bindings active** → batch locked to 1 (highest priority)
+2. **Model reports `RecurrentOnlyBatch`** → batch locked to 1
+3. **Model reports `FixedBatch{N}`** → batch locked to N
+4. **Model reports `DynamicBatch{min, max}`** → spinbox range set to [min, max]
+
+The constraint reasoning is surfaced as a tooltip on the batch-size spinbox.
+
+## Multi-Variant Model Loading
+
+Some models are compiled multiple times for different batch sizes — for example, 
+a recurrent variant with batch=1 and a batched variant with batch=8. The 
+`weights_variants` field in `RuntimeModelSpec` supports this:
+
+```json
+{
+  "model_id": "neurosam_multi",
+  "display_name": "NeuroSAM (Multi-Variant)",
+  "batch_mode": { "dynamic": { "min": 1, "max": 8 } },
+  "weights_variants": [
+    { "path": "neurosam_b1.pt2", "batch_size": 1, "label": "recurrent" },
+    { "path": "neurosam_b8.pt2", "batch_size": 8, "label": "batched" }
+  ],
+  "inputs": [...],
+  "outputs": [...]
+}
+```
+
+Each variant specifies:
+
+- **`path`** — Path to the weights file (resolved relative to the JSON file's directory)
+- **`batch_size`** — The batch size this variant was compiled for
+- **`label`** (optional) — Human-readable label for display
+- **`backend`** (optional) — Backend override (e.g., `"aotinductor"`, `"torchscript"`)
+
+The `RuntimeModel::loadWeightsForBatchSize(int)` method selects and loads the matching 
+variant. If no exact match is found, it falls back to the default `weights_path`.
+
+## Dynamic-Shape AOT Export
+
+For models that support variable batch sizes with a single `.pt2` file, use 
+`torch.export` with `dynamic_shapes` to mark the batch dimension as dynamic:
+
+```python
+import torch
+from torch.export import export, Dim
+
+model = MyModel()
+model.eval()
+
+# Define a dynamic batch dimension
+batch = Dim("batch", min=1, max=32)
+
+# Example inputs with batch dimension marked dynamic
+example_inputs = (torch.randn(1, 3, 256, 256),)
+dynamic_shapes = {"x": {0: batch}}
+
+# Export with dynamic shapes
+exported = export(model, example_inputs, dynamic_shapes=dynamic_shapes)
+
+# Compile to AOT Inductor package
+so_path = torch._inductor.aot_compile(
+    exported.module(),
+    example_inputs,
+)
+# The resulting .so can be loaded by AOTInductorBackend
+```
+
+### When to Use Dynamic vs Multi-Variant
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| Dynamic shapes | Single file, flexible | May be slightly slower than fixed-shape |
+| Multi-variant | Optimal per-batch performance | Multiple files to manage |
+
+For most use cases, **dynamic shapes** is simpler and sufficient. Use multi-variant 
+only when profiling shows a meaningful performance gap between dynamic and fixed-shape 
+compilation for your specific model.

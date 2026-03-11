@@ -1074,6 +1074,7 @@ std::optional<ModelDisplayInfo> SlotAssembler::getModelDisplayInfo(
     display.outputs = info->outputs;
     display.preferred_batch_size = info->preferred_batch_size;
     display.max_batch_size = info->max_batch_size;
+    display.batch_mode = info->batch_mode;
     return display;
 }
 

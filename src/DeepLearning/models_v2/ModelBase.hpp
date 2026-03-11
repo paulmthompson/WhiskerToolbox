@@ -57,6 +57,18 @@ public:
     /// Maximum batch size the model supports. 0 = unlimited.
     [[nodiscard]] virtual int maxBatchSize() const { return 0; }
 
+    /// Batch mode describing the model's batch-size constraints.
+    ///
+    /// The default returns `DynamicBatch{1, 0}` (any batch size).
+    /// Override in subclasses to report `FixedBatch`, `RecurrentOnlyBatch`,
+    /// or a `DynamicBatch` with specific limits.
+    ///
+    /// The widget uses this to configure the batch-size spinbox and to
+    /// auto-select the correct weights variant for multi-variant models.
+    [[nodiscard]] virtual BatchMode batchMode() const {
+        return DynamicBatch{1, maxBatchSize()};
+    }
+
     /// Run inference.
     ///
     /// @param inputs  Map of slot_name → Tensor, each with a leading batch dimension.
@@ -68,6 +80,6 @@ public:
     forward(std::unordered_map<std::string, torch::Tensor> const & inputs) = 0;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_MODEL_BASE_HPP
+#endif// WHISKERTOOLBOX_MODEL_BASE_HPP

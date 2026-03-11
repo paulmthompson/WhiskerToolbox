@@ -5,20 +5,19 @@
 namespace dl {
 
 RuntimeModel::RuntimeModel(RuntimeModelSpec spec)
-    : _spec(std::move(spec))
-    , _input_slots(_spec.inputDescriptors())
-    , _output_slots(_spec.outputDescriptors())
-    , _execution(_spec.backend.has_value()
-          ? backendTypeFromString(_spec.backend.value())
-          : BackendType::Auto)
-{
+    : _spec(std::move(spec)),
+      _input_slots(_spec.inputDescriptors()),
+      _output_slots(_spec.outputDescriptors()),
+      _execution(_spec.backend.has_value()
+                         ? backendTypeFromString(_spec.backend.value())
+                         : BackendType::Auto) {
     _input_order.reserve(_input_slots.size());
-    for (auto const & slot : _input_slots) {
+    for (auto const & slot: _input_slots) {
         _input_order.push_back(slot.name);
     }
 
     _output_order.reserve(_output_slots.size());
-    for (auto const & slot : _output_slots) {
+    for (auto const & slot: _output_slots) {
         _output_order.push_back(slot.name);
     }
 
@@ -28,58 +27,81 @@ RuntimeModel::RuntimeModel(RuntimeModelSpec spec)
     }
 }
 
-std::string RuntimeModel::modelId() const
-{
+std::string RuntimeModel::modelId() const {
     return _spec.model_id;
 }
 
-std::string RuntimeModel::displayName() const
-{
+std::string RuntimeModel::displayName() const {
     return _spec.display_name;
 }
 
-std::string RuntimeModel::description() const
-{
+std::string RuntimeModel::description() const {
     return _spec.description.value_or("");
 }
 
-std::vector<TensorSlotDescriptor> RuntimeModel::inputSlots() const
-{
+std::vector<TensorSlotDescriptor> RuntimeModel::inputSlots() const {
     return _input_slots;
 }
 
-std::vector<TensorSlotDescriptor> RuntimeModel::outputSlots() const
-{
+std::vector<TensorSlotDescriptor> RuntimeModel::outputSlots() const {
     return _output_slots;
 }
 
-void RuntimeModel::loadWeights(std::filesystem::path const & path)
-{
+void RuntimeModel::loadWeights(std::filesystem::path const & path) {
     _execution.load(path);
 }
 
-bool RuntimeModel::isReady() const
-{
+bool RuntimeModel::isReady() const {
     return _execution.isLoaded();
 }
 
-int RuntimeModel::preferredBatchSize() const
-{
+int RuntimeModel::preferredBatchSize() const {
     return _spec.preferred_batch_size.value_or(0);
 }
 
-int RuntimeModel::maxBatchSize() const
-{
+int RuntimeModel::maxBatchSize() const {
     return _spec.max_batch_size.value_or(0);
 }
 
+BatchMode RuntimeModel::batchMode() const {
+    if (_spec.batch_mode.has_value()) {
+        return _spec.batch_mode->toBatchMode();
+    }
+    // Fall back to legacy preferred/max batch size fields
+    return DynamicBatch{1, _spec.max_batch_size.value_or(0)};
+}
+
+bool RuntimeModel::loadWeightsForBatchSize(int batch_size) {
+    if (!_spec.weights_variants.has_value()) {
+        return false;
+    }
+
+    for (auto const & variant: _spec.weights_variants.value()) {
+        if (variant.batch_size == batch_size) {
+            auto backend_type = variant.backend.has_value()
+                                        ? backendTypeFromString(variant.backend.value())
+                                        : BackendType::Auto;
+            _execution = ModelExecution(backend_type);
+            _execution.load(variant.path);
+            return _execution.isLoaded();
+        }
+    }
+    return false;
+}
+
+std::vector<WeightsVariant> RuntimeModel::weightsVariants() const {
+    if (_spec.weights_variants.has_value()) {
+        return _spec.weights_variants.value();
+    }
+    return {};
+}
+
 std::unordered_map<std::string, torch::Tensor>
-RuntimeModel::forward(std::unordered_map<std::string, torch::Tensor> const & inputs)
-{
+RuntimeModel::forward(std::unordered_map<std::string, torch::Tensor> const & inputs) {
     if (!isReady()) {
         throw std::runtime_error(
-            "RuntimeModel::forward(): model '" + _spec.model_id +
-            "' not ready (weights not loaded)");
+                "RuntimeModel::forward(): model '" + _spec.model_id +
+                "' not ready (weights not loaded)");
     }
 
     auto output_tensors = _execution.executeNamed(inputs, _input_order);
@@ -91,9 +113,8 @@ RuntimeModel::forward(std::unordered_map<std::string, torch::Tensor> const & inp
     return result;
 }
 
-RuntimeModelSpec const & RuntimeModel::spec() const
-{
+RuntimeModelSpec const & RuntimeModel::spec() const {
     return _spec;
 }
 
-} // namespace dl
+}// namespace dl

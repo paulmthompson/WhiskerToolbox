@@ -1,6 +1,6 @@
-#include "runtime/RuntimeModel.hpp"
 #include "runtime/RuntimeModelSpec.hpp"
 #include "registry/ModelRegistry.hpp"
+#include "runtime/RuntimeModel.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
@@ -13,16 +13,14 @@ using namespace dl;
 using Catch::Matchers::ContainsSubstring;
 
 // Helper to create a SlotSpec with only name and shape
-static SlotSpec makeSlot(std::string name, std::vector<int64_t> shape)
-{
+static SlotSpec makeSlot(std::string name, std::vector<int64_t> shape) {
     SlotSpec s;
     s.name = std::move(name);
     s.shape = std::move(shape);
     return s;
 }
 
-static SlotSpec makeSlotWithSeqDim(std::string name, std::vector<int64_t> shape, int seq_dim)
-{
+static SlotSpec makeSlotWithSeqDim(std::string name, std::vector<int64_t> shape, int seq_dim) {
     SlotSpec s;
     s.name = std::move(name);
     s.shape = std::move(shape);
@@ -32,8 +30,7 @@ static SlotSpec makeSlotWithSeqDim(std::string name, std::vector<int64_t> shape,
 
 /// Extract error message from an rfl::Result
 template<typename T>
-static std::string errorMsg(rfl::Result<T> const & result)
-{
+static std::string errorMsg(rfl::Result<T> const & result) {
     return std::string(result.error()->what());
 }
 
@@ -101,8 +98,7 @@ static std::string const kMinimalJson = R"({
 // SlotSpec → TensorSlotDescriptor
 // ═══════════════════════════════════════════════════════════════
 
-TEST_CASE("SlotSpec - toDescriptor with all fields", "[runtime]")
-{
+TEST_CASE("SlotSpec - toDescriptor with all fields", "[runtime]") {
     SlotSpec slot;
     slot.name = "image";
     slot.shape = {3, 256, 256};
@@ -126,8 +122,7 @@ TEST_CASE("SlotSpec - toDescriptor with all fields", "[runtime]")
     CHECK(desc.sequence_dim == 0);
 }
 
-TEST_CASE("SlotSpec - toDescriptor applies defaults for omitted fields", "[runtime]")
-{
+TEST_CASE("SlotSpec - toDescriptor applies defaults for omitted fields", "[runtime]") {
     SlotSpec slot;
     slot.name = "x";
     slot.shape = {1, 64, 64};
@@ -150,8 +145,7 @@ TEST_CASE("SlotSpec - toDescriptor applies defaults for omitted fields", "[runti
 // RuntimeModelSpec - JSON parsing
 // ═══════════════════════════════════════════════════════════════
 
-TEST_CASE("RuntimeModelSpec - parse full JSON", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - parse full JSON", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson(kFullJson);
     REQUIRE(static_cast<bool>(result));
 
@@ -182,8 +176,7 @@ TEST_CASE("RuntimeModelSpec - parse full JSON", "[runtime]")
     CHECK(spec.outputs[0].recommended_decoder.value() == "TensorToMask2D");
 }
 
-TEST_CASE("RuntimeModelSpec - parse minimal JSON", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - parse minimal JSON", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson(kMinimalJson);
     REQUIRE(static_cast<bool>(result));
 
@@ -204,14 +197,12 @@ TEST_CASE("RuntimeModelSpec - parse minimal JSON", "[runtime]")
     CHECK(spec.outputs[0].name == "y");
 }
 
-TEST_CASE("RuntimeModelSpec - parse invalid JSON returns error", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - parse invalid JSON returns error", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson("not valid json{{{");
     CHECK_FALSE(static_cast<bool>(result));
 }
 
-TEST_CASE("RuntimeModelSpec - parse JSON missing required field", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - parse JSON missing required field", "[runtime]") {
     // Missing model_id
     std::string const json = R"({
         "display_name": "Oops",
@@ -226,8 +217,7 @@ TEST_CASE("RuntimeModelSpec - parse JSON missing required field", "[runtime]")
 // RuntimeModelSpec - round-trip
 // ═══════════════════════════════════════════════════════════════
 
-TEST_CASE("RuntimeModelSpec - toJson produces parseable JSON", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - toJson produces parseable JSON", "[runtime]") {
     auto result1 = RuntimeModelSpec::fromJson(kFullJson);
     REQUIRE(static_cast<bool>(result1));
 
@@ -258,8 +248,7 @@ TEST_CASE("RuntimeModelSpec - toJson produces parseable JSON", "[runtime]")
 // RuntimeModelSpec - descriptors
 // ═══════════════════════════════════════════════════════════════
 
-TEST_CASE("RuntimeModelSpec - inputDescriptors and outputDescriptors", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - inputDescriptors and outputDescriptors", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson(kFullJson);
     REQUIRE(static_cast<bool>(result));
 
@@ -287,8 +276,7 @@ TEST_CASE("RuntimeModelSpec - inputDescriptors and outputDescriptors", "[runtime
 // RuntimeModelSpec - validate()
 // ═══════════════════════════════════════════════════════════════
 
-TEST_CASE("RuntimeModelSpec - validate passes on valid spec", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - validate passes on valid spec", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson(kFullJson);
     REQUIRE(static_cast<bool>(result));
 
@@ -296,8 +284,7 @@ TEST_CASE("RuntimeModelSpec - validate passes on valid spec", "[runtime]")
     CHECK(errors.empty());
 }
 
-TEST_CASE("RuntimeModelSpec - validate catches empty model_id", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - validate catches empty model_id", "[runtime]") {
     RuntimeModelSpec spec;
     spec.model_id = "";
     spec.display_name = "Name";
@@ -309,8 +296,7 @@ TEST_CASE("RuntimeModelSpec - validate catches empty model_id", "[runtime]")
     CHECK_THAT(errors[0], ContainsSubstring("model_id"));
 }
 
-TEST_CASE("RuntimeModelSpec - validate catches empty display_name", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - validate catches empty display_name", "[runtime]") {
     RuntimeModelSpec spec;
     spec.model_id = "ok";
     spec.display_name = "";
@@ -322,14 +308,13 @@ TEST_CASE("RuntimeModelSpec - validate catches empty display_name", "[runtime]")
     CHECK_THAT(errors[0], ContainsSubstring("display_name"));
 }
 
-TEST_CASE("RuntimeModelSpec - validate catches duplicate input names", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - validate catches duplicate input names", "[runtime]") {
     RuntimeModelSpec spec;
     spec.model_id = "ok";
     spec.display_name = "OK";
     spec.inputs = {
-        makeSlot("x", {1}),
-        makeSlot("x", {2}),
+            makeSlot("x", {1}),
+            makeSlot("x", {2}),
     };
     spec.outputs = {makeSlot("y", {1})};
 
@@ -338,13 +323,12 @@ TEST_CASE("RuntimeModelSpec - validate catches duplicate input names", "[runtime
     CHECK_THAT(errors[0], ContainsSubstring("duplicate"));
 }
 
-TEST_CASE("RuntimeModelSpec - validate catches sequence_dim out of bounds", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - validate catches sequence_dim out of bounds", "[runtime]") {
     RuntimeModelSpec spec;
     spec.model_id = "ok";
     spec.display_name = "OK";
     spec.inputs = {
-        makeSlotWithSeqDim("x", {3, 256, 256}, 5),
+            makeSlotWithSeqDim("x", {3, 256, 256}, 5),
     };
     spec.outputs = {makeSlot("y", {1})};
 
@@ -353,8 +337,7 @@ TEST_CASE("RuntimeModelSpec - validate catches sequence_dim out of bounds", "[ru
     CHECK_THAT(errors[0], ContainsSubstring("sequence_dim"));
 }
 
-TEST_CASE("RuntimeModelSpec - validate catches empty shape", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - validate catches empty shape", "[runtime]") {
     RuntimeModelSpec spec;
     spec.model_id = "ok";
     spec.display_name = "OK";
@@ -366,8 +349,7 @@ TEST_CASE("RuntimeModelSpec - validate catches empty shape", "[runtime]")
     CHECK_THAT(errors[0], ContainsSubstring("shape"));
 }
 
-TEST_CASE("RuntimeModelSpec - validate catches negative batch sizes", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - validate catches negative batch sizes", "[runtime]") {
     RuntimeModelSpec spec;
     spec.model_id = "ok";
     spec.display_name = "OK";
@@ -384,8 +366,7 @@ TEST_CASE("RuntimeModelSpec - validate catches negative batch sizes", "[runtime]
 // RuntimeModelSpec - file loading
 // ═══════════════════════════════════════════════════════════════
 
-TEST_CASE("RuntimeModelSpec - fromJsonFile with relative weights_path", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - fromJsonFile with relative weights_path", "[runtime]") {
     auto const tmp_dir = std::filesystem::temp_directory_path() / "dl_test_runtime";
     std::filesystem::create_directories(tmp_dir);
     auto const json_path = tmp_dir / "model_spec.json";
@@ -416,8 +397,7 @@ TEST_CASE("RuntimeModelSpec - fromJsonFile with relative weights_path", "[runtim
     std::filesystem::remove_all(tmp_dir);
 }
 
-TEST_CASE("RuntimeModelSpec - fromJsonFile with absolute weights_path", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - fromJsonFile with absolute weights_path", "[runtime]") {
     auto const tmp_dir = std::filesystem::temp_directory_path() / "dl_test_runtime2";
     std::filesystem::create_directories(tmp_dir);
     auto const json_path = tmp_dir / "model_spec.json";
@@ -443,8 +423,7 @@ TEST_CASE("RuntimeModelSpec - fromJsonFile with absolute weights_path", "[runtim
     std::filesystem::remove_all(tmp_dir);
 }
 
-TEST_CASE("RuntimeModelSpec - fromJsonFile nonexistent file", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - fromJsonFile nonexistent file", "[runtime]") {
     auto result = RuntimeModelSpec::fromJsonFile("/nonexistent/path/model.json");
     REQUIRE_FALSE(static_cast<bool>(result));
     CHECK_THAT(errorMsg(result), ContainsSubstring("Failed to open"));
@@ -454,8 +433,7 @@ TEST_CASE("RuntimeModelSpec - fromJsonFile nonexistent file", "[runtime]")
 // RuntimeModel - construction and metadata
 // ═══════════════════════════════════════════════════════════════
 
-TEST_CASE("RuntimeModel - metadata from spec", "[runtime]")
-{
+TEST_CASE("RuntimeModel - metadata from spec", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson(kFullJson);
     REQUIRE(static_cast<bool>(result));
 
@@ -468,8 +446,7 @@ TEST_CASE("RuntimeModel - metadata from spec", "[runtime]")
     CHECK(model.maxBatchSize() == 4);
 }
 
-TEST_CASE("RuntimeModel - minimal spec uses defaults", "[runtime]")
-{
+TEST_CASE("RuntimeModel - minimal spec uses defaults", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson(kMinimalJson);
     REQUIRE(static_cast<bool>(result));
 
@@ -482,8 +459,7 @@ TEST_CASE("RuntimeModel - minimal spec uses defaults", "[runtime]")
     CHECK(model.maxBatchSize() == 0);
 }
 
-TEST_CASE("RuntimeModel - input/output slots match spec", "[runtime]")
-{
+TEST_CASE("RuntimeModel - input/output slots match spec", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson(kFullJson);
     REQUIRE(static_cast<bool>(result));
 
@@ -508,8 +484,7 @@ TEST_CASE("RuntimeModel - input/output slots match spec", "[runtime]")
     CHECK(outputs[0].recommended_decoder == "TensorToMask2D");
 }
 
-TEST_CASE("RuntimeModel - isReady before loadWeights", "[runtime]")
-{
+TEST_CASE("RuntimeModel - isReady before loadWeights", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson(kMinimalJson);
     REQUIRE(static_cast<bool>(result));
 
@@ -517,8 +492,7 @@ TEST_CASE("RuntimeModel - isReady before loadWeights", "[runtime]")
     CHECK_FALSE(model.isReady());
 }
 
-TEST_CASE("RuntimeModel - forward throws when not ready", "[runtime]")
-{
+TEST_CASE("RuntimeModel - forward throws when not ready", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson(kMinimalJson);
     REQUIRE(static_cast<bool>(result));
 
@@ -528,8 +502,7 @@ TEST_CASE("RuntimeModel - forward throws when not ready", "[runtime]")
     CHECK_THROWS_AS(model.forward(inputs), std::runtime_error);
 }
 
-TEST_CASE("RuntimeModel - spec() accessor", "[runtime]")
-{
+TEST_CASE("RuntimeModel - spec() accessor", "[runtime]") {
     auto result = RuntimeModelSpec::fromJson(kFullJson);
     REQUIRE(static_cast<bool>(result));
 
@@ -545,8 +518,7 @@ TEST_CASE("RuntimeModel - spec() accessor", "[runtime]")
 // ModelRegistry - registerFromJson
 // ═══════════════════════════════════════════════════════════════
 
-TEST_CASE("ModelRegistry - registerFromJson success", "[runtime]")
-{
+TEST_CASE("ModelRegistry - registerFromJson success", "[runtime]") {
     auto const tmp_dir = std::filesystem::temp_directory_path() / "dl_test_registry_json";
     std::filesystem::create_directories(tmp_dir);
     auto const json_path = tmp_dir / "model.json";
@@ -591,8 +563,7 @@ TEST_CASE("ModelRegistry - registerFromJson success", "[runtime]")
     std::filesystem::remove_all(tmp_dir);
 }
 
-TEST_CASE("ModelRegistry - registerFromJson with nonexistent file", "[runtime]")
-{
+TEST_CASE("ModelRegistry - registerFromJson with nonexistent file", "[runtime]") {
     auto & registry = ModelRegistry::instance();
     std::string error;
     auto result = registry.registerFromJson("/nonexistent/model.json", &error);
@@ -600,8 +571,7 @@ TEST_CASE("ModelRegistry - registerFromJson with nonexistent file", "[runtime]")
     CHECK_THAT(error, ContainsSubstring("Failed to open"));
 }
 
-TEST_CASE("ModelRegistry - registerFromJson with invalid spec", "[runtime]")
-{
+TEST_CASE("ModelRegistry - registerFromJson with invalid spec", "[runtime]") {
     auto const tmp_dir = std::filesystem::temp_directory_path() / "dl_test_registry_invalid";
     std::filesystem::create_directories(tmp_dir);
     auto const json_path = tmp_dir / "bad_model.json";
@@ -631,8 +601,7 @@ TEST_CASE("ModelRegistry - registerFromJson with invalid spec", "[runtime]")
 // Phase 3A: backend field
 // ──────────────────────────────────────────────────────────────
 
-TEST_CASE("RuntimeModelSpec - parse with backend field", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - parse with backend field", "[runtime]") {
     auto json = R"({
         "model_id": "backend_test",
         "display_name": "Backend Test",
@@ -654,8 +623,7 @@ TEST_CASE("RuntimeModelSpec - parse with backend field", "[runtime]")
     CHECK(spec.backend.value() == "aotinductor");
 }
 
-TEST_CASE("RuntimeModelSpec - parse without backend field defaults to empty", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - parse without backend field defaults to empty", "[runtime]") {
     auto json = R"({
         "model_id": "no_backend",
         "display_name": "No Backend",
@@ -672,8 +640,7 @@ TEST_CASE("RuntimeModelSpec - parse without backend field defaults to empty", "[
     CHECK_FALSE(result.value().backend.has_value());
 }
 
-TEST_CASE("RuntimeModelSpec - backend field roundtrips through toJson", "[runtime]")
-{
+TEST_CASE("RuntimeModelSpec - backend field roundtrips through toJson", "[runtime]") {
     auto json = R"({
         "model_id": "roundtrip_backend",
         "display_name": "Roundtrip",
@@ -694,4 +661,237 @@ TEST_CASE("RuntimeModelSpec - backend field roundtrips through toJson", "[runtim
     REQUIRE(result2);
     REQUIRE(result2.value().backend.has_value());
     CHECK(result2.value().backend.value() == "torchscript");
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Phase 6: BatchModeSpec
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("BatchModeSpec - default produces DynamicBatch(1,0)",
+          "[RuntimeModelSpec][BatchMode]") {
+    dl::BatchModeSpec spec;
+    auto mode = spec.toBatchMode();
+    REQUIRE(std::holds_alternative<dl::DynamicBatch>(mode));
+    auto const & d = std::get<dl::DynamicBatch>(mode);
+    CHECK(d.min_size == 1);
+    CHECK(d.max_size == 0);
+}
+
+TEST_CASE("BatchModeSpec - fixed", "[RuntimeModelSpec][BatchMode]") {
+    dl::BatchModeSpec spec;
+    spec.fixed = 4;
+    auto mode = spec.toBatchMode();
+    REQUIRE(std::holds_alternative<dl::FixedBatch>(mode));
+    CHECK(std::get<dl::FixedBatch>(mode).size == 4);
+}
+
+TEST_CASE("BatchModeSpec - dynamic", "[RuntimeModelSpec][BatchMode]") {
+    dl::BatchModeSpec spec;
+    spec.dynamic = dl::BatchModeSpec::DynamicSpec{2, 16};
+    auto mode = spec.toBatchMode();
+    REQUIRE(std::holds_alternative<dl::DynamicBatch>(mode));
+    auto const & d = std::get<dl::DynamicBatch>(mode);
+    CHECK(d.min_size == 2);
+    CHECK(d.max_size == 16);
+}
+
+TEST_CASE("BatchModeSpec - recurrent_only", "[RuntimeModelSpec][BatchMode]") {
+    dl::BatchModeSpec spec;
+    spec.recurrent_only = true;
+    auto mode = spec.toBatchMode();
+    CHECK(std::holds_alternative<dl::RecurrentOnlyBatch>(mode));
+}
+
+TEST_CASE("RuntimeModelSpec - JSON round-trip with batch_mode",
+          "[RuntimeModelSpec][BatchMode]") {
+    std::string const json = R"({
+        "model_id": "bm_test",
+        "display_name": "Batch Mode Test",
+        "batch_mode": { "fixed": 8 },
+        "inputs": [
+            { "name": "x", "shape": [3, 64, 64] }
+        ],
+        "outputs": [
+            { "name": "y", "shape": [1, 64, 64] }
+        ]
+    })";
+
+    auto result = dl::RuntimeModelSpec::fromJson(json);
+    REQUIRE(result);
+    auto const & spec = result.value();
+    REQUIRE(spec.batch_mode.has_value());
+    REQUIRE(spec.batch_mode->fixed.has_value());
+    CHECK(spec.batch_mode->fixed.value() == 8);
+
+    // Round-trip
+    auto serialized = spec.toJson();
+    auto result2 = dl::RuntimeModelSpec::fromJson(serialized);
+    REQUIRE(result2);
+    REQUIRE(result2.value().batch_mode.has_value());
+    REQUIRE(result2.value().batch_mode->fixed.has_value());
+    CHECK(result2.value().batch_mode->fixed.value() == 8);
+}
+
+TEST_CASE("RuntimeModelSpec - JSON with dynamic batch_mode",
+          "[RuntimeModelSpec][BatchMode]") {
+    std::string const json = R"({
+        "model_id": "dyn_test",
+        "display_name": "Dynamic Test",
+        "batch_mode": { "dynamic": { "min": 1, "max": 32 } },
+        "inputs": [{ "name": "x", "shape": [1] }],
+        "outputs": [{ "name": "y", "shape": [1] }]
+    })";
+
+    auto result = dl::RuntimeModelSpec::fromJson(json);
+    REQUIRE(result);
+    auto mode = result.value().batch_mode->toBatchMode();
+    REQUIRE(std::holds_alternative<dl::DynamicBatch>(mode));
+    CHECK(std::get<dl::DynamicBatch>(mode).min_size == 1);
+    CHECK(std::get<dl::DynamicBatch>(mode).max_size == 32);
+}
+
+TEST_CASE("RuntimeModelSpec - JSON with recurrent_only batch_mode",
+          "[RuntimeModelSpec][BatchMode]") {
+    std::string const json = R"({
+        "model_id": "rec_test",
+        "display_name": "Recurrent Test",
+        "batch_mode": { "recurrent_only": true },
+        "inputs": [{ "name": "x", "shape": [1] }],
+        "outputs": [{ "name": "y", "shape": [1] }]
+    })";
+
+    auto result = dl::RuntimeModelSpec::fromJson(json);
+    REQUIRE(result);
+    auto mode = result.value().batch_mode->toBatchMode();
+    CHECK(std::holds_alternative<dl::RecurrentOnlyBatch>(mode));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Phase 6: WeightsVariant
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("RuntimeModelSpec - weights_variants JSON round-trip",
+          "[RuntimeModelSpec][WeightsVariant]") {
+    std::string const json = R"({
+        "model_id": "mv_test",
+        "display_name": "Multi-Variant Test",
+        "weights_variants": [
+            { "path": "model_b1.pt2", "batch_size": 1, "label": "recurrent" },
+            { "path": "model_b8.pt2", "batch_size": 8, "label": "batched" }
+        ],
+        "inputs": [{ "name": "x", "shape": [3, 64, 64] }],
+        "outputs": [{ "name": "y", "shape": [1, 64, 64] }]
+    })";
+
+    auto result = dl::RuntimeModelSpec::fromJson(json);
+    REQUIRE(result);
+    auto const & spec = result.value();
+    REQUIRE(spec.weights_variants.has_value());
+    REQUIRE(spec.weights_variants->size() == 2);
+    CHECK((*spec.weights_variants)[0].path == "model_b1.pt2");
+    CHECK((*spec.weights_variants)[0].batch_size == 1);
+    CHECK((*spec.weights_variants)[0].label.value() == "recurrent");
+    CHECK((*spec.weights_variants)[1].path == "model_b8.pt2");
+    CHECK((*spec.weights_variants)[1].batch_size == 8);
+
+    // Round-trip
+    auto serialized = spec.toJson();
+    auto result2 = dl::RuntimeModelSpec::fromJson(serialized);
+    REQUIRE(result2);
+    REQUIRE(result2.value().weights_variants.has_value());
+    CHECK(result2.value().weights_variants->size() == 2);
+}
+
+TEST_CASE("RuntimeModelSpec - validate batch_mode errors",
+          "[RuntimeModelSpec][BatchMode]") {
+    SECTION("multiple modes set") {
+        dl::RuntimeModelSpec spec;
+        spec.model_id = "err_test";
+        spec.display_name = "Error Test";
+        spec.inputs = {makeSlot("x", {1})};
+        spec.outputs = {makeSlot("y", {1})};
+        spec.batch_mode = dl::BatchModeSpec{};
+        spec.batch_mode->fixed = 4;
+        spec.batch_mode->recurrent_only = true;
+
+        auto errors = spec.validate();
+        CHECK(!errors.empty());
+        bool found = false;
+        for (auto const & e: errors) {
+            if (e.find("only one") != std::string::npos) found = true;
+        }
+        CHECK(found);
+    }
+
+    SECTION("fixed < 1") {
+        dl::RuntimeModelSpec spec;
+        spec.model_id = "err_test2";
+        spec.display_name = "Error Test 2";
+        spec.inputs = {makeSlot("x", {1})};
+        spec.outputs = {makeSlot("y", {1})};
+        spec.batch_mode = dl::BatchModeSpec{};
+        spec.batch_mode->fixed = 0;
+
+        auto errors = spec.validate();
+        bool found = false;
+        for (auto const & e: errors) {
+            if (e.find("fixed") != std::string::npos) found = true;
+        }
+        CHECK(found);
+    }
+
+    SECTION("dynamic max < min") {
+        dl::RuntimeModelSpec spec;
+        spec.model_id = "err_test3";
+        spec.display_name = "Error Test 3";
+        spec.inputs = {makeSlot("x", {1})};
+        spec.outputs = {makeSlot("y", {1})};
+        spec.batch_mode = dl::BatchModeSpec{};
+        spec.batch_mode->dynamic = dl::BatchModeSpec::DynamicSpec{4, 2};
+
+        auto errors = spec.validate();
+        bool found = false;
+        for (auto const & e: errors) {
+            if (e.find("max") != std::string::npos) found = true;
+        }
+        CHECK(found);
+    }
+}
+
+TEST_CASE("RuntimeModelSpec - validate weights_variants errors",
+          "[RuntimeModelSpec][WeightsVariant]") {
+    SECTION("empty path") {
+        dl::RuntimeModelSpec spec;
+        spec.model_id = "wv_err";
+        spec.display_name = "WV Error";
+        spec.inputs = {makeSlot("x", {1})};
+        spec.outputs = {makeSlot("y", {1})};
+        spec.weights_variants = std::vector<dl::WeightsVariant>{
+                {.path = "", .batch_size = 1}};
+
+        auto errors = spec.validate();
+        bool found = false;
+        for (auto const & e: errors) {
+            if (e.find("path") != std::string::npos) found = true;
+        }
+        CHECK(found);
+    }
+
+    SECTION("duplicate batch_size") {
+        dl::RuntimeModelSpec spec;
+        spec.model_id = "wv_dup";
+        spec.display_name = "WV Dup";
+        spec.inputs = {makeSlot("x", {1})};
+        spec.outputs = {makeSlot("y", {1})};
+        spec.weights_variants = std::vector<dl::WeightsVariant>{
+                {.path = "a.pt2", .batch_size = 4},
+                {.path = "b.pt2", .batch_size = 4}};
+
+        auto errors = spec.validate();
+        bool found = false;
+        for (auto const & e: errors) {
+            if (e.find("duplicate") != std::string::npos) found = true;
+        }
+        CHECK(found);
+    }
 }
