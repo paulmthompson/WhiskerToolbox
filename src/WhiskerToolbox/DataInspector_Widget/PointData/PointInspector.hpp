@@ -20,13 +20,11 @@
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
-#include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityTypes.hpp"
 
 #include <memory>
 #include <string>
-#include <variant>
 
 namespace Ui {
 class PointInspector;
@@ -35,9 +33,6 @@ class PointInspector;
 class CSVPointSaver_Widget;
 class MediaData;
 class PointTableView;
-
-// Define the variant type for saver options
-using PointSaverOptionsVariant = std::variant<CSVPointSaverOptions>;
 
 /**
  * @brief Inspector widget for PointData
@@ -89,12 +84,6 @@ private:
     void _setupUi();
     void _connectSignals();
 
-    enum SaverType { CSV };
-
-    void _saveToCSVFile(CSVPointSaverOptions & options);
-    bool _performActualCSVSave(CSVPointSaverOptions & options);
-    void _initiateSaveProcess(SaverType saver_type, PointSaverOptionsVariant & options_variant);
-
     void _updateImageSizeDisplay();
     void _populateMediaComboBox();
     void _populateGroupFilterCombo();
@@ -106,7 +95,6 @@ private:
 
 private slots:
     void _onExportTypeChanged(int index);
-    void _handleSaveCSVRequested(CSVPointSaverOptions options);
     void _onExportMediaFramesCheckboxToggled(bool checked);
     void _onApplyImageSizeClicked();
     void _onCopyImageSizeClicked();

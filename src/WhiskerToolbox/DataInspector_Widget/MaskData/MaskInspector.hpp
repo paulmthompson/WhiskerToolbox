@@ -18,8 +18,6 @@
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
 
-#include "nlohmann/json.hpp"
-
 #include <memory>
 
 namespace Ui {
@@ -27,9 +25,6 @@ class MaskInspector;
 }
 
 class MaskTableView;
-
-// JSON-based saver options - no need for variant types
-using MaskSaverConfig = nlohmann::json;
 
 /**
  * @brief Inspector widget for MaskData
@@ -82,8 +77,6 @@ private slots:
 
     // Export slots
     void _onExportTypeChanged(int index);
-    void _handleSaveImageMaskRequested(QString format, nlohmann::json config);
-    void _handleSaveCSVMaskRequested(QString format, nlohmann::json config);
     void _onExportMediaFramesCheckboxToggled(bool checked);
     void _onApplyImageSizeClicked();
     void _onCopyImageSizeClicked();
@@ -103,8 +96,6 @@ private slots:
 private:
     void _connectSignals();
     void _updateImageSizeDisplay();
-    void _initiateSaveProcess(QString const & format, MaskSaverConfig const & config);
-    bool _performRegistrySave(QString const & format, MaskSaverConfig const & config);
     void _populateGroupFilterCombo();
 
     Ui::MaskInspector * ui;
