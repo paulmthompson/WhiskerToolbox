@@ -73,6 +73,13 @@ private slots:
     void _onRunBatch();
     void _onPredictCurrentFrame();
     void _onCaptureStaticInput(std::string const & slot_name);
+    void _onCaptureSequenceEntry(
+            std::string const & slot_name,
+            int memory_index,
+            QComboBox * source_combo,
+            QComboBox * mode_combo,
+            QSpinBox * offset_spin,
+            QLabel * capture_status);
 
 private:
     void _buildUi();
@@ -85,8 +92,15 @@ private:
     QGroupBox * _buildBooleanMaskGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildOutputGroup(dl::TensorSlotDescriptor const & slot);
 
+    /// Add one sequence entry row (index, source, mode, capture button)
+    /// inside a sequence slot's entry container.
+    void _addSequenceEntryRow(QWidget * container,
+                              dl::TensorSlotDescriptor const & slot,
+                              int memory_index);
+
     void _populateDataSourceCombo(QComboBox * combo,
                                   std::string const & type_hint);
+    void _refreshDataSourceCombos();
     [[nodiscard]] static std::vector<std::string> _modesForEncoder(
             std::string const & encoder_id);
 
@@ -122,6 +136,9 @@ private:
 
     // Current time position from EditorRegistry
     std::optional<TimePosition> _current_time_position;
+
+    // DataManager observer for data add/delete notifications
+    int _dm_observer_id = -1;
 };
 
 #endif// DEEP_LEARNING_PROPERTIES_WIDGET_HPP

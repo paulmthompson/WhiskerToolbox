@@ -150,3 +150,48 @@ TEST_CASE("staticCacheKey - different slots produce different keys",
           "[binding_data][capture_mode]") {
     CHECK(staticCacheKey("a", 0) != staticCacheKey("b", 0));
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// StaticInputData for sequence entries
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("StaticInputData - multiple entries per slot with different memory_index",
+          "[binding_data][sequence]") {
+    std::vector<StaticInputData> entries;
+    for (int i = 0; i < 4; ++i) {
+        StaticInputData si;
+        si.slot_name = "memory_images";
+        si.memory_index = i;
+        si.data_key = "media/video_1";
+        si.setCaptureMode(CaptureMode::Absolute);
+        si.captured_frame = 10 + i;
+        entries.push_back(std::move(si));
+    }
+
+    CHECK(entries.size() == 4);
+    for (int i = 0; i < 4; ++i) {
+        CHECK(entries[static_cast<std::size_t>(i)].memory_index == i);
+        CHECK(entries[static_cast<std::size_t>(i)].captured_frame == 10 + i);
+    }
+}
+
+TEST_CASE("staticCacheKey - sequence entries produce unique keys per position",
+          "[binding_data][sequence]") {
+    std::vector<std::string> keys;
+    keys.reserve(4);
+for (int i = 0; i < 4; ++i) {
+        keys.push_back(staticCacheKey("memory_images", i));
+    }
+
+    // All keys should be unique
+    for (std::size_t i = 0; i < keys.size(); ++i) {
+        for (std::size_t j = i + 1; j < keys.size(); ++j) {
+            CHECK(keys[i] != keys[j]);
+        }
+    }
+
+    CHECK(keys[0] == "memory_images:0");
+    CHECK(keys[1] == "memory_images:1");
+    CHECK(keys[2] == "memory_images:2");
+    CHECK(keys[3] == "memory_images:3");
+}

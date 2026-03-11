@@ -78,15 +78,15 @@ Support stacking multiple captured frames along a slot's `sequence_dim` axis. Th
 enables architectures like NeuroSAM that consume N memory frames (e.g., 4 reference 
 images along a sequence dimension).
 
-- [ ] **Sequence packing** — When `TensorSlotDescriptor::sequence_dim >= 0`, assemble 
+- [x] **Sequence packing** — When `TensorSlotDescriptor::sequence_dim >= 0`, assemble 
   multiple `StaticInputData` entries along that axis using `memory_index` to place 
   each capture at the correct position
-- [ ] **UI: sequence entry manager** — Add/remove/reorder buttons for sequence slots in 
+- [x] **UI: sequence entry manager** — Add/remove/reorder buttons for sequence slots in 
   the Properties widget. Each entry shows its `memory_index`, source `data_key`, and 
   captured frame number
-- [ ] **Variable-length sequences** — Handle cases where the user captures fewer frames 
+- [x] **Variable-length sequences** — Handle cases where the user captures fewer frames 
   than the sequence dimension size (zero-pad unused positions) and surface a warning
-- [ ] **Boolean mask alignment** — Ensure `is_boolean_mask` slots with `sequence_dim` 
+- [x] **Boolean mask alignment** — Ensure `is_boolean_mask` slots with `sequence_dim` 
   correctly set active/inactive flags for each sequence position
 
 #### Phase 4: Recurrent (Feedback) Inputs

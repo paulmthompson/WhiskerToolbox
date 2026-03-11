@@ -2,9 +2,8 @@
 
 #include "models_v2/TensorSlotDescriptor.hpp"
 
-TEST_CASE("TensorSlotDescriptor - default construction", "[TensorSlotDescriptor]")
-{
-    dl::TensorSlotDescriptor slot;
+TEST_CASE("TensorSlotDescriptor - default construction", "[TensorSlotDescriptor]") {
+    dl::TensorSlotDescriptor const slot;
 
     CHECK(slot.name.empty());
     CHECK(slot.shape.empty());
@@ -16,18 +15,16 @@ TEST_CASE("TensorSlotDescriptor - default construction", "[TensorSlotDescriptor]
     CHECK(slot.sequence_dim == -1);
 }
 
-TEST_CASE("TensorSlotDescriptor - aggregate initialization", "[TensorSlotDescriptor]")
-{
+TEST_CASE("TensorSlotDescriptor - aggregate initialization", "[TensorSlotDescriptor]") {
     dl::TensorSlotDescriptor slot{
-        .name = "encoder_image",
-        .shape = {3, 256, 256},
-        .description = "Current video frame",
-        .recommended_encoder = "ImageEncoder",
-        .recommended_decoder = "",
-        .is_static = false,
-        .is_boolean_mask = false,
-        .sequence_dim = -1
-    };
+            .name = "encoder_image",
+            .shape = {3, 256, 256},
+            .description = "Current video frame",
+            .recommended_encoder = "ImageEncoder",
+            .recommended_decoder = "",
+            .is_static = false,
+            .is_boolean_mask = false,
+            .sequence_dim = -1};
 
     CHECK(slot.name == "encoder_image");
     CHECK(slot.shape == std::vector<int64_t>{3, 256, 256});
@@ -39,55 +36,52 @@ TEST_CASE("TensorSlotDescriptor - aggregate initialization", "[TensorSlotDescrip
     CHECK(slot.sequence_dim == -1);
 }
 
-TEST_CASE("TensorSlotDescriptor - numElements", "[TensorSlotDescriptor]")
-{
+TEST_CASE("TensorSlotDescriptor - numElements", "[TensorSlotDescriptor]") {
     SECTION("3D shape") {
-        dl::TensorSlotDescriptor slot{.shape = {3, 256, 256}};
-        CHECK(slot.numElements() == 3 * 256 * 256);
+        dl::TensorSlotDescriptor const slot{.shape = {3, 256, 256}};
+        CHECK(slot.numElements() == static_cast<int64_t>(3 * 256 * 256));
     }
 
     SECTION("1D shape") {
-        dl::TensorSlotDescriptor slot{.shape = {4}};
+        dl::TensorSlotDescriptor const slot{.shape = {4}};
         CHECK(slot.numElements() == 4);
     }
 
     SECTION("empty shape (scalar)") {
-        dl::TensorSlotDescriptor slot{.shape = {}};
+        dl::TensorSlotDescriptor const slot{.shape = {}};
         CHECK(slot.numElements() == 1);
     }
 
     SECTION("4D shape with sequence dimension") {
-        dl::TensorSlotDescriptor slot{.shape = {4, 3, 256, 256}};
-        CHECK(slot.numElements() == 4 * 3 * 256 * 256);
+        dl::TensorSlotDescriptor const slot{.shape = {4, 3, 256, 256}};
+        CHECK(slot.numElements() == static_cast<int64_t>(4 * 3 * 256 * 256));
     }
 }
 
-TEST_CASE("TensorSlotDescriptor - hasSequenceDim", "[TensorSlotDescriptor]")
-{
+TEST_CASE("TensorSlotDescriptor - hasSequenceDim", "[TensorSlotDescriptor]") {
     SECTION("no sequence dimension (default)") {
-        dl::TensorSlotDescriptor slot{.sequence_dim = -1};
+        dl::TensorSlotDescriptor const slot{.sequence_dim = -1};
         CHECK_FALSE(slot.hasSequenceDim());
     }
 
     SECTION("with sequence dimension") {
-        dl::TensorSlotDescriptor slot{.sequence_dim = 0};
+        dl::TensorSlotDescriptor const slot{.sequence_dim = 0};
         CHECK(slot.hasSequenceDim());
     }
 
     SECTION("negative is no sequence") {
-        dl::TensorSlotDescriptor slot{.sequence_dim = -2};
+        dl::TensorSlotDescriptor const slot{.sequence_dim = -2};
         CHECK_FALSE(slot.hasSequenceDim());
     }
 }
 
-TEST_CASE("TensorSlotDescriptor - static and boolean mask flags", "[TensorSlotDescriptor]")
-{
-    dl::TensorSlotDescriptor memory_mask{
-        .name = "memory_mask",
-        .shape = {1},
-        .description = "Boolean active flags",
-        .is_static = true,
-        .is_boolean_mask = true,
+TEST_CASE("TensorSlotDescriptor - static and boolean mask flags", "[TensorSlotDescriptor]") {
+    dl::TensorSlotDescriptor const memory_mask{
+            .name = "memory_mask",
+            .shape = {1},
+            .description = "Boolean active flags",
+            .is_static = true,
+            .is_boolean_mask = true,
     };
 
     CHECK(memory_mask.is_static == true);
@@ -95,9 +89,55 @@ TEST_CASE("TensorSlotDescriptor - static and boolean mask flags", "[TensorSlotDe
     CHECK(memory_mask.numElements() == 1);
 }
 
-TEST_CASE("SlotDirection enum", "[TensorSlotDescriptor]")
-{
+TEST_CASE("SlotDirection enum", "[TensorSlotDescriptor]") {
     auto input = dl::SlotDirection::Input;
     auto output = dl::SlotDirection::Output;
     CHECK(input != output);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Sequence dimension support (Phase 3)
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("TensorSlotDescriptor - sequence slot with dim 0",
+          "[TensorSlotDescriptor][sequence]") {
+    dl::TensorSlotDescriptor slot{
+            .name = "memory_images",
+            .shape = {4, 3, 256, 256},
+            .description = "Memory frames stacked along dim 0",
+            .is_static = true,
+            .sequence_dim = 0};
+
+    CHECK(slot.hasSequenceDim());
+    CHECK(slot.shape[0] == 4);// sequence length
+    CHECK(slot.numElements() == static_cast<int64_t>(4 * 3 * 256 * 256));
+}
+
+TEST_CASE("TensorSlotDescriptor - sequence slot with dim 1",
+          "[TensorSlotDescriptor][sequence]") {
+    dl::TensorSlotDescriptor slot{
+            .name = "stacked_features",
+            .shape = {3, 8, 64, 64},
+            .description = "Features stacked along dim 1",
+            .is_static = true,
+            .sequence_dim = 1};
+
+    CHECK(slot.hasSequenceDim());
+    CHECK(slot.shape[1] == 8);// sequence length
+}
+
+TEST_CASE("TensorSlotDescriptor - boolean mask for sequence slots",
+          "[TensorSlotDescriptor][sequence]") {
+    dl::TensorSlotDescriptor mask_slot{
+            .name = "memory_active",
+            .shape = {4},
+            .description = "Active flags for 4 memory positions",
+            .is_static = true,
+            .is_boolean_mask = true,
+            .sequence_dim = 0};
+
+    CHECK(mask_slot.hasSequenceDim());
+    CHECK(mask_slot.is_boolean_mask);
+    CHECK(mask_slot.is_static);
+    CHECK(mask_slot.shape[0] == 4);
 }

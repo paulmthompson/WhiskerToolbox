@@ -43,6 +43,13 @@ DeepLearningPropertiesWidget::DeepLearningPropertiesWidget(
     _buildUi();
     _populateModelCombo();
 
+    // Register for DataManager data add/delete notifications
+    if (_data_manager) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _refreshDataSourceCombos();
+        });
+    }
+
     connect(_state.get(), &DeepLearningState::modelChanged, this, [this] {
         auto const & id = _state->selectedModelId();
         int const idx = _model_combo->findData(QString::fromStdString(id));
@@ -52,7 +59,12 @@ DeepLearningPropertiesWidget::DeepLearningPropertiesWidget(
     });
 }
 
-DeepLearningPropertiesWidget::~DeepLearningPropertiesWidget() = default;
+DeepLearningPropertiesWidget::~DeepLearningPropertiesWidget() {
+    if (_data_manager && _dm_observer_id >= 0) {
+        _data_manager->removeObserver(_dm_observer_id);
+        _dm_observer_id = -1;
+    }
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // UI Construction
@@ -495,63 +507,299 @@ QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
     }
     layout->addWidget(new QLabel(tr("Shape: ") + shape_str, group));
 
-    auto * form = new QFormLayout();
+    if (slot.hasSequenceDim()) {
+        // ── Sequence slot: multi-entry manager ──
+        int64_t const seq_len = slot.shape[static_cast<std::size_t>(slot.sequence_dim)];
+        layout->addWidget(new QLabel(
+                tr("Sequence length: %1 (dim %2)")
+                        .arg(seq_len)
+                        .arg(slot.sequence_dim),
+                group));
 
-    // Source data combo
-    auto * source_combo = new QComboBox(group);
+        // Container for sequence entries
+        auto * entries_container = new QWidget(group);
+        entries_container->setObjectName(
+                QString::fromStdString("seq_entries_" + slot.name));
+        auto * entries_layout = new QVBoxLayout(entries_container);
+        entries_layout->setContentsMargins(0, 0, 0, 0);
+        entries_layout->setSpacing(4);
+        layout->addWidget(entries_container);
+
+        // Determine how many entries to show initially from state
+        int initial_count = 0;
+        for (auto const & si: _state->staticInputs()) {
+            if (si.slot_name == slot.name) {
+                initial_count = std::max(initial_count, si.memory_index + 1);
+            }
+        }
+        // Show at least 1 entry for user convenience
+        if (initial_count == 0) initial_count = 1;
+
+        auto slot_name = slot.name;
+
+        // Add entry rows
+        for (int idx = 0; idx < initial_count; ++idx) {
+            _addSequenceEntryRow(entries_container, slot, idx);
+        }
+
+        // Add / Remove buttons
+        auto * btn_row = new QHBoxLayout();
+        auto * add_btn = new QPushButton(tr("+ Add Entry"), group);
+        add_btn->setToolTip(
+                tr("Add another sequence position (up to %1)").arg(seq_len));
+        auto * remove_btn = new QPushButton(tr("- Remove Last"), group);
+        remove_btn->setToolTip(tr("Remove the last sequence entry"));
+        btn_row->addWidget(add_btn);
+        btn_row->addWidget(remove_btn);
+        btn_row->addStretch();
+        layout->addLayout(btn_row);
+
+        // Wire add button
+        connect(add_btn, &QPushButton::clicked, this,
+                [this, entries_container, slot, seq_len] {
+                    int const current_count = static_cast<int>(
+                            entries_container->findChildren<QGroupBox *>(
+                                                     Qt::FindDirectChildrenOnly)
+                                    .size());
+                    if (current_count >= static_cast<int>(seq_len)) {
+                        return;// Already at max
+                    }
+                    _addSequenceEntryRow(entries_container, slot, current_count);
+                });
+
+        // Wire remove button
+        connect(remove_btn, &QPushButton::clicked, this,
+                [this, entries_container, slot_name] {
+                    auto children = entries_container->findChildren<QGroupBox *>(
+                            Qt::FindDirectChildrenOnly);
+                    if (children.size() <= 1) return;// Keep at least one
+
+                    auto * last = children.back();
+                    // Get the memory_index from the last entry
+                    QLabel * idx_label = nullptr;
+                    for (auto * lbl: last->findChildren<QLabel *>()) {
+                        if (lbl->objectName().startsWith(QStringLiteral("seq_idx_"))) {
+                            idx_label = lbl;
+                            break;
+                        }
+                    }
+                    if (idx_label) {
+                        int const mem_idx = idx_label->property("memory_index").toInt();
+                        auto const key = staticCacheKey(slot_name, mem_idx);
+                        _assembler->clearStaticCacheEntry(key);
+                        emit staticCacheChanged();
+                    }
+                    last->deleteLater();
+                });
+    } else {
+        // ── Non-sequence static slot (original single-entry UI) ──
+        auto * form = new QFormLayout();
+
+        // Source data combo
+        auto * source_combo = new QComboBox(group);
+        source_combo->setObjectName(
+                QString::fromStdString("static_source_" + slot.name));
+        _populateDataSourceCombo(
+                source_combo,
+                SlotAssembler::dataTypeForEncoder(slot.recommended_encoder));
+        form->addRow(tr("Source:"), source_combo);
+
+        // Capture mode combo
+        auto * mode_combo = new QComboBox(group);
+        mode_combo->setObjectName(
+                QString::fromStdString("static_mode_" + slot.name));
+        mode_combo->addItem(tr("Relative"), QStringLiteral("Relative"));
+        mode_combo->addItem(tr("Absolute"), QStringLiteral("Absolute"));
+        form->addRow(tr("Mode:"), mode_combo);
+
+        // Time offset (used in Relative mode)
+        auto * offset_spin = new QSpinBox(group);
+        offset_spin->setObjectName(
+                QString::fromStdString("static_offset_" + slot.name));
+        offset_spin->setRange(-99999, 0);
+        offset_spin->setValue(0);
+        offset_spin->setPrefix(QStringLiteral("t"));
+        offset_spin->setToolTip(
+                tr("Time offset for Relative mode (e.g. -1 = previous frame).\n"
+                   "Ignored in Absolute mode (uses the captured frame)."));
+        form->addRow(tr("Time Offset:"), offset_spin);
+
+        layout->addLayout(form);
+
+        // Capture button + status (for Absolute mode)
+        auto * capture_row = new QHBoxLayout();
+        auto * capture_btn = new QPushButton(
+                tr("\u2B07 Capture Current Frame"), group);
+        capture_btn->setObjectName(
+                QString::fromStdString("static_capture_" + slot.name));
+        capture_btn->setToolTip(
+                tr("Encode data from the current frame and freeze it.\n"
+                   "The cached tensor will be reused for all subsequent runs."));
+        capture_btn->setEnabled(false);
+        capture_row->addWidget(capture_btn);
+
+        auto * capture_status = new QLabel(tr("Not captured"), group);
+        capture_status->setObjectName(
+                QString::fromStdString("static_capture_status_" + slot.name));
+        capture_status->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
+        capture_row->addWidget(capture_status);
+
+        layout->addLayout(capture_row);
+
+        // Wire capture mode switching
+        auto slot_name = slot.name;
+        connect(mode_combo, &QComboBox::currentTextChanged, this,
+                [this, offset_spin, capture_btn, capture_status, slot_name](
+                        QString const & text) {
+                    bool const is_absolute = (text == tr("Absolute"));
+                    offset_spin->setEnabled(!is_absolute);
+                    capture_btn->setEnabled(is_absolute && _assembler->isModelReady());
+                    if (!is_absolute) {
+                        capture_status->setText(tr("Not captured"));
+                        capture_status->setStyleSheet(
+                                QStringLiteral("color: gray; font-size: 10px;"));
+                    } else {
+                        _updateCaptureButtonState(slot_name);
+                    }
+                });
+
+        // Wire capture button
+        connect(capture_btn, &QPushButton::clicked, this,
+                [this, slot_name] { _onCaptureStaticInput(slot_name); });
+
+        // Invalidate cache when data source changes
+        connect(source_combo, &QComboBox::currentTextChanged, this,
+                [this, slot_name, capture_status](QString const &) {
+                    auto const key = staticCacheKey(slot_name, 0);
+                    _assembler->clearStaticCacheEntry(key);
+                    capture_status->setText(tr("Not captured"));
+                    capture_status->setStyleSheet(
+                            QStringLiteral("color: gray; font-size: 10px;"));
+                    emit staticCacheChanged();
+                });
+    }
+
+    return group;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Sequence Entry Row
+// ────────────────────────────────────────────────────────────────────────────
+
+void DeepLearningPropertiesWidget::_addSequenceEntryRow(
+        QWidget * container,
+        dl::TensorSlotDescriptor const & slot,
+        int memory_index) {
+
+    auto * entry_group = new QGroupBox(
+            tr("Position %1").arg(memory_index), container);
+    auto * form = new QFormLayout(entry_group);
+
+    auto const slot_name = slot.name;
+
+    // Hidden label to store the memory_index for retrieval
+    auto * idx_label = new QLabel(QString::number(memory_index), entry_group);
+    idx_label->setObjectName(
+            QString::fromStdString("seq_idx_" + slot_name + "_" +
+                                   std::to_string(memory_index)));
+    idx_label->setProperty("memory_index", memory_index);
+    idx_label->setVisible(false);
+    form->addRow(idx_label);
+
+    // Source combo
+    auto * source_combo = new QComboBox(entry_group);
     source_combo->setObjectName(
-            QString::fromStdString("static_source_" + slot.name));
+            QString::fromStdString("seq_source_" + slot_name + "_" +
+                                   std::to_string(memory_index)));
     _populateDataSourceCombo(
             source_combo,
             SlotAssembler::dataTypeForEncoder(slot.recommended_encoder));
+
+    // Restore saved data_key from state
+    for (auto const & si: _state->staticInputs()) {
+        if (si.slot_name == slot_name && si.memory_index == memory_index) {
+            int const idx = source_combo->findText(
+                    QString::fromStdString(si.data_key));
+            if (idx >= 0) source_combo->setCurrentIndex(idx);
+            break;
+        }
+    }
     form->addRow(tr("Source:"), source_combo);
 
     // Capture mode combo
-    auto * mode_combo = new QComboBox(group);
+    auto * mode_combo = new QComboBox(entry_group);
     mode_combo->setObjectName(
-            QString::fromStdString("static_mode_" + slot.name));
+            QString::fromStdString("seq_mode_" + slot_name + "_" +
+                                   std::to_string(memory_index)));
     mode_combo->addItem(tr("Relative"), QStringLiteral("Relative"));
     mode_combo->addItem(tr("Absolute"), QStringLiteral("Absolute"));
+
+    // Restore saved mode
+    for (auto const & si: _state->staticInputs()) {
+        if (si.slot_name == slot_name && si.memory_index == memory_index) {
+            int const idx = mode_combo->findData(
+                    QString::fromStdString(si.capture_mode_str));
+            if (idx >= 0) mode_combo->setCurrentIndex(idx);
+            break;
+        }
+    }
     form->addRow(tr("Mode:"), mode_combo);
 
-    // Time offset (used in Relative mode)
-    auto * offset_spin = new QSpinBox(group);
+    // Time offset
+    auto * offset_spin = new QSpinBox(entry_group);
     offset_spin->setObjectName(
-            QString::fromStdString("static_offset_" + slot.name));
+            QString::fromStdString("seq_offset_" + slot_name + "_" +
+                                   std::to_string(memory_index)));
     offset_spin->setRange(-99999, 0);
-    offset_spin->setValue(0);
     offset_spin->setPrefix(QStringLiteral("t"));
     offset_spin->setToolTip(
-            tr("Time offset for Relative mode (e.g. -1 = previous frame).\n"
-               "Ignored in Absolute mode (uses the captured frame)."));
-    form->addRow(tr("Time Offset:"), offset_spin);
+            tr("Time offset for Relative mode."));
 
-    layout->addLayout(form);
+    // Restore saved offset
+    for (auto const & si: _state->staticInputs()) {
+        if (si.slot_name == slot_name && si.memory_index == memory_index) {
+            offset_spin->setValue(si.time_offset);
+            break;
+        }
+    }
+    form->addRow(tr("Offset:"), offset_spin);
 
-    // Capture button + status (for Absolute mode)
+    // Capture button + status
     auto * capture_row = new QHBoxLayout();
     auto * capture_btn = new QPushButton(
-            tr("\u2B07 Capture Current Frame"), group);
+            tr("\u2B07 Capture"), entry_group);
     capture_btn->setObjectName(
-            QString::fromStdString("static_capture_" + slot.name));
-    capture_btn->setToolTip(
-            tr("Encode data from the current frame and freeze it.\n"
-               "The cached tensor will be reused for all subsequent runs."));
+            QString::fromStdString("seq_capture_" + slot_name + "_" +
+                                   std::to_string(memory_index)));
     capture_btn->setEnabled(false);
     capture_row->addWidget(capture_btn);
 
-    auto * capture_status = new QLabel(tr("Not captured"), group);
+    auto * capture_status = new QLabel(tr("Not captured"), entry_group);
     capture_status->setObjectName(
-            QString::fromStdString("static_capture_status_" + slot.name));
-    capture_status->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
+            QString::fromStdString("seq_status_" + slot_name + "_" +
+                                   std::to_string(memory_index)));
+    capture_status->setStyleSheet(
+            QStringLiteral("color: gray; font-size: 10px;"));
+
+    // Restore captured state
+    for (auto const & si: _state->staticInputs()) {
+        if (si.slot_name == slot_name && si.memory_index == memory_index) {
+            auto const key = staticCacheKey(slot_name, memory_index);
+            if (_assembler->hasStaticCacheEntry(key) && si.captured_frame >= 0) {
+                capture_status->setText(
+                        tr("\u2713 Frame %1").arg(si.captured_frame));
+                capture_status->setStyleSheet(
+                        QStringLiteral("color: green; font-size: 10px;"));
+            }
+            break;
+        }
+    }
     capture_row->addWidget(capture_status);
+    form->addRow(capture_row);
 
-    layout->addLayout(capture_row);
-
-    // Wire capture mode switching
-    auto slot_name = slot.name;
+    // Wire mode switching
     connect(mode_combo, &QComboBox::currentTextChanged, this,
-            [this, offset_spin, capture_btn, capture_status, slot_name](
+            [offset_spin, capture_btn, capture_status, this](
                     QString const & text) {
                 bool const is_absolute = (text == tr("Absolute"));
                 offset_spin->setEnabled(!is_absolute);
@@ -560,19 +808,22 @@ QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
                     capture_status->setText(tr("Not captured"));
                     capture_status->setStyleSheet(
                             QStringLiteral("color: gray; font-size: 10px;"));
-                } else {
-                    _updateCaptureButtonState(slot_name);
                 }
             });
 
-    // Wire capture button
+    // Wire capture button — captures this specific sequence entry
     connect(capture_btn, &QPushButton::clicked, this,
-            [this, slot_name] { _onCaptureStaticInput(slot_name); });
+            [this, slot_name, memory_index, source_combo, mode_combo,
+             offset_spin, capture_status] {
+                _onCaptureSequenceEntry(
+                        slot_name, memory_index, source_combo, mode_combo,
+                        offset_spin, capture_status);
+            });
 
-    // Invalidate cache when data source changes
+    // Invalidate cache on source change
     connect(source_combo, &QComboBox::currentTextChanged, this,
-            [this, slot_name, capture_status](QString const &) {
-                auto const key = staticCacheKey(slot_name, 0);
+            [this, slot_name, memory_index, capture_status](QString const &) {
+                auto const key = staticCacheKey(slot_name, memory_index);
                 _assembler->clearStaticCacheEntry(key);
                 capture_status->setText(tr("Not captured"));
                 capture_status->setStyleSheet(
@@ -580,7 +831,10 @@ QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
                 emit staticCacheChanged();
             });
 
-    return group;
+    auto * container_layout = qobject_cast<QVBoxLayout *>(container->layout());
+    if (container_layout) {
+        container_layout->addWidget(entry_group);
+    }
 }
 
 QGroupBox * DeepLearningPropertiesWidget::_buildBooleanMaskGroup(
@@ -688,6 +942,62 @@ void DeepLearningPropertiesWidget::_populateDataSourceCombo(
     if (idx >= 0) combo->setCurrentIndex(idx);
 }
 
+void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
+    if (!_current_info || !_dynamic_container) return;
+
+    // Refresh dynamic input source combos
+    for (auto const & slot: _current_info->inputs) {
+        if (!slot.is_static && !slot.is_boolean_mask) {
+            auto * source = _dynamic_container->findChild<QComboBox *>(
+                    QString::fromStdString("source_" + slot.name));
+            auto * encoder = _dynamic_container->findChild<QComboBox *>(
+                    QString::fromStdString("encoder_" + slot.name));
+            if (source) {
+                std::string const enc_id = encoder
+                                                   ? encoder->currentText().toStdString()
+                                                   : slot.recommended_encoder;
+                _populateDataSourceCombo(
+                        source, SlotAssembler::dataTypeForEncoder(enc_id));
+            }
+        } else if (slot.is_static && !slot.is_boolean_mask) {
+            if (slot.hasSequenceDim()) {
+                // Refresh all sequence entry source combos
+                auto const prefix = QString::fromStdString(
+                        "seq_source_" + slot.name + "_");
+                for (auto * combo: _dynamic_container->findChildren<QComboBox *>()) {
+                    if (combo->objectName().startsWith(prefix)) {
+                        _populateDataSourceCombo(
+                                combo,
+                                SlotAssembler::dataTypeForEncoder(
+                                        slot.recommended_encoder));
+                    }
+                }
+            } else {
+                auto * source = _dynamic_container->findChild<QComboBox *>(
+                        QString::fromStdString("static_source_" + slot.name));
+                if (source) {
+                    _populateDataSourceCombo(
+                            source,
+                            SlotAssembler::dataTypeForEncoder(
+                                    slot.recommended_encoder));
+                }
+            }
+        }
+    }
+
+    // Refresh output target combos
+    for (auto const & slot: _current_info->outputs) {
+        auto * target = _dynamic_container->findChild<QComboBox *>(
+                QString::fromStdString("target_" + slot.name));
+        if (target) {
+            _populateDataSourceCombo(
+                    target,
+                    SlotAssembler::dataTypeForDecoder(
+                            slot.recommended_decoder));
+        }
+    }
+}
+
 std::vector<std::string> DeepLearningPropertiesWidget::_modesForEncoder(
         std::string const & encoder_id) {
 
@@ -765,25 +1075,91 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
     for (auto const & slot: _current_info->inputs) {
         if (!slot.is_static || slot.is_boolean_mask) continue;
 
-        StaticInputData si;
-        si.slot_name = slot.name;
-        si.memory_index = 0;
+        if (slot.hasSequenceDim()) {
+            // Sequence slot: collect entries from all sequence rows
+            auto * entries_container = _dynamic_container->findChild<QWidget *>(
+                    QString::fromStdString("seq_entries_" + slot.name));
+            if (!entries_container) continue;
 
-        auto * source = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("static_source_" + slot.name));
-        auto * offset = _dynamic_container->findChild<QSpinBox *>(
-                QString::fromStdString("static_offset_" + slot.name));
-        auto * mode = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("static_mode_" + slot.name));
+            auto entry_groups = entries_container->findChildren<QGroupBox *>(
+                    Qt::FindDirectChildrenOnly);
 
-        if (source) si.data_key = source->currentText().toStdString();
-        if (offset) si.time_offset = offset->value();
-        if (mode) {
-            si.capture_mode_str = mode->currentData().toString().toStdString();
-        }
+            for (auto * entry_group: entry_groups) {
+                // Find the memory_index from the hidden label
+                QLabel * idx_lbl = nullptr;
+                for (auto * lbl: entry_group->findChildren<QLabel *>()) {
+                    if (lbl->objectName().startsWith(QStringLiteral("seq_idx_"))) {
+                        idx_lbl = lbl;
+                        break;
+                    }
+                }
+                if (!idx_lbl) continue;
+                int const mem_idx = idx_lbl->property("memory_index").toInt();
 
-        if (!si.data_key.empty() && si.data_key != "(None)") {
-            static_inputs.push_back(std::move(si));
+                auto const suffix = slot.name + "_" + std::to_string(mem_idx);
+                auto * source = entry_group->findChild<QComboBox *>(
+                        QString::fromStdString("seq_source_" + suffix));
+                auto * mode = entry_group->findChild<QComboBox *>(
+                        QString::fromStdString("seq_mode_" + suffix));
+                auto * offset = entry_group->findChild<QSpinBox *>(
+                        QString::fromStdString("seq_offset_" + suffix));
+
+                StaticInputData si;
+                si.slot_name = slot.name;
+                si.memory_index = mem_idx;
+                si.active = true;
+
+                if (source) si.data_key = source->currentText().toStdString();
+                if (offset) si.time_offset = offset->value();
+                if (mode) {
+                    si.capture_mode_str =
+                            mode->currentData().toString().toStdString();
+                }
+
+                // Preserve captured_frame from existing state
+                for (auto const & prev: _state->staticInputs()) {
+                    if (prev.slot_name == slot.name &&
+                        prev.memory_index == mem_idx) {
+                        si.captured_frame = prev.captured_frame;
+                        break;
+                    }
+                }
+
+                if (!si.data_key.empty() && si.data_key != "(None)") {
+                    static_inputs.push_back(std::move(si));
+                }
+            }
+        } else {
+            // Non-sequence slot: single entry (original behavior)
+            StaticInputData si;
+            si.slot_name = slot.name;
+            si.memory_index = 0;
+
+            auto * source = _dynamic_container->findChild<QComboBox *>(
+                    QString::fromStdString("static_source_" + slot.name));
+            auto * offset = _dynamic_container->findChild<QSpinBox *>(
+                    QString::fromStdString("static_offset_" + slot.name));
+            auto * mode = _dynamic_container->findChild<QComboBox *>(
+                    QString::fromStdString("static_mode_" + slot.name));
+
+            if (source) si.data_key = source->currentText().toStdString();
+            if (offset) si.time_offset = offset->value();
+            if (mode) {
+                si.capture_mode_str =
+                        mode->currentData().toString().toStdString();
+            }
+
+            // Preserve captured_frame from existing state
+            for (auto const & prev: _state->staticInputs()) {
+                if (prev.slot_name == slot.name) {
+                    si.captured_frame = prev.captured_frame;
+                    break;
+                }
+            }
+
+            if (!si.data_key.empty() && si.data_key != "(None)") {
+                static_inputs.push_back(std::move(si));
+            }
         }
     }
     _state->setStaticInputs(std::move(static_inputs));
@@ -910,6 +1286,80 @@ void DeepLearningPropertiesWidget::_onCaptureStaticInput(
     }
 
     _updateCaptureButtonState(slot_name);
+    emit staticCacheChanged();
+}
+
+void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
+        std::string const & slot_name,
+        int memory_index,
+        QComboBox * source_combo,
+        QComboBox * mode_combo,
+        QSpinBox * offset_spin,
+        QLabel * capture_status) {
+
+    if (!_assembler->isModelReady()) {
+        QMessageBox::warning(this, tr("Not Ready"),
+                             tr("Model weights not loaded."));
+        return;
+    }
+
+    auto const data_key = source_combo->currentText().toStdString();
+    if (data_key.empty() || data_key == "(None)") {
+        QMessageBox::warning(this, tr("No Source"),
+                             tr("Select a data source for this entry first."));
+        return;
+    }
+
+    // Build a StaticInputData for this entry
+    StaticInputData entry;
+    entry.slot_name = slot_name;
+    entry.memory_index = memory_index;
+    entry.data_key = data_key;
+    entry.time_offset = offset_spin->value();
+    entry.capture_mode_str = mode_combo->currentData().toString().toStdString();
+    entry.active = true;
+
+    // Determine which frame to capture
+    int frame = _state->currentFrame();
+    if (_current_time_position.has_value()) {
+        frame = static_cast<int>(_current_time_position->index.getValue());
+    }
+
+    // Determine source image size
+    ImageSize source_size{256, 256};
+    for (auto const & binding: _state->inputBindings()) {
+        auto media = _data_manager->getData<MediaData>(binding.data_key);
+        if (media) {
+            source_size = media->getImageSize();
+            break;
+        }
+    }
+
+    bool const ok = _assembler->captureStaticInput(
+            *_data_manager, entry, frame, source_size);
+
+    if (ok) {
+        capture_status->setText(
+                tr("\u2713 Frame %1").arg(frame));
+        capture_status->setStyleSheet(
+                QStringLiteral("color: green; font-size: 10px;"));
+
+        // Update captured_frame in state
+        _syncBindingsFromUi();
+        auto inputs = _state->staticInputs();
+        for (auto & si: inputs) {
+            if (si.slot_name == slot_name && si.memory_index == memory_index) {
+                si.captured_frame = frame;
+                break;
+            }
+        }
+        _state->setStaticInputs(std::move(inputs));
+    } else {
+        capture_status->setText(tr("\u2717 Capture failed"));
+        capture_status->setStyleSheet(
+                QStringLiteral("color: red; font-size: 10px;"));
+    }
+
     emit staticCacheChanged();
 }
 

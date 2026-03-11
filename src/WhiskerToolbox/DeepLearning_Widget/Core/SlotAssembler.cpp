@@ -31,6 +31,7 @@
 #include <torch/torch.h>
 
 #include <algorithm>
+#include <cassert>
 #include <filesystem>
 #include <iostream>
 #include <limits>
@@ -79,6 +80,33 @@ findSlot(std::vector<dl::TensorSlotDescriptor> const & slot_vec,
         if (s.name == name) return &s;
     }
     return nullptr;
+}
+
+/// Compute the per-element shape for a sequence slot.
+///
+/// For a slot with shape {4, 3, 256, 256} and sequence_dim=0, the
+/// per-element shape is {3, 256, 256} — the shape of one frame in the
+/// sequence. This is used for encoding individual sequence entries.
+///
+/// @pre slot.hasSequenceDim()
+std::vector<int64_t> perElementShape(dl::TensorSlotDescriptor const & slot) {
+    assert(slot.hasSequenceDim() && "perElementShape: slot must have a sequence dim");
+    std::vector<int64_t> shape;
+    shape.reserve(slot.shape.size() - 1);
+    for (std::size_t i = 0; i < slot.shape.size(); ++i) {
+        if (static_cast<int>(i) != slot.sequence_dim) {
+            shape.push_back(slot.shape[i]);
+        }
+    }
+    return shape;
+}
+
+/// Get the sequence length from a slot's shape.
+///
+/// @pre slot.hasSequenceDim()
+int64_t sequenceLength(dl::TensorSlotDescriptor const & slot) {
+    assert(slot.hasSequenceDim() && "sequenceLength: slot must have a sequence dim");
+    return slot.shape[static_cast<std::size_t>(slot.sequence_dim)];
 }
 
 dl::EncoderParams makeEncoderParams(
@@ -284,10 +312,25 @@ assembleInputs(
             std::vector<int64_t> shape = {batch_size};
             for (auto d: slot.shape) shape.push_back(d);
             auto tensor = torch::zeros(shape, toTorchDType(slot.dtype));
+
+            // Determine which dimension the memory_index indexes into.
+            // For boolean masks with sequence_dim, use sequence_dim + 1
+            // (accounting for the batch dim). Otherwise, use dim 1 (first
+            // shape dimension).
+            int const flag_dim = slot.hasSequenceDim()
+                                         ? slot.sequence_dim + 1
+                                         : 1;
+            int64_t const flag_extent = slot.shape[slot.hasSequenceDim()
+                                                           ? static_cast<std::size_t>(slot.sequence_dim)
+                                                           : 0];
+
             for (auto const * entry: entries) {
                 if (entry->active &&
-                    entry->memory_index < static_cast<int>(slot.shape[0])) {
-                    tensor[0][entry->memory_index] = 1.0f;
+                    entry->memory_index < static_cast<int>(flag_extent)) {
+                    // Set the flag for all batch elements
+                    for (int b = 0; b < batch_size; ++b) {
+                        tensor[b].select(flag_dim - 1, entry->memory_index) = 1.0f;
+                    }
                 }
             }
             result[slot.name] = std::move(tensor);
@@ -299,45 +342,137 @@ assembleInputs(
                                 slot.shape.begin(), slot.shape.end());
             // Use dtype from slot descriptor
             auto tensor = torch::zeros(tensor_shape, toTorchDType(slot.dtype));
-            for (auto const * entry: entries) {
-                if (entry->data_key.empty()) continue;
 
-                auto const mode = captureModeFromString(entry->capture_mode_str);
-                auto const key = staticCacheKey(entry->slot_name, entry->memory_index);
+            if (slot.hasSequenceDim()) {
+                // ── Sequence slot: place each entry at its memory_index ──
+                // along the sequence axis. The full tensor dimension
+                // for the sequence is sequence_dim + 1 (batch is dim 0).
+                int const full_seq_dim = slot.sequence_dim + 1;
+                auto const seq_len = sequenceLength(slot);
+                auto const elem_shape = perElementShape(slot);
 
-                if (mode == CaptureMode::Absolute) {
-                    // Absolute mode: use cached tensor if available
-                    auto cache_it = static_cache.find(key);
-                    if (cache_it != static_cache.end()) {
-                        auto cached = cache_it->second;
-                        // Expand along batch dimension if needed
-                        if (batch_size > 1 && cached.size(0) == 1) {
-                            cached = cached.expand({batch_size, -1, -1, -1})
-                                             .slice(0, 0, batch_size);
-                            // Use expand with correct number of dims
-                            std::vector<int64_t> expand_sizes(
-                                    static_cast<std::size_t>(cached.dim()), -1);
-                            expand_sizes[0] = batch_size;
-                            cached = cache_it->second.expand(expand_sizes);
-                        }
-                        // Copy cached data into the output tensor
-                        tensor.copy_(cached);
+                // Build a temporary descriptor with per-element shape for encoding
+                dl::TensorSlotDescriptor elem_slot = slot;
+                elem_slot.shape = elem_shape;
+                elem_slot.sequence_dim = -1;
+
+                // Track which positions have been filled for gap warnings
+                int filled_count = 0;
+
+                for (auto const * entry: entries) {
+                    if (entry->data_key.empty()) continue;
+                    if (entry->memory_index >= static_cast<int>(seq_len)) {
+                        std::cerr << "SlotAssembler: memory_index "
+                                  << entry->memory_index
+                                  << " exceeds sequence length "
+                                  << seq_len << " for slot '"
+                                  << slot.name << "'\n";
                         continue;
                     }
-                    // Fall through to relative encoding if not yet captured
+
+                    auto const mode = captureModeFromString(entry->capture_mode_str);
+                    auto const key = staticCacheKey(entry->slot_name, entry->memory_index);
+
+                    // Get the target slice: tensor[:, ..., memory_index, ..., :]
+                    // where memory_index is along full_seq_dim
+                    auto target_slice = tensor.select(full_seq_dim, entry->memory_index);
+
+                    if (mode == CaptureMode::Absolute) {
+                        auto cache_it = static_cache.find(key);
+                        if (cache_it != static_cache.end()) {
+                            auto cached = cache_it->second;
+                            // Cached tensor has shape {1, ...elem_shape}
+                            // Expand to {batch_size, ...elem_shape} if needed
+                            if (batch_size > 1 && cached.size(0) == 1) {
+                                std::vector<int64_t> expand_sizes(
+                                        static_cast<std::size_t>(cached.dim()), -1);
+                                expand_sizes[0] = batch_size;
+                                cached = cached.expand(expand_sizes);
+                            }
+                            // target_slice has shape {batch_size, ...elem_shape}
+                            target_slice.copy_(cached);
+                            ++filled_count;
+                            continue;
+                        }
+                        // Fall through to relative encoding if not yet captured
+                    }
+
+                    // Relative mode (or Absolute without cache): encode live
+                    // Create a temp tensor with per-element shape for encoding
+                    std::vector<int64_t> temp_shape = {1};
+                    temp_shape.insert(temp_shape.end(),
+                                      elem_shape.begin(), elem_shape.end());
+                    auto temp = torch::zeros(temp_shape, toTorchDType(slot.dtype));
+
+                    int const frame = computeEncodingFrame(
+                            current_frame, 0, entry->time_offset, max_frame);
+                    SlotBindingData temp_binding;
+                    temp_binding.slot_name = slot.name;
+                    temp_binding.data_key = entry->data_key;
+                    temp_binding.encoder_id = slot.recommended_encoder;
+                    temp_binding.mode = defaultModeForEncoder(slot.recommended_encoder);
+                    temp_binding.gaussian_sigma = 2.0f;
+                    encodeDynamicSlot(dm, temp_binding, elem_slot, temp,
+                                      frame, 0, source_image_size);
+
+                    // Expand temp from {1, ...elem_shape} to {batch_size, ...}
+                    if (batch_size > 1) {
+                        std::vector<int64_t> expand_sizes(
+                                static_cast<std::size_t>(temp.dim()), -1);
+                        expand_sizes[0] = batch_size;
+                        temp = temp.expand(expand_sizes);
+                    }
+                    target_slice.copy_(temp);
+                    ++filled_count;
                 }
 
-                // Relative mode (or Absolute without cache): encode live
-                int const frame = computeEncodingFrame(
-                        current_frame, 0, entry->time_offset, max_frame);
-                SlotBindingData temp_binding;
-                temp_binding.slot_name = slot.name;
-                temp_binding.data_key = entry->data_key;
-                temp_binding.encoder_id = slot.recommended_encoder;
-                // Use appropriate default mode for this encoder type
-                temp_binding.mode = defaultModeForEncoder(slot.recommended_encoder);
-                temp_binding.gaussian_sigma = 2.0f;
-                encodeDynamicSlot(dm, temp_binding, slot, tensor, frame, 0, source_image_size);
+                // Warn if not all sequence positions are filled
+                if (filled_count < static_cast<int>(seq_len)) {
+                    std::cerr << "SlotAssembler: slot '" << slot.name
+                              << "' has " << filled_count << " of "
+                              << seq_len
+                              << " sequence positions filled; unfilled "
+                                 "positions are zero-padded\n";
+                }
+            } else {
+                // ── Non-sequence static slot (original behavior) ──
+                for (auto const * entry: entries) {
+                    if (entry->data_key.empty()) continue;
+
+                    auto const mode = captureModeFromString(entry->capture_mode_str);
+                    auto const key = staticCacheKey(entry->slot_name, entry->memory_index);
+
+                    if (mode == CaptureMode::Absolute) {
+                        // Absolute mode: use cached tensor if available
+                        auto cache_it = static_cache.find(key);
+                        if (cache_it != static_cache.end()) {
+                            auto cached = cache_it->second;
+                            // Expand along batch dimension if needed
+                            if (batch_size > 1 && cached.size(0) == 1) {
+                                std::vector<int64_t> expand_sizes(
+                                        static_cast<std::size_t>(cached.dim()), -1);
+                                expand_sizes[0] = batch_size;
+                                cached = cache_it->second.expand(expand_sizes);
+                            }
+                            // Copy cached data into the output tensor
+                            tensor.copy_(cached);
+                            continue;
+                        }
+                        // Fall through to relative encoding if not yet captured
+                    }
+
+                    // Relative mode (or Absolute without cache): encode live
+                    int const frame = computeEncodingFrame(
+                            current_frame, 0, entry->time_offset, max_frame);
+                    SlotBindingData temp_binding;
+                    temp_binding.slot_name = slot.name;
+                    temp_binding.data_key = entry->data_key;
+                    temp_binding.encoder_id = slot.recommended_encoder;
+                    // Use appropriate default mode for this encoder type
+                    temp_binding.mode = defaultModeForEncoder(slot.recommended_encoder);
+                    temp_binding.gaussian_sigma = 2.0f;
+                    encodeDynamicSlot(dm, temp_binding, slot, tensor, frame, 0, source_image_size);
+                }
             }
             result[slot.name] = std::move(tensor);
         }
@@ -508,11 +643,25 @@ bool SlotAssembler::captureStaticInput(
     auto const * slot = findSlot(input_slot_vec, entry.slot_name);
     if (!slot || !slot->is_static) return false;
 
+    // For sequence slots, capture at per-element shape (excluding the
+    // sequence dimension). For non-sequence slots, use the full shape.
+    std::vector<int64_t> encode_shape;
+    if (slot->hasSequenceDim()) {
+        encode_shape = perElementShape(*slot);
+    } else {
+        encode_shape = slot->shape;
+    }
+
     // Create a single-batch tensor and encode into it
     std::vector<int64_t> tensor_shape = {1};
     tensor_shape.insert(tensor_shape.end(),
-                        slot->shape.begin(), slot->shape.end());
+                        encode_shape.begin(), encode_shape.end());
     auto tensor = torch::zeros(tensor_shape, toTorchDType(slot->dtype));
+
+    // Build a temporary descriptor with the encoding shape
+    dl::TensorSlotDescriptor encode_slot = *slot;
+    encode_slot.shape = encode_shape;
+    encode_slot.sequence_dim = -1;
 
     SlotBindingData temp_binding;
     temp_binding.slot_name = slot->name;
@@ -521,7 +670,7 @@ bool SlotAssembler::captureStaticInput(
     temp_binding.mode = defaultModeForEncoder(slot->recommended_encoder);
     temp_binding.gaussian_sigma = 2.0f;
 
-    encodeDynamicSlot(dm, temp_binding, *slot, tensor, frame, 0, source_image_size);
+    encodeDynamicSlot(dm, temp_binding, encode_slot, tensor, frame, 0, source_image_size);
 
     auto const key = staticCacheKey(entry.slot_name, entry.memory_index);
     _impl->static_cache[key] = std::move(tensor);
