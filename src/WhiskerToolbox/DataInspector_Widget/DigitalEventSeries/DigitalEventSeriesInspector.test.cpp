@@ -3,9 +3,12 @@
 #include "DigitalEventSeriesDataView.hpp"
 #include "EventTableModel.hpp"
 
+#include "DataExport_Widget/DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp"
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "IO/core/LoaderRegistration.hpp"
+#include "IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
@@ -13,15 +16,18 @@
 
 #include <QApplication>
 #include <QLabel>
-#include <QPushButton>
 #include <QLineEdit>
+#include <QPushButton>
+#include <QTimer>
 #include <QComboBox>
 #include <QTableView>
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
 
+#include <algorithm>
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <numeric>
 #include <vector>
@@ -37,6 +43,32 @@ void ensureQApplication()
         static std::array<char *, 1> argv = {app_name};
         new QApplication(argc, argv.data());// NOLINT: Intentionally leaked
     }
+}
+
+struct RegistryInitializer {
+    RegistryInitializer()
+    {
+        static bool initialized = false;
+        if (!initialized) {
+            registerInternalLoaders();
+            initialized = true;
+        }
+    }
+};
+
+[[maybe_unused]] RegistryInitializer const g_registry_init{};
+
+std::filesystem::path makeTempDir()
+{
+    auto dir = std::filesystem::temp_directory_path() / "whisker_digital_event_inspector_save_test";
+    std::filesystem::create_directories(dir);
+    return dir;
+}
+
+void cleanupTempDir(std::filesystem::path const & dir)
+{
+    std::error_code ec;
+    std::filesystem::remove_all(dir, ec);
 }
 }// namespace
 
@@ -331,6 +363,81 @@ TEST_CASE("DigitalEventSeriesInspector data manipulation", "[DigitalEventSeriesI
 
         // Label should update to show 3 events
         REQUIRE(total_events_label->text() == QStringLiteral("3"));
+    }
+}
+
+TEST_CASE("DigitalEventSeriesInspector saves data from DataManager", "[DigitalEventSeriesInspector][save]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Save button exports DigitalEventSeries to CSV") {
+        auto temp_dir = makeTempDir();
+        auto data_manager = std::make_shared<DataManager>();
+        data_manager->setOutputPath(temp_dir.string());
+
+        // Create timeframe and event series
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        std::vector<TimeFrameIndex> event_times = {
+            TimeFrameIndex(10), TimeFrameIndex(25), TimeFrameIndex(42)};
+        auto event_series = std::make_shared<DigitalEventSeries>(event_times);
+        data_manager->setData<DigitalEventSeries>("test_events", event_series, TimeKey("time"));
+
+        DigitalEventSeriesInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setActiveKey("test_events");
+
+        app->processEvents();
+
+        // Set filename for export
+        auto * filename_edit = inspector.findChild<QLineEdit *>("filename_edit");
+        REQUIRE(filename_edit != nullptr);
+        filename_edit->setText(QStringLiteral("saved_events.csv"));
+
+        // Schedule dialog dismissal before clicking save (QMessageBox blocks)
+        QTimer::singleShot(50, []() {
+            if (auto * w = QApplication::activeModalWidget()) {
+                w->close();
+            }
+        });
+
+        auto * csv_saver = inspector.findChild<CSVEventSaver_Widget *>("csv_event_saver_widget");
+        REQUIRE(csv_saver != nullptr);
+        auto * save_button = csv_saver->findChild<QPushButton *>("save_action_button");
+        REQUIRE(save_button != nullptr);
+        save_button->click();
+
+        app->processEvents();
+
+        auto const filepath = temp_dir / "saved_events.csv";
+        REQUIRE(std::filesystem::exists(filepath));
+
+        // Verify file content: load back and check event times
+        CSVEventLoaderOptions load_opts;
+        load_opts.filepath = filepath.string();
+        load_opts.has_header = true;
+        load_opts.event_column = 0;
+
+        auto loaded_series = load(load_opts);
+        REQUIRE(loaded_series.size() == 1);
+        REQUIRE(loaded_series[0]->size() == 3);
+
+        auto view = loaded_series[0]->view();
+        std::vector<int64_t> loaded_times;
+        for (auto const & ev : view) {
+            loaded_times.push_back(ev.time().getValue());
+        }
+        std::sort(loaded_times.begin(), loaded_times.end());
+        REQUIRE(loaded_times[0] == 10);
+        REQUIRE(loaded_times[1] == 25);
+        REQUIRE(loaded_times[2] == 42);
+
+        cleanupTempDir(temp_dir);
     }
 }
 
