@@ -26,10 +26,6 @@ namespace Ui {
 class MaskInspector;
 }
 
-class ImageMaskSaver_Widget;
-class HDF5MaskSaver_Widget;
-class CSVMaskSaver_Widget;
-class MediaExport_Widget;
 class MaskTableView;
 
 // JSON-based saver options - no need for variant types

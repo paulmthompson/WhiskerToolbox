@@ -26,8 +26,6 @@
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
 
-#include "nlohmann/json.hpp"
-
 #include <memory>
 #include <string>
 
@@ -35,8 +33,7 @@ namespace Ui {
 class LineInspector;
 }
 
-class CSVLineSaver_Widget;
-class BinaryLineSaver_Widget;
+
 class LineTableView;
 class QComboBox;
 class QCheckBox;
@@ -44,9 +41,6 @@ class QLineEdit;
 class QPushButton;
 class QStackedWidget;
 class QLabel;
-
-// JSON-based saver configuration
-using LineSaverConfig = nlohmann::json;
 
 /**
  * @brief Inspector widget for LineData
@@ -65,9 +59,9 @@ public:
      * @param parent Parent widget
      */
     explicit LineInspector(
-        std::shared_ptr<DataManager> data_manager,
-        GroupManager * group_manager = nullptr,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            GroupManager * group_manager = nullptr,
+            QWidget * parent = nullptr);
 
     ~LineInspector() override;
 
@@ -95,9 +89,6 @@ public:
 
 private slots:
     void _onExportTypeChanged(int index);
-    void _handleSaveCSVRequested(QString const & format, nlohmann::json const & config);
-    void _handleSaveMultiFileCSVRequested(QString const & format, nlohmann::json const & config);
-    void _handleSaveBinaryRequested(QString const & format, nlohmann::json const & config);
     void _onExportMediaFramesCheckboxToggled(bool checked);
     void _onApplyImageSizeClicked();
     void _onCopyImageSizeClicked();
@@ -113,15 +104,13 @@ private slots:
 private:
     void _setupUi();
     void _connectSignals();
-    void _initiateSaveProcess(QString const & format, LineSaverConfig const & config);
-    bool _performRegistrySave(QString const & format, LineSaverConfig const & config);
     void _updateImageSizeDisplay();
     void _populateMediaComboBox();
     void _populateGroupFilterCombo();
 
     Ui::LineInspector * _ui{nullptr};
-    int _dm_observer_id{-1};  ///< Callback ID for DataManager-level observer
-    LineTableView * _data_view{nullptr};  ///< Pointer to the associated table view
+    int _dm_observer_id{-1};            ///< Callback ID for DataManager-level observer
+    LineTableView * _data_view{nullptr};///< Pointer to the associated table view
 };
 
-#endif // LINE_INSPECTOR_HPP
+#endif// LINE_INSPECTOR_HPP
