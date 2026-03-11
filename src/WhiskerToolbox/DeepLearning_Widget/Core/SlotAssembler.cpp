@@ -35,6 +35,7 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <unordered_map>
 
 // ════════════════════════════════════════════════════════════════════════════
 // PIMPL
@@ -43,6 +44,10 @@
 struct SlotAssembler::Impl {
     std::unique_ptr<dl::ModelBase> model;
     std::string model_id;
+
+    /// Cached tensors for Absolute-mode static inputs.
+    /// Key: "slot_name:memory_index" (from staticCacheKey()).
+    std::unordered_map<std::string, torch::Tensor> static_cache;
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -205,6 +210,7 @@ assembleInputs(
         dl::ModelBase const & model,
         std::vector<SlotBindingData> const & input_bindings,
         std::vector<StaticInputData> const & static_inputs,
+        std::unordered_map<std::string, torch::Tensor> const & static_cache,
         int current_frame,
         int batch_size) {
 
@@ -295,6 +301,33 @@ assembleInputs(
             auto tensor = torch::zeros(tensor_shape, toTorchDType(slot.dtype));
             for (auto const * entry: entries) {
                 if (entry->data_key.empty()) continue;
+
+                auto const mode = captureModeFromString(entry->capture_mode_str);
+                auto const key = staticCacheKey(entry->slot_name, entry->memory_index);
+
+                if (mode == CaptureMode::Absolute) {
+                    // Absolute mode: use cached tensor if available
+                    auto cache_it = static_cache.find(key);
+                    if (cache_it != static_cache.end()) {
+                        auto cached = cache_it->second;
+                        // Expand along batch dimension if needed
+                        if (batch_size > 1 && cached.size(0) == 1) {
+                            cached = cached.expand({batch_size, -1, -1, -1})
+                                             .slice(0, 0, batch_size);
+                            // Use expand with correct number of dims
+                            std::vector<int64_t> expand_sizes(
+                                    static_cast<std::size_t>(cached.dim()), -1);
+                            expand_sizes[0] = batch_size;
+                            cached = cache_it->second.expand(expand_sizes);
+                        }
+                        // Copy cached data into the output tensor
+                        tensor.copy_(cached);
+                        continue;
+                    }
+                    // Fall through to relative encoding if not yet captured
+                }
+
+                // Relative mode (or Absolute without cache): encode live
                 int const frame = computeEncodingFrame(
                         current_frame, 0, entry->time_offset, max_frame);
                 SlotBindingData temp_binding;
@@ -455,6 +488,81 @@ std::string const & SlotAssembler::currentModelId() const {
 void SlotAssembler::resetModel() {
     _impl->model.reset();
     _impl->model_id.clear();
+    _impl->static_cache.clear();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Instance: static tensor cache
+// ════════════════════════════════════════════════════════════════════════════
+
+bool SlotAssembler::captureStaticInput(
+        DataManager & dm,
+        StaticInputData const & entry,
+        int frame,
+        ImageSize source_image_size) {
+
+    if (!_impl->model) return false;
+    if (entry.data_key.empty()) return false;
+
+    auto const input_slot_vec = _impl->model->inputSlots();
+    auto const * slot = findSlot(input_slot_vec, entry.slot_name);
+    if (!slot || !slot->is_static) return false;
+
+    // Create a single-batch tensor and encode into it
+    std::vector<int64_t> tensor_shape = {1};
+    tensor_shape.insert(tensor_shape.end(),
+                        slot->shape.begin(), slot->shape.end());
+    auto tensor = torch::zeros(tensor_shape, toTorchDType(slot->dtype));
+
+    SlotBindingData temp_binding;
+    temp_binding.slot_name = slot->name;
+    temp_binding.data_key = entry.data_key;
+    temp_binding.encoder_id = slot->recommended_encoder;
+    temp_binding.mode = defaultModeForEncoder(slot->recommended_encoder);
+    temp_binding.gaussian_sigma = 2.0f;
+
+    encodeDynamicSlot(dm, temp_binding, *slot, tensor, frame, 0, source_image_size);
+
+    auto const key = staticCacheKey(entry.slot_name, entry.memory_index);
+    _impl->static_cache[key] = std::move(tensor);
+    return true;
+}
+
+void SlotAssembler::clearStaticCacheEntry(std::string const & cache_key) {
+    _impl->static_cache.erase(cache_key);
+}
+
+void SlotAssembler::clearStaticCache() {
+    _impl->static_cache.clear();
+}
+
+bool SlotAssembler::hasStaticCacheEntry(std::string const & cache_key) const {
+    return _impl->static_cache.contains(cache_key);
+}
+
+std::vector<std::string> SlotAssembler::staticCacheKeys() const {
+    std::vector<std::string> keys;
+    keys.reserve(_impl->static_cache.size());
+    for (auto const & [k, _]: _impl->static_cache) {
+        keys.push_back(k);
+    }
+    return keys;
+}
+
+std::vector<int64_t> SlotAssembler::staticCacheTensorShape(
+        std::string const & cache_key) const {
+    auto it = _impl->static_cache.find(cache_key);
+    if (it == _impl->static_cache.end()) return {};
+    auto sizes = it->second.sizes();
+    return {sizes.begin(), sizes.end()};
+}
+
+std::pair<float, float> SlotAssembler::staticCacheTensorRange(
+        std::string const & cache_key) const {
+    auto it = _impl->static_cache.find(cache_key);
+    if (it == _impl->static_cache.end()) return {0.0f, 0.0f};
+    auto const & t = it->second;
+    return {t.min().item<float>(), t.max().item<float>()};
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -477,6 +585,7 @@ void SlotAssembler::runSingleFrame(
     auto inputs = assembleInputs(
             dm, *_impl->model,
             input_bindings, static_inputs,
+            _impl->static_cache,
             current_frame, /*batch_size=*/1);
 
     auto outputs = _impl->model->forward(inputs);

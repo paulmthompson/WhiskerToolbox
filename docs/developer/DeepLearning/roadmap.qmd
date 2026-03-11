@@ -55,21 +55,21 @@ behind") without the static input machinery.
 `StaticInputData` currently re-encodes at `current_frame + time_offset` every invocation. 
 True "capture once, reuse forever" requires caching the encoded tensor.
 
-- [ ] **Absolute vs relative capture mode** — Add a `capture_mode` field to 
+- [x] **Absolute vs relative capture mode** — Add a `capture_mode` field to 
   `StaticInputData`: `Relative` (current behavior, re-encodes each run at 
   `current_frame + time_offset`) vs `Absolute` (encode once at a fixed frame, cache 
   the tensor)
-- [ ] **Tensor cache in SlotAssembler** — Store captured tensors in 
+- [x] **Tensor cache in SlotAssembler** — Store captured tensors in 
   `map<string, Tensor> _static_cache` keyed by `slot_name + memory_index`. Skip 
   re-encoding when a cached tensor exists for an `Absolute`-mode entry
-- [ ] **"Capture Current Frame" button** — Widget action: encodes the current frame's data 
+- [x] **"Capture Current Frame" button** — Widget action: encodes the current frame's data 
   for a static slot and stores it in the cache. User navigates to the desired frame, 
   clicks capture, and the tensor is frozen
-- [ ] **Static tensor preview in ViewWidget** — Render color-mapped thumbnails of cached 
+- [x] **Static tensor preview in ViewWidget** — Render color-mapped thumbnails of cached 
   static tensors so the user can verify what the model will see as its memory input
-- [ ] **Batch dimension expansion** — For `Absolute`-mode static inputs, `.expand()` the 
+- [x] **Batch dimension expansion** — For `Absolute`-mode static inputs, `.expand()` the 
   cached tensor along the batch dimension so batch_size can be > 1
-- [ ] **Cache invalidation** — Clear cached tensors when the user changes `data_key`, 
+- [x] **Cache invalidation** — Clear cached tensors when the user changes `data_key`, 
   re-captures, or switches models
 
 #### Phase 3: Multi-Frame Sequence Inputs

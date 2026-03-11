@@ -79,3 +79,74 @@ TEST_CASE("SlotBindingData - time_offset defaults to zero",
     SlotBindingData const binding;
     CHECK(binding.time_offset == 0);
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// CaptureMode
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("CaptureMode - captureModeToString round trips",
+          "[binding_data][capture_mode]") {
+    CHECK(captureModeToString(CaptureMode::Relative) == "Relative");
+    CHECK(captureModeToString(CaptureMode::Absolute) == "Absolute");
+}
+
+TEST_CASE("CaptureMode - captureModeFromString round trips",
+          "[binding_data][capture_mode]") {
+    CHECK(captureModeFromString("Relative") == CaptureMode::Relative);
+    CHECK(captureModeFromString("Absolute") == CaptureMode::Absolute);
+}
+
+TEST_CASE("CaptureMode - captureModeFromString defaults to Relative on unknown",
+          "[binding_data][capture_mode]") {
+    CHECK(captureModeFromString("") == CaptureMode::Relative);
+    CHECK(captureModeFromString("unknown") == CaptureMode::Relative);
+    CHECK(captureModeFromString("absolute") == CaptureMode::Relative);// case-sensitive
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// StaticInputData defaults
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("StaticInputData - defaults",
+          "[binding_data][capture_mode]") {
+    StaticInputData const si;
+    CHECK(si.capture_mode_str == "Relative");
+    CHECK(si.captured_frame == -1);
+    CHECK(si.captureMode() == CaptureMode::Relative);
+    CHECK(si.time_offset == 0);
+    CHECK(si.memory_index == 0);
+    CHECK(si.active == true);
+}
+
+TEST_CASE("StaticInputData - setCaptureMode updates string",
+          "[binding_data][capture_mode]") {
+    StaticInputData si;
+    si.setCaptureMode(CaptureMode::Absolute);
+    CHECK(si.capture_mode_str == "Absolute");
+    CHECK(si.captureMode() == CaptureMode::Absolute);
+
+    si.setCaptureMode(CaptureMode::Relative);
+    CHECK(si.capture_mode_str == "Relative");
+    CHECK(si.captureMode() == CaptureMode::Relative);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// staticCacheKey
+// ════════════════════════════════════════════════════════════════════════════
+
+TEST_CASE("staticCacheKey - generates correct format",
+          "[binding_data][capture_mode]") {
+    CHECK(staticCacheKey("memory_images", 0) == "memory_images:0");
+    CHECK(staticCacheKey("memory_images", 3) == "memory_images:3");
+    CHECK(staticCacheKey("", 0) == ":0");
+}
+
+TEST_CASE("staticCacheKey - different indices produce different keys",
+          "[binding_data][capture_mode]") {
+    CHECK(staticCacheKey("slot", 0) != staticCacheKey("slot", 1));
+}
+
+TEST_CASE("staticCacheKey - different slots produce different keys",
+          "[binding_data][capture_mode]") {
+    CHECK(staticCacheKey("a", 0) != staticCacheKey("b", 0));
+}

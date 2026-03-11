@@ -9,6 +9,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <iostream>
+#include <utility>
 
 namespace DeepLearningWidgetModule {
 
@@ -19,7 +20,7 @@ void registerTypes(EditorRegistry * registry,
         return;
     }
 
-    auto dm = data_manager;
+    const auto& dm = std::move(data_manager);
     auto reg = registry;
 
     registry->registerType({.type_id = QStringLiteral("DeepLearningWidget"),
@@ -39,7 +40,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<DeepLearningState>(); },
 
                             // View factory - creates DeepLearningViewWidget (main visualization)
-                            .create_view = [dm](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_view = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
                                 auto dl_state = std::dynamic_pointer_cast<DeepLearningState>(state);
                                 if (!dl_state) {
                                     std::cerr << "DeepLearningWidgetModule: Failed to cast state to DeepLearningState" << std::endl;
@@ -51,7 +52,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Properties factory - creates DeepLearningPropertiesWidget
-                            .create_properties = [dm](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_properties = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
                                 auto dl_state = std::dynamic_pointer_cast<DeepLearningState>(state);
                                 if (!dl_state) {
                                     std::cerr << "DeepLearningWidgetModule: Failed to cast state to DeepLearningState (properties)" << std::endl;
@@ -74,12 +75,19 @@ void registerTypes(EditorRegistry * registry,
                                 // Create the properties widget with the shared state
                                 auto * props = new DeepLearningPropertiesWidget(state, dm);
 
+                                // Give the view widget access to the assembler for cache previews
+                                view->setAssembler(props->assembler());
+
                                 // Connect EditorRegistry time changes to properties widget
                                 if (reg) {
                                     QObject::connect(reg,
                                                      QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
                                                      props, &DeepLearningPropertiesWidget::onTimeChanged);
                                 }
+
+                                // Connect static cache changes to view widget preview
+                                QObject::connect(props, &DeepLearningPropertiesWidget::staticCacheChanged,
+                                                 view, &DeepLearningViewWidget::refreshCachePreview);
 
                                 // Register the state
                                 reg->registerState(state);

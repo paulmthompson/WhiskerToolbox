@@ -42,11 +42,14 @@ class DeepLearningPropertiesWidget : public QWidget {
 
 public:
     explicit DeepLearningPropertiesWidget(
-        std::shared_ptr<DeepLearningState> state,
-        std::shared_ptr<DataManager> data_manager,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DeepLearningState> state,
+            std::shared_ptr<DataManager> data_manager,
+            QWidget * parent = nullptr);
 
     ~DeepLearningPropertiesWidget() override;
+
+    /// Non-owning access to the SlotAssembler for cache preview queries.
+    [[nodiscard]] SlotAssembler * assembler() const { return _assembler.get(); }
 
 public slots:
     /**
@@ -56,7 +59,11 @@ public slots:
      * 
      * @param position The new TimePosition
      */
-    void onTimeChanged(const TimePosition& position);
+    void onTimeChanged(TimePosition const & position);
+
+signals:
+    /// Emitted when the static tensor cache changes (capture/clear).
+    void staticCacheChanged();
 
 private slots:
     void _onModelComboChanged(int index);
@@ -65,6 +72,7 @@ private slots:
     void _onRunSingleFrame();
     void _onRunBatch();
     void _onPredictCurrentFrame();
+    void _onCaptureStaticInput(std::string const & slot_name);
 
 private:
     void _buildUi();
@@ -80,11 +88,12 @@ private:
     void _populateDataSourceCombo(QComboBox * combo,
                                   std::string const & type_hint);
     [[nodiscard]] static std::vector<std::string> _modesForEncoder(
-        std::string const & encoder_id) ;
+            std::string const & encoder_id);
 
     void _syncBindingsFromUi();
     void _updateWeightsStatus();
     void _loadModelIfReady();
+    void _updateCaptureButtonState(std::string const & slot_name);
 
     std::shared_ptr<DeepLearningState> _state;
     std::shared_ptr<DataManager> _data_manager;
@@ -115,4 +124,4 @@ private:
     std::optional<TimePosition> _current_time_position;
 };
 
-#endif // DEEP_LEARNING_PROPERTIES_WIDGET_HPP
+#endif// DEEP_LEARNING_PROPERTIES_WIDGET_HPP
