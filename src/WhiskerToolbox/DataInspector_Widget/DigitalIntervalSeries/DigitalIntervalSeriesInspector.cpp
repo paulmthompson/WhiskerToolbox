@@ -5,8 +5,9 @@
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 #include "DataManager.hpp"
+#include "DataManager/Commands/CommandContext.hpp"
+#include "DataManager/Commands/SaveData.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "DigitalIntervalSeriesDataView.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
@@ -27,6 +28,8 @@
 #include <filesystem>
 #include <iostream>
 #include <unordered_set>
+
+#include <rfl/json.hpp>
 
 DigitalIntervalSeriesInspector::DigitalIntervalSeriesInspector(
         std::shared_ptr<DataManager> data_manager,
@@ -156,7 +159,45 @@ void DigitalIntervalSeriesInspector::_connectSignals() {
     connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &DigitalIntervalSeriesInspector::_onExportTypeChanged);
     connect(ui->csv_interval_saver_widget, &CSVIntervalSaver_Widget::saveIntervalCSVRequested,
-            this, &DigitalIntervalSeriesInspector::_handleSaveIntervalCSVRequested);
+            this, [this](CSVIntervalSaverOptions options) {
+                auto output_path = dataManager()->getOutputPath();
+                if (output_path.empty()) {
+                    QMessageBox::warning(this, "Warning",
+                                         "Please set an output directory in the Data Manager settings");
+                    return;
+                }
+
+                auto filename = ui->filename_edit->text().toStdString();
+                auto const filepath = (std::filesystem::path(output_path) / filename).string();
+
+                options.parent_dir = output_path;
+                options.filename = filename;
+
+                auto const opts_json = rfl::json::write(options);
+                auto format_opts = rfl::json::read<rfl::Generic>(opts_json);
+
+                commands::SaveDataParams params{
+                        .data_key = _active_key,
+                        .format = "csv",
+                        .path = filepath,
+                };
+                if (format_opts) {
+                    params.format_options = format_opts.value();
+                }
+
+                commands::CommandContext ctx;
+                ctx.data_manager = dataManager();
+
+                commands::SaveData cmd(std::move(params));
+                auto result = cmd.execute(ctx);
+
+                if (result.success) {
+                    QMessageBox::information(this, "Success", "Intervals saved successfully to CSV");
+                } else {
+                    QMessageBox::critical(this, "Error",
+                                          QString("Failed to save: %1").arg(QString::fromStdString(result.error_message)));
+                }
+            });
 
     // Group filter signals
     connect(ui->groupFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -330,67 +371,6 @@ void DigitalIntervalSeriesInspector::_onExportTypeChanged(int index) {
 
     // Update filename based on new export type
     _updateFilename();
-}
-
-void DigitalIntervalSeriesInspector::_handleSaveIntervalCSVRequested(CSVIntervalSaverOptions options) {
-    options.filename = ui->filename_edit->text().toStdString();
-    if (options.filename.empty()) {
-        QMessageBox::warning(this, "Filename Missing", "Please enter an output filename.");
-        return;
-    }
-    IntervalSaverOptionsVariant options_variant = options;
-    _initiateSaveProcess(SaverType::CSV, options_variant);
-}
-
-void DigitalIntervalSeriesInspector::_initiateSaveProcess(SaverType saver_type, IntervalSaverOptionsVariant & options_variant) {
-    if (_active_key.empty()) {
-        QMessageBox::warning(this, "No Data Selected", "Please select a DigitalIntervalSeries item to save.");
-        return;
-    }
-
-    auto interval_data_ptr = dataManager()->getData<DigitalIntervalSeries>(_active_key);
-    if (!interval_data_ptr) {
-        QMessageBox::critical(this, "Error", "Could not retrieve DigitalIntervalSeries for saving. Key: " + QString::fromStdString(_active_key));
-        return;
-    }
-
-    bool save_successful = false;
-    switch (saver_type) {
-        case SaverType::CSV: {
-            auto & specific_csv_options = std::get<CSVIntervalSaverOptions>(options_variant);
-            specific_csv_options.parent_dir = dataManager()->getOutputPath();
-            if (specific_csv_options.parent_dir.empty()) {
-                specific_csv_options.parent_dir = ".";
-            }
-            save_successful = _performActualCSVSave(specific_csv_options);
-            break;
-        }
-            // Future saver types can be added here
-    }
-
-    if (save_successful) {
-        QMessageBox::information(this, "Save Successful", QString::fromStdString("Interval data saved to " + std::get<CSVIntervalSaverOptions>(options_variant).parent_dir + "/" + std::get<CSVIntervalSaverOptions>(options_variant).filename));
-        std::cout << "Interval data saved to: " << std::get<CSVIntervalSaverOptions>(options_variant).parent_dir << "/" << std::get<CSVIntervalSaverOptions>(options_variant).filename << std::endl;
-    } else {
-        QMessageBox::critical(this, "Save Error", "Failed to save interval data.");
-    }
-}
-
-bool DigitalIntervalSeriesInspector::_performActualCSVSave(CSVIntervalSaverOptions & options) {
-    auto interval_data_ptr = dataManager()->getData<DigitalIntervalSeries>(_active_key);
-    if (!interval_data_ptr) {
-        std::cerr << "_performActualCSVSave: Critical - Could not get DigitalIntervalSeries for key: " << _active_key << std::endl;
-        return false;
-    }
-
-    try {
-        save(interval_data_ptr.get(), options);
-        return true;
-    } catch (std::exception const & e) {
-        QMessageBox::critical(this, "Save Error", "Failed to save interval data (CSV): " + QString::fromStdString(e.what()));
-        std::cerr << "Failed to save interval data (CSV): " << e.what() << std::endl;
-        return false;
-    }
 }
 
 std::vector<Interval> DigitalIntervalSeriesInspector::_getSelectedIntervals() {
@@ -569,11 +549,10 @@ std::string DigitalIntervalSeriesInspector::_generateFilename() const {
 
     if (current_export_type == "CSV") {
         extension = ".csv";
-    } else {
-        // Future export types can be added here
-        // Example: if (current_export_type == "JSON") extension = ".json";
-        extension = ".csv";// Default fallback
     }
+
+    // Future export types can be added here
+    // Example: if (current_export_type == "JSON") extension = ".json";
 
     return sanitized_key + extension;
 }
