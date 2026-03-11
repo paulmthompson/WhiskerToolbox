@@ -46,20 +46,6 @@ add_executable(test_data_manager
 
         Lineage/test_lineage_recorder.test.cpp
 
-        # Commands tests
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/CommandFactory.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/CommandInfo.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/VariableSubstitution.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/GetEntityIdsInRange.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/Commands.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveData.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveDataDigitalEvent.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveDataDigitalInterval.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/SaveDataAnalog.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/LoadData.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/Validation.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Commands/CommandRecorder.test.cpp
-
         # DataManagerSnapshot tests
         ${CMAKE_SOURCE_DIR}/src/DataManager/DataManagerSnapshot.test.cpp
 

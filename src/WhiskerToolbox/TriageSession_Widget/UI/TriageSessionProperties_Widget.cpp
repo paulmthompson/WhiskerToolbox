@@ -6,7 +6,7 @@
 #include "TriageSessionProperties_Widget.hpp"
 
 #include "Core/TriageSessionState.hpp"
-#include "DataManager/Commands/CommandDescriptor.hpp"
+#include "Commands/CommandDescriptor.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "EditorState/EditorRegistry.hpp"

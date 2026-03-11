@@ -127,6 +127,7 @@ target_link_libraries(DataInspector_Widget PRIVATE DataManagerIO)
 target_link_libraries(DataInspector_Widget PRIVATE MediaExport)
 target_link_libraries(DataInspector_Widget PRIVATE Collapsible_Widget)
 target_link_libraries(DataInspector_Widget PRIVATE TransformsV2)
+target_link_libraries(DataInspector_Widget PRIVATE Commands)
 
 target_include_directories(DataInspector_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" # This directory
@@ -135,18 +136,7 @@ target_include_directories(DataInspector_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataInspector_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataInspector_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(DataInspector_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataInspector_Widget)
 
 set_target_properties(DataInspector_Widget PROPERTIES
     AUTOMOC ON

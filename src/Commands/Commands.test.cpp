@@ -3,12 +3,12 @@
  * @brief Unit tests for MoveByTimeRange, CopyByTimeRange, AddInterval, and ForEachKey commands
  */
 
-#include "DataManager/Commands/AddInterval.hpp"
-#include "DataManager/Commands/CommandContext.hpp"
-#include "DataManager/Commands/CommandFactory.hpp"
-#include "DataManager/Commands/CopyByTimeRange.hpp"
-#include "DataManager/Commands/ForEachKey.hpp"
-#include "DataManager/Commands/MoveByTimeRange.hpp"
+#include "Commands/AddInterval.hpp"
+#include "Commands/CommandContext.hpp"
+#include "Commands/CommandFactory.hpp"
+#include "Commands/CopyByTimeRange.hpp"
+#include "Commands/ForEachKey.hpp"
+#include "Commands/MoveByTimeRange.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"

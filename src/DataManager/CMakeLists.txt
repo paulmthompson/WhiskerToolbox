@@ -33,36 +33,6 @@ set(DATAMANAGER_SOURCES
         DataManagerTypes.hpp
         DataManagerTypes.cpp
 
-        Commands/CommandResult.hpp
-        Commands/CommandContext.hpp
-        Commands/CommandDescriptor.hpp
-        Commands/CommandInfo.hpp
-        Commands/CommandUIHints.hpp
-        Commands/ICommand.hpp
-        Commands/CommandFactory.hpp
-        Commands/CommandFactory.cpp
-        Commands/VariableSubstitution.hpp
-        Commands/VariableSubstitution.cpp
-        Commands/SequenceExecution.hpp
-        Commands/SequenceExecution.cpp
-        Commands/GetEntityIdsInRange.hpp
-        Commands/GetEntityIdsInRange.cpp
-        Commands/MoveByTimeRange.hpp
-        Commands/MoveByTimeRange.cpp
-        Commands/CopyByTimeRange.hpp
-        Commands/CopyByTimeRange.cpp
-        Commands/AddInterval.hpp
-        Commands/AddInterval.cpp
-        Commands/ForEachKey.hpp
-        Commands/ForEachKey.cpp
-        Commands/SaveData.hpp
-        Commands/SaveData.cpp
-        Commands/LoadData.hpp
-        Commands/LoadData.cpp
-        Commands/Validation.hpp
-        Commands/Validation.cpp
-        Commands/CommandRecorder.hpp
-        Commands/CommandRecorder.cpp
         Commands/MutationGuard.hpp
         Commands/MutationGuard.cpp
 
@@ -303,6 +273,8 @@ target_link_libraries(DataManager PRIVATE DataManagerNumpy)
 target_link_libraries(DataManager PRIVATE armadillo)
 target_link_libraries(DataManager PRIVATE LAPACK::LAPACK)
 target_link_libraries(DataManager PRIVATE OpenBLAS::OpenBLAS)
+
+target_link_libraries(DataManager PRIVATE Commands)
 
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

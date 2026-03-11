@@ -3,7 +3,7 @@
  * @brief Unit tests for getEntityIdsInRange free functions
  */
 
-#include "DataManager/Commands/GetEntityIdsInRange.hpp"
+#include "Commands/GetEntityIdsInRange.hpp"
 
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"

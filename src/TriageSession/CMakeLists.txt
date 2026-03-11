@@ -14,18 +14,7 @@ target_include_directories(TriageSession PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Apply the same compiler flags as the main project
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(TriageSession PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(TriageSession PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(TriageSession PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(TriageSession)
 
 # Set target properties to match the main project
 set_target_properties(TriageSession PROPERTIES
@@ -35,7 +24,7 @@ set_target_properties(TriageSession PROPERTIES
 )
 
 # Dependencies: TriageSession consumes the Command Architecture from DataManager
-target_link_libraries(TriageSession PUBLIC DataManager)
+target_link_libraries(TriageSession PUBLIC DataManager Commands)
 
 # Add alias for consistent naming
 add_library(WhiskerToolbox::TriageSession ALIAS TriageSession)

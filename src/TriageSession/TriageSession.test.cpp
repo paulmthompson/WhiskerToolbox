@@ -5,10 +5,10 @@
 
 #include "TriageSession/TriageSession.hpp"
 
-#include "DataManager/Commands/AddInterval.hpp"
-#include "DataManager/Commands/CommandContext.hpp"
-#include "DataManager/Commands/CommandDescriptor.hpp"
-#include "DataManager/Commands/MoveByTimeRange.hpp"
+#include "Commands/AddInterval.hpp"
+#include "Commands/CommandContext.hpp"
+#include "Commands/CommandDescriptor.hpp"
+#include "Commands/MoveByTimeRange.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"

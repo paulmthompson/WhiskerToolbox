@@ -29,6 +29,8 @@ add_subdirectory(MLCore)
 add_subdirectory(python_bindings)
 add_subdirectory(CorePlotting)
 add_subdirectory(DeepLearning)
+
+add_subdirectory(Commands)
 if (ENABLE_UI)
     add_subdirectory(PlottingOpenGL)
     add_subdirectory(WhiskerToolbox)

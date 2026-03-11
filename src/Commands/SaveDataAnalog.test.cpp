@@ -1,22 +1,22 @@
 /**
- * @file SaveDataDigitalInterval.test.cpp
- * @brief Unit tests for SaveData command with DigitalIntervalSeries CSV format
+ * @file SaveDataAnalog.test.cpp
+ * @brief Unit tests for SaveData command with AnalogTimeSeries CSV format
  *
- * These tests verify the SaveData command correctly saves DigitalIntervalSeries
+ * These tests verify the SaveData command correctly saves AnalogTimeSeries
  * data through the LoaderRegistry, and that the saved files can be loaded back
  * with data integrity preserved (round-trip).
  */
 
-#include "DataManager/Commands/CommandContext.hpp"
-#include "DataManager/Commands/CommandFactory.hpp"
-#include "DataManager/Commands/SaveData.hpp"
+#include "Commands/CommandContext.hpp"
+#include "Commands/CommandFactory.hpp"
+#include "Commands/SaveData.hpp"
 
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include "IO/core/LoaderRegistration.hpp"
 #include "IO/core/LoaderRegistry.hpp"
-#include "IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
+#include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -25,7 +25,6 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
-#include <vector>
 
 using namespace commands;
 
@@ -43,15 +42,12 @@ struct RegistryInitializer {
 
 [[maybe_unused]] RegistryInitializer const g_init{};
 
-/// Create a CommandContext with a DigitalIntervalSeries populated with test intervals
-CommandContext makeContextWithIntervals(std::string const & key) {
+/// Create a CommandContext with an AnalogTimeSeries populated with test data
+CommandContext makeContextWithAnalog(std::string const & key) {
     auto dm = std::make_shared<DataManager>();
-    dm->setData<DigitalIntervalSeries>(key, TimeKey("time"));
-
-    auto intervals = dm->getData<DigitalIntervalSeries>(key);
-    intervals->addEvent(Interval{100, 150});
-    intervals->addEvent(Interval{200, 250});
-    intervals->addEvent(Interval{300, 350});
+    auto analog = std::make_shared<AnalogTimeSeries>(
+            std::vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f}, 5);
+    dm->setData<AnalogTimeSeries>(key, analog, TimeKey("time"));
 
     CommandContext ctx;
     ctx.data_manager = dm;
@@ -59,7 +55,7 @@ CommandContext makeContextWithIntervals(std::string const & key) {
 }
 
 std::filesystem::path makeTempDir() {
-    auto dir = std::filesystem::temp_directory_path() / "whisker_save_interval_test";
+    auto dir = std::filesystem::temp_directory_path() / "whisker_save_analog_test";
     std::filesystem::create_directories(dir);
     return dir;
 }
@@ -75,15 +71,15 @@ void cleanupTempDir(std::filesystem::path const & dir) {
 // Basic save
 // ============================================================================
 
-TEST_CASE("SaveData saves DigitalIntervalSeries to CSV",
-          "[commands][SaveData][DigitalInterval]") {
+TEST_CASE("SaveData saves AnalogTimeSeries to CSV",
+          "[commands][SaveData][Analog]") {
     auto temp_dir = makeTempDir();
-    auto ctx = makeContextWithIntervals("intervals");
+    auto ctx = makeContextWithAnalog("signal");
 
-    auto const filepath = (temp_dir / "intervals.csv").string();
+    auto const filepath = (temp_dir / "analog.csv").string();
 
     SaveData cmd(SaveDataParams{
-            .data_key = "intervals",
+            .data_key = "signal",
             .format = "csv",
             .path = filepath,
     });
@@ -92,14 +88,14 @@ TEST_CASE("SaveData saves DigitalIntervalSeries to CSV",
     REQUIRE(result.success);
     REQUIRE(std::filesystem::exists(filepath));
 
-    // Verify file has content (header + interval rows)
+    // Verify file has content (header + 5 data rows)
     std::ifstream ifs(filepath);
     std::string content((std::istreambuf_iterator<char>(ifs)),
                         std::istreambuf_iterator<char>());
     REQUIRE_FALSE(content.empty());
 
     auto line_count = std::count(content.begin(), content.end(), '\n');
-    REQUIRE(line_count >= 3);
+    REQUIRE(line_count >= 5);
 
     cleanupTempDir(temp_dir);
 }
@@ -108,15 +104,15 @@ TEST_CASE("SaveData saves DigitalIntervalSeries to CSV",
 // Round-trip: save then load back
 // ============================================================================
 
-TEST_CASE("SaveData round-trips DigitalIntervalSeries through CSV",
-          "[commands][SaveData][DigitalInterval]") {
+TEST_CASE("SaveData round-trips AnalogTimeSeries through CSV",
+          "[commands][SaveData][Analog]") {
     auto temp_dir = makeTempDir();
-    auto ctx = makeContextWithIntervals("intervals");
+    auto ctx = makeContextWithAnalog("signal");
 
-    auto const filepath = (temp_dir / "roundtrip_intervals.csv").string();
+    auto const filepath = (temp_dir / "roundtrip_analog.csv").string();
 
     SaveData cmd(SaveDataParams{
-            .data_key = "intervals",
+            .data_key = "signal",
             .format = "csv",
             .path = filepath,
     });
@@ -125,50 +121,46 @@ TEST_CASE("SaveData round-trips DigitalIntervalSeries through CSV",
     REQUIRE(result.success);
 
     // Load back using the CSV loader
-    CSVIntervalLoaderOptions load_opts;
+    CSVAnalogLoaderOptions load_opts;
     load_opts.filepath = filepath;
-    load_opts.has_header = true;// default saver includes header
+    load_opts.has_header = true;
+    load_opts.single_column_format = false;
+    load_opts.time_column = 0;
+    load_opts.data_column = 1;
 
-    auto loaded_intervals = load(load_opts);
-    REQUIRE(loaded_intervals.size() == 3);
+    auto loaded = load(load_opts);
+    REQUIRE(loaded != nullptr);
+    REQUIRE(loaded->getNumSamples() == 5);
 
-    // Verify all original intervals are present
-    std::sort(loaded_intervals.begin(), loaded_intervals.end(),
-              [](Interval const & a, Interval const & b) {
-                  if (a.start == b.start) {
-                      return a.end < b.end;
-                  }
-                  return a.start < b.start;
-              });
-
-    REQUIRE(loaded_intervals[0].start == 100);
-    REQUIRE(loaded_intervals[0].end == 150);
-    REQUIRE(loaded_intervals[1].start == 200);
-    REQUIRE(loaded_intervals[1].end == 250);
-    REQUIRE(loaded_intervals[2].start == 300);
-    REQUIRE(loaded_intervals[2].end == 350);
+    auto const data_span = loaded->getAnalogTimeSeries();
+    REQUIRE(data_span.size() == 5);
+    REQUIRE(data_span[0] == 1.0f);
+    REQUIRE(data_span[1] == 2.0f);
+    REQUIRE(data_span[2] == 3.0f);
+    REQUIRE(data_span[3] == 4.0f);
+    REQUIRE(data_span[4] == 5.0f);
 
     cleanupTempDir(temp_dir);
 }
 
 // ============================================================================
-// Format options (example: no header)
+// Format options (custom delimiter, no header)
 // ============================================================================
 
-TEST_CASE("SaveData passes format_options to CSV saver for DigitalIntervalSeries",
-          "[commands][SaveData][DigitalInterval]") {
+TEST_CASE("SaveData passes format_options to CSV saver for AnalogTimeSeries",
+          "[commands][SaveData][Analog]") {
     auto temp_dir = makeTempDir();
-    auto ctx = makeContextWithIntervals("intervals");
+    auto ctx = makeContextWithAnalog("signal");
 
-    auto const filepath = (temp_dir / "custom_intervals.csv").string();
+    auto const filepath = (temp_dir / "custom_analog.csv").string();
 
-    // Build format_options with custom settings (mirror event test style)
-    auto const opts_json = R"({"save_header": false})";
+    // Build format_options with custom settings
+    auto const opts_json = R"({"save_header": false, "precision": 0})";
     auto format_opts = rfl::json::read<rfl::Generic>(opts_json);
     REQUIRE(format_opts);
 
     SaveData cmd(SaveDataParams{
-            .data_key = "intervals",
+            .data_key = "signal",
             .format = "csv",
             .path = filepath,
             .format_options = format_opts.value(),
@@ -182,7 +174,13 @@ TEST_CASE("SaveData passes format_options to CSV saver for DigitalIntervalSeries
     std::string content((std::istreambuf_iterator<char>(ifs)),
                         std::istreambuf_iterator<char>());
 
-    REQUIRE(content.find("Start") == std::string::npos);
+    // No header means first line is data (no "Time" or "Data" header)
+    REQUIRE(content.find("Time") == std::string::npos);
+    REQUIRE(content.find("Data") == std::string::npos);
+
+    // Should have exactly 5 lines of data
+    auto line_count = std::count(content.begin(), content.end(), '\n');
+    REQUIRE(line_count == 5);
 
     cleanupTempDir(temp_dir);
 }
@@ -191,15 +189,15 @@ TEST_CASE("SaveData passes format_options to CSV saver for DigitalIntervalSeries
 // Factory creation
 // ============================================================================
 
-TEST_CASE("SaveData for DigitalIntervalSeries can be created via factory",
-          "[commands][SaveData][DigitalInterval][factory]") {
+TEST_CASE("SaveData for AnalogTimeSeries can be created via factory",
+          "[commands][SaveData][Analog][factory]") {
     auto temp_dir = makeTempDir();
-    auto ctx = makeContextWithIntervals("intervals");
+    auto ctx = makeContextWithAnalog("signal");
 
-    auto const filepath = (temp_dir / "factory_intervals.csv").string();
+    auto const filepath = (temp_dir / "factory_analog.csv").string();
 
     auto const json = R"({
-        "data_key": "intervals",
+        "data_key": "signal",
         "format": "csv",
         "path": ")" + filepath +
                       R"("
@@ -219,17 +217,17 @@ TEST_CASE("SaveData for DigitalIntervalSeries can be created via factory",
 // Error case: nonexistent data key
 // ============================================================================
 
-TEST_CASE("SaveData errors when DigitalIntervalSeries key does not exist",
-          "[commands][SaveData][DigitalInterval]") {
+TEST_CASE("SaveData errors when AnalogTimeSeries key does not exist",
+          "[commands][SaveData][Analog]") {
     auto dm = std::make_shared<DataManager>();
 
     CommandContext ctx;
     ctx.data_manager = dm;
 
     SaveData cmd(SaveDataParams{
-            .data_key = "nonexistent_intervals",
+            .data_key = "nonexistent_signal",
             .format = "csv",
-            .path = "/tmp/should_not_exist_intervals.csv",
+            .path = "/tmp/should_not_exist.csv",
     });
 
     auto result = cmd.execute(ctx);

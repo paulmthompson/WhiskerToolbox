@@ -3,10 +3,10 @@
  * @brief Unit tests for the LoadData command
  */
 
-#include "DataManager/Commands/LoadData.hpp"
-#include "DataManager/Commands/CommandContext.hpp"
-#include "DataManager/Commands/CommandFactory.hpp"
-#include "DataManager/Commands/SaveData.hpp"
+#include "Commands/LoadData.hpp"
+#include "Commands/CommandContext.hpp"
+#include "Commands/CommandFactory.hpp"
+#include "Commands/SaveData.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"

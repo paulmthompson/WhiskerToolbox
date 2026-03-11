@@ -5,8 +5,8 @@
 
 #include "TriageSession.hpp"
 
-#include "DataManager/Commands/CommandContext.hpp"
-#include "DataManager/Commands/SequenceExecution.hpp"
+#include "Commands/CommandContext.hpp"
+#include "Commands/SequenceExecution.hpp"
 
 #include <string>
 #include <utility>

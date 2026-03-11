@@ -9,8 +9,9 @@
 #include "CommandFactory.hpp"
 #include "CommandRecorder.hpp"
 #include "ICommand.hpp"
-#include "MutationGuard.hpp"
 #include "VariableSubstitution.hpp"
+
+#include "DataManager/Commands/MutationGuard.hpp"
 
 #include <rfl/json.hpp>
 

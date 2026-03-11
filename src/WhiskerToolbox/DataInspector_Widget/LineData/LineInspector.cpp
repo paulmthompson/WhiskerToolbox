@@ -6,8 +6,8 @@
 #include "LineTableView.hpp"
 
 #include "DataManager.hpp"
-#include "DataManager/Commands/CommandContext.hpp"
-#include "DataManager/Commands/SaveData.hpp"
+#include "Commands/CommandContext.hpp"
+#include "Commands/SaveData.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 
