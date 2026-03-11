@@ -10,7 +10,7 @@ title: "Command Architecture Roadmap"
 |-------|--------|-------|
 | **Phase 1:** Command Foundation | In Progress | Steps 1.1–1.12 complete. GUI audit (1.10) restructured as on-demand. Steps 1.13–1.14 (testing infrastructure) added. |
 | **Phase 2:** Triage Session | In Progress | Steps 2.1–2.3, 2.6–2.8 complete. Keyboard shortcuts (2.4) and tracked-regions visualization (2.5) remain. |
-| **Phase 3:** Persistence Commands & Save Registry | Not Started | Unified SaveData/LoadData commands wrapping existing IO |
+| **Phase 3:** Persistence Commands & Save Registry | Complete | SaverRegistry infrastructure, 8 savers (CSV ×6, CapnProto, OpenCV), SaveData + LoadData commands, round-trip fuzz tests |
 | **Phase 4:** Action Journal Integration | Not Started | Full journal; builds on CommandRecorder from Step 1.13 |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
 | **Phase 6:** CLI Batch Executor & Macro Recording | Not Started | Headless command sequence execution; builds on golden trace tests from Step 1.14 |
@@ -390,31 +390,100 @@ See [UI Sketch](index.qmd#ui-sketch) in the design document.
 
 **Depends on:** Phase 1
 
-### Step 3.1 — SaverRegistry
+### Step 3.1.1 — SaverRegistry Core Infrastructure
 
-- [ ] `SaverRegistry` class mapping format strings to saver functions (analogous to `LoaderRegistry`)
-- [ ] Register existing savers: CSV single-file, CSV multi-file for LineData, PointData, DigitalEventSeries, DigitalIntervalSeries, AnalogTimeSeries
+- [x] `SaverInfo` metadata struct (`format`, `data_type`, `description`, `ParameterSchema`) in `src/DataManager/IO/core/SaverInfo.hpp`
+- [x] `getSupportedSaveFormats()` query on `LoaderRegistry`; per-loader `getSaverInfo()` virtual method
+- [x] `AtomicWrite` utility (`atomicWriteFile()`) in `src/DataManager/IO/core/AtomicWrite.hpp/.cpp` — write to `.tmp`, `fsync()`, rename over target
+- [x] Saver return types audited — all savers updated to return `bool`
+
+See [SaverInfo & AtomicWrite](../../IO/saver_infrastructure.qmd) for infrastructure details.
+
+### Step 3.1.2 — CSV PointData Saver
+
+- [x] `save(PointData const*, CSVPointSaverOptions)` returns `bool`, uses `atomicWriteFile()`
+- [x] Registered in `CSVLoader::getSaverInfo()`
+- [x] `ParameterUIHints<CSVPointSaverOptions>` tooltips added
+- [x] Round-trip fuzz tests (`FuzzCsvPointRoundTrip`, `FuzzCsvPointRoundTripDelimiter`)
+- [x] Deterministic unit tests (single point, multiple points, empty data, negative coords, space-delimited)
+- [x] Sources migrated from `Points/IO/CSV/` → `IO/formats/CSV/points/`
+
+### Step 3.1.3 — CSV LineData Saver (Single-File and Multi-File)
+
+- [x] Both `save()` overloads (`CSVSingleFileLineSaverOptions`, `CSVMultiFileLineSaverOptions`) return `bool`, use `atomicWriteFile()`
+- [x] Single-file variant registered in `CSVLoader::getSaverInfo()`
+- [x] `ParameterUIHints` added for both option structs
+- [x] Round-trip fuzz tests for both variants
+- [x] Deterministic unit tests for both variants
+- [x] Sources migrated from `Lines/IO/CSV/` → `IO/formats/CSV/lines/`
+
+### Step 3.1.4 — CSV AnalogTimeSeries Saver
+
+- [x] `save(AnalogTimeSeries const*, CSVAnalogSaverOptions const&)` returns `bool`, uses `atomicWriteFile()`
+- [x] Registered in `CSVLoader::getSaverInfo()`
+- [x] `ParameterUIHints<CSVAnalogSaverOptions>` tooltips added
+- [x] Round-trip fuzz tests (`FuzzCsvAnalogRoundTrip`, `FuzzCsvAnalogRoundTripDelimiter`)
+- [x] Deterministic unit tests (single sample, multiple samples, negative values, space-delimited)
+
+### Step 3.1.5 — CSV DigitalEventSeries Saver
+
+- [x] `save(DigitalEventSeries const*, CSVEventSaverOptions const&)` returns `bool`, uses `atomicWriteFile()`
+- [x] Registered in `CSVLoader::getSaverInfo()`
+- [x] `ParameterUIHints<CSVEventSaverOptions>` tooltips added
+- [x] Round-trip fuzz tests (`FuzzCsvEventRoundTrip`, `FuzzCsvEventRoundTripDelimiter`)
+- [x] Deterministic unit tests (single event, multiple events, empty data, large times, space-delimited)
+
+### Step 3.1.6 — CSV DigitalIntervalSeries Saver
+
+- [x] `save(DigitalIntervalSeries const*, CSVIntervalSaverOptions const&)` returns `bool`, uses `atomicWriteFile()`
+- [x] Registered in `CSVLoader::getSaverInfo()`
+- [x] `ParameterUIHints<CSVIntervalSaverOptions>` tooltips added
+- [x] Round-trip fuzz tests (`FuzzCsvIntervalRoundTrip`, `FuzzCsvIntervalRoundTripDelimiter`)
+- [x] Existing unit tests updated to check `bool` return
+
+### Step 3.1.7 — CSV MaskData (RLE) Saver
+
+- [x] `save(MaskData const*, CSVMaskRLESaverOptions const&)` returns `bool`, uses `atomicWriteFile()`
+- [x] Registered in `CSVLoader::getSaverInfo()`
+- [x] `ParameterUIHints<CSVMaskRLESaverOptions>` tooltips added
+- [x] Round-trip fuzz tests (`FuzzCsvMaskRleRoundTrip`, `FuzzCsvMaskRleRoundTripDelimiter`)
+- [x] Deterministic unit tests (single mask, multiple frames, empty data, large coords, no-header, CSV contents)
+
+### Step 3.1.8 — CapnProto LineData Saver
+
+- [x] `save(LineData const&, BinaryLineSaverOptions const&)` uses `atomicWriteFile()`; options const-corrected
+- [x] `getSaverInfo()` override on `CapnProtoFormatLoader` for `IODataType::Line`
+- [x] `ParameterUIHints<BinaryLineSaverOptions>` tooltips added
+- [x] Round-trip fuzz test (`FuzzCapnProtoLineRoundTrip`) — exact match (binary format, no FP loss)
+- [x] Deterministic unit tests (single line, multiple lines, multiple frames, negative coords, image size, save-returns-true)
+
+### Step 3.1.9 — OpenCV MaskData (Image) Saver
+
+- [x] `save(MaskData const*, ImageMaskSaverOptions const&)` returns `bool`; per-image atomic write via temp-prefixed `cv::imwrite()` + rename
+- [x] `getSaverInfo()` override on `OpenCVFormatLoader` for `IODataType::Mask`
+- [x] `ParameterUIHints<ImageMaskSaverOptions>` tooltips added
+- [x] Robustness fuzz tests (`FuzzOpenCVMaskSave`, `FuzzOpenCVMaskSaveFormats`) — no crash, valid files produced
+- [x] Deterministic unit tests (single mask, multiple frames, empty data, null pointer, custom prefix/padding, overwrite protection, BMP format)
 
 ### Step 3.2 — SaveData Command
 
-- [ ] `SaveDataParams` struct: data_key, format, path, optional format_options
-- [ ] `SaveData` command dispatches to `SaverRegistry` based on format string
-- [ ] Atomic write-ahead pattern: write to `.tmp`, `fsync()`, `rename()` over target
-- [ ] Deserialize format-specific option structs from `format_options`
+- [x] `SaveDataParams` struct: `data_key`, `format`, `path`, optional `format_options`
+- [x] `SaveData` dispatches via `LoaderRegistry::trySave()`, not undoable
+- [x] Registered in factory with `category = "persistence"`
+- [x] `ParameterUIHints<SaveDataParams>` tooltips; `format_options` marked `is_advanced`
+- [x] 11 unit tests (factory, execution, serialization, integration)
+- [x] Developer documentation: [SaveData Command](save_data.qmd)
 
 See [SaveData](index.qmd#savedata) and [Persistence Safety](index.qmd#persistence-safety) in the design document.
 
 ### Step 3.3 — LoadData Command
 
-- [ ] `LoadDataParams` struct: data_key, data_type, filepath, format, optional format_options
-- [ ] `LoadData` command wraps `LoaderRegistry` for unified dispatch
-
-### Step 3.4 — Unit Tests
-
-- [ ] Save round-trip: save data object, reload, verify contents match
-- [ ] Atomic write safety: verify `.tmp` → `rename()` pattern
-- [ ] Format dispatch: correct saver called for each format string
-- [ ] Error handling: unknown format, missing data key, write permission failure
+- [x] `LoadDataParams` struct: `data_key`, `data_type`, `filepath`, `format`, optional `format_options`
+- [x] `LoadData` dispatches via `LoaderRegistry::tryLoad()`, stores result in `DataManager`; undoable (`undo()` calls `deleteData()`)
+- [x] Registered in factory with `category = "persistence"`, `supports_undo = true`
+- [x] `ParameterUIHints<LoadDataParams>` tooltips; `format_options` marked `is_advanced`
+- [x] 11 unit tests (factory, execution including undo, serialization, Load+Save round-trip)
+- [x] Developer documentation: [LoadData Command](load_data.qmd)
 
 ---
 

@@ -129,4 +129,4 @@ Load and save data in a pipeline:
 
 - [SaveData Command](save_data.qmd) — the complementary persistence command for saving
 - [Command Architecture](index.qmd) — overall command system design
-- [SaverRegistry Roadmap](saver_registry_roadmap.qmd) — parent roadmap (Step 3.3)
+- [Command Architecture Roadmap](roadmap.qmd) — Phase 3 (Step 3.3)
