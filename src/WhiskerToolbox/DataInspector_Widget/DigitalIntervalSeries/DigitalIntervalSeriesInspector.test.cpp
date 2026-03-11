@@ -3,12 +3,14 @@
 #include "DigitalIntervalSeriesDataView.hpp"
 #include "IntervalTableModel.hpp"
 
+#include "DataExport_Widget/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"
 #include "DataInspector_Widget/DataInspectorPropertiesWidget.hpp"
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataInspector_Widget/DataInspectorViewWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
@@ -24,8 +26,10 @@
 #include <QTableView>
 #include <QAbstractItemModel>
 #include <QTest>
+#include <QTimer>
 
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <numeric>
 #include <vector>
@@ -41,6 +45,19 @@ void ensureQApplication()
         static std::array<char *, 1> argv = {app_name};
         new QApplication(argc, argv.data());// NOLINT: Intentionally leaked
     }
+}
+
+std::filesystem::path makeTempDir()
+{
+    auto dir = std::filesystem::temp_directory_path() / "whisker_digital_interval_inspector_save_test";
+    std::filesystem::create_directories(dir);
+    return dir;
+}
+
+void cleanupTempDir(std::filesystem::path const & dir)
+{
+    std::error_code ec;
+    std::filesystem::remove_all(dir, ec);
 }
 }// namespace
 
@@ -301,6 +318,78 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
 
         // Label should update to show 2 intervals
         REQUIRE(total_intervals_label->text() == QStringLiteral("2"));
+    }
+}
+
+TEST_CASE("DigitalIntervalSeriesInspector saves data from DataManager", "[DigitalIntervalSeriesInspector][save]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Save button exports DigitalIntervalSeries to CSV") {
+        auto temp_dir = makeTempDir();
+        auto data_manager = std::make_shared<DataManager>();
+        data_manager->setOutputPath(temp_dir.string());
+
+        // Create timeframe and interval series
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        auto interval_series = std::make_shared<DigitalIntervalSeries>();
+        interval_series->addEvent(TimeFrameIndex(10), TimeFrameIndex(20));
+        interval_series->addEvent(TimeFrameIndex(30), TimeFrameIndex(40));
+        interval_series->addEvent(TimeFrameIndex(50), TimeFrameIndex(60));
+        data_manager->setData<DigitalIntervalSeries>("test_intervals", interval_series, TimeKey("time"));
+
+        DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setActiveKey("test_intervals");
+
+        app->processEvents();
+
+        // Set filename for export
+        auto * filename_edit = inspector.findChild<QLineEdit *>("filename_edit");
+        REQUIRE(filename_edit != nullptr);
+        filename_edit->setText(QStringLiteral("saved_intervals.csv"));
+
+        // Schedule dialog dismissal before clicking save (QMessageBox blocks)
+        QTimer::singleShot(50, []() {
+            if (auto * w = QApplication::activeModalWidget()) {
+                w->close();
+            }
+        });
+
+        auto * csv_saver = inspector.findChild<CSVIntervalSaver_Widget *>("csv_interval_saver_widget");
+        REQUIRE(csv_saver != nullptr);
+        auto * save_button = csv_saver->findChild<QPushButton *>("save_action_button");
+        REQUIRE(save_button != nullptr);
+        save_button->click();
+
+        app->processEvents();
+
+        auto const filepath = temp_dir / "saved_intervals.csv";
+        REQUIRE(std::filesystem::exists(filepath));
+
+        // Verify file content: load back and check intervals
+        CSVIntervalLoaderOptions load_opts;
+        load_opts.filepath = filepath.string();
+        load_opts.has_header = true;
+        load_opts.start_column = 0;
+        load_opts.end_column = 1;
+
+        auto loaded_intervals = load(load_opts);
+        REQUIRE(loaded_intervals.size() == 3);
+        REQUIRE(loaded_intervals[0].start == 10);
+        REQUIRE(loaded_intervals[0].end == 20);
+        REQUIRE(loaded_intervals[1].start == 30);
+        REQUIRE(loaded_intervals[1].end == 40);
+        REQUIRE(loaded_intervals[2].start == 50);
+        REQUIRE(loaded_intervals[2].end == 60);
+
+        cleanupTempDir(temp_dir);
     }
 }
 

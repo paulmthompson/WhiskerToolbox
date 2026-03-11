@@ -26,6 +26,7 @@ target_link_libraries(test_data_inspector_widget PRIVATE
     Catch2::Catch2WithMain 
     DataInspector_Widget 
     DataManager 
+    DataManagerIO
     GroupManagementWidget
     Entity
     Qt6::Widgets
@@ -35,7 +36,8 @@ target_link_libraries(test_data_inspector_widget PRIVATE
 )
 
 target_include_directories(test_data_inspector_widget PRIVATE
-        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DataManager>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataInspector_Widget>"
