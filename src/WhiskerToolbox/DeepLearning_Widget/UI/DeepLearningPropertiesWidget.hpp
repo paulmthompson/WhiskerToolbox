@@ -56,7 +56,7 @@ public slots:
      * 
      * @param position The new TimePosition
      */
-    void onTimeChanged(TimePosition position);
+    void onTimeChanged(const TimePosition& position);
 
 private slots:
     void _onModelComboChanged(int index);
@@ -79,8 +79,8 @@ private:
 
     void _populateDataSourceCombo(QComboBox * combo,
                                   std::string const & type_hint);
-    [[nodiscard]] std::vector<std::string> _modesForEncoder(
-        std::string const & encoder_id) const;
+    [[nodiscard]] static std::vector<std::string> _modesForEncoder(
+        std::string const & encoder_id) ;
 
     void _syncBindingsFromUi();
     void _updateWeightsStatus();

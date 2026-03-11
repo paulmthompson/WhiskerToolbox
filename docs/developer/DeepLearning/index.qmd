@@ -197,7 +197,13 @@ PIMPL (Pointer to Implementation) pattern:
 - **`SlotAssembler`** — a bridge class with a clean public API (no torch headers in the .hpp). 
   Its `Impl` struct (in the .cpp) holds all torch-dependent code.
 - **`DeepLearningBindingData`** — pure data structs with no Qt or torch dependencies, used to 
-  pass binding information between the UI and SlotAssembler.
+  pass binding information between the UI and SlotAssembler. Includes:
+    - `SlotBindingData` — dynamic (per-frame) input binding with a `time_offset` field for 
+      temporal shifting (e.g. `-1` reads one frame behind)
+    - `StaticInputData` — static (memory) input binding
+    - `OutputBindingData` — output slot binding
+    - `computeEncodingFrame(current_frame, batch_index, time_offset, max_frame)` — utility 
+      that combines frame, batch index, and temporal offset with clamping to `[0, max_frame]`
 
 This ensures Qt headers and torch headers never appear in the same translation unit.
 

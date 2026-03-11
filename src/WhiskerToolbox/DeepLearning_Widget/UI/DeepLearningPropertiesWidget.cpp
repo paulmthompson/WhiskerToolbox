@@ -4,10 +4,10 @@
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Media/Media_Data.hpp"
+#include "DataManager/Points/Point_Data.hpp"
 
 #include <QComboBox>
 #include <QDoubleSpinBox>
@@ -32,9 +32,9 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 DeepLearningPropertiesWidget::DeepLearningPropertiesWidget(
-    std::shared_ptr<DeepLearningState> state,
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
+        std::shared_ptr<DeepLearningState> state,
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
     : QWidget(parent),
       _state(std::move(state)),
       _data_manager(std::move(data_manager)),
@@ -72,7 +72,7 @@ void DeepLearningPropertiesWidget::_buildUi() {
         _model_desc_label = new QLabel(group);
         _model_desc_label->setWordWrap(true);
         _model_desc_label->setStyleSheet(
-            QStringLiteral("color: gray; font-size: 11px;"));
+                QStringLiteral("color: gray; font-size: 11px;"));
 
         form->addRow(tr("Model:"), _model_combo);
         form->addRow(_model_desc_label);
@@ -91,7 +91,7 @@ void DeepLearningPropertiesWidget::_buildUi() {
         auto * path_row = new QHBoxLayout();
         _weights_path_edit = new QLineEdit(group);
         _weights_path_edit->setPlaceholderText(
-            tr("Path to model weights file..."));
+                tr("Path to model weights file..."));
         _weights_browse_btn = new QPushButton(tr("Browse..."), group);
         path_row->addWidget(_weights_path_edit);
         path_row->addWidget(_weights_browse_btn);
@@ -178,18 +178,18 @@ void DeepLearningPropertiesWidget::_populateModelCombo() {
     _model_combo->clear();
     _model_combo->addItem(tr("(None)"), QString{});
 
-    for (auto const & id : SlotAssembler::availableModelIds()) {
+    for (auto const & id: SlotAssembler::availableModelIds()) {
         auto info = SlotAssembler::getModelDisplayInfo(id);
-        QString display = info
-            ? QString::fromStdString(info->display_name)
-            : QString::fromStdString(id);
+        QString const display = info
+                                  ? QString::fromStdString(info->display_name)
+                                  : QString::fromStdString(id);
         _model_combo->addItem(display, QString::fromStdString(id));
     }
 
     auto const & saved_id = _state->selectedModelId();
     if (!saved_id.empty()) {
         int const idx =
-            _model_combo->findData(QString::fromStdString(saved_id));
+                _model_combo->findData(QString::fromStdString(saved_id));
         if (idx >= 0) {
             _model_combo->setCurrentIndex(idx);
         }
@@ -201,7 +201,7 @@ void DeepLearningPropertiesWidget::_populateModelCombo() {
 
 void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
     auto const model_id =
-        _model_combo->itemData(index).toString().toStdString();
+            _model_combo->itemData(index).toString().toStdString();
     _state->setSelectedModelId(model_id);
 
     if (model_id.empty()) {
@@ -212,7 +212,7 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
         _current_info = SlotAssembler::getModelDisplayInfo(model_id);
         if (_current_info) {
             _model_desc_label->setText(
-                QString::fromStdString(_current_info->description));
+                    QString::fromStdString(_current_info->description));
             int const pref = _current_info->preferred_batch_size;
             _batch_size_spin->setValue(pref > 0 ? pref : 1);
             if (_current_info->max_batch_size > 0) {
@@ -232,15 +232,15 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
 
 void DeepLearningPropertiesWidget::_onWeightsBrowseClicked() {
     auto const path = AppFileDialog::getOpenFileName(
-        this,
-        QStringLiteral("import_model_weights"),
-        tr("Select Model Weights"),
+            this,
+            QStringLiteral("import_model_weights"),
+            tr("Select Model Weights"),
 #ifdef DL_HAS_EXECUTORCH
-        tr("Model Files (*.pt2 *.pt *.pte);;AOT Inductor (*.pt2);;TorchScript (*.pt);;ExecuTorch (*.pte);;All Files (*)"),
+            tr("Model Files (*.pt2 *.pt *.pte);;AOT Inductor (*.pt2);;TorchScript (*.pt);;ExecuTorch (*.pte);;All Files (*)"),
 #else
-        tr("Model Files (*.pt2 *.pt);;AOT Inductor (*.pt2);;TorchScript (*.pt);;All Files (*)"),
+            tr("Model Files (*.pt2 *.pt);;AOT Inductor (*.pt2);;TorchScript (*.pt);;All Files (*)"),
 #endif
-        QString::fromStdString(_state->weightsPath()));
+            QString::fromStdString(_state->weightsPath()));
     if (!path.isEmpty()) {
         _weights_path_edit->setText(path);
         _state->setWeightsPath(path.toStdString());
@@ -265,9 +265,9 @@ void DeepLearningPropertiesWidget::_loadModelIfReady() {
             }
         } catch (std::exception const & e) {
             _weights_status_label->setText(
-                tr("Error: %1").arg(QString::fromUtf8(e.what())));
+                    tr("Error: %1").arg(QString::fromUtf8(e.what())));
             _weights_status_label->setStyleSheet(
-                QStringLiteral("color: red;"));
+                    QStringLiteral("color: red;"));
         }
     }
 
@@ -287,7 +287,7 @@ void DeepLearningPropertiesWidget::_updateWeightsStatus() {
     if (path.empty()) {
         _weights_status_label->setText(tr("No weights file specified"));
         _weights_status_label->setStyleSheet(
-            QStringLiteral("color: orange;"));
+                QStringLiteral("color: orange;"));
     } else if (!std::filesystem::exists(path)) {
         _weights_status_label->setText(tr("\u2717 File not found"));
         _weights_status_label->setStyleSheet(QStringLiteral("color: red;"));
@@ -297,7 +297,7 @@ void DeepLearningPropertiesWidget::_updateWeightsStatus() {
     } else {
         _weights_status_label->setText(tr("File exists, not yet loaded"));
         _weights_status_label->setStyleSheet(
-            QStringLiteral("color: orange;"));
+                QStringLiteral("color: orange;"));
     }
 }
 
@@ -329,12 +329,12 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
 
     // ── Dynamic (per-frame) inputs ──
     bool has_dynamic = false;
-    for (auto const & slot : inputs) {
+    for (auto const & slot: inputs) {
         if (!slot.is_static && !slot.is_boolean_mask) {
             if (!has_dynamic) {
                 _dynamic_layout->addWidget(
-                    new QLabel(tr("<b>Dynamic Inputs</b>"),
-                               _dynamic_container));
+                        new QLabel(tr("<b>Dynamic Inputs</b>"),
+                                   _dynamic_container));
                 has_dynamic = true;
             }
             _dynamic_layout->addWidget(_buildDynamicInputGroup(slot));
@@ -343,12 +343,12 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
 
     // ── Static (memory) inputs ──
     bool has_static = false;
-    for (auto const & slot : inputs) {
+    for (auto const & slot: inputs) {
         if (slot.is_static && !slot.is_boolean_mask) {
             if (!has_static) {
                 _dynamic_layout->addWidget(
-                    new QLabel(tr("<b>Static Inputs (Memory)</b>"),
-                               _dynamic_container));
+                        new QLabel(tr("<b>Static Inputs (Memory)</b>"),
+                                   _dynamic_container));
                 has_static = true;
             }
             _dynamic_layout->addWidget(_buildStaticInputGroup(slot));
@@ -356,7 +356,7 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
     }
 
     // ── Boolean mask inputs ──
-    for (auto const & slot : inputs) {
+    for (auto const & slot: inputs) {
         if (slot.is_boolean_mask) {
             _dynamic_layout->addWidget(_buildBooleanMaskGroup(slot));
         }
@@ -365,9 +365,9 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
     // ── Outputs ──
     if (!outputs.empty()) {
         _dynamic_layout->addWidget(
-            new QLabel(tr("<b>Outputs</b>"), _dynamic_container));
+                new QLabel(tr("<b>Outputs</b>"), _dynamic_container));
     }
-    for (auto const & slot : outputs) {
+    for (auto const & slot: outputs) {
         _dynamic_layout->addWidget(_buildOutputGroup(slot));
     }
 
@@ -379,10 +379,10 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
 // ────────────────────────────────────────────────────────────────────────────
 
 QGroupBox * DeepLearningPropertiesWidget::_buildDynamicInputGroup(
-    dl::TensorSlotDescriptor const & slot) {
+        dl::TensorSlotDescriptor const & slot) {
 
     auto * group =
-        new QGroupBox(QString::fromStdString(slot.name), _dynamic_container);
+            new QGroupBox(QString::fromStdString(slot.name), _dynamic_container);
     auto * form = new QFormLayout(group);
 
     if (!slot.description.empty()) {
@@ -400,22 +400,22 @@ QGroupBox * DeepLearningPropertiesWidget::_buildDynamicInputGroup(
     // Source data combo
     auto * source_combo = new QComboBox(group);
     source_combo->setObjectName(
-        QString::fromStdString("source_" + slot.name));
+            QString::fromStdString("source_" + slot.name));
     _populateDataSourceCombo(
-        source_combo,
-        SlotAssembler::dataTypeForEncoder(slot.recommended_encoder));
+            source_combo,
+            SlotAssembler::dataTypeForEncoder(slot.recommended_encoder));
     form->addRow(tr("Source:"), source_combo);
 
     // Encoder combo
     auto * encoder_combo = new QComboBox(group);
     encoder_combo->setObjectName(
-        QString::fromStdString("encoder_" + slot.name));
-    for (auto const & enc : SlotAssembler::availableEncoders()) {
+            QString::fromStdString("encoder_" + slot.name));
+    for (auto const & enc: SlotAssembler::availableEncoders()) {
         encoder_combo->addItem(QString::fromStdString(enc));
     }
     if (!slot.recommended_encoder.empty()) {
         int const idx = encoder_combo->findText(
-            QString::fromStdString(slot.recommended_encoder));
+                QString::fromStdString(slot.recommended_encoder));
         if (idx >= 0) encoder_combo->setCurrentIndex(idx);
     }
     form->addRow(tr("Encoder:"), encoder_combo);
@@ -423,8 +423,8 @@ QGroupBox * DeepLearningPropertiesWidget::_buildDynamicInputGroup(
     // Mode combo
     auto * mode_combo = new QComboBox(group);
     mode_combo->setObjectName(
-        QString::fromStdString("mode_" + slot.name));
-    for (auto const & m : _modesForEncoder(slot.recommended_encoder)) {
+            QString::fromStdString("mode_" + slot.name));
+    for (auto const & m: _modesForEncoder(slot.recommended_encoder)) {
         mode_combo->addItem(QString::fromStdString(m));
     }
     form->addRow(tr("Mode:"), mode_combo);
@@ -432,21 +432,34 @@ QGroupBox * DeepLearningPropertiesWidget::_buildDynamicInputGroup(
     // Sigma
     auto * sigma_spin = new QDoubleSpinBox(group);
     sigma_spin->setObjectName(
-        QString::fromStdString("sigma_" + slot.name));
+            QString::fromStdString("sigma_" + slot.name));
     sigma_spin->setRange(0.1, 50.0);
     sigma_spin->setValue(2.0);
     sigma_spin->setSingleStep(0.5);
     form->addRow(tr("Sigma:"), sigma_spin);
+
+    // Time offset
+    auto * time_offset_spin = new QSpinBox(group);
+    time_offset_spin->setObjectName(
+            QString::fromStdString("time_offset_" + slot.name));
+    time_offset_spin->setRange(-99999, 99999);
+    time_offset_spin->setValue(0);
+    time_offset_spin->setPrefix(QStringLiteral("t"));
+    time_offset_spin->setToolTip(
+            tr("Temporal offset applied to each frame during encoding.\n"
+               "E.g. -1 reads one frame behind, +1 reads one frame ahead.\n"
+               "Values are clamped to [0, max_frame]."));
+    form->addRow(tr("Time Offset:"), time_offset_spin);
 
     // Re-filter when encoder changes
     connect(encoder_combo, &QComboBox::currentTextChanged, this,
             [this, source_combo, mode_combo](QString const & enc_text) {
                 auto const enc_id = enc_text.toStdString();
                 _populateDataSourceCombo(
-                    source_combo,
-                    SlotAssembler::dataTypeForEncoder(enc_id));
+                        source_combo,
+                        SlotAssembler::dataTypeForEncoder(enc_id));
                 mode_combo->clear();
-                for (auto const & m : _modesForEncoder(enc_id)) {
+                for (auto const & m: _modesForEncoder(enc_id)) {
                     mode_combo->addItem(QString::fromStdString(m));
                 }
             });
@@ -455,11 +468,11 @@ QGroupBox * DeepLearningPropertiesWidget::_buildDynamicInputGroup(
 }
 
 QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
-    dl::TensorSlotDescriptor const & slot) {
+        dl::TensorSlotDescriptor const & slot) {
 
     auto * group = new QGroupBox(
-        QString::fromStdString(slot.name) + tr(" (memory)"),
-        _dynamic_container);
+            QString::fromStdString(slot.name) + tr(" (memory)"),
+            _dynamic_container);
     auto * layout = new QVBoxLayout(group);
 
     if (!slot.description.empty()) {
@@ -468,8 +481,8 @@ QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
 
     // Info label explaining memory inputs
     auto * info = new QLabel(
-        tr("Memory frame: loaded from DataManager at specified time offset (e.g., t-1 = previous frame)"),
-        group);
+            tr("Memory frame: loaded from DataManager at specified time offset (e.g., t-1 = previous frame)"),
+            group);
     info->setWordWrap(true);
     info->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
     layout->addWidget(info);
@@ -485,15 +498,15 @@ QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
 
     auto * source_combo = new QComboBox(group);
     source_combo->setObjectName(
-        QString::fromStdString("static_source_" + slot.name));
+            QString::fromStdString("static_source_" + slot.name));
     _populateDataSourceCombo(
-        source_combo,
-        SlotAssembler::dataTypeForEncoder(slot.recommended_encoder));
+            source_combo,
+            SlotAssembler::dataTypeForEncoder(slot.recommended_encoder));
     form->addRow(tr("Source:"), source_combo);
 
     auto * offset_spin = new QSpinBox(group);
     offset_spin->setObjectName(
-        QString::fromStdString("static_offset_" + slot.name));
+            QString::fromStdString("static_offset_" + slot.name));
     offset_spin->setRange(-99999, 0);
     offset_spin->setValue(0);
     offset_spin->setPrefix(QStringLiteral("t"));
@@ -504,11 +517,11 @@ QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
 }
 
 QGroupBox * DeepLearningPropertiesWidget::_buildBooleanMaskGroup(
-    dl::TensorSlotDescriptor const & slot) {
+        dl::TensorSlotDescriptor const & slot) {
 
     auto * group = new QGroupBox(
-        QString::fromStdString(slot.name) + tr(" (boolean)"),
-        _dynamic_container);
+            QString::fromStdString(slot.name) + tr(" (boolean)"),
+            _dynamic_container);
     auto * layout = new QVBoxLayout(group);
 
     if (!slot.description.empty()) {
@@ -516,7 +529,7 @@ QGroupBox * DeepLearningPropertiesWidget::_buildBooleanMaskGroup(
     }
 
     auto * info = new QLabel(
-        tr("Active memory slot flags. Automatically managed."), group);
+            tr("Active memory slot flags. Automatically managed."), group);
     info->setWordWrap(true);
     info->setStyleSheet(QStringLiteral("color: gray; font-size: 11px;"));
     layout->addWidget(info);
@@ -525,10 +538,10 @@ QGroupBox * DeepLearningPropertiesWidget::_buildBooleanMaskGroup(
 }
 
 QGroupBox * DeepLearningPropertiesWidget::_buildOutputGroup(
-    dl::TensorSlotDescriptor const & slot) {
+        dl::TensorSlotDescriptor const & slot) {
 
     auto * group = new QGroupBox(
-        QString::fromStdString(slot.name), _dynamic_container);
+            QString::fromStdString(slot.name), _dynamic_container);
     auto * form = new QFormLayout(group);
 
     if (!slot.description.empty()) {
@@ -544,28 +557,28 @@ QGroupBox * DeepLearningPropertiesWidget::_buildOutputGroup(
 
     auto * target_combo = new QComboBox(group);
     target_combo->setObjectName(
-        QString::fromStdString("target_" + slot.name));
+            QString::fromStdString("target_" + slot.name));
     _populateDataSourceCombo(
-        target_combo,
-        SlotAssembler::dataTypeForDecoder(slot.recommended_decoder));
+            target_combo,
+            SlotAssembler::dataTypeForDecoder(slot.recommended_decoder));
     form->addRow(tr("Target:"), target_combo);
 
     auto * decoder_combo = new QComboBox(group);
     decoder_combo->setObjectName(
-        QString::fromStdString("decoder_" + slot.name));
-    for (auto const & dec : SlotAssembler::availableDecoders()) {
+            QString::fromStdString("decoder_" + slot.name));
+    for (auto const & dec: SlotAssembler::availableDecoders()) {
         decoder_combo->addItem(QString::fromStdString(dec));
     }
     if (!slot.recommended_decoder.empty()) {
         int const idx = decoder_combo->findText(
-            QString::fromStdString(slot.recommended_decoder));
+                QString::fromStdString(slot.recommended_decoder));
         if (idx >= 0) decoder_combo->setCurrentIndex(idx);
     }
     form->addRow(tr("Decoder:"), decoder_combo);
 
     auto * threshold_spin = new QDoubleSpinBox(group);
     threshold_spin->setObjectName(
-        QString::fromStdString("threshold_" + slot.name));
+            QString::fromStdString("threshold_" + slot.name));
     threshold_spin->setRange(0.01, 1.0);
     threshold_spin->setValue(0.5);
     threshold_spin->setSingleStep(0.05);
@@ -579,7 +592,7 @@ QGroupBox * DeepLearningPropertiesWidget::_buildOutputGroup(
 // ────────────────────────────────────────────────────────────────────────────
 
 void DeepLearningPropertiesWidget::_populateDataSourceCombo(
-    QComboBox * combo, std::string const & type_hint) {
+        QComboBox * combo, std::string const & type_hint) {
 
     QString const current = combo->currentText();
     combo->clear();
@@ -600,7 +613,7 @@ void DeepLearningPropertiesWidget::_populateDataSourceCombo(
         keys = _data_manager->getAllKeys();
     }
 
-    for (auto const & key : keys) {
+    for (auto const & key: keys) {
         combo->addItem(QString::fromStdString(key));
     }
 
@@ -609,7 +622,7 @@ void DeepLearningPropertiesWidget::_populateDataSourceCombo(
 }
 
 std::vector<std::string> DeepLearningPropertiesWidget::_modesForEncoder(
-    std::string const & encoder_id) const {
+        std::string const & encoder_id) {
 
     if (encoder_id == "ImageEncoder") return {"Raw"};
     if (encoder_id == "Point2DEncoder") return {"Binary", "Heatmap"};
@@ -627,25 +640,28 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
 
     // ── Input bindings ──
     std::vector<SlotBindingData> input_bindings;
-    for (auto const & slot : _current_info->inputs) {
+    for (auto const & slot: _current_info->inputs) {
         if (slot.is_static || slot.is_boolean_mask) continue;
 
         SlotBindingData binding;
         binding.slot_name = slot.name;
 
         auto * source = _dynamic_container->findChild<QComboBox *>(
-            QString::fromStdString("source_" + slot.name));
+                QString::fromStdString("source_" + slot.name));
         auto * encoder = _dynamic_container->findChild<QComboBox *>(
-            QString::fromStdString("encoder_" + slot.name));
+                QString::fromStdString("encoder_" + slot.name));
         auto * mode = _dynamic_container->findChild<QComboBox *>(
-            QString::fromStdString("mode_" + slot.name));
+                QString::fromStdString("mode_" + slot.name));
         auto * sigma = _dynamic_container->findChild<QDoubleSpinBox *>(
-            QString::fromStdString("sigma_" + slot.name));
+                QString::fromStdString("sigma_" + slot.name));
+        auto * time_offset = _dynamic_container->findChild<QSpinBox *>(
+                QString::fromStdString("time_offset_" + slot.name));
 
         if (source) binding.data_key = source->currentText().toStdString();
         if (encoder) binding.encoder_id = encoder->currentText().toStdString();
         if (mode) binding.mode = mode->currentText().toStdString();
         if (sigma) binding.gaussian_sigma = static_cast<float>(sigma->value());
+        if (time_offset) binding.time_offset = time_offset->value();
 
         if (!binding.data_key.empty() && binding.data_key != "(None)") {
             input_bindings.push_back(std::move(binding));
@@ -655,16 +671,16 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
 
     // ── Output bindings ──
     std::vector<OutputBindingData> output_bindings;
-    for (auto const & slot : _current_info->outputs) {
+    for (auto const & slot: _current_info->outputs) {
         OutputBindingData binding;
         binding.slot_name = slot.name;
 
         auto * target = _dynamic_container->findChild<QComboBox *>(
-            QString::fromStdString("target_" + slot.name));
+                QString::fromStdString("target_" + slot.name));
         auto * decoder = _dynamic_container->findChild<QComboBox *>(
-            QString::fromStdString("decoder_" + slot.name));
+                QString::fromStdString("decoder_" + slot.name));
         auto * threshold = _dynamic_container->findChild<QDoubleSpinBox *>(
-            QString::fromStdString("threshold_" + slot.name));
+                QString::fromStdString("threshold_" + slot.name));
 
         if (target) binding.data_key = target->currentText().toStdString();
         if (decoder) binding.decoder_id = decoder->currentText().toStdString();
@@ -679,7 +695,7 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
 
     // ── Static inputs ──
     std::vector<StaticInputData> static_inputs;
-    for (auto const & slot : _current_info->inputs) {
+    for (auto const & slot: _current_info->inputs) {
         if (!slot.is_static || slot.is_boolean_mask) continue;
 
         StaticInputData si;
@@ -687,9 +703,9 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
         si.memory_index = 0;
 
         auto * source = _dynamic_container->findChild<QComboBox *>(
-            QString::fromStdString("static_source_" + slot.name));
+                QString::fromStdString("static_source_" + slot.name));
         auto * offset = _dynamic_container->findChild<QSpinBox *>(
-            QString::fromStdString("static_offset_" + slot.name));
+                QString::fromStdString("static_offset_" + slot.name));
 
         if (source) si.data_key = source->currentText().toStdString();
         if (offset) si.time_offset = offset->value();
@@ -719,7 +735,7 @@ void DeepLearningPropertiesWidget::_onRunSingleFrame() {
 
         // Determine source image size from primary media binding
         ImageSize source_size{256, 256};
-        for (auto const & binding : _state->inputBindings()) {
+        for (auto const & binding: _state->inputBindings()) {
             auto media = _data_manager->getData<MediaData>(binding.data_key);
             if (media) {
                 source_size = media->getImageSize();
@@ -728,21 +744,21 @@ void DeepLearningPropertiesWidget::_onRunSingleFrame() {
         }
 
         _assembler->runSingleFrame(
-            *_data_manager,
-            _state->inputBindings(),
-            _state->staticInputs(),
-            _state->outputBindings(),
-            frame,
-            source_size);
+                *_data_manager,
+                _state->inputBindings(),
+                _state->staticInputs(),
+                _state->outputBindings(),
+                frame,
+                source_size);
 
         _weights_status_label->setText(
-            tr("\u2713 Inference complete (frame %1)").arg(frame));
+                tr("\u2713 Inference complete (frame %1)").arg(frame));
         _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
 
     } catch (std::exception const & e) {
         QMessageBox::critical(
-            this, tr("Inference Error"),
-            tr("Forward pass failed:\n%1").arg(QString::fromUtf8(e.what())));
+                this, tr("Inference Error"),
+                tr("Forward pass failed:\n%1").arg(QString::fromUtf8(e.what())));
     }
 }
 
@@ -755,18 +771,18 @@ void DeepLearningPropertiesWidget::_onRunBatch() {
 
     // TODO: Implement batch inference with progress reporting.
     QMessageBox::information(
-        this, tr("Batch Inference"),
-        tr("Batch inference is not yet implemented.\n"
-           "Use \"Run Frame\" for single-frame inference."));
+            this, tr("Batch Inference"),
+            tr("Batch inference is not yet implemented.\n"
+               "Use \"Run Frame\" for single-frame inference."));
 }
 
 // ────────────────────────────────────────────────────────────────────────────
 // Time Position Tracking
 // ────────────────────────────────────────────────────────────────────────────
 
-void DeepLearningPropertiesWidget::onTimeChanged(TimePosition position) {
+void DeepLearningPropertiesWidget::onTimeChanged(const TimePosition& position) {
     _current_time_position = position;
-    
+
     // Enable/disable the predict current frame button based on whether we have
     // a valid time position and the model is ready
     if (_predict_current_frame_btn) {
@@ -797,7 +813,7 @@ void DeepLearningPropertiesWidget::_onPredictCurrentFrame() {
 
         // Determine source image size from primary media binding
         ImageSize source_size{256, 256};
-        for (auto const & binding : _state->inputBindings()) {
+        for (auto const & binding: _state->inputBindings()) {
             auto media = _data_manager->getData<MediaData>(binding.data_key);
             if (media) {
                 source_size = media->getImageSize();
@@ -806,20 +822,20 @@ void DeepLearningPropertiesWidget::_onPredictCurrentFrame() {
         }
 
         _assembler->runSingleFrame(
-            *_data_manager,
-            _state->inputBindings(),
-            _state->staticInputs(),
-            _state->outputBindings(),
-            frame,
-            source_size);
+                *_data_manager,
+                _state->inputBindings(),
+                _state->staticInputs(),
+                _state->outputBindings(),
+                frame,
+                source_size);
 
         _weights_status_label->setText(
-            tr("\u2713 Inference complete (current frame %1)").arg(frame));
+                tr("\u2713 Inference complete (current frame %1)").arg(frame));
         _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
 
     } catch (std::exception const & e) {
         QMessageBox::critical(
-            this, tr("Inference Error"),
-            tr("Forward pass failed:\n%1").arg(QString::fromUtf8(e.what())));
+                this, tr("Inference Error"),
+                tr("Forward pass failed:\n%1").arg(QString::fromUtf8(e.what())));
     }
 }

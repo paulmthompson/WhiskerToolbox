@@ -41,13 +41,13 @@ Dynamic inputs (`SlotBindingData`) currently read at `current_frame + batch_inde
 Adding a `time_offset` field lets users specify temporal offsets (e.g., "read one frame 
 behind") without the static input machinery.
 
-- [ ] **Add `time_offset` to `SlotBindingData`** — New `int time_offset = 0` field. During 
+- [x] **Add `time_offset` to `SlotBindingData`** — New `int time_offset = 0` field. During 
   assembly, each frame encodes at `current_frame + batch_index + time_offset`
-- [ ] **Update `SlotAssembler::assembleInputs()`** — Apply `time_offset` in the dynamic 
+- [x] **Update `SlotAssembler::assembleInputs()`** — Apply `time_offset` in the dynamic 
   input encoding loop
-- [ ] **UI: time offset spinbox** — Add a spinbox for each dynamic input slot in the 
+- [x] **UI: time offset spinbox** — Add a spinbox for each dynamic input slot in the 
   Properties widget
-- [ ] **Tests** — Verify that negative offsets clamp to frame 0, positive offsets 
+- [x] **Tests** — Verify that negative offsets clamp to frame 0, positive offsets 
   clamp to max frame
 
 #### Phase 2: Static Input Capture & Preview

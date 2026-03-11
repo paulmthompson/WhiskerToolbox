@@ -339,3 +339,46 @@ endif()
 if (MSVC)
     target_compile_options(neurosam_test_driver PRIVATE ${MSVC_WARNINGS})
 endif()
+
+# --- Binding Data Tests (header-only, no libtorch needed) ---
+add_executable(test_binding_data
+    binding_data/BindingData.test.cpp
+)
+
+target_link_libraries(test_binding_data PRIVATE
+    Catch2::Catch2WithMain
+)
+
+target_include_directories(test_binding_data PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_binding_data PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_binding_data PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_binding_data PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_binding_data
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_binding_data)
+    endif()
+else()
+    add_test(NAME test_binding_data_all
+        COMMAND test_binding_data
+        )
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_binding_data)
