@@ -3,7 +3,7 @@
 #include "TransformsV2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/detail/FlatZipView.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 

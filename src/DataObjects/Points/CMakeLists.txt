@@ -29,14 +29,7 @@ target_link_libraries(PointData PUBLIC
 
 set_target_compiler_warnings(PointData)
 
-# Create alias for consistent naming
 add_library(WhiskerToolbox::PointData ALIAS PointData)
 
-set(points_test_sources
-    Point_Data.test.cpp
-)
 
-add_tests_to_global(points_test_sources
-                    "${CMAKE_SOURCE_DIR}/src/DataManager/Points"
-                    DATAMANAGER_TEST_SOURCES)
 enable_whiskertoolbox_pch(PointData)

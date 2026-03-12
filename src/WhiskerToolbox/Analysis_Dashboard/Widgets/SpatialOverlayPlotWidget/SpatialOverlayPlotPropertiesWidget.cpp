@@ -5,7 +5,7 @@
 #include "SpatialOverlayPlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 
 #include <QCheckBox>

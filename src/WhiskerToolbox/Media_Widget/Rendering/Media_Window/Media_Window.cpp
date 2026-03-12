@@ -14,7 +14,7 @@
 #include "Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "GroupContextMenu/GroupContextMenuHandler.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"

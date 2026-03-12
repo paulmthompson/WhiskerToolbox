@@ -3,7 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "DataManager/Tensors/TensorData.hpp"
 
 #include "DataManager/utils/armadillo_wrap/analog_armadillo.hpp"

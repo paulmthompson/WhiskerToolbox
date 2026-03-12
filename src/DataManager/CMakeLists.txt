@@ -197,7 +197,6 @@ set(DATAMANAGER_SOURCES
 set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
 
 add_subdirectory(Masks)
-add_subdirectory(Points)
 
 add_library(DataManager STATIC ${DATAMANAGER_SOURCES})
 

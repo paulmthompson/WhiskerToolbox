@@ -8,7 +8,7 @@
 #include "Commands/Core/CommandFactory.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 
 #include "IO/core/LoaderRegistration.hpp"
 #include "IO/core/LoaderRegistry.hpp"

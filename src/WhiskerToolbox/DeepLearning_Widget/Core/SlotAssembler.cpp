@@ -8,7 +8,7 @@
 #include "Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 
 #include "channel_encoding/ChannelEncoder.hpp"
 #include "channel_encoding/EncoderFactory.hpp"

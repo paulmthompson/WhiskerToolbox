@@ -8,7 +8,7 @@
 #include "Selection/SelectionModes.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"

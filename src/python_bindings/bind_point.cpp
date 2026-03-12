@@ -2,7 +2,7 @@
 
 #include <pybind11/stl.h>
 
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "Observer/Observer_Data.hpp"
 
 #include <string>

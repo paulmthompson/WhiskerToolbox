@@ -7,7 +7,7 @@
 
 #include "CoreGeometry/points.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include "../fixtures/qt_test_fixtures.hpp"

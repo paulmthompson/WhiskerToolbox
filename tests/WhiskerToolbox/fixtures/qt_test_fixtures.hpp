@@ -35,7 +35,7 @@ class TimeFrameIndex;
 // Include necessary headers for the test fixtures
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderSourceType.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "SpatialIndex/QuadTree.hpp"

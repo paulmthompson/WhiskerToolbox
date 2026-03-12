@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "transforms/v2/core/FlatZipView.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include <vector>

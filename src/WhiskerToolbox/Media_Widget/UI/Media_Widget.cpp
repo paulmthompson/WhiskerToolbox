@@ -9,7 +9,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/SelectionContext.hpp"
 
