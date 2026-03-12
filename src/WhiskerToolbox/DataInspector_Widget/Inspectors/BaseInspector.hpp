@@ -25,7 +25,7 @@
 
 #include "IDataInspector.hpp"
 
-#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
+#include "TimeFrame/TimeFrame.hpp"// For TimePosition
 
 #include <QWidget>
 
@@ -35,6 +35,10 @@
 class DataManager;
 class GroupManager;
 class DataInspectorState;
+
+namespace commands {
+class CommandRecorder;
+}// namespace commands
 
 /**
  * @brief Base implementation for type-specific data inspectors
@@ -53,9 +57,9 @@ public:
      * @param parent Parent widget
      */
     explicit BaseInspector(
-        std::shared_ptr<DataManager> data_manager,
-        GroupManager * group_manager = nullptr,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            GroupManager * group_manager = nullptr,
+            QWidget * parent = nullptr);
 
     ~BaseInspector() override;
 
@@ -91,6 +95,12 @@ public:
      */
     [[nodiscard]] GroupManager * groupManager() const { return _group_manager; }
 
+    /**
+     * @brief Set the CommandRecorder for recording command executions
+     * @param recorder Non-owning pointer to the CommandRecorder (can be nullptr)
+     */
+    void setCommandRecorder(commands::CommandRecorder * recorder) { _command_recorder = recorder; }
+
     // =========================================================================
     // State Access
     // =========================================================================
@@ -125,6 +135,12 @@ protected:
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
 
     /**
+     * @brief Get the CommandRecorder for recording command executions
+     * @return Non-owning pointer to the CommandRecorder, or nullptr if not set
+     */
+    [[nodiscard]] commands::CommandRecorder * commandRecorder() const { return _command_recorder; }
+
+    /**
      * @brief Helper to remove a callback from data
      * @param key Data key
      * @param callback_id Callback ID to remove
@@ -147,6 +163,7 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     GroupManager * _group_manager{nullptr};
     std::shared_ptr<DataInspectorState> _state;
+    commands::CommandRecorder * _command_recorder{nullptr};
 };
 
-#endif // BASE_INSPECTOR_HPP
+#endif// BASE_INSPECTOR_HPP

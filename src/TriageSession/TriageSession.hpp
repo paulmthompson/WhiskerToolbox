@@ -20,6 +20,10 @@
 
 class DataManager;
 
+namespace commands {
+class CommandRecorder;
+}// namespace commands
+
 namespace triage {
 
 /// @brief Mark/Commit/Recall state machine consuming command sequences.
@@ -61,10 +65,12 @@ public:
     ///        transition to Idle on success.
     /// @param current_frame The end frame of the triage range
     /// @param dm The DataManager to operate on
+    /// @param recorder Optional CommandRecorder for recording executed commands
     /// @return CommandResult indicating success or failure.
     ///         On failure, state remains Marking so the user can retry or recall.
     commands::CommandResult commit(TimeFrameIndex current_frame,
-                                   std::shared_ptr<DataManager> dm);
+                                   std::shared_ptr<DataManager> dm,
+                                   commands::CommandRecorder * recorder = nullptr);
 
     // -- Query ----------------------------------------------------------------
 

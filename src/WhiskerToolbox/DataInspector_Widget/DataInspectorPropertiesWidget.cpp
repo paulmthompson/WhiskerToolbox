@@ -18,6 +18,7 @@
 #include "TimeFrameData/TimeFrameDataView.hpp"
 #include "TimeFrameData/TimeFrameInspector.hpp"
 
+#include "Commands/Core/CommandRecorder.hpp"
 #include "DataManager/DataManager.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -88,6 +89,15 @@ void DataInspectorPropertiesWidget::setSelectionContext(SelectionContext * conte
 
 void DataInspectorPropertiesWidget::setOperationContext(EditorLib::OperationContext * context) {
     _operation_context = context;
+}
+
+void DataInspectorPropertiesWidget::setCommandRecorder(commands::CommandRecorder * recorder) {
+    _command_recorder = recorder;
+
+    // Forward to the current inspector if one exists
+    if (_current_inspector) {
+        _current_inspector->setCommandRecorder(recorder);
+    }
 }
 
 void DataInspectorPropertiesWidget::inspectData(QString const & key) {
@@ -203,7 +213,7 @@ void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) 
     auto const data_type = _data_manager->getType(key_std);
 
     // Update type label
-    QString type_name = QString::fromStdString(convert_data_type_to_string(data_type));
+    QString const type_name = QString::fromStdString(convert_data_type_to_string(data_type));
     ui->dataTypeLabel->setText(type_name);
 
     // Create type-specific inspector using the factory
@@ -276,6 +286,9 @@ void DataInspectorPropertiesWidget::_createInspectorForType(DM_DataType type) {
         if (_state) {
             _current_inspector->setState(_state);
         }
+
+        // Forward the command recorder for recording command executions
+        _current_inspector->setCommandRecorder(_command_recorder);
 
         ui->contentLayout->addWidget(_current_inspector.get());
 

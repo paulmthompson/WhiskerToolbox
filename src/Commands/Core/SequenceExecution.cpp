@@ -124,4 +124,26 @@ SequenceResult executeSequence(
     return seq_result;
 }
 
+CommandResult executeSingleCommand(
+        std::string const & command_name,
+        std::string const & params_json,
+        CommandContext const & ctx) {
+
+    CommandDescriptor desc;
+    desc.command_name = command_name;
+
+    if (!params_json.empty()) {
+        auto parsed = rfl::json::read<rfl::Generic>(params_json);
+        if (parsed) {
+            desc.parameters = std::move(parsed.value());
+        }
+    }
+
+    CommandSequenceDescriptor seq;
+    seq.commands = {std::move(desc)};
+
+    auto seq_result = executeSequence(seq, ctx);
+    return seq_result.result;
+}
+
 }// namespace commands

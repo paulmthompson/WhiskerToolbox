@@ -23,6 +23,10 @@ class QPushButton;
 class QTextEdit;
 class TriageSessionState;
 
+namespace commands {
+class CommandRecorder;
+}// namespace commands
+
 namespace triage {
 class TriageSession;
 }
@@ -47,6 +51,12 @@ public:
                                             EditorRegistry * editor_registry,
                                             QWidget * parent = nullptr);
     ~TriageSessionProperties_Widget() override;
+
+    /**
+     * @brief Set the CommandRecorder for recording command executions
+     * @param recorder Non-owning pointer to the CommandRecorder (can be nullptr)
+     */
+    void setCommandRecorder(commands::CommandRecorder * recorder) { _command_recorder = recorder; }
 
 private slots:
     void _onMarkClicked();
@@ -88,6 +98,8 @@ private:
 
     // Tracked regions
     QLabel * _tracked_summary_label = nullptr;
+
+    commands::CommandRecorder * _command_recorder{nullptr};
 };
 
 #endif// TRIAGE_SESSION_PROPERTIES_WIDGET_HPP

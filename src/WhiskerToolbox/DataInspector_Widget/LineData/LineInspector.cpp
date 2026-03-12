@@ -5,9 +5,10 @@
 #include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 #include "LineTableView.hpp"
 
-#include "DataManager.hpp"
 #include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/IO/SaveData.hpp"
+#include "DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 
@@ -166,9 +167,10 @@ void LineInspector::_connectSignals() {
 
         commands::CommandContext ctx;
         ctx.data_manager = dataManager();
+        ctx.recorder = commandRecorder();
 
-        commands::SaveData cmd(std::move(params));
-        auto result = cmd.execute(ctx);
+        auto const params_json = rfl::json::write(params);
+        auto result = commands::executeSingleCommand("SaveData", params_json, ctx);
 
         if (!result.success) {
             QMessageBox::critical(this, "Save Error",
@@ -291,8 +293,8 @@ void LineInspector::_onApplyImageSizeClicked() {
     }
 
     // Get current values from the line edits
-    QString width_text = _ui->image_width_edit->text().trimmed();
-    QString height_text = _ui->image_height_edit->text().trimmed();
+    QString const width_text = _ui->image_width_edit->text().trimmed();
+    QString const height_text = _ui->image_height_edit->text().trimmed();
 
     if (width_text.isEmpty() || height_text.isEmpty()) {
         QMessageBox::warning(this, "Invalid Input", "Please enter both width and height values.");
@@ -300,8 +302,8 @@ void LineInspector::_onApplyImageSizeClicked() {
     }
 
     bool width_ok, height_ok;
-    int new_width = width_text.toInt(&width_ok);
-    int new_height = height_text.toInt(&height_ok);
+    int const new_width = width_text.toInt(&width_ok);
+    int const new_height = height_text.toInt(&height_ok);
 
     if (!width_ok || !height_ok) {
         QMessageBox::warning(this, "Invalid Input", "Please enter valid integer values for width and height.");
@@ -314,7 +316,7 @@ void LineInspector::_onApplyImageSizeClicked() {
     }
 
     // Get current image size
-    ImageSize current_size = line_data->getImageSize();
+    ImageSize const current_size = line_data->getImageSize();
 
     // If no current size is set, just set the new size without scaling
     if (current_size.width == -1 || current_size.height == -1) {
@@ -328,7 +330,7 @@ void LineInspector::_onApplyImageSizeClicked() {
     }
 
     // Ask user if they want to scale existing data
-    int ret = QMessageBox::question(this, "Scale Existing Data",
+    int const ret = QMessageBox::question(this, "Scale Existing Data",
                                     QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4?\n\n"
                                             "Click 'Yes' to scale all line data proportionally.\n"
                                             "Click 'No' to just change the image size without scaling.\n"
@@ -380,7 +382,7 @@ void LineInspector::_updateImageSizeDisplay() {
         return;
     }
 
-    ImageSize current_size = line_data->getImageSize();
+    ImageSize const current_size = line_data->getImageSize();
 
     if (current_size.width == -1 || current_size.height == -1) {
         _ui->image_width_edit->setText("");
@@ -401,7 +403,7 @@ void LineInspector::_onCopyImageSizeClicked() {
         return;
     }
 
-    QString selected_media_key = _ui->copy_from_media_combo->currentText();
+    QString const selected_media_key = _ui->copy_from_media_combo->currentText();
     if (selected_media_key.isEmpty()) {
         QMessageBox::warning(this, "No Media Selected", "Please select a media source to copy image size from.");
         return;
@@ -413,7 +415,7 @@ void LineInspector::_onCopyImageSizeClicked() {
         return;
     }
 
-    ImageSize media_size = media_data->getImageSize();
+    ImageSize const media_size = media_data->getImageSize();
     if (media_size.width == -1 || media_size.height == -1) {
         QMessageBox::warning(this, "No Image Size",
                              QString("The selected media '%1' does not have an image size set.").arg(selected_media_key));
@@ -427,7 +429,7 @@ void LineInspector::_onCopyImageSizeClicked() {
     }
 
     // Get current image size
-    ImageSize current_size = line_data->getImageSize();
+    ImageSize const current_size = line_data->getImageSize();
 
     // If no current size is set, just set the new size without scaling
     if (current_size.width == -1 || current_size.height == -1) {
@@ -442,7 +444,7 @@ void LineInspector::_onCopyImageSizeClicked() {
     }
 
     // Ask user if they want to scale existing data
-    int ret = QMessageBox::question(this, "Scale Existing Data",
+    int const ret = QMessageBox::question(this, "Scale Existing Data",
                                     QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4 (from '%5')?\n\n"
                                             "Click 'Yes' to scale all line data proportionally.\n"
                                             "Click 'No' to just change the image size without scaling.\n"
@@ -515,7 +517,7 @@ void LineInspector::_onGroupFilterChanged(int index) {
         auto groups = groupManager()->getGroups();
         auto group_ids = groups.keys();
         if (index - 1 < group_ids.size()) {
-            int group_id = group_ids[index - 1];
+            int const group_id = group_ids[index - 1];
             _data_view->setGroupFilter(group_id);
         }
     }
@@ -523,7 +525,7 @@ void LineInspector::_onGroupFilterChanged(int index) {
 
 void LineInspector::_onGroupChanged() {
     // Store current selection and current text (in case index changes)
-    int current_index = _ui->groupFilterCombo->currentIndex();
+    int const current_index = _ui->groupFilterCombo->currentIndex();
     QString current_text;
     if (current_index >= 0 && current_index < _ui->groupFilterCombo->count()) {
         current_text = _ui->groupFilterCombo->itemText(current_index);
@@ -679,7 +681,7 @@ void LineInspector::_onMoveLinesToGroupRequested(int group_id) {
         return;
     }
 
-    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
 
     // First, remove entities from their current groups
     groupManager()->ungroupEntities(entity_ids_set);
@@ -707,7 +709,7 @@ void LineInspector::_onRemoveLinesFromGroupRequested() {
         return;
     }
 
-    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
 
     // Remove entities from all groups
     groupManager()->ungroupEntities(entity_ids_set);
@@ -743,7 +745,7 @@ void LineInspector::_onDeleteLinesRequested() {
 
     // Remove entities from groups first
     if (groupManager()) {
-        std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+        std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
         groupManager()->ungroupEntities(entity_ids_set);
     }
 

@@ -15,7 +15,9 @@
 
 namespace DataSynthesizerWidgetModule {
 
-void registerTypes(EditorRegistry * registry, std::shared_ptr<DataManager> const & data_manager) {
+void registerTypes(EditorRegistry * registry,
+                   std::shared_ptr<DataManager> const & data_manager,
+                   commands::CommandRecorder * recorder) {
     if (!registry) {
         std::cerr << "DataSynthesizerWidgetModule::registerTypes: registry is null" << std::endl;
         return;
@@ -27,6 +29,7 @@ void registerTypes(EditorRegistry * registry, std::shared_ptr<DataManager> const
     }
 
     auto const & dm = data_manager;
+    auto cr = recorder;
 
     registry->registerType({.type_id = QStringLiteral("DataSynthesizerWidget"),
                             .display_name = QStringLiteral("Data Synthesizer"),
@@ -45,11 +48,12 @@ void registerTypes(EditorRegistry * registry, std::shared_ptr<DataManager> const
                             .create_view = nullptr,
                             .create_properties = nullptr,
 
-                            .create_editor_custom = [dm](EditorRegistry * reg) -> EditorRegistry::EditorInstance {
+                            .create_editor_custom = [dm, cr](EditorRegistry * reg) -> EditorRegistry::EditorInstance {
                                 auto state = std::make_shared<DataSynthesizerState>();
 
                                 auto * view = new DataSynthesizerView_Widget(state, dm);
                                 auto * props = new DataSynthesizerProperties_Widget(state, dm);
+                                props->setCommandRecorder(cr);
 
                                 // Connect preview: properties "Preview" button → view OpenGL widget
                                 QObject::connect(props, &DataSynthesizerProperties_Widget::previewRequested,

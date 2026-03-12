@@ -1,10 +1,11 @@
 #include "AnalogTimeSeriesInspector.hpp"
 #include "ui_AnalogTimeSeriesInspector.h"
 
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/SequenceExecution.hpp"
+#include "Commands/IO/SaveData.hpp"
 #include "DataExport_Widget/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "Commands/Core/CommandContext.hpp"
-#include "Commands/IO/SaveData.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 
@@ -90,9 +91,10 @@ void AnalogTimeSeriesInspector::_connectSignals() {
 
                 commands::CommandContext ctx;
                 ctx.data_manager = dataManager();
+                ctx.recorder = commandRecorder();
 
-                commands::SaveData cmd(std::move(params));
-                auto result = cmd.execute(ctx);
+                auto const params_json = rfl::json::write(params);
+                auto result = commands::executeSingleCommand("SaveData", params_json, ctx);
 
                 if (result.success) {
                     QMessageBox::information(this, "Success", "Analog time series saved successfully to CSV");
@@ -104,7 +106,7 @@ void AnalogTimeSeriesInspector::_connectSignals() {
 }
 
 void AnalogTimeSeriesInspector::_onExportTypeChanged(int index) {
-    QString current_text = ui->export_type_combo->itemText(index);
+    QString const current_text = ui->export_type_combo->itemText(index);
     if (current_text == "CSV") {
         ui->stacked_saver_options->setCurrentWidget(ui->csv_analog_saver_widget);
     } else {

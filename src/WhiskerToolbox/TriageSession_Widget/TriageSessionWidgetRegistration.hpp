@@ -11,10 +11,15 @@
 class EditorRegistry;
 class DataManager;
 
+namespace commands {
+class CommandRecorder;
+}// namespace commands
+
 namespace TriageSessionWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager);
+                   const std::shared_ptr<DataManager>& data_manager,
+                   commands::CommandRecorder * recorder = nullptr);
 
 }// namespace TriageSessionWidgetModule
 

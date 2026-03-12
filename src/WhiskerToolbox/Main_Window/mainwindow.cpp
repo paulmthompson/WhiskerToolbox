@@ -957,13 +957,13 @@ void MainWindow::_registerEditorTypes() {
 
     MediaWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
-    DataInspectorModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
+    DataInspectorModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get(), commandRecorder());
 
     DataTransformWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TransformsV2WidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    TriageSessionWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    TriageSessionWidgetModule::registerTypes(_editor_registry.get(), _data_manager, commandRecorder());
 
     DataImportWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
@@ -1019,7 +1019,7 @@ void MainWindow::_registerEditorTypes() {
 
     OnionSkinViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    DataSynthesizerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    DataSynthesizerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, commandRecorder());
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);
@@ -1581,7 +1581,7 @@ void MainWindow::_connectProvenanceTracking() {
     // Connect to EditorRegistry's editorCreated signal to wire up
     // provenance tracking for new widget instances
     connect(_editor_registry.get(), &EditorRegistry::editorCreated,
-            this, [this](const EditorInstanceId& instance_id, const EditorTypeId& type_id) {
+            this, [this](EditorInstanceId const & instance_id, EditorTypeId const & type_id) {
                 Q_UNUSED(instance_id);
 
                 // Find the dock widget for this instance and connect signals

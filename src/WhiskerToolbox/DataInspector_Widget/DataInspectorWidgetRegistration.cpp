@@ -1,136 +1,135 @@
 #include "DataInspectorWidgetRegistration.hpp"
 
+#include "DataInspectorPropertiesWidget.hpp"
 #include "DataInspectorState.hpp"
 #include "DataInspectorViewWidget.hpp"
-#include "DataInspectorPropertiesWidget.hpp"
 
+#include "DataManager/DataManager.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/OperationContext.hpp"
-#include "DataManager/DataManager.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 
 #include <iostream>
+#include <utility>
 
 namespace DataInspectorModule {
 
 void registerTypes(EditorRegistry * registry,
                    std::shared_ptr<DataManager> data_manager,
-                   GroupManager * group_manager) {
-    
+                   GroupManager * group_manager,
+                   commands::CommandRecorder * recorder) {
+
     if (!registry) {
         std::cerr << "DataInspectorModule::registerTypes: registry is null" << std::endl;
         return;
     }
 
     // Capture dependencies for lambdas
-    auto dm = data_manager;
+    const auto& dm = std::move(data_manager);
     auto gm = group_manager;
+    auto cr = recorder;
 
-    registry->registerType({
-        .type_id = QStringLiteral("DataInspector"),
-        .display_name = QStringLiteral("Data Inspector"),
-        .icon_path = QStringLiteral(":/icons/inspect.png"),
-        .menu_path = QStringLiteral("View/Data"),
-        .preferred_zone = Zone::Center,       // View widget goes to center
-        .properties_zone = Zone::Right,       // Properties widget goes to right
-        .prefers_split = false,
-        .properties_as_tab = true,            // Add as tab, don't replace
-        .auto_raise_properties = false,       // Don't obscure other tools
-        .allow_multiple = true,               // Multiple inspectors allowed
+    registry->registerType({.type_id = QStringLiteral("DataInspector"),
+                            .display_name = QStringLiteral("Data Inspector"),
+                            .icon_path = QStringLiteral(":/icons/inspect.png"),
+                            .menu_path = QStringLiteral("View/Data"),
+                            .preferred_zone = Zone::Center,// View widget goes to center
+                            .properties_zone = Zone::Right,// Properties widget goes to right
+                            .prefers_split = false,
+                            .properties_as_tab = true,     // Add as tab, don't replace
+                            .auto_raise_properties = false,// Don't obscure other tools
+                            .allow_multiple = true,        // Multiple inspectors allowed
 
-        // State factory - creates the shared state object
-        .create_state = []() {
-            return std::make_shared<DataInspectorState>();
-        },
+                            // State factory - creates the shared state object
+                            .create_state = []() { return std::make_shared<DataInspectorState>(); },
 
-        // View factory - creates DataInspectorViewWidget (Center zone)
-        .create_view = [dm](std::shared_ptr<EditorState> state) -> QWidget * {
-            auto inspector_state = std::dynamic_pointer_cast<DataInspectorState>(state);
-            if (!inspector_state) {
-                std::cerr << "DataInspectorModule: Failed to cast state to DataInspectorState" << std::endl;
-                return nullptr;
-            }
+                            // View factory - creates DataInspectorViewWidget (Center zone)
+                            .create_view = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                                auto inspector_state = std::dynamic_pointer_cast<DataInspectorState>(state);
+                                if (!inspector_state) {
+                                    std::cerr << "DataInspectorModule: Failed to cast state to DataInspectorState" << std::endl;
+                                    return nullptr;
+                                }
 
-            auto * widget = new DataInspectorViewWidget(dm);
-            widget->setState(inspector_state);
-            return widget;
-        },
+                                auto * widget = new DataInspectorViewWidget(dm);
+                                widget->setState(inspector_state);
+                                return widget;
+                            },
 
-        // Properties factory - creates DataInspectorPropertiesWidget (Right zone)
-        .create_properties = [dm, gm](std::shared_ptr<EditorState> state) -> QWidget * {
-            auto inspector_state = std::dynamic_pointer_cast<DataInspectorState>(state);
-            if (!inspector_state) {
-                std::cerr << "DataInspectorModule: Failed to cast state to DataInspectorState for properties" << std::endl;
-                return nullptr;
-            }
+                            // Properties factory - creates DataInspectorPropertiesWidget (Right zone)
+                            .create_properties = [dm, gm, cr](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                                auto inspector_state = std::dynamic_pointer_cast<DataInspectorState>(state);
+                                if (!inspector_state) {
+                                    std::cerr << "DataInspectorModule: Failed to cast state to DataInspectorState for properties" << std::endl;
+                                    return nullptr;
+                                }
 
-            auto * widget = new DataInspectorPropertiesWidget(dm, gm);
-            widget->setState(inspector_state);
-            return widget;
-        },
+                                auto * widget = new DataInspectorPropertiesWidget(dm, gm);
+                                widget->setState(inspector_state);
+                                widget->setCommandRecorder(cr);
+                                return widget;
+                            },
 
-        // Custom editor creation for complex view/properties coupling
-        // Ensures both widgets share the same state and SelectionContext
-        .create_editor_custom = [dm, gm](EditorRegistry * reg) 
-            -> EditorRegistry::EditorInstance 
-        {
-            // Create the shared state
-            auto state = std::make_shared<DataInspectorState>();
+                            // Custom editor creation for complex view/properties coupling
+                            // Ensures both widgets share the same state and SelectionContext
+                            .create_editor_custom = [dm, gm, cr](EditorRegistry * reg)
+                                    -> EditorRegistry::EditorInstance {
+                                // Create the shared state
+                                auto state = std::make_shared<DataInspectorState>();
 
-            // Create the view widget (Center zone)
-            auto * view = new DataInspectorViewWidget(dm);
-            view->setState(state);
+                                // Create the view widget (Center zone)
+                                auto * view = new DataInspectorViewWidget(dm);
+                                view->setState(state);
 
-            // Create the properties widget (Right zone)
-            auto * props = new DataInspectorPropertiesWidget(dm, gm);
-            props->setState(state);
+                                // Create the properties widget (Right zone)
+                                auto * props = new DataInspectorPropertiesWidget(dm, gm);
+                                props->setState(state);
+                                props->setCommandRecorder(cr);
 
-            // Connect properties to selection context from registry
-            if (reg) {
-                props->setSelectionContext(reg->selectionContext());
-                props->setOperationContext(reg->operationContext());
-            }
+                                // Connect properties to selection context from registry
+                                if (reg) {
+                                    props->setSelectionContext(reg->selectionContext());
+                                    props->setOperationContext(reg->operationContext());
+                                }
 
-            // Connect frame selection signals
-            QObject::connect(props, &DataInspectorPropertiesWidget::frameSelected,
-                             view, &DataInspectorViewWidget::frameSelected);
+                                // Connect frame selection signals
+                                QObject::connect(props, &DataInspectorPropertiesWidget::frameSelected,
+                                                 view, &DataInspectorViewWidget::frameSelected);
 
-            // Connect view widget frame selection to update time in both DataManager and EditorRegistry
-            // This allows double-clicking on table cells to navigate to the corresponding frame
-            if (reg && dm) {
-                QObject::connect(view, &DataInspectorViewWidget::frameSelected,
-                                 [reg](TimePosition position) {
-                                     // Update EditorRegistry time (triggers timeChanged signal for other widgets)
-                                     reg->setCurrentTime(position);
-                                 });
-            }
+                                // Connect view widget frame selection to update time in both DataManager and EditorRegistry
+                                // This allows double-clicking on table cells to navigate to the corresponding frame
+                                if (reg && dm) {
+                                    QObject::connect(view, &DataInspectorViewWidget::frameSelected,
+                                                     [reg](TimePosition position) {
+                                                         // Update EditorRegistry time (triggers timeChanged signal for other widgets)
+                                                         reg->setCurrentTime(std::move(position));
+                                                     });
+                                }
 
-            // Connect properties widget to view widget for inspector-view communication
-            props->setViewWidget(view);
+                                // Connect properties widget to view widget for inspector-view communication
+                                props->setViewWidget(view);
 
-            // Register the state
-            reg->registerState(state);
+                                // Register the state
+                                reg->registerState(state);
 
-            // Initialize current_position from EditorRegistry's current position
-            if (reg) {
-                state->current_position = reg->currentPosition();
-                
-                // Connect EditorRegistry time changes to update state's current_position
-                // This allows sub-widgets to access the current time position from the state
-                QObject::connect(reg,
-                                 QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
-                                 [state](TimePosition position) {
-                                     state->current_position = position;
-                                 });
-            }
+                                // Initialize current_position from EditorRegistry's current position
+                                if (reg) {
+                                    state->current_position = reg->currentPosition();
 
-            return EditorRegistry::EditorInstance{
-                .state = state,
-                .view = view,
-                .properties = props
-            };
-        }
-    });
+                                    // Connect EditorRegistry time changes to update state's current_position
+                                    // This allows sub-widgets to access the current time position from the state
+                                    QObject::connect(reg,
+                                                     QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                                                     [state](TimePosition position) {
+                                                         state->current_position = std::move(position);
+                                                     });
+                                }
+
+                                return EditorRegistry::EditorInstance{
+                                        .state = state,
+                                        .view = view,
+                                        .properties = props};
+                            }});
 }
 
-}  // namespace DataInspectorModule
+}// namespace DataInspectorModule

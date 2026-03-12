@@ -268,12 +268,12 @@ commands → copy JSON → paste into a Catch2 golden trace test*.
 
 ### Step 3.5.2 — Route Widgets Through executeSequence()
 
-- [ ] **DataSynthesizer Generate** (`src/WhiskerToolbox/DataSynthesizer_Widget/UI/DataSynthesizerProperties_Widget.cpp`):
+- [x] **DataSynthesizer Generate** (`src/WhiskerToolbox/DataSynthesizer_Widget/UI/DataSynthesizerProperties_Widget.cpp`):
   Build a `CommandDescriptor{.command_name = "SynthesizeData", .parameters = ...}` and call
   `executeSequence()` instead of `cmd.execute(ctx)`.
-- [ ] **SaveData call sites** (DataInspector savers, DataExport): Same pattern. See
+- [x] **SaveData call sites** (DataInspector savers, DataExport): Same pattern. See
   [widget_save_refactoring_guide.qmd](widget_save_refactoring_guide.qmd).
-- [ ] **TriageSession** (`src/TriageSession/TriageSession.cpp`): Accept `CommandRecorder*`
+- [x] **TriageSession** (`src/TriageSession/TriageSession.cpp`): Accept `CommandRecorder*`
   in `commit()`, forward to `executeSequence()`.
 
 ### Step 3.5.3 — Command Log UI

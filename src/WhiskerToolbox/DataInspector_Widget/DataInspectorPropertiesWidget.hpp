@@ -22,9 +22,9 @@
  * @see DataInspectorViewWidget for the view component
  */
 
-#include "DataManager/DataManagerFwd.hpp"  // For DM_DataType
-#include "EditorState/StrongTypes.hpp"  // Must be before any TimePosition usage in signals
-#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
+#include "DataManager/DataManagerFwd.hpp"// For DM_DataType
+#include "EditorState/StrongTypes.hpp"   // Must be before any TimePosition usage in signals
+#include "TimeFrame/TimeFrame.hpp"       // For TimePosition
 
 #include <QWidget>
 
@@ -38,9 +38,13 @@ class GroupManager;
 class SelectionContext;
 struct SelectionSource;
 
+namespace commands {
+class CommandRecorder;
+}// namespace commands
+
 namespace EditorLib {
 class OperationContext;
-} // namespace EditorLib
+}// namespace EditorLib
 
 namespace Ui {
 class DataInspectorPropertiesWidget;
@@ -64,9 +68,9 @@ public:
      * @param parent Parent widget
      */
     explicit DataInspectorPropertiesWidget(
-        std::shared_ptr<DataManager> data_manager,
-        GroupManager * group_manager = nullptr,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            GroupManager * group_manager = nullptr,
+            QWidget * parent = nullptr);
 
     ~DataInspectorPropertiesWidget() override;
 
@@ -93,6 +97,15 @@ public:
      * @param context OperationContext instance (can be nullptr)
      */
     void setOperationContext(EditorLib::OperationContext * context);
+
+    /**
+     * @brief Set the CommandRecorder for recording command executions
+     * @param recorder Non-owning pointer to the CommandRecorder (can be nullptr)
+     *
+     * The recorder is forwarded to child inspector widgets so they can
+     * route commands through executeSequence() for recording.
+     */
+    void setCommandRecorder(commands::CommandRecorder * recorder);
 
     /**
      * @brief Directly set the data key to inspect (bypasses SelectionContext)
@@ -144,14 +157,15 @@ private:
     SelectionContext * _selection_context{nullptr};
     EditorLib::OperationContext * _operation_context{nullptr};
     GroupManager * _group_manager{nullptr};
-    
+    commands::CommandRecorder * _command_recorder{nullptr};
+
     // Current inspector (type-specific, created by InspectorFactory)
     std::unique_ptr<class BaseInspector> _current_inspector;
     std::string _current_key;
     DM_DataType _current_type{DM_DataType::Unknown};
     DataInspectorViewWidget * _view_widget{nullptr};
-    
+
     void _connectInspectorToView();
 };
 
-#endif // DATA_INSPECTOR_PROPERTIES_WIDGET_HPP
+#endif// DATA_INSPECTOR_PROPERTIES_WIDGET_HPP

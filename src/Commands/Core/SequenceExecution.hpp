@@ -49,6 +49,20 @@ SequenceResult executeSequence(
         bool stop_on_error = true,
         CommandRecorder * recorder = nullptr);
 
+/// @brief Execute a single command through the sequence execution pipeline.
+///
+/// Convenience wrapper that routes a single command through executeSequence(),
+/// enabling recording (via ctx.recorder) and MutationGuard support.
+///
+/// @param command_name The command factory name (e.g., "SaveData", "SynthesizeData")
+/// @param params_json JSON-serialized command parameters
+/// @param ctx Runtime context with DataManager, runtime variables, and optional recorder
+/// @return CommandResult indicating success or failure
+CommandResult executeSingleCommand(
+        std::string const & command_name,
+        std::string const & params_json,
+        CommandContext const & ctx);
+
 }// namespace commands
 
 #endif// SEQUENCE_EXECUTION_HPP

@@ -5,8 +5,8 @@
 
 #include "TriageSessionProperties_Widget.hpp"
 
-#include "Core/TriageSessionState.hpp"
 #include "Commands/Core/CommandDescriptor.hpp"
+#include "Core/TriageSessionState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "EditorState/EditorRegistry.hpp"
@@ -161,7 +161,7 @@ void TriageSessionProperties_Widget::_onCommitClicked() {
         return;
     }
 
-    auto result = _session->commit(_current_frame, _state->dataManager());
+    auto result = _session->commit(_current_frame, _state->dataManager(), _command_recorder);
 
     if (!result.success) {
         QMessageBox::warning(this, tr("Commit Failed"),

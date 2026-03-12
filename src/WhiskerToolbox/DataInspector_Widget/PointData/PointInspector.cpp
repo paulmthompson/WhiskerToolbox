@@ -3,17 +3,18 @@
 
 #include "PointTableView.hpp"
 
-#include "DataManager.hpp"
 #include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/IO/SaveData.hpp"
+#include "DataExport_Widget/Points/CSV/CSVPointSaver_Widget.hpp"
+#include "DataManager.hpp"
 #include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataExport_Widget/Points/CSV/CSVPointSaver_Widget.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "Inspectors/GroupFilterHelper.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
 #include "MediaExport/media_export.hpp"
-#include "Entity/EntityTypes.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 
@@ -31,11 +32,11 @@
 #include <rfl/json.hpp>
 
 PointInspector::PointInspector(
-    std::shared_ptr<DataManager> data_manager,
-    GroupManager * group_manager,
-    QWidget * parent)
-    : BaseInspector(std::move(data_manager), group_manager, parent)
-    , ui(new Ui::PointInspector) {
+        std::shared_ptr<DataManager> data_manager,
+        GroupManager * group_manager,
+        QWidget * parent)
+    : BaseInspector(std::move(data_manager), group_manager, parent),
+      ui(new Ui::PointInspector) {
     ui->setupUi(this);
 
     connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -75,14 +76,14 @@ PointInspector::PointInspector(
 
                 commands::CommandContext ctx;
                 ctx.data_manager = dataManager();
+                ctx.recorder = commandRecorder();
 
-                commands::SaveData cmd(std::move(params));
-                auto result = cmd.execute(ctx);
+                auto const params_json = rfl::json::write(params);
+                auto result = commands::executeSingleCommand("SaveData", params_json, ctx);
 
                 if (!result.success) {
                     QMessageBox::critical(this, "Save Error",
-                                          QString("Failed to save: %1").arg(
-                                                  QString::fromStdString(result.error_message)));
+                                          QString("Failed to save: %1").arg(QString::fromStdString(result.error_message)));
                     return;
                 }
 
@@ -95,7 +96,7 @@ PointInspector::PointInspector(
                         auto times_with_data = point_data_ptr->getTimesWithData();
                         std::vector<size_t> frame_ids_to_export;
                         frame_ids_to_export.reserve(times_with_data.size());
-                        for (auto frame_id : times_with_data) {
+                        for (auto frame_id: times_with_data) {
                             frame_ids_to_export.push_back(static_cast<size_t>(frame_id.getValue()));
                         }
 
@@ -103,7 +104,7 @@ PointInspector::PointInspector(
                             auto media_ptr = dataManager()->getData<MediaData>("media");
                             if (!media_ptr) {
                                 QMessageBox::warning(this, "Media Not Available",
-                                                    "Could not access media for exporting frames.");
+                                                     "Could not access media for exporting frames.");
                             } else {
                                 MediaExportOptions media_opts = ui->media_export_options_widget->getOptions();
                                 media_opts.image_save_dir = output_path;
@@ -112,23 +113,23 @@ PointInspector::PointInspector(
                                     std::filesystem::create_directories(media_opts.image_save_dir);
                                 } catch (std::exception const & e) {
                                     QMessageBox::critical(this, "Export Error",
-                                                         QString("Failed to create output directory: %1\n%2")
-                                                                 .arg(QString::fromStdString(media_opts.image_save_dir))
-                                                                 .arg(QString::fromStdString(e.what())));
+                                                          QString("Failed to create output directory: %1\n%2")
+                                                                  .arg(QString::fromStdString(media_opts.image_save_dir))
+                                                                  .arg(QString::fromStdString(e.what())));
                                     return;
                                 }
 
                                 int frames_exported = 0;
-                                for (size_t const frame_id : frame_ids_to_export) {
+                                for (size_t const frame_id: frame_ids_to_export) {
                                     save_image(media_ptr.get(), static_cast<int>(frame_id), media_opts);
                                     frames_exported++;
                                 }
 
                                 QMessageBox::information(this, "Media Export",
-                                                        QString("Exported %1 media frames to: %2/%3")
-                                                                .arg(frames_exported)
-                                                                .arg(QString::fromStdString(media_opts.image_save_dir))
-                                                                .arg(QString::fromStdString(media_opts.image_folder)));
+                                                         QString("Exported %1 media frames to: %2/%3")
+                                                                 .arg(frames_exported)
+                                                                 .arg(QString::fromStdString(media_opts.image_save_dir))
+                                                                 .arg(QString::fromStdString(media_opts.image_folder)));
                             }
                         } else {
                             QMessageBox::information(this, "No Frames",
@@ -221,19 +222,19 @@ void PointInspector::setTableView(PointTableView * table_view) {
         if (groupManager()) {
             _table_view->setGroupManager(groupManager());
         }
-        
+
         // Connect to view signals for move/copy operations
         connect(_table_view, &PointTableView::movePointsRequested,
                 this, &PointInspector::_onMovePointsRequested);
         connect(_table_view, &PointTableView::copyPointsRequested,
                 this, &PointInspector::_onCopyPointsRequested);
-        
+
         // Connect to view signals for group management operations
         connect(_table_view, &PointTableView::movePointsToGroupRequested,
                 this, &PointInspector::_onMovePointsToGroupRequested);
         connect(_table_view, &PointTableView::removePointsFromGroupRequested,
                 this, &PointInspector::_onRemovePointsFromGroupRequested);
-        
+
         // Connect to view signal for delete operation
         connect(_table_view, &PointTableView::deletePointsRequested,
                 this, &PointInspector::_onDeletePointsRequested);
@@ -279,8 +280,8 @@ void PointInspector::_onApplyImageSizeClicked() {
     }
 
     // Get current values from the line edits
-    QString width_text = ui->image_width_edit->text().trimmed();
-    QString height_text = ui->image_height_edit->text().trimmed();
+    QString const width_text = ui->image_width_edit->text().trimmed();
+    QString const height_text = ui->image_height_edit->text().trimmed();
 
     if (width_text.isEmpty() || height_text.isEmpty()) {
         QMessageBox::warning(this, "Invalid Input", "Please enter both width and height values.");
@@ -288,8 +289,8 @@ void PointInspector::_onApplyImageSizeClicked() {
     }
 
     bool width_ok, height_ok;
-    int new_width = width_text.toInt(&width_ok);
-    int new_height = height_text.toInt(&height_ok);
+    int const new_width = width_text.toInt(&width_ok);
+    int const new_height = height_text.toInt(&height_ok);
 
     if (!width_ok || !height_ok) {
         QMessageBox::warning(this, "Invalid Input", "Please enter valid integer values for width and height.");
@@ -302,7 +303,7 @@ void PointInspector::_onApplyImageSizeClicked() {
     }
 
     // Get current image size
-    ImageSize current_size = point_data->getImageSize();
+    ImageSize const current_size = point_data->getImageSize();
 
     // If no current size is set, just set the new size without scaling
     if (current_size.width == -1 || current_size.height == -1) {
@@ -316,7 +317,7 @@ void PointInspector::_onApplyImageSizeClicked() {
     }
 
     // Ask user if they want to scale existing data
-    int ret = QMessageBox::question(this, "Scale Existing Data",
+    int const ret = QMessageBox::question(this, "Scale Existing Data",
                                     QString("Current image size is %1 × %2. Do you want to scale all existing point data to the new size %3 × %4?\n\n"
                                             "Click 'Yes' to scale all point data proportionally.\n"
                                             "Click 'No' to just change the image size without scaling.\n"
@@ -370,7 +371,7 @@ void PointInspector::_updateImageSizeDisplay() {
         return;
     }
 
-    ImageSize current_size = point_data->getImageSize();
+    ImageSize const current_size = point_data->getImageSize();
     std::cout << "PointInspector::_updateImageSizeDisplay: Current size: " << current_size.width << " x " << current_size.height << std::endl;
 
     if (current_size.width == -1 || current_size.height == -1) {
@@ -394,7 +395,7 @@ void PointInspector::_onCopyImageSizeClicked() {
         return;
     }
 
-    QString selected_media_key = ui->copy_from_media_combo->currentText();
+    QString const selected_media_key = ui->copy_from_media_combo->currentText();
     if (selected_media_key.isEmpty()) {
         QMessageBox::warning(this, "No Media Selected", "Please select a media source to copy image size from.");
         return;
@@ -406,7 +407,7 @@ void PointInspector::_onCopyImageSizeClicked() {
         return;
     }
 
-    ImageSize media_size = media_data->getImageSize();
+    ImageSize const media_size = media_data->getImageSize();
     if (media_size.width == -1 || media_size.height == -1) {
         QMessageBox::warning(this, "No Image Size",
                              QString("The selected media '%1' does not have an image size set.").arg(selected_media_key));
@@ -420,7 +421,7 @@ void PointInspector::_onCopyImageSizeClicked() {
     }
 
     // Get current image size
-    ImageSize current_size = point_data->getImageSize();
+    ImageSize const current_size = point_data->getImageSize();
 
     // If no current size is set, just set the new size without scaling
     if (current_size.width == -1 || current_size.height == -1) {
@@ -435,7 +436,7 @@ void PointInspector::_onCopyImageSizeClicked() {
     }
 
     // Ask user if they want to scale existing data
-    int ret = QMessageBox::question(this, "Scale Existing Data",
+    int const ret = QMessageBox::question(this, "Scale Existing Data",
                                     QString("Current image size is %1 × %2. Do you want to scale all existing point data to the new size %3 × %4 (from '%5')?\n\n"
                                             "Click 'Yes' to scale all point data proportionally.\n"
                                             "Click 'No' to just change the image size without scaling.\n"
@@ -510,7 +511,7 @@ void PointInspector::_onGroupFilterChanged(int index) {
         auto groups = groupManager()->getGroups();
         auto group_ids = groups.keys();
         if (index - 1 < group_ids.size()) {
-            int group_id = group_ids[index - 1];
+            int const group_id = group_ids[index - 1];
             _table_view->setGroupFilter(group_id);
         }
     }
@@ -518,7 +519,7 @@ void PointInspector::_onGroupFilterChanged(int index) {
 
 void PointInspector::_onGroupChanged() {
     // Store current selection and current text (in case index changes)
-    int current_index = ui->groupFilterCombo->currentIndex();
+    int const current_index = ui->groupFilterCombo->currentIndex();
     QString current_text;
     if (current_index >= 0 && current_index < ui->groupFilterCombo->count()) {
         current_text = ui->groupFilterCombo->itemText(current_index);
@@ -529,7 +530,7 @@ void PointInspector::_onGroupChanged() {
 
     // Restore selection
     restoreGroupFilterSelection(ui->groupFilterCombo, current_index, current_text);
-    
+
     // If selection was restored to "All Groups" or invalid, clear filter
     if (ui->groupFilterCombo->currentIndex() == 0 || ui->groupFilterCombo->currentIndex() < 0) {
         if (_table_view) {
@@ -557,7 +558,7 @@ void PointInspector::_onMovePointsRequested(std::string const & target_key) {
               << " selected points from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     std::size_t const total_moved = moveEntitiesByIds<PointData>(
-        dataManager().get(), _active_key, target_key, selected_entity_ids);
+            dataManager().get(), _active_key, target_key, selected_entity_ids);
 
     if (total_moved > 0) {
         // Update the view to reflect changes
@@ -584,7 +585,7 @@ void PointInspector::_onCopyPointsRequested(std::string const & target_key) {
               << " selected points from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     std::size_t const total_copied = copyEntitiesByIds<PointData>(
-        dataManager().get(), _active_key, target_key, selected_entity_ids);
+            dataManager().get(), _active_key, target_key, selected_entity_ids);
 
     if (total_copied > 0) {
         std::cout << "PointInspector: Successfully copied " << total_copied
@@ -605,7 +606,7 @@ void PointInspector::_onMovePointsToGroupRequested(int group_id) {
         return;
     }
 
-    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
 
     // First, remove entities from their current groups
     groupManager()->ungroupEntities(entity_ids_set);
@@ -633,7 +634,7 @@ void PointInspector::_onRemovePointsFromGroupRequested() {
         return;
     }
 
-    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
 
     // Remove entities from all groups
     groupManager()->ungroupEntities(entity_ids_set);
@@ -669,14 +670,14 @@ void PointInspector::_onDeletePointsRequested() {
 
     // Remove entities from groups first
     if (groupManager()) {
-        std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+        std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
         groupManager()->ungroupEntities(entity_ids_set);
     }
 
     int total_points_deleted = 0;
 
     // Delete each selected point individually
-    for (EntityId const entity_id : selected_entity_ids) {
+    for (EntityId const entity_id: selected_entity_ids) {
         if (entity_id != EntityId(0)) {
             bool const success = point_data->clearByEntityId(entity_id, NotifyObservers::No);
             if (success) {

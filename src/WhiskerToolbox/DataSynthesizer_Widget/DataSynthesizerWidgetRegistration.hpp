@@ -28,6 +28,10 @@
 class DataManager;
 class EditorRegistry;
 
+namespace commands {
+class CommandRecorder;
+}// namespace commands
+
 namespace DataSynthesizerWidgetModule {
 
 /**
@@ -41,8 +45,11 @@ namespace DataSynthesizerWidgetModule {
  *
  * @param registry The EditorRegistry to register types with
  * @param data_manager Shared DataManager instance
+ * @param recorder Optional CommandRecorder for recording executed commands (can be nullptr)
  */
-void registerTypes(EditorRegistry * registry, std::shared_ptr<DataManager> const & data_manager);
+void registerTypes(EditorRegistry * registry,
+                   std::shared_ptr<DataManager> const & data_manager,
+                   commands::CommandRecorder * recorder = nullptr);
 
 }// namespace DataSynthesizerWidgetModule
 

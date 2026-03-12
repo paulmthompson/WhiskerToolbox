@@ -1,12 +1,13 @@
 #include "DigitalIntervalSeriesInspector.hpp"
 #include "ui_DigitalIntervalSeriesInspector.h"
 
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/SequenceExecution.hpp"
+#include "Commands/IO/SaveData.hpp"
 #include "DataExport_Widget/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 #include "DataManager.hpp"
-#include "Commands/Core/CommandContext.hpp"
-#include "Commands/IO/SaveData.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "DigitalIntervalSeriesDataView.hpp"
@@ -187,9 +188,10 @@ void DigitalIntervalSeriesInspector::_connectSignals() {
 
                 commands::CommandContext ctx;
                 ctx.data_manager = dataManager();
+                ctx.recorder = commandRecorder();
 
-                commands::SaveData cmd(std::move(params));
-                auto result = cmd.execute(ctx);
+                auto const params_json = rfl::json::write(params);
+                auto result = commands::executeSingleCommand("SaveData", params_json, ctx);
 
                 if (result.success) {
                     QMessageBox::information(this, "Success", "Intervals saved successfully to CSV");

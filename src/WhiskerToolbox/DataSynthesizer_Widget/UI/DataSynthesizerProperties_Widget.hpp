@@ -24,6 +24,10 @@ class QComboBox;
 class QLabel;
 class QLineEdit;
 
+namespace commands {
+class CommandRecorder;
+}// namespace commands
+
 /**
  * @brief Properties panel for the Data Synthesizer
  *
@@ -40,6 +44,12 @@ public:
             QWidget * parent = nullptr);
 
     ~DataSynthesizerProperties_Widget() override = default;
+
+    /**
+     * @brief Set the CommandRecorder for recording command executions
+     * @param recorder Non-owning pointer to the CommandRecorder (can be nullptr)
+     */
+    void setCommandRecorder(commands::CommandRecorder * recorder) { _command_recorder = recorder; }
 
 signals:
     /**
@@ -73,6 +83,8 @@ private:
     QLineEdit * _time_key_edit = nullptr;
     QComboBox * _time_frame_mode_combo = nullptr;
     QLabel * _status_label = nullptr;
+
+    commands::CommandRecorder * _command_recorder{nullptr};
 
     bool _restoring = false;///< Guard against recursive updates during restore
 };

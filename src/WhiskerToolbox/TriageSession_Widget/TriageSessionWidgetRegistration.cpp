@@ -15,11 +15,13 @@
 namespace TriageSessionWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager) {
+                   const std::shared_ptr<DataManager>& data_manager,
+                   commands::CommandRecorder * recorder) {
     if (!registry) {
         return;
     }
-    const auto& dm = std::move(data_manager);
+    auto const & dm = std::move(data_manager);
+    auto cr = recorder;
 
     registry->registerType({
             .type_id = QStringLiteral("TriageSessionWidget"),
@@ -44,11 +46,12 @@ void registerTypes(EditorRegistry * registry,
             .create_properties = nullptr,
 
             // Custom editor: provides EditorRegistry for time tracking
-            .create_editor_custom = [dm](EditorRegistry * reg)
+            .create_editor_custom = [dm, cr](EditorRegistry * reg)
                     -> EditorRegistry::EditorInstance {
                 auto state = std::make_shared<TriageSessionState>(dm);
 
                 auto * widget = new TriageSessionProperties_Widget(state, reg);
+                widget->setCommandRecorder(cr);
                 widget->setMinimumSize(300, 200);
 
                 reg->registerState(state);

@@ -13,6 +13,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/SynthesizeData.hpp"
 
 #include <rfl.hpp>
@@ -234,12 +235,13 @@ void DataSynthesizerProperties_Widget::_onGenerateClicked() {
         cmd_params.time_key = tk;
     }
 
-    commands::SynthesizeData cmd(std::move(cmd_params));
+    auto const params_json = rfl::json::write(cmd_params);
 
     commands::CommandContext ctx;
     ctx.data_manager = _data_manager;
+    ctx.recorder = _command_recorder;
 
-    auto result = cmd.execute(ctx);
+    auto result = commands::executeSingleCommand("SynthesizeData", params_json, ctx);
     if (result.success) {
         _status_label->setText(
                 QStringLiteral("Generated '%1' successfully.")

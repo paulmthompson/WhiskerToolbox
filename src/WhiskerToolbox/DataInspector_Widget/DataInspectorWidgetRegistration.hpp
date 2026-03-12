@@ -38,6 +38,10 @@ class EditorRegistry;
 class DataManager;
 class GroupManager;
 
+namespace commands {
+class CommandRecorder;
+}// namespace commands
+
 namespace DataInspectorModule {
 
 /**
@@ -55,11 +59,13 @@ namespace DataInspectorModule {
  * @param registry The EditorRegistry to register types with
  * @param data_manager Shared DataManager for data access
  * @param group_manager Optional GroupManager for group-aware features (can be nullptr)
+ * @param recorder Optional CommandRecorder for recording executed commands (can be nullptr)
  */
 void registerTypes(EditorRegistry * registry,
                    std::shared_ptr<DataManager> data_manager,
-                   GroupManager * group_manager = nullptr);
+                   GroupManager * group_manager = nullptr,
+                   commands::CommandRecorder * recorder = nullptr);
 
-}  // namespace DataInspectorModule
+}// namespace DataInspectorModule
 
-#endif  // DATA_INSPECTOR_WIDGET_REGISTRATION_HPP
+#endif// DATA_INSPECTOR_WIDGET_REGISTRATION_HPP
