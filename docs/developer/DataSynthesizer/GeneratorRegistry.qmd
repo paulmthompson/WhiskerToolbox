@@ -1,0 +1,110 @@
+---
+title: "Generator Registry"
+---
+
+## Overview
+
+The `GeneratorRegistry` is a singleton registry that maps generator names to factory functions. It follows the same static-registration pattern as TransformsV2's `ElementRegistry`, but tailored for **data generators** — functions that create data from parameters alone, with no input data required.
+
+## Architecture
+
+```
+GeneratorRegistry (singleton)
+├── registerGenerator(name, func, metadata)
+├── generate(name, params_json) → DataTypeVariant
+├── listGenerators(output_type) → vector<string>
+├── getSchema(name) → ParameterSchema
+└── entries_: map<string, GeneratorEntry>
+```
+
+### Key Types
+
+| Type | File | Purpose |
+|------|------|---------|
+| `GeneratorMetadata` | `GeneratorTypes.hpp` | Name, description, category, output type, parameter schema |
+| `GeneratorFunction` | `GeneratorTypes.hpp` | `std::function<DataTypeVariant(string const&)>` — takes JSON params, returns data |
+| `GeneratorEntry` | `GeneratorTypes.hpp` | Pairs a `GeneratorFunction` with its `GeneratorMetadata` |
+| `RegisterGenerator<Params>` | `Registration.hpp` | RAII helper for compile-time static registration |
+
+### Registration Flow
+
+1. A generator `.cpp` file defines a params struct (reflect-cpp) and a typed generate function.
+2. A file-scope `RegisterGenerator<Params>` instance in an anonymous namespace calls `GeneratorRegistry::instance().registerGenerator(...)` at static init.
+3. The `RegisterGenerator` constructor:
+   - Wraps the typed function `(Params const&) → DataTypeVariant` into a JSON-accepting `GeneratorFunction` via `rfl::json::read<Params>`.
+   - Extracts the `ParameterSchema` from the `Params` type.
+   - Stores both in the registry.
+
+### Static Registration & `--whole-archive`
+
+Because generators use file-scope RAII registration objects, the linker may discard translation units with no externally-referenced symbols. Any binary (test or application) that needs generators must link `DataSynthesizer` with `--whole-archive` (Linux), `-force_load` (macOS), or `/WHOLEARCHIVE` (MSVC). This is the same requirement as TransformsV2.
+
+## API
+
+### `GeneratorRegistry::instance()`
+Returns the global singleton.
+
+### `registerGenerator(name, func, metadata)`
+Registers a generator. Duplicate names are rejected with a warning.
+
+### `generate(name, params_json) → optional<DataTypeVariant>`
+Looks up the generator by name, deserializes params from JSON, and executes it. Returns `nullopt` on unknown generator or execution failure.
+
+### `listGenerators(output_type) → vector<string>`
+Returns all generator names that produce the given output type (e.g., `"AnalogTimeSeries"`).
+
+### `listAllGenerators() → vector<string>`
+Returns all registered generator names, sorted alphabetically.
+
+### `getSchema(name) → optional<ParameterSchema>`
+Returns the parameter schema for UI generation via `AutoParamWidget`.
+
+### `hasGenerator(name) → bool`
+Checks if a generator is registered.
+
+## Example: Writing a Generator
+
+```cpp
+// src/DataSynthesizer/Generators/Analog/SineWaveGenerator.cpp
+
+#include "DataSynthesizer/Registration.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+
+struct SineWaveParams {
+    int num_samples = 1000;
+    float amplitude = 1.0f;
+    float frequency = 0.01f;
+    float phase = 0.0f;
+    float dc_offset = 0.0f;
+};
+
+static DataTypeVariant generateSineWave(SineWaveParams const & params) {
+    auto ts = std::make_shared<AnalogTimeSeries>();
+    std::vector<float> data(params.num_samples);
+    for (int i = 0; i < params.num_samples; ++i) {
+        data[i] = params.dc_offset +
+                  params.amplitude * std::sin(2.0f * M_PI * params.frequency * i + params.phase);
+    }
+    ts->setData(data);
+    return ts;
+}
+
+namespace {
+auto const reg = WhiskerToolbox::DataSynthesizer::RegisterGenerator<SineWaveParams>(
+    "SineWave",
+    generateSineWave,
+    WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+        .description = "Generate a sine wave signal",
+        .category = "Periodic",
+        .output_type = "AnalogTimeSeries"
+    });
+}
+```
+
+## Dependencies
+
+- **`DataManager`** — For `DataTypeVariant` and data type definitions
+- **`ParameterSchema`** — For `extractParameterSchema<T>()` and `ParameterSchema`
+- **`reflectcpp`** — For JSON deserialization of generator parameters
+
+No Qt dependency.

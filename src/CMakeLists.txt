@@ -20,6 +20,7 @@ add_subdirectory(StateEstimation)
 
 add_subdirectory(DataManager)
 add_subdirectory(ParameterSchema)
+add_subdirectory(DataSynthesizer)
 add_subdirectory(TriageSession)
 add_subdirectory(TransformsV2)
 add_subdirectory(GatherResult)

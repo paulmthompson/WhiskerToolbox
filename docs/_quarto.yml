@@ -75,6 +75,12 @@ website:
                 - developer/transforms_v2/adding_transforms.qmd
             - section: "ParameterSchema"
               href: developer/ParameterSchema/index.qmd
+            - section: "Data Synthesizer"
+              contents:
+                - developer/DataSynthesizer/GeneratorRegistry.qmd
+                - section: "Generators"
+                  contents:
+                    - developer/DataSynthesizer/Generators/Analog.qmd
         - section: "Data Inspectors"
           contents:
             - developer/ui/data_inspectors/tensor_inspector.qmd
@@ -104,6 +110,7 @@ website:
                 - developer/DataManager/Commands/commands.qmd
                 - developer/DataManager/Commands/save_data.qmd
                 - developer/DataManager/Commands/load_data.qmd
+                - developer/DataManager/Commands/synthesize_data.qmd
                 - developer/DataManager/Commands/validation.qmd
                 - developer/DataManager/Commands/command_introspection.qmd
                 - developer/DataManager/Commands/gui_verb_audit.qmd

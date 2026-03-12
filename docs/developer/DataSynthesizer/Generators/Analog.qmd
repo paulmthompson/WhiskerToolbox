@@ -1,0 +1,190 @@
+---
+title: "Analog Generators"
+---
+
+## Overview
+
+Milestone 1b adds five `AnalogTimeSeries` generators to the DataSynthesizer registry.
+Each generator is a self-contained `.cpp` file under
+`src/DataSynthesizer/Generators/Analog/` that self-registers at static initialization
+time via `RegisterGenerator<Params>`.
+
+All generators produce an `std::shared_ptr<AnalogTimeSeries>` wrapped in a
+`DataTypeVariant`. The `frequency` parameter is expressed in **cycles per sample**
+(i.e., a normalized frequency), and `phase` is in **radians**.
+
+---
+
+## Generators
+
+### SineWave
+
+**Registration name**: `"SineWave"` · **Category**: Periodic
+
+**Formula**: `y[t] = amplitude × sin(2π × frequency × t + phase) + dc_offset`
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | — | > 0 |
+| `amplitude` | `float` | ✅ | — | — |
+| `frequency` | `float` | ✅ | — | > 0 |
+| `phase` | `float` | ☐ | 0.0 | — |
+| `dc_offset` | `float` | ☐ | 0.0 | — |
+
+At `phase = 0`, `t = 0` the output is exactly 0, rising positively (same as a
+standard sine wave). At `phase = π/2` it behaves as a cosine (peak at `t = 0`).
+
+---
+
+### SquareWave
+
+**Registration name**: `"SquareWave"` · **Category**: Periodic
+
+**Formula**: outputs `+amplitude` for the first `duty_cycle` fraction of each cycle,
+`−amplitude` for the remainder.
+
+The normalized position within a cycle is:
+`pos = fmod(frequency × t + phase / (2π), 1.0)`.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | — | > 0 |
+| `amplitude` | `float` | ✅ | — | — |
+| `frequency` | `float` | ✅ | — | > 0 |
+| `phase` | `float` | ☐ | 0.0 | — |
+| `dc_offset` | `float` | ☐ | 0.0 | — |
+| `duty_cycle` | `float` | ☐ | 0.5 | [0, 1] |
+
+Every output sample is exactly `±amplitude + dc_offset` — there are no
+intermediate values (transitions are instantaneous at sample boundaries).
+
+---
+
+### TriangleWave
+
+**Registration name**: `"TriangleWave"` · **Category**: Periodic
+
+**Formula**: `y[t] = amplitude × (2/π) × arcsin(sin(2π × frequency × t + phase)) + dc_offset`
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | — | > 0 |
+| `amplitude` | `float` | ✅ | — | — |
+| `frequency` | `float` | ✅ | — | > 0 |
+| `phase` | `float` | ☐ | 0.0 | — |
+| `dc_offset` | `float` | ☐ | 0.0 | — |
+
+The `arcsin(sin(x))` formulation produces a triangle wave with **exactly the same
+phase conventions as SineWave**: at `t = 0, phase = 0` the output is 0 and rising.
+The peaks occur at quarter-cycle offsets (`t = 1/(4×frequency)` and
+`t = 3/(4×frequency)`).
+
+---
+
+### GaussianNoise
+
+**Registration name**: `"GaussianNoise"` · **Category**: Noise
+
+Produces `num_samples` i.i.d. samples from `N(mean, stddev²)` using a
+`std::mt19937_64` PRNG seeded by `seed`.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | — | > 0 |
+| `stddev` | `float` | ✅ | — | ≥ 0 |
+| `mean` | `float` | ☐ | 0.0 | — |
+| `seed` | `uint64_t` | ☐ | 42 | — |
+
+**Determinism guarantee**: the same `(num_samples, stddev, mean, seed)` tuple always
+produces bit-identical output, regardless of platform (C++ standard library
+`std::normal_distribution` output is implementation-defined across platforms, but
+identical within a single build).
+
+---
+
+### UniformNoise
+
+**Registration name**: `"UniformNoise"` · **Category**: Noise
+
+Produces `num_samples` i.i.d. samples from `U(min_value, max_value)` using a
+`std::mt19937_64` PRNG seeded by `seed`.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | — | > 0 |
+| `min_value` | `float` | ✅ | — | < `max_value` |
+| `max_value` | `float` | ✅ | — | > `min_value` |
+| `seed` | `uint64_t` | ☐ | 42 | — |
+
+**Determinism guarantee**: same as GaussianNoise above.
+
+---
+
+## JSON Usage Examples
+
+```json
+// SineWave — 1000-sample, 1 Hz (0.001 cycles/sample), amplitude 2
+{
+  "num_samples": 1000,
+  "amplitude": 2.0,
+  "frequency": 0.001,
+  "phase": 0.0,
+  "dc_offset": 0.0
+}
+
+// SquareWave — 25% duty cycle
+{
+  "num_samples": 500,
+  "amplitude": 1.0,
+  "frequency": 0.01,
+  "duty_cycle": 0.25
+}
+
+// GaussianNoise — zero mean, unit variance, fixed seed
+{
+  "num_samples": 2000,
+  "stddev": 1.0,
+  "seed": 42
+}
+```
+
+---
+
+## Adding a New Analog Generator
+
+1. Create `src/DataSynthesizer/Generators/Analog/MyGenerator.cpp`.
+2. Define a params struct (aggregate, all public fields; `std::optional<T>` for
+   optional parameters).
+3. Write a free function `DataTypeVariant myGenerate(MyParams const&)`.
+4. Create a file-scope `RegisterGenerator<MyParams>` instance in an anonymous
+   namespace.
+5. Add the file to `src/DataSynthesizer/CMakeLists.txt`.
+6. Write tests in `tests/DataSynthesizer/`.
+7. Update this documentation page.
+
+The CMake target `DataSynthesizer` must be linked with **`--whole-archive`** (Linux),
+**`-force_load`** (macOS), or **`/WHOLEARCHIVE`** (MSVC) in any binary that relies on
+the generators being registered (test binaries, the `SynthesizeData` command binary).
+See `tests/DataSynthesizer/CMakeLists.txt` for an example.
+
+---
+
+## File Layout
+
+```
+src/DataSynthesizer/Generators/Analog/
+├── SineWaveGenerator.cpp
+├── SquareWaveGenerator.cpp
+├── TriangleWaveGenerator.cpp
+├── GaussianNoiseGenerator.cpp
+└── UniformNoiseGenerator.cpp
+
+tests/DataSynthesizer/
+├── CMakeLists.txt
+├── GeneratorRegistry.test.cpp
+├── SineWaveGenerator.test.cpp
+├── SquareWaveGenerator.test.cpp
+├── TriangleWaveGenerator.test.cpp
+├── GaussianNoiseGenerator.test.cpp
+└── UniformNoiseGenerator.test.cpp
+```

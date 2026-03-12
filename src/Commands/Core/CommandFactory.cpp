@@ -11,8 +11,9 @@
 #include "ForEachKey.hpp"
 #include "ICommand.hpp"
 #include "IO/LoadData.hpp"
-#include "MoveByTimeRange.hpp"
 #include "IO/SaveData.hpp"
+#include "MoveByTimeRange.hpp"
+#include "SynthesizeData.hpp"
 #include "VariableSubstitution.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
@@ -26,7 +27,8 @@ namespace commands {
 bool isKnownCommandName(std::string const & name) {
     return name == "MoveByTimeRange" || name == "CopyByTimeRange" ||
            name == "AddInterval" || name == "ForEachKey" ||
-           name == "SaveData" || name == "LoadData";
+           name == "SaveData" || name == "LoadData" ||
+           name == "SynthesizeData";
 }
 
 std::unique_ptr<ICommand> createCommand(
@@ -76,6 +78,12 @@ std::unique_ptr<ICommand> createCommandFromJson(
         auto p = rfl::json::read<LoadDataParams>(json);
         if (!p) return nullptr;
         return std::make_unique<LoadData>(std::move(*p));
+    }
+
+    if (name == "SynthesizeData") {
+        auto p = rfl::json::read<SynthesizeDataParams>(json);
+        if (!p) return nullptr;
+        return std::make_unique<SynthesizeData>(std::move(*p));
     }
 
     return nullptr;
@@ -130,6 +138,14 @@ std::vector<CommandInfo> getAvailableCommands() {
                     .supports_undo = true,
                     .supported_data_types = {"PointData", "LineData", "MaskData", "AnalogTimeSeries", "DigitalEventSeries", "DigitalIntervalSeries", "TensorData"},
                     .parameter_schema = extractParameterSchema<LoadDataParams>(),
+            },
+            CommandInfo{
+                    .name = "SynthesizeData",
+                    .description = "Generate synthetic data using a registered generator and store it in DataManager",
+                    .category = "data_generation",
+                    .supports_undo = false,
+                    .supported_data_types = {"AnalogTimeSeries"},
+                    .parameter_schema = extractParameterSchema<SynthesizeDataParams>(),
             },
     };
 }

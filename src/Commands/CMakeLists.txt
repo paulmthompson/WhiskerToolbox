@@ -28,6 +28,8 @@ set(COMMAND_SOURCES
         AddInterval.cpp
         ForEachKey.hpp
         ForEachKey.cpp
+        SynthesizeData.hpp
+        SynthesizeData.cpp
 
         IO/SaveData.hpp
         IO/SaveData.cpp
@@ -45,6 +47,7 @@ target_include_directories(Commands PUBLIC
 )
 
 target_link_libraries(Commands PRIVATE DataManager)
+target_link_libraries(Commands PRIVATE WhiskerToolbox::DataSynthesizer)
 target_link_libraries(Commands PUBLIC reflectcpp::reflectcpp)
 
 set_target_compiler_warnings(Commands)

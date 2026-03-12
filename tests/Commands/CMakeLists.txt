@@ -26,9 +26,20 @@ add_executable(test_commands
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/LoadData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Core/Validation.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandRecorder.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Commands/SynthesizeData.test.cpp
 )
 
 target_link_libraries(test_commands PRIVATE Catch2::Catch2WithMain DataManager Commands)
+
+# DataSynthesizer uses static registration — whole-archive required
+if(APPLE)
+    target_link_libraries(test_commands PRIVATE -Wl,-force_load,$<TARGET_FILE:DataSynthesizer>)
+elseif(MSVC)
+    target_link_options(test_commands PRIVATE /WHOLEARCHIVE:DataSynthesizer)
+    target_link_libraries(test_commands PRIVATE DataSynthesizer)
+else()
+    target_link_libraries(test_commands PRIVATE -Wl,--whole-archive DataSynthesizer -Wl,--no-whole-archive)
+endif()
 
 target_include_directories(test_commands PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Commands>"
