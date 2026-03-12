@@ -32,6 +32,7 @@
 #include "BatchProcessing_Widget/BatchProcessingWidgetRegistration.hpp"
 #include "DataImport_Widget/DataImportWidgetRegistration.hpp"
 #include "DataInspector_Widget/DataInspectorWidgetRegistration.hpp"
+#include "DataSynthesizer_Widget/DataSynthesizerWidgetRegistration.hpp"
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
 #include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
 #include "DataViewer_Widget/DataViewerWidgetRegistration.hpp"
@@ -1010,6 +1011,8 @@ void MainWindow::_registerEditorTypes() {
     ThreeDPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     OnionSkinViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    DataSynthesizerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);

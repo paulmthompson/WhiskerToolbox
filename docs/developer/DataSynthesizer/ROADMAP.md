@@ -5,7 +5,7 @@
 | Milestone | Status | Date |
 |-----------|--------|------|
 | **1** — Core Library, Generators & Command | ✅ Complete | 2026-03-12 |
-| **2a** — Widget Skeleton & Registration | 🔲 Not started | — |
+| **2a** — Widget Skeleton & Registration | ✅ Complete | 2026-03-12 |
 | **2b** — State & AutoParamWidget Integration | 🔲 Not started | — |
 | **2c** — OpenGL Signal Preview | 🔲 Not started | — |
 | **3** — More AnalogTimeSeries Generators | 🔲 Not started | — |

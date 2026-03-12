@@ -1,0 +1,69 @@
+---
+title: "DataSynthesizer Widget"
+description: "GUI widget for interactive data synthesis"
+---
+
+## Overview
+
+The `DataSynthesizer_Widget` provides a dockable GUI panel for generating synthetic data into `DataManager`. It uses the `DataSynthesizer` library's `GeneratorRegistry` to access available generators and their parameter schemas.
+
+## Architecture
+
+The widget follows the standard EditorState pattern with a view + properties split:
+
+```
+DataSynthesizer_Widget/
+├── CMakeLists.txt
+├── DataSynthesizerWidgetRegistration.hpp/cpp   # EditorRegistry registration
+├── Core/
+│   ├── DataSynthesizerStateData.hpp            # reflect-cpp POD struct
+│   └── DataSynthesizerState.hpp/cpp            # EditorState subclass
+└── UI/
+    ├── DataSynthesizerProperties_Widget.hpp/cpp # Properties panel (right zone)
+    └── DataSynthesizerView_Widget.hpp/cpp       # Preview panel (right zone)
+```
+
+### State (`DataSynthesizerState`)
+
+Minimal `EditorState` subclass tracking:
+
+- `instance_id` — unique widget instance identifier
+- `display_name` — user-visible name ("Data Synthesizer")
+
+Implements `toJson()` / `fromJson()` via reflect-cpp for workspace persistence.
+
+### Properties Widget
+
+Currently a placeholder `QWidget` with a label. Will be populated in Milestone 2b with:
+
+- Output type combo (AnalogTimeSeries, DigitalEventSeries, etc.)
+- Generator combo (SineWave, GaussianNoise, etc.)
+- `AutoParamWidget` for generator-specific parameter editing
+- Output key text field
+- Generate button
+
+### View Widget
+
+Currently a placeholder `QWidget` with a label. Will embed an OpenGL preview widget (`SynthesizerPreviewWidget`) in Milestone 2c.
+
+### Registration
+
+Registered via `DataSynthesizerWidgetModule::registerTypes()` with:
+
+- **Type ID**: `"DataSynthesizerWidget"`
+- **Menu path**: View/Tools
+- **Zone**: Right (both view and properties)
+- **Single instance**: `allow_multiple = false`
+- Uses `create_editor_custom` for coordinated view + properties creation
+
+## Dependencies
+
+- `Qt6::Widgets` — UI components
+- `EditorState` — state management and registration
+- `DataManager` — data storage target
+- `reflectcpp` — state serialization
+
+## See Also
+
+- [GeneratorRegistry](GeneratorRegistry.qmd) — the generator registry API
+- [ROADMAP](ROADMAP.md) — full development roadmap including Milestones 2b/2c

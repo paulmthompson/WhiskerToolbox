@@ -78,6 +78,7 @@ website:
             - section: "Data Synthesizer"
               contents:
                 - developer/DataSynthesizer/GeneratorRegistry.qmd
+                - developer/DataSynthesizer/Widget.qmd
                 - section: "Generators"
                   contents:
                     - developer/DataSynthesizer/Generators/Analog.qmd

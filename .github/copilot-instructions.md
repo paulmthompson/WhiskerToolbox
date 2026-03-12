@@ -165,6 +165,7 @@ The overall structure of the project is divided into several static and dynamic 
 - **DataTransform_Widget**: UI for executing data transforms.
 - **DataImport_Widget**: Unified data import supporting all standard data types. Opens via Modules → Data Import.
 - **DataExport_Widget**: Data export/saving functionality.
+- **DataSynthesizer_Widget**: GUI for interactive data synthesis using `GeneratorRegistry`. Provides generator selection, parameter editing, and signal preview. Opens via View/Tools.
 
 ## Specific Task Workflows
 
