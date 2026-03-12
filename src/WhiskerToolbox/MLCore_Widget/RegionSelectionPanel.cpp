@@ -4,7 +4,7 @@
 #include "ui_RegionSelectionPanel.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include <QTimer>
 

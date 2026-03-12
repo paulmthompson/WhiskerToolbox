@@ -4,7 +4,7 @@
 
 #include "DataManager.hpp"
 #include "DataManager/transforms/DigitalIntervalSeries/Digital_Interval_Boolean/digital_interval_boolean.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include <algorithm>
 

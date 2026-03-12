@@ -7,7 +7,7 @@
 #include "DataManager.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/IO/SaveData.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalEventSeriesDataView.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 

@@ -203,7 +203,6 @@ set(DATAMANAGER_SOURCES
 
 set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
 
-add_subdirectory(DigitalTimeSeries)
 add_subdirectory(Masks)
 add_subdirectory(Points)
 

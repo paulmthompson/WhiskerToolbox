@@ -12,8 +12,8 @@
 #include "TransformsV2/core/TensorColumnBuilders.hpp"
 #define slots Q_SLOTS
 
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/utils/TimeIndexExtractor.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"

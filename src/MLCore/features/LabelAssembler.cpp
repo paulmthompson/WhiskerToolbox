@@ -5,7 +5,7 @@
 
 #include "LabelAssembler.hpp"
 
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"

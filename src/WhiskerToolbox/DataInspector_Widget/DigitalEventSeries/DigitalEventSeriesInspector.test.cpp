@@ -6,7 +6,7 @@
 #include "DataExport_Widget/DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp"
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "IO/core/LoaderRegistration.hpp"
 #include "IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
 #include "TimeFrame/TimeFrame.hpp"

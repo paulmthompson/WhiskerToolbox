@@ -9,7 +9,7 @@
 #include "DataInspector_Widget/DataInspectorViewWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"

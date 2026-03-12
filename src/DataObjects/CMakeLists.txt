@@ -2,3 +2,4 @@ add_subdirectory(TypeTraits)
 add_subdirectory(DataTypeEnum)
 
 add_subdirectory(AnalogTimeSeries)
+add_subdirectory(DigitalTimeSeries)

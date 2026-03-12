@@ -13,7 +13,7 @@
 #define slots Q_SLOTS
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/utils/armadillo_wrap/analog_armadillo.hpp"
 #include "MLModelOperation.hpp"

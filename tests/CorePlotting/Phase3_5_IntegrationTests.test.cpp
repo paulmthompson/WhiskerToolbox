@@ -33,8 +33,8 @@
 #include "SpatialIndex/QuadTree.hpp"
 
 // DataManager includes
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Observer/Observer_Data.hpp"

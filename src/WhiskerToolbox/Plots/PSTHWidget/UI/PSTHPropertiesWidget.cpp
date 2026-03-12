@@ -2,7 +2,7 @@
 
 #include "Core/PSTHState.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RateEstimationControls/EstimationMethodControls.hpp"
 #include "Plots/Common/RateEstimationControls/ScalingModeControls.hpp"
