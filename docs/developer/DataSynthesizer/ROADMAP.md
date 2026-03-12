@@ -83,13 +83,7 @@ WhiskerToolbox needs a built-in data synthesis system to:
 
 ## Milestone 1 — Core Library, Generators & Command ✅ Complete (2026-03-12)
 
-Milestone 1 delivered the `DataSynthesizer` static library, five `AnalogTimeSeries` generators, and the `SynthesizeData` command. Summary:
-
-- **GeneratorRegistry** (`src/DataSynthesizer/`): Singleton mapping generator names → factory functions + metadata. Generators self-register via `RegisterGenerator<Params>` RAII helper at static init (same `--whole-archive` pattern as TransformsV2). `GeneratorFunction` takes a JSON string; `RegisterGenerator` handles deserialization via `rfl::json::read<Params>`.
-- **Five AnalogTimeSeries generators** (`src/DataSynthesizer/Generators/Analog/`): SineWave, SquareWave, TriangleWave, GaussianNoise, UniformNoise. Each is a self-contained `.cpp` with a params struct, validation, and static registration.
-- **`SynthesizeData` command** (`src/Commands/SynthesizeData.hpp/cpp`): `ICommand` that looks up a generator by name, passes `rfl::Generic` parameters (serialized to JSON string), stores the result via `DataManager::setData()`. Category `"data_generation"`. Tests verify round-trip JSON → command → DataManager, determinism, and error handling.
-- **Linker integration**: `Commands` library links `DataSynthesizer` privately. Test binaries use `--whole-archive` / `-force_load` / `/WHOLEARCHIVE` for static registration.
-- **Documentation**: `GeneratorRegistry.qmd`, `Analog.qmd`, `synthesize_data.qmd`, and `_quarto.yml`/`copilot-instructions.md` updates.
+`DataSynthesizer` static library with `GeneratorRegistry` singleton, five `AnalogTimeSeries` generators (SineWave, SquareWave, TriangleWave, GaussianNoise, UniformNoise), and `SynthesizeData` command. Generators self-register at static init via `RegisterGenerator<Params>` (same `--whole-archive` pattern as TransformsV2). See `GeneratorRegistry.qmd` and `Analog.qmd` for details.
 
 ---
 
@@ -97,244 +91,21 @@ Milestone 1 delivered the `DataSynthesizer` static library, five `AnalogTimeSeri
 
 **Goal**: A dockable widget where users can select a generator, configure params, preview the output, and generate data into `DataManager`.
 
-### 2a. Widget Skeleton & Registration
+### 2a. Widget Skeleton & Registration ✅ Complete (2026-03-12)
 
-**Goal**: Create blank state, properties, and view panels. Register the widget so it can be raised from the MainWindow menu.
-
-#### Deliverables
-
-| Item | Description |
-|------|-------------|
-| `DataSynthesizerState.hpp/cpp` | Minimal `EditorState` subclass. Contains `DataSynthesizerStateData` with `instance_id` and `display_name` only. Implements `getTypeName()` → `"DataSynthesizerWidget"`, `toJson()`/`fromJson()` via reflect-cpp. |
-| `DataSynthesizerStateData.hpp` | reflect-cpp serializable POD struct: `{instance_id, display_name}`. |
-| `DataSynthesizerProperties_Widget.hpp/cpp` | Empty `QWidget` subclass with a `QVBoxLayout`. Accepts `shared_ptr<DataSynthesizerState>` in constructor. Displays a placeholder `QLabel("Data Synthesizer — Properties")`. |
-| `DataSynthesizerView_Widget.hpp/cpp` | Empty `QWidget` subclass with a `QVBoxLayout`. Accepts `shared_ptr<DataSynthesizerState>` and `shared_ptr<DataManager>`. Displays a placeholder `QLabel("Data Synthesizer — Preview")`. This will later hold the OpenGL preview. |
-| `DataSynthesizerWidgetRegistration.hpp/cpp` | `DataSynthesizerWidgetModule::registerTypes(EditorRegistry*, shared_ptr<DataManager>)`. Registers type `"DataSynthesizerWidget"` with `display_name = "Data Synthesizer"`, `menu_path = "View/Tools"`, `preferred_zone = Zone::Right`, `properties_zone = Zone::Right`, `allow_multiple = false`. Uses `create_editor_custom` to create state, properties, and view widgets. The view goes to the center/right zone; properties as a tab in the right zone. |
-| `CMakeLists.txt` | Static library `DataSynthesizer_Widget`, depends on `Qt6::Widgets`, `EditorState`, `DataManager`. |
-| `mainwindow.cpp` change | Add `DataSynthesizerWidgetModule::registerTypes(_editor_registry.get(), _data_manager)` call in `_registerEditorTypes()`. Add `#include` for registration header. |
-
-#### File Layout
-
-```
-src/WhiskerToolbox/DataSynthesizer_Widget/
-├── CMakeLists.txt
-├── DataSynthesizerWidgetRegistration.hpp
-├── DataSynthesizerWidgetRegistration.cpp
-├── Core/
-│   ├── DataSynthesizerState.hpp
-│   ├── DataSynthesizerState.cpp
-│   └── DataSynthesizerStateData.hpp
-└── UI/
-    ├── DataSynthesizerProperties_Widget.hpp
-    ├── DataSynthesizerProperties_Widget.cpp
-    ├── DataSynthesizerView_Widget.hpp
-    └── DataSynthesizerView_Widget.cpp
-```
-
-#### Exit Criteria
-
-User can launch the Data Synthesizer from the View/Tools menu. Two blank panels appear (properties and preview). Closing and reopening the widget restores state (instance ID and display name round-trip through JSON).
+Delivered `DataSynthesizerState`/`DataSynthesizerStateData` (`EditorState` subclass with `instance_id`/`display_name`), empty properties and view `QWidget` stubs, and `DataSynthesizerWidgetRegistration` registering under `"View/Tools"`. Static library `DataSynthesizer_Widget` depends on `Qt6::Widgets`, `EditorState`, `DataManager`.
 
 ---
 
 ### 2b. State & AutoParamWidget Integration ✅ Complete (2026-03-12)
 
-**Goal**: Populate `DataSynthesizerState` with the fields needed for generator selection and parameter editing. Wire the properties widget to use `AutoParamWidget` for rendering generator-specific parameter forms.
-
-Milestone 2b delivered:
-
-- **State expansion**: `DataSynthesizerStateData` now stores `output_type`, `generator_name`, `parameter_json`, `output_key`, and `time_key`. `DataSynthesizerState` exposes getters/setters with `markDirty()` + Qt signals for each field.
-- **Properties widget**: Fully functional UI with output type combo, generator combo, `AutoParamWidget` for parameter editing, output key field, and Generate button. Auto-populates from `GeneratorRegistry`.
-- **`GeneratorRegistry::listOutputTypes()`**: New method added to enumerate registered output types.
-- **Generate action**: Executes `SynthesizeData` command via `CommandContext`, storing results in DataManager.
-- **State restore**: `fromJson()` emits all change signals; properties widget reconnects and restores UI from persisted state with `_restoring` guard to prevent recursive updates.
-- **CMake**: `DataSynthesizer_Widget` links `AutoParamWidget`, `DataSynthesizer`, `ParameterSchema`, `Commands`. Main executable links `DataSynthesizer` with `--whole-archive` for static generator registration.
-- **MainWindow**: Added `actionData_Synthesizer` menu action in Modules menu, connected to `openDataSynthesizerWidget()` slot.
-
-#### State Expansion
-
-`DataSynthesizerStateData` gains:
-
-```cpp
-struct DataSynthesizerStateData {
-    std::string instance_id;
-    std::string display_name = "Data Synthesizer";
-
-    // Generator selection
-    std::string output_type;       // "AnalogTimeSeries", "DigitalEventSeries", etc.
-    std::string generator_name;    // Registry key (e.g., "SineWave")
-    std::string parameter_json;    // Current params as JSON string
-
-    // Output configuration
-    std::string output_key;        // DataManager key for generated data
-    std::string time_key = "time"; // TimeFrame association
-};
-```
-
-`DataSynthesizerState` adds getters/setters with `markDirty()` + signals for each new field:
-- `setOutputType()` / `outputType()` + `outputTypeChanged()`
-- `setGeneratorName()` / `generatorName()` + `generatorNameChanged()`
-- `setParameterJson()` / `parameterJson()` + `parameterJsonChanged()`
-- `setOutputKey()` / `outputKey()` + `outputKeyChanged()`
-
-#### Properties Widget UI
-
-`DataSynthesizerProperties_Widget` is rebuilt with these sections (top to bottom):
-
-1. **Output Type combo** (`QComboBox`): Populated with the unique `output_type` values from `GeneratorRegistry::instance().listAllGenerators()`. Changing this filters the generator combo.
-
-2. **Generator combo** (`QComboBox`): Populated with generator names filtered by the selected output type via `GeneratorRegistry::instance().listGenerators(output_type)`. Changing this:
-   - Fetches the `ParameterSchema` from the registry via `getSchema(generator_name)`.
-   - Destroys any existing `AutoParamWidget` and creates a new one with the schema.
-   - Resets `parameter_json` in state.
-
-3. **AutoParamWidget** (dynamically created): Renders the generator's parameter form. Connected via `AutoParamWidget::parametersChanged` → `state->setParameterJson(widget->toJson())`.
-
-4. **Output key** (`QLineEdit`): DataManager key for the generated data. Default: generator name in snake_case (e.g., `"sine_wave_1"`).
-
-5. **Generate button** (`QPushButton`): Constructs a `SynthesizeData` command from state fields and executes it via `CommandContext`. On success, emits a status message.
-
-#### State ↔ UI Sync
-
-- **UI → State**: Combo/field changes call the corresponding state setter. `AutoParamWidget::parametersChanged` updates `parameter_json`.
-- **State → UI** (restore): `fromJson()` emits all change signals. Properties widget connects to these signals and repopulates combos, recreates `AutoParamWidget` with stored schema, and calls `fromJson()` on it with the stored `parameter_json`.
-
-#### CMake Changes
-
-`DataSynthesizer_Widget` adds dependencies: `AutoParamWidget`, `WhiskerToolbox::DataSynthesizer`, `ParameterSchema`. Must link `DataSynthesizer` with `--whole-archive` for static registration.
-
-#### Exit Criteria
-
-1. User opens the Data Synthesizer panel.
-2. Selects "AnalogTimeSeries" from the output type combo.
-3. Generator combo shows: SineWave, SquareWave, TriangleWave, GaussianNoise, UniformNoise.
-4. Selecting "SineWave" displays parameter form: num_samples, amplitude, frequency, phase, dc_offset fields.
-5. Changing generator replaces the parameter form with the new generator's fields.
-6. Clicking "Generate" with valid params creates an `AnalogTimeSeries` in DataManager (visible in DataManager_Widget).
-7. Closing and reopening the widget restores the selected output type, generator, parameters, and output key.
+`DataSynthesizerStateData` expanded with `output_type`, `generator_name`, `parameter_json`, `output_key`, and `time_key`. Properties widget wired with output type combo → generator combo → `AutoParamWidget` → output key field → Generate button. `GeneratorRegistry::listOutputTypes()` added. State restore uses `_restoring` guard to prevent recursive updates. CMake links `AutoParamWidget`, `DataSynthesizer` (with `--whole-archive`), `ParameterSchema`, `Commands`.
 
 ---
 
 ### 2c. OpenGL Signal Preview ✅ Complete (2026-03-12)
 
-**Goal**: Embed a lightweight `QOpenGLWidget` in the view panel that renders the generated `AnalogTimeSeries` using the `CorePlotting` + `PlottingOpenGL` rendering pipeline. Users click "Preview" to see the signal before committing it to DataManager.
-
-Milestone 2c delivered:
-
-- **`SynthesizerPreviewWidget`** (`UI/SynthesizerPreviewWidget.hpp/cpp`): `QOpenGLWidget` subclass using `PlottingOpenGL::SceneRenderer`. Implements `setData(shared_ptr<AnalogTimeSeries>)` which computes data bounds (with 10% vertical padding), builds an orthographic projection via `glm::ortho`, maps values through `TimeSeriesMapper::mapAnalogSeriesFull()` with identity `SeriesLayout`, and uploads a single polyline batch via `SceneBuilder`. Non-interactive (no pan/zoom/selection).
-- **View widget integration**: `DataSynthesizerView_Widget` replaced its placeholder label with `SynthesizerPreviewWidget`. Exposes `setPreviewData(shared_ptr<AnalogTimeSeries>)` public slot.
-- **Preview button**: `DataSynthesizerProperties_Widget` gained a "Preview" `QPushButton` that calls `GeneratorRegistry::generate()` directly (ephemeral, no DataManager involvement). If the result is an `AnalogTimeSeries`, emits `previewRequested(series)` signal.
-- **Signal wiring**: Registration code connects `DataSynthesizerProperties_Widget::previewRequested` → `DataSynthesizerView_Widget::setPreviewData` so the two widgets remain decoupled.
-- **CMake**: `DataSynthesizer_Widget` now links `PlottingOpenGL` and `CorePlotting` (which transitively provide `Qt6::OpenGL`, `Qt6::OpenGLWidgets`, `glm::glm`).
-
-#### Architecture
-
-The preview uses the same rendering stack as `DataViewer_Widget` but in a minimal, non-interactive configuration:
-
-```
-AnalogTimeSeries (ephemeral, from generator)
-        │
-        ▼
-TimeSeriesMapper::mapAnalogSeriesFull()  →  MappedVertex range
-        │
-        ▼
-SceneBuilder::addPolyLine()              →  RenderableScene
-        │
-        ▼
-SceneRenderer::uploadScene() + render()  →  OpenGL output
-```
-
-No interaction handling, no selection, no multi-series support, no scrolling — just a single static polyline plot.
-
-#### Deliverables
-
-| Item | Description |
-|------|-------------|
-| `SynthesizerPreviewWidget.hpp/cpp` | `QOpenGLWidget` subclass. Holds a `PlottingOpenGL::SceneRenderer`, a cached `CorePlotting::RenderableScene`, and optionally a local `AnalogTimeSeries` + `TimeFrame`. Implements `initializeGL()`, `paintGL()`, `resizeGL()`. Provides `setData(AnalogTimeSeries)` to upload new preview data. |
-| Properties widget "Preview" button | New `QPushButton` in properties panel. Calls the generator directly via `GeneratorRegistry::generate()` (no DataManager involvement). If the result is an `AnalogTimeSeries`, passes it to `SynthesizerPreviewWidget::setData()`. |
-| View widget integration | `DataSynthesizerView_Widget` replaces its placeholder label with a `SynthesizerPreviewWidget` embedded via layout. |
-| CMake changes | `DataSynthesizer_Widget` adds dependencies: `PlottingOpenGL`, `CorePlotting`, `Qt6::OpenGL`, `Qt6::OpenGLWidgets`, `glm::glm`. |
-
-#### `SynthesizerPreviewWidget` Design
-
-```cpp
-class SynthesizerPreviewWidget : public QOpenGLWidget {
-public:
-    explicit SynthesizerPreviewWidget(QWidget * parent = nullptr);
-
-    /// @brief Set a new AnalogTimeSeries for preview. Rebuilds the scene and triggers repaint.
-    void setData(std::shared_ptr<AnalogTimeSeries> series);
-
-    /// @brief Clear the preview.
-    void clearData();
-
-protected:
-    void initializeGL() override;
-    void paintGL() override;
-    void resizeGL(int w, int h) override;
-
-private:
-    void rebuildScene();
-
-    std::unique_ptr<PlottingOpenGL::SceneRenderer> _scene_renderer;
-    std::shared_ptr<AnalogTimeSeries> _series;
-
-    // View parameters (computed from data range)
-    float _x_min = 0.0f;
-    float _x_max = 1.0f;
-    float _y_min = -1.0f;
-    float _y_max = 1.0f;
-};
-```
-
-**Scene building** (`rebuildScene()`):
-1. Compute data bounds: `x_min = 0`, `x_max = num_samples - 1`, `y_min/y_max` from data min/max with 10% padding.
-2. Create an identity `SeriesLayout` (no offset/gain — raw data coordinates).
-3. Call `TimeSeriesMapper::mapAnalogSeriesFull()` to get vertices.
-4. Use `SceneBuilder::addPolyLine()` with a white or blue `PolyLineStyle` to build the scene.
-5. Set view/projection matrices:
-   - View matrix: identity.
-   - Projection matrix: `glm::ortho(x_min, x_max, y_min, y_max, -1.0f, 1.0f)`.
-6. Store the built `RenderableScene`.
-
-**Rendering** (`paintGL()`):
-1. Clear background to dark gray.
-2. Upload and render the cached scene via `SceneRenderer`.
-
-**Resize** (`resizeGL()`):
-1. Update `glViewport`.
-2. Rebuild scene with updated projection if data exists.
-
-#### Properties Widget "Preview" Button Wiring
-
-```
-User clicks "Preview"
-    │
-    ├─ Read generator_name + parameter_json from state
-    ├─ Call GeneratorRegistry::generate(generator_name, parameter_json)
-    ├─ If result holds AnalogTimeSeries:
-    │      Extract from DataTypeVariant
-    │      Call _view_widget->previewWidget()->setData(series)
-    └─ If result is error or wrong type:
-           Show error in status label
-```
-
-The preview is **ephemeral** — it lives only in the widget, not in DataManager. The "Generate" button separately creates the data in DataManager via the `SynthesizeData` command.
-
-#### Exit Criteria
-
-1. User selects SineWave generator with `num_samples=500, amplitude=2.0, frequency=0.02`.
-2. Clicks "Preview" → the OpenGL panel draws a smooth sine waveform.
-3. Changing parameters and clicking "Preview" again updates the plot.
-4. Clicking "Generate" writes the data to DataManager without affecting the preview.
-5. Preview renders correctly on resize.
-6. Preview can be cleared when switching to a non-analog output type.
-
----
-
-### Milestone 2 overall exit criteria
-
-User can open the Data Synthesizer from View/Tools, select a generator type and generator, configure parameters via auto-generated form, preview the analog signal in the embedded OpenGL plot, and generate the data into DataManager. State persists across widget close/reopen.
+`SynthesizerPreviewWidget` (`QOpenGLWidget`) added using `PlottingOpenGL::SceneRenderer` + `TimeSeriesMapper::mapAnalogSeriesFull()` + `glm::ortho()` projection. Non-interactive; renders a single static polyline. View widget hosts the preview widget. Properties widget gained a "Preview" button that calls `GeneratorRegistry::generate()` directly (ephemeral — no DataManager involvement) and emits `previewRequested(series)`. Registration wires `previewRequested` → `setPreviewData`. CMake adds `PlottingOpenGL`, `CorePlotting`, `Qt6::OpenGL`, `Qt6::OpenGLWidgets`, `glm::glm`.
 
 ---
 
@@ -543,11 +314,11 @@ These are ideas noted for future consideration, not committed milestones:
 
 ---
 
-## File Layout (After Milestone 2)
+## Current File Layout
 
 ```
 src/
-├── DataSynthesizer/                          # ✅ Milestone 1 (complete)
+├── DataSynthesizer/                          # ✅ Milestones 1 & 2 (complete)
 │   ├── CMakeLists.txt
 │   ├── GeneratorRegistry.hpp
 │   ├── GeneratorRegistry.cpp
@@ -564,21 +335,21 @@ src/
 │   ├── SynthesizeData.hpp
 │   └── SynthesizeData.cpp
 └── WhiskerToolbox/
-    └── DataSynthesizer_Widget/               # Milestone 2
-        ├── CMakeLists.txt                       # 2a
-        ├── DataSynthesizerWidgetRegistration.hpp # 2a
-        ├── DataSynthesizerWidgetRegistration.cpp # 2a, 2c (signal wiring)
+    └── DataSynthesizer_Widget/               # ✅ Milestone 2 (complete)
+        ├── CMakeLists.txt
+        ├── DataSynthesizerWidgetRegistration.hpp
+        ├── DataSynthesizerWidgetRegistration.cpp
         ├── Core/
-        │   ├── DataSynthesizerStateData.hpp      # 2a (minimal), 2b (expanded)
-        │   ├── DataSynthesizerState.hpp           # 2a (minimal), 2b (expanded)
-        │   └── DataSynthesizerState.cpp           # 2a (minimal), 2b (expanded)
+        │   ├── DataSynthesizerStateData.hpp
+        │   ├── DataSynthesizerState.hpp
+        │   └── DataSynthesizerState.cpp
         └── UI/
-            ├── DataSynthesizerProperties_Widget.hpp  # 2a (stub), 2b (functional), 2c (+Preview)
-            ├── DataSynthesizerProperties_Widget.cpp  # 2a (stub), 2b (functional), 2c (+Preview)
-            ├── DataSynthesizerView_Widget.hpp         # 2a (stub), 2c (hosts preview)
-            ├── DataSynthesizerView_Widget.cpp         # 2a (stub), 2c (hosts preview)
-            ├── SynthesizerPreviewWidget.hpp           # 2c
-            └── SynthesizerPreviewWidget.cpp           # 2c
+            ├── DataSynthesizerProperties_Widget.hpp
+            ├── DataSynthesizerProperties_Widget.cpp
+            ├── DataSynthesizerView_Widget.hpp
+            ├── DataSynthesizerView_Widget.cpp
+            ├── SynthesizerPreviewWidget.hpp
+            └── SynthesizerPreviewWidget.cpp
 
 tests/
 └── DataSynthesizer/                          # ✅ Milestone 1 (complete)
@@ -596,38 +367,10 @@ docs/
     └── DataSynthesizer/
         ├── ROADMAP.md              (this file)
         ├── GeneratorRegistry.qmd   # ✅ Milestone 1
-        ├── Widget.qmd              # Milestone 2
+        ├── Widget.qmd              # ✅ Milestone 2
         └── Generators/
             └── Analog.qmd         # ✅ Milestone 1
 ```
-
-## Implementation Order (Milestone 2 detailed)
-
-For Milestone 2, the recommended implementation sequence is:
-
-### 2a — Widget Skeleton (4 items)
-1. **`DataSynthesizerStateData.hpp`** — Minimal POD struct: `{instance_id, display_name}`.
-2. **`DataSynthesizerState.hpp/cpp`** — `EditorState` subclass with `toJson()`/`fromJson()`.
-3. **`DataSynthesizerProperties_Widget.hpp/cpp`** — Empty `QWidget` with placeholder label.
-4. **`DataSynthesizerView_Widget.hpp/cpp`** — Empty `QWidget` with placeholder label.
-5. **`DataSynthesizerWidgetRegistration.hpp/cpp`** — Register with `EditorRegistry`.
-6. **`CMakeLists.txt`** — Static library, link `Qt6::Widgets`, `EditorState`, `DataManager`.
-7. **`mainwindow.cpp`** — Add registration call in `_registerEditorTypes()`.
-8. **Build & verify** — Widget appears in View/Tools menu.
-
-### 2b — State & AutoParamWidget (3 items)
-1. **Expand `DataSynthesizerStateData`** — Add `output_type`, `generator_name`, `parameter_json`, `output_key`, `time_key`.
-2. **Expand `DataSynthesizerState`** — Getters/setters with signals for each new field.
-3. **Rebuild properties widget UI** — Output type combo → generator combo → `AutoParamWidget` → output key → Generate button.
-4. **CMake: add dependencies** — `AutoParamWidget`, `DataSynthesizer` (with `--whole-archive`), `ParameterSchema`.
-5. **Build & verify** — Generator selection drives parameter form; Generate creates data in DataManager.
-
-### 2c — OpenGL Preview (3 items)
-1. **`SynthesizerPreviewWidget.hpp/cpp`** — `QOpenGLWidget` with `SceneRenderer`, identity layout, `mapAnalogSeriesFull()`, `glm::ortho()` projection.
-2. **Integrate into view widget** — Replace placeholder label with `SynthesizerPreviewWidget`.
-3. **Add Preview button** — Properties widget calls `GeneratorRegistry::generate()` directly, passes result to preview.
-4. **CMake: add dependencies** — `PlottingOpenGL`, `CorePlotting`, `Qt6::OpenGL`, `Qt6::OpenGLWidgets`, `glm::glm`.
-5. **Build & verify** — Preview renders sine wave correctly.
 
 ## Key Design Decisions
 
