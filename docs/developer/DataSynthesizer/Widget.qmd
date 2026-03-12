@@ -5,7 +5,7 @@ description: "GUI widget for interactive data synthesis"
 
 ## Overview
 
-The `DataSynthesizer_Widget` provides a dockable GUI panel for generating synthetic data into `DataManager`. It uses the `DataSynthesizer` library's `GeneratorRegistry` to access available generators and their parameter schemas.
+The `DataSynthesizer_Widget` provides a dockable GUI panel for generating synthetic data into `DataManager`. It uses the `DataSynthesizer` library's `GeneratorRegistry` to access available generators and their parameter schemas, and renders generator-specific parameter forms via `AutoParamWidget`.
 
 ## Architecture
 
@@ -20,50 +20,82 @@ DataSynthesizer_Widget/
 │   └── DataSynthesizerState.hpp/cpp            # EditorState subclass
 └── UI/
     ├── DataSynthesizerProperties_Widget.hpp/cpp # Properties panel (right zone)
-    └── DataSynthesizerView_Widget.hpp/cpp       # Preview panel (right zone)
+    ├── DataSynthesizerView_Widget.hpp/cpp       # View panel hosting preview
+    └── SynthesizerPreviewWidget.hpp/cpp         # OpenGL polyline preview
 ```
 
 ### State (`DataSynthesizerState`)
 
-Minimal `EditorState` subclass tracking:
+`EditorState` subclass tracking:
 
 - `instance_id` — unique widget instance identifier
 - `display_name` — user-visible name ("Data Synthesizer")
+- `output_type` — selected output data type (e.g. "AnalogTimeSeries")
+- `generator_name` — selected generator registry key (e.g. "SineWave")
+- `parameter_json` — current parameter values as JSON
+- `output_key` — DataManager key for generated data
+- `time_key` — TimeFrame association (default: "time")
 
-Implements `toJson()` / `fromJson()` via reflect-cpp for workspace persistence.
+Implements `toJson()` / `fromJson()` via reflect-cpp for workspace persistence. Emits signals (`outputTypeChanged`, `generatorNameChanged`, `parameterJsonChanged`, `outputKeyChanged`) on state changes.
 
 ### Properties Widget
 
-Currently a placeholder `QWidget` with a label. Will be populated in Milestone 2b with:
+Provides the full generator configuration UI:
 
-- Output type combo (AnalogTimeSeries, DigitalEventSeries, etc.)
-- Generator combo (SineWave, GaussianNoise, etc.)
-- `AutoParamWidget` for generator-specific parameter editing
-- Output key text field
-- Generate button
+1. **Output Type combo** — populated from `GeneratorRegistry::listOutputTypes()`. Changing this filters the generator combo.
+2. **Generator combo** — populated from `GeneratorRegistry::listGenerators(output_type)`. Changing this:
+   - Fetches the `ParameterSchema` from the registry
+   - Creates a new `AutoParamWidget` form with the schema
+   - Resets `parameter_json` in state
+3. **AutoParamWidget** — dynamically generated parameter form. Changes update `parameter_json` in state.
+4. **Output key** — `QLineEdit` for the DataManager key.
+5. **Preview button** — calls `GeneratorRegistry::generate()` directly (no DataManager involvement). If the result is an `AnalogTimeSeries`, emits `previewRequested(series)` which the view widget receives via a signal/slot connection established in registration.
+6. **Generate button** — constructs and executes a `SynthesizeData` command to commit data to DataManager.
 
 ### View Widget
 
-Currently a placeholder `QWidget` with a label. Will embed an OpenGL preview widget (`SynthesizerPreviewWidget`) in Milestone 2c.
+Hosts a `SynthesizerPreviewWidget` (a `QOpenGLWidget` subclass) that renders a generated `AnalogTimeSeries` as an OpenGL polyline. The preview is **ephemeral** — it exists only in the widget, not in DataManager.
+
+#### `SynthesizerPreviewWidget`
+
+- Inherits from `QOpenGLWidget` + `QOpenGLFunctions`
+- Uses `PlottingOpenGL::SceneRenderer` for rendering and `CorePlotting::SceneBuilder` for scene construction
+- `setData(shared_ptr<AnalogTimeSeries>)` computes data bounds, builds an orthographic projection with 10% vertical padding, maps values via `TimeSeriesMapper::mapAnalogSeriesFull()` with identity layout, and uploads a single polyline batch
+- `clearData()` clears the scene and repaints
+- Non-interactive — no pan, zoom, or selection
 
 ### Registration
 
 Registered via `DataSynthesizerWidgetModule::registerTypes()` with:
 
 - **Type ID**: `"DataSynthesizerWidget"`
-- **Menu path**: View/Tools
+- **Menu path**: View/Tools (also accessible from Modules menu)
 - **Zone**: Right (both view and properties)
 - **Single instance**: `allow_multiple = false`
 - Uses `create_editor_custom` for coordinated view + properties creation
+- Connects `DataSynthesizerProperties_Widget::previewRequested` signal to `DataSynthesizerView_Widget::setPreviewData` slot
+
+## State ↔ UI Synchronization
+
+- **UI → State**: Combo/field changes call the corresponding state setter. `AutoParamWidget::parametersChanged` updates `parameter_json`.
+- **State → UI (restore)**: `fromJson()` emits all change signals. The properties widget listens to these and repopulates combos, recreates `AutoParamWidget` with stored schema, and calls `fromJson()` with stored `parameter_json`.
+- A `_restoring` guard prevents recursive updates during state restoration.
 
 ## Dependencies
 
 - `Qt6::Widgets` — UI components
+- `Qt6::OpenGL`, `Qt6::OpenGLWidgets` — OpenGL preview rendering
 - `EditorState` — state management and registration
 - `DataManager` — data storage target
 - `reflectcpp` — state serialization
+- `AutoParamWidget` — dynamic parameter form generation
+- `DataSynthesizer` — generator registry and execution
+- `ParameterSchema` — schema extraction
+- `Commands` — `SynthesizeData` command execution
+- `PlottingOpenGL` — `SceneRenderer` for GPU rendering
+- `CorePlotting` — `SceneBuilder`, `TimeSeriesMapper`, `SeriesLayout`
 
 ## See Also
 
 - [GeneratorRegistry](GeneratorRegistry.qmd) — the generator registry API
-- [ROADMAP](ROADMAP.md) — full development roadmap including Milestones 2b/2c
+- [ROADMAP](ROADMAP.md) — full development roadmap including Milestone 2c

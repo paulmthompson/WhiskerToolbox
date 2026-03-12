@@ -6,8 +6,8 @@
 |-----------|--------|------|
 | **1** — Core Library, Generators & Command | ✅ Complete | 2026-03-12 |
 | **2a** — Widget Skeleton & Registration | ✅ Complete | 2026-03-12 |
-| **2b** — State & AutoParamWidget Integration | 🔲 Not started | — |
-| **2c** — OpenGL Signal Preview | 🔲 Not started | — |
+| **2b** — State & AutoParamWidget Integration | ✅ Complete | 2026-03-12 |
+| **2c** — OpenGL Signal Preview | ✅ Complete | 2026-03-12 |
 | **3** — More AnalogTimeSeries Generators | 🔲 Not started | — |
 | **4** — DigitalEventSeries & DigitalIntervalSeries Generators | 🔲 Not started | — |
 | **5** — Spatial Data Generators | 🔲 Not started | — |
@@ -137,9 +137,19 @@ User can launch the Data Synthesizer from the View/Tools menu. Two blank panels 
 
 ---
 
-### 2b. State & AutoParamWidget Integration
+### 2b. State & AutoParamWidget Integration ✅ Complete (2026-03-12)
 
 **Goal**: Populate `DataSynthesizerState` with the fields needed for generator selection and parameter editing. Wire the properties widget to use `AutoParamWidget` for rendering generator-specific parameter forms.
+
+Milestone 2b delivered:
+
+- **State expansion**: `DataSynthesizerStateData` now stores `output_type`, `generator_name`, `parameter_json`, `output_key`, and `time_key`. `DataSynthesizerState` exposes getters/setters with `markDirty()` + Qt signals for each field.
+- **Properties widget**: Fully functional UI with output type combo, generator combo, `AutoParamWidget` for parameter editing, output key field, and Generate button. Auto-populates from `GeneratorRegistry`.
+- **`GeneratorRegistry::listOutputTypes()`**: New method added to enumerate registered output types.
+- **Generate action**: Executes `SynthesizeData` command via `CommandContext`, storing results in DataManager.
+- **State restore**: `fromJson()` emits all change signals; properties widget reconnects and restores UI from persisted state with `_restoring` guard to prevent recursive updates.
+- **CMake**: `DataSynthesizer_Widget` links `AutoParamWidget`, `DataSynthesizer`, `ParameterSchema`, `Commands`. Main executable links `DataSynthesizer` with `--whole-archive` for static generator registration.
+- **MainWindow**: Added `actionData_Synthesizer` menu action in Modules menu, connected to `openDataSynthesizerWidget()` slot.
 
 #### State Expansion
 
@@ -205,9 +215,17 @@ struct DataSynthesizerStateData {
 
 ---
 
-### 2c. OpenGL Signal Preview
+### 2c. OpenGL Signal Preview ✅ Complete (2026-03-12)
 
 **Goal**: Embed a lightweight `QOpenGLWidget` in the view panel that renders the generated `AnalogTimeSeries` using the `CorePlotting` + `PlottingOpenGL` rendering pipeline. Users click "Preview" to see the signal before committing it to DataManager.
+
+Milestone 2c delivered:
+
+- **`SynthesizerPreviewWidget`** (`UI/SynthesizerPreviewWidget.hpp/cpp`): `QOpenGLWidget` subclass using `PlottingOpenGL::SceneRenderer`. Implements `setData(shared_ptr<AnalogTimeSeries>)` which computes data bounds (with 10% vertical padding), builds an orthographic projection via `glm::ortho`, maps values through `TimeSeriesMapper::mapAnalogSeriesFull()` with identity `SeriesLayout`, and uploads a single polyline batch via `SceneBuilder`. Non-interactive (no pan/zoom/selection).
+- **View widget integration**: `DataSynthesizerView_Widget` replaced its placeholder label with `SynthesizerPreviewWidget`. Exposes `setPreviewData(shared_ptr<AnalogTimeSeries>)` public slot.
+- **Preview button**: `DataSynthesizerProperties_Widget` gained a "Preview" `QPushButton` that calls `GeneratorRegistry::generate()` directly (ephemeral, no DataManager involvement). If the result is an `AnalogTimeSeries`, emits `previewRequested(series)` signal.
+- **Signal wiring**: Registration code connects `DataSynthesizerProperties_Widget::previewRequested` → `DataSynthesizerView_Widget::setPreviewData` so the two widgets remain decoupled.
+- **CMake**: `DataSynthesizer_Widget` now links `PlottingOpenGL` and `CorePlotting` (which transitively provide `Qt6::OpenGL`, `Qt6::OpenGLWidgets`, `glm::glm`).
 
 #### Architecture
 
@@ -549,16 +567,16 @@ src/
     └── DataSynthesizer_Widget/               # Milestone 2
         ├── CMakeLists.txt                       # 2a
         ├── DataSynthesizerWidgetRegistration.hpp # 2a
-        ├── DataSynthesizerWidgetRegistration.cpp # 2a
+        ├── DataSynthesizerWidgetRegistration.cpp # 2a, 2c (signal wiring)
         ├── Core/
         │   ├── DataSynthesizerStateData.hpp      # 2a (minimal), 2b (expanded)
         │   ├── DataSynthesizerState.hpp           # 2a (minimal), 2b (expanded)
         │   └── DataSynthesizerState.cpp           # 2a (minimal), 2b (expanded)
         └── UI/
-            ├── DataSynthesizerProperties_Widget.hpp  # 2a (stub), 2b (functional)
-            ├── DataSynthesizerProperties_Widget.cpp  # 2a (stub), 2b (functional)
-            ├── DataSynthesizerView_Widget.hpp         # 2a (stub), 2c (OpenGL)
-            ├── DataSynthesizerView_Widget.cpp         # 2a (stub), 2c (OpenGL)
+            ├── DataSynthesizerProperties_Widget.hpp  # 2a (stub), 2b (functional), 2c (+Preview)
+            ├── DataSynthesizerProperties_Widget.cpp  # 2a (stub), 2b (functional), 2c (+Preview)
+            ├── DataSynthesizerView_Widget.hpp         # 2a (stub), 2c (hosts preview)
+            ├── DataSynthesizerView_Widget.cpp         # 2a (stub), 2c (hosts preview)
             ├── SynthesizerPreviewWidget.hpp           # 2c
             └── SynthesizerPreviewWidget.cpp           # 2c
 

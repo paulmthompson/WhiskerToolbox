@@ -97,6 +97,7 @@
     <addaction name="actionZone_Layout_Manager"/>
     <addaction name="actionTest_Widget"/>
     <addaction name="actionPython_Console"/>
+    <addaction name="actionData_Synthesizer"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -330,6 +331,11 @@
   <action name="actionTriage_Session">
    <property name="text">
     <string>Triage Session</string>
+   </property>
+  </action>
+  <action name="actionData_Synthesizer">
+   <property name="text">
+    <string>Data Synthesizer</string>
    </property>
   </action>
  </widget>

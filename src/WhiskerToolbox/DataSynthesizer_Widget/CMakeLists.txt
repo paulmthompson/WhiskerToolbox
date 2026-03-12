@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets OpenGL OpenGLWidgets)
 find_package(reflectcpp CONFIG REQUIRED)
 
 add_library(DataSynthesizer_Widget STATIC
@@ -11,6 +11,8 @@ add_library(DataSynthesizer_Widget STATIC
     UI/DataSynthesizerProperties_Widget.cpp
     UI/DataSynthesizerView_Widget.hpp
     UI/DataSynthesizerView_Widget.cpp
+    UI/SynthesizerPreviewWidget.hpp
+    UI/SynthesizerPreviewWidget.cpp
 )
 
 target_link_libraries(DataSynthesizer_Widget
@@ -20,6 +22,13 @@ target_link_libraries(DataSynthesizer_Widget
         EditorState
         DataManager
         reflectcpp::reflectcpp
+    PRIVATE
+        AutoParamWidget
+        WhiskerToolbox::DataSynthesizer
+        WhiskerToolbox::ParameterSchema
+        Commands
+        PlottingOpenGL
+        CorePlotting
 )
 
 target_include_directories(DataSynthesizer_Widget PUBLIC

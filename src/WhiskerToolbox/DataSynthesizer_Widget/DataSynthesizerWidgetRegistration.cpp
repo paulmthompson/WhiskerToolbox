@@ -49,7 +49,11 @@ void registerTypes(EditorRegistry * registry, std::shared_ptr<DataManager> const
                                 auto state = std::make_shared<DataSynthesizerState>();
 
                                 auto * view = new DataSynthesizerView_Widget(state, dm);
-                                auto * props = new DataSynthesizerProperties_Widget(state);
+                                auto * props = new DataSynthesizerProperties_Widget(state, dm);
+
+                                // Connect preview: properties "Preview" button → view OpenGL widget
+                                QObject::connect(props, &DataSynthesizerProperties_Widget::previewRequested,
+                                                 view, &DataSynthesizerView_Widget::setPreviewData);
 
                                 reg->registerState(state);
 

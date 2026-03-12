@@ -72,6 +72,16 @@ std::vector<std::string> GeneratorRegistry::listAllGenerators() const {
     return names;
 }
 
+std::vector<std::string> GeneratorRegistry::listOutputTypes() const {
+    std::vector<std::string> types;
+    types.reserve(output_type_index_.size());
+    for (auto const & [type, _]: output_type_index_) {
+        types.push_back(type);
+    }
+    std::sort(types.begin(), types.end());
+    return types;
+}
+
 std::optional<Transforms::V2::ParameterSchema> GeneratorRegistry::getSchema(
         std::string const & name) const {
     auto const it = entries_.find(name);

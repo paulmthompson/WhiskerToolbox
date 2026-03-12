@@ -78,6 +78,11 @@ public:
     [[nodiscard]] std::vector<std::string> listAllGenerators() const;
 
     /**
+     * @brief List all unique output types that have at least one registered generator.
+     */
+    [[nodiscard]] std::vector<std::string> listOutputTypes() const;
+
+    /**
      * @brief Get the parameter schema for a generator.
      *
      * @param name The generator name

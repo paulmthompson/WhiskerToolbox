@@ -24,6 +24,15 @@
 struct DataSynthesizerStateData {
     std::string instance_id;                      ///< Unique instance ID (preserved across serialization)
     std::string display_name = "Data Synthesizer";///< User-visible name
+
+    // Generator selection
+    std::string output_type;   ///< e.g. "AnalogTimeSeries", "DigitalEventSeries"
+    std::string generator_name;///< Registry key (e.g. "SineWave")
+    std::string parameter_json;///< Current params as JSON string
+
+    // Output configuration
+    std::string output_key;       ///< DataManager key for generated data
+    std::string time_key = "time";///< TimeFrame association
 };
 
 #endif// DATA_SYNTHESIZER_STATE_DATA_HPP

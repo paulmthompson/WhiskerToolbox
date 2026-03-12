@@ -5,7 +5,8 @@
 
 #include "DataSynthesizerView_Widget.hpp"
 
-#include <QLabel>
+#include "SynthesizerPreviewWidget.hpp"
+
 #include <QVBoxLayout>
 
 DataSynthesizerView_Widget::DataSynthesizerView_Widget(
@@ -16,10 +17,18 @@ DataSynthesizerView_Widget::DataSynthesizerView_Widget(
       _state(std::move(state)),
       _data_manager(std::move(data_manager)) {
     auto * layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
 
-    auto * label = new QLabel(QStringLiteral("Data Synthesizer \u2014 Preview"), this);
-    label->setAlignment(Qt::AlignCenter);
-    layout->addWidget(label);
+    _preview_widget = new SynthesizerPreviewWidget(this);
+    layout->addWidget(_preview_widget);
+}
 
-    layout->addStretch();
+void DataSynthesizerView_Widget::setPreviewData(std::shared_ptr<AnalogTimeSeries> series) {
+    if (_preview_widget) {
+        if (series) {
+            _preview_widget->setData(std::move(series));
+        } else {
+            _preview_widget->clearData();
+        }
+    }
 }

@@ -17,7 +17,7 @@ class QMenu;
 namespace StateManagement {
 class StateManager;
 class WorkspaceData;
-}
+}// namespace StateManagement
 class EditorCreationController;
 class EditorRegistry;
 class GroupManager;
@@ -120,9 +120,9 @@ private:
     std::shared_ptr<TimeScrollBarState> _time_scrollbar_state;
 
     std::map<std::string, std::unique_ptr<QWidget>> _widgets;
-    
+
     // Counter for generating unique media widget IDs
-    int _media_widget_counter = 1; // Start at 1 since "main" is the initial one
+    int _media_widget_counter = 1;// Start at 1 since "main" is the initial one
 
     void _createActions();
     void _buildInitialLayout();
@@ -200,5 +200,6 @@ private slots:
     void openPythonWidget();
     void openTransformsV2Widget();
     void openTriageSessionWidget();
+    void openDataSynthesizerWidget();
 };
 #endif// MAINWINDOW_HPP

@@ -2,8 +2,7 @@
  * @file DataSynthesizerState.hpp
  * @brief EditorState subclass for the DataSynthesizer widget
  *
- * Minimal state for Milestone 2a — tracks only instance_id and display_name.
- * Will be expanded in Milestone 2b with generator selection fields.
+ * Manages generator selection, parameter editing, and output configuration.
  *
  * @see DataSynthesizerStateData for the serializable POD struct
  */
@@ -22,8 +21,8 @@
 /**
  * @brief State class for DataSynthesizer widget
  *
- * Manages the serializable state of the DataSynthesizer widget.
- * Currently minimal (Milestone 2a) — stores only instance identity.
+ * Manages the serializable state of the DataSynthesizer widget,
+ * including generator selection, parameters, and output configuration.
  */
 class DataSynthesizerState : public EditorState {
     Q_OBJECT
@@ -38,6 +37,29 @@ public:
 
     [[nodiscard]] std::string toJson() const override;
     bool fromJson(std::string const & json) override;
+
+    // --- Generator selection ---
+    [[nodiscard]] std::string const & outputType() const;
+    void setOutputType(std::string const & type);
+
+    [[nodiscard]] std::string const & generatorName() const;
+    void setGeneratorName(std::string const & name);
+
+    [[nodiscard]] std::string const & parameterJson() const;
+    void setParameterJson(std::string const & json);
+
+    // --- Output configuration ---
+    [[nodiscard]] std::string const & outputKey() const;
+    void setOutputKey(std::string const & key);
+
+    [[nodiscard]] std::string const & timeKey() const;
+    void setTimeKey(std::string const & key);
+
+signals:
+    void outputTypeChanged(std::string const & type);
+    void generatorNameChanged(std::string const & name);
+    void parameterJsonChanged(std::string const & json);
+    void outputKeyChanged(std::string const & key);
 
 private:
     DataSynthesizerStateData _data;
