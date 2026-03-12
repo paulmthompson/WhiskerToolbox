@@ -1,8 +1,8 @@
 #include "TensorColumnBuilders.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Tensors/storage/LazyColumnTensorStorage.hpp"
 #include "DataManager/Tensors/TensorData.hpp"

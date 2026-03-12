@@ -5,7 +5,7 @@
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>

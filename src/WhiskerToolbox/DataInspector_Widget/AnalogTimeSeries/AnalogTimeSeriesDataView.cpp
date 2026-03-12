@@ -1,7 +1,7 @@
 #include "AnalogTimeSeriesDataView.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 
 #include <QLabel>
 #include <QVBoxLayout>

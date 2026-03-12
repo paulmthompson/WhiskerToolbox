@@ -11,7 +11,7 @@
 #include "Commands/Core/CommandFactory.hpp"
 #include "Commands/IO/SaveData.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include "IO/core/LoaderRegistration.hpp"

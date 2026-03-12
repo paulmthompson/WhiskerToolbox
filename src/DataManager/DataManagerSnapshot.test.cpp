@@ -5,7 +5,7 @@
 
 #include "DataManager/DataManagerSnapshot.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/CommandDescriptor.hpp"
 #include "Commands/Core/CommandRecorder.hpp"

@@ -15,7 +15,7 @@
 #include "Core/ScatterAxisSource.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/Tensors/TensorData.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"

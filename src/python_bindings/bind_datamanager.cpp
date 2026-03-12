@@ -3,8 +3,8 @@
 #include <pybind11/stl.h>
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"

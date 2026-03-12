@@ -8,7 +8,7 @@
 #include "CorePlotting/LineBatch/LineBatchBuilder.hpp"
 #include "CorePlotting/LineBatch/LineBatchData.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "GatherResult/GatherResult.hpp"

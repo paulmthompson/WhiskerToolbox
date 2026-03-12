@@ -52,6 +52,9 @@ add_executable(test_data_manager
         test_time_entity.cpp
         test_time_entity_groups.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/AnalogTimeSeries/Analog_Time_Series.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/AnalogTimeSeries/utils/statistics.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
 

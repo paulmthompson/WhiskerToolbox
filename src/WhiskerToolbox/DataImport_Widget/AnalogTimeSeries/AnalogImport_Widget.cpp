@@ -3,7 +3,7 @@
 #include "ui_AnalogImport_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 #include "DataManager/IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
 #include "DataImportTypeRegistry.hpp"

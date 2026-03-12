@@ -13,7 +13,7 @@
 #include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 

@@ -5,7 +5,7 @@
 #include "LineBatchBuilder.hpp"
 
 #include "GatherResult/GatherResult.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 
 #include <algorithm>
