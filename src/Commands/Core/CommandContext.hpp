@@ -15,6 +15,8 @@ class DataManager;
 
 namespace commands {
 
+class CommandRecorder;
+
 /// @brief Runtime context provided to every command at execution time.
 ///        This is not serialized — it is the environment that commands run in.
 struct CommandContext {
@@ -26,6 +28,10 @@ struct CommandContext {
 
     /// Optional progress reporting
     std::function<void(float)> on_progress;
+
+    /// Optional recorder for capturing executed command descriptors.
+    /// Used by executeSequence() as a fallback when no explicit recorder is passed.
+    CommandRecorder * recorder = nullptr;
 };
 
 }// namespace commands

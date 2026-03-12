@@ -1,0 +1,104 @@
+---
+title: "SynthesizeData Command"
+description: "Command that generates synthetic data using the DataSynthesizer registry and stores it in DataManager"
+---
+
+## Overview
+
+`SynthesizeData` is a non-undoable command that generates synthetic data using a registered
+generator from the `DataSynthesizer` module and stores the result in `DataManager`. This
+enables data synthesis to participate in command sequences, pipelines, and scripted workflows.
+
+**Source files:**
+
+- `src/Commands/SynthesizeData.hpp` / `.cpp`
+- `src/Commands/SynthesizeData.test.cpp`
+
+All code lives in the `commands` namespace with no Qt dependency.
+
+## Parameters
+
+```cpp
+struct SynthesizeDataParams {
+    std::string output_key;      // DataManager key for the result
+    std::string generator_name;  // Registry lookup (e.g., "SineWave")
+    std::string output_type;     // Data type hint (e.g., "AnalogTimeSeries")
+    rfl::Generic parameters;     // Generator-specific params (forwarded as JSON)
+    std::string time_key = "time"; // TimeFrame association
+};
+```
+
+| Field | Description |
+|-------|-------------|
+| `output_key` | Key under which the generated data will be stored in `DataManager` |
+| `generator_name` | Name of a registered generator (e.g., `"SineWave"`, `"GaussianNoise"`) |
+| `output_type` | Data type string for metadata/filtering (e.g., `"AnalogTimeSeries"`) |
+| `parameters` | Generator-specific parameters as a JSON object, forwarded to the generator |
+| `time_key` | TimeFrame key to associate with the generated data (defaults to `"time"`) |
+
+## Supported Generators
+
+Any generator registered in the `GeneratorRegistry`. As of Milestone 1b:
+
+- `SineWave` — Periodic sine wave
+- `SquareWave` — Periodic square wave with configurable duty cycle
+- `TriangleWave` — Periodic triangle wave
+- `GaussianNoise` — i.i.d. Gaussian noise (deterministic with seed)
+- `UniformNoise` — i.i.d. uniform noise (deterministic with seed)
+
+New generators are automatically available without modifying this command.
+
+## Undo
+
+Not undoable (`isUndoable()` returns `false`).
+
+## Execution Flow
+
+1. Look up the generator by `generator_name` in `GeneratorRegistry::instance()`.
+2. If the generator is not found, return `CommandResult::error()`.
+3. Serialize the `parameters` field to a JSON string.
+4. Call `GeneratorRegistry::generate(name, params_json)`.
+5. If generation fails, return `CommandResult::error()`.
+6. Store the result via `DataManager::setData(output_key, variant, TimeKey(time_key))`.
+7. Return `CommandResult::ok({output_key})`.
+
+## Example JSON
+
+```json
+{
+    "command_name": "SynthesizeData",
+    "parameters": {
+        "output_key": "test_sine",
+        "generator_name": "SineWave",
+        "output_type": "AnalogTimeSeries",
+        "parameters": {
+            "num_samples": 1000,
+            "amplitude": 2.0,
+            "frequency": 0.01,
+            "phase": 0.0,
+            "dc_offset": 0.0
+        },
+        "time_key": "time"
+    }
+}
+```
+
+## Linker Requirements
+
+Because DataSynthesizer generators use static registration (RAII objects in anonymous
+namespaces), any binary that executes `SynthesizeData` must link the `DataSynthesizer`
+library with `--whole-archive` (Linux), `-force_load` (macOS), or `/WHOLEARCHIVE` (MSVC).
+Without this, the linker discards "unused" translation units and generators will not be
+registered at runtime.
+
+## Testing
+
+Tests are in `src/Commands/SynthesizeData.test.cpp` and exercise:
+
+- Factory creation from JSON and `rfl::Generic`
+- Execution with a SineWave generator
+- Determinism: same seed produces identical output
+- Error handling for unknown generators
+- Serialization round-trip (`toJson` → `createCommandFromJson`)
+- Custom `time_key` propagation
+- Introspection (`getAvailableCommands`, `isKnownCommandName`)

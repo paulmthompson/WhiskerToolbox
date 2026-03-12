@@ -76,6 +76,7 @@
 #include "StateManagement/WorkspaceData.hpp"
 #include "StateManagement/WorkspaceManager.hpp"
 
+#include "Commands/Core/CommandRecorder.hpp"
 #include "utils/DataLoadUtils.hpp"
 
 #include <QCloseEvent>
@@ -111,7 +112,8 @@ MainWindow::MainWindow(QWidget * parent)
       _editor_registry{std::make_unique<EditorRegistry>(this)},
       _zone_manager(nullptr),
       _state_manager{std::make_unique<StateManagement::StateManager>(this)},
-      _group_manager(nullptr)
+      _group_manager(nullptr),
+      _command_recorder{std::make_unique<commands::CommandRecorder>()}
 
 {
     ui->setupUi(this);
@@ -518,7 +520,7 @@ void MainWindow::_loadJSONConfig() {
     auto progress_callback = [&progress](int current, int total, std::string const & message) -> bool {
         // Update progress bar
         if (total > 0) {
-            int percent = (current * 100) / total;
+            int const percent = (current * 100) / total;
             progress.setValue(percent);
         }
 
@@ -680,7 +682,7 @@ ads::CDockWidget * MainWindow::findDockWidget(std::string const & key) const {
 
 bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
     if (event->type() == QEvent::KeyPress) {
-        QKeyEvent * keyEvent = static_cast<QKeyEvent *>(event);
+        auto * keyEvent = dynamic_cast<QKeyEvent *>(event);
 
         // Handle spacebar for play/pause (unless in text input widget)
         if (keyEvent->key() == Qt::Key_Space && keyEvent->modifiers() == Qt::NoModifier) {
@@ -1039,7 +1041,7 @@ void MainWindow::openEditor(QString const & type_id) {
             // Find the existing dock widget and show it
             // The dock widget title should contain the display name
             for (auto const & state: existing) {
-                EditorLib::EditorInstanceId instance_id(state->getInstanceId());
+                EditorLib::EditorInstanceId const instance_id(state->getInstanceId());
 
                 // Search all dock widgets for one containing this state's widget
                 for (auto * dock: _m_DockManager->dockWidgetsMap()) {
@@ -1079,7 +1081,7 @@ void MainWindow::openEditor(QString const & type_id) {
         return;
     }
 
-    EditorLib::EditorInstanceId instance_id(placed.state->getInstanceId());
+    EditorLib::EditorInstanceId const instance_id(placed.state->getInstanceId());
 
     // Set this editor as active so PropertiesHost shows its properties
     _editor_registry->selectionContext()->setActiveEditor(instance_id);
@@ -1579,7 +1581,7 @@ void MainWindow::_connectProvenanceTracking() {
     // Connect to EditorRegistry's editorCreated signal to wire up
     // provenance tracking for new widget instances
     connect(_editor_registry.get(), &EditorRegistry::editorCreated,
-            this, [this](EditorInstanceId instance_id, EditorTypeId type_id) {
+            this, [this](const EditorInstanceId& instance_id, const EditorTypeId& type_id) {
                 Q_UNUSED(instance_id);
 
                 // Find the dock widget for this instance and connect signals

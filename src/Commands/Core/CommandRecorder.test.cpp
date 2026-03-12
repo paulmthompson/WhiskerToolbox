@@ -8,9 +8,9 @@
 #include "Commands/Core/CommandDescriptor.hpp"
 #include "Commands/Core/CommandFactory.hpp"
 #include "Commands/Core/ICommand.hpp"
-#include "DataManager/Commands/MutationGuard.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/Core/VariableSubstitution.hpp"
+#include "DataManager/Commands/MutationGuard.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -206,6 +206,67 @@ TEST_CASE("executeSequence without recorder still works (nullptr)",
     // Pass nullptr explicitly — should behave exactly as before
     auto result = executeSequence(seq, ctx, true, nullptr);
     REQUIRE(result.result.success);
+}
+
+TEST_CASE("executeSequence uses ctx.recorder as fallback when no explicit recorder is passed",
+          "[commands][recorder]") {
+    auto dm = std::make_shared<DataManager>();
+    dm->setData<DigitalIntervalSeries>("intervals", TimeKey("time"));
+
+    CommandSequenceDescriptor seq;
+    CommandDescriptor desc;
+    desc.command_name = "AddInterval";
+    auto const params_json = R"({
+        "interval_key": "intervals",
+        "start_frame": 10,
+        "end_frame": 20,
+        "create_if_missing": true
+    })";
+    desc.parameters = rfl::json::read<rfl::Generic>(params_json).value();
+    seq.commands.push_back(desc);
+
+    CommandRecorder recorder;
+    CommandContext ctx;
+    ctx.data_manager = dm;
+    ctx.recorder = &recorder;
+
+    // No explicit recorder parameter — should fall back to ctx.recorder
+    auto result = executeSequence(seq, ctx);
+    INFO("Error: " << result.result.error_message);
+    REQUIRE(result.result.success);
+    REQUIRE(recorder.size() == 1);
+    REQUIRE(recorder.trace()[0].command_name == "AddInterval");
+}
+
+TEST_CASE("executeSequence explicit recorder overrides ctx.recorder",
+          "[commands][recorder]") {
+    auto dm = std::make_shared<DataManager>();
+    dm->setData<DigitalIntervalSeries>("intervals", TimeKey("time"));
+
+    CommandSequenceDescriptor seq;
+    CommandDescriptor desc;
+    desc.command_name = "AddInterval";
+    auto const params_json = R"({
+        "interval_key": "intervals",
+        "start_frame": 10,
+        "end_frame": 20,
+        "create_if_missing": true
+    })";
+    desc.parameters = rfl::json::read<rfl::Generic>(params_json).value();
+    seq.commands.push_back(desc);
+
+    CommandRecorder ctx_recorder;
+    CommandRecorder explicit_recorder;
+    CommandContext ctx;
+    ctx.data_manager = dm;
+    ctx.recorder = &ctx_recorder;
+
+    // Pass explicit recorder — should override ctx.recorder
+    auto result = executeSequence(seq, ctx, true, &explicit_recorder);
+    INFO("Error: " << result.result.error_message);
+    REQUIRE(result.result.success);
+    REQUIRE(explicit_recorder.size() == 1);
+    REQUIRE(ctx_recorder.empty());
 }
 
 // =============================================================================

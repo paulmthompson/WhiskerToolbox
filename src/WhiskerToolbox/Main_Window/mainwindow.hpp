@@ -14,6 +14,10 @@
 class DataManager;
 class QMenu;
 
+namespace commands {
+class CommandRecorder;
+}// namespace commands
+
 namespace StateManagement {
 class StateManager;
 class WorkspaceData;
@@ -80,6 +84,12 @@ public:
     StateManagement::StateManager * stateManager() const { return _state_manager.get(); }
 
     /**
+     * @brief Get the global command recorder for capturing executed commands
+     * @return Non-owning pointer to the CommandRecorder
+     */
+    commands::CommandRecorder * commandRecorder() const { return _command_recorder.get(); }
+
+    /**
      * @brief Get the editor registry for state and type management
      * 
      * EditorRegistry provides:
@@ -114,6 +124,7 @@ private:
     std::unique_ptr<StateManagement::StateManager> _state_manager;
     std::unique_ptr<GroupManager> _group_manager;
     std::unique_ptr<SplitButtonHandler> _split_button_handler;
+    std::unique_ptr<commands::CommandRecorder> _command_recorder;
 
     // Main widgets created programmatically (not in UI file)
     TimeScrollBar * _time_scrollbar;
