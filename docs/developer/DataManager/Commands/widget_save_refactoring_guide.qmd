@@ -101,8 +101,8 @@ The following items are removed from the header:
 **In the `.cpp` file**, add the command headers:
 
 ```cpp
-#include "DataManager/Commands/CommandContext.hpp"
-#include "DataManager/Commands/SaveData.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/IO/SaveData.hpp"
 
 #include <rfl/json.hpp>
 #include <filesystem>
@@ -327,7 +327,7 @@ TEST_CASE("SaveData round-trips DigitalEventSeries through CSV",
 |------|--------|
 | `src/WhiskerToolbox/DataInspector_Widget/DigitalEventSeries/DigitalEventSeriesInspector.hpp` | Removed format-specific include, variant type alias, SaverType enum, direct-save helper declarations, and CSV slot declaration |
 | `src/WhiskerToolbox/DataInspector_Widget/DigitalEventSeries/DigitalEventSeriesInspector.cpp` | Replaced direct CSV save with SaveData command execution via lambda; removed three old methods |
-| `src/DataManager/Commands/SaveDataDigitalEvent.test.cpp` | New test file: 5 test cases covering save, round-trip, format options, factory, and error handling |
+| `src/Commands/IO/SaveDataDigitalEvent.test.cpp` | New test file: 5 test cases covering save, round-trip, format options, factory, and error handling |
 | `tests/DataManager/CMakeLists.txt` | Added new test file to build |
 
 ## Checklist for Other Widgets

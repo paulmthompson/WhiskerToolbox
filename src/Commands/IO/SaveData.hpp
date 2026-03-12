@@ -6,8 +6,8 @@
 #ifndef SAVE_DATA_COMMAND_HPP
 #define SAVE_DATA_COMMAND_HPP
 
-#include "CommandResult.hpp"
-#include "ICommand.hpp"
+#include "Core/CommandResult.hpp"
+#include "Core/ICommand.hpp"
 
 #include <optional>
 #include <string>

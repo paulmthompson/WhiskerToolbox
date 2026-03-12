@@ -6,9 +6,9 @@
 #ifndef FOR_EACH_KEY_COMMAND_HPP
 #define FOR_EACH_KEY_COMMAND_HPP
 
-#include "CommandDescriptor.hpp"
-#include "CommandResult.hpp"
-#include "ICommand.hpp"
+#include "Core/CommandDescriptor.hpp"
+#include "Core/CommandResult.hpp"
+#include "Core/ICommand.hpp"
 
 #include <memory>
 #include <string>

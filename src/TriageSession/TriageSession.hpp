@@ -10,9 +10,9 @@
 #ifndef TRIAGE_SESSION_HPP
 #define TRIAGE_SESSION_HPP
 
-#include "Commands/CommandDescriptor.hpp"
-#include "Commands/CommandResult.hpp"
-#include "Commands/ICommand.hpp"
+#include "Commands/Core/CommandDescriptor.hpp"
+#include "Commands/Core/CommandResult.hpp"
+#include "Commands/Core/ICommand.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <memory>

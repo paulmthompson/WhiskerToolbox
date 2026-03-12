@@ -11,8 +11,8 @@ in command sequences and triage pipelines.
 
 **Source files:**
 
-- `src/DataManager/Commands/SaveData.hpp` / `.cpp`
-- `src/DataManager/Commands/SaveData.test.cpp`
+- `src/Commands/IO/SaveData.hpp` / `.cpp`
+- `src/Commands/IO/SaveData.test.cpp`
 
 All code lives in the `commands` namespace with no Qt dependency.
 

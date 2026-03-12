@@ -6,7 +6,7 @@
 #ifndef GUIDED_PIPELINE_EDITOR_HPP
 #define GUIDED_PIPELINE_EDITOR_HPP
 
-#include "Commands/CommandDescriptor.hpp"
+#include "Commands/Core/CommandDescriptor.hpp"
 
 #include <QWidget>
 

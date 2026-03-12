@@ -7,18 +7,18 @@ description: "First four command implementations: MoveByTimeRange, CopyByTimeRan
 
 This page documents the first four concrete `ICommand` implementations for data mutation
 and meta operations. Each command has a reflect-cpp–serializable parameter struct and lives
-in `src/DataManager/Commands/`. All commands are registered in the centralized
+in `src/Commands/`. All commands are registered in the centralized
 `createCommand()` factory.
 
 For the persistence command (`SaveData`), see [SaveData Command](save_data.qmd).
 
 **Source files:**
 
-- `src/DataManager/Commands/MoveByTimeRange.hpp` / `.cpp`
-- `src/DataManager/Commands/CopyByTimeRange.hpp` / `.cpp`
-- `src/DataManager/Commands/AddInterval.hpp` / `.cpp`
-- `src/DataManager/Commands/ForEachKey.hpp` / `.cpp`
-- `src/DataManager/Commands/Commands.test.cpp` — Unit tests
+- `src/Commands/MoveByTimeRange.hpp` / `.cpp`
+- `src/Commands/CopyByTimeRange.hpp` / `.cpp`
+- `src/Commands/AddInterval.hpp` / `.cpp`
+- `src/Commands/ForEachKey.hpp` / `.cpp`
+- `src/Commands/Commands.test.cpp` — Unit tests
 
 All code lives in the `commands` namespace with no Qt dependency.
 

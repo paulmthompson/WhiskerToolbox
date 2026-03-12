@@ -4,8 +4,8 @@
  */
 
 #include "Commands/AddInterval.hpp"
-#include "Commands/CommandContext.hpp"
-#include "Commands/CommandFactory.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/CommandFactory.hpp"
 #include "Commands/CopyByTimeRange.hpp"
 #include "Commands/ForEachKey.hpp"
 #include "Commands/MoveByTimeRange.hpp"

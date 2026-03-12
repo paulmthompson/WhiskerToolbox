@@ -3,14 +3,14 @@
  * @brief Unit tests for CommandRecorder and MutationGuard
  */
 
-#include "Commands/CommandRecorder.hpp"
-#include "Commands/CommandContext.hpp"
-#include "Commands/CommandDescriptor.hpp"
-#include "Commands/CommandFactory.hpp"
-#include "Commands/ICommand.hpp"
+#include "Commands/Core/CommandRecorder.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/CommandDescriptor.hpp"
+#include "Commands/Core/CommandFactory.hpp"
+#include "Commands/Core/ICommand.hpp"
 #include "DataManager/Commands/MutationGuard.hpp"
-#include "Commands/SequenceExecution.hpp"
-#include "Commands/VariableSubstitution.hpp"
+#include "Commands/Core/SequenceExecution.hpp"
+#include "Commands/Core/VariableSubstitution.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"

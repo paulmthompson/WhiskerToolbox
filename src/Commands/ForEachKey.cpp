@@ -5,9 +5,9 @@
 
 #include "ForEachKey.hpp"
 
-#include "CommandContext.hpp"
-#include "CommandFactory.hpp"
-#include "VariableSubstitution.hpp"
+#include "Core/CommandContext.hpp"
+#include "Core/CommandFactory.hpp"
+#include "Core/VariableSubstitution.hpp"
 
 #include <algorithm>
 

@@ -3,9 +3,9 @@
  * @brief Unit tests for command sequence validation
  */
 
-#include "Commands/Validation.hpp"
-#include "Commands/CommandContext.hpp"
-#include "Commands/CommandDescriptor.hpp"
+#include "Commands/Core/Validation.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/CommandDescriptor.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"

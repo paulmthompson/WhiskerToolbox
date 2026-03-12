@@ -12,9 +12,9 @@ no side effects, designed to be used by commands such as `MoveByTimeRange` and
 
 **Source files:**
 
-- `src/DataManager/Commands/GetEntityIdsInRange.hpp` — Template + declarations
-- `src/DataManager/Commands/GetEntityIdsInRange.cpp` — Non-template implementations
-- `src/DataManager/Commands/GetEntityIdsInRange.test.cpp` — Unit tests
+- `src/Commands/GetEntityIdsInRange.hpp` — Template + declarations
+- `src/Commands/GetEntityIdsInRange.cpp` — Non-template implementations
+- `src/Commands/GetEntityIdsInRange.test.cpp` — Unit tests
 
 All code lives in the `commands` namespace with no Qt dependency.
 

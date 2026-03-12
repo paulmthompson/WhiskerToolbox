@@ -11,11 +11,11 @@ and command consumers depend on.
 
 **Source files:**
 
-- `src/DataManager/Commands/CommandResult.hpp` — Result type for command execution
-- `src/DataManager/Commands/CommandContext.hpp` — Runtime context provided to commands
-- `src/DataManager/Commands/CommandDescriptor.hpp` — JSON-serializable command descriptors
-- `src/DataManager/Commands/ICommand.hpp` — Abstract base class for all commands
-- `src/DataManager/Commands/CommandFactory.hpp` / `.cpp` — Factory function mapping names to commands
+- `src/Commands/Core/CommandResult.hpp` — Result type for command execution
+- `src/Commands/Core/CommandContext.hpp` — Runtime context provided to commands
+- `src/Commands/Core/CommandDescriptor.hpp` — JSON-serializable command descriptors
+- `src/Commands/Core/ICommand.hpp` — Abstract base class for all commands
+- `src/Commands/Core/CommandFactory.hpp` / `.cpp` — Factory function mapping names to commands
 
 All types live in the `commands` namespace and have no Qt dependency.
 
@@ -110,7 +110,7 @@ See the [design rationale](index.qmd#why-not-a-static-registry) for details.
 
 ## Tests
 
-Test file: `src/DataManager/Commands/CommandFactory.test.cpp`
+Test file: `src/Commands/Core/CommandFactory.test.cpp`
 
 Tests cover:
 

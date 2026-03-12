@@ -5,7 +5,7 @@
 
 #include "AddInterval.hpp"
 
-#include "CommandContext.hpp"
+#include "Core/CommandContext.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"

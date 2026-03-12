@@ -4,8 +4,8 @@
 #include "PointTableView.hpp"
 
 #include "DataManager.hpp"
-#include "Commands/CommandContext.hpp"
-#include "Commands/SaveData.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/IO/SaveData.hpp"
 #include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"

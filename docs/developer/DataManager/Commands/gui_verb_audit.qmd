@@ -197,8 +197,8 @@ Once a command exists for a verb:
    }
    ```
 
-3. **Commands live in `src/DataManager/Commands/`** — All command classes and their params
-   structs are defined there. The widget only needs to include `CommandFactory.hpp` and the
+3. **Commands live in `src/Commands/`** — All command classes and their params
+   structs are defined there. The widget only needs to include `Commands/Core/CommandFactory.hpp` and the
    relevant params header.
 
 4. **Widget does NOT include `ICommand.hpp` subclass headers directly** — It uses the factory
@@ -222,25 +222,34 @@ After refactoring (Phase D), create a golden trace test:
 ### Organization Summary
 
 ```
+src/Commands/
+├── CMakeLists.txt
+├── Core/                          ← framework infrastructure
+│   ├── ICommand.hpp               ← interface
+│   ├── CommandFactory.hpp/.cpp    ← factory + getAvailableCommands()
+│   ├── CommandContext.hpp         ← runtime context
+│   ├── CommandRecorder.hpp/.cpp   ← trace recording
+│   ├── SequenceExecution.hpp/.cpp
+│   ├── Validation.hpp/.cpp
+│   └── VariableSubstitution.hpp/.cpp
+├── IO/                            ← persistence commands
+│   ├── SaveData.hpp/.cpp          ← persistence command
+│   └── LoadData.hpp/.cpp          ← persistence command (undoable)
+├── MoveByTimeRange.hpp/.cpp       ← concrete command (undoable)
+├── CopyByTimeRange.hpp/.cpp       ← concrete command
+├── AddInterval.hpp/.cpp           ← concrete command
+├── ForEachKey.hpp/.cpp            ← meta-command
+├── GetEntityIdsInRange.hpp/.cpp
+├── CommandUIHints.hpp
+├── DeleteByEntityIds.hpp/.cpp     ← NOT YET IMPLEMENTED (audit-identified)
+├── AddEvent.hpp/.cpp              ← NOT YET IMPLEMENTED (audit-identified)
+├── RemoveEvent.hpp/.cpp           ← NOT YET IMPLEMENTED (audit-identified)
+├── CreateData.hpp/.cpp            ← NOT YET IMPLEMENTED (audit-identified)
+├── DeleteData.hpp/.cpp            ← NOT YET IMPLEMENTED (audit-identified)
+└── ...                            ← more as audit discovers them
+
 src/DataManager/Commands/
-├── ICommand.hpp              ← interface
-├── CommandFactory.hpp/.cpp   ← factory + getAvailableCommands()
-├── CommandContext.hpp         ← runtime context
-├── CommandRecorder.hpp/.cpp  ← trace recording
-├── MutationGuard.hpp/.cpp    ← debug-only gap detection
-├── MoveByTimeRange.hpp/.cpp  ← concrete command (undoable)
-├── CopyByTimeRange.hpp/.cpp  ← concrete command
-├── AddInterval.hpp/.cpp      ← concrete command
-├── ForEachKey.hpp/.cpp        ← meta-command
-├── SaveData.hpp/.cpp          ← persistence command
-├── LoadData.hpp/.cpp          ← persistence command (undoable)
-├── DeleteByEntityIds.hpp/.cpp ← NOT YET IMPLEMENTED (audit-identified)
-├── AddEvent.hpp/.cpp          ← NOT YET IMPLEMENTED (audit-identified)
-├── RemoveEvent.hpp/.cpp       ← NOT YET IMPLEMENTED (audit-identified)
-├── CreateData.hpp/.cpp        ← NOT YET IMPLEMENTED (audit-identified)
-├── DeleteData.hpp/.cpp        ← NOT YET IMPLEMENTED (audit-identified)
-├── ...                        ← more as audit discovers them
-└── CMakeLists.txt
+└── MutationGuard.hpp/.cpp         ← debug-only gap detection (DataManager concern)
 
 src/WhiskerToolbox/SomeWidget/
 ├── SomeWidget.hpp             ← includes CommandFactory.hpp, params headers
@@ -552,7 +561,7 @@ When auditing and refactoring a widget, follow this checklist:
 □ 6. Add rows to the widget's audit table in this document
 □ 7. For Category B verbs: check if a planned command already covers it
 □ 8. If not, add a new entry to the "New Commands Identified" section
-□ 9. Implement the command(s) in src/DataManager/Commands/
+□ 9. Implement the command(s) in src/Commands/ (or src/Commands/IO/ for persistence commands)
 □ 10. Add command to CommandFactory.cpp (one if-branch)
 □ 11. Add to getAvailableCommands() (one entry)
 □ 12. Refactor the widget slots to use createCommand() + execute()

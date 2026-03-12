@@ -5,7 +5,7 @@
 
 #include "CommandPickerDialog.hpp"
 
-#include "Commands/CommandFactory.hpp"
+#include "Commands/Core/CommandFactory.hpp"
 
 #include <QComboBox>
 #include <QDialogButtonBox>

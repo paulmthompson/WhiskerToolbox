@@ -6,8 +6,8 @@
 #ifndef ADD_INTERVAL_COMMAND_HPP
 #define ADD_INTERVAL_COMMAND_HPP
 
-#include "CommandResult.hpp"
-#include "ICommand.hpp"
+#include "Core/CommandResult.hpp"
+#include "Core/ICommand.hpp"
 
 #include <cstdint>
 #include <string>

@@ -23,7 +23,7 @@ struct CommandInfo {
 };
 ```
 
-**Source:** `src/DataManager/Commands/CommandInfo.hpp`
+**Source:** `src/Commands/Core/CommandInfo.hpp`
 
 ## Factory Query Functions
 
@@ -47,7 +47,7 @@ Each command's parameter struct has a `ParameterUIHints<T>` specialization in
 `CommandUIHints.hpp` that annotates fields with tooltips and UI flags. These are
 automatically applied by `extractParameterSchema<T>()`.
 
-**Source:** `src/DataManager/Commands/CommandUIHints.hpp`
+**Source:** `src/Commands/CommandUIHints.hpp`
 
 ### Current Annotations
 
@@ -61,7 +61,7 @@ automatically applied by `extractParameterSchema<T>()`.
 ## Usage Example
 
 ```cpp
-#include "DataManager/Commands/CommandFactory.hpp"
+#include "Commands/Core/CommandFactory.hpp"
 
 // List all commands for a picker UI
 auto commands = commands::getAvailableCommands();

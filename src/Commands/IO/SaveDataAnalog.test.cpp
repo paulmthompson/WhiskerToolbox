@@ -7,9 +7,9 @@
  * with data integrity preserved (round-trip).
  */
 
-#include "Commands/CommandContext.hpp"
-#include "Commands/CommandFactory.hpp"
-#include "Commands/SaveData.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/CommandFactory.hpp"
+#include "Commands/IO/SaveData.hpp"
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"

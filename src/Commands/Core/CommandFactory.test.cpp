@@ -3,11 +3,11 @@
  * @brief Unit tests for the command factory and core types
  */
 
-#include "Commands/CommandFactory.hpp"
-#include "Commands/CommandContext.hpp"
-#include "Commands/CommandDescriptor.hpp"
-#include "Commands/CommandResult.hpp"
-#include "Commands/ICommand.hpp"
+#include "Commands/Core/CommandFactory.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/CommandDescriptor.hpp"
+#include "Commands/Core/CommandResult.hpp"
+#include "Commands/Core/ICommand.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

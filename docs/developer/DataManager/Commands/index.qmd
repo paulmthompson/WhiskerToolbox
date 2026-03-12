@@ -13,7 +13,10 @@ For the phased implementation plan, see the [Command Architecture Roadmap](roadm
 
 ## Source Location
 
-- Core library: `src/DataManager/Commands/`
+- Core command library: `src/Commands/` (standalone static library)
+  - `src/Commands/Core/` — framework: `ICommand`, `CommandFactory`, `CommandRecorder`, `SequenceExecution`, `Validation`, `VariableSubstitution`
+  - `src/Commands/IO/` — persistence commands: `SaveData`, `LoadData`
+  - `src/Commands/` (root) — data mutation commands: `MoveByTimeRange`, `CopyByTimeRange`, `AddInterval`, `ForEachKey`
 - Triage session (non-Qt): `src/TriageSession/`
 - Triage widget (Qt): `src/WhiskerToolbox/TriageSession_Widget/`
 - Command sequence widget (Qt): `src/WhiskerToolbox/Commands/`
@@ -141,22 +144,22 @@ global `CommandStack`. This would be an EditorState feature, not a command archi
 
 | Component | Location | Qt dependency? |
 |-----------|----------|---------------|
-| `ICommand`, `CommandResult`, `CommandContext` | `src/DataManager/Commands/` | **No** |
-| `CommandDescriptor`, `CommandSequenceDescriptor` | `src/DataManager/Commands/` | **No** |
-| Concrete commands + `createCommand()` factory | `src/DataManager/Commands/` | **No** |
-| `CommandInfo` + `getAvailableCommands()` | `src/DataManager/Commands/` | **No** |
+| `ICommand`, `CommandResult`, `CommandContext` | `src/Commands/Core/` | **No** |
+| `CommandDescriptor`, `CommandSequenceDescriptor` | `src/Commands/Core/` | **No** |
+| Concrete commands (`MoveByTimeRange`, `AddInterval`, etc.) | `src/Commands/` | **No** |
+| IO commands (`SaveData`, `LoadData`) | `src/Commands/IO/` | **No** |
+| `CommandFactory`, `CommandInfo` + `getAvailableCommands()` | `src/Commands/Core/` | **No** |
 | `ParameterSchema` (shared library) | `src/ParameterSchema/` | **No** |
 | `AutoParamWidget` (shared UI library) | `src/WhiskerToolbox/AutoParamWidget/` | Yes |
 | `TriageSession` | `src/TriageSession/` | **No** |
 | `TriageSessionWidget` | `src/WhiskerToolbox/TriageSession_Widget/` | Yes |
 | `CommandSequenceWidget` | `src/WhiskerToolbox/Commands/` *(planned)* | Yes |
 
-Placing the command library inside `DataManager` (not `WhiskerToolbox`) ensures it is usable
-from unit tests, Python bindings, and future CLI tools without pulling in Qt.
+The command library lives in `src/Commands/` as a standalone static library above `DataManager`. This keeps it free from Qt, available to unit tests, Python bindings, and future CLI tools, and — crucially — allows commands to wrap libraries that sit *above* `DataManager` (such as `TransformsV2` and `DeepLearning`) without creating circular dependencies.
 
 ## Core Types
 
-The four foundational types are defined in `src/DataManager/Commands/`:
+The four foundational types are defined in `src/Commands/Core/`:
 
 - **`CommandResult`** — `{success, error_message, affected_keys}` with static `ok()` and
   `error()` factory methods.

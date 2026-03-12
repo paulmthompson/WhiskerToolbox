@@ -6,8 +6,8 @@
 #ifndef COMMAND_ROW_WIDGET_HPP
 #define COMMAND_ROW_WIDGET_HPP
 
-#include "Commands/CommandDescriptor.hpp"
-#include "Commands/CommandInfo.hpp"
+#include "Commands/Core/CommandDescriptor.hpp"
+#include "Commands/Core/CommandInfo.hpp"
 
 #include <QWidget>
 

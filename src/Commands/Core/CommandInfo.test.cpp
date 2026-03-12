@@ -3,8 +3,8 @@
  * @brief Unit tests for CommandInfo and factory query functions
  */
 
-#include "Commands/CommandInfo.hpp"
-#include "Commands/CommandFactory.hpp"
+#include "Commands/Core/CommandInfo.hpp"
+#include "Commands/Core/CommandFactory.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

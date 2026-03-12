@@ -3,9 +3,9 @@
  * @brief Unit tests for the SaveData command
  */
 
-#include "Commands/SaveData.hpp"
-#include "Commands/CommandContext.hpp"
-#include "Commands/CommandFactory.hpp"
+#include "Commands/IO/SaveData.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/CommandFactory.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"

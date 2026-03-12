@@ -12,9 +12,9 @@ applying substitution and executing each command in order.
 
 **Source files:**
 
-- `src/DataManager/Commands/VariableSubstitution.hpp` / `.cpp` — `${variable}` string substitution
-- `src/DataManager/Commands/SequenceExecution.hpp` / `.cpp` — `executeSequence()` and `SequenceResult`
-- `src/DataManager/Commands/VariableSubstitution.test.cpp` — Tests for both features
+- `src/Commands/Core/VariableSubstitution.hpp` / `.cpp` — `${variable}` string substitution
+- `src/Commands/Core/SequenceExecution.hpp` / `.cpp` — `executeSequence()` and `SequenceResult`
+- `src/Commands/Core/VariableSubstitution.test.cpp` — Tests for both features
 
 All code lives in the `commands` namespace with no Qt dependency.
 
@@ -119,7 +119,7 @@ session).
 
 ## Tests
 
-Test file: `src/DataManager/Commands/VariableSubstitution.test.cpp`
+Test file: `src/Commands/Core/VariableSubstitution.test.cpp`
 
 **Variable substitution tests:**
 

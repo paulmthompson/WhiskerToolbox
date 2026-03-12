@@ -3,12 +3,12 @@
  * @brief Unit tests for variable substitution and sequence execution
  */
 
-#include "Commands/VariableSubstitution.hpp"
-#include "Commands/CommandContext.hpp"
-#include "Commands/CommandDescriptor.hpp"
-#include "Commands/CommandFactory.hpp"
-#include "Commands/ICommand.hpp"
-#include "Commands/SequenceExecution.hpp"
+#include "Commands/Core/VariableSubstitution.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/Core/CommandDescriptor.hpp"
+#include "Commands/Core/CommandFactory.hpp"
+#include "Commands/Core/ICommand.hpp"
+#include "Commands/Core/SequenceExecution.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

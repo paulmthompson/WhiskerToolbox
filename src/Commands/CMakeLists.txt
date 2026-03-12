@@ -1,18 +1,23 @@
 find_package(reflectcpp CONFIG REQUIRED)
 
 set(COMMAND_SOURCES
-    CommandResult.hpp
-        CommandContext.hpp
-        CommandDescriptor.hpp
-        CommandInfo.hpp
+    Core/CommandResult.hpp
+    Core/CommandContext.hpp
+    Core/CommandDescriptor.hpp
+    Core/CommandInfo.hpp
         CommandUIHints.hpp
-        ICommand.hpp
-        CommandFactory.hpp
-        CommandFactory.cpp
-        VariableSubstitution.hpp
-        VariableSubstitution.cpp
-        SequenceExecution.hpp
-        SequenceExecution.cpp
+    Core/ICommand.hpp
+    Core/CommandFactory.hpp
+    Core/CommandFactory.cpp
+    Core/VariableSubstitution.hpp #Detail?
+    Core/VariableSubstitution.cpp #Detail?
+    Core/SequenceExecution.hpp
+    Core/SequenceExecution.cpp
+    Core/Validation.hpp
+    Core/Validation.cpp
+    Core/CommandRecorder.hpp
+    Core/CommandRecorder.cpp
+
         GetEntityIdsInRange.hpp
         GetEntityIdsInRange.cpp
         MoveByTimeRange.hpp
@@ -23,14 +28,12 @@ set(COMMAND_SOURCES
         AddInterval.cpp
         ForEachKey.hpp
         ForEachKey.cpp
-        SaveData.hpp
-        SaveData.cpp
-        LoadData.hpp
-        LoadData.cpp
-        Validation.hpp
-        Validation.cpp
-        CommandRecorder.hpp
-        CommandRecorder.cpp
+
+        IO/SaveData.hpp
+        IO/SaveData.cpp
+        IO/LoadData.hpp
+        IO/LoadData.cpp
+
 )
 
 add_library(Commands STATIC ${COMMAND_SOURCES})

@@ -36,16 +36,16 @@ For the full architectural design, types, and code examples, see the
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| `CommandFactory` | `src/DataManager/Commands/` | `createCommand()`, `createCommandFromJson()`, `getAvailableCommands()`, `getCommandInfo()` |
-| `CommandRecorder` | `src/DataManager/Commands/` | Records executed commands for replay; hook in `executeSequence()` |
+| `CommandFactory` | `src/Commands/Core/` | `createCommand()`, `createCommandFromJson()`, `getAvailableCommands()`, `getCommandInfo()` |
+| `CommandRecorder` | `src/Commands/Core/` | Records executed commands for replay; hook in `executeSequence()` |
 | `MutationGuard` | `src/DataManager/Commands/` | Debug-only: warns when `DataManager` is mutated outside a command |
 | `DataManagerSnapshot` | `src/DataManager/` | Lightweight state snapshot (type, entity count, content hash) for golden trace tests |
 | `ParameterSchema` | `src/ParameterSchema/` | Compile-time parameter schema extraction from reflect-cpp structs |
 | `AutoParamWidget` | `src/WhiskerToolbox/AutoParamWidget/` | Dynamic Qt form builder from `ParameterSchema` |
 | `TriageSession` | `src/TriageSession/` | Mark/Commit/Recall state machine using command sequences |
 | `SaverRegistry` | `src/DataManager/IO/core/` | `SaverInfo`, `AtomicWrite`, `getSupportedSaveFormats()` |
-| `Validation` | `src/DataManager/Commands/` | `validateSequence()` — structural, type, and variable checks |
-| `VariableSubstitution` | `src/DataManager/Commands/` | Two-pass `${variable}` substitution + `normalizeJsonNumbers()` |
+| `Validation` | `src/Commands/Core/` | `validateSequence()` — structural, type, and variable checks |
+| `VariableSubstitution` | `src/Commands/Core/` | Two-pass `${variable}` substitution + `normalizeJsonNumbers()` |
 
 ### Test Coverage
 

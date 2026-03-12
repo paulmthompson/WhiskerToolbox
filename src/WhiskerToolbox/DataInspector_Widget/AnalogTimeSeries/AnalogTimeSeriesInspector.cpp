@@ -3,8 +3,8 @@
 
 #include "DataExport_Widget/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "Commands/CommandContext.hpp"
-#include "Commands/SaveData.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/IO/SaveData.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 

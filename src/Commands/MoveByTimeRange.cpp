@@ -5,7 +5,7 @@
 
 #include "MoveByTimeRange.hpp"
 
-#include "CommandContext.hpp"
+#include "Core/CommandContext.hpp"
 #include "GetEntityIdsInRange.hpp"
 
 #include "DataManager/DataManager.hpp"

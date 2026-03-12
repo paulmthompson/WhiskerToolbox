@@ -8,7 +8,7 @@
 #include "CommandPickerDialog.hpp"
 #include "CommandRowWidget.hpp"
 
-#include "Commands/CommandFactory.hpp"
+#include "Commands/Core/CommandFactory.hpp"
 
 #include <rfl/json.hpp>
 

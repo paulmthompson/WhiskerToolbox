@@ -10,9 +10,9 @@ type mismatches — all *before* any command runs.
 
 **Source files:**
 
-- `src/DataManager/Commands/Validation.hpp` — public API
-- `src/DataManager/Commands/Validation.cpp` — implementation
-- `src/DataManager/Commands/Validation.test.cpp` — unit tests
+- `src/Commands/Core/Validation.hpp` — public API
+- `src/Commands/Core/Validation.cpp` — implementation
+- `src/Commands/Core/Validation.test.cpp` — unit tests
 
 ## API
 

@@ -6,8 +6,8 @@
 #ifndef COPY_BY_TIME_RANGE_HPP
 #define COPY_BY_TIME_RANGE_HPP
 
-#include "CommandResult.hpp"
-#include "ICommand.hpp"
+#include "Core/CommandResult.hpp"
+#include "Core/ICommand.hpp"
 
 #include "Entity/EntityTypes.hpp"
 
