@@ -1,0 +1,70 @@
+---
+title: "Command Log Widget"
+---
+
+## Overview
+
+The Command Log Widget is a minimal dock widget that displays the list of
+`CommandDescriptor` entries recorded by the shared `CommandRecorder` during
+the current session. It provides visibility into what commands have been
+executed and allows exporting the recorded trace as JSON.
+
+This is intentionally minimal — NOT the full Phase 4 Action Journal.
+No persistence, timestamps, filtering, or provenance. Just enough to
+see what happened and export it.
+
+## Source Location
+
+```
+src/WhiskerToolbox/CommandLog_Widget/
+├── CMakeLists.txt
+├── Core/CommandLogStateData.hpp       # Serializable state data (minimal)
+├── Core/CommandLogState.hpp/.cpp      # EditorState subclass
+├── UI/CommandLogWidget.hpp/.cpp     # The widget (QListWidget + buttons)
+└── CommandLogWidgetRegistration.hpp/.cpp  # EditorRegistry integration
+```
+
+## Features
+
+- **Command List**: Displays each executed command's name, description, and
+  a compact summary of its parameters.
+- **Copy as JSON**: Calls `recorder->toSequence("recorded_session")`, serializes
+  via `rfl::json::write()`, and copies to the system clipboard. The resulting
+  JSON is a valid `CommandSequenceDescriptor` that can be pasted into a
+  Catch2 golden trace test.
+- **Clear**: Resets the recorder and clears the displayed list.
+- **Auto-refresh**: A 500ms poll timer incrementally appends new entries
+  without rebuilding the entire list.
+
+## Access
+
+Open via **Modules → Command Log** in the menu bar.
+
+## Architecture
+
+The widget follows the standard EditorState registration pattern:
+
+- `CommandLogState` is a minimal `EditorState` subclass with no meaningful
+  persistent configuration beyond instance identity.
+- `CommandLogWidget` takes a non-owning `CommandRecorder*` (from `MainWindow`)
+  and polls it for new entries.
+- Registration uses `Zone::Right`, single-instance, no properties panel.
+
+## Relationship to Roadmap
+
+This widget implements **Step 3.5.3** of the
+[Command Architecture Roadmap](roadmap.qmd). It is a prerequisite for:
+
+- **Step 3.5.4** (End-to-End Verification): The demo workflow uses the
+  Command Log to verify that executed commands are recorded and exportable.
+- **Phase 4** (Action Journal): The Action Journal will replace this
+  minimal widget with a persistent, timestamped, filterable log.
+
+## See Also
+
+- [CommandRecorder](core_types.qmd) — the recorder class that captures
+  executed `CommandDescriptor` entries
+- [Sequence Execution](sequence_execution.qmd) — `executeSequence()` and
+  its recording hook
+- [Command Architecture Roadmap](roadmap.qmd) — full roadmap with Phase 3.5
+  details

@@ -160,6 +160,9 @@ add_subdirectory(Test_Widget)
 # Qt, DataManager, EditorState, reflectcpp - Data synthesizer widget
 add_subdirectory(DataSynthesizer_Widget)
 
+# Qt, EditorState, Commands, reflectcpp - Command log widget
+add_subdirectory(CommandLog_Widget)
+
 set(PROJECT_SOURCES
         main.cpp
         whiskertoolbox.qrc
@@ -364,6 +367,7 @@ target_link_libraries(WhiskerToolbox PRIVATE 3DPlotWidget)
 target_link_libraries(WhiskerToolbox PRIVATE OnionSkinViewWidget)
 target_link_libraries(WhiskerToolbox PRIVATE Test_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataSynthesizer_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE CommandLog_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE LayoutTesting)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)

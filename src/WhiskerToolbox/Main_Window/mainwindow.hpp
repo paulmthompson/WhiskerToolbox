@@ -212,5 +212,6 @@ private slots:
     void openTransformsV2Widget();
     void openTriageSessionWidget();
     void openDataSynthesizerWidget();
+    void openCommandLogWidget();
 };
 #endif// MAINWINDOW_HPP

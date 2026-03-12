@@ -33,6 +33,7 @@
 #include "DataImport_Widget/DataImportWidgetRegistration.hpp"
 #include "DataInspector_Widget/DataInspectorWidgetRegistration.hpp"
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
+#include "CommandLog_Widget/CommandLogWidgetRegistration.hpp"
 #include "DataSynthesizer_Widget/DataSynthesizerWidgetRegistration.hpp"
 #include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
 #include "DataViewer_Widget/DataViewerWidgetRegistration.hpp"
@@ -437,6 +438,7 @@ void MainWindow::_createActions() {
     connect(ui->action3D_Plot, &QAction::triggered, this, &MainWindow::open3DPlotWidget);
     connect(ui->actionOnion_Skin_View, &QAction::triggered, this, &MainWindow::openOnionSkinViewWidget);
     connect(ui->actionData_Synthesizer, &QAction::triggered, this, &MainWindow::openDataSynthesizerWidget);
+    connect(ui->actionCommand_Log, &QAction::triggered, this, &MainWindow::openCommandLogWidget);
 }
 
 /*
@@ -850,6 +852,10 @@ void MainWindow::openDataSynthesizerWidget() {
     openEditor(QStringLiteral("DataSynthesizerWidget"));
 }
 
+void MainWindow::openCommandLogWidget() {
+    openEditor(QStringLiteral("CommandLogWidget"));
+}
+
 void MainWindow::openDataImport() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("DataImportWidget"));
@@ -1020,6 +1026,8 @@ void MainWindow::_registerEditorTypes() {
     OnionSkinViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     DataSynthesizerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, commandRecorder());
+
+    CommandLogWidgetModule::registerTypes(_editor_registry.get(), commandRecorder());
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);

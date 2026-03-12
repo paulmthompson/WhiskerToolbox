@@ -251,10 +251,10 @@ commands → copy JSON → paste into a Catch2 golden trace test*.
 | `MutationGuard` | ✅ Active in debug builds |
 | Shared recorder instance in app | ✅ `MainWindow` owns `CommandRecorder`; `commandRecorder()` getter |
 | `ctx.recorder` fallback | ✅ `executeSequence()` falls back to `ctx.recorder` when no explicit recorder passed |
-| DataSynthesizer "Generate" | ❌ Calls `cmd.execute(ctx)` directly, not recorded |
-| SaveData call sites | ❌ Call `cmd.execute(ctx)` directly, not recorded |
-| TriageSession `commit()` | ❌ Calls `executeSequence()` with `nullptr` recorder |
-| UI to view/export recorded commands | ❌ Does not exist |
+| DataSynthesizer "Generate" | ✅ Routes through `executeSequence()` |
+| SaveData call sites | ✅ Routes through `executeSequence()` |
+| TriageSession `commit()` | ✅ Routes through `executeSequence()` with recorder |
+| UI to view/export recorded commands | ✅ CommandLog_Widget (Step 3.5.3) |
 
 ### Step 3.5.1 — Centralized Recorder (Complete)
 
@@ -276,14 +276,15 @@ commands → copy JSON → paste into a Catch2 golden trace test*.
 - [x] **TriageSession** (`src/TriageSession/TriageSession.cpp`): Accept `CommandRecorder*`
   in `commit()`, forward to `executeSequence()`.
 
-### Step 3.5.3 — Command Log UI
+### Step 3.5.3 — Command Log UI (Complete)
 
-- [ ] Create a minimal "Command Log" dock widget showing the list of recorded
+- [x] Create a minimal "Command Log" dock widget showing the list of recorded
   `CommandDescriptor` names and parameters from the shared recorder.
-- [ ] "Copy as JSON" button: calls `recorder->toSequence("recorded_session")`, serializes
+  See [Command Log Widget](command_log_widget.qmd).
+- [x] "Copy as JSON" button: calls `recorder->toSequence("recorded_session")`, serializes
   via `rfl::json::write()`, copies to clipboard.
-- [ ] "Clear" button.
-- [ ] Add "View → Command Log" (or "Tools → Command Log") menu item in MainWindow.
+- [x] "Clear" button.
+- [x] Add "Modules → Command Log" menu item in MainWindow.
 
 **Note:** This is intentionally minimal — NOT the full Phase 4 Action Journal. No
 persistence, timestamps, filtering, or provenance. Just enough to see what happened and
