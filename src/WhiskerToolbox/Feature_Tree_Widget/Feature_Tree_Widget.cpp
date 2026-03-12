@@ -1,7 +1,7 @@
 #include "Feature_Tree_Widget.hpp"
 #include "ui_Feature_Tree_Widget.h"
 
-#include "../DataManager/utils/color.hpp"
+#include "CoreUtilities/color.hpp"
 #include "DataManager.hpp"
 
 #include <QCheckBox>

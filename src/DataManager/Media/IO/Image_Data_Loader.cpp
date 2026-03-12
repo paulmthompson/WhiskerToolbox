@@ -1,7 +1,7 @@
 #include "Image_Data_Loader.hpp"
 
 #include "Media/Image_Data.hpp"
-#include "utils/string_manip.hpp"
+#include "CoreUtilities/string_manip.hpp"
 
 #include <algorithm>
 #include <filesystem>

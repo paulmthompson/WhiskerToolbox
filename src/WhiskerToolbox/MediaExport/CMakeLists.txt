@@ -12,7 +12,7 @@ add_library(MediaExport STATIC ${MEDIA_EXPORT_SOURCES})
 
 target_link_libraries(MediaExport PUBLIC Qt6::Widgets Qt6::Core Qt6::Gui)
 
-target_link_libraries(MediaExport PRIVATE DataManager) # just for string manipulation
+target_link_libraries(MediaExport PRIVATE CoreUtilities) # just for string manipulation
 target_link_libraries(MediaExport PRIVATE MediaData)
 
 target_include_directories(MediaExport PUBLIC

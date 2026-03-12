@@ -27,6 +27,7 @@ target_link_libraries(Feature_Table_Widget PUBLIC
 )
 
 target_link_libraries(Feature_Table_Widget PRIVATE DataManager)
+target_link_libraries(Feature_Table_Widget PRIVATE CoreUtilities)
 target_link_libraries(Feature_Table_Widget PUBLIC DataTypeEnum)
 
 # Include directories

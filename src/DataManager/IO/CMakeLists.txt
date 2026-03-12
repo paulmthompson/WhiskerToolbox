@@ -59,6 +59,8 @@ target_link_libraries(DataManagerIO PUBLIC
     DigitalTimeSeries # Needed for Digital loaders
 )
 
+target_link_libraries(DataManagerIO PRIVATE CoreUtilities)
+
 # Add subdirectories for specific format plugins
 if(ENABLE_HDF5)
     add_subdirectory(formats/HDF5)

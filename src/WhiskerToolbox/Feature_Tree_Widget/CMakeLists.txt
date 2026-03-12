@@ -22,6 +22,7 @@ target_link_libraries(Feature_Tree_Widget PUBLIC
     Qt6::Gui
 )
 
+target_link_libraries(Feature_Tree_Widget PRIVATE CoreUtilities)
 target_link_libraries(Feature_Tree_Widget PRIVATE DataManager)
 target_link_libraries(Feature_Tree_Widget PUBLIC DataTypeEnum)
 

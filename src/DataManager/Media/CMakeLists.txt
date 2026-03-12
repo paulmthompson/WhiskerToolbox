@@ -67,6 +67,8 @@ target_link_libraries(MediaData PUBLIC
     DataTypeEnum                 # DataTypeEnum
 )
 
+target_link_libraries(MediaData PRIVATE CoreUtilities)
+
 # Link OpenCV libraries conditionally
 if(ENABLE_OPENCV)
     target_link_libraries(MediaData PRIVATE

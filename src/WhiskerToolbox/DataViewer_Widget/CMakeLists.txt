@@ -88,6 +88,7 @@ target_link_libraries(DataViewer_Widget PRIVATE PlottingOpenGL)  # Contains Shad
 target_link_libraries(DataViewer_Widget PRIVATE ColorPicker_Widget)
 target_link_libraries(DataViewer_Widget PRIVATE TimeScrollBar)
 target_link_libraries(DataViewer_Widget PRIVATE CorePlotting)
+target_link_libraries(DataViewer_Widget PRIVATE CoreUtilities)
 
 target_link_libraries(DataViewer_Widget PRIVATE WhiskerToolbox::StateManagement)
 

@@ -9,7 +9,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "CorePlotting/Export/SVGPrimitives.hpp"
-#include "DataManager/utils/color.hpp"
+#include "CoreUtilities/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"

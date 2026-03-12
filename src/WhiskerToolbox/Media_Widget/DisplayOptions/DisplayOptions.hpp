@@ -35,7 +35,7 @@
  * @see MediaWidgetStateData for full widget state serialization
  */
 
-#include "../../DataManager/utils/color.hpp"
+#include "CoreUtilities/color.hpp"
 #include "ImageProcessing/ProcessingOptions.hpp"
 
 #include <rfl.hpp>
