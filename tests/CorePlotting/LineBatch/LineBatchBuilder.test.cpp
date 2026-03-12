@@ -10,7 +10,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 

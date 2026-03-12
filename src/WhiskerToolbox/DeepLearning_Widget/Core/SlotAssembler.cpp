@@ -5,7 +5,7 @@
 #include "DeepLearningBindingData.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"

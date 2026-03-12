@@ -12,7 +12,7 @@
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 

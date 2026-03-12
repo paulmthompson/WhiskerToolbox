@@ -13,7 +13,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 
 // Register EntityId with Qt's meta-type system so it can be used in signals/QVariant
 Q_DECLARE_METATYPE(EntityId)

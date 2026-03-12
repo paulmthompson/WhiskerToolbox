@@ -3,7 +3,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 

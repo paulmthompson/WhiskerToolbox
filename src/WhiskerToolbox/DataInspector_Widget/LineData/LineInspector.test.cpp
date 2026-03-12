@@ -4,7 +4,7 @@
 
 #include "DataExport_Widget/Lines/CSV/CSVLineSaver_Widget.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "IO/core/LoaderRegistration.hpp"
 #include "IO/formats/CSV/lines/Line_Data_CSV.hpp"
 #include "TimeFrame/TimeFrame.hpp"

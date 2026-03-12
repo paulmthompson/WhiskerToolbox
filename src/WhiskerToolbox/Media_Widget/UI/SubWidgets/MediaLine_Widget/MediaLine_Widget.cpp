@@ -11,7 +11,7 @@
 
 #include "CoreGeometry/point_geometry.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Media/Video_Data.hpp"
 #include "DataManager/transforms/Lines/Line_Angle/line_angle.hpp"

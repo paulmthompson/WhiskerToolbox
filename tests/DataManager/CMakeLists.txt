@@ -58,6 +58,9 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataObjects/DigitalTimeSeries/Digital_Event_Series.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.test.cpp
 
+
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Lines/Line_Data.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/AnalogSliceGathererComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/EventInIntervalComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/IntervalOverlapComputer.test.cpp

@@ -3,7 +3,7 @@
 #include <pybind11/stl.h>
 
 #include "CoreGeometry/lines.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "Observer/Observer_Data.hpp"
 
 #include <string>

@@ -24,7 +24,7 @@
 // Analog data
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 // Line data sampling (multi-output)
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "DataManager/utils/TableView/computers/LineSamplingMultiComputer.h"
 
 // Qt includes for widget testing

@@ -16,7 +16,7 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"

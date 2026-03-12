@@ -3,7 +3,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/transforms/Lines/Line_Clip/line_clip.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include <algorithm>
 
 LineClip_Widget::LineClip_Widget(QWidget *parent) :

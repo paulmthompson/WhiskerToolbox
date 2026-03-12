@@ -14,9 +14,6 @@ find_package(Armadillo REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
 
-
-add_subdirectory(Lines)
-
 add_subdirectory(IO)
 
 add_subdirectory(Media)

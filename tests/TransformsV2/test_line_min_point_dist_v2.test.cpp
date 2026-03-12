@@ -4,7 +4,7 @@
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/detail/FlatZipView.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 
 #include <catch2/catch_test_macros.hpp>

@@ -1,5 +1,5 @@
 #include "LineTableModel.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <iostream>

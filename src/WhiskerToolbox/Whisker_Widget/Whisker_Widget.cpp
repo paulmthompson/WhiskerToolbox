@@ -3,7 +3,7 @@
 #include "ui_Whisker_Widget.h"
 
 #include "DataManager.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"

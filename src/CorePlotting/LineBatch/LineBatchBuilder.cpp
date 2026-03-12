@@ -6,7 +6,7 @@
 
 #include "GatherResult/GatherResult.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 
 #include <algorithm>
 #include <cstddef>
