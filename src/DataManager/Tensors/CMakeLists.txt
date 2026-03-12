@@ -87,6 +87,7 @@ target_include_directories(TensorData PUBLIC
 target_link_libraries(TensorData PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(TensorData PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(TensorData PUBLIC WhiskerToolbox::TimeFrame)
+target_link_libraries(TensorData PUBLIC DataTypeTraits)
 
 # Armadillo is always PUBLIC (ArmadilloTensorStorage.hpp includes <armadillo>)
 target_link_libraries(TensorData PUBLIC armadillo ${ARMADILLO_LIBRARIES})

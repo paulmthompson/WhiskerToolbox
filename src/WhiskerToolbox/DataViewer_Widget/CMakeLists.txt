@@ -68,13 +68,16 @@ set_target_properties(DataViewer_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(DataViewer_Widget PRIVATE 
+target_link_libraries(DataViewer_Widget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
     Qt6::OpenGL
     Qt6::OpenGLWidgets
 )
+
+target_link_libraries(DataViewer_Widget PUBLIC DataTypeEnum)
+target_link_libraries(DataViewer_Widget PUBLIC EditorState)
 
 target_link_libraries(DataViewer_Widget PRIVATE DataManager)
 target_link_libraries(DataViewer_Widget PRIVATE glm::glm)
@@ -85,7 +88,7 @@ target_link_libraries(DataViewer_Widget PRIVATE PlottingOpenGL)  # Contains Shad
 target_link_libraries(DataViewer_Widget PRIVATE ColorPicker_Widget)
 target_link_libraries(DataViewer_Widget PRIVATE TimeScrollBar)
 target_link_libraries(DataViewer_Widget PRIVATE CorePlotting)
-target_link_libraries(DataViewer_Widget PRIVATE EditorState)
+
 target_link_libraries(DataViewer_Widget PRIVATE WhiskerToolbox::StateManagement)
 
 target_include_directories(DataViewer_Widget PUBLIC

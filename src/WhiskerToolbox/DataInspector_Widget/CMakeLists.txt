@@ -109,11 +109,14 @@ set_target_properties(DataInspector_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(DataInspector_Widget PRIVATE 
+target_link_libraries(DataInspector_Widget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
 )
+
+target_link_libraries(DataInspector_Widget PUBLIC DataTypeEnum)
+target_link_libraries(DataInspector_Widget PUBLIC EditorState)
 
 target_link_libraries(DataInspector_Widget PRIVATE DataManager)
 target_link_libraries(DataInspector_Widget PRIVATE TimeFrame)

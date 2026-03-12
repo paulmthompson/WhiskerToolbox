@@ -34,7 +34,7 @@
 #include "Tensors/storage/DenseTensorStorage.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
-#include "DataManager/TypeTraits/DataTypeTraits.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 
 #include <armadillo>
 

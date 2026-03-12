@@ -241,6 +241,8 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::PointData)
 
+target_link_libraries(DataManager PUBLIC DataTypeEnum)
+
 if(ENABLE_OPENCV)
     target_link_libraries(DataManager PUBLIC ImageProcessing)
 endif()

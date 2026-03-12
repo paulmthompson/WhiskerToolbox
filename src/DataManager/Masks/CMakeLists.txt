@@ -32,6 +32,7 @@ target_link_libraries(MaskData PUBLIC
     WhiskerToolbox::ObserverData  # Observer
     TimeFrame                # TimeFrame  
     Entity                   # Entity
+    DataTypeTraits           # DataTypeTraits
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

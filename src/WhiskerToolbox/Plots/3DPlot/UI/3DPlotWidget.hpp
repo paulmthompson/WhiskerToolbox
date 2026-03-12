@@ -8,7 +8,7 @@
  * 3DPlotWidget displays 3D visualizations of data.
  */
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>

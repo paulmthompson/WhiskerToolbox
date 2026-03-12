@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_MEDIA_DATA_FACTORY_HPP
 #define WHISKERTOOLBOX_MEDIA_DATA_FACTORY_HPP
 
-#include "DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "Media/Media_Data.hpp"
 
 #include <nlohmann/json.hpp>

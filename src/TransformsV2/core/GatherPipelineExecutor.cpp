@@ -7,7 +7,7 @@
 #include "DataManager/AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/TypeTraits/DataTypeTraits.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "TransformsV2/core/RangeReductionRegistry.hpp"

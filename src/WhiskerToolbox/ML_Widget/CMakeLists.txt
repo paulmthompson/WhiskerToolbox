@@ -83,6 +83,9 @@ target_link_libraries(ML_Widget PUBLIC
     Qt6::Gui
 )
 
+target_link_libraries(ML_Widget PUBLIC DataTypeEnum)
+target_link_libraries(ML_Widget PUBLIC EditorState)
+
 target_link_libraries(ML_Widget PRIVATE
     nlohmann_json::nlohmann_json
     armadillo
@@ -91,7 +94,6 @@ target_link_libraries(ML_Widget PRIVATE
     DataManager
     TensorData
     Feature_Table_Widget
-    EditorState
 )
 
 # Apply compiler warnings (if defined in parent scope) but remove OpenMP flags

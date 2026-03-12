@@ -182,6 +182,7 @@ target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManag
 target_link_libraries(test_data_manager PRIVATE DataManagerIO)
 target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)
 target_link_libraries(test_data_manager PRIVATE TensorData)
+target_link_libraries(test_data_manager PRIVATE DataTypeTraits)
 
 # When LibTorch is available, enable LibTorch-specific tests.
 # TENSOR_BACKEND_LIBTORCH is defined PRIVATE on TensorData to avoid

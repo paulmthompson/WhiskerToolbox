@@ -26,7 +26,8 @@ target_link_libraries(Feature_Table_Widget PUBLIC
     Qt6::Gui
 )
 
-target_link_libraries(Feature_Table_Widget PUBLIC DataManager)
+target_link_libraries(Feature_Table_Widget PRIVATE DataManager)
+target_link_libraries(Feature_Table_Widget PUBLIC DataTypeEnum)
 
 # Include directories
 target_include_directories(Feature_Table_Widget PUBLIC

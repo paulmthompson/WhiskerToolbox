@@ -25,7 +25,7 @@ set_target_properties(SpectrogramWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(SpectrogramWidget PRIVATE 
+target_link_libraries(SpectrogramWidget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
@@ -33,8 +33,10 @@ target_link_libraries(SpectrogramWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(SpectrogramWidget PUBLIC DataTypeEnum)
+target_link_libraries(SpectrogramWidget PUBLIC EditorState)
+
 target_link_libraries(SpectrogramWidget PRIVATE DataManager)
-target_link_libraries(SpectrogramWidget PRIVATE EditorState)
 
 target_include_directories(SpectrogramWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
@@ -42,18 +44,7 @@ target_include_directories(SpectrogramWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(SpectrogramWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(SpectrogramWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(SpectrogramWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(SpectrogramWidget)
 
 # Enable automoc for Qt
 set_target_properties(SpectrogramWidget PROPERTIES

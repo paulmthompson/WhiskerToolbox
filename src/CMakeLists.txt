@@ -6,6 +6,8 @@ add_subdirectory(Entity)
 
 add_subdirectory(CoreGeometry)
 
+add_subdirectory(DataObjects)
+
 add_subdirectory(CoreMath)
 
 add_subdirectory(SpatialIndex)

@@ -9,7 +9,7 @@
  * state; pan/zoom in OpenGL widget update state. Axis labels: Lag (X), Value (Y).
  */
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QResizeEvent>

@@ -1,7 +1,7 @@
 #ifndef HEATMAP_WIDGET_HPP
 #define HEATMAP_WIDGET_HPP
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>
