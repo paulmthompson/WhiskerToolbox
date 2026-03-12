@@ -39,7 +39,6 @@ set(DATAMANAGER_SOURCES
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
         utils/json_helpers.hpp
-        utils/map_timeseries.hpp
         utils/metaprogramming_utils.hpp
         utils/TimeIndexExtractor.hpp
         utils/TimeIndexExtractor.cpp

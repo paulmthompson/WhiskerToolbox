@@ -24,20 +24,10 @@ target_link_libraries(PointData PUBLIC
     TimeFrame                # TimeFrame  
     Entity                   # Entity
     DataTypeTraits           # DataTypeTraits
+    RaggedTimeSeries         # RaggedTimeSeries
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(PointData PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(PointData PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(PointData PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(PointData)
 
 # Create alias for consistent naming
 add_library(WhiskerToolbox::PointData ALIAS PointData)

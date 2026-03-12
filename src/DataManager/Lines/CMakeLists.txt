@@ -28,20 +28,10 @@ target_link_libraries(LineData PUBLIC
     TimeFrame                # TimeFrame  
     Entity                   # Entity
     DataTypeTraits           # DataTypeTraits
+    RaggedTimeSeries         # RaggedTimeSeries
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(LineData PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(LineData PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(LineData PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(LineData)
 
 # Set properties
 set_target_properties(LineData PROPERTIES

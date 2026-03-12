@@ -5,8 +5,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "utils/RaggedStorage.hpp"
-#include "utils/RaggedTimeSeries.hpp"
+#include "RaggedTimeSeries/RaggedStorage.hpp"
+#include "RaggedTimeSeries/RaggedTimeSeries.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
