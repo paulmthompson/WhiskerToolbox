@@ -1,7 +1,7 @@
 #ifndef PAGINATEDTABLEMODEL_HPP
 #define PAGINATEDTABLEMODEL_HPP
 
-#include "DataManager/utils/TableView/TableInfo.hpp"
+#include "DataManager/utils/TableView/TableInfo.hpp"  // ColumnInfo
 
 #include <QAbstractTableModel>
 #include <QStringList>

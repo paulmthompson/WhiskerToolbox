@@ -28,23 +28,16 @@ target_link_libraries(TransformsV2_Widget PUBLIC
         Qt6::Widgets
         Qt6::Core
         Qt6::Gui
-        EditorState
-        DataManager
-        TransformsV2
-        AutoParamWidget
-        Collapsible_Widget
-)
+        EditorState)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(TransformsV2_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
+ # Type Chain Result must be made into pointer
+ # Then can be made private
+target_link_libraries(TransformsV2_Widget PUBLIC TransformsV2)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(TransformsV2_Widget PRIVATE ${GCC_WARNINGS})
-endif()
+target_link_libraries(TransformsV2_Widget PRIVATE AutoParamWidget)
+target_link_libraries(TransformsV2_Widget PRIVATE Collapsible_Widget)
+target_link_libraries(TransformsV2_Widget PRIVATE DataManager)
 
-if (MSVC)
-    target_compile_options(TransformsV2_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(TransformsV2_Widget)
 
 enable_whiskertoolbox_shared_pch(TransformsV2_Widget)

@@ -17,17 +17,6 @@ target_link_libraries(AutoParamWidget PUBLIC
         WhiskerToolbox::ParameterSchema
 )
 
-# Apply the same compiler flags as the main project
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(AutoParamWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(AutoParamWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(AutoParamWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(AutoParamWidget)
 
 enable_whiskertoolbox_shared_pch(AutoParamWidget)

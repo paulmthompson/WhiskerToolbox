@@ -14,8 +14,6 @@ find_package(Armadillo REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
 
-# Note: Observer library has been promoted to top-level (src/Observer)
-# DataManager gets Observer includes via transitive dependency from Entity
 
 add_subdirectory(Lines)
 
@@ -248,25 +246,6 @@ if(ENABLE_OPENCV)
 endif()
 
 target_link_libraries(DataManager PRIVATE DataManagerIO)
-
-
-if(ENABLE_HDF5)
-    target_link_libraries(DataManager PRIVATE DataManagerHDF5)
-    target_compile_definitions(DataManager PRIVATE ENABLE_HDF5)
-endif()
-
-if(ENABLE_CAPNPROTO)
-    target_link_libraries(DataManager PRIVATE DataManagerIO_CapnProto)
-    target_compile_definitions(DataManager PRIVATE ENABLE_CAPNPROTO)
-endif()
-
-if(ENABLE_OPENCV)
-    target_link_libraries(DataManager PRIVATE DataManagerOpenCV)
-    target_compile_definitions(DataManager PRIVATE ENABLE_OPENCV)
-endif()
-
-# Numpy loader is always available (header-only libnpy)
-target_link_libraries(DataManager PRIVATE DataManagerNumpy)
 
 #It is important to put these last to avoid linker errors with no OpenCV
 #I don't know exactly why

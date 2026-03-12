@@ -16,7 +16,7 @@ set_target_properties(TimeFrame_Table_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(TimeFrame_Table_Widget PRIVATE
+target_link_libraries(TimeFrame_Table_Widget PUBLIC
     Qt6::Widgets
     Qt6::Core
     Qt6::Gui
@@ -31,19 +31,7 @@ target_include_directories(TimeFrame_Table_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-target_compile_definitions(TimeFrame_Table_Widget PRIVATE _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(TimeFrame_Table_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(TimeFrame_Table_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(TimeFrame_Table_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(TimeFrame_Table_Widget)
 
 set_target_properties(TimeFrame_Table_Widget PROPERTIES
     AUTOMOC ON

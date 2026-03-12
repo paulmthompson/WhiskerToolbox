@@ -94,19 +94,7 @@ target_include_directories(DataViewer_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataViewer_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataViewer_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DataViewer_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataViewer_Widget)
 
 # Enable automoc for Qt
 set_target_properties(DataViewer_Widget PROPERTIES

@@ -35,7 +35,6 @@ target_include_directories(DataManagerIO_CapnProto PRIVATE
 )
 
 target_link_libraries(DataManagerIO_CapnProto PRIVATE
- #   DataManagerIO
     WhiskerToolbox::LineData  # Link to LineData library instead of accessing headers
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY

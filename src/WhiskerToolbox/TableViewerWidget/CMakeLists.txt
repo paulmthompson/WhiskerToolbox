@@ -32,16 +32,6 @@ set_target_properties(TableViewerWidget PROPERTIES
     AUTOUIC ON
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(TableViewerWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(TableViewerWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(TableViewerWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(TableViewerWidget)
 
 enable_whiskertoolbox_shared_pch(TableViewerWidget)

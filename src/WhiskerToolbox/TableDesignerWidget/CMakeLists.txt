@@ -34,14 +34,14 @@ target_link_libraries(TableDesignerWidget
         Qt6::Core
         Qt6::Widgets
         Qt6::Concurrent
-        DataManager
-        TableViewerWidget
-        Collapsible_Widget
-        EditorState
-        reflectcpp::reflectcpp
-    PRIVATE
-        WhiskerToolbox::StateManagement
 )
+target_link_libraries(TableDesignerWidget PUBLIC EditorState)
+target_link_libraries(TableDesignerWidget PUBLIC DataManager)
+target_link_libraries(TableDesignerWidget PUBLIC reflectcpp::reflectcpp)
+
+target_link_libraries(TableDesignerWidget PRIVATE WhiskerToolbox::StateManagement)
+target_link_libraries(TableDesignerWidget PRIVATE Collapsible_Widget)
+target_link_libraries(TableDesignerWidget PRIVATE TableViewerWidget)
 
 # Include directories
 target_include_directories(TableDesignerWidget PUBLIC
@@ -56,16 +56,7 @@ set_target_properties(TableDesignerWidget PROPERTIES
     AUTOMOC ON
     AUTOUIC ON
 )
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(TableDesignerWidget PRIVATE ${CLANG_OPTIONS})
-endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(TableDesignerWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(TableDesignerWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(TableDesignerWidget)
 
 enable_whiskertoolbox_shared_pch(TableDesignerWidget)

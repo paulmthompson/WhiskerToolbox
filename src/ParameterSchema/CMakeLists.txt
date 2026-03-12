@@ -7,10 +7,6 @@ add_library(ParameterSchema STATIC
 
 add_library(WhiskerToolbox::ParameterSchema ALIAS ParameterSchema)
 
-set_target_properties(ParameterSchema
-    PROPERTIES
-    WINDOWS_EXPORT_ALL_SYMBOLS OFF
-)
 
 # Expose src/ so consumers can include as: #include "ParameterSchema/ParameterSchema.hpp"
 target_include_directories(ParameterSchema PUBLIC

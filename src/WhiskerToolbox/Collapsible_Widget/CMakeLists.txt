@@ -27,18 +27,7 @@ target_include_directories(Collapsible_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(Collapsible_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(Collapsible_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(Collapsible_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(Collapsible_Widget)
 
 set_target_properties(Collapsible_Widget PROPERTIES
     AUTOMOC ON

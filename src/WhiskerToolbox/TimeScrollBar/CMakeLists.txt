@@ -1,7 +1,8 @@
 # TimeScrollBar Library CMakeLists.txt
 
-# Find required packages
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+
+find_package(reflectcpp CONFIG REQUIRED)
 
 # Define the TimeScrollBar library sources
 set(TIMESCROLLBAR_SOURCES
@@ -21,17 +22,14 @@ else()
     list(APPEND TIMESCROLLBAR_SOURCES TimeScrollBar_NoVideo.cpp)
 endif()
 
-# Create the TimeScrollBar library
 add_library(TimeScrollBar STATIC ${TIMESCROLLBAR_SOURCES})
 
-# Set target properties
 set_target_properties(TimeScrollBar PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-# Link Qt libraries
 target_link_libraries(TimeScrollBar PRIVATE 
     Qt6::Widgets 
     Qt6::Core 
@@ -47,8 +45,6 @@ if(ENABLE_FFMPEG)
     #target_compile_definitions(TimeScrollBar PRIVATE ENABLE_FFMPEG)
 endif()
 
-# Link reflectcpp for state serialization
-find_package(reflectcpp CONFIG REQUIRED)
 target_link_libraries(TimeScrollBar PRIVATE reflectcpp::reflectcpp)
 
 # Include directories
@@ -59,21 +55,7 @@ target_include_directories(TimeScrollBar PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compile definitions
-target_compile_definitions(TimeScrollBar PRIVATE _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH)
-
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(TimeScrollBar PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(TimeScrollBar PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(TimeScrollBar PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(TimeScrollBar)
 
 # Enable automoc for Qt
 set_target_properties(TimeScrollBar PROPERTIES
