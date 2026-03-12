@@ -33,7 +33,7 @@ void registerTypes(EditorRegistry * registry, std::shared_ptr<DataManager> const
                             .icon_path = QString{},
                             .menu_path = QStringLiteral("View/Tools"),
 
-                            .preferred_zone = Zone::Right,
+                            .preferred_zone = Zone::Center,
                             .properties_zone = Zone::Right,
                             .prefers_split = false,
                             .properties_as_tab = true,

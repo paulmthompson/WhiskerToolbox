@@ -10,8 +10,9 @@ Each generator is a self-contained `.cpp` file under
 time via `RegisterGenerator<Params>`.
 
 All generators produce an `std::shared_ptr<AnalogTimeSeries>` wrapped in a
-`DataTypeVariant`. The `frequency` parameter is expressed in **cycles per sample**
-(i.e., a normalized frequency), and `phase` is in **radians**.
+`DataTypeVariant`. Periodic generators use `num_cycles` and optional `cycle_length`
+to control frequency: the internal frequency is `num_cycles / cycle_length` cycles
+per sample, where `cycle_length` defaults to `num_samples`. `phase` is in **radians**.
 
 ---
 
@@ -21,13 +22,14 @@ All generators produce an `std::shared_ptr<AnalogTimeSeries>` wrapped in a
 
 **Registration name**: `"SineWave"` · **Category**: Periodic
 
-**Formula**: `y[t] = amplitude × sin(2π × frequency × t + phase) + dc_offset`
+**Formula**: `y[t] = amplitude × sin(2π × (num_cycles/cycle_length) × t + phase) + dc_offset`
 
 | Parameter | Type | Required | Default | Constraint |
 |-----------|------|----------|---------|------------|
 | `num_samples` | `int` | ✅ | — | > 0 |
 | `amplitude` | `float` | ✅ | — | — |
-| `frequency` | `float` | ✅ | — | > 0 |
+| `num_cycles` | `float` | ✅ | — | > 0 |
+| `cycle_length` | `int` | ☐ | `num_samples` | > 0 |
 | `phase` | `float` | ☐ | 0.0 | — |
 | `dc_offset` | `float` | ☐ | 0.0 | — |
 
@@ -44,13 +46,14 @@ standard sine wave). At `phase = π/2` it behaves as a cosine (peak at `t = 0`).
 `−amplitude` for the remainder.
 
 The normalized position within a cycle is:
-`pos = fmod(frequency × t + phase / (2π), 1.0)`.
+`pos = fmod((num_cycles/cycle_length) × t + phase / (2π), 1.0)`.
 
 | Parameter | Type | Required | Default | Constraint |
 |-----------|------|----------|---------|------------|
 | `num_samples` | `int` | ✅ | — | > 0 |
 | `amplitude` | `float` | ✅ | — | — |
-| `frequency` | `float` | ✅ | — | > 0 |
+| `num_cycles` | `float` | ✅ | — | > 0 |
+| `cycle_length` | `int` | ☐ | `num_samples` | > 0 |
 | `phase` | `float` | ☐ | 0.0 | — |
 | `dc_offset` | `float` | ☐ | 0.0 | — |
 | `duty_cycle` | `float` | ☐ | 0.5 | [0, 1] |
@@ -64,20 +67,21 @@ intermediate values (transitions are instantaneous at sample boundaries).
 
 **Registration name**: `"TriangleWave"` · **Category**: Periodic
 
-**Formula**: `y[t] = amplitude × (2/π) × arcsin(sin(2π × frequency × t + phase)) + dc_offset`
+**Formula**: `y[t] = amplitude × (2/π) × arcsin(sin(2π × (num_cycles/cycle_length) × t + phase)) + dc_offset`
 
 | Parameter | Type | Required | Default | Constraint |
 |-----------|------|----------|---------|------------|
 | `num_samples` | `int` | ✅ | — | > 0 |
 | `amplitude` | `float` | ✅ | — | — |
-| `frequency` | `float` | ✅ | — | > 0 |
+| `num_cycles` | `float` | ✅ | — | > 0 |
+| `cycle_length` | `int` | ☐ | `num_samples` | > 0 |
 | `phase` | `float` | ☐ | 0.0 | — |
 | `dc_offset` | `float` | ☐ | 0.0 | — |
 
 The `arcsin(sin(x))` formulation produces a triangle wave with **exactly the same
 phase conventions as SineWave**: at `t = 0, phase = 0` the output is 0 and rising.
-The peaks occur at quarter-cycle offsets (`t = 1/(4×frequency)` and
-`t = 3/(4×frequency)`).
+The peaks occur at quarter-cycle offsets (`t = cycle_length/(4×num_cycles)` and
+`t = 3×cycle_length/(4×num_cycles)`).
 
 ---
 
@@ -123,20 +127,28 @@ Produces `num_samples` i.i.d. samples from `U(min_value, max_value)` using a
 ## JSON Usage Examples
 
 ```json
-// SineWave — 1000-sample, 1 Hz (0.001 cycles/sample), amplitude 2
+// SineWave — 1000-sample, 1 cycle over the full signal, amplitude 2
 {
   "num_samples": 1000,
   "amplitude": 2.0,
-  "frequency": 0.001,
+  "num_cycles": 1.0,
   "phase": 0.0,
   "dc_offset": 0.0
+}
+
+// SineWave — 5 Hz at 1000 Hz sampling rate, 2000 samples
+{
+  "num_samples": 2000,
+  "amplitude": 1.0,
+  "num_cycles": 5,
+  "cycle_length": 1000
 }
 
 // SquareWave — 25% duty cycle
 {
   "num_samples": 500,
   "amplitude": 1.0,
-  "frequency": 0.01,
+  "num_cycles": 5,
   "duty_cycle": 0.25
 }
 

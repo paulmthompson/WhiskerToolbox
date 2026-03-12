@@ -23,9 +23,9 @@
 namespace {
 
 struct UniformNoiseParams {
-    int num_samples;
-    float min_value;
-    float max_value;
+    int num_samples = 1000;
+    float min_value = -1.0f;
+    float max_value = 1.0f;
     std::optional<uint64_t> seed;
 };
 

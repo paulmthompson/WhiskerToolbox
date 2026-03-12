@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <numeric>
 
 SynthesizerPreviewWidget::SynthesizerPreviewWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
@@ -93,7 +94,16 @@ void SynthesizerPreviewWidget::rebuildScene() {
         return;
     }
 
-    auto const time_frame = _series->getTimeFrame();
+    auto time_frame = _series->getTimeFrame();
+
+    // The preview series is ephemeral (generated outside DataManager),
+    // so it may not have a TimeFrame.  Create an identity one.
+    if (!time_frame) {
+        auto const n = static_cast<int>(_series->getNumSamples());
+        std::vector<int> times(static_cast<std::size_t>(n));
+        std::iota(times.begin(), times.end(), 0);
+        time_frame = std::make_shared<TimeFrame>(times);
+    }
 
     // Compute data bounds from the series
     float y_min = std::numeric_limits<float>::max();

@@ -55,11 +55,15 @@ public:
     [[nodiscard]] std::string const & timeKey() const;
     void setTimeKey(std::string const & key);
 
+    [[nodiscard]] std::string const & timeFrameMode() const;
+    void setTimeFrameMode(std::string const & mode);
+
 signals:
     void outputTypeChanged(std::string const & type);
     void generatorNameChanged(std::string const & name);
     void parameterJsonChanged(std::string const & json);
     void outputKeyChanged(std::string const & key);
+    void timeFrameModeChanged(std::string const & mode);
 
 private:
     DataSynthesizerStateData _data;

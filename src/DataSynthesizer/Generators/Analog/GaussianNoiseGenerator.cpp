@@ -23,8 +23,8 @@
 namespace {
 
 struct GaussianNoiseParams {
-    int num_samples;
-    float stddev;
+    int num_samples = 1000;
+    float stddev = 1.0f;
     std::optional<float> mean;
     std::optional<uint64_t> seed;
 };

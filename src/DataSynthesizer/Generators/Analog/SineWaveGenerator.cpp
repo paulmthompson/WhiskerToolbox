@@ -3,8 +3,8 @@
  * @brief Analog time series generator that produces a sine wave.
  *
  * Registers a "SineWave" generator in the DataSynthesizer registry.
- * Produces: y[t] = amplitude * sin(2π * frequency * t + phase) + dc_offset
- * where t is the sample index and frequency is in cycles per sample.
+ * Produces: y[t] = amplitude * sin(2π * (num_cycles / cycle_length) * t + phase) + dc_offset
+ * where t is the sample index.
  */
 #include "DataSynthesizer/GeneratorRegistry.hpp"
 #include "DataSynthesizer/Registration.hpp"
@@ -23,9 +23,10 @@
 namespace {
 
 struct SineWaveParams {
-    int num_samples;
-    float amplitude;
-    float frequency;
+    int num_samples = 1000;
+    float amplitude = 1.0f;
+    float num_cycles = 1.0f;
+    std::optional<int> cycle_length;
     std::optional<float> phase;
     std::optional<float> dc_offset;
 };
@@ -34,13 +35,18 @@ DataTypeVariant generateSineWave(SineWaveParams const & params) {
     if (params.num_samples <= 0) {
         throw std::invalid_argument("SineWave: num_samples must be > 0");
     }
-    if (params.frequency <= 0.0f) {
-        throw std::invalid_argument("SineWave: frequency must be > 0");
+    if (params.num_cycles <= 0.0f) {
+        throw std::invalid_argument("SineWave: num_cycles must be > 0");
+    }
+    int const cyc_len = params.cycle_length.value_or(params.num_samples);
+    if (cyc_len <= 0) {
+        throw std::invalid_argument("SineWave: cycle_length must be > 0");
     }
 
     float const ph = params.phase.value_or(0.0f);
     float const dc = params.dc_offset.value_or(0.0f);
-    float const two_pi_freq = 2.0f * std::numbers::pi_v<float> * params.frequency;
+    float const frequency = params.num_cycles / static_cast<float>(cyc_len);
+    float const two_pi_freq = 2.0f * std::numbers::pi_v<float> * frequency;
 
     auto const n = static_cast<size_t>(params.num_samples);
     std::vector<float> data(n);

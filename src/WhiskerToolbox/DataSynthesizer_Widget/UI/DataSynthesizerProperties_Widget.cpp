@@ -83,6 +83,16 @@ DataSynthesizerProperties_Widget::DataSynthesizerProperties_Widget(
     _output_key_edit->setPlaceholderText(QStringLiteral("e.g. sine_wave_1"));
     output_layout->addRow(QStringLiteral("Data Key:"), _output_key_edit);
 
+    _time_key_edit = new QLineEdit(output_group);
+    _time_key_edit->setPlaceholderText(QStringLiteral("auto: <data_key>_time"));
+    output_layout->addRow(QStringLiteral("Time Key:"), _time_key_edit);
+
+    _time_frame_mode_combo = new QComboBox(output_group);
+    _time_frame_mode_combo->addItem(QStringLiteral("Create New"), QStringLiteral("create_new"));
+    _time_frame_mode_combo->addItem(QStringLiteral("Use Existing"), QStringLiteral("use_existing"));
+    _time_frame_mode_combo->addItem(QStringLiteral("Overwrite"), QStringLiteral("overwrite"));
+    output_layout->addRow(QStringLiteral("TimeFrame:"), _time_frame_mode_combo);
+
     main_layout->addWidget(output_group);
 
     // --- Preview & Generate Buttons ---
@@ -118,6 +128,19 @@ DataSynthesizerProperties_Widget::DataSynthesizerProperties_Widget(
     connect(_output_key_edit, &QLineEdit::textChanged, this, [this](QString const & text) {
         if (!_restoring) {
             _state->setOutputKey(text.toStdString());
+        }
+    });
+
+    connect(_time_key_edit, &QLineEdit::textChanged, this, [this](QString const & text) {
+        if (!_restoring) {
+            _state->setTimeKey(text.toStdString());
+        }
+    });
+
+    connect(_time_frame_mode_combo, &QComboBox::currentIndexChanged, this, [this](int idx) {
+        if (!_restoring && idx >= 0) {
+            _state->setTimeFrameMode(
+                    _time_frame_mode_combo->currentData().toString().toStdString());
         }
     });
 
@@ -202,7 +225,14 @@ void DataSynthesizerProperties_Widget::_onGenerateClicked() {
     cmd_params.generator_name = generator_name;
     cmd_params.output_type = _state->outputType();
     cmd_params.parameters = std::move(*parsed);
-    cmd_params.time_key = _state->timeKey();
+    cmd_params.time_frame_mode = _state->timeFrameMode();
+
+    // Pass time key if the user specified one; otherwise leave as nullopt
+    // so the command auto-generates "<output_key>_time".
+    auto const & tk = _state->timeKey();
+    if (!tk.empty()) {
+        cmd_params.time_key = tk;
+    }
 
     commands::SynthesizeData cmd(std::move(cmd_params));
 
@@ -293,6 +323,9 @@ void DataSynthesizerProperties_Widget::_restoreFromState() {
             _generator_combo->setCurrentIndex(idx);
             _setupGeneratorParams(generator_name);
         }
+    } else if (_generator_combo->count() > 0) {
+        // First load with no saved state: set up params for the default generator
+        _setupGeneratorParams(_generator_combo->currentText().toStdString());
     }
 
     // Restore parameters
@@ -303,6 +336,19 @@ void DataSynthesizerProperties_Widget::_restoreFromState() {
     // Restore output key
     if (!output_key.empty()) {
         _output_key_edit->setText(QString::fromStdString(output_key));
+    }
+
+    // Restore time key
+    auto const & time_key = _state->timeKey();
+    if (!time_key.empty()) {
+        _time_key_edit->setText(QString::fromStdString(time_key));
+    }
+
+    // Restore time frame mode
+    auto const & mode = _state->timeFrameMode();
+    int const mode_idx = _time_frame_mode_combo->findData(QString::fromStdString(mode));
+    if (mode_idx >= 0) {
+        _time_frame_mode_combo->setCurrentIndex(mode_idx);
     }
 
     _restoring = false;

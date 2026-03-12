@@ -109,3 +109,15 @@ void DataSynthesizerState::setTimeKey(std::string const & key) {
         markDirty();
     }
 }
+
+std::string const & DataSynthesizerState::timeFrameMode() const {
+    return _data.time_frame_mode;
+}
+
+void DataSynthesizerState::setTimeFrameMode(std::string const & mode) {
+    if (_data.time_frame_mode != mode) {
+        _data.time_frame_mode = mode;
+        markDirty();
+        emit timeFrameModeChanged(_data.time_frame_mode);
+    }
+}

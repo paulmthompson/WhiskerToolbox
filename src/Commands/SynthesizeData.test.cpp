@@ -10,6 +10,9 @@
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
 
+#include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
@@ -43,7 +46,7 @@ TEST_CASE("createCommandFromJson creates SynthesizeData from valid params",
         "parameters": {
             "num_samples": 100,
             "amplitude": 1.0,
-            "frequency": 0.01
+            "num_cycles": 1
         }
     })");
     REQUIRE(cmd != nullptr);
@@ -57,7 +60,7 @@ TEST_CASE("createCommand creates SynthesizeData via rfl::Generic",
         "output_key": "out",
         "generator_name": "SineWave",
         "output_type": "AnalogTimeSeries",
-        "parameters": {"num_samples": 50, "amplitude": 1.0, "frequency": 0.02}
+        "parameters": {"num_samples": 50, "amplitude": 1.0, "num_cycles": 1}
     })";
     auto const generic = rfl::json::read<rfl::Generic>(json).value();
     auto cmd = createCommand("SynthesizeData", generic);
@@ -79,7 +82,7 @@ TEST_CASE("SynthesizeData command produces deterministic sine wave",
         "parameters": {
             "num_samples": 1000,
             "amplitude": 2.0,
-            "frequency": 0.01,
+            "num_cycles": 10,
             "phase": 0.0,
             "dc_offset": 0.0
         }
@@ -98,7 +101,7 @@ TEST_CASE("SynthesizeData command produces deterministic sine wave",
     // sin(0) == 0
     auto val = ts->getAtTime(TimeFrameIndex(0));
     REQUIRE(val.has_value());
-    REQUIRE(val.value() == Catch::Approx(0.0f).margin(1e-5f)); // NOLINT(bugprone-unchecked-optional-access)
+    REQUIRE(val.value() == Catch::Approx(0.0f).margin(1e-5f));// NOLINT(bugprone-unchecked-optional-access)
 }
 
 TEST_CASE("SynthesizeData determinism: same params produce same output",
@@ -165,7 +168,7 @@ TEST_CASE("SynthesizeData toJson produces valid JSON",
         "output_key": "out",
         "generator_name": "SineWave",
         "output_type": "AnalogTimeSeries",
-        "parameters": {"num_samples": 100, "amplitude": 1.0, "frequency": 0.01}
+        "parameters": {"num_samples": 100, "amplitude": 1.0, "num_cycles": 1}
     })");
     REQUIRE(cmd != nullptr);
 
@@ -189,8 +192,9 @@ TEST_CASE("SynthesizeData respects custom time_key",
         "output_key": "custom_time",
         "generator_name": "SineWave",
         "output_type": "AnalogTimeSeries",
-        "parameters": {"num_samples": 50, "amplitude": 1.0, "frequency": 0.05},
-        "time_key": "my_timeframe"
+        "parameters": {"num_samples": 50, "amplitude": 1.0, "num_cycles": 1},
+        "time_key": "my_timeframe",
+        "time_frame_mode": "create_new"
     })");
     REQUIRE(cmd != nullptr);
 
@@ -200,6 +204,148 @@ TEST_CASE("SynthesizeData respects custom time_key",
     auto ts = ctx.data_manager->getData<AnalogTimeSeries>("custom_time");
     REQUIRE(ts != nullptr);
     REQUIRE(ts->getNumSamples() == 50);
+}
+
+// =============================================================================
+// TimeFrame modes
+// =============================================================================
+
+TEST_CASE("SynthesizeData create_new fails when TimeFrame already exists",
+          "[commands][SynthesizeData][timeframe]") {
+    auto ctx = makeSynthContext();
+
+    // First create succeeds
+    auto cmd1 = createCommandFromJson("SynthesizeData", R"({
+        "output_key": "sig1",
+        "generator_name": "SineWave",
+        "output_type": "AnalogTimeSeries",
+        "parameters": {"num_samples": 100, "amplitude": 1.0, "num_cycles": 1},
+        "time_key": "shared_tf",
+        "time_frame_mode": "create_new"
+    })");
+    auto r1 = cmd1->execute(ctx);
+    REQUIRE(r1.success);
+
+    // Second create with same time_key should fail
+    auto cmd2 = createCommandFromJson("SynthesizeData", R"({
+        "output_key": "sig2",
+        "generator_name": "SineWave",
+        "output_type": "AnalogTimeSeries",
+        "parameters": {"num_samples": 100, "amplitude": 1.0, "num_cycles": 1},
+        "time_key": "shared_tf",
+        "time_frame_mode": "create_new"
+    })");
+    auto r2 = cmd2->execute(ctx);
+    REQUIRE_FALSE(r2.success);
+    REQUIRE(r2.error_message.find("already exists") != std::string::npos);
+}
+
+TEST_CASE("SynthesizeData use_existing succeeds with compatible TimeFrame",
+          "[commands][SynthesizeData][timeframe]") {
+    auto ctx = makeSynthContext();
+
+    // Create a TimeFrame first via create_new
+    auto cmd1 = createCommandFromJson("SynthesizeData", R"({
+        "output_key": "sig1",
+        "generator_name": "SineWave",
+        "output_type": "AnalogTimeSeries",
+        "parameters": {"num_samples": 200, "amplitude": 1.0, "num_cycles": 2},
+        "time_key": "shared_tf",
+        "time_frame_mode": "create_new"
+    })");
+    REQUIRE(cmd1->execute(ctx).success);
+
+    // use_existing with same size should succeed
+    auto cmd2 = createCommandFromJson("SynthesizeData", R"({
+        "output_key": "sig2",
+        "generator_name": "SquareWave",
+        "output_type": "AnalogTimeSeries",
+        "parameters": {"num_samples": 200, "amplitude": 1.0, "num_cycles": 2},
+        "time_key": "shared_tf",
+        "time_frame_mode": "use_existing"
+    })");
+    auto r2 = cmd2->execute(ctx);
+    REQUIRE(r2.success);
+}
+
+TEST_CASE("SynthesizeData use_existing fails when TimeFrame is missing",
+          "[commands][SynthesizeData][timeframe]") {
+    auto ctx = makeSynthContext();
+
+    auto cmd = createCommandFromJson("SynthesizeData", R"({
+        "output_key": "sig1",
+        "generator_name": "SineWave",
+        "output_type": "AnalogTimeSeries",
+        "parameters": {"num_samples": 100, "amplitude": 1.0, "num_cycles": 1},
+        "time_key": "nonexistent",
+        "time_frame_mode": "use_existing"
+    })");
+    auto result = cmd->execute(ctx);
+    REQUIRE_FALSE(result.success);
+    REQUIRE(result.error_message.find("does not exist") != std::string::npos);
+}
+
+TEST_CASE("SynthesizeData use_existing fails when TimeFrame is too small",
+          "[commands][SynthesizeData][timeframe]") {
+    auto ctx = makeSynthContext();
+
+    // Create a small TimeFrame
+    auto cmd1 = createCommandFromJson("SynthesizeData", R"({
+        "output_key": "sig1",
+        "generator_name": "SineWave",
+        "output_type": "AnalogTimeSeries",
+        "parameters": {"num_samples": 50, "amplitude": 1.0, "num_cycles": 1},
+        "time_key": "small_tf",
+        "time_frame_mode": "create_new"
+    })");
+    REQUIRE(cmd1->execute(ctx).success);
+
+    // Try to use it with a larger signal
+    auto cmd2 = createCommandFromJson("SynthesizeData", R"({
+        "output_key": "sig2",
+        "generator_name": "SineWave",
+        "output_type": "AnalogTimeSeries",
+        "parameters": {"num_samples": 200, "amplitude": 1.0, "num_cycles": 2},
+        "time_key": "small_tf",
+        "time_frame_mode": "use_existing"
+    })");
+    auto r2 = cmd2->execute(ctx);
+    REQUIRE_FALSE(r2.success);
+    REQUIRE(r2.error_message.find("frames but data requires") != std::string::npos);
+}
+
+TEST_CASE("SynthesizeData overwrite replaces existing TimeFrame",
+          "[commands][SynthesizeData][timeframe]") {
+    auto ctx = makeSynthContext();
+
+    // Create initial
+    auto cmd1 = createCommandFromJson("SynthesizeData", R"({
+        "output_key": "sig1",
+        "generator_name": "SineWave",
+        "output_type": "AnalogTimeSeries",
+        "parameters": {"num_samples": 50, "amplitude": 1.0, "num_cycles": 1},
+        "time_key": "my_tf",
+        "time_frame_mode": "create_new"
+    })");
+    REQUIRE(cmd1->execute(ctx).success);
+
+    auto tf_before = ctx.data_manager->getTime(TimeKey("my_tf"));
+    REQUIRE(tf_before->getTotalFrameCount() == 50);
+
+    // Overwrite with larger signal
+    auto cmd2 = createCommandFromJson("SynthesizeData", R"({
+        "output_key": "sig2",
+        "generator_name": "SineWave",
+        "output_type": "AnalogTimeSeries",
+        "parameters": {"num_samples": 300, "amplitude": 1.0, "num_cycles": 3},
+        "time_key": "my_tf",
+        "time_frame_mode": "overwrite"
+    })");
+    auto r2 = cmd2->execute(ctx);
+    REQUIRE(r2.success);
+
+    auto tf_after = ctx.data_manager->getTime(TimeKey("my_tf"));
+    REQUIRE(tf_after->getTotalFrameCount() == 300);
 }
 
 // =============================================================================

@@ -23,6 +23,11 @@ struct SynthesizeDataParams {
     std::string output_type;
     rfl::Generic parameters;
     std::optional<std::string> time_key;
+
+    /// "create_new" (default): create a new TimeFrame; fails if key already exists.
+    /// "use_existing": attach to an existing TimeFrame; fails if it doesn't exist or is too small.
+    /// "overwrite": create/replace a TimeFrame unconditionally.
+    std::optional<std::string> time_frame_mode;
 };
 
 class SynthesizeData : public ICommand {

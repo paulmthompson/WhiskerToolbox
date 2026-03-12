@@ -70,6 +70,8 @@ private:
     QComboBox * _generator_combo = nullptr;
     AutoParamWidget * _auto_param_widget = nullptr;
     QLineEdit * _output_key_edit = nullptr;
+    QLineEdit * _time_key_edit = nullptr;
+    QComboBox * _time_frame_mode_combo = nullptr;
     QLabel * _status_label = nullptr;
 
     bool _restoring = false;///< Guard against recursive updates during restore

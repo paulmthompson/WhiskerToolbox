@@ -19,19 +19,19 @@ static std::shared_ptr<AnalogTimeSeries> runSineWave(std::string const & json) {
 }
 
 TEST_CASE("SineWave produces correct output size", "[SineWave]") {
-    auto ts = runSineWave(R"({"num_samples": 200, "amplitude": 1.0, "frequency": 0.01})");
+    auto ts = runSineWave(R"({"num_samples": 200, "amplitude": 1.0, "num_cycles": 2})");
     REQUIRE(ts->getNumSamples() == 200);
 }
 
 TEST_CASE("SineWave value at t=0 with default phase is ~0", "[SineWave]") {
-    auto ts = runSineWave(R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.01})");
+    auto ts = runSineWave(R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 1})");
     auto values = ts->getAnalogTimeSeries();
     REQUIRE(values[0] == Catch::Approx(0.0f).margin(1e-6f));
 }
 
 TEST_CASE("SineWave values are bounded within [-amplitude, amplitude]", "[SineWave]") {
     float const amplitude = 3.5f;
-    auto ts = runSineWave(R"({"num_samples": 1000, "amplitude": 3.5, "frequency": 0.01})");
+    auto ts = runSineWave(R"({"num_samples": 1000, "amplitude": 3.5, "num_cycles": 10})");
     auto values = ts->getAnalogTimeSeries();
     for (auto v: values) {
         REQUIRE(v <= amplitude + 1e-5f);
@@ -41,8 +41,8 @@ TEST_CASE("SineWave values are bounded within [-amplitude, amplitude]", "[SineWa
 
 TEST_CASE("SineWave dc_offset shifts all values", "[SineWave]") {
     float const dc = 5.0f;
-    auto ts_no_dc = runSineWave(R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.01})");
-    auto ts_with_dc = runSineWave(R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.01, "dc_offset": 5.0})");
+    auto ts_no_dc = runSineWave(R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 1})");
+    auto ts_with_dc = runSineWave(R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 1, "dc_offset": 5.0})");
 
     auto v_no = ts_no_dc->getAnalogTimeSeries();
     auto v_dc = ts_with_dc->getAnalogTimeSeries();
@@ -54,8 +54,8 @@ TEST_CASE("SineWave dc_offset shifts all values", "[SineWave]") {
 
 TEST_CASE("SineWave one complete cycle peaks at +amplitude and -amplitude", "[SineWave]") {
     float const amplitude = 2.0f;
-    // 1000 samples, frequency = 1/1000 → one complete cycle
-    auto ts = runSineWave(R"({"num_samples": 1000, "amplitude": 2.0, "frequency": 0.001})");
+    // 1000 samples, num_cycles = 1 → one complete cycle
+    auto ts = runSineWave(R"({"num_samples": 1000, "amplitude": 2.0, "num_cycles": 1})");
     auto values = ts->getAnalogTimeSeries();
 
     float max_val = *std::max_element(values.begin(), values.end());
@@ -72,7 +72,7 @@ TEST_CASE("SineWave phase shifts the waveform", "[SineWave]") {
     float const half_pi = std::numbers::pi_v<float> / 2.0f;
     // JSON doesn't allow runtime float expressions, compute the string manually
     // π/2 ≈ 1.5707963
-    auto ts = runSineWave(R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.01, "phase": 1.5707963})");
+    auto ts = runSineWave(R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 1, "phase": 1.5707963})");
     auto values = ts->getAnalogTimeSeries();
     // sin(π/2) = 1
     REQUIRE(values[0] == Catch::Approx(amplitude).margin(1e-5f));
@@ -80,12 +80,22 @@ TEST_CASE("SineWave phase shifts the waveform", "[SineWave]") {
 
 TEST_CASE("SineWave rejects num_samples <= 0", "[SineWave]") {
     auto result = GeneratorRegistry::instance().generate(
-            "SineWave", R"({"num_samples": 0, "amplitude": 1.0, "frequency": 0.01})");
+            "SineWave", R"({"num_samples": 0, "amplitude": 1.0, "num_cycles": 1})");
     REQUIRE_FALSE(result.has_value());
 }
 
-TEST_CASE("SineWave rejects frequency <= 0", "[SineWave]") {
+TEST_CASE("SineWave rejects num_cycles <= 0", "[SineWave]") {
     auto result = GeneratorRegistry::instance().generate(
-            "SineWave", R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.0})");
+            "SineWave", R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 0.0})");
     REQUIRE_FALSE(result.has_value());
+}
+
+TEST_CASE("SineWave with explicit cycle_length", "[SineWave]") {
+    // 5 cycles over 500 samples in a 1000-sample signal → same freq as 5/500 = 0.01 c/s
+    auto ts = runSineWave(R"({"num_samples": 1000, "amplitude": 1.0, "num_cycles": 5, "cycle_length": 500})");
+    auto values = ts->getAnalogTimeSeries();
+    // Period is 100 samples. Value at sample 25 (quarter-period) should be +amplitude
+    REQUIRE(values[25] == Catch::Approx(1.0f).margin(0.01f));
+    // Value at sample 100 (full period) should be ~0
+    REQUIRE(values[100] == Catch::Approx(0.0f).margin(0.01f));
 }

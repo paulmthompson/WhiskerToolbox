@@ -5,8 +5,8 @@
  * Registers a "SquareWave" generator in the DataSynthesizer registry.
  * Produces: y[t] = +amplitude if fractional position within cycle < duty_cycle,
  *                  -amplitude otherwise, plus dc_offset.
- * Fractional position = fmod(frequency * t + phase/(2π), 1.0).
- * frequency is in cycles per sample; phase is in radians.
+ * Fractional position = fmod((num_cycles/cycle_length) * t + phase/(2π), 1.0).
+ * phase is in radians.
  */
 #include "DataSynthesizer/GeneratorRegistry.hpp"
 #include "DataSynthesizer/Registration.hpp"
@@ -25,9 +25,10 @@
 namespace {
 
 struct SquareWaveParams {
-    int num_samples;
-    float amplitude;
-    float frequency;
+    int num_samples = 1000;
+    float amplitude = 1.0f;
+    float num_cycles = 1.0f;
+    std::optional<int> cycle_length;
     std::optional<float> phase;
     std::optional<float> dc_offset;
     std::optional<float> duty_cycle;
@@ -37,8 +38,12 @@ DataTypeVariant generateSquareWave(SquareWaveParams const & params) {
     if (params.num_samples <= 0) {
         throw std::invalid_argument("SquareWave: num_samples must be > 0");
     }
-    if (params.frequency <= 0.0f) {
-        throw std::invalid_argument("SquareWave: frequency must be > 0");
+    if (params.num_cycles <= 0.0f) {
+        throw std::invalid_argument("SquareWave: num_cycles must be > 0");
+    }
+    int const cyc_len = params.cycle_length.value_or(params.num_samples);
+    if (cyc_len <= 0) {
+        throw std::invalid_argument("SquareWave: cycle_length must be > 0");
     }
     float const dc_ratio = params.duty_cycle.value_or(0.5f);
     if (dc_ratio < 0.0f || dc_ratio > 1.0f) {
@@ -47,6 +52,7 @@ DataTypeVariant generateSquareWave(SquareWaveParams const & params) {
 
     float const ph = params.phase.value_or(0.0f);
     float const dc = params.dc_offset.value_or(0.0f);
+    float const frequency = params.num_cycles / static_cast<float>(cyc_len);
     // Convert radian phase to cycle fraction for consistent phase semantics
     float const phase_frac = ph / (2.0f * std::numbers::pi_v<float>);
 
@@ -54,7 +60,7 @@ DataTypeVariant generateSquareWave(SquareWaveParams const & params) {
     std::vector<float> data(n);
     for (size_t i = 0; i < n; ++i) {
         auto const t = static_cast<float>(i);
-        float pos = std::fmod(params.frequency * t + phase_frac, 1.0f);
+        float pos = std::fmod(frequency * t + phase_frac, 1.0f);
         if (pos < 0.0f) {
             pos += 1.0f;
         }
@@ -70,6 +76,7 @@ auto const square_wave_reg =
                 generateSquareWave,
                 WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a square wave analog time series with configurable duty cycle. "
+                                       "num_cycles complete cycles over cycle_length samples (defaults to num_samples). "
                                        "duty_cycle in [0,1] controls the fraction of each period at +amplitude.",
                         .category = "Periodic",
                         .output_type = "AnalogTimeSeries"});

@@ -17,13 +17,13 @@ static std::shared_ptr<AnalogTimeSeries> runSquareWave(std::string const & json)
 }
 
 TEST_CASE("SquareWave produces correct output size", "[SquareWave]") {
-    auto ts = runSquareWave(R"({"num_samples": 300, "amplitude": 1.0, "frequency": 0.01})");
+    auto ts = runSquareWave(R"({"num_samples": 300, "amplitude": 1.0, "num_cycles": 3})");
     REQUIRE(ts->getNumSamples() == 300);
 }
 
 TEST_CASE("SquareWave values are exactly ±amplitude (plus dc_offset)", "[SquareWave]") {
     float const amplitude = 2.0f;
-    auto ts = runSquareWave(R"({"num_samples": 500, "amplitude": 2.0, "frequency": 0.01})");
+    auto ts = runSquareWave(R"({"num_samples": 500, "amplitude": 2.0, "num_cycles": 5})");
     auto values = ts->getAnalogTimeSeries();
     for (auto v: values) {
         bool is_pos = (std::abs(v - amplitude) < 1e-5f);
@@ -33,10 +33,10 @@ TEST_CASE("SquareWave values are exactly ±amplitude (plus dc_offset)", "[Square
 }
 
 TEST_CASE("SquareWave default duty_cycle 0.5 splits cycle evenly", "[SquareWave]") {
-    // 100 samples, frequency=0.01 → 1 cycle over 100 samples
+    // 100 samples, num_cycles=1 → 1 cycle over 100 samples
     // First 50 samples should be +amplitude, next 50 -amplitude
     float const amplitude = 1.0f;
-    auto ts = runSquareWave(R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.01})");
+    auto ts = runSquareWave(R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 1})");
     auto values = ts->getAnalogTimeSeries();
 
     // First half: +amplitude
@@ -50,10 +50,10 @@ TEST_CASE("SquareWave default duty_cycle 0.5 splits cycle evenly", "[SquareWave]
 }
 
 TEST_CASE("SquareWave duty_cycle 0.25 gives 25% positive", "[SquareWave]") {
-    // 100 samples, frequency=0.01 → 1 cycle; first 25 positive, rest negative
+    // 100 samples, num_cycles=1 → 1 cycle; first 25 positive, rest negative
     float const amplitude = 1.0f;
     auto ts = runSquareWave(
-            R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.01, "duty_cycle": 0.25})");
+            R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 1, "duty_cycle": 0.25})");
     auto values = ts->getAnalogTimeSeries();
 
     for (size_t i = 0; i < 25; ++i) {
@@ -66,9 +66,9 @@ TEST_CASE("SquareWave duty_cycle 0.25 gives 25% positive", "[SquareWave]") {
 
 TEST_CASE("SquareWave dc_offset shifts all values", "[SquareWave]") {
     float const dc = 3.0f;
-    auto ts_no_dc = runSquareWave(R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.01})");
+    auto ts_no_dc = runSquareWave(R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 1})");
     auto ts_with_dc = runSquareWave(
-            R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.01, "dc_offset": 3.0})");
+            R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 1, "dc_offset": 3.0})");
 
     auto v_no = ts_no_dc->getAnalogTimeSeries();
     auto v_dc = ts_with_dc->getAnalogTimeSeries();
@@ -79,16 +79,16 @@ TEST_CASE("SquareWave dc_offset shifts all values", "[SquareWave]") {
 
 TEST_CASE("SquareWave rejects duty_cycle out of range", "[SquareWave]") {
     auto r1 = GeneratorRegistry::instance().generate(
-            "SquareWave", R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.01, "duty_cycle": 1.5})");
+            "SquareWave", R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 1, "duty_cycle": 1.5})");
     REQUIRE_FALSE(r1.has_value());
 
     auto r2 = GeneratorRegistry::instance().generate(
-            "SquareWave", R"({"num_samples": 100, "amplitude": 1.0, "frequency": 0.01, "duty_cycle": -0.1})");
+            "SquareWave", R"({"num_samples": 100, "amplitude": 1.0, "num_cycles": 1, "duty_cycle": -0.1})");
     REQUIRE_FALSE(r2.has_value());
 }
 
 TEST_CASE("SquareWave rejects num_samples <= 0", "[SquareWave]") {
     auto result = GeneratorRegistry::instance().generate(
-            "SquareWave", R"({"num_samples": -1, "amplitude": 1.0, "frequency": 0.01})");
+            "SquareWave", R"({"num_samples": -1, "amplitude": 1.0, "num_cycles": 1})");
     REQUIRE_FALSE(result.has_value());
 }

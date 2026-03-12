@@ -31,8 +31,9 @@ struct DataSynthesizerStateData {
     std::string parameter_json;///< Current params as JSON string
 
     // Output configuration
-    std::string output_key;       ///< DataManager key for generated data
-    std::string time_key = "time";///< TimeFrame association
+    std::string output_key;                    ///< DataManager key for generated data
+    std::string time_key;                      ///< TimeFrame key (empty = auto-generate from output_key)
+    std::string time_frame_mode = "create_new";///< "create_new", "use_existing", "overwrite"
 };
 
 #endif// DATA_SYNTHESIZER_STATE_DATA_HPP
