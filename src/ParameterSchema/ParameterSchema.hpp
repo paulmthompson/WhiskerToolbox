@@ -12,6 +12,8 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include "TimeFrame/TimeFrameIndexReflector.hpp"
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -165,6 +167,14 @@ ParameterSchema extractParameterSchema() {
 
     auto meta_fields = rfl::fields<Params>();
 
+    // Default-construct a Params instance and serialize to JSON to extract defaults
+    auto const defaults_json = rfl::json::write(Params{});
+    auto const defaults_parsed = rfl::json::read<rfl::Generic>(defaults_json);
+    rfl::Generic::Object const * defaults_obj = nullptr;
+    if (defaults_parsed) {
+        defaults_obj = std::get_if<rfl::Generic::Object>(&defaults_parsed.value().get());
+    }
+
     int order = 0;
     for (auto const & mf: meta_fields) {
         ParameterFieldDescriptor desc;
@@ -182,6 +192,14 @@ ParameterSchema extractParameterSchema() {
             desc.max_value = constraints.max_value;
             desc.is_exclusive_min = constraints.is_exclusive_min;
             desc.is_exclusive_max = constraints.is_exclusive_max;
+        }
+
+        // Extract default value from the default-constructed instance
+        if (defaults_obj) {
+            auto field_val = defaults_obj->get(desc.name);
+            if (field_val) {
+                desc.default_value_json = rfl::json::write(field_val.value());
+            }
         }
 
         schema.fields.push_back(std::move(desc));

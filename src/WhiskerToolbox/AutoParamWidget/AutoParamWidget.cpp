@@ -100,7 +100,21 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
         }
 
         spin->setRange(min_val, max_val);
-        spin->setValue(0.0);
+
+        // Apply default value if available, otherwise 0.0
+        if (desc.default_value_json.has_value()) {
+            auto def_result = rfl::json::read<rfl::Generic>(desc.default_value_json.value());
+            if (def_result) {
+                auto const & val = def_result.value().get();
+                if (auto const * d = std::get_if<double>(&val)) {
+                    spin->setValue(*d);
+                } else if (auto const * i = std::get_if<int>(&val)) {
+                    spin->setValue(static_cast<double>(*i));
+                }
+            }
+        } else {
+            spin->setValue(0.0);
+        }
 
         connect(spin, &QDoubleSpinBox::valueChanged, this, &AutoParamWidget::onFieldChanged);
 
@@ -121,7 +135,21 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
         }
 
         spin->setRange(min_val, max_val);
-        spin->setValue(0);
+
+        // Apply default value if available, otherwise 0
+        if (desc.default_value_json.has_value()) {
+            auto def_result = rfl::json::read<rfl::Generic>(desc.default_value_json.value());
+            if (def_result) {
+                auto const & val = def_result.value().get();
+                if (auto const * i = std::get_if<int>(&val)) {
+                    spin->setValue(*i);
+                } else if (auto const * d = std::get_if<double>(&val)) {
+                    spin->setValue(static_cast<int>(*d));
+                }
+            }
+        } else {
+            spin->setValue(0);
+        }
 
         connect(spin, &QSpinBox::valueChanged, this, &AutoParamWidget::onFieldChanged);
 
@@ -130,7 +158,19 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
 
     } else if (desc.type_name == "bool") {
         auto * check = new QCheckBox(this);
-        check->setChecked(false);
+
+        // Apply default value if available, otherwise false
+        if (desc.default_value_json.has_value()) {
+            auto def_result = rfl::json::read<rfl::Generic>(desc.default_value_json.value());
+            if (def_result) {
+                auto const & val = def_result.value().get();
+                if (auto const * b = std::get_if<bool>(&val)) {
+                    check->setChecked(*b);
+                }
+            }
+        } else {
+            check->setChecked(false);
+        }
 
         connect(check, &QCheckBox::toggled, this, &AutoParamWidget::onFieldChanged);
 
@@ -143,6 +183,20 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
             combo->addItem(QString::fromStdString(val));
         }
 
+        // Apply default value if available
+        if (desc.default_value_json.has_value()) {
+            auto def_result = rfl::json::read<rfl::Generic>(desc.default_value_json.value());
+            if (def_result) {
+                auto const & val = def_result.value().get();
+                if (auto const * s = std::get_if<std::string>(&val)) {
+                    int const idx = combo->findText(QString::fromStdString(*s));
+                    if (idx >= 0) {
+                        combo->setCurrentIndex(idx);
+                    }
+                }
+            }
+        }
+
         connect(combo, &QComboBox::currentIndexChanged, this, &AutoParamWidget::onFieldChanged);
 
         row.combo_box = combo;
@@ -151,6 +205,17 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
     } else {
         // Default to QLineEdit for std::string and unknown types
         auto * edit = new QLineEdit(this);
+
+        // Apply default value if available
+        if (desc.default_value_json.has_value()) {
+            auto def_result = rfl::json::read<rfl::Generic>(desc.default_value_json.value());
+            if (def_result) {
+                auto const & val = def_result.value().get();
+                if (auto const * s = std::get_if<std::string>(&val)) {
+                    edit->setText(QString::fromStdString(*s));
+                }
+            }
+        }
 
         connect(edit, &QLineEdit::textChanged, this, &AutoParamWidget::onFieldChanged);
 

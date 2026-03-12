@@ -311,9 +311,11 @@ void DataSynthesizerProperties_Widget::_restoreFromState() {
             _populateGenerators(output_type);
         }
     } else if (_output_type_combo->count() > 0) {
-        // Default to first output type
+        // Default to first output type — also sync state
         _output_type_combo->setCurrentIndex(0);
-        _populateGenerators(_output_type_combo->currentText().toStdString());
+        auto const default_output_type = _output_type_combo->currentText().toStdString();
+        _state->setOutputType(default_output_type);
+        _populateGenerators(default_output_type);
     }
 
     // Restore generator selection
@@ -324,8 +326,10 @@ void DataSynthesizerProperties_Widget::_restoreFromState() {
             _setupGeneratorParams(generator_name);
         }
     } else if (_generator_combo->count() > 0) {
-        // First load with no saved state: set up params for the default generator
-        _setupGeneratorParams(_generator_combo->currentText().toStdString());
+        // First load with no saved state: sync selected generator to state
+        auto const default_generator = _generator_combo->currentText().toStdString();
+        _state->setGeneratorName(default_generator);
+        _setupGeneratorParams(default_generator);
     }
 
     // Restore parameters
