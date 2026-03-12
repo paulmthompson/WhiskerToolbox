@@ -5,7 +5,7 @@
 
 #include "DataExport_Widget/Masks/CSV/CSVMaskSaver_Widget.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "IO/formats/CSV/mask/Mask_Data_CSV.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"

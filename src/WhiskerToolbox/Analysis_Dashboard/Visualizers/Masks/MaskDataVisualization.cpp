@@ -2,7 +2,7 @@
 
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/polygon_adapter.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 
 #include "Selection/ISelectionHandler.hpp"
 #include "Selection/LineSelectionHandler.hpp"

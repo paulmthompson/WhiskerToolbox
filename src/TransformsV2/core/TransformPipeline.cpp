@@ -4,7 +4,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "Lines/Line_Data.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 
 namespace WhiskerToolbox::Transforms::V2 {

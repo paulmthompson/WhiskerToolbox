@@ -3,7 +3,7 @@
 #include "MaskTableModel.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"

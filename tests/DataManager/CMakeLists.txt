@@ -62,6 +62,13 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataObjects/Lines/Line_Data.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataObjects/Points/Point_Data.test.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/Mask_Data.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/connected_component.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/hole_filling.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/median_filter.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/skeletonize.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/mask_utils.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/AnalogSliceGathererComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/EventInIntervalComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/IntervalOverlapComputer.test.cpp

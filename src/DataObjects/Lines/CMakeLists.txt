@@ -40,4 +40,4 @@ set_target_properties(LineData PROPERTIES
 
 add_library(WhiskerToolbox::LineData ALIAS LineData)
 
-enable_whiskertoolbox_pch(LineData)
+enable_whiskertoolbox_shared_pch(LineData)

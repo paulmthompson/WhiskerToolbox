@@ -43,21 +43,7 @@ set_target_properties(MaskData PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-# Create alias for consistent naming
 add_library(WhiskerToolbox::MaskData ALIAS MaskData)
 
-# Test sources
-set(masks_test_sources
-    Mask_Data.test.cpp
-    utils/connected_component.test.cpp
-    utils/hole_filling.test.cpp
-    utils/median_filter.test.cpp
-    utils/skeletonize.test.cpp
-    utils/mask_utils.test.cpp
-)
 
-add_tests_to_global(masks_test_sources 
-                    "${CMAKE_SOURCE_DIR}/src/DataManager/Masks" 
-                    DATAMANAGER_TEST_SOURCES)
-
-enable_whiskertoolbox_pch(MaskData)
+enable_whiskertoolbox_shared_pch(MaskData)

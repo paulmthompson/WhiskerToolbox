@@ -10,7 +10,7 @@
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/IO/SaveData.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "MediaExport/media_export.hpp"
