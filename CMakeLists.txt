@@ -127,6 +127,15 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# NVCC does not support CUDA23, so cap the CUDA standard at 20.
+# This prevents libtorch's find_package(Torch) from inheriting C++23
+# and failing with "language dialect CUDA23 is not supported".
+set(CMAKE_CUDA_STANDARD 20)
+
+# CMake 3.18+ requires CUDA_ARCHITECTURES to be non-empty for CUDA targets.
+# "native" (CMake 3.24+) auto-detects the GPU on the build machine.
+set(CMAKE_CUDA_ARCHITECTURES native)
+
 include(enable_sanitizers)
 include(CompilerWarnings)
 include(set_rpath)
