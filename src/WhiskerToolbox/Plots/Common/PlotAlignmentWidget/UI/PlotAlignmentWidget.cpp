@@ -2,8 +2,8 @@
 
 #include "Core/PlotAlignmentState.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include "ui_PlotAlignmentWidget.h"
 

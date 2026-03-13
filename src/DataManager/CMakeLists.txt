@@ -14,11 +14,6 @@ find_package(Armadillo REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
 
-# Note: Observer library has been promoted to top-level (src/Observer)
-# DataManager gets Observer includes via transitive dependency from Entity
-
-add_subdirectory(Lines)
-
 add_subdirectory(IO)
 
 add_subdirectory(Media)
@@ -40,12 +35,8 @@ set(DATAMANAGER_SOURCES
 
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
-        utils/color.hpp
-        utils/color.cpp
         utils/json_helpers.hpp
-        utils/map_timeseries.hpp
         utils/metaprogramming_utils.hpp
-        utils/string_manip.hpp
         utils/TimeIndexExtractor.hpp
         utils/TimeIndexExtractor.cpp
         utils/DerivedTimeFrame.hpp
@@ -205,11 +196,6 @@ set(DATAMANAGER_SOURCES
 
 set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
 
-add_subdirectory(AnalogTimeSeries)
-add_subdirectory(DigitalTimeSeries)
-add_subdirectory(Masks)
-add_subdirectory(Points)
-
 add_library(DataManager STATIC ${DATAMANAGER_SOURCES})
 
 target_include_directories(DataManager PRIVATE
@@ -224,6 +210,7 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(DataManager PRIVATE WhiskerToolbox::CoreMath)
+target_link_libraries(DataManager PRIVATE CoreUtilities)
 
 target_link_libraries(DataManager PRIVATE StateEstimation)
 
@@ -243,30 +230,13 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::PointData)
 
+target_link_libraries(DataManager PUBLIC DataTypeEnum)
+
 if(ENABLE_OPENCV)
     target_link_libraries(DataManager PUBLIC ImageProcessing)
 endif()
 
 target_link_libraries(DataManager PRIVATE DataManagerIO)
-
-
-if(ENABLE_HDF5)
-    target_link_libraries(DataManager PRIVATE DataManagerHDF5)
-    target_compile_definitions(DataManager PRIVATE ENABLE_HDF5)
-endif()
-
-if(ENABLE_CAPNPROTO)
-    target_link_libraries(DataManager PRIVATE DataManagerIO_CapnProto)
-    target_compile_definitions(DataManager PRIVATE ENABLE_CAPNPROTO)
-endif()
-
-if(ENABLE_OPENCV)
-    target_link_libraries(DataManager PRIVATE DataManagerOpenCV)
-    target_compile_definitions(DataManager PRIVATE ENABLE_OPENCV)
-endif()
-
-# Numpy loader is always available (header-only libnpy)
-target_link_libraries(DataManager PRIVATE DataManagerNumpy)
 
 #It is important to put these last to avoid linker errors with no OpenCV
 #I don't know exactly why

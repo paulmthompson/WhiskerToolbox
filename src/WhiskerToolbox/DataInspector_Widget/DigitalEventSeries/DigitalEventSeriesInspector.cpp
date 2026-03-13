@@ -8,7 +8,9 @@
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 #include "DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/IO/SaveData.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalEventSeriesDataView.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 

@@ -3,7 +3,7 @@
 
 #include <pybind11/stl.h>
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 
 #include <string>
 

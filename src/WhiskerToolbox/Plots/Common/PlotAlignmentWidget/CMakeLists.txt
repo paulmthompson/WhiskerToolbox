@@ -20,12 +20,13 @@ set_target_properties(PlotAlignmentWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(PlotAlignmentWidget PRIVATE 
+target_link_libraries(PlotAlignmentWidget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
 )
 
+target_link_libraries(PlotAlignmentWidget PUBLIC DataTypeEnum)
 target_link_libraries(PlotAlignmentWidget PRIVATE DataManager GatherResult)
 
 target_include_directories(PlotAlignmentWidget PUBLIC
@@ -34,18 +35,7 @@ target_include_directories(PlotAlignmentWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(PlotAlignmentWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(PlotAlignmentWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(PlotAlignmentWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(PlotAlignmentWidget)
 
 # Enable automoc for Qt
 set_target_properties(PlotAlignmentWidget PROPERTIES

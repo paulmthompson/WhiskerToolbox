@@ -2,7 +2,7 @@
 
 #include "CoreGeometry/points.hpp"
 #include "Entity/EntityRegistry.hpp"
-#include "utils/map_timeseries.hpp"
+#include "RaggedTimeSeries/map_timeseries.hpp"
 
 #include <cmath>
 #include <iostream>

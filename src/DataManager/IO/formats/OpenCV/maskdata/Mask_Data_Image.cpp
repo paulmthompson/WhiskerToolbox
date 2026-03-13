@@ -5,7 +5,7 @@
 #include "CoreGeometry/points.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Masks/utils/mask_utils.hpp"
-#include "utils/string_manip.hpp"
+#include "CoreUtilities/string_manip.hpp"
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>

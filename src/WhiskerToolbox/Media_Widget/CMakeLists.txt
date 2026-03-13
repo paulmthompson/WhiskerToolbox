@@ -111,10 +111,6 @@ set(MEDIA_WIDGET_SOURCES
     DisplayOptionsRegistry.cpp
     DisplayOptions/DisplayOptions.hpp
     DisplayOptions/CoordinateTypes.hpp
-
-
-
-
 )
 
 add_library(Media_Widget STATIC ${MEDIA_WIDGET_SOURCES})
@@ -130,6 +126,8 @@ target_link_libraries(Media_Widget PRIVATE Collapsible_Widget)
 target_link_libraries(Media_Widget PRIVATE GroupManagementWidget)
 target_link_libraries(Media_Widget PRIVATE GroupContextMenu)
 target_link_libraries(Media_Widget PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
+
+target_link_libraries(Media_Widget PUBLIC CoreUtilities) # Color in header
 
 target_include_directories(Media_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"

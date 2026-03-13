@@ -1,12 +1,12 @@
 #ifndef TIMESCROLLBAR_H
 #define TIMESCROLLBAR_H
 
+#include "TimeFrame/TimeFrame.hpp"  // For TimePosition, TimeFrameIndex
+#include "TimeFrame/StrongTimeTypes.hpp"  // For TimeKey
+
 #include <QWidget>
 
 #include <memory>
-
-#include "TimeFrame/TimeFrame.hpp"  // For TimePosition, TimeFrameIndex
-#include "TimeFrame/StrongTimeTypes.hpp"  // For TimeKey
 
 class DataManager;
 class EditorRegistry;

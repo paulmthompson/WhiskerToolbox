@@ -20,9 +20,9 @@
 #include "TransformsV2/core/TensorColumnBuilders.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Tensors/TensorData.hpp"
 #include "DataManager/Tensors/RowDescriptor.hpp"
 #include "DataManager/Tensors/storage/LazyColumnTensorStorage.hpp"

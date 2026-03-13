@@ -1,7 +1,7 @@
 #ifndef FEATUREPROCESSINGWIDGET_HPP
 #define FEATUREPROCESSINGWIDGET_HPP
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "ML_Widget/Transformations/TransformationsCommon.hpp"
 
 #include <QString>

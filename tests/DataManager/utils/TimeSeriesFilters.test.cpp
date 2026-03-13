@@ -15,7 +15,7 @@
 #include "DigitalTimeSeries/IntervalWithId.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "utils/RaggedTimeSeries.hpp"
+#include "RaggedTimeSeries/RaggedTimeSeries.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "DataManager.hpp"

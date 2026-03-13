@@ -28,7 +28,7 @@ set_target_properties(3DPlotWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(3DPlotWidget PRIVATE 
+target_link_libraries(3DPlotWidget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
@@ -37,7 +37,8 @@ target_link_libraries(3DPlotWidget PRIVATE
 )
 
 target_link_libraries(3DPlotWidget PRIVATE DataManager)
-target_link_libraries(3DPlotWidget PRIVATE EditorState)
+target_link_libraries(3DPlotWidget PUBLIC DataTypeEnum)
+target_link_libraries(3DPlotWidget PUBLIC EditorState)
 
 target_include_directories(3DPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
@@ -45,18 +46,7 @@ target_include_directories(3DPlotWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(3DPlotWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(3DPlotWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(3DPlotWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(3DPlotWidget)
 
 # Enable automoc for Qt
 set_target_properties(3DPlotWidget PROPERTIES

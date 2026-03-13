@@ -13,8 +13,8 @@
  * raster events without modifying the core rendering pipeline.
  */
 
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 
 #include <memory>

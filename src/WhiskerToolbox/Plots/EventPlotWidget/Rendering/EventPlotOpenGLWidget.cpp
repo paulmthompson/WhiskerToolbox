@@ -8,7 +8,7 @@
 #include "CorePlotting/Mappers/RasterMapper.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/utils/color.hpp"
+#include "CoreUtilities/color.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"

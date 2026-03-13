@@ -1,6 +1,6 @@
 #include "PointDataVisualization.hpp"
 
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "DataManager/Points/utils/Point_Data_utils.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 

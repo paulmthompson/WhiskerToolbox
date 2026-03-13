@@ -1,7 +1,7 @@
 
 #include "Media/Image_Data.hpp"
 
-#include "utils/string_manip.hpp"
+#include "CoreUtilities/string_manip.hpp"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>

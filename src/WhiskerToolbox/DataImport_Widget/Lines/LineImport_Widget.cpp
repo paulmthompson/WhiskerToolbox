@@ -2,7 +2,7 @@
 #include "ui_LineImport_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "DataManager/IO/core/LoaderRegistry.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "Scaling_Widget/Scaling_Widget.hpp"

@@ -8,7 +8,6 @@ set(points_sources
 
 # Create the PointData static library
 add_library(PointData STATIC ${points_sources})
-set_target_properties(PointData PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 
 target_include_directories(PointData PUBLIC
@@ -23,29 +22,12 @@ target_link_libraries(PointData PUBLIC
     WhiskerToolbox::ObserverData  # Observer
     TimeFrame                # TimeFrame  
     Entity                   # Entity
+    DataTypeTraits           # DataTypeTraits
+    RaggedTimeSeries         # RaggedTimeSeries
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(PointData PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
+set_target_compiler_warnings(PointData)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(PointData PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(PointData PRIVATE ${MSVC_WARNINGS})
-endif()
-
-# Create alias for consistent naming
 add_library(WhiskerToolbox::PointData ALIAS PointData)
 
-set(points_test_sources
-    Point_Data.test.cpp
-)
-
-add_tests_to_global(points_test_sources
-                    "${CMAKE_SOURCE_DIR}/src/DataManager/Points"
-                    DATAMANAGER_TEST_SOURCES)
-enable_whiskertoolbox_pch(PointData)
+enable_whiskertoolbox_shared_pch(PointData)

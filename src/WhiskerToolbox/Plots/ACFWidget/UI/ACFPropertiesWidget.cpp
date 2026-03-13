@@ -2,7 +2,7 @@
 
 #include "Core/ACFState.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Collapsible_Widget/Section.hpp"

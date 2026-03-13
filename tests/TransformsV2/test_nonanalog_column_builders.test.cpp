@@ -27,10 +27,10 @@
 #include "TransformsV2/core/TensorColumnBuilders.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
+#include "Points/Point_Data.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Tensors/TensorData.hpp"
 #include "DataManager/Tensors/storage/LazyColumnTensorStorage.hpp"
 

@@ -16,13 +16,13 @@ set_target_properties(ColorPicker_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(ColorPicker_Widget PRIVATE 
+target_link_libraries(ColorPicker_Widget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
-
-    DataManager
 )
+
+target_link_libraries(ColorPicker_Widget PRIVATE CoreUtilities)
 
 # Include directories
 target_include_directories(ColorPicker_Widget PUBLIC

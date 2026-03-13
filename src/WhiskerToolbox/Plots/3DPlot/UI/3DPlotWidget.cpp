@@ -2,7 +2,7 @@
 
 #include "Core/3DPlotState.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "Rendering/ThreeDPlotOpenGLWidget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 

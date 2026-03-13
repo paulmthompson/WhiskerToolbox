@@ -1,7 +1,7 @@
 #ifndef ITRANSFORMATION_HPP
 #define ITRANSFORMATION_HPP
 
-#include "DataManager/DataManagerFwd.hpp"//DM_DataType
+#include "DataTypeEnum/DM_DataType.hpp"//DM_DataType
 #include "TransformationsCommon.hpp"
 
 #include <armadillo>

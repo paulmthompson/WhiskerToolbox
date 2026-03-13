@@ -22,7 +22,6 @@ set_target_properties(Terminal_Widget PROPERTIES
 target_link_libraries(Terminal_Widget 
     PUBLIC
         EditorState
-    PRIVATE 
         Qt6::Widgets 
         Qt6::Core 
         Qt6::Gui
@@ -35,19 +34,7 @@ target_include_directories(Terminal_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-target_compile_definitions(Terminal_Widget PRIVATE _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(Terminal_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(Terminal_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(Terminal_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(Terminal_Widget)
 
 set_target_properties(Terminal_Widget PROPERTIES
     AUTOMOC ON

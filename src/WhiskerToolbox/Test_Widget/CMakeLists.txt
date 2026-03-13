@@ -35,15 +35,15 @@ set_target_properties(Test_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(Test_Widget PRIVATE
+target_link_libraries(Test_Widget PUBLIC
     Qt6::Widgets
     Qt6::Core
     Qt6::Gui
-    reflectcpp::reflectcpp
-
-    DataManager
-    EditorState
 )
+target_link_libraries(Test_Widget PUBLIC reflectcpp::reflectcpp)
+target_link_libraries(Test_Widget PUBLIC EditorState)
+
+target_link_libraries(Test_Widget PRIVATE DataManager)
 
 target_include_directories(Test_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
@@ -51,17 +51,7 @@ target_include_directories(Test_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(Test_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(Test_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(Test_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(Test_Widget)
 
 set_target_properties(Test_Widget PROPERTIES
     AUTOMOC ON

@@ -3,7 +3,7 @@
 #include "CorePlotting/Mappers/MappedElement.hpp"
 #include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <cmath>

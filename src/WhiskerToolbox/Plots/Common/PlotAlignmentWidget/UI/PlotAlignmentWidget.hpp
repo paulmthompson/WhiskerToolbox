@@ -15,7 +15,7 @@
 #include "Core/PlotAlignmentData.hpp"
 #include "Core/PlotAlignmentState.hpp"
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 
 #include <QWidget>
 

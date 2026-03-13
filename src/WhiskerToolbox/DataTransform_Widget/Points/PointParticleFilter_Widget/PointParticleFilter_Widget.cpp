@@ -2,7 +2,7 @@
 #include "ui_PointParticleFilter_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "DataManager/transforms/Points/Point_Particle_Filter/point_particle_filter.hpp"
 
 #include <QComboBox>

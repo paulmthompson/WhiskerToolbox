@@ -64,7 +64,10 @@ target_link_libraries(MediaData PUBLIC
     TimeFrame                # TimeFrame  
     Entity                   # Entity
     nlohmann_json::nlohmann_json  # For JSON support
+    DataTypeEnum                 # DataTypeEnum
 )
+
+target_link_libraries(MediaData PRIVATE CoreUtilities)
 
 # Link OpenCV libraries conditionally
 if(ENABLE_OPENCV)

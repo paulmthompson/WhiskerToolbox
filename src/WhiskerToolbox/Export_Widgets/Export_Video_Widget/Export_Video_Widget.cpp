@@ -4,9 +4,9 @@
 #include "ui_Export_Video_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/EventWithId.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/EventWithId.hpp"
+#include "Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"// For TimeKey
 #include "TimeFrame/TimeFrame.hpp"

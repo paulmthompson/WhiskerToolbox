@@ -1,7 +1,7 @@
 #include "media_export.hpp"
 
 #include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/utils/string_manip.hpp"
+#include "CoreUtilities/string_manip.hpp"
 
 #include <QImage>
 

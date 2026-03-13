@@ -114,6 +114,8 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::PointData)
 
 target_link_libraries(TransformsV2 PUBLIC DataManager)
 
+target_link_libraries(TransformsV2 PUBLIC DataTypeTraits)
+
 set_target_compiler_warnings(TransformsV2)
 
 enable_whiskertoolbox_shared_pch(TransformsV2)

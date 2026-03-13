@@ -4,7 +4,7 @@
 #include "Core/ScatterPlotState.hpp"
 #include "Core/SourceCompatibility.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/Tensors/TensorData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"

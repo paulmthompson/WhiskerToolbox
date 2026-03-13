@@ -8,7 +8,7 @@
  * LinePlotWidget displays line plots for visualizing time series data.
  */
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>

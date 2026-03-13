@@ -1,4 +1,5 @@
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(reflectcpp CONFIG REQUIRED)
 
 set(DATA_MANAGER_WIDGET_SOURCES
         DataManager_Widget.hpp
@@ -27,23 +28,33 @@ set_target_properties(DataManager_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(DataManager_Widget PRIVATE 
+target_link_libraries(DataManager_Widget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
 )
 
-target_link_libraries(DataManager_Widget PRIVATE DataManager DataManagerIO TensorData)
-target_link_libraries(DataManager_Widget PRIVATE EditorState)
-target_link_libraries(DataManager_Widget PRIVATE MediaExport)
+target_link_libraries(DataManager_Widget PUBLIC reflectcpp::reflectcpp)
+target_link_libraries(DataManager_Widget PUBLIC EditorState)
+
+target_link_libraries(DataManager_Widget PRIVATE DataManager)
+target_link_libraries(DataManager_Widget PRIVATE TensorData)
+target_link_libraries(DataManager_Widget PRIVATE AnalogTimeSeries)
+target_link_libraries(DataManager_Widget PRIVATE DigitalTimeSeries)
+target_link_libraries(DataManager_Widget PRIVATE PointData)
+target_link_libraries(DataManager_Widget PRIVATE LineData)
+target_link_libraries(DataManager_Widget PRIVATE MaskData)
+target_link_libraries(DataManager_Widget PRIVATE MediaData)
+
+target_link_libraries(DataManager_Widget PRIVATE NEURALYZER_GEOMETRY)
+
 target_link_libraries(DataManager_Widget PRIVATE Feature_Table_Widget)
 target_link_libraries(DataManager_Widget PRIVATE TimeFrame_Table_Widget)
-target_link_libraries(DataManager_Widget PRIVATE DataExport_Widget)
+
 target_link_libraries(DataManager_Widget PRIVATE Collapsible_Widget)
 target_link_libraries(DataManager_Widget PRIVATE Entity)
 target_link_libraries(DataManager_Widget PRIVATE GroupManagementWidget)
 
-target_link_libraries(DataManager_Widget PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(DataManager_Widget PRIVATE WhiskerToolbox::StateManagement)
 
 
@@ -53,18 +64,7 @@ target_include_directories(DataManager_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataManager_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataManager_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DataManager_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataManager_Widget)
 
 # Enable automoc for Qt
 set_target_properties(DataManager_Widget PROPERTIES

@@ -32,41 +32,18 @@ target_link_libraries(MaskData PUBLIC
     WhiskerToolbox::ObserverData  # Observer
     TimeFrame                # TimeFrame  
     Entity                   # Entity
+    DataTypeTraits           # DataTypeTraits
+    RaggedTimeSeries         # RaggedTimeSeries
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(MaskData PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(MaskData PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(MaskData PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(MaskData)
 
 # Set properties
 set_target_properties(MaskData PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-# Create alias for consistent naming
 add_library(WhiskerToolbox::MaskData ALIAS MaskData)
 
-# Test sources
-set(masks_test_sources
-    Mask_Data.test.cpp
-    utils/connected_component.test.cpp
-    utils/hole_filling.test.cpp
-    utils/median_filter.test.cpp
-    utils/skeletonize.test.cpp
-    utils/mask_utils.test.cpp
-)
 
-add_tests_to_global(masks_test_sources 
-                    "${CMAKE_SOURCE_DIR}/src/DataManager/Masks" 
-                    DATAMANAGER_TEST_SOURCES)
-
-enable_whiskertoolbox_pch(MaskData)
+enable_whiskertoolbox_shared_pch(MaskData)

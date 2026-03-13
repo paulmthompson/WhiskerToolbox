@@ -28,7 +28,7 @@ set_target_properties(PSTHWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(PSTHWidget PRIVATE 
+target_link_libraries(PSTHWidget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
@@ -36,8 +36,10 @@ target_link_libraries(PSTHWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(PSTHWidget PUBLIC DataTypeEnum)
+target_link_libraries(PSTHWidget PUBLIC EditorState)
+
 target_link_libraries(PSTHWidget PRIVATE DataManager)
-target_link_libraries(PSTHWidget PRIVATE EditorState)
 target_link_libraries(PSTHWidget PRIVATE PlotAlignmentWidget)
 target_link_libraries(PSTHWidget PRIVATE RateEstimationControls)
 target_link_libraries(PSTHWidget PRIVATE RelativeTimeAxisWidget)
@@ -55,18 +57,7 @@ target_include_directories(PSTHWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(PSTHWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(PSTHWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(PSTHWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(PSTHWidget)
 
 # Enable automoc for Qt
 set_target_properties(PSTHWidget PROPERTIES

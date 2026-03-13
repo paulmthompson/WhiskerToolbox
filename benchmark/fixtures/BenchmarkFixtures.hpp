@@ -15,11 +15,11 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <cstdint>

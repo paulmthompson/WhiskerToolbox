@@ -28,7 +28,7 @@ set_target_properties(TemporalProjectionViewWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(TemporalProjectionViewWidget PRIVATE 
+target_link_libraries(TemporalProjectionViewWidget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
@@ -36,11 +36,13 @@ target_link_libraries(TemporalProjectionViewWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(TemporalProjectionViewWidget PUBLIC EditorState)
+target_link_libraries(TemporalProjectionViewWidget PUBLIC DataTypeEnum)
+
+target_link_libraries(TemporalProjectionViewWidget PRIVATE DataManager)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE Collapsible_Widget)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE CorePlotting)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE PlottingOpenGL)
-target_link_libraries(TemporalProjectionViewWidget PRIVATE DataManager)
-target_link_libraries(TemporalProjectionViewWidget PRIVATE EditorState)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE GlyphStyleWidget)
@@ -52,18 +54,7 @@ target_include_directories(TemporalProjectionViewWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(TemporalProjectionViewWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(TemporalProjectionViewWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(TemporalProjectionViewWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(TemporalProjectionViewWidget)
 
 # Enable automoc for Qt
 set_target_properties(TemporalProjectionViewWidget PROPERTIES

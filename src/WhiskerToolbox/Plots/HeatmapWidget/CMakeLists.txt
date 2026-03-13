@@ -30,7 +30,7 @@ set_target_properties(HeatmapWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(HeatmapWidget PRIVATE 
+target_link_libraries(HeatmapWidget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
@@ -38,9 +38,11 @@ target_link_libraries(HeatmapWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(HeatmapWidget PUBLIC DataTypeEnum)
+target_link_libraries(HeatmapWidget PUBLIC EditorState)
+
 target_link_libraries(HeatmapWidget PRIVATE Collapsible_Widget)
 target_link_libraries(HeatmapWidget PRIVATE DataManager)
-target_link_libraries(HeatmapWidget PRIVATE EditorState)
 target_link_libraries(HeatmapWidget PRIVATE Feature_Tree_Widget)
 target_link_libraries(HeatmapWidget PRIVATE PlotAlignmentWidget)
 target_link_libraries(HeatmapWidget PRIVATE RelativeTimeAxisWidget)
@@ -61,18 +63,7 @@ target_include_directories(HeatmapWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(HeatmapWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(HeatmapWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(HeatmapWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(HeatmapWidget)
 
 # Enable automoc for Qt
 set_target_properties(HeatmapWidget PROPERTIES

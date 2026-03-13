@@ -9,7 +9,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "TypeTraits/DataTypeTraits.hpp"
-#include "utils/RaggedTimeSeries.hpp"
+#include "RaggedTimeSeries/RaggedTimeSeries.hpp"
 
 #include <map>
 #include <optional>

@@ -9,7 +9,7 @@
  * event counts or rates aligned to a reference event.
  */
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>

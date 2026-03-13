@@ -12,7 +12,7 @@
 #include "Plots/ACFWidget/Core/ACFState.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 

@@ -2,7 +2,7 @@
 #define DATAMANAGERTYPES_HPP
 
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "IO/core/IOTypes.hpp"
 
 #include <memory>

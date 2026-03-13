@@ -5,7 +5,9 @@
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/IO/SaveData.hpp"
 #include "DataExport_Widget/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "Commands/Core/CommandContext.hpp"
+#include "Commands/IO/SaveData.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 

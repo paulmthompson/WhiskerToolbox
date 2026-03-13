@@ -6,7 +6,7 @@
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 
 #include <QPointF>
 #include <cmath>

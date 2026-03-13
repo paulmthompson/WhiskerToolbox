@@ -6,7 +6,7 @@
 #include "DataExport_Widget/Points/CSV/CSVPointSaver_Widget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"

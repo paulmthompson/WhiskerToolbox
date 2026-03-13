@@ -17,7 +17,7 @@
 #include "CorePlotting/Mappers/HeatmapMapper.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/HeatmapWidget/Core/HeatmapState.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"

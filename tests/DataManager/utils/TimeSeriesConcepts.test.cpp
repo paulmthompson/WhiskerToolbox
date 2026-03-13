@@ -17,7 +17,7 @@
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "DigitalTimeSeries/IntervalWithId.hpp"
-#include "utils/RaggedTimeSeries.hpp"
+#include "RaggedTimeSeries/RaggedTimeSeries.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"

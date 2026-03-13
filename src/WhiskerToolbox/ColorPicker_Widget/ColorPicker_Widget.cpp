@@ -2,7 +2,7 @@
 #include "ColorPicker_Widget.hpp"
 #include "ui_ColorPicker_Widget.h"
 
-#include "../DataManager/utils/color.hpp"
+#include "CoreUtilities/color.hpp"
 
 #include <QColorDialog>
 

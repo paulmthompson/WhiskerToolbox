@@ -5,18 +5,18 @@
 
 #include "DataManager/DataManagerSnapshot.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/CommandDescriptor.hpp"
 #include "Commands/Core/CommandRecorder.hpp"
 #include "Commands/Core/ICommand.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
+#include "Points/Point_Data.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

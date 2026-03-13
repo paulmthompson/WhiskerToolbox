@@ -28,7 +28,7 @@ set_target_properties(OnionSkinViewWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(OnionSkinViewWidget PRIVATE 
+target_link_libraries(OnionSkinViewWidget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
@@ -36,11 +36,13 @@ target_link_libraries(OnionSkinViewWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(OnionSkinViewWidget PUBLIC DataTypeEnum)
+target_link_libraries(OnionSkinViewWidget PUBLIC EditorState)
+
 target_link_libraries(OnionSkinViewWidget PRIVATE Collapsible_Widget)
 target_link_libraries(OnionSkinViewWidget PRIVATE CorePlotting)
 target_link_libraries(OnionSkinViewWidget PRIVATE PlottingOpenGL)
 target_link_libraries(OnionSkinViewWidget PRIVATE DataManager)
-target_link_libraries(OnionSkinViewWidget PRIVATE EditorState)
 target_link_libraries(OnionSkinViewWidget PRIVATE GlyphStyleWidget)
 target_link_libraries(OnionSkinViewWidget PRIVATE LineStyleControls)
 target_link_libraries(OnionSkinViewWidget PRIVATE HorizontalAxisWidget)
@@ -52,18 +54,7 @@ target_include_directories(OnionSkinViewWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(OnionSkinViewWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(OnionSkinViewWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(OnionSkinViewWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(OnionSkinViewWidget)
 
 # Enable automoc for Qt
 set_target_properties(OnionSkinViewWidget PROPERTIES

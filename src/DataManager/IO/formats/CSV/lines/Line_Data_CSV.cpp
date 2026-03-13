@@ -2,7 +2,7 @@
 
 #include "IO/core/AtomicWrite.hpp"
 #include "Lines/Line_Data.hpp"
-#include "utils/string_manip.hpp"
+#include "CoreUtilities/string_manip.hpp"
 
 #include <cassert>
 #include <chrono>

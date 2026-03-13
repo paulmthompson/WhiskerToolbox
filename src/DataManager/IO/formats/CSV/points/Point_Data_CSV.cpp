@@ -4,7 +4,7 @@
 #include "Points/Point_Data.hpp"
 #include "loaders/loading_utils.hpp"
 #include "utils/json_reflection.hpp"
-#include "utils/string_manip.hpp"
+#include "CoreUtilities/string_manip.hpp"
 
 #include <cassert>
 #include <filesystem>

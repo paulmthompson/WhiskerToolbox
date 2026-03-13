@@ -9,7 +9,7 @@
  * across multiple channels or trials.
  */
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>

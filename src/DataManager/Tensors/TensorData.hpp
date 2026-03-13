@@ -33,7 +33,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"
 #include "TimeFrame/interval_data.hpp"
-#include "DataManager/TypeTraits/DataTypeTraits.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 
 #include <armadillo>
 

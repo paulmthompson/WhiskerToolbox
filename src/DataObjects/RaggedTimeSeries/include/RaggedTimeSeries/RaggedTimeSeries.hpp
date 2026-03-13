@@ -1,6 +1,9 @@
 #ifndef RAGGED_TIME_SERIES_HPP
 #define RAGGED_TIME_SERIES_HPP
 
+#include "map_timeseries.hpp"
+#include "RaggedStorage.hpp"
+
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
@@ -10,8 +13,6 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"          // TimeFrame and TimeFrameIndex
 #include "TimeFrame/interval_data.hpp"      // 
-#include "utils/map_timeseries.hpp"
-#include "utils/RaggedStorage.hpp"
 
 #include <algorithm>
 #include <memory>

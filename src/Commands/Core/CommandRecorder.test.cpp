@@ -13,7 +13,7 @@
 #include "DataManager/Commands/MutationGuard.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

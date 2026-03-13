@@ -8,12 +8,12 @@
 #include "Selection/SelectionModes.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 
 // Register EntityId with Qt's meta-type system so it can be used in signals/QVariant
 Q_DECLARE_METATYPE(EntityId)

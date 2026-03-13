@@ -3,7 +3,7 @@
 
 #include "Core/SpikeSorterConfigLoader.hpp"
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "EditorState/StrongTypes.hpp"  // For TimePosition
 #include "TimeFrame/TimeFrame.hpp"
 

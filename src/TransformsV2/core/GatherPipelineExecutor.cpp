@@ -3,11 +3,11 @@
 
 #include "GatherResult/GatherResult.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/TypeTraits/DataTypeTraits.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "TransformsV2/core/RangeReductionRegistry.hpp"

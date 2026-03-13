@@ -2,7 +2,7 @@
 #include "ui_LineBaseFlip_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "transforms/Lines/Line_Base_Flip/line_base_flip.hpp"
 
 #include <QVBoxLayout>

@@ -12,7 +12,7 @@
 #include "Commands/IO/SaveData.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include "IO/core/LoaderRegistration.hpp"
 #include "IO/core/LoaderRegistry.hpp"

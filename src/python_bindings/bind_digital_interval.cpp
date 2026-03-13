@@ -2,7 +2,7 @@
 
 #include <pybind11/stl.h>
 
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include <string>
 #include <vector>

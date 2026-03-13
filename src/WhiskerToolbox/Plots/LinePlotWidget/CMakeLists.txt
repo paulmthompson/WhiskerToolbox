@@ -28,7 +28,7 @@ set_target_properties(LinePlotWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(LinePlotWidget PRIVATE 
+target_link_libraries(LinePlotWidget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
@@ -36,8 +36,10 @@ target_link_libraries(LinePlotWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(LinePlotWidget PUBLIC DataTypeEnum)
+target_link_libraries(LinePlotWidget PUBLIC EditorState)
+
 target_link_libraries(LinePlotWidget PRIVATE DataManager)
-target_link_libraries(LinePlotWidget PRIVATE EditorState)
 target_link_libraries(LinePlotWidget PRIVATE LineStyleControls)
 target_link_libraries(LinePlotWidget PRIVATE PlotAlignmentWidget)
 target_link_libraries(LinePlotWidget PRIVATE RelativeTimeAxisWidget)
@@ -57,18 +59,7 @@ target_include_directories(LinePlotWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(LinePlotWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(LinePlotWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(LinePlotWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(LinePlotWidget)
 
 # Enable automoc for Qt
 set_target_properties(LinePlotWidget PROPERTIES

@@ -10,7 +10,7 @@
 #include "DataManager.hpp"
 #include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Inspectors/GroupFilterHelper.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"

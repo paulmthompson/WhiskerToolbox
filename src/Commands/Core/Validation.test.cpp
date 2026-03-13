@@ -8,9 +8,9 @@
 #include "Commands/Core/CommandDescriptor.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Points/Point_Data.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

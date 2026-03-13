@@ -3,9 +3,9 @@
 #include "TransformsV2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/detail/FlatZipView.hpp"
-#include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
+#include "Points/Point_Data.hpp"
+#include "Lines/Line_Data.hpp"
+#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>

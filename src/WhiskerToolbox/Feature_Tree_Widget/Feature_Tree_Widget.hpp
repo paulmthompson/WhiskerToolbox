@@ -2,7 +2,7 @@
 #ifndef FEATURE_TREE_WIDGET_HPP
 #define FEATURE_TREE_WIDGET_HPP
 
-#include "DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 
 #include <QPoint>
 #include <QWidget>

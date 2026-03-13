@@ -16,7 +16,7 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/StrongTypes.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"

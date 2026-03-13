@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_POINTTABLEMODEL_HPP
 #define WHISKERTOOLBOX_POINTTABLEMODEL_HPP
 
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityTypes.hpp"
 

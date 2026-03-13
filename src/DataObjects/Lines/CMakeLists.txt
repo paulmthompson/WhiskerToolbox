@@ -27,36 +27,17 @@ target_link_libraries(LineData PUBLIC
     WhiskerToolbox::ObserverData  # Observer
     TimeFrame                # TimeFrame  
     Entity                   # Entity
+    DataTypeTraits           # DataTypeTraits
+    RaggedTimeSeries         # RaggedTimeSeries
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(LineData PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(LineData PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(LineData PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(LineData)
 
 # Set properties
 set_target_properties(LineData PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-# Create alias for consistent naming
 add_library(WhiskerToolbox::LineData ALIAS LineData)
 
-# Test sources
-set(lines_test_sources
-    Line_Data.test.cpp
-)
-
-add_tests_to_global(lines_test_sources 
-                    "${CMAKE_SOURCE_DIR}/src/DataManager/Lines" 
-                    DATAMANAGER_TEST_SOURCES)
-
-enable_whiskertoolbox_pch(LineData)
+enable_whiskertoolbox_shared_pch(LineData)

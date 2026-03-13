@@ -28,7 +28,7 @@ set_target_properties(ACFWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(ACFWidget PRIVATE
+target_link_libraries(ACFWidget PUBLIC
     Qt6::Widgets
     Qt6::Core
     Qt6::Gui
@@ -36,8 +36,10 @@ target_link_libraries(ACFWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(ACFWidget PUBLIC EditorState)
+target_link_libraries(ACFWidget PUBLIC DataTypeEnum)
+
 target_link_libraries(ACFWidget PRIVATE DataManager)
-target_link_libraries(ACFWidget PRIVATE EditorState)
 target_link_libraries(ACFWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(ACFWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(ACFWidget PRIVATE Collapsible_Widget)
@@ -51,18 +53,7 @@ target_include_directories(ACFWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(ACFWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(ACFWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(ACFWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(ACFWidget)
 
 # Enable automoc for Qt
 set_target_properties(ACFWidget PROPERTIES

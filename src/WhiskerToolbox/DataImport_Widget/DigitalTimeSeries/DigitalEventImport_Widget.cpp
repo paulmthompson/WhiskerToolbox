@@ -3,7 +3,7 @@
 #include "ui_DigitalEventImport_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
 #include "DigitalTimeSeries/CSV/CSVDigitalEventImport_Widget.hpp"
 #include "DataImportTypeRegistry.hpp"

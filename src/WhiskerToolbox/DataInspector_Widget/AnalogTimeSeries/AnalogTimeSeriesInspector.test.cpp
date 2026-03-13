@@ -6,7 +6,7 @@
 #include "AnalogTimeSeriesInspector.hpp"
 
 #include "DataExport_Widget/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
 #include "IO/core/LoaderRegistration.hpp"
 #include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"

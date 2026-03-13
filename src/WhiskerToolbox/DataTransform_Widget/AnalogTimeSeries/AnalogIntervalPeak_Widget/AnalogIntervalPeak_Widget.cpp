@@ -4,7 +4,7 @@
 
 #include "DataManager/transforms/AnalogTimeSeries/Analog_Interval_Peak/analog_interval_peak.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include <iostream>
 

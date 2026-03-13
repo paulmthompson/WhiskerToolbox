@@ -52,8 +52,22 @@ add_executable(test_data_manager
         test_time_entity.cpp
         test_time_entity_groups.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/AnalogTimeSeries/Analog_Time_Series.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/AnalogTimeSeries/utils/statistics.test.cpp
+
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/DigitalTimeSeries/Digital_Event_Series.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.test.cpp
+
+
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Lines/Line_Data.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Points/Point_Data.test.cpp
+
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/Mask_Data.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/connected_component.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/hole_filling.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/median_filter.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/skeletonize.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Masks/utils/mask_utils.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/AnalogSliceGathererComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/EventInIntervalComputer.test.cpp
@@ -182,6 +196,8 @@ target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManag
 target_link_libraries(test_data_manager PRIVATE DataManagerIO)
 target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)
 target_link_libraries(test_data_manager PRIVATE TensorData)
+target_link_libraries(test_data_manager PRIVATE DataTypeTraits)
+target_link_libraries(test_data_manager PRIVATE RaggedTimeSeries)
 
 # When LibTorch is available, enable LibTorch-specific tests.
 # TENSOR_BACKEND_LIBTORCH is defined PRIVATE on TensorData to avoid

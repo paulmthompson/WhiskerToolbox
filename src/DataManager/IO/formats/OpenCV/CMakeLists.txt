@@ -18,6 +18,7 @@ add_library(DataManagerOpenCV SHARED ${DATAMANAGER_OPENCV_SOURCES})
 # Set up include directories
 target_include_directories(DataManagerOpenCV PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../..>" 
     $<INSTALL_INTERFACE:include>
 )
 
@@ -34,6 +35,8 @@ target_link_libraries(DataManagerOpenCV PRIVATE
     opencv_core opencv_imgproc opencv_imgcodecs  # OpenCV components
     spdlog::spdlog
 )
+
+target_link_libraries(DataManagerOpenCV PRIVATE CoreUtilities)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManagerOpenCV PRIVATE ${CLANG_OPTIONS})

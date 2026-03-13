@@ -1,6 +1,6 @@
 #include "LineDataVisualization.hpp"
 
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderSourceType.hpp"
 

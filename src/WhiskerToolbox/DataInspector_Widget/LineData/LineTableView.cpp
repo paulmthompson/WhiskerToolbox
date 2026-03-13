@@ -3,7 +3,7 @@
 #include "LineTableModel.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
+#include "Lines/Line_Data.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"

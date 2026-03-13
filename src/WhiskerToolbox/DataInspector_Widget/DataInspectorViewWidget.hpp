@@ -23,7 +23,7 @@
  * @see ViewFactory for creating type-specific views
  */
 
-#include "DataManager/DataManagerFwd.hpp"  // For DM_DataType
+#include "DataTypeEnum/DM_DataType.hpp"  // For DM_DataType
 #include "EditorState/StrongTypes.hpp"  // Must be before any TimePosition usage in signals
 #include "TimeFrame/TimeFrame.hpp"  // For TimePosition
 

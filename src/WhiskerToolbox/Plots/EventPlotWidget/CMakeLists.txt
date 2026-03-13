@@ -28,7 +28,7 @@ set_target_properties(EventPlotWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(EventPlotWidget PRIVATE 
+target_link_libraries(EventPlotWidget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
@@ -36,8 +36,10 @@ target_link_libraries(EventPlotWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(EventPlotWidget PUBLIC DataTypeEnum)
+target_link_libraries(EventPlotWidget PUBLIC EditorState)
+
 target_link_libraries(EventPlotWidget PRIVATE DataManager)
-target_link_libraries(EventPlotWidget PRIVATE EditorState)
 target_link_libraries(EventPlotWidget PRIVATE GlyphStyleWidget)
 target_link_libraries(EventPlotWidget PRIVATE PlotAlignmentWidget)
 target_link_libraries(EventPlotWidget PRIVATE RelativeTimeAxisWidget)
@@ -49,6 +51,7 @@ target_link_libraries(EventPlotWidget PRIVATE PlottingOpenGL)
 target_link_libraries(EventPlotWidget PRIVATE Collapsible_Widget)
 target_link_libraries(EventPlotWidget PRIVATE glm::glm)
 target_link_libraries(EventPlotWidget PRIVATE GatherResult)
+target_link_libraries(EventPlotWidget PRIVATE CoreUtilities)
 
 target_include_directories(EventPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
@@ -56,18 +59,7 @@ target_include_directories(EventPlotWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(EventPlotWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(EventPlotWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(EventPlotWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(EventPlotWidget)
 
 # Enable automoc for Qt
 set_target_properties(EventPlotWidget PROPERTIES

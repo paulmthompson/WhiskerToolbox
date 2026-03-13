@@ -9,10 +9,10 @@
 #include "GetEntityIdsInRange.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
+#include "Points/Point_Data.hpp"
 
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"

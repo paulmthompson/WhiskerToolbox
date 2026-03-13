@@ -43,19 +43,8 @@ target_include_directories(StateManagement
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Add alias for consistent naming
 add_library(WhiskerToolbox::StateManagement ALIAS StateManagement)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(StateManagement PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(StateManagement PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(StateManagement PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(StateManagement)
 
 enable_whiskertoolbox_shared_pch(StateManagement)

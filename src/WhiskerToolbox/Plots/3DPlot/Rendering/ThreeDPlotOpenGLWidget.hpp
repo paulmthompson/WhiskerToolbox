@@ -17,7 +17,7 @@
 
 #include "Core/3DPlotState.hpp"
 
-#include "DataManager/DataManagerFwd.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QMatrix4x4>

@@ -2,7 +2,7 @@
 
 #include "CorePlotting/Mappers/HistogramMapper.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
 #include "Plots/Common/EventRateEstimation/RateNormalization.hpp"

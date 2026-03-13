@@ -20,15 +20,15 @@ set_target_properties(Feature_Table_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-# Link Qt libraries
-target_link_libraries(Feature_Table_Widget PRIVATE 
+target_link_libraries(Feature_Table_Widget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
 )
 
-# Link against DataManager and Color_Widget
 target_link_libraries(Feature_Table_Widget PRIVATE DataManager)
+target_link_libraries(Feature_Table_Widget PRIVATE CoreUtilities)
+target_link_libraries(Feature_Table_Widget PUBLIC DataTypeEnum)
 
 # Include directories
 target_include_directories(Feature_Table_Widget PUBLIC
@@ -38,21 +38,7 @@ target_include_directories(Feature_Table_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compile definitions
-target_compile_definitions(Feature_Table_Widget PRIVATE _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH)
-
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(Feature_Table_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(Feature_Table_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(Feature_Table_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(Feature_Table_Widget)
 
 # Enable automoc for Qt
 set_target_properties(Feature_Table_Widget PROPERTIES

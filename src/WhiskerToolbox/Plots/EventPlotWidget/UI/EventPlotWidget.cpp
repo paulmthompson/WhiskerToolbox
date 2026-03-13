@@ -4,7 +4,7 @@
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"

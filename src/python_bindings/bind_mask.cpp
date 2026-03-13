@@ -3,7 +3,7 @@
 #include <pybind11/stl.h>
 
 #include "CoreGeometry/masks.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "Observer/Observer_Data.hpp"
 
 #include <string>

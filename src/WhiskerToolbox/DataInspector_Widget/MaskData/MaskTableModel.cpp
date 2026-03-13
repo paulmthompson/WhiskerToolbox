@@ -1,6 +1,6 @@
 #include "MaskTableModel.hpp"
 
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <iostream>// For debugging

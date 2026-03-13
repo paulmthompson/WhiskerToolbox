@@ -10,7 +10,7 @@
 #include "Collapsible_Widget/Section.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 
 #include <QLabel>

@@ -32,7 +32,7 @@
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 #include "utils/DerivedTimeFrame.hpp"
-#include "utils/string_manip.hpp"
+#include "CoreUtilities/string_manip.hpp"
 
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"

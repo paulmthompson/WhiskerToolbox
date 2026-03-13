@@ -2,7 +2,7 @@
 #include "ui_MaskImport_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "DataManager/IO/core/LoaderRegistry.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "Scaling_Widget/Scaling_Widget.hpp"

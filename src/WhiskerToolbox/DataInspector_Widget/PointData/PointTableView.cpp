@@ -3,7 +3,7 @@
 #include "PointTableModel.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
