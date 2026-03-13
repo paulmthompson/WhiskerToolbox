@@ -976,7 +976,8 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
         int end_frame,
         ImageSize source_image_size,
         std::atomic<bool> const & cancel_requested,
-        ProgressCallback const & progress) {
+        ProgressCallback const & progress,
+        ResultCallback const & result_callback) {
 
     BatchInferenceResult batch_result;
 
@@ -1023,10 +1024,14 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
                     outputs, output_bindings,
                     *_impl->model, frame, source_image_size);
 
-            batch_result.results.insert(
-                    batch_result.results.end(),
-                    std::make_move_iterator(frame_results.begin()),
-                    std::make_move_iterator(frame_results.end()));
+            if (result_callback) {
+                result_callback(std::move(frame_results));
+            } else {
+                batch_result.results.insert(
+                        batch_result.results.end(),
+                        std::make_move_iterator(frame_results.begin()),
+                        std::make_move_iterator(frame_results.end()));
+            }
         } catch (std::exception const & e) {
             batch_result.success = false;
             batch_result.error_message = e.what();

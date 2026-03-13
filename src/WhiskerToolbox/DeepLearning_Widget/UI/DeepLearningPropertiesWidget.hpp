@@ -34,10 +34,12 @@ class QLineEdit;
 class QPushButton;
 class QSpinBox;
 class QThread;
+class QTimer;
 class QVBoxLayout;
 
 class DataManager;
 class DeepLearningState;
+class WriteReservation;
 
 class DeepLearningPropertiesWidget : public QWidget {
     Q_OBJECT
@@ -162,8 +164,11 @@ private:
     void _setBatchRunning(bool running);
     void _onCancelBatch();
     void _onBatchFinished();
+    void _mergeResults();
 
     QThread * _batch_worker = nullptr;
+    QTimer * _merge_timer = nullptr;
+    std::shared_ptr<WriteReservation> _write_reservation;
 };
 
 #endif// DEEP_LEARNING_PROPERTIES_WIDGET_HPP

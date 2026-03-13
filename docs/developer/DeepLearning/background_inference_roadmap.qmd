@@ -136,22 +136,21 @@ appearing frame-by-frame in the UI while the worker runs. This uses the
 **Prerequisite:** `createWriteReservation<T>()` must be implemented on 
 DataManager (see Concurrency Architecture Stage 2).
 
-- [ ] **Replace `BatchInferenceResult` buffer with write reservation** — 
+- [x] **Replace `BatchInferenceResult` buffer with write reservation** — 
   Instead of accumulating decoded results in a flat vector, the worker 
-  writes to the reservation's private data object (e.g., a private 
-  `MaskData`). The `decodeOutputsToBuffer()` method writes to this buffer 
-  via `addAtTime()` — same as the current `decodeOutputs()` but targeting 
-  the reservation buffer instead of DataManager.
-- [ ] **Add merge timer to `_onRunBatch()`** — Start a `QTimer` (200ms 
+  pushes results via a `ResultCallback` to a shared `WriteReservation` 
+  buffer. The `WriteReservation` class provides thread-safe `push()` and 
+  `drain()` methods protected by a mutex.
+- [x] **Add merge timer to `_onRunBatch()`** — Start a `QTimer` (200ms 
   interval) when the worker launches. On each tick, call 
-  `reservation.mergeInto(*dm)` which: (1) moves accumulated frames from 
-  buffer to real data object using `addAtTime(..., NotifyObservers::No)`, 
-  (2) calls `notifyObservers()` once, (3) clears the buffer. Stop the 
-  timer on `worker->finished`.
-- [ ] **Final merge on completion** — In the `finished` handler, do one 
-  last merge to pick up any frames computed since the last timer tick. 
-  Then clean up the reservation.
-- [ ] **User editing during inference** — With the reservation pattern, the 
+  `_mergeResults()` which: (1) drains accumulated FrameResults from the 
+  WriteReservation, (2) writes them to data objects using 
+  `addAtTime(..., NotifyObservers::No)`, (3) calls `notifyObservers()` 
+  once per affected key.
+- [x] **Final merge on completion** — In the `finished` handler, stop the 
+  merge timer, do one last `_mergeResults()` to pick up any frames 
+  computed since the last timer tick, then clean up the reservation.
+- [x] **User editing during inference** — With the reservation pattern, the 
   user can edit masks at other frames in Media_Widget while inference runs. 
   User edits go through `getData()` on the real object; worker writes go 
   to the buffer. No conflict.
@@ -174,18 +173,15 @@ DataManager (see Concurrency Architecture Stage 2).
 
 | File | Changes |
 |------|---------|
-| `SlotAssembler.hpp` | `BatchInferenceResult` struct, `runBatchRangeOffline()` declaration |
-| `SlotAssembler.cpp` | `runBatchRangeOffline()` and `decodeOutputsToBuffer()` implementation |
-| `DeepLearningPropertiesWidget.hpp` | Worker pointer member, `_setBatchRunning()` method |
-| `DeepLearningPropertiesWidget.cpp` | `BatchInferenceWorker` class, rewritten `_onRunBatch()`, cancel handler |
-| `roadmap.qmd` | Update task status |
-
+| `SlotAssembler.hpp` | `BatchInferenceResult` struct, `runBatchRangeOffline()` declaration, `ResultCallback` type alias |
+| `SlotAssembler.cpp` | `runBatchRangeOffline()` and `decodeOutputsToBuffer()` implementation, progressive callback support |
+| `DeepLearningPropertiesWidget.hpp` | Worker pointer member, `_setBatchRunning()` method, `QTimer*` and `WriteReservation` members, `_mergeResults()` |
+| `DeepLearningPropertiesWidget.cpp` | `BatchInferenceWorker` class, rewritten `_onRunBatch()`, cancel handler, merge timer, progressive merge |
 ## Files to Create
 
 | File | Purpose |
 |------|---------|
-| `background_inference.qmd` | Developer documentation for the threading pattern |
-
+| `WriteReservation.hpp` | Thread-safe buffer for progressive result delivery |
 ## Verification
 
 1. **Build** — `cmake --build --preset linux-clang-release` must succeed

@@ -17,6 +17,7 @@
  * @see ModelBase for the model forward pass interface.
  */
 
+#include "BatchInferenceResult.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
 
 #include <atomic>
@@ -32,7 +33,6 @@ struct StaticInputData;
 struct OutputBindingData;
 struct RecurrentBindingData;
 struct ImageSize;
-struct BatchInferenceResult;
 
 class DataManager;
 class MediaData;
@@ -98,6 +98,11 @@ public:
     /// @param total_frames Total number of frames to process
     using ProgressCallback = std::function<void(int current_frame, int total_frames)>;
 
+    /// Callback invoked per-frame with decoded results for progressive delivery.
+    /// When provided to runBatchRangeOffline(), results are pushed via this
+    /// callback instead of accumulating in BatchInferenceResult::results.
+    using ResultCallback = std::function<void(std::vector<FrameResult>)>;
+
     /// Run independent (non-recurrent) inference over a range of frames.
     ///
     /// For each frame in [start_frame, end_frame]:
@@ -154,7 +159,11 @@ public:
     /// @param source_image_size Original image dimensions
     /// @param cancel_requested Checked before each frame; stops early if true
     /// @param progress Optional callback for progress reporting
-    /// @return Accumulated decoded results (may be partial on cancellation)
+    /// @param result_callback Optional per-frame result callback for progressive
+    ///        delivery.  When non-null, decoded outputs are pushed via this
+    ///        callback and NOT accumulated in BatchInferenceResult::results.
+    /// @return Accumulated decoded results (may be partial on cancellation).
+    ///         If result_callback is set, the results vector will be empty.
     [[nodiscard]] BatchInferenceResult runBatchRangeOffline(
             DataManager & dm,
             MediaOverrides const & media_overrides,
@@ -165,7 +174,8 @@ public:
             int end_frame,
             ImageSize source_image_size,
             std::atomic<bool> const & cancel_requested,
-            ProgressCallback const & progress = nullptr);
+            ProgressCallback const & progress = nullptr,
+            ResultCallback const & result_callback = nullptr);
 
     /// Run sequential recurrent inference over a range of frames.
     ///

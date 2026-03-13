@@ -1,0 +1,120 @@
+---
+title: "Background Inference"
+---
+
+## Overview
+
+Deep learning batch inference runs on a background `QThread` so the UI stays
+responsive during long runs. Results appear progressively in the UI as the
+model processes frames.
+
+## Threading Pattern
+
+The implementation follows the **thread confinement + merge** model from the
+[Concurrency Architecture](../DataManager/concurrency_architecture.qmd):
+
+1. **DataManager stays single-threaded.** All writes happen on the main (Qt) thread.
+2. **The worker uses private data.** A cloned `VideoData` gives the worker its
+   own FFmpeg decoder. Non-video `MediaData` is shared (stateless reads).
+3. **Results merge on the main thread.** A `QTimer` (200ms) periodically drains
+   a shared `WriteReservation` buffer and writes results into DataManager.
+4. **Qt signals provide cross-thread communication.** Progress and completion
+   signals use `Qt::QueuedConnection` automatically.
+
+## Key Components
+
+### WriteReservation
+
+Thread-safe buffer connecting the worker thread to the main thread. The worker
+pushes decoded `FrameResult` entries via `push()`, and the main thread drains
+them via `drain()`. A `std::mutex` protects the internal vector.
+
+```
+Worker thread                    Main thread
+─────────────                    ───────────
+decodeFrame() ──→ push(results)
+                                 QTimer (200ms) ──→ drain()
+decodeFrame() ──→ push(results)                      ├─ addAtTime(...)
+                                                     └─ notifyObservers()
+decodeFrame() ──→ push(results)
+                                 QThread::finished ──→ drain() (final)
+                                                       └─ cleanup
+```
+
+### BatchInferenceWorker
+
+A `QThread` subclass (defined in an anonymous namespace in
+`DeepLearningPropertiesWidget.cpp`) that runs `SlotAssembler::runBatchRangeOffline()`
+with a `ResultCallback`. The callback pushes each frame's decoded results into
+the shared `WriteReservation`.
+
+The worker holds a `std::atomic<bool> _cancel_requested` flag checked by
+`runBatchRangeOffline()` before each frame.
+
+### SlotAssembler::ResultCallback
+
+An optional callback parameter on `runBatchRangeOffline()`:
+
+```cpp
+using ResultCallback = std::function<void(std::vector<FrameResult>)>;
+```
+
+When provided, decoded results are pushed via the callback per-frame instead of
+being accumulated in `BatchInferenceResult::results`. This enables progressive
+delivery without changing the core inference loop.
+
+When not provided (default `nullptr`), the old behavior is preserved: results
+accumulate in the returned `BatchInferenceResult`.
+
+## Data Flow
+
+### Startup (`_onRunBatch`)
+
+1. User selects frame range in the dialog
+2. `VideoData` is cloned for the worker's independent FFmpeg decoder
+3. A `WriteReservation` is created (shared between worker and main thread)
+4. A `BatchInferenceWorker` is created with the reservation and a `ResultCallback`
+5. A `QTimer` (200ms) is started for periodic merging
+6. The worker thread starts
+
+### During Inference
+
+- **Worker thread:** For each frame, assembles inputs, runs forward pass,
+  decodes outputs, pushes `FrameResult`s into `WriteReservation::push()`
+- **Main thread (timer):** Every 200ms, `_mergeResults()` calls
+  `WriteReservation::drain()`, writes results to DataManager using
+  `addAtTime(..., NotifyObservers::No)`, then calls `notifyObservers()` once
+  per affected key. The UI redraws and the user sees results appearing.
+
+### Completion (`_onBatchFinished`)
+
+1. Stop the merge timer
+2. Final `_mergeResults()` to pick up any results since the last timer tick
+3. Report success or error
+4. Clean up worker and reservation
+
+### Cancellation
+
+The "Run Batch" button becomes "Cancel Batch" during inference. Clicking it
+sets `_cancel_requested = true` on the worker. The inference loop checks this
+before each frame and exits early. Any results computed before cancellation
+are still merged.
+
+## Why a Separate VideoData?
+
+`VideoData` wraps a stateful FFmpeg decoder with mutable internal state (seek
+position, codec context, frame buffer). Two threads cannot read frames from the
+same `VideoData` without corrupting each other's state. Creating a second
+`VideoData` at the same file path gives the worker its own independent decoder.
+
+This aligns with `ConcurrencyTraits<VideoData>::supports_cheap_clone = true`.
+
+## Generalizing to Other Components
+
+The same pattern (WriteReservation + QTimer merge) can be applied to
+`DataTransform_Widget` or any other long-running computation:
+
+1. Create a `WriteReservation` shared between worker and main thread
+2. Run computation on a `QThread`, pushing results via callback
+3. Merge periodically on the main thread using a `QTimer`
+4. Final merge on `QThread::finished`
