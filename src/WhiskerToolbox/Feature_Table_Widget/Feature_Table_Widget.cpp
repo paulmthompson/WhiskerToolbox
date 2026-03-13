@@ -1,7 +1,7 @@
 #include "Feature_Table_Widget.hpp"
 #include "ui_Feature_Table_Widget.h"
 
-#include "DataManager.hpp"
+#include "DataManager/DataManager.hpp"
 #include "CoreUtilities/color.hpp"
 
 #include <QHBoxLayout>

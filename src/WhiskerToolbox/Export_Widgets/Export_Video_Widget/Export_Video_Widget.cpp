@@ -7,7 +7,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "Lines/Line_Data.hpp"
-#include "DataManager/Media/Media_Data.hpp"
+#include "Media/Media_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"// For TimeKey
 #include "TimeFrame/TimeFrame.hpp"
 

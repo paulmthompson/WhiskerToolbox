@@ -5,7 +5,7 @@
 #include "ui_Tongue_Widget.h"
 
 #include "DataManager.hpp"
-#include "DataManager/Media/Media_Data.hpp"
+#include "Media/Media_Data.hpp"
 
 #include "Grabcut_Widget/Grabcut_Widget.hpp"
 #include "TimeFrame/TimeFrame.hpp"

@@ -2,7 +2,7 @@
 #include "ui_Feature_Tree_Widget.h"
 
 #include "CoreUtilities/color.hpp"
-#include "DataManager.hpp"
+#include "DataManager/DataManager.hpp"
 
 #include <QCheckBox>
 #include <QHeaderView>

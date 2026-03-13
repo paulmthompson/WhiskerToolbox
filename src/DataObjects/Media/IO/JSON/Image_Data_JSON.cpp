@@ -3,7 +3,7 @@
 #include "Media/IO/Image_Data_Loader.hpp"
 #include "Media/Image_Data.hpp"
 
-#include "loaders/loading_utils.hpp"
+#include "CoreUtilities/loading_utils.hpp"
 
 #include <iostream>
 

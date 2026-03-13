@@ -1,7 +1,7 @@
 #include "TimeFrame_Table_Widget.hpp"
 #include "ui_TimeFrame_Table_Widget.h"
 
-#include "DataManager.hpp"
+#include "DataManager/DataManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QHeaderView>

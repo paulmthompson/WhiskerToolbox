@@ -2,7 +2,7 @@
 
 #include <pybind11/stl.h>
 
-#include "DataManager/Media/Media_Data.hpp"
+#include "Media/Media_Data.hpp"
 
 #include <string>
 

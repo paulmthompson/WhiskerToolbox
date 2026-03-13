@@ -2,7 +2,7 @@
 #define ANALOG_TIME_SERIES_CSV_HPP
 
 #include "ParameterSchema/ParameterSchema.hpp"
-#include "utils/LoaderOptionsConcepts.hpp"
+#include "IO/core/LoaderOptionsConcepts.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>

@@ -1,7 +1,7 @@
 #ifndef MULTI_COLUMN_BINARY_CSV_HPP
 #define MULTI_COLUMN_BINARY_CSV_HPP
 
-#include "utils/LoaderOptionsConcepts.hpp"
+#include "IO/core/LoaderOptionsConcepts.hpp"
 #include "TimeFrame/interval_data.hpp"
 
 #include <rfl.hpp>

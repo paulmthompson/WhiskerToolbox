@@ -2,7 +2,7 @@
 
 #include "ui_TimeScrollBar.h"
 
-#include "DataManager.hpp"
+#include "DataManager/DataManager.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"// For TimeKey
 #include "TimeFrame/TimeFrame.hpp"

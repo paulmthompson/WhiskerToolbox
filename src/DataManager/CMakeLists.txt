@@ -16,8 +16,6 @@ find_package(OpenBLAS REQUIRED)
 
 add_subdirectory(IO)
 
-add_subdirectory(Media)
-
 add_subdirectory(Tensors)
 
 set(DATAMANAGER_SOURCES
@@ -31,12 +29,9 @@ set(DATAMANAGER_SOURCES
         Commands/MutationGuard.hpp
         Commands/MutationGuard.cpp
 
-        loaders/loading_utils.hpp
-
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
         utils/json_helpers.hpp
-        utils/metaprogramming_utils.hpp
         utils/TimeIndexExtractor.hpp
         utils/TimeIndexExtractor.cpp
         utils/DerivedTimeFrame.hpp
@@ -198,7 +193,7 @@ set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
 
 add_library(DataManager STATIC ${DATAMANAGER_SOURCES})
 
-target_include_directories(DataManager PRIVATE
+target_include_directories(DataManager PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" # State Estimation
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
@@ -210,7 +205,7 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(DataManager PRIVATE WhiskerToolbox::CoreMath)
-target_link_libraries(DataManager PRIVATE CoreUtilities)
+target_link_libraries(DataManager PUBLIC CoreUtilities) # used in 
 
 target_link_libraries(DataManager PRIVATE StateEstimation)
 

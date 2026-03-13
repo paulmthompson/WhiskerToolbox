@@ -3,7 +3,7 @@
 
 #include "core/ComputeContext.hpp"
 
-#include "DataManagerTypes.hpp"// DataTypeVariant
+#include "DataManager/DataManagerTypes.hpp"// DataTypeVariant
 
 #include <functional>
 #include <memory>

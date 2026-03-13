@@ -112,7 +112,7 @@ target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::PointData)
 
-#target_link_libraries(TransformsV2 PUBLIC DataManager)
+target_link_libraries(TransformsV2 PRIVATE DataManager) # DataTypeVariant
 
 target_link_libraries(TransformsV2 PUBLIC DataTypeTraits)
 

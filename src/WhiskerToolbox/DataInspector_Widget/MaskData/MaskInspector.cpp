@@ -12,7 +12,7 @@
 #include "DataExport_Widget/Masks/Image/ImageMaskSaver_Widget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Masks/Mask_Data.hpp"
-#include "DataManager/Media/Media_Data.hpp"
+#include "Media/Media_Data.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "MediaExport/media_export.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"

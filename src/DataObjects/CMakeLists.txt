@@ -9,3 +9,5 @@ add_subdirectory(RaggedTimeSeries)
 add_subdirectory(Lines)
 add_subdirectory(Points)
 add_subdirectory(Masks)
+
+add_subdirectory(Media)

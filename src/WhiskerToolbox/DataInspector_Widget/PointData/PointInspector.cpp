@@ -9,7 +9,7 @@
 #include "DataExport_Widget/Points/CSV/CSVPointSaver_Widget.hpp"
 #include "DataManager.hpp"
 #include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
-#include "DataManager/Media/Media_Data.hpp"
+#include "Media/Media_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Inspectors/GroupFilterHelper.hpp"

@@ -1,6 +1,5 @@
+find_package(nlohmann_json CONFIG REQUIRED)
 
-
-# Find required packages conditionally
 if(ENABLE_HDF5)
     find_package(HDF5 COMPONENTS CXX REQUIRED)
 endif()

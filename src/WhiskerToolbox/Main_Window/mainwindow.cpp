@@ -4,9 +4,9 @@
 #include "video_loader.hpp"
 
 #include "DataManager.hpp"
-#include "DataManager/Media/Image_Data.hpp"
-#include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/Media/Video_Data.hpp"
+#include "Media/Image_Data.hpp"
+#include "Media/Media_Data.hpp"
+#include "Media/Video_Data.hpp"
 
 #include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataTransform_Widget/DataTransform_Widget.hpp"

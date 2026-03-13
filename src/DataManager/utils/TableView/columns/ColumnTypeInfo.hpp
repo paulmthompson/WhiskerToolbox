@@ -2,7 +2,7 @@
 #define COLUMNTYPEINFO_HPP
 
 #include "TimeFrame/TimeFrameIndex.hpp"
-#include "utils/metaprogramming_utils.hpp"
+#include "CoreUtilities/metaprogramming_utils.hpp"
 
 #include <string>
 #include <tuple>

@@ -3,8 +3,8 @@
 #include "ImageTableModel.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Media/Image_Data.hpp"
-#include "DataManager/Media/Media_Data.hpp"
+#include "Media/Image_Data.hpp"
+#include "Media/Media_Data.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 
 #include <QHeaderView>

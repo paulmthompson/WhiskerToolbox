@@ -15,7 +15,7 @@
 
 #include "Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Media/Media_Data.hpp"
+#include "Media/Media_Data.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 
 

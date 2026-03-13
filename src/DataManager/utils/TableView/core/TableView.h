@@ -1,11 +1,11 @@
 #ifndef TABLE_VIEW_H
 #define TABLE_VIEW_H
 
-#include "utils/TableView/columns/ColumnTypeInfo.hpp"
-#include "utils/TableView/columns/Column.h"
-#include "utils/TableView/core/ExecutionPlan.h"
-#include "utils/TableView/core/RowDescriptor.h"
-#include "utils/TableView/interfaces/IRowSelector.h"
+#include "DataManager/utils/TableView/columns/ColumnTypeInfo.hpp"
+#include "DataManager/utils/TableView/columns/Column.h"
+#include "DataManager/utils/TableView/core/ExecutionPlan.h"
+#include "DataManager/utils/TableView/core/RowDescriptor.h"
+#include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 
 #include <map>
 #include <memory>

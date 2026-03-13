@@ -1,7 +1,7 @@
 #ifndef DATAMANAGER_TABLE_INFO_HPP
 #define DATAMANAGER_TABLE_INFO_HPP
 
-#include "utils/TableView/columns/ColumnTypeInfo.hpp"
+#include "DataManager/utils/TableView/columns/ColumnTypeInfo.hpp"
 
 #include <map>
 #include <string>

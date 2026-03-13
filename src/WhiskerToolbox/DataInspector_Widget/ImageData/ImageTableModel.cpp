@@ -1,6 +1,6 @@
 #include "ImageTableModel.hpp"
 
-#include "DataManager/Media/Image_Data.hpp"
+#include "Media/Image_Data.hpp"
 
 #include <iostream>
 
