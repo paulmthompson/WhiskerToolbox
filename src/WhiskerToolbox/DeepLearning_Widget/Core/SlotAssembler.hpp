@@ -17,12 +17,15 @@
  * @see ModelBase for the model forward pass interface.
  */
 
+#include "BatchInferenceResult.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 struct SlotBindingData;
@@ -32,6 +35,7 @@ struct RecurrentBindingData;
 struct ImageSize;
 
 class DataManager;
+class MediaData;
 
 /// Lightweight model metadata for display in the UI.
 /// Mirrors dl::ModelRegistry::ModelInfo but without any libtorch dependency.
@@ -94,6 +98,11 @@ public:
     /// @param total_frames Total number of frames to process
     using ProgressCallback = std::function<void(int current_frame, int total_frames)>;
 
+    /// Callback invoked per-frame with decoded results for progressive delivery.
+    /// When provided to runBatchRangeOffline(), results are pushed via this
+    /// callback instead of accumulating in BatchInferenceResult::results.
+    using ResultCallback = std::function<void(std::vector<FrameResult>)>;
+
     /// Run independent (non-recurrent) inference over a range of frames.
     ///
     /// For each frame in [start_frame, end_frame]:
@@ -122,6 +131,51 @@ public:
             int end_frame,
             ImageSize source_image_size,
             ProgressCallback const & progress = nullptr);
+
+    /// Map from DataManager data_key to a cloned MediaData instance.
+    ///
+    /// Used by runBatchRangeOffline() so the worker thread has its own
+    /// independent MediaData (e.g. a separate VideoData with its own
+    /// FFmpeg decoder state) while the UI continues using the original.
+    using MediaOverrides =
+            std::unordered_map<std::string, std::shared_ptr<MediaData>>;
+
+    /// Run independent inference over a frame range without writing to
+    /// DataManager.
+    ///
+    /// Identical to runBatchRange() except:
+    ///  - Uses @p media_overrides for MediaData lookups (thread-safe clone).
+    ///  - Returns decoded results in a BatchInferenceResult instead of
+    ///    calling addAtTime() on DataManager.
+    ///  - Checks @p cancel_requested before each frame for early exit.
+    ///
+    /// @param dm DataManager for non-media input encoding (masks, points, lines)
+    /// @param media_overrides Cloned MediaData instances keyed by data_key
+    /// @param input_bindings Dynamic input slot bindings
+    /// @param static_inputs Static (memory) input entries
+    /// @param output_bindings Output slot bindings
+    /// @param start_frame First frame to process (inclusive)
+    /// @param end_frame Last frame to process (inclusive)
+    /// @param source_image_size Original image dimensions
+    /// @param cancel_requested Checked before each frame; stops early if true
+    /// @param progress Optional callback for progress reporting
+    /// @param result_callback Optional per-frame result callback for progressive
+    ///        delivery.  When non-null, decoded outputs are pushed via this
+    ///        callback and NOT accumulated in BatchInferenceResult::results.
+    /// @return Accumulated decoded results (may be partial on cancellation).
+    ///         If result_callback is set, the results vector will be empty.
+    [[nodiscard]] BatchInferenceResult runBatchRangeOffline(
+            DataManager & dm,
+            MediaOverrides const & media_overrides,
+            std::vector<SlotBindingData> const & input_bindings,
+            std::vector<StaticInputData> const & static_inputs,
+            std::vector<OutputBindingData> const & output_bindings,
+            int start_frame,
+            int end_frame,
+            ImageSize source_image_size,
+            std::atomic<bool> const & cancel_requested,
+            ProgressCallback const & progress = nullptr,
+            ResultCallback const & result_callback = nullptr);
 
     /// Run sequential recurrent inference over a range of frames.
     ///

@@ -1,0 +1,184 @@
+---
+title: "Threaded Loading Roadmap"
+---
+
+## Overview
+
+This document plans the introduction of background-threaded data loading so 
+the UI stays responsive during large file imports.
+
+For the broader concurrency architecture — ownership model, const access, 
+write reservations, and data-sharing semantics — see 
+[Concurrency Architecture](concurrency_architecture.qmd).
+
+## Problem Statement
+
+All data loading is currently synchronous on the main (Qt) thread. When a user
+clicks "Load" in an import widget, the loader parses the entire file, builds 
+the data object, and writes it to DataManager — all while the UI is frozen.
+
+| Loader | Bottleneck | Typical Freeze Duration |
+|--------|-----------|------------------------|
+| CSV (large PointData/MaskData) | Line-by-line string parsing | Seconds (millions of rows) |
+| Multi-channel binary (64ch analog) | Raw I/O of 500MB+ files | Seconds |
+| HDF5 (ragged arrays) | Deserialization overhead | Seconds |
+| Video/Image media | Metadata only (lazy decode) | Negligible |
+
+Media loading is already effectively async because `VideoData::doLoadMedia()` 
+only reads metadata — frames are decoded on demand via `doLoadFrame()`. The 
+pain is in structured data formats.
+
+## Current Loading Flow
+
+```
+Main Thread (blocked)
+─────────────────────────────────────────────────────
+User clicks "Load"
+  → Import widget validates inputs
+  → Calls loader directly: IFormatLoader::load(filepath, type, config)
+    → Parser reads entire file
+    → Builds shared_ptr<DataType> (e.g., PointData, AnalogTimeSeries)
+    ← Returns LoadResult with LoadedDataVariant
+  → _data_manager->setData(key, data, TimeKey)
+    → Stores in _data map
+    → Calls _notifyObservers() (synchronous callbacks)
+  → Shows success message box
+─────────────────────────────────────────────────────
+UI unfreezes
+```
+
+## Why This Is a Simple Concurrency Case
+
+Data loading is a **pure producer**: the worker reads from a file (no 
+DataManager dependency), builds a complete data object, and hands it off. 
+There is no shared mutable state during the work.
+
+```
+Deep Learning:  Worker ↔ DataManager (reads frames, writes results)
+Data Loading:   Worker ← File system only → returns finished data object
+```
+
+The existing `IFormatLoader::load()` is already a pure function: file path in, 
+`LoadResult` out. Moving it to a worker thread is mechanical. This uses the 
+**fork-join pattern** described in the 
+[Concurrency Architecture](concurrency_architecture.qmd) — no write 
+reservations needed because the data object doesn't exist in DataManager 
+until the worker is done.
+
+## Implementation Plan
+
+### Phase 1: Loader Progress Infrastructure
+
+**Goal:** Enable loaders to report progress so users see feedback during 
+loading, even before threading is added.
+
+- [ ] **Add progress callback to `IFormatLoader::load()`** — Optional 
+  parameter: `LoadProgressCallback progress = nullptr` where 
+  `using LoadProgressCallback = std::function<void(int percent)>`.
+- [ ] **Implement progress in CSV loaders** — CSV loaders can report 
+  `bytes_read / file_size * 100` periodically (e.g., every 10,000 rows).
+- [ ] **Implement progress in binary loaders** — Report per-channel progress 
+  for multi-channel batch loads.
+- [ ] **Add progress bar to import widgets** — Each type-specific import 
+  widget gets a `QProgressBar` that updates during loading.
+
+**At this point loading is still synchronous, but users see progress.**
+
+### Phase 2: Worker Thread for Single-Object Loading
+
+**Goal:** Move file parsing off the main thread for single-object imports.
+
+- [ ] **Create `DataLoadWorker : QThread`** — Define in a shared header or 
+  in the import widget. Constructor takes: loader reference, filepath, data 
+  type, config, output key name. `run()` calls 
+  `loader.load(filepath, type, config, progress)`. Emits 
+  `progressChanged(int percent)` signal. Stores `LoadResult` for harvest.
+- [ ] **Add cancellation support** — `std::atomic<bool> _cancel_requested` 
+  checked by the loader progress callback. CSV loader checks between row 
+  batches; binary loader checks between channels.
+- [ ] **Wire import widgets to use `DataLoadWorker`** — On "Load" click: 
+  disable UI, create worker, connect signals, start. On `finished`: harvest 
+  result, call `_data_manager->setData()` on main thread, re-enable UI, 
+  show success/error message.
+- [ ] **Handle errors** — If `LoadResult::success` is false, show error 
+  dialog on main thread. If cancelled, show cancellation message.
+
+### Phase 3: Batch Loading and Polish
+
+**Goal:** Support multi-channel binary imports and general robustness.
+
+- [ ] **Extend `DataLoadWorker` for batch loads** — Worker calls 
+  `loadBatch()`, stores `BatchLoadResult`. Main thread loops results and 
+  calls `setData()` for each.
+- [ ] **Suppress intermediate notifications** — When writing N results from 
+  a batch, use a bulk-write pattern: write all with notification suppressed, 
+  then call `_notifyObservers()` once. This may require a small DataManager 
+  enhancement (a `setData` overload with `NotifyObservers` parameter).
+- [ ] **Prevent concurrent loads** — If a load is already in progress, 
+  disable the Load button across all import widgets. Only one 
+  `DataLoadWorker` active at a time.
+- [ ] **Cancel button** — Wire the progress bar's cancel button (or 
+  repurpose the Load button) to call `worker->requestCancel()`.
+
+### Phase 4: Testing and Documentation
+
+- [ ] **Unit test loader progress** — Verify CSV loader reports monotonically 
+  increasing progress. Verify cancellation returns partial result or empty 
+  result.
+- [ ] **Integration test** — Load a large CSV via DataLoadWorker, verify the 
+  resulting data matches a synchronous load.
+- [ ] **Developer documentation** — Create 
+  `docs/developer/DataManager/threaded_loading.qmd` after implementation, 
+  documenting the pattern and how to extend to new loaders.
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `IFormatLoader` (IO/core/) | Add `LoadProgressCallback` parameter to `load()` |
+| `CSVLoader.cpp` | Implement progress reporting in parse loop |
+| `BinaryFormatLoader.cpp` | Implement progress reporting per channel |
+| Import widget `.cpp` files | `DataLoadWorker` creation, signal wiring, UI disable/enable |
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `DataLoadWorker.hpp/.cpp` (in import widget area or shared utils) | QThread subclass for background loading |
+
+## Verification
+
+1. **Build** — `cmake --build --preset linux-clang-release` must succeed
+2. **Existing tests** — All IO and DataManager tests must pass
+3. **Manual — UI responsiveness** — Import a large CSV; verify widgets 
+   remain interactive during load
+4. **Manual — cancellation** — Start a large import, cancel mid-load; verify 
+   UI recovers cleanly
+5. **Manual — correctness** — Compare loaded data against synchronous load 
+   for identical files
+
+## Relationship to Other Roadmaps
+
+Threaded loading uses the **fork-join pattern** — the simplest concurrency 
+case. The worker reads a file, builds a data object, and returns it. No 
+DataManager contact during work. No write reservations needed.
+
+For the broader concurrency design (write reservations, borrow tracking, 
+progressive merge), see 
+[Concurrency Architecture](concurrency_architecture.qmd).
+
+For applying the merge pattern to deep learning inference, see 
+[Background Inference Roadmap](../DeepLearning/background_inference_roadmap.qmd).
+
+| Aspect | Data Loading | Deep Learning Inference |
+|--------|-------------|------------------------|
+| Worker input | File path + options | Model + cloned MediaData + frame range |
+| Worker computation | Parse file → build data object | Encode → forward → decode per frame |
+| Worker output | `LoadResult` (single object) | `BatchInferenceResult` (multi-frame) |
+| Main-thread write | One `setData()` call | Multiple `addAtTime()` calls |
+| Progress source | Bytes read / file size | Frames processed / total frames |
+| Cancellation check | Between row batches | Between frames |
+| DataManager contact during work | None | None (uses cloned MediaData) |
+
+Threaded loading is a good first implementation to build confidence with the 
+QThread + signal/slot pattern before tackling the more complex inference case.

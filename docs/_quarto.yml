@@ -68,6 +68,7 @@ website:
                 - developer/DeepLearning/batch_mode_guide.qmd
                 - developer/DeepLearning/batch_inference.qmd
                 - developer/DeepLearning/background_inference_roadmap.qmd
+                - developer/DeepLearning/background_inference.qmd
                 - developer/DeepLearning/roadmap.qmd
             - section: "Transforms V2"
               href: developer/transforms_v2/index.qmd
@@ -102,6 +103,8 @@ website:
             - developer/DataManager/storage_architecture.qmd
             - developer/DataManager/storage_testing_roadmap.qmd
             - developer/DataManager/storage_benchmarking_roadmap.qmd
+            - developer/DataManager/concurrency_architecture.qmd
+            - developer/DataManager/threaded_loading_roadmap.qmd
             - section: "Command Architecture"
               href: developer/DataManager/Commands/index.qmd
               contents:
