@@ -28,6 +28,9 @@ target_link_libraries(test_table_designer_widget PRIVATE
     Qt6::Widgets
     Qt6::Core
     Qt6::Test
+    WhiskerToolbox::DigitalTimeSeries
+    WhiskerToolbox::AnalogTimeSeries
+    WhiskerToolbox::LineData
 )
 
 target_include_directories(test_table_designer_widget PRIVATE

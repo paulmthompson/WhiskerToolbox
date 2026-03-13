@@ -25,7 +25,7 @@ target_link_libraries(test_mediamask_widget_integration PRIVATE
     Qt6::Widgets
     Qt6::Core
     Qt6::Test
-    TensorData
+    MaskData
 )
 
 target_include_directories(test_mediamask_widget_integration PRIVATE

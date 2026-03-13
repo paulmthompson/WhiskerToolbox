@@ -41,17 +41,7 @@ else()
     add_test(NAME test_plot_alignment_gather COMMAND test_plot_alignment_gather)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_plot_alignment_gather PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_plot_alignment_gather PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_plot_alignment_gather PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_plot_alignment_gather)
 
 enable_whiskertoolbox_shared_test_pch(test_plot_alignment_gather)
 
@@ -83,17 +73,7 @@ else()
     add_test(NAME test_plot_interaction_helpers COMMAND test_plot_interaction_helpers)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_plot_interaction_helpers PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_plot_interaction_helpers PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_plot_interaction_helpers PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_plot_interaction_helpers)
 
 enable_whiskertoolbox_shared_test_pch(test_plot_interaction_helpers)
 
@@ -129,17 +109,7 @@ else()
     set_property(TEST test_event_rate_estimation_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_event_rate_estimation PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_event_rate_estimation PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_event_rate_estimation PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_event_rate_estimation)
 
 enable_whiskertoolbox_shared_test_pch(test_event_rate_estimation)
 
@@ -163,6 +133,7 @@ target_link_libraries(test_plot_widget_common PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Test
+    WhiskerToolbox::DigitalTimeSeries
 )
 
 target_include_directories(test_plot_widget_common PRIVATE
@@ -190,16 +161,6 @@ else()
     set_property(TEST test_plot_widget_common_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_plot_widget_common PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_plot_widget_common PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_plot_widget_common PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_plot_widget_common)
 
 enable_whiskertoolbox_shared_test_pch(test_plot_widget_common)

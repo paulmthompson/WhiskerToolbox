@@ -240,6 +240,8 @@ target_link_libraries(fuzz_real_widget_roundtrip
         Test_Widget
 
         CoreUtilities # for color in MediaWidget state
+
+        ImageProcessing # for Display Options in Media State
 )
 
 target_compile_options(fuzz_real_widget_roundtrip

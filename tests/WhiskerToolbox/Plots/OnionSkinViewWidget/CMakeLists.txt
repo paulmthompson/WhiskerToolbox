@@ -32,6 +32,9 @@ target_link_libraries(test_onion_skin_view_widget PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Test
+    WhiskerToolbox::LineData
+    WhiskerToolbox::MaskData
+    WhiskerToolbox::PointData
 )
 
 target_include_directories(test_onion_skin_view_widget PRIVATE

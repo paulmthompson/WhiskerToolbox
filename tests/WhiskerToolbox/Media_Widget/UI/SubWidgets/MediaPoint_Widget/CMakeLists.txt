@@ -25,7 +25,7 @@ target_link_libraries(test_mediapoint_widget_integration PRIVATE
     Qt6::Widgets
     Qt6::Core
     Qt6::Test
-    TensorData
+    PointData
 )
 
 target_include_directories(test_mediapoint_widget_integration PRIVATE

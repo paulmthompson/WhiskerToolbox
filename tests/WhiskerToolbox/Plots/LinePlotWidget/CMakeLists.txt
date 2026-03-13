@@ -28,6 +28,7 @@ target_link_libraries(test_line_plot_widget PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Test
+    WhiskerToolbox::LineData
 )
 
 target_include_directories(test_line_plot_widget PRIVATE

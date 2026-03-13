@@ -7,8 +7,8 @@
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/Media/Video_Data.hpp"
+#include "Media/Media_Data.hpp"
+#include "Media/Video_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"

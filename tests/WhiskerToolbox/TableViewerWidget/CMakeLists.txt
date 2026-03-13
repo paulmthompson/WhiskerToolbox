@@ -24,6 +24,8 @@ target_link_libraries(test_table_viewer_widget PRIVATE
     DataManager 
     Qt6::Widgets
     Qt6::Core
+    WhiskerToolbox::DigitalTimeSeries
+    WhiskerToolbox::LineData
 )
 
 target_include_directories(test_table_viewer_widget PRIVATE

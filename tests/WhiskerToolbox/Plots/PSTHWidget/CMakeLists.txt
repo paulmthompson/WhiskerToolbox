@@ -28,6 +28,7 @@ target_link_libraries(test_psth_widget PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Test
+    WhiskerToolbox::DigitalTimeSeries
 )
 
 target_include_directories(test_psth_widget PRIVATE

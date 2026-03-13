@@ -4,7 +4,7 @@
 #include "DeepLearningBindingData.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Media/Media_Data.hpp"
+#include "Media/Media_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"

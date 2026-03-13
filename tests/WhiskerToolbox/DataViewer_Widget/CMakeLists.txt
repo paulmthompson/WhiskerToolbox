@@ -38,6 +38,10 @@ target_link_libraries(test_data_viewer_widget PRIVATE
     Qt6::Test
 )
 
+target_link_libraries(test_data_viewer_widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(test_data_viewer_widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+
+
 target_include_directories(test_data_viewer_widget PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"

@@ -14,6 +14,7 @@ target_link_libraries(fuzz_csv_point_roundtrip
         gtest
         fuzztest::fuzztest
         fuzztest::fuzztest_gtest_main
+        WhiskerToolbox::PointData
 )
 
 # Add AddressSanitizer for better bug detection
@@ -47,6 +48,7 @@ target_link_libraries(fuzz_csv_line_single_roundtrip
         gtest
         fuzztest::fuzztest
         fuzztest::fuzztest_gtest_main
+        WhiskerToolbox::LineData
 )
 
 target_compile_options(fuzz_csv_line_single_roundtrip
@@ -77,6 +79,7 @@ target_link_libraries(fuzz_csv_line_multi_roundtrip
         gtest
         fuzztest::fuzztest
         fuzztest::fuzztest_gtest_main
+        WhiskerToolbox::LineData
 )
 
 target_compile_options(fuzz_csv_line_multi_roundtrip
@@ -107,6 +110,7 @@ target_link_libraries(fuzz_csv_analog_roundtrip
         gtest
         fuzztest::fuzztest
         fuzztest::fuzztest_gtest_main
+        WhiskerToolbox::AnalogTimeSeries
 )
 
 target_compile_options(fuzz_csv_analog_roundtrip
@@ -137,6 +141,7 @@ target_link_libraries(fuzz_csv_event_roundtrip
         gtest
         fuzztest::fuzztest
         fuzztest::fuzztest_gtest_main
+        WhiskerToolbox::DigitalTimeSeries
 )
 
 target_compile_options(fuzz_csv_event_roundtrip
@@ -167,6 +172,7 @@ target_link_libraries(fuzz_csv_interval_roundtrip
         gtest
         fuzztest::fuzztest
         fuzztest::fuzztest_gtest_main
+        WhiskerToolbox::DigitalTimeSeries
 )
 
 target_compile_options(fuzz_csv_interval_roundtrip
@@ -197,6 +203,7 @@ target_link_libraries(fuzz_csv_mask_rle_roundtrip
         gtest
         fuzztest::fuzztest
         fuzztest::fuzztest_gtest_main
+        WhiskerToolbox::MaskData
 )
 
 target_compile_options(fuzz_csv_mask_rle_roundtrip
@@ -230,6 +237,7 @@ target_link_libraries(fuzz_capnproto_line_roundtrip
         gtest
         fuzztest::fuzztest
         fuzztest::fuzztest_gtest_main
+        WhiskerToolbox::LineData
 )
 
 target_compile_options(fuzz_capnproto_line_roundtrip
@@ -264,6 +272,7 @@ target_link_libraries(fuzz_opencv_mask_save
         gtest
         fuzztest::fuzztest
         fuzztest::fuzztest_gtest_main
+        WhiskerToolbox::MaskData
 )
 
 target_compile_options(fuzz_opencv_mask_save
