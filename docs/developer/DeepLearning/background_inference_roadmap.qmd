@@ -1,0 +1,195 @@
+---
+title: "Background Inference Roadmap"
+---
+
+## Overview
+
+This document tracks the implementation plan for moving deep learning batch 
+inference off the main thread so the UI stays responsive during long runs. The 
+approach uses the existing `QThread` pattern from `MLCoreWidget` as a template, 
+gives the worker its own private `MediaData` (separate FFmpeg decoder), 
+accumulates results in a private buffer, and bulk-writes them to `DataManager` 
+on the main thread after the worker finishes.
+
+## Design Rationale
+
+### Why not add mutexes to DataManager?
+
+`DataManager`, `ObserverData`, and all data types (`MaskData`, `PointData`, 
+`LineData`, `RaggedTimeSeries`) are entirely unsynchronized. Adding thread 
+safety would be a massive scope change affecting the entire codebase and every 
+consumer. The minimal approach is: **keep DataManager single-threaded and 
+marshal all writes back to the main thread.**
+
+### Why a separate MediaData instance?
+
+`VideoData` wraps `ffmpeg_wrapper::VideoDecoder`, which holds stateful FFmpeg 
+context (current decode position, codec context, frame buffer). If the worker 
+thread seeks to frame N while the UI is displaying frame M, they corrupt each 
+other's state. Creating a second `VideoData` at the same file path gives the 
+worker its own independent FFmpeg decoder — both can read frames concurrently 
+from the same file without interference.
+
+### Why all-at-once results instead of per-frame?
+
+Since `DataManager` is not thread-safe, per-frame writes from the worker would 
+require either:
+
+- Cross-thread signal per frame carrying decoded data (mask vectors, point 
+  vectors) — adds significant complexity and overhead.
+- Main-thread mutex on `DataManager` writes — opens deadlock risks with 
+  synchronous observer callbacks.
+
+For a first implementation, accumulating results in a worker-owned buffer and 
+bulk-writing them on the main thread after completion is simpler, safer, and 
+sufficient. Per-frame streaming can be added later as a refinement.
+
+## Key Existing Patterns
+
+### MLCoreWidget PipelineWorker
+
+`src/WhiskerToolbox/MLCore_Widget/MLCoreWidget.cpp` (L46–80):
+
+- `class PipelineWorker : public QThread` with `Q_OBJECT`
+- Emits `progressUpdate(int, QString)` signal from the worker thread
+- Qt automatically delivers cross-thread signals via `QueuedConnection`
+- Main thread connects `QThread::finished` to a lambda that harvests results 
+  and calls `deleteLater()`
+- Panels disabled during execution via `_setPipelineRunning(bool)`
+
+### producer_consumer_pipeline
+
+`src/DataManager/transforms/Media/producer_consumer_pipeline.hpp`:
+
+- Uses `std::mutex` around `MediaData` access when multiple threads read frames
+- Demonstrates that creating separate media access per thread is the safe 
+  approach
+
+### NotifyObservers::No
+
+`addAtTime(frame_idx, data, NotifyObservers::No)` suppresses per-frame 
+observer callbacks. Followed by a single `notifyObservers()` call after all 
+data is written. Used to avoid N observer callback fires during bulk writes.
+
+## Implementation Plan
+
+### Phase 1: Worker Thread Infrastructure
+
+- [ ] **Define `BatchInferenceResult` struct** — New code in `SlotAssembler.hpp` 
+  or a new header. Struct holding a vector of per-frame decoded results: 
+  `FrameResult` with frame index, decoded data variant, `data_key`, and 
+  `decoder_id`. Plus `BatchInferenceResult` with 
+  `vector<FrameResult>`, `bool success`, and `string error_message`. This is 
+  what the worker accumulates and the main thread consumes.
+- [ ] **Add `runBatchRangeOffline()` to `SlotAssembler`** — Similar to the 
+  existing `runBatchRange()` but: (a) takes its own `MediaData` references 
+  instead of reading from `DataManager`, (b) returns `BatchInferenceResult` 
+  instead of writing to `DataManager`, (c) accepts 
+  `std::atomic<bool> const & cancel_requested` for cancellation. Uses a new 
+  `decodeOutputsToBuffer()` that returns decoded data instead of calling 
+  `addAtTime()`. Progress callback is still invoked per-frame.
+- [ ] **Create `BatchInferenceWorker : QThread`** — Defined in an anonymous 
+  namespace in `DeepLearningPropertiesWidget.cpp` (following the 
+  `PipelineWorker` pattern). Constructor takes: `SlotAssembler*`, bindings, 
+  frame range, source image size, and a cloned `MediaData`. `run()` calls 
+  `runBatchRangeOffline()`. Emits `progressChanged(int, int)` signal. Stores 
+  `BatchInferenceResult` for harvest after completion. Holds 
+  `std::atomic<bool> _cancel_requested` checked in the loop.
+- [ ] **Clone `MediaData` for worker** — In `_onRunBatch()`, create a new 
+  `VideoData` instance and call `LoadMedia()` with the same file path as the 
+  UI's `MediaData`. Pass this private `MediaData` to the worker. The worker 
+  uses it for encoding; the UI continues using the original.
+
+### Phase 2: Wiring and UI
+
+- [ ] **Rewrite `_onRunBatch()` to async** — Instead of calling 
+  `runBatchRange()` synchronously, create a `BatchInferenceWorker` and start 
+  it. Connect `worker->progressChanged` to the `batchProgressChanged` signal 
+  (no `processEvents()` needed — Qt queued connection handles it). Connect 
+  `worker->finished` to a lambda that: (1) harvests `BatchInferenceResult`, 
+  (2) writes all results to `DataManager` on the main thread using 
+  `addAtTime()` with `NotifyObservers::No`, (3) calls `notifyObservers()` once 
+  on affected data objects, (4) calls `worker->deleteLater()`, (5) re-enables 
+  UI. Disable "Run Batch", "Run Single", and "Run Recurrent" buttons while 
+  running (following `_setPipelineRunning()` pattern).
+- [ ] **Add Cancel button** — When batch starts, repurpose "Run Batch" to 
+  become "Cancel" (or show a separate button). On click, call 
+  `worker->requestCancel()` which sets `_cancel_requested = true`. The worker 
+  loop checks this before each frame and exits early. On cancellation, still 
+  write whatever results were accumulated up to that point.
+- [ ] **Remove `processEvents()` from batch progress** — Since the event loop 
+  is now free (inference runs on a background thread), the 
+  `processEvents(ExcludeUserInputEvents)` call in the progress lambda is 
+  unnecessary. The progress bar updates naturally through queued signal 
+  connections.
+
+### Phase 3: Testing and Documentation
+
+- [ ] **Unit test for cancellation** — Test that `runBatchRangeOffline()` 
+  respects `cancel_requested` and returns partial results. Test that 
+  `BatchInferenceResult` correctly accumulates decoded data.
+- [ ] **Developer documentation** — Create 
+  `docs/developer/DeepLearning/background_inference.qmd` documenting the 
+  threading pattern, rationale for separate `MediaData`, and how to generalize 
+  to other components.
+- [ ] **Update main roadmap** — Update `roadmap.qmd` to reflect async inference 
+  progress.
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `SlotAssembler.hpp` | `BatchInferenceResult` struct, `runBatchRangeOffline()` declaration |
+| `SlotAssembler.cpp` | `runBatchRangeOffline()` and `decodeOutputsToBuffer()` implementation |
+| `DeepLearningPropertiesWidget.hpp` | Worker pointer member, `_setBatchRunning()` method |
+| `DeepLearningPropertiesWidget.cpp` | `BatchInferenceWorker` class, rewritten `_onRunBatch()`, cancel handler |
+| `roadmap.qmd` | Update task status |
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `background_inference.qmd` | Developer documentation for the threading pattern |
+
+## Verification
+
+1. **Build** — `cmake --build --preset linux-clang-release` must succeed
+2. **Existing tests** — All `DeepLearning` and `SlotAssembler` tests must pass
+3. **Manual — UI responsiveness** — Start batch inference on >100 frames; 
+   verify `Media_Widget` slider and other widgets remain interactive
+4. **Manual — cancellation** — Start batch, cancel mid-run; verify partial 
+   results are written and UI recovers cleanly
+5. **Manual — correctness** — Compare batch output against single-frame 
+   inference for the same frames; results must match
+6. **Manual — video contention** — During batch inference, scrub the media 
+   slider to confirm the UI's video decoder works independently from the 
+   worker's
+
+## Design Decisions
+
+- **All-at-once result delivery** (not per-frame) — Keeps `DataManager` 
+  single-threaded with no synchronization needed. Per-frame streaming is a 
+  future enhancement.
+- **Separate `VideoData` instance per worker** — Avoids FFmpeg decoder 
+  contention without adding mutexes to `MediaData`.
+- **`QThread` (not `std::jthread`)** — Consistent with the existing 
+  `MLCoreWidget` pattern; integrates naturally with Qt signal/slot for 
+  cross-thread communication.
+- **Scope: deep learning only** — `DataTransform_Widget` threading uses the 
+  same pattern but is out of scope for this plan.
+
+## Future Generalization
+
+The same `QThread worker + deferred DataManager writes` pattern applies to:
+
+- **`DataTransform_Widget`** — Currently blocks the main thread with a 
+  `processEvents()` hack. A `TransformWorker : QThread` would be nearly 
+  identical.
+- **Any long-running computation** — The recipe is: (1) clone any shared 
+  mutable state the worker needs, (2) run on background thread accumulating 
+  results, (3) write results on main thread after `QThread::finished`.
+
+**Key constraint:** `DataManager` must only be written from the main thread 
+until full thread-safety is implemented. Workers should either return results 
+for main-thread write-back, or use 
+`QMetaObject::invokeMethod(QueuedConnection)` to marshal writes.

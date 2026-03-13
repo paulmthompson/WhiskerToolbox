@@ -67,6 +67,7 @@ website:
                 - developer/DeepLearning/hybrid_sequence_inputs.qmd
                 - developer/DeepLearning/batch_mode_guide.qmd
                 - developer/DeepLearning/batch_inference.qmd
+                - developer/DeepLearning/background_inference_roadmap.qmd
                 - developer/DeepLearning/roadmap.qmd
             - section: "Transforms V2"
               href: developer/transforms_v2/index.qmd
