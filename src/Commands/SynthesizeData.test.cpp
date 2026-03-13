@@ -7,7 +7,7 @@
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/CommandFactory.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include "TimeFrame/StrongTimeTypes.hpp"

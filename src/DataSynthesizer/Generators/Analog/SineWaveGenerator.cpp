@@ -9,7 +9,7 @@
 #include "DataSynthesizer/GeneratorRegistry.hpp"
 #include "DataSynthesizer/Registration.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 
 #include <cassert>

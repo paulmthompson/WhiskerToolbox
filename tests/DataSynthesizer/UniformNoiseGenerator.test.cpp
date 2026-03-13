@@ -2,7 +2,7 @@
  * @file UniformNoiseGenerator.test.cpp
  * @brief Unit tests for the UniformNoise generator.
  */
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataSynthesizer/GeneratorRegistry.hpp"
 
 #include <catch2/catch_approx.hpp>

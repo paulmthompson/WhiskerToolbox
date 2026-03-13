@@ -238,6 +238,8 @@ target_link_libraries(fuzz_real_widget_roundtrip
         WhiskerToolbox::TensorData
         # Real widget libraries (Phase 6 corpus)
         Test_Widget
+
+        CoreUtilities # for color in MediaWidget state
 )
 
 target_compile_options(fuzz_real_widget_roundtrip

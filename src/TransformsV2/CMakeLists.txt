@@ -104,15 +104,15 @@ target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::CoreMath)
 target_link_libraries(TransformsV2 PUBLIC reflectcpp::reflectcpp)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::ParameterSchema)
 
-target_link_libraries(DataManager PRIVATE WhiskerToolbox::TensorData)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::MediaData)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::AnalogTimeSeries)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::DigitalTimeSeries)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::PointData)
+target_link_libraries(TransformsV2 PRIVATE WhiskerToolbox::TensorData)
+target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::LineData)
+target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::MaskData)
+target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::MediaData)
+target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::PointData)
 
-target_link_libraries(TransformsV2 PUBLIC DataManager)
+#target_link_libraries(TransformsV2 PUBLIC DataManager)
 
 target_link_libraries(TransformsV2 PUBLIC DataTypeTraits)
 

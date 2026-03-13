@@ -7,7 +7,7 @@
 
 #include "Core/CommandContext.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "DataSynthesizer/GeneratorRegistry.hpp"
