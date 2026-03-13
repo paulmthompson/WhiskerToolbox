@@ -9,7 +9,7 @@
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/IO/SaveData.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
+#include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 
 #include <QComboBox>
 #include <QLineEdit>

@@ -23,9 +23,9 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
-#include "DataManager/Tensors/RowDescriptor.hpp"
-#include "DataManager/Tensors/storage/LazyColumnTensorStorage.hpp"
+#include "Tensors/TensorData.hpp"
+#include "Tensors/RowDescriptor.hpp"
+#include "Tensors/storage/LazyColumnTensorStorage.hpp"
 
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/core/PipelineLoader.hpp"

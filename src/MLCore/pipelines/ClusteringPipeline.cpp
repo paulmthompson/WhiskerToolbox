@@ -6,8 +6,8 @@
 #include "ClusteringPipeline.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
-#include "DataManager/Tensors/RowDescriptor.hpp"
+#include "Tensors/TensorData.hpp"
+#include "Tensors/RowDescriptor.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"

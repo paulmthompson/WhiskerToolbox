@@ -91,10 +91,14 @@ target_link_libraries(ML_Widget PRIVATE
     armadillo
     LAPACK::LAPACK
     OpenBLAS::OpenBLAS
-    DataManager
-    TensorData
     Feature_Table_Widget
 )
+
+target_link_libraries(ML_Widget PRIVATE DataManager)
+target_link_libraries(ML_Widget PRIVATE TensorData)
+target_link_libraries(ML_Widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(ML_Widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(ML_Widget PRIVATE WhiskerToolbox::PointData)
 
 # Apply compiler warnings (if defined in parent scope) but remove OpenMP flags
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND DEFINED CLANG_OPTIONS)

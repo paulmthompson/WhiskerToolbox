@@ -4,8 +4,8 @@
 
 #include "features/FeatureConverter.hpp"
 
-#include "DataManager/Tensors/TensorData.hpp"
-#include "DataManager/Tensors/RowDescriptor.hpp"
+#include "Tensors/TensorData.hpp"
+#include "Tensors/RowDescriptor.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
 

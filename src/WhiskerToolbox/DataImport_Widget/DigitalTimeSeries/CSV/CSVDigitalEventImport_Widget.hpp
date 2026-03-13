@@ -6,7 +6,7 @@
  * @brief Widget for configuring CSV digital event data import options
  */
 
-#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
+#include "IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
 
 #include <QWidget>
 #include <QString>

@@ -120,16 +120,25 @@ set_target_properties(DataTransform_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(DataTransform_Widget PRIVATE 
+target_link_libraries(DataTransform_Widget PUBLIC 
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
 )
 
-target_link_libraries(DataTransform_Widget PRIVATE DataManager)
-target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::EditorState)
-target_link_libraries(DataTransform_Widget PRIVATE NEURALYZER_GEOMETRY)
+target_link_libraries(DataTransform_Widget PUBLIC WhiskerToolbox::EditorState)
+
+target_link_libraries(DataTransform_Widget PUBLIC DataManager) # DataTypeVariant
+target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::MediaData)
+target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::TensorData)
+
 target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::StateManagement)
+target_link_libraries(DataTransform_Widget PRIVATE NEURALYZER_GEOMETRY)
 
 # Include directories
 target_include_directories(DataTransform_Widget PUBLIC
@@ -139,21 +148,7 @@ target_include_directories(DataTransform_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compile definitions
-target_compile_definitions(DataTransform_Widget PRIVATE _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH)
-
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataTransform_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataTransform_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DataTransform_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataTransform_Widget)
 
 # Enable automoc for Qt
 set_target_properties(DataTransform_Widget PROPERTIES

@@ -19,9 +19,15 @@ set(DEEP_LEARNING_WIDGET_SOURCES
 
 add_library(DeepLearning_Widget STATIC ${DEEP_LEARNING_WIDGET_SOURCES})
 
-target_link_libraries(DeepLearning_Widget PRIVATE Qt6::Widgets)
-target_link_libraries(DeepLearning_Widget PRIVATE EditorState)
+target_link_libraries(DeepLearning_Widget PUBLIC Qt6::Widgets)
+target_link_libraries(DeepLearning_Widget PUBLIC EditorState)
+
 target_link_libraries(DeepLearning_Widget PRIVATE DataManager)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MediaData)
+
 target_link_libraries(DeepLearning_Widget PRIVATE DeepLearning)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::StateManagement)
 

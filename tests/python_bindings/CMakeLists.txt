@@ -27,17 +27,7 @@ catch_discover_tests(test_python_engine
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_python_engine PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_python_engine PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_python_engine PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_python_engine)
 
 enable_whiskertoolbox_shared_test_pch(test_python_engine)
 
@@ -55,17 +45,7 @@ catch_discover_tests(test_python_bindings
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_python_bindings PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_python_bindings PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_python_bindings PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_python_bindings)
 
 enable_whiskertoolbox_shared_test_pch(test_python_bindings)
 
@@ -79,21 +59,20 @@ target_link_libraries(test_python_bridge PRIVATE
     WhiskerToolbox::PythonBridge
 )
 
+target_link_libraries(test_python_bridge PRIVATE DataManager)
+
+target_link_libraries(test_python_bridge PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(test_python_bridge PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(test_python_bridge PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(test_python_bridge PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(test_python_bridge PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(test_python_bridge PRIVATE WhiskerToolbox::TensorData)
+
 catch_discover_tests(test_python_bridge
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_python_bridge PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_python_bridge PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_python_bridge PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_python_bridge)
 
 enable_whiskertoolbox_shared_test_pch(test_python_bridge)
 
@@ -107,21 +86,13 @@ target_link_libraries(test_python_phase5 PRIVATE
     WhiskerToolbox::PythonBridge
 )
 
+target_link_libraries(test_python_phase5 PRIVATE DataManager)
+
 catch_discover_tests(test_python_phase5
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_python_phase5 PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_python_phase5 PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_python_phase5 PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_python_phase5)
 
 enable_whiskertoolbox_shared_test_pch(test_python_phase5)
 
@@ -135,20 +106,12 @@ target_link_libraries(test_python_phase6 PRIVATE
     WhiskerToolbox::PythonBridge
 )
 
+target_link_libraries(test_python_phase6 PRIVATE DataManager)
+
 catch_discover_tests(test_python_phase6
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_python_phase6 PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_python_phase6 PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_python_phase6 PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_python_phase6)
 
 enable_whiskertoolbox_shared_test_pch(test_python_phase6)

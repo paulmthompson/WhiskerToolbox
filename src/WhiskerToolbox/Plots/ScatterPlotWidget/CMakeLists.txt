@@ -46,6 +46,9 @@ target_link_libraries(ScatterPlotWidget PUBLIC DataTypeEnum)
 target_link_libraries(ScatterPlotWidget PUBLIC EditorState)
 
 target_link_libraries(ScatterPlotWidget PRIVATE DataManager)
+target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::TensorData)
+
 target_link_libraries(ScatterPlotWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE Collapsible_Widget)

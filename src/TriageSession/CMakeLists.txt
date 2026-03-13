@@ -23,8 +23,9 @@ set_target_properties(TriageSession PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-# Dependencies: TriageSession consumes the Command Architecture from DataManager
-target_link_libraries(TriageSession PUBLIC DataManager Commands)
+target_link_libraries(TriageSession PUBLIC Commands)
+target_link_libraries(TriageSession PRIVATE DataManager)
+target_link_libraries(TriageSession PUBLIC TimeFrame)
 
 # Add alias for consistent naming
 add_library(WhiskerToolbox::TriageSession ALIAS TriageSession)

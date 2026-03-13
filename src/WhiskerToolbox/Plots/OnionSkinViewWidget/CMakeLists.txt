@@ -39,10 +39,14 @@ target_link_libraries(OnionSkinViewWidget PUBLIC
 target_link_libraries(OnionSkinViewWidget PUBLIC DataTypeEnum)
 target_link_libraries(OnionSkinViewWidget PUBLIC EditorState)
 
+target_link_libraries(OnionSkinViewWidget PRIVATE DataManager)
+target_link_libraries(OnionSkinViewWidget PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(OnionSkinViewWidget PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(OnionSkinViewWidget PRIVATE WhiskerToolbox::MaskData)
+
 target_link_libraries(OnionSkinViewWidget PRIVATE Collapsible_Widget)
 target_link_libraries(OnionSkinViewWidget PRIVATE CorePlotting)
 target_link_libraries(OnionSkinViewWidget PRIVATE PlottingOpenGL)
-target_link_libraries(OnionSkinViewWidget PRIVATE DataManager)
 target_link_libraries(OnionSkinViewWidget PRIVATE GlyphStyleWidget)
 target_link_libraries(OnionSkinViewWidget PRIVATE LineStyleControls)
 target_link_libraries(OnionSkinViewWidget PRIVATE HorizontalAxisWidget)

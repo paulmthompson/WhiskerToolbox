@@ -5,7 +5,7 @@
 #include "Core/SourceCompatibility.hpp"
 #include "DataManager/DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
+#include "Tensors/TensorData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Plots/Common/SelectionInstructions.hpp"

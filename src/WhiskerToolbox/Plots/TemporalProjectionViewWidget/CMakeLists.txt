@@ -40,6 +40,9 @@ target_link_libraries(TemporalProjectionViewWidget PUBLIC EditorState)
 target_link_libraries(TemporalProjectionViewWidget PUBLIC DataTypeEnum)
 
 target_link_libraries(TemporalProjectionViewWidget PRIVATE DataManager)
+target_link_libraries(TemporalProjectionViewWidget PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(TemporalProjectionViewWidget PRIVATE WhiskerToolbox::PointData)
+
 target_link_libraries(TemporalProjectionViewWidget PRIVATE Collapsible_Widget)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE CorePlotting)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE PlottingOpenGL)

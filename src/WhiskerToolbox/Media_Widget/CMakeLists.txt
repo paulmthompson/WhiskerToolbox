@@ -115,12 +115,22 @@ set(MEDIA_WIDGET_SOURCES
 
 add_library(Media_Widget STATIC ${MEDIA_WIDGET_SOURCES})
 
-target_link_libraries(Media_Widget PRIVATE Qt6::Widgets)
-target_link_libraries(Media_Widget PRIVATE Feature_Table_Widget)
-target_link_libraries(Media_Widget PRIVATE EditorState)
+target_link_libraries(Media_Widget PUBLIC Qt6::Widgets)
+target_link_libraries(Media_Widget PUBLIC EditorState)
+
+target_link_libraries(Media_Widget PRIVATE DataManager)
+target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::MediaData)
+target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::TensorData)
+
 target_link_libraries(Media_Widget PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(Media_Widget PUBLIC WhiskerToolbox::CoreMath)
-target_link_libraries(Media_Widget PRIVATE DataManager)
+
+target_link_libraries(Media_Widget PRIVATE Feature_Table_Widget)
 target_link_libraries(Media_Widget PRIVATE ColorPicker_Widget)
 target_link_libraries(Media_Widget PRIVATE Collapsible_Widget)
 target_link_libraries(Media_Widget PRIVATE GroupManagementWidget)
@@ -128,6 +138,7 @@ target_link_libraries(Media_Widget PRIVATE GroupContextMenu)
 target_link_libraries(Media_Widget PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 
 target_link_libraries(Media_Widget PUBLIC CoreUtilities) # Color in header
+target_link_libraries(Media_Widget PUBLIC ImageProcessing) # Display options in header
 
 target_include_directories(Media_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
@@ -135,17 +146,6 @@ target_include_directories(Media_Widget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(Media_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(Media_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(Media_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(Media_Widget)
 
 enable_whiskertoolbox_shared_pch(Media_Widget)

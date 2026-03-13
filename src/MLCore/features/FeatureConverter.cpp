@@ -5,7 +5,7 @@
 
 #include "FeatureConverter.hpp"
 
-#include "DataManager/Tensors/TensorData.hpp"
+#include "Tensors/TensorData.hpp"
 
 #include <cmath>
 #include <sstream>

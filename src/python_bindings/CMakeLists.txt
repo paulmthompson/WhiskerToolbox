@@ -92,25 +92,23 @@ add_library(PythonBridge STATIC
 
 target_link_libraries(PythonBridge
     PUBLIC  pybind11::embed Python3::Python
-    PUBLIC  DataManager                     # all data types (PUBLIC transitive)
-    PUBLIC  WhiskerToolbox::TensorData      # TensorData is PRIVATE in DataManager
 )
+
+target_link_libraries(PythonBridge PRIVATE DataManager)
+target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::TensorData)
+target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::MediaData)
+target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::PointData)
 
 target_include_directories(PythonBridge PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Suppress warnings from pybind11 / Python headers that we cannot fix
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(PythonBridge PRIVATE ${CLANG_OPTIONS})
-endif()
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(PythonBridge PRIVATE ${GCC_WARNINGS})
-endif()
-if (MSVC)
-    target_compile_options(PythonBridge PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(PythonBridge)
 
 add_library(WhiskerToolbox::PythonBridge ALIAS PythonBridge)
 

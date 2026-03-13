@@ -9,7 +9,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
-#include "DataManager/IO/core/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 
 #include <nlohmann/json.hpp>
 

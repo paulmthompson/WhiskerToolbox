@@ -1,5 +1,7 @@
 find_package(HDF5 COMPONENTS CXX REQUIRED)
 
+find_package(nlohmann_json CONFIG REQUIRED)
+
 # Create DataManagerHDF5 as a separate shared library for HDF5 utilities
 set(DATAMANAGER_HDF5_SOURCES
     common/hdf5_utilities.hpp

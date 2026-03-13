@@ -1,5 +1,7 @@
 # IO Plugin System CMakeLists.txt
 
+find_package(nlohmann_json CONFIG REQUIRED)
+
 # Core plugin interface
 set(IO_CORE_SOURCES
     core/DataLoader.hpp

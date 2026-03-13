@@ -21,14 +21,16 @@ set_target_properties(GroupManagementWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(GroupManagementWidget PRIVATE
+target_link_libraries(GroupManagementWidget PUBLIC
     Qt6::Widgets
     Qt6::Core
     Qt6::Gui
-
-    DataManager
     EditorState
 )
+
+target_link_libraries(GroupManagementWidget PRIVATE DataManager)
+target_link_libraries(GroupManagementWidget PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(GroupManagementWidget PRIVATE WhiskerToolbox::PointData)
 
 # Include directories
 target_include_directories(GroupManagementWidget PUBLIC

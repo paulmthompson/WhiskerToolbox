@@ -80,6 +80,9 @@ target_link_libraries(DataViewer_Widget PUBLIC DataTypeEnum)
 target_link_libraries(DataViewer_Widget PUBLIC EditorState)
 
 target_link_libraries(DataViewer_Widget PRIVATE DataManager)
+target_link_libraries(DataViewer_Widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(DataViewer_Widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+
 target_link_libraries(DataViewer_Widget PRIVATE glm::glm)
 target_link_libraries(DataViewer_Widget PRIVATE Boost::boost)
 target_link_libraries(DataViewer_Widget PRIVATE DataViewer)

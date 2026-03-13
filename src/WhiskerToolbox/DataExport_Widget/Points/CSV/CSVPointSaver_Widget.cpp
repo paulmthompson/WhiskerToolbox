@@ -1,7 +1,7 @@
 #include "CSVPointSaver_Widget.hpp"
 #include "ui_CSVPointSaver_Widget.h"
 
-#include "DataManager/IO/formats/CSV/points/Point_Data_CSV.hpp"
+#include "IO/formats/CSV/points/Point_Data_CSV.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>

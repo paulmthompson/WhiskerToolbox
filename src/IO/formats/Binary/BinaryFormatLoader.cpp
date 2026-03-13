@@ -6,7 +6,7 @@
 #include "analogtimeseries/Analog_Time_Series_Binary.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "utils/json_reflection.hpp"
+#include "CoreUtilities/json_reflection.hpp"
 
 #include <iostream>
 

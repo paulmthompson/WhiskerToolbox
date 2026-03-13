@@ -22,6 +22,10 @@ target_link_libraries(test_triage_session PRIVATE
     WhiskerToolbox::TriageSession
 )
 
+target_link_libraries(test_triage_session PRIVATE DataManager)
+target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::DigitalTimeSeries)
+
 if (WIN32)
     catch_discover_tests(test_triage_session
         DL_PATHS

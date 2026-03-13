@@ -4,7 +4,7 @@
 #include "ui_ClusteringPanel.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
+#include "Tensors/TensorData.hpp"
 #include "MLCore/models/MLModelParameters.hpp"
 #include "MLCore/models/MLModelRegistry.hpp"
 #include "MLCore/models/MLTaskType.hpp"

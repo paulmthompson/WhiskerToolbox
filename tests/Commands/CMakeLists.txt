@@ -30,6 +30,11 @@ add_executable(test_commands
 )
 
 target_link_libraries(test_commands PRIVATE Catch2::Catch2WithMain DataManager Commands)
+target_link_libraries(test_commands PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(test_commands PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(test_commands PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(test_commands PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(test_commands PRIVATE WhiskerToolbox::MaskData)
 
 # DataSynthesizer uses static registration — whole-archive required
 if(APPLE)

@@ -8,7 +8,7 @@
 
 #include <QWidget>
 #include <QString>
-#include "DataManager/IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
+#include "IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
 
 namespace Ui {
 class BinaryAnalogImport_Widget;

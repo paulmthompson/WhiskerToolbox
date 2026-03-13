@@ -3,8 +3,8 @@
 #include "ScatterAxisSource.hpp"
 #include "DataManager/DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
-#include "DataManager/Tensors/RowDescriptor.hpp"
+#include "Tensors/TensorData.hpp"
+#include "Tensors/RowDescriptor.hpp"
 
 ScatterSourceRowType resolveSourceRowType(
     DataManager & dm,

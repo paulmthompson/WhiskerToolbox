@@ -24,9 +24,16 @@ target_include_directories(DataSynthesizer PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-target_link_libraries(DataSynthesizer PUBLIC DataManager)
+target_link_libraries(DataSynthesizer PUBLIC DataManager) # DataTypeVariant
 target_link_libraries(DataSynthesizer PUBLIC WhiskerToolbox::ParameterSchema)
 target_link_libraries(DataSynthesizer PUBLIC reflectcpp::reflectcpp)
+
+target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::AnalogTimeSeries)
+#target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::DigitalTimeSeries)
+#target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::PointData)
+#target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::LineData)
+#target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::MaskData)
+#target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::MediaData)
 
 set_target_compiler_warnings(DataSynthesizer)
 enable_whiskertoolbox_shared_pch(DataSynthesizer)

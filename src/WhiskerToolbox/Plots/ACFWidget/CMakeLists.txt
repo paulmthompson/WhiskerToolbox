@@ -40,6 +40,8 @@ target_link_libraries(ACFWidget PUBLIC EditorState)
 target_link_libraries(ACFWidget PUBLIC DataTypeEnum)
 
 target_link_libraries(ACFWidget PRIVATE DataManager)
+target_link_libraries(ACFWidget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+
 target_link_libraries(ACFWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(ACFWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(ACFWidget PRIVATE Collapsible_Widget)

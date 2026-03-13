@@ -6,8 +6,8 @@
 #include "ClassificationPipeline.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Tensors/RowDescriptor.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
+#include "Tensors/RowDescriptor.hpp"
+#include "Tensors/TensorData.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"

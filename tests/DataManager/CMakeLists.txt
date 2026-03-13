@@ -153,14 +153,14 @@ add_executable(test_data_manager
         # Loader tests
         loaders/test_analog_reflection.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/DimensionDescriptor.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/RowDescriptor.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/ArmadilloTensorStorage.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/DenseTensorStorage.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/LazyColumnTensorStorage.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/TensorStorageWrapper.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/LibTorchTensorStorage.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/TensorData.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Tensors/DimensionDescriptor.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Tensors/RowDescriptor.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Tensors/storage/ArmadilloTensorStorage.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Tensors/storage/DenseTensorStorage.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Tensors/storage/LazyColumnTensorStorage.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Tensors/storage/TensorStorageWrapper.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Tensors/storage/LibTorchTensorStorage.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataObjects/Tensors/TensorData.test.cpp
 )
 
 # Add VideoData tests only if FFmpeg is enabled

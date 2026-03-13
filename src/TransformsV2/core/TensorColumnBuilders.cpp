@@ -4,8 +4,8 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/Tensors/storage/LazyColumnTensorStorage.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
+#include "Tensors/storage/LazyColumnTensorStorage.hpp"
+#include "Tensors/TensorData.hpp"
 
 #include "GatherPipelineExecutor.hpp"
 

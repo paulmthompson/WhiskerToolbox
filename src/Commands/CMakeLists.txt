@@ -50,6 +50,14 @@ target_link_libraries(Commands PRIVATE DataManager)
 target_link_libraries(Commands PRIVATE WhiskerToolbox::DataSynthesizer)
 target_link_libraries(Commands PUBLIC reflectcpp::reflectcpp)
 
+target_link_libraries(Commands PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(Commands PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(Commands PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(Commands PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(Commands PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(Commands PRIVATE WhiskerToolbox::MediaData)
+target_link_libraries(Commands PRIVATE WhiskerToolbox::TensorData)
+
 set_target_compiler_warnings(Commands)
 
 set_target_properties(Commands PROPERTIES

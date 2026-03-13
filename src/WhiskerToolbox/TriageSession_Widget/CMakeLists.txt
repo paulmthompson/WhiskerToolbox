@@ -27,13 +27,17 @@ target_link_libraries(TriageSession_Widget PUBLIC
         Qt6::Widgets
         Qt6::Core
         Qt6::Gui
-        AutoParamWidget
-        EditorState
-        DataManager
-        StateManagement
-        TriageSession
-        Commands
 )
+
+target_link_libraries(TriageSession_Widget PUBLIC EditorState)
+target_link_libraries(TriageSession_Widget PUBLIC Commands)
+
+target_link_libraries(TriageSession_Widget PRIVATE DataManager)
+target_link_libraries(TriageSession_Widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(TriageSession_Widget PRIVATE WhiskerToolbox::StateManagement)
+target_link_libraries(TriageSession_Widget PRIVATE WhiskerToolbox::TriageSession)
+target_link_libraries(TriageSession_Widget PRIVATE AutoParamWidget)
+
 
 set_target_compiler_warnings(TriageSession_Widget)
 

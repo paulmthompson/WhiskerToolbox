@@ -4,8 +4,8 @@
 
 #include "DataManager/DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
-#include "DataManager/IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
+#include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
+#include "IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
 #include "DataImportTypeRegistry.hpp"
 
 #include <QFileDialog>

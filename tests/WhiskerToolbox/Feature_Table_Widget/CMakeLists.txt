@@ -26,6 +26,11 @@ target_link_libraries(test_feature_table_widget PRIVATE
     Qt6::Core
 )
 
+target_link_libraries(test_feature_table_widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(test_feature_table_widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(test_feature_table_widget PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(test_feature_table_widget PRIVATE WhiskerToolbox::LineData)
+
 target_include_directories(test_feature_table_widget PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Feature_Table_Widget>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"

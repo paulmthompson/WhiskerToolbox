@@ -11,7 +11,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "Points/Point_Data.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
+#include "Tensors/TensorData.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 

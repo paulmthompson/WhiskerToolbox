@@ -121,6 +121,14 @@ target_link_libraries(DataImport_Widget
         WhiskerToolbox::StateManagement
 )
 
+target_link_libraries(DataImport_Widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(DataImport_Widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(DataImport_Widget PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(DataImport_Widget PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(DataImport_Widget PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(DataImport_Widget PRIVATE WhiskerToolbox::MediaData)
+target_link_libraries(DataImport_Widget PRIVATE WhiskerToolbox::TensorData)
+
 target_include_directories(DataImport_Widget
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}

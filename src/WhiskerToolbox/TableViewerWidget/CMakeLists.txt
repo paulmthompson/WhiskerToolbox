@@ -15,8 +15,10 @@ target_link_libraries(TableViewerWidget
     PUBLIC
         Qt6::Core
         Qt6::Widgets
-        DataManager
 )
+
+target_link_libraries(TableViewerWidget PUBLIC DataManager) #Table info in header
+target_link_libraries(TableViewerWidget PRIVATE WhiskerToolbox::DigitalTimeSeries)
 
 # Include directories
 target_include_directories(TableViewerWidget PUBLIC

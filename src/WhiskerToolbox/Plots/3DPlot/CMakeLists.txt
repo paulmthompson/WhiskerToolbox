@@ -36,9 +36,11 @@ target_link_libraries(3DPlotWidget PUBLIC
     Qt6::OpenGLWidgets
 )
 
-target_link_libraries(3DPlotWidget PRIVATE DataManager)
 target_link_libraries(3DPlotWidget PUBLIC DataTypeEnum)
 target_link_libraries(3DPlotWidget PUBLIC EditorState)
+
+target_link_libraries(3DPlotWidget PRIVATE DataManager)
+target_link_libraries(3DPlotWidget PRIVATE WhiskerToolbox::PointData)
 
 target_include_directories(3DPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

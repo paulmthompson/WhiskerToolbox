@@ -8,7 +8,7 @@
 
 #include <QWidget>
 #include <QString>
-#include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
+#include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 
 namespace Ui {
 class CSVAnalogImport_Widget;

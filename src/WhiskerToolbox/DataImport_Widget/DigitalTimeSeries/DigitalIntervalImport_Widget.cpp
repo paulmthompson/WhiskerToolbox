@@ -4,7 +4,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
+#include "IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 #include "DataImportTypeRegistry.hpp"
 
 #include <QFileDialog>

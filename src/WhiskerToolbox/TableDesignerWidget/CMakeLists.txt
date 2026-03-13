@@ -36,8 +36,12 @@ target_link_libraries(TableDesignerWidget
         Qt6::Concurrent
 )
 target_link_libraries(TableDesignerWidget PUBLIC EditorState)
-target_link_libraries(TableDesignerWidget PUBLIC DataManager)
 target_link_libraries(TableDesignerWidget PUBLIC reflectcpp::reflectcpp)
+
+target_link_libraries(TableDesignerWidget PUBLIC DataManager) # Table info in header
+target_link_libraries(TableDesignerWidget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(TableDesignerWidget PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(TableDesignerWidget PRIVATE WhiskerToolbox::LineData)
 
 target_link_libraries(TableDesignerWidget PRIVATE WhiskerToolbox::StateManagement)
 target_link_libraries(TableDesignerWidget PRIVATE Collapsible_Widget)

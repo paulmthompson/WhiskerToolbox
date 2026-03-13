@@ -1,3 +1,5 @@
+find_package(nlohmann_json CONFIG REQUIRED)
+
 find_package(OpenCV CONFIG REQUIRED)
 
 # Create DataManagerOpenCV as a separate shared library for OpenCV utilities

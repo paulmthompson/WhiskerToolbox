@@ -60,6 +60,9 @@ target_link_libraries(MLCore_Widget
         reflectcpp::reflectcpp
 )
 
+target_link_libraries(MLCore_Widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(MLCore_Widget PRIVATE WhiskerToolbox::TensorData)
+
 set_target_properties(MLCore_Widget PROPERTIES
     AUTOMOC ON
     AUTOUIC ON

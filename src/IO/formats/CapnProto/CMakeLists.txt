@@ -1,5 +1,7 @@
 # CapnProto Plugin CMakeLists.txt
 
+find_package(nlohmann_json CONFIG REQUIRED)
+
 # Find CapnProto - make it conditional
 if(ENABLE_CAPNPROTO)
     find_package(CapnProto CONFIG REQUIRED)

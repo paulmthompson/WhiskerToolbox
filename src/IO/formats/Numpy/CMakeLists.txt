@@ -1,5 +1,7 @@
 # Numpy Plugin CMakeLists.txt
 
+find_package(nlohmann_json CONFIG REQUIRED)
+
 # Create DataManagerNumpy as a separate shared library for numpy loading
 set(DATAMANAGER_NUMPY_SOURCES
     NumpyLoader.hpp
@@ -16,6 +18,7 @@ add_library(DataManagerNumpy SHARED ${DATAMANAGER_NUMPY_SOURCES})
 # Set up include directories
 target_include_directories(DataManagerNumpy PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../..>"  #I'll make this better i Promise
     $<INSTALL_INTERFACE:include>
     "${npy_SOURCE_DIR}/include"  # For libnpy header-only library
 )

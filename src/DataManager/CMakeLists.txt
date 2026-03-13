@@ -14,10 +14,6 @@ find_package(Armadillo REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
 
-add_subdirectory(IO)
-
-add_subdirectory(Tensors)
-
 set(DATAMANAGER_SOURCES
         DataManager.hpp
         DataManager.cpp
@@ -31,7 +27,6 @@ set(DATAMANAGER_SOURCES
 
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
-        utils/json_helpers.hpp
         utils/TimeIndexExtractor.hpp
         utils/TimeIndexExtractor.cpp
         utils/DerivedTimeFrame.hpp
@@ -218,17 +213,17 @@ target_link_libraries(DataManager PRIVATE Whisker-Analysis)
 target_link_libraries(DataManager PUBLIC iir::iir)
 
 target_link_libraries(DataManager PRIVATE WhiskerToolbox::TensorData)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::MediaData)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::AnalogTimeSeries)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::DigitalTimeSeries)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::PointData)
+target_link_libraries(DataManager PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(DataManager PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(DataManager PRIVATE WhiskerToolbox::MediaData)
+target_link_libraries(DataManager PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(DataManager PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(DataManager PRIVATE WhiskerToolbox::PointData)
 
 target_link_libraries(DataManager PUBLIC DataTypeEnum)
 
 if(ENABLE_OPENCV)
-    target_link_libraries(DataManager PUBLIC ImageProcessing)
+    target_link_libraries(DataManager PRIVATE ImageProcessing)
 endif()
 
 target_link_libraries(DataManager PRIVATE DataManagerIO)

@@ -3,7 +3,7 @@
 
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Points/Point_Data.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
+#include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <numeric>

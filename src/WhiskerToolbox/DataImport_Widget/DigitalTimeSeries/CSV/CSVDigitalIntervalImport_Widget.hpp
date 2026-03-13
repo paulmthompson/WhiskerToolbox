@@ -8,7 +8,7 @@
 
 #include <QWidget>
 #include <QString>
-#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
+#include "IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 
 namespace Ui {
 class CSVDigitalIntervalImport_Widget;

@@ -3,7 +3,7 @@
 #include "IO/core/AtomicWrite.hpp"
 #include "Points/Point_Data.hpp"
 #include "CoreUtilities/loading_utils.hpp"
-#include "utils/json_reflection.hpp"
+#include "CoreUtilities/json_reflection.hpp"
 #include "CoreUtilities/string_manip.hpp"
 
 #include <cassert>

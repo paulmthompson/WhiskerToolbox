@@ -1,7 +1,7 @@
 #ifndef CSV_EVENT_SAVER_WIDGET_HPP
 #define CSV_EVENT_SAVER_WIDGET_HPP
 
-#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
+#include "IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
 
 #include <QWidget>
 

@@ -19,17 +19,23 @@ target_link_libraries(DataSynthesizer_Widget
     PUBLIC
         Qt6::Core
         Qt6::Widgets
-        EditorState
-        DataManager
-        reflectcpp::reflectcpp
-    PRIVATE
-        AutoParamWidget
-        WhiskerToolbox::DataSynthesizer
-        WhiskerToolbox::ParameterSchema
-        Commands
-        PlottingOpenGL
-        CorePlotting
 )
+
+target_link_libraries(DataSynthesizer_Widget PUBLIC EditorState)
+target_link_libraries(DataSynthesizer_Widget PUBLIC reflectcpp::reflectcpp)
+
+target_link_libraries(DataSynthesizer_Widget PRIVATE PlottingOpenGL) #in preview widget header
+target_link_libraries(DataSynthesizer_Widget PRIVATE CorePlotting)
+target_link_libraries(DataSynthesizer_Widget PRIVATE AutoParamWidget)
+target_link_libraries(DataSynthesizer_Widget PRIVATE WhiskerToolbox::DataSynthesizer)
+target_link_libraries(DataSynthesizer_Widget PRIVATE WhiskerToolbox::ParameterSchema)
+target_link_libraries(DataSynthesizer_Widget PRIVATE Commands)
+
+
+target_link_libraries(DataSynthesizer_Widget PRIVATE DataManager)
+target_link_libraries(DataSynthesizer_Widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+
+
 
 target_include_directories(DataSynthesizer_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"

@@ -4,7 +4,7 @@
 #include "ui_FeatureSelectionPanel.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
+#include "Tensors/TensorData.hpp"
 
 #include <QTimer>
 

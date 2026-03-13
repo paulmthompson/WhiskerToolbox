@@ -20,8 +20,8 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Points/Point_Data.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
-#include "DataManager/Tensors/storage/LazyColumnTensorStorage.hpp"
+#include "Tensors/TensorData.hpp"
+#include "Tensors/storage/LazyColumnTensorStorage.hpp"
 
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
