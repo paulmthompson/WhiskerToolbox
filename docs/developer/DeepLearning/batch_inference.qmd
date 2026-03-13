@@ -20,10 +20,10 @@ each frame as a standalone prediction — no state is carried between frames.
 
 ## Architecture
 
-### SlotAssembler::runBatchRange()
+### SlotAssembler::runBatchRange() (synchronous, legacy)
 
-The core loop lives in `SlotAssembler::runBatchRange()`. For each frame in the 
-range:
+The original synchronous loop lives in `SlotAssembler::runBatchRange()`. For 
+each frame in the range:
 
 1. `assembleInputs()` — encode dynamic and static inputs for the frame
 2. `model->forward()` — run the model
@@ -31,19 +31,53 @@ range:
 
 A `ProgressCallback` is invoked before each frame so the UI can update.
 
+### SlotAssembler::runBatchRangeOffline() (async, current)
+
+The async version (`runBatchRangeOffline()`) runs on a `BatchInferenceWorker` 
+(QThread subclass). Key differences from the synchronous path:
+
+- **MediaOverrides**: Accepts a map of `data_key → shared_ptr<MediaData>` 
+  clones so the worker has its own FFmpeg decoder state, avoiding seek 
+  contention with the UI thread.
+- **decodeOutputsToBuffer()**: Instead of writing decoded outputs directly to 
+  DataManager via `addAtTime()`, this helper returns `FrameResult` structs 
+  containing decoded geometry (`Mask2D`, `Point2D<float>`, `Line2D`) via a 
+  `DecodedOutputVariant`.
+- **BatchInferenceResult**: The worker accumulates all `FrameResult`s into a 
+  `BatchInferenceResult` struct. On completion, the main thread bulk-writes 
+  results to DataManager using `NotifyObservers::No`, then calls 
+  `notifyObservers()` once per affected data key.
+- **Cancellation**: Accepts `std::atomic<bool> const & cancel_requested`. 
+  Checked before each frame; partial results are still returned.
+
+### BatchInferenceWorker (QThread)
+
+Defined in an anonymous namespace in `DeepLearningPropertiesWidget.cpp`, 
+following the `PipelineWorker` pattern from `MLCoreWidget`. Constructor 
+receives copies of all bindings and a cloned `MediaData`. Emits 
+`progressChanged(int, int)` via Qt queued connection so the main thread 
+progress bar updates naturally.
+
+### UI Behaviour During Async Inference
+
+- "Run Batch" becomes "Cancel Batch" while running.
+- "Run Single" and "Run Recurrent" are disabled.
+- No `processEvents()` calls needed — the Qt event loop runs freely.
+- On completion or cancellation, results are written and UI is restored.
+
 ### Progress Reporting
 
-The `DeepLearningPropertiesWidget` emits `batchProgressChanged(int, int)` from 
-the progress callback. This signal is connected to 
-`DeepLearningViewWidget::updateRecurrentProgress()`, which drives the shared 
-`QProgressBar`. `QCoreApplication::processEvents()` is called after each 
-progress emission to ensure the UI repaints during the synchronous loop.
+The `BatchInferenceWorker` emits `progressChanged(int, int)` from the worker 
+thread. This signal is connected to 
+`DeepLearningPropertiesWidget::batchProgressChanged` via Qt queued connection, 
+which in turn drives the `DeepLearningViewWidget` progress bar.
 
 ### Key Files
 
 | File | Role |
 |------|------|
-| `SlotAssembler.hpp / .cpp` | `runBatchRange()` implementation |
-| `DeepLearningPropertiesWidget.cpp` | `_onRunBatch()` handler and dialog |
+| `BatchInferenceResult.hpp` | `FrameResult`, `DecodedOutputVariant`, `BatchInferenceResult` structs |
+| `SlotAssembler.hpp / .cpp` | `runBatchRange()` (sync) and `runBatchRangeOffline()` (async) |
+| `DeepLearningPropertiesWidget.cpp` | `BatchInferenceWorker`, `_onRunBatch()`, `_onBatchFinished()` |
 | `DeepLearningViewWidget.cpp` | Progress bar update slot |
 | `DeepLearningWidgetRegistration.cpp` | Signal/slot wiring |

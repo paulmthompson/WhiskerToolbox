@@ -33,6 +33,7 @@ class QLabel;
 class QLineEdit;
 class QPushButton;
 class QSpinBox;
+class QThread;
 class QVBoxLayout;
 
 class DataManager;
@@ -156,6 +157,13 @@ private:
 
     // DataManager observer for data add/delete notifications
     int _dm_observer_id = -1;
+
+    // ── Background batch inference ─────────────────────────────────────────
+    void _setBatchRunning(bool running);
+    void _onCancelBatch();
+    void _onBatchFinished();
+
+    QThread * _batch_worker = nullptr;
 };
 
 #endif// DEEP_LEARNING_PROPERTIES_WIDGET_HPP

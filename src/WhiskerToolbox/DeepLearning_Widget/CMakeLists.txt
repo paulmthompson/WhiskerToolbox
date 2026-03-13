@@ -4,6 +4,7 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     DeepLearningWidgetRegistration.hpp
     DeepLearningWidgetRegistration.cpp
 
+    Core/BatchInferenceResult.hpp
     Core/DeepLearningState.hpp
     Core/DeepLearningState.cpp
     Core/DeepLearningBindingData.hpp

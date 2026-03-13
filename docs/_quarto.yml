@@ -102,6 +102,8 @@ website:
             - developer/DataManager/storage_architecture.qmd
             - developer/DataManager/storage_testing_roadmap.qmd
             - developer/DataManager/storage_benchmarking_roadmap.qmd
+            - developer/DataManager/concurrency_architecture.qmd
+            - developer/DataManager/threaded_loading_roadmap.qmd
             - section: "Command Architecture"
               href: developer/DataManager/Commands/index.qmd
               contents:

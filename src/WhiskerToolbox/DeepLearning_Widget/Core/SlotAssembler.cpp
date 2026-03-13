@@ -1,13 +1,12 @@
 #include "SlotAssembler.hpp"
 
-// Use the Qt-free binding data header instead of the full DeepLearningState
-// (which inherits from EditorState → QObject → #define slots).
+#include "BatchInferenceResult.hpp"
 #include "DeepLearningBindingData.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
-#include "DataManager/Media/Media_Data.hpp"
 #include "Points/Point_Data.hpp"
 
 #include "channel_encoding/ChannelEncoder.hpp"
@@ -31,6 +30,7 @@
 #include <torch/torch.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <filesystem>
 #include <iostream>
@@ -147,6 +147,8 @@ dl::EncoderParams makeEncoderParams(
 /// @param frame Frame number to encode
 /// @param batch_index Batch index in the tensor
 /// @param source_image_size Original image dimensions (for coordinate scaling of masks/points/lines)
+/// @param media_overrides Optional map of data_key -> cloned MediaData for
+///        thread-safe frame reading (nullptr = use DataManager only)
 void encodeDynamicSlot(
         DataManager & dm,
         SlotBindingData const & binding,
@@ -154,12 +156,23 @@ void encodeDynamicSlot(
         torch::Tensor & tensor,
         int frame,
         int batch_index,
-        ImageSize const & source_image_size) {
+        ImageSize const & source_image_size,
+        SlotAssembler::MediaOverrides const * media_overrides = nullptr) {
 
     auto params = makeEncoderParams(slot, binding, batch_index);
 
     if (binding.encoder_id == "ImageEncoder") {
-        auto media = dm.getData<MediaData>(binding.data_key);
+        // Check overrides first, then DataManager
+        std::shared_ptr<MediaData> media;
+        if (media_overrides) {
+            auto ov_it = media_overrides->find(binding.data_key);
+            if (ov_it != media_overrides->end()) {
+                media = ov_it->second;
+            }
+        }
+        if (!media) {
+            media = dm.getData<MediaData>(binding.data_key);
+        }
         if (!media) {
             std::cerr << "SlotAssembler: MediaData not found for key '"
                       << binding.data_key << "'\n";
@@ -265,7 +278,8 @@ assembleInputs(
         std::unordered_map<std::string, torch::Tensor> const & static_cache,
         std::vector<RecurrentBindingData> const & recurrent_bindings,
         int current_frame,
-        int batch_size) {
+        int batch_size,
+        SlotAssembler::MediaOverrides const * media_overrides = nullptr) {
 
     std::unordered_map<std::string, torch::Tensor> result;
     auto const input_slot_vec = model.inputSlots();
@@ -276,7 +290,13 @@ assembleInputs(
     ImageSize source_image_size{0, 0};
     for (auto const & binding: input_bindings) {
         if (binding.encoder_id == "ImageEncoder" && !binding.data_key.empty()) {
-            auto media = dm.getData<MediaData>(binding.data_key);
+            // Check overrides first
+            std::shared_ptr<MediaData> media;
+            if (media_overrides) {
+                auto ov_it = media_overrides->find(binding.data_key);
+                if (ov_it != media_overrides->end()) media = ov_it->second;
+            }
+            if (!media) media = dm.getData<MediaData>(binding.data_key);
             if (media) {
                 source_image_size = media->getImageSize();
                 break;
@@ -288,7 +308,12 @@ assembleInputs(
     int max_frame = std::numeric_limits<int>::max();
     for (auto const & binding: input_bindings) {
         if (binding.encoder_id == "ImageEncoder" && !binding.data_key.empty()) {
-            auto media = dm.getData<MediaData>(binding.data_key);
+            std::shared_ptr<MediaData> media;
+            if (media_overrides) {
+                auto ov_it = media_overrides->find(binding.data_key);
+                if (ov_it != media_overrides->end()) media = ov_it->second;
+            }
+            if (!media) media = dm.getData<MediaData>(binding.data_key);
             if (media) {
                 int const total = media->getTotalFrameCount();
                 if (total > 0) {
@@ -315,7 +340,8 @@ assembleInputs(
             int const frame = computeEncodingFrame(
                     current_frame, b, binding.time_offset, max_frame);
             encodeDynamicSlot(dm, binding, *slot, tensor,
-                              frame, b, source_image_size);
+                              frame, b, source_image_size,
+                              media_overrides);
         }
         result[binding.slot_name] = std::move(tensor);
     }
@@ -464,7 +490,8 @@ assembleInputs(
                     temp_binding.mode = defaultModeForEncoder(slot.recommended_encoder);
                     temp_binding.gaussian_sigma = 2.0f;
                     encodeDynamicSlot(dm, temp_binding, elem_slot, temp,
-                                      frame, 0, source_image_size);
+                                      frame, 0, source_image_size,
+                                      media_overrides);
 
                     // Expand temp from {1, ...elem_shape} to {batch_size, ...}
                     if (batch_size > 1) {
@@ -532,7 +559,8 @@ assembleInputs(
                     // Use appropriate default mode for this encoder type
                     temp_binding.mode = defaultModeForEncoder(slot.recommended_encoder);
                     temp_binding.gaussian_sigma = 2.0f;
-                    encodeDynamicSlot(dm, temp_binding, slot, tensor, frame, 0, source_image_size);
+                    encodeDynamicSlot(dm, temp_binding, slot, tensor, frame, 0, source_image_size,
+                                      media_overrides);
                 }
             }
             result[slot.name] = std::move(tensor);
@@ -623,6 +651,82 @@ void decodeOutputs(
                       << binding.decoder_id << "'\n";
         }
     }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Offline (worker-thread) helpers
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Decode model outputs into FrameResult entries instead of writing to
+/// DataManager. Returns a vector of decoded results for the given frame.
+std::vector<FrameResult> decodeOutputsToBuffer(
+        std::unordered_map<std::string, torch::Tensor> const & outputs,
+        std::vector<OutputBindingData> const & output_bindings,
+        dl::ModelBase const & model,
+        int current_frame,
+        ImageSize source_image_size) {
+
+    std::vector<FrameResult> frame_results;
+    auto const output_slot_vec = model.outputSlots();
+
+    for (auto const & binding: output_bindings) {
+        if (binding.data_key.empty()) continue;
+        auto it = outputs.find(binding.slot_name);
+        if (it == outputs.end()) continue;
+
+        auto const & tensor = it->second;
+        auto const * slot = findSlot(output_slot_vec, binding.slot_name);
+        if (!slot) continue;
+
+        dl::DecoderParams params;
+        params.source_channel = 0;
+        params.batch_index = 0;
+        params.threshold = binding.threshold;
+        params.subpixel = binding.subpixel;
+        params.target_image_size = source_image_size;
+
+        if (slot->shape.size() >= 2) {
+            params.height =
+                    static_cast<int>(slot->shape[slot->shape.size() - 2]);
+            params.width =
+                    static_cast<int>(slot->shape[slot->shape.size() - 1]);
+        }
+
+        if (binding.decoder_id == "TensorToMask2D") {
+            dl::TensorToMask2D const decoder;
+            auto mask = decoder.decode(tensor, params);
+            if (!mask.empty()) {
+                frame_results.push_back(FrameResult{
+                        current_frame,
+                        std::move(mask),
+                        binding.data_key,
+                        binding.decoder_id});
+            }
+        } else if (binding.decoder_id == "TensorToPoint2D") {
+            dl::TensorToPoint2D const decoder;
+            auto point = decoder.decode(tensor, params);
+            frame_results.push_back(FrameResult{
+                    current_frame,
+                    point,
+                    binding.data_key,
+                    binding.decoder_id});
+        } else if (binding.decoder_id == "TensorToLine2D") {
+            dl::TensorToLine2D const decoder;
+            auto line = decoder.decode(tensor, params);
+            if (!line.empty()) {
+                frame_results.push_back(FrameResult{
+                        current_frame,
+                        std::move(line),
+                        binding.data_key,
+                        binding.decoder_id});
+            }
+        } else {
+            std::cerr << "SlotAssembler(offline): unknown decoder '"
+                      << binding.decoder_id << "'\n";
+        }
+    }
+
+    return frame_results;
 }
 
 }// anonymous namespace
@@ -856,6 +960,85 @@ void SlotAssembler::runBatchRange(
     if (progress) {
         progress(total_frames, total_frames);
     }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Instance: offline batch range inference (worker-thread safe)
+// ════════════════════════════════════════════════════════════════════════════
+
+BatchInferenceResult SlotAssembler::runBatchRangeOffline(
+        DataManager & dm,
+        MediaOverrides const & media_overrides,
+        std::vector<SlotBindingData> const & input_bindings,
+        std::vector<StaticInputData> const & static_inputs,
+        std::vector<OutputBindingData> const & output_bindings,
+        int start_frame,
+        int end_frame,
+        ImageSize source_image_size,
+        std::atomic<bool> const & cancel_requested,
+        ProgressCallback const & progress) {
+
+    BatchInferenceResult batch_result;
+
+    if (!isModelReady()) {
+        batch_result.success = false;
+        batch_result.error_message =
+                "SlotAssembler::runBatchRangeOffline: "
+                "model not loaded or weights missing";
+        return batch_result;
+    }
+    if (end_frame < start_frame) {
+        batch_result.success = false;
+        batch_result.error_message =
+                "SlotAssembler::runBatchRangeOffline: "
+                "end_frame must be >= start_frame";
+        return batch_result;
+    }
+
+    int const total_frames = end_frame - start_frame + 1;
+
+    for (int i = 0; i < total_frames; ++i) {
+        if (cancel_requested.load(std::memory_order_relaxed)) {
+            break;
+        }
+
+        int const frame = start_frame + i;
+
+        if (progress) {
+            progress(i, total_frames);
+        }
+
+        try {
+            auto inputs = assembleInputs(
+                    dm, *_impl->model,
+                    input_bindings, static_inputs,
+                    _impl->static_cache,
+                    {},// no recurrent bindings
+                    frame, /*batch_size=*/1,
+                    &media_overrides);
+
+            auto outputs = _impl->model->forward(inputs);
+
+            auto frame_results = decodeOutputsToBuffer(
+                    outputs, output_bindings,
+                    *_impl->model, frame, source_image_size);
+
+            batch_result.results.insert(
+                    batch_result.results.end(),
+                    std::make_move_iterator(frame_results.begin()),
+                    std::make_move_iterator(frame_results.end()));
+        } catch (std::exception const & e) {
+            batch_result.success = false;
+            batch_result.error_message = e.what();
+            break;
+        }
+    }
+
+    if (progress) {
+        progress(total_frames, total_frames);
+    }
+
+    return batch_result;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
