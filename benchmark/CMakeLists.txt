@@ -26,6 +26,9 @@ add_selective_benchmark(
         MaskArea.benchmark.cpp
     LINK_LIBRARIES 
         DataManager
+        AnalogTimeSeries
+        MaskData
+        TransformsV2
     DEFAULT ON
 )
 
