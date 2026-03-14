@@ -13,6 +13,9 @@
 #include "DataSynthesizer/GeneratorRegistry.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
+#include "Points/Point_Data.hpp"
 
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -35,6 +38,12 @@ std::size_t getSampleCount(DataTypeVariant const & data) {
             return ptr->size();
         } else if constexpr (std::is_same_v<T, DigitalIntervalSeries>) {
             return ptr->size();
+        } else if constexpr (std::is_same_v<T, MaskData>) {
+            return ptr->getTimeCount();
+        } else if constexpr (std::is_same_v<T, PointData>) {
+            return ptr->getTimeCount();
+        } else if constexpr (std::is_same_v<T, LineData>) {
+            return ptr->getTimeCount();
         }
         return 0;
     },

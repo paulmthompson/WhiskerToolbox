@@ -10,7 +10,7 @@
 | **2c** — OpenGL Signal Preview | ✅ Complete | 2026-03-12 |
 | **3** — More AnalogTimeSeries Generators | 🔲 Not started | — |
 | **4** — DigitalEventSeries & DigitalIntervalSeries Generators | ✅ Complete | 2026-03-14 |
-| **5** — Spatial Data Generators | 🔲 Not started | — |
+| **5** — Spatial Data Generators | � In progress (5a complete) | — |
 | **6** — Multi-Signal Generation & Correlation | 🔲 Not started | — |
 | **7** — Pipeline & Fuzz Testing Integration | 🔲 Not started | — |
 | **8** — GUI Enhancements | 🔲 Not started | — |
@@ -158,7 +158,10 @@ The current `InhomogeneousPoissonEvents` implementation takes a `rate_signal_key
 
 **Goal**: Generate spatiotemporal data (masks, points, lines) with motion models.
 
-#### 5a. Static Shape Generators
+#### 5a. Static Shape Generators ✅
+
+All six static shape generators are implemented and tested.
+See [Spatial Generators](Generators/Spatial.qmd) for full documentation.
 
 | Generator | Output Type | Params |
 |-----------|------------|--------|

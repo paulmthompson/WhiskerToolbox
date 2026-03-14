@@ -16,6 +16,12 @@ add_library(DataSynthesizer STATIC
     Generators/DigitalEvent/InhomogeneousPoissonEventsGenerator.cpp
     Generators/DigitalInterval/RegularIntervalsGenerator.cpp
     Generators/DigitalInterval/RandomIntervalsGenerator.cpp
+    Generators/Mask/CircleMaskGenerator.cpp
+    Generators/Mask/RectangleMaskGenerator.cpp
+    Generators/Mask/EllipseMaskGenerator.cpp
+    Generators/Point/GridPointsGenerator.cpp
+    Generators/Point/RandomPointsGenerator.cpp
+    Generators/Line/StraightLineGenerator.cpp
 )
 
 add_library(WhiskerToolbox::DataSynthesizer ALIAS DataSynthesizer)
@@ -36,9 +42,9 @@ target_link_libraries(DataSynthesizer PUBLIC reflectcpp::reflectcpp)
 
 target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::DigitalTimeSeries)
-#target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::PointData)
-#target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::LineData)
-#target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::MaskData)
 #target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::MediaData)
 
 set_target_compiler_warnings(DataSynthesizer)

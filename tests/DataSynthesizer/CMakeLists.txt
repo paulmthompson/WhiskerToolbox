@@ -21,6 +21,12 @@ add_executable(test_DataSynthesizer
     InhomogeneousPoissonEventsGenerator.test.cpp
     RegularIntervalsGenerator.test.cpp
     RandomIntervalsGenerator.test.cpp
+    CircleMaskGenerator.test.cpp
+    RectangleMaskGenerator.test.cpp
+    EllipseMaskGenerator.test.cpp
+    GridPointsGenerator.test.cpp
+    RandomPointsGenerator.test.cpp
+    StraightLineGenerator.test.cpp
 )
 
 target_include_directories(test_DataSynthesizer PRIVATE
@@ -31,6 +37,9 @@ target_link_libraries(test_DataSynthesizer PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(test_DataSynthesizer PRIVATE DataManager)
 target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::LineData)
 
 # Force whole-archive linking for DataSynthesizer to ensure static generator registration
 # (each generator .cpp has a file-scope RAII object that registers into GeneratorRegistry,

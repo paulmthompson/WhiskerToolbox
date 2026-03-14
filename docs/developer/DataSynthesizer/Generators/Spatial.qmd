@@ -1,0 +1,209 @@
+---
+title: "Spatial Generators"
+---
+
+## Overview
+
+Milestone 5a adds six static shape generators to the DataSynthesizer registry,
+producing spatial data types: `MaskData`, `PointData`, and `LineData`.
+Each generator is a self-contained `.cpp` file under
+`src/DataSynthesizer/Generators/{Mask,Point,Line}/` that self-registers at
+static initialization time via `RegisterGenerator<Params>`.
+
+All generators produce a static shape repeated identically at every frame.
+None require `GeneratorContext` (no DataManager access needed).
+
+---
+
+## Mask Generators
+
+Mask generators produce `std::shared_ptr<MaskData>` wrapped in a `DataTypeVariant`.
+Each frame contains a single `Mask2D` — a set of pixel coordinates defining the
+mask footprint. An `ImageSize` is set on the output `MaskData`.
+
+### CircleMask
+
+**Registration name**: `"CircleMask"` · **Category**: Spatial
+
+Generates a circular mask by calling `generate_ellipse_pixels()` with equal radii.
+The same mask is repeated at every frame.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `image_width` | `int` | ✅ | 640 | > 0 |
+| `image_height` | `int` | ✅ | 480 | > 0 |
+| `center_x` | `float` | ✅ | 320.0 | — |
+| `center_y` | `float` | ✅ | 240.0 | — |
+| `radius` | `float` | ✅ | 50.0 | > 0 |
+| `num_frames` | `int` | ✅ | 100 | > 0 |
+
+**Expected pixel count**: approximately π × radius².
+
+```json
+{"image_width": 640, "image_height": 480, "center_x": 100, "center_y": 100, "radius": 30, "num_frames": 50}
+```
+
+---
+
+### RectangleMask
+
+**Registration name**: `"RectangleMask"` · **Category**: Spatial
+
+Generates a rectangular mask by scanning all integer pixel coordinates within
+`[center - half_dim, center + half_dim]` and clamping to image bounds.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `image_width` | `int` | ✅ | 640 | > 0 |
+| `image_height` | `int` | ✅ | 480 | > 0 |
+| `center_x` | `float` | ✅ | 320.0 | — |
+| `center_y` | `float` | ✅ | 240.0 | — |
+| `width` | `float` | ✅ | 100.0 | > 0 |
+| `height` | `float` | ✅ | 60.0 | > 0 |
+| `num_frames` | `int` | ✅ | 100 | > 0 |
+
+**Expected pixel count**: approximately `width × height` (may vary slightly
+due to integer rounding of half-dimensions).
+
+```json
+{"image_width": 640, "image_height": 480, "center_x": 100, "center_y": 100, "width": 40, "height": 20, "num_frames": 50}
+```
+
+---
+
+### EllipseMask
+
+**Registration name**: `"EllipseMask"` · **Category**: Spatial
+
+Generates an elliptical mask. For axis-aligned ellipses (`angle` omitted or 0),
+delegates to `generate_ellipse_pixels()`. For rotated ellipses, performs a
+bounding-box scan with inverse rotation to test pixel inclusion.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `image_width` | `int` | ✅ | 640 | > 0 |
+| `image_height` | `int` | ✅ | 480 | > 0 |
+| `center_x` | `float` | ✅ | 320.0 | — |
+| `center_y` | `float` | ✅ | 240.0 | — |
+| `semi_major` | `float` | ✅ | 80.0 | > 0 |
+| `semi_minor` | `float` | ✅ | 40.0 | > 0 |
+| `angle` | `float` | ☐ | — | degrees |
+| `num_frames` | `int` | ✅ | 100 | > 0 |
+
+**Expected pixel count**: approximately π × semi_major × semi_minor.
+
+**Rotation**: when `angle` is provided and non-zero, pixels are tested via the
+rotated ellipse equation. The scan region expands to `max(semi_major, semi_minor)`
+to ensure complete coverage.
+
+```json
+{"image_width": 640, "image_height": 480, "center_x": 200, "center_y": 200, "semi_major": 50, "semi_minor": 25, "angle": 30, "num_frames": 50}
+```
+
+---
+
+## Point Generators
+
+Point generators produce `std::shared_ptr<PointData>` wrapped in a `DataTypeVariant`.
+Each frame contains a collection of `Point2D<float>` values.
+
+### GridPoints
+
+**Registration name**: `"GridPoints"` · **Category**: Spatial
+
+Generates a regular grid of points with configurable row/column count, spacing,
+and origin offset. Points are laid out row-major: for each `(row, col)`,
+the point is at `(origin_x + col * spacing, origin_y + row * spacing)`.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `rows` | `int` | ✅ | 5 | > 0 |
+| `cols` | `int` | ✅ | 5 | > 0 |
+| `spacing` | `float` | ✅ | 20.0 | > 0 |
+| `origin_x` | `float` | ✅ | 0.0 | — |
+| `origin_y` | `float` | ✅ | 0.0 | — |
+| `num_frames` | `int` | ✅ | 100 | > 0 |
+
+**Points per frame**: exactly `rows × cols`.
+
+```json
+{"rows": 10, "cols": 10, "spacing": 15, "origin_x": 50, "origin_y": 50, "num_frames": 100}
+```
+
+---
+
+### RandomPoints
+
+**Registration name**: `"RandomPoints"` · **Category**: Spatial
+
+Generates uniformly distributed random points within a rectangular bounding box.
+Each frame gets independently sampled points (positions differ across frames).
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_points` | `int` | ✅ | 20 | > 0 |
+| `min_x` | `float` | ✅ | 0.0 | < max_x |
+| `max_x` | `float` | ✅ | 640.0 | > min_x |
+| `min_y` | `float` | ✅ | 0.0 | < max_y |
+| `max_y` | `float` | ✅ | 480.0 | > min_y |
+| `num_frames` | `int` | ✅ | 100 | > 0 |
+| `seed` | `uint64_t` | ☐ | random | — |
+
+**Determinism guarantee**: same `(num_points, bounds, num_frames, seed)` tuple
+always produces identical output within a single build.
+
+```json
+{"num_points": 50, "min_x": 0, "max_x": 640, "min_y": 0, "max_y": 480, "num_frames": 100, "seed": 42}
+```
+
+---
+
+## Line Generators
+
+Line generators produce `std::shared_ptr<LineData>` wrapped in a `DataTypeVariant`.
+Each frame contains a single `Line2D` — a polyline defined by a sequence of
+`Point2D<float>` values.
+
+### StraightLine
+
+**Registration name**: `"StraightLine"` · **Category**: Spatial
+
+Generates a straight line segment from `(start_x, start_y)` to `(end_x, end_y)`
+with evenly interpolated interior points. The same line is repeated at every frame.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `start_x` | `float` | ✅ | 0.0 | — |
+| `start_y` | `float` | ✅ | 0.0 | — |
+| `end_x` | `float` | ✅ | 100.0 | — |
+| `end_y` | `float` | ✅ | 100.0 | — |
+| `num_points_per_line` | `int` | ✅ | 50 | > 1 |
+| `num_frames` | `int` | ✅ | 100 | > 0 |
+
+**Points per line**: exactly `num_points_per_line`. The first point is at
+`(start_x, start_y)` and the last at `(end_x, end_y)`.
+
+**Euclidean length**: `sqrt((end_x - start_x)² + (end_y - start_y)²)`.
+
+```json
+{"start_x": 10, "start_y": 20, "end_x": 200, "end_y": 150, "num_points_per_line": 100, "num_frames": 50}
+```
+
+---
+
+## Source Files
+
+| Generator | Source |
+|-----------|--------|
+| CircleMask | `src/DataSynthesizer/Generators/Mask/CircleMaskGenerator.cpp` |
+| RectangleMask | `src/DataSynthesizer/Generators/Mask/RectangleMaskGenerator.cpp` |
+| EllipseMask | `src/DataSynthesizer/Generators/Mask/EllipseMaskGenerator.cpp` |
+| GridPoints | `src/DataSynthesizer/Generators/Point/GridPointsGenerator.cpp` |
+| RandomPoints | `src/DataSynthesizer/Generators/Point/RandomPointsGenerator.cpp` |
+| StraightLine | `src/DataSynthesizer/Generators/Line/StraightLineGenerator.cpp` |
+
+## Test Files
+
+All tests are in `tests/DataSynthesizer/` and linked into the `test_DataSynthesizer`
+binary. Each generator has its own test file following the `<Name>Generator.test.cpp`
+naming convention.
