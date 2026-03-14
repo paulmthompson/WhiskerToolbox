@@ -1,21 +1,21 @@
 #include "LineImport_Widget.hpp"
 #include "ui_LineImport_Widget.h"
 
-#include "DataManager/DataManager.hpp"
-#include "Lines/Line_Data.hpp"
-#include "IO/core/LoaderRegistry.hpp"
-#include "DataManager/DataManagerTypes.hpp"
-#include "Scaling_Widget/Scaling_Widget.hpp"
 #include "DataImportTypeRegistry.hpp"
+#include "DataManager/DataManager.hpp"
+#include "DataManager/DataManagerTypes.hpp"
+#include "IO/core/LoaderRegistry.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Scaling_Widget/Scaling_Widget.hpp"
 
-#include "Lines/HDF5/HDF5LineImport_Widget.hpp"
-#include "Lines/CSV/CSVLineImport_Widget.hpp"
 #include "Lines/Binary/BinaryLineImport_Widget.hpp"
+#include "Lines/CSV/CSVLineImport_Widget.hpp"
+#include "Lines/HDF5/HDF5LineImport_Widget.hpp"
 #include "Lines/LMDB/LMDBLineImport_Widget.hpp"
 
 #include <QComboBox>
-#include <QStackedWidget>
 #include <QMessageBox>
+#include <QStackedWidget>
 
 #include "StateManagement/AppFileDialog.hpp"
 
@@ -107,7 +107,7 @@ void LineImport_Widget::_loadMultiHDF5LineFiles(QString const & dir_name, QStrin
     }
     std::regex const regex_pattern(std::regex_replace(filename_pattern, std::regex("\\*"), ".*"));
 
-    for (auto const & entry : std::filesystem::directory_iterator(directory)) {
+    for (auto const & entry: std::filesystem::directory_iterator(directory)) {
         std::string const filename = entry.path().filename().string();
         if (std::regex_match(filename, regex_pattern)) {
             line_files.push_back(entry.path());
@@ -116,7 +116,7 @@ void LineImport_Widget::_loadMultiHDF5LineFiles(QString const & dir_name, QStrin
     std::sort(line_files.begin(), line_files.end());
 
     int line_num = 0;
-    for (auto const & file : line_files) {
+    for (auto const & file: line_files) {
         _loadSingleHDF5LineFile(file.string(), std::to_string(line_num));
         line_num += 1;
     }
@@ -138,9 +138,9 @@ void LineImport_Widget::_loadSingleHDF5LineFile(std::string const & filename, st
         // Use the HDF5 loader through the plugin system
         auto & registry = LoaderRegistry::getInstance();
 
-        if (!registry.isFormatSupported("hdf5", toIODataType(DM_DataType::Line))) {
-            QMessageBox::critical(this, "Import Error", 
-                "HDF5 loader not found. Please ensure the HDF5 plugin is loaded.");
+        if (!registry.isFormatSupported("hdf5", DM_DataType::Line)) {
+            QMessageBox::critical(this, "Import Error",
+                                  "HDF5 loader not found. Please ensure the HDF5 plugin is loaded.");
             return;
         }
 
@@ -148,7 +148,7 @@ void LineImport_Widget::_loadSingleHDF5LineFile(std::string const & filename, st
         nlohmann::json config;
         config["format"] = "hdf5";
         config["frame_key"] = "frames";
-        config["x_key"] = "y";  // Note: x and y are swapped
+        config["x_key"] = "y";// Note: x and y are swapped
         config["y_key"] = "x";
 
         // Add image size from scaling widget if available
@@ -159,11 +159,11 @@ void LineImport_Widget::_loadSingleHDF5LineFile(std::string const & filename, st
         }
 
         // Load the data using registry system
-        auto result = registry.tryLoad("hdf5", toIODataType(DM_DataType::Line), filename, config);
+        auto result = registry.tryLoad("hdf5", DM_DataType::Line, filename, config);
 
         if (!result.success) {
-            QMessageBox::critical(this, "Import Error", 
-                QString::fromStdString("Failed to load HDF5 file: " + result.error_message));
+            QMessageBox::critical(this, "Import Error",
+                                  QString::fromStdString("Failed to load HDF5 file: " + result.error_message));
             return;
         }
 
@@ -194,14 +194,14 @@ void LineImport_Widget::_loadSingleHDF5LineFile(std::string const & filename, st
         _data_manager->setData<LineData>(line_key, line_data_ptr, TimeKey("time"));
 
         QMessageBox::information(this, "Import Successful",
-            QString::fromStdString("HDF5 Line data loaded into '" + line_key + "'"));
+                                 QString::fromStdString("HDF5 Line data loaded into '" + line_key + "'"));
 
         emit importCompleted(QString::fromStdString(line_key), "LineData");
 
     } catch (std::exception const & e) {
         std::cerr << "Error loading HDF5 file " << filename << ": " << e.what() << std::endl;
         QMessageBox::critical(this, "Import Error",
-            QString::fromStdString("Error loading HDF5: " + std::string(e.what())));
+                              QString::fromStdString("Error loading HDF5: " + std::string(e.what())));
     }
 }
 
@@ -210,9 +210,9 @@ void LineImport_Widget::_handleSingleCSVLoadRequested(QString format, nlohmann::
         // Use LoaderRegistry for CSV loading
         LoaderRegistry & registry = LoaderRegistry::getInstance();
 
-        if (!registry.isFormatSupported("csv", IODataType::Line)) {
-            QMessageBox::warning(this, "Format Not Supported", 
-                "CSV format loading is not available.");
+        if (!registry.isFormatSupported("csv", DM_DataType::Line)) {
+            QMessageBox::warning(this, "Format Not Supported",
+                                 "CSV format loading is not available.");
             return;
         }
 
@@ -223,11 +223,11 @@ void LineImport_Widget::_handleSingleCSVLoadRequested(QString format, nlohmann::
             return;
         }
 
-        LoadResult result = registry.tryLoad("csv", IODataType::Line, filepath, config);
+        LoadResult result = registry.tryLoad("csv", DM_DataType::Line, filepath, config);
 
         if (!result.success) {
-            QMessageBox::critical(this, "Import Error", 
-                QString("Failed to load CSV file: %1").arg(QString::fromStdString(result.error_message)));
+            QMessageBox::critical(this, "Import Error",
+                                  QString("Failed to load CSV file: %1").arg(QString::fromStdString(result.error_message)));
             return;
         }
 
@@ -271,15 +271,15 @@ void LineImport_Widget::_handleSingleCSVLoadRequested(QString format, nlohmann::
         }
 
         _data_manager->setData<LineData>(base_key, line_data, TimeKey("time"));
-        QMessageBox::information(this, "Import Successful", 
-            QString("CSV line data loaded successfully as '%1'.").arg(QString::fromStdString(base_key)));
-        
+        QMessageBox::information(this, "Import Successful",
+                                 QString("CSV line data loaded successfully as '%1'.").arg(QString::fromStdString(base_key)));
+
         emit importCompleted(QString::fromStdString(base_key), "LineData");
 
     } catch (std::exception const & e) {
         std::cerr << "Error loading single CSV file: " << e.what() << std::endl;
-        QMessageBox::critical(this, "Import Error", 
-            QString::fromStdString("Error loading CSV: " + std::string(e.what())));
+        QMessageBox::critical(this, "Import Error",
+                              QString::fromStdString("Error loading CSV: " + std::string(e.what())));
     }
 }
 
@@ -288,9 +288,9 @@ void LineImport_Widget::_handleMultiCSVLoadRequested(QString format, nlohmann::j
         // Use LoaderRegistry for CSV loading
         LoaderRegistry & registry = LoaderRegistry::getInstance();
 
-        if (!registry.isFormatSupported("csv", IODataType::Line)) {
-            QMessageBox::warning(this, "Format Not Supported", 
-                "CSV format loading is not available.");
+        if (!registry.isFormatSupported("csv", DM_DataType::Line)) {
+            QMessageBox::warning(this, "Format Not Supported",
+                                 "CSV format loading is not available.");
             return;
         }
 
@@ -301,11 +301,11 @@ void LineImport_Widget::_handleMultiCSVLoadRequested(QString format, nlohmann::j
             return;
         }
 
-        LoadResult result = registry.tryLoad("csv", IODataType::Line, parent_dir, config);
+        LoadResult result = registry.tryLoad("csv", DM_DataType::Line, parent_dir, config);
 
         if (!result.success) {
-            QMessageBox::critical(this, "Import Error", 
-                QString("Failed to load CSV files: %1").arg(QString::fromStdString(result.error_message)));
+            QMessageBox::critical(this, "Import Error",
+                                  QString("Failed to load CSV files: %1").arg(QString::fromStdString(result.error_message)));
             return;
         }
 
@@ -349,15 +349,15 @@ void LineImport_Widget::_handleMultiCSVLoadRequested(QString format, nlohmann::j
         }
 
         _data_manager->setData<LineData>(base_key, line_data, TimeKey("time"));
-        QMessageBox::information(this, "Import Successful", 
-            QString("CSV line data loaded successfully as '%1'.").arg(QString::fromStdString(base_key)));
-        
+        QMessageBox::information(this, "Import Successful",
+                                 QString("CSV line data loaded successfully as '%1'.").arg(QString::fromStdString(base_key)));
+
         emit importCompleted(QString::fromStdString(base_key), "LineData");
 
     } catch (std::exception const & e) {
         std::cerr << "Error loading multi CSV files: " << e.what() << std::endl;
-        QMessageBox::critical(this, "Import Error", 
-            QString::fromStdString("Error loading CSV: " + std::string(e.what())));
+        QMessageBox::critical(this, "Import Error",
+                              QString::fromStdString("Error loading CSV: " + std::string(e.what())));
     }
 }
 
@@ -383,9 +383,9 @@ void LineImport_Widget::_loadSingleBinaryFile(QString const & filepath) {
         // Use LoaderRegistry for binary loading
         LoaderRegistry & registry = LoaderRegistry::getInstance();
 
-        if (!registry.isFormatSupported("binary", IODataType::Line)) {
-            QMessageBox::warning(this, "Format Not Supported", 
-                "Binary format loading is not available. This may require CapnProto to be enabled at build time.");
+        if (!registry.isFormatSupported("binary", DM_DataType::Line)) {
+            QMessageBox::warning(this, "Format Not Supported",
+                                 "Binary format loading is not available. This may require CapnProto to be enabled at build time.");
             return;
         }
 
@@ -393,11 +393,11 @@ void LineImport_Widget::_loadSingleBinaryFile(QString const & filepath) {
         nlohmann::json config;
         config["file_path"] = file_path_std;
 
-        LoadResult result = registry.tryLoad("binary", IODataType::Line, file_path_std, config);
+        LoadResult result = registry.tryLoad("binary", DM_DataType::Line, file_path_std, config);
 
         if (!result.success) {
-            QMessageBox::critical(this, "Import Error", 
-                QString("Failed to load binary line data: %1").arg(QString::fromStdString(result.error_message)));
+            QMessageBox::critical(this, "Import Error",
+                                  QString("Failed to load binary line data: %1").arg(QString::fromStdString(result.error_message)));
             return;
         }
 
@@ -429,16 +429,16 @@ void LineImport_Widget::_loadSingleBinaryFile(QString const & filepath) {
         }
 
         _data_manager->setData<LineData>(line_key, line_data, TimeKey("time"));
-        
-        QMessageBox::information(this, "Import Successful", 
-            QString::fromStdString("Binary Line data loaded into " + line_key));
+
+        QMessageBox::information(this, "Import Successful",
+                                 QString::fromStdString("Binary Line data loaded into " + line_key));
 
         emit importCompleted(QString::fromStdString(line_key), "LineData");
 
     } catch (std::exception const & e) {
         std::cerr << "Failed to load binary line data: " << e.what() << std::endl;
-        QMessageBox::critical(this, "Import Error", 
-            QString("Could not load binary line data: %1").arg(e.what()));
+        QMessageBox::critical(this, "Import Error",
+                              QString("Could not load binary line data: %1").arg(e.what()));
     }
 }
 
@@ -447,13 +447,12 @@ namespace {
 struct LineImportRegistrar {
     LineImportRegistrar() {
         DataImportTypeRegistry::instance().registerType(
-            "LineData",
-            ImportWidgetFactory{
-                .display_name = "Line Data",
-                .create_widget = [](std::shared_ptr<DataManager> dm, QWidget * parent) {
-                    return new LineImport_Widget(std::move(dm), parent);
-                }
-            });
+                "LineData",
+                ImportWidgetFactory{
+                        .display_name = "Line Data",
+                        .create_widget = [](std::shared_ptr<DataManager> dm, QWidget * parent) {
+                            return new LineImport_Widget(std::move(dm), parent);
+                        }});
     }
 } line_import_registrar;
-}
+}// namespace

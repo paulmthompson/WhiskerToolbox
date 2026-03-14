@@ -17,14 +17,14 @@ public:
     /**
      * @brief Load data from .npy file
      */
-    LoadResult load(std::string const& filepath, 
-                   IODataType dataType, 
-                   nlohmann::json const& config) const override;
+    LoadResult load(std::string const & filepath,
+                    DM_DataType dataType,
+                    nlohmann::json const & config) const override;
 
     /**
      * @brief Check if this loader supports the format/dataType combination
      */
-    bool supportsFormat(std::string const& format, IODataType dataType) const override;
+    bool supportsFormat(std::string const & format, DM_DataType dataType) const override;
 
     /**
      * @brief Get loader name for logging
@@ -35,8 +35,8 @@ private:
     /**
      * @brief Load TensorData from .npy file using existing functionality
      */
-    LoadResult loadTensorDataNumpy(std::string const& filepath, 
-                                   nlohmann::json const& config) const;
+    LoadResult loadTensorDataNumpy(std::string const & filepath,
+                                   nlohmann::json const & config) const;
 };
 
-#endif // NUMPY_FORMAT_LOADER_HPP
+#endif// NUMPY_FORMAT_LOADER_HPP

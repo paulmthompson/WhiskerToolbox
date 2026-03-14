@@ -41,6 +41,7 @@ target_link_libraries(DataManagerIO_CapnProto PRIVATE
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
     ParameterSchema
+    DataTypeEnum
     spdlog::spdlog
 )
 

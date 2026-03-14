@@ -1,6 +1,6 @@
 #include "NumpyLoader.hpp"
-#include "tensordata/Tensor_Data_numpy.hpp"
 #include "Tensors/TensorData.hpp"
+#include "tensordata/Tensor_Data_numpy.hpp"
 
 #include <iostream>
 #include <memory>
@@ -9,8 +9,8 @@ std::string NumpyLoader::getFormatId() const {
     return "numpy";
 }
 
-bool NumpyLoader::supportsDataType(IODataType data_type) const {
-    using enum IODataType;
+bool NumpyLoader::supportsDataType(DM_DataType data_type) const {
+    using enum DM_DataType;
     switch (data_type) {
         case Tensor:
             return true;
@@ -20,32 +20,30 @@ bool NumpyLoader::supportsDataType(IODataType data_type) const {
 }
 
 LoadResult NumpyLoader::loadData(
-    std::string const& file_path,
-    IODataType data_type,
-    nlohmann::json const& config
-) const {
+        std::string const & file_path,
+        DM_DataType data_type,
+        nlohmann::json const & config) const {
     try {
-        using enum IODataType;
+        using enum DM_DataType;
         if (data_type == Tensor) {
             return loadTensorData(file_path, config);
         }
         return LoadResult("Unsupported data type for Numpy loader");
-    } catch (std::exception const& e) {
+    } catch (std::exception const & e) {
         return LoadResult("Numpy loading error: " + std::string(e.what()));
     }
 }
 
 LoadResult NumpyLoader::loadTensorData(
-    std::string const& file_path,
-    [[maybe_unused]] nlohmann::json const& config
-) const {
+        std::string const & file_path,
+        [[maybe_unused]] nlohmann::json const & config) const {
     try {
         auto tensor_data = std::make_shared<TensorData>();
         loadNpyToTensorData(file_path, *tensor_data);
-        
+
         return LoadResult(LoadedDataVariant{std::move(tensor_data)});
-        
-    } catch (std::exception const& e) {
+
+    } catch (std::exception const & e) {
         return LoadResult("Numpy TensorData loading failed: " + std::string(e.what()));
     }
 }

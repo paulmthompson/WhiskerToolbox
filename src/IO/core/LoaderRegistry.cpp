@@ -15,7 +15,7 @@ void LoaderRegistry::registerLoader(std::unique_ptr<IFormatLoader> loader) {
 }
 
 LoadResult LoaderRegistry::tryLoad(std::string const & format,
-                                   IODataType dataType,
+                                   DM_DataType dataType,
                                    std::string const & filepath,
                                    nlohmann::json const & config) {
     // Try each registered loader
@@ -52,7 +52,7 @@ LoadResult LoaderRegistry::tryLoad(std::string const & format,
 }
 
 LoadResult LoaderRegistry::trySave(std::string const & format,
-                                   IODataType dataType,
+                                   DM_DataType dataType,
                                    std::string const & filepath,
                                    nlohmann::json const & config,
                                    void const * data) {
@@ -93,7 +93,7 @@ LoadResult LoaderRegistry::trySave(std::string const & format,
     return LoadResult(error_msg.str());
 }
 
-bool LoaderRegistry::isFormatSupported(std::string const & format, IODataType dataType) const {
+bool LoaderRegistry::isFormatSupported(std::string const & format, DM_DataType dataType) const {
     return std::any_of(m_loaders.begin(), m_loaders.end(),
                        [&](auto const & loader) {
                            return loader->supportsFormat(format, dataType);
@@ -101,7 +101,7 @@ bool LoaderRegistry::isFormatSupported(std::string const & format, IODataType da
 }
 
 BatchLoadResult LoaderRegistry::tryLoadBatch(std::string const & format,
-                                             IODataType dataType,
+                                             DM_DataType dataType,
                                              std::string const & filepath,
                                              nlohmann::json const & config) {
     // Try each registered loader
@@ -153,7 +153,7 @@ BatchLoadResult LoaderRegistry::tryLoadBatch(std::string const & format,
     return BatchLoadResult::error(error_msg.str());
 }
 
-bool LoaderRegistry::isBatchLoadingSupported(std::string const & format, IODataType dataType) const {
+bool LoaderRegistry::isBatchLoadingSupported(std::string const & format, DM_DataType dataType) const {
     return std::any_of(m_loaders.begin(), m_loaders.end(),
                        [&](auto const & loader) {
                            return loader->supportsFormat(format, dataType) &&
@@ -161,7 +161,7 @@ bool LoaderRegistry::isBatchLoadingSupported(std::string const & format, IODataT
                        });
 }
 
-std::vector<std::string> LoaderRegistry::getSupportedFormats(IODataType dataType) const {
+std::vector<std::string> LoaderRegistry::getSupportedFormats(DM_DataType dataType) const {
     std::vector<std::string> formats;
 
     // This is a simplified implementation - in practice you might want to query each loader
@@ -194,7 +194,7 @@ std::vector<SaverInfo> LoaderRegistry::getSupportedSaveFormats() const {
     return all;
 }
 
-std::vector<SaverInfo> LoaderRegistry::getSupportedSaveFormats(IODataType dataType) const {
+std::vector<SaverInfo> LoaderRegistry::getSupportedSaveFormats(DM_DataType dataType) const {
     std::vector<SaverInfo> filtered;
     for (auto const & loader: m_loaders) {
         for (auto info: loader->getSaverInfo()) {

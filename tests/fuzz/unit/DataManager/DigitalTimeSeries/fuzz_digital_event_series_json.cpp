@@ -14,9 +14,9 @@
 #include "fuzztest/fuzztest.h"
 #include "gtest/gtest.h"
 
-#include "IO/formats/CSV/CSVLoader.hpp"
-#include "IO/core/IOTypes.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "IO/formats/CSV/CSVLoader.hpp"
 #include "nlohmann/json.hpp"
 
 #include <filesystem>
@@ -32,25 +32,25 @@ namespace {
  * This fuzz test verifies that the loader handles corrupted or malformed JSON
  * gracefully without crashing, even with invalid data.
  */
-void FuzzJsonStructure(const std::string& json_str) {
+void FuzzJsonStructure(std::string const & json_str) {
     try {
         auto json_obj = nlohmann::json::parse(json_str);
-        
+
         // Create a temporary file (we don't actually need valid data for this test)
         std::string temp_file = std::tmpnam(nullptr);
-        
+
         // Attempt to load using CSVLoader - should not crash
         CSVLoader loader;
-        auto result = loader.load(temp_file, IODataType::DigitalEvent, json_obj);
-        
+        auto result = loader.load(temp_file, DM_DataType::DigitalEvent, json_obj);
+
         // Clean up
         std::filesystem::remove(temp_file);
-        
+
         // We don't care if it succeeds or fails, just that it doesn't crash
         // Result may be empty or populated depending on input validity
-    } catch (const nlohmann::json::parse_error&) {
+    } catch (nlohmann::json::parse_error const &) {
         // JSON parsing failures are expected and acceptable
-    } catch (const std::exception&) {
+    } catch (std::exception const &) {
         // Other exceptions are caught but we allow them
         // The function should handle errors gracefully
     }
@@ -64,14 +64,14 @@ FUZZ_TEST(DigitalEventSeriesJsonFuzz, FuzzJsonStructure);
  * in a real configuration but with fuzzy values.
  */
 void FuzzValidJsonStructure(
-    const std::string& format,
-    int channel,
-    const std::string& transition,
-    int header_size,
-    int channel_count,
-    float scale,
-    bool scale_divide) {
-    
+        std::string const & format,
+        int channel,
+        std::string const & transition,
+        int header_size,
+        int channel_count,
+        float scale,
+        bool scale_divide) {
+
     try {
         nlohmann::json json_obj;
         json_obj["format"] = format;
@@ -81,34 +81,33 @@ void FuzzValidJsonStructure(
         json_obj["channel_count"] = channel_count;
         json_obj["scale"] = scale;
         json_obj["scale_divide"] = scale_divide;
-        
+
         // Create a temporary file
         std::string temp_file = std::tmpnam(nullptr);
-        
+
         // Attempt to load using CSVLoader
         CSVLoader loader;
-        auto result = loader.load(temp_file, IODataType::DigitalEvent, json_obj);
-        
+        auto result = loader.load(temp_file, DM_DataType::DigitalEvent, json_obj);
+
         // Clean up
         std::filesystem::remove(temp_file);
-        
+
         // Function should handle all inputs gracefully
-    } catch (const std::exception&) {
+    } catch (std::exception const &) {
         // Exceptions are acceptable for invalid configurations
     }
 }
 FUZZ_TEST(DigitalEventSeriesJsonFuzz, FuzzValidJsonStructure)
-    .WithDomains(
-        fuzztest::StringOf(fuzztest::InRange('a', 'z')).WithMinSize(1).WithMaxSize(20),
-        fuzztest::InRange(-100, 100),
-        fuzztest::OneOf(fuzztest::Just(std::string("rising")), 
-                       fuzztest::Just(std::string("falling")), 
-                       fuzztest::Arbitrary<std::string>()),
-        fuzztest::InRange(-1000, 1000),
-        fuzztest::InRange(-10, 100),
-        fuzztest::InRange(-1000.0f, 1000.0f),
-        fuzztest::Arbitrary<bool>()
-    );
+        .WithDomains(
+                fuzztest::StringOf(fuzztest::InRange('a', 'z')).WithMinSize(1).WithMaxSize(20),
+                fuzztest::InRange(-100, 100),
+                fuzztest::OneOf(fuzztest::Just(std::string("rising")),
+                                fuzztest::Just(std::string("falling")),
+                                fuzztest::Arbitrary<std::string>()),
+                fuzztest::InRange(-1000, 1000),
+                fuzztest::InRange(-10, 100),
+                fuzztest::InRange(-1000.0f, 1000.0f),
+                fuzztest::Arbitrary<bool>());
 
 /**
  * @brief Test CSV format configuration with batch loading
@@ -116,12 +115,12 @@ FUZZ_TEST(DigitalEventSeriesJsonFuzz, FuzzValidJsonStructure)
  * Tests the CSVLoader's batch loading for multi-series CSV files.
  */
 void FuzzCsvJsonStructure(
-    const std::string& delimiter,
-    bool has_header,
-    int event_column,
-    int identifier_column,
-    const std::string& name) {
-    
+        std::string const & delimiter,
+        bool has_header,
+        int event_column,
+        int identifier_column,
+        std::string const & name) {
+
     try {
         nlohmann::json json_obj;
         json_obj["format"] = "csv";
@@ -130,7 +129,7 @@ void FuzzCsvJsonStructure(
         json_obj["event_column"] = event_column;
         json_obj["identifier_column"] = identifier_column;
         json_obj["name"] = name;
-        
+
         // Create a temporary CSV file with some data
         std::string temp_file = std::tmpnam(nullptr);
         std::ofstream file(temp_file);
@@ -140,29 +139,28 @@ void FuzzCsvJsonStructure(
         file << "100" << delimiter << "event1\n";
         file << "200" << delimiter << "event2\n";
         file.close();
-        
+
         // Attempt to load using CSVLoader with batch loading
         CSVLoader loader;
-        auto batch_result = loader.loadBatch(temp_file, IODataType::DigitalEvent, json_obj);
-        
+        auto batch_result = loader.loadBatch(temp_file, DM_DataType::DigitalEvent, json_obj);
+
         // Clean up
         std::filesystem::remove(temp_file);
-        
-    } catch (const std::exception&) {
+
+    } catch (std::exception const &) {
         // Exceptions are acceptable
     }
 }
 FUZZ_TEST(DigitalEventSeriesJsonFuzz, FuzzCsvJsonStructure)
-    .WithDomains(
-        fuzztest::OneOf(fuzztest::Just(std::string(",")), 
-                       fuzztest::Just(std::string("\t")), 
-                       fuzztest::Just(std::string(";")),
-                       fuzztest::Arbitrary<std::string>().WithMaxSize(3)),
-        fuzztest::Arbitrary<bool>(),
-        fuzztest::InRange(-5, 10),
-        fuzztest::InRange(-5, 10),
-        fuzztest::StringOf(fuzztest::InRange('a', 'z')).WithMaxSize(30)
-    );
+        .WithDomains(
+                fuzztest::OneOf(fuzztest::Just(std::string(",")),
+                                fuzztest::Just(std::string("\t")),
+                                fuzztest::Just(std::string(";")),
+                                fuzztest::Arbitrary<std::string>().WithMaxSize(3)),
+                fuzztest::Arbitrary<bool>(),
+                fuzztest::InRange(-5, 10),
+                fuzztest::InRange(-5, 10),
+                fuzztest::StringOf(fuzztest::InRange('a', 'z')).WithMaxSize(30));
 
 /**
  * @brief Test event scaling with various scale factors
@@ -170,20 +168,20 @@ FUZZ_TEST(DigitalEventSeriesJsonFuzz, FuzzCsvJsonStructure)
  * Note: scale_events function is in DigitalTimeSeries IO, test it via the loader.
  */
 void FuzzEventScaling(
-    const std::vector<int64_t>& event_values,
-    float scale,
-    bool scale_divide) {
-    
+        std::vector<int64_t> const & event_values,
+        float scale,
+        bool scale_divide) {
+
     try {
         // Create a temporary CSV file with event data
         std::string temp_file = std::tmpnam(nullptr);
         std::ofstream file(temp_file);
         file << "time\n";
-        for (auto val : event_values) {
+        for (auto val: event_values) {
             file << val << "\n";
         }
         file.close();
-        
+
         // Configure with scaling options
         nlohmann::json json_obj;
         json_obj["format"] = "csv";
@@ -191,24 +189,23 @@ void FuzzEventScaling(
         json_obj["event_column"] = 0;
         json_obj["scale"] = scale;
         json_obj["scale_divide"] = scale_divide;
-        
+
         // Attempt to load - should handle scaling gracefully
         CSVLoader loader;
-        auto result = loader.load(temp_file, IODataType::DigitalEvent, json_obj);
-        
+        auto result = loader.load(temp_file, DM_DataType::DigitalEvent, json_obj);
+
         // Clean up
         std::filesystem::remove(temp_file);
-        
-    } catch (const std::exception&) {
+
+    } catch (std::exception const &) {
         // Division by zero or overflow are acceptable exceptions
     }
 }
 FUZZ_TEST(DigitalEventSeriesJsonFuzz, FuzzEventScaling)
-    .WithDomains(
-        fuzztest::VectorOf(fuzztest::InRange<int64_t>(-1000000, 1000000))
-            .WithMaxSize(1000),
-        fuzztest::InRange(-100.0f, 100.0f),
-        fuzztest::Arbitrary<bool>()
-    );
+        .WithDomains(
+                fuzztest::VectorOf(fuzztest::InRange<int64_t>(-1000000, 1000000))
+                        .WithMaxSize(1000),
+                fuzztest::InRange(-100.0f, 100.0f),
+                fuzztest::Arbitrary<bool>());
 
-} // namespace
+}// namespace

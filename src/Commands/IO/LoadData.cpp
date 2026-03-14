@@ -17,15 +17,15 @@ namespace commands {
 
 namespace {
 
-/// Map a human-readable data type string to IODataType
-std::optional<IODataType> parseDataType(std::string const & data_type) {
-    if (data_type == "PointData") return IODataType::Points;
-    if (data_type == "LineData") return IODataType::Line;
-    if (data_type == "MaskData") return IODataType::Mask;
-    if (data_type == "AnalogTimeSeries") return IODataType::Analog;
-    if (data_type == "DigitalEventSeries") return IODataType::DigitalEvent;
-    if (data_type == "DigitalIntervalSeries") return IODataType::DigitalInterval;
-    if (data_type == "TensorData") return IODataType::Tensor;
+/// Map a human-readable data type string to DM_DataType
+std::optional<DM_DataType> parseDataType(std::string const & data_type) {
+    if (data_type == "PointData") return DM_DataType::Points;
+    if (data_type == "LineData") return DM_DataType::Line;
+    if (data_type == "MaskData") return DM_DataType::Mask;
+    if (data_type == "AnalogTimeSeries") return DM_DataType::Analog;
+    if (data_type == "DigitalEventSeries") return DM_DataType::DigitalEvent;
+    if (data_type == "DigitalIntervalSeries") return DM_DataType::DigitalInterval;
+    if (data_type == "TensorData") return DM_DataType::Tensor;
     return std::nullopt;
 }
 

@@ -1,19 +1,19 @@
 #include "MaskImport_Widget.hpp"
 #include "ui_MaskImport_Widget.h"
 
-#include "DataManager/DataManager.hpp"
-#include "Masks/Mask_Data.hpp"
-#include "IO/core/LoaderRegistry.hpp"
-#include "DataManager/DataManagerTypes.hpp"
-#include "Scaling_Widget/Scaling_Widget.hpp"
 #include "DataImportTypeRegistry.hpp"
+#include "DataManager/DataManager.hpp"
+#include "DataManager/DataManagerTypes.hpp"
+#include "IO/core/LoaderRegistry.hpp"
+#include "Masks/Mask_Data.hpp"
+#include "Scaling_Widget/Scaling_Widget.hpp"
 
 #include "Masks/HDF5/HDF5MaskImport_Widget.hpp"
 #include "Masks/Image/ImageMaskImport_Widget.hpp"
 
 #include <QComboBox>
-#include <QStackedWidget>
 #include <QMessageBox>
+#include <QStackedWidget>
 
 #include "StateManagement/AppFileDialog.hpp"
 
@@ -98,7 +98,7 @@ void MaskImport_Widget::_loadMultiHDF5MaskFiles(QString const & dir_name, QStrin
     }
     std::regex const regex_pattern(std::regex_replace(filename_pattern, std::regex("\\*"), ".*"));
 
-    for (auto const & entry : std::filesystem::directory_iterator(directory)) {
+    for (auto const & entry: std::filesystem::directory_iterator(directory)) {
         std::string const filename = entry.path().filename().string();
         if (std::regex_match(filename, regex_pattern)) {
             mask_files.push_back(entry.path());
@@ -107,7 +107,7 @@ void MaskImport_Widget::_loadMultiHDF5MaskFiles(QString const & dir_name, QStrin
     std::sort(mask_files.begin(), mask_files.end());
 
     int mask_num = 0;
-    for (auto const & file : mask_files) {
+    for (auto const & file: mask_files) {
         _loadSingleHDF5MaskFile(file.string(), std::to_string(mask_num));
         mask_num += 1;
     }
@@ -129,9 +129,9 @@ void MaskImport_Widget::_loadSingleHDF5MaskFile(std::string const & filename, st
         // Use the HDF5 loader through the plugin system
         auto & registry = LoaderRegistry::getInstance();
 
-        if (!registry.isFormatSupported("hdf5", toIODataType(DM_DataType::Mask))) {
-            QMessageBox::critical(this, "Import Error", 
-                "HDF5 loader not found. Please ensure the HDF5 plugin is loaded.");
+        if (!registry.isFormatSupported("hdf5", DM_DataType::Mask)) {
+            QMessageBox::critical(this, "Import Error",
+                                  "HDF5 loader not found. Please ensure the HDF5 plugin is loaded.");
             return;
         }
 
@@ -150,11 +150,11 @@ void MaskImport_Widget::_loadSingleHDF5MaskFile(std::string const & filename, st
         }
 
         // Load the data using registry system
-        auto result = registry.tryLoad("hdf5", toIODataType(DM_DataType::Mask), filename, config);
+        auto result = registry.tryLoad("hdf5", DM_DataType::Mask, filename, config);
 
         if (!result.success) {
-            QMessageBox::critical(this, "Import Error", 
-                QString::fromStdString("Failed to load HDF5 file: " + result.error_message));
+            QMessageBox::critical(this, "Import Error",
+                                  QString::fromStdString("Failed to load HDF5 file: " + result.error_message));
             return;
         }
 
@@ -178,14 +178,14 @@ void MaskImport_Widget::_loadSingleHDF5MaskFile(std::string const & filename, st
         _data_manager->setData<MaskData>(mask_key, mask_data_ptr, TimeKey("time"));
 
         QMessageBox::information(this, "Import Successful",
-            QString::fromStdString("HDF5 Mask data loaded into '" + mask_key + "'"));
+                                 QString::fromStdString("HDF5 Mask data loaded into '" + mask_key + "'"));
 
         emit importCompleted(QString::fromStdString(mask_key), "MaskData");
 
     } catch (std::exception const & e) {
         std::cerr << "Error loading HDF5 file " << filename << ": " << e.what() << std::endl;
         QMessageBox::critical(this, "Import Error",
-            QString::fromStdString("Error loading HDF5: " + std::string(e.what())));
+                              QString::fromStdString("Error loading HDF5: " + std::string(e.what())));
     }
 }
 
@@ -200,9 +200,9 @@ void MaskImport_Widget::_handleImageMaskLoadRequested(QString format, nlohmann::
         auto & registry = LoaderRegistry::getInstance();
         std::string format_str = format.toStdString();
 
-        if (!registry.isFormatSupported(format_str, toIODataType(DM_DataType::Mask))) {
+        if (!registry.isFormatSupported(format_str, DM_DataType::Mask)) {
             QMessageBox::critical(this, "Import Error",
-                QString("Format '%1' loader not found. Please ensure the required plugin is loaded.").arg(format));
+                                  QString("Format '%1' loader not found. Please ensure the required plugin is loaded.").arg(format));
             return;
         }
 
@@ -221,11 +221,11 @@ void MaskImport_Widget::_handleImageMaskLoadRequested(QString format, nlohmann::
         }
 
         // Load the data using registry system
-        auto result = registry.tryLoad(format_str, toIODataType(DM_DataType::Mask), directory_path, config);
+        auto result = registry.tryLoad(format_str, DM_DataType::Mask, directory_path, config);
 
         if (!result.success) {
             QMessageBox::critical(this, "Import Error",
-                QString::fromStdString("Failed to load image masks: " + result.error_message));
+                                  QString::fromStdString("Failed to load image masks: " + result.error_message));
             return;
         }
 
@@ -249,14 +249,14 @@ void MaskImport_Widget::_handleImageMaskLoadRequested(QString format, nlohmann::
         _data_manager->setData<MaskData>(mask_key, mask_data_ptr, TimeKey("time"));
 
         QMessageBox::information(this, "Import Successful",
-            QString::fromStdString("Image mask data loaded into '" + mask_key + "'"));
+                                 QString::fromStdString("Image mask data loaded into '" + mask_key + "'"));
 
         emit importCompleted(QString::fromStdString(mask_key), "MaskData");
 
     } catch (std::exception const & e) {
         std::cerr << "Error loading image masks: " << e.what() << std::endl;
         QMessageBox::critical(this, "Import Error",
-            QString::fromStdString("Error loading image masks: " + std::string(e.what())));
+                              QString::fromStdString("Error loading image masks: " + std::string(e.what())));
     }
 }
 
@@ -265,13 +265,12 @@ namespace {
 struct MaskImportRegistrar {
     MaskImportRegistrar() {
         DataImportTypeRegistry::instance().registerType(
-            "MaskData",
-            ImportWidgetFactory{
-                .display_name = "Mask Data",
-                .create_widget = [](std::shared_ptr<DataManager> dm, QWidget * parent) {
-                    return new MaskImport_Widget(std::move(dm), parent);
-                }
-            });
+                "MaskData",
+                ImportWidgetFactory{
+                        .display_name = "Mask Data",
+                        .create_widget = [](std::shared_ptr<DataManager> dm, QWidget * parent) {
+                            return new MaskImport_Widget(std::move(dm), parent);
+                        }});
     }
 } mask_import_registrar;
-}
+}// namespace

@@ -48,17 +48,17 @@ void registerInternalLoaders(LoaderRegistry & registry) {
     // =========================================================================
 
     // CSVLoader handles all CSV-based data types:
-    // - IODataType::Line: Single/multi-file CSV whisker data
-    // - IODataType::Points: Simple CSV or DLC format (with batch loading for multi-bodypart)
-    // - IODataType::Analog: Single/two column CSV time series
-    // - IODataType::DigitalEvent: Event timestamps (with batch loading for multi-series)
-    // - IODataType::DigitalInterval: Start/end column pairs
+    // - DM_DataType::Line: Single/multi-file CSV whisker data
+    // - DM_DataType::Points: Simple CSV or DLC format (with batch loading for multi-bodypart)
+    // - DM_DataType::Analog: Single/two column CSV time series
+    // - DM_DataType::DigitalEvent: Event timestamps (with batch loading for multi-series)
+    // - DM_DataType::DigitalInterval: Start/end column pairs
     registry.registerLoader(std::make_unique<CSVLoader>());
 
     // BinaryFormatLoader handles all binary-based data types:
-    // - IODataType::Analog: Multi-channel binary (int16, float32, etc.) with batch loading
-    // - IODataType::DigitalEvent: TTL extraction from binary
-    // - IODataType::DigitalInterval: TTL extraction from binary
+    // - DM_DataType::Analog: Multi-channel binary (int16, float32, etc.) with batch loading
+    // - DM_DataType::DigitalEvent: TTL extraction from binary
+    // - DM_DataType::DigitalInterval: TTL extraction from binary
     registry.registerLoader(std::make_unique<BinaryFormatLoader>());
 }
 

@@ -4,7 +4,7 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 #include "DataManager.hpp"
-#include "IO/core/IOTypes.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "IO/core/LoaderRegistry.hpp"
 #include "IO/formats/CSV/lines/Line_Data_CSV.hpp"
 #include "Lines/Line_Data.hpp"
@@ -252,7 +252,7 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV load through 
     "data_type": "line",
     "name": "missing_csv_lines", 
     "filepath": ")" + fake_filepath.string() +
-                                  R"(",
+                                        R"(",
     "format": "csv"
 }
 ])";
@@ -285,7 +285,7 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save/load thr
 
         // Check if CSV loader is registered for Line data type
         auto & registry = LoaderRegistry::getInstance();
-        REQUIRE(registry.isFormatSupported("csv", IODataType::Line));
+        REQUIRE(registry.isFormatSupported("csv", DM_DataType::Line));
 
         // Create a minimal JSON config for saving
         nlohmann::json config;
@@ -300,7 +300,7 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save/load thr
 
         // Test saving through registry - this exercises the same code path as the GUI
         auto result = registry.trySave("csv",
-                                       IODataType::Line,
+                                       DM_DataType::Line,
                                        csv_filepath.string(),
                                        config,
                                        original_line_data.get());
@@ -337,7 +337,7 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save/load thr
         config["image_width"] = 800;
 
         auto load_result = registry.tryLoad("csv",
-                                            IODataType::Line,
+                                            DM_DataType::Line,
                                             csv_filepath.string(),
                                             config);
         REQUIRE(load_result.success);

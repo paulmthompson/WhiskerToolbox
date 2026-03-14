@@ -5,7 +5,7 @@
 #ifndef DATAMANAGER_IO_SAVER_INFO_HPP
 #define DATAMANAGER_IO_SAVER_INFO_HPP
 
-#include "IOTypes.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
@@ -19,7 +19,7 @@
  */
 struct SaverInfo {
     std::string format;                                    ///< Format identifier (e.g., "csv", "capnproto", "opencv")
-    IODataType data_type;                                  ///< Data type this saver handles
+    DM_DataType data_type;                                 ///< Data type this saver handles
     std::string description;                               ///< Human-readable description (e.g., "CSV point data (frame, x, y)")
     WhiskerToolbox::Transforms::V2::ParameterSchema schema;///< Parameter schema for the saver options
 };

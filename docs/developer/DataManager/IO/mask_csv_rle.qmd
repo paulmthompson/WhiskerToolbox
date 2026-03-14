@@ -56,7 +56,7 @@ Loader and saver options are defined as reflect-cpp structs satisfying the `Vali
 
 The mask RLE format is accessible through the `CSVLoader` factory with:
 
-- **Data type**: `IODataType::Mask`
+- **Data type**: `DM_DataType::Mask`
 - **Config key**: `"csv_layout"` = `"rle"` (default, currently the only CSV mask layout)
 
 # RLE Encoding / Decoding

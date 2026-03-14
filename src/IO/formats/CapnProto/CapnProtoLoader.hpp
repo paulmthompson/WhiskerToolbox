@@ -1,15 +1,15 @@
 #ifndef DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
 #define DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
 
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "IO/core/DataLoader.hpp"
-#include "IO/core/IOTypes.hpp"
 #include <capnp/common.h>
 #include <kj/array.h>
 #include <set>
 
 // Forward declarations
-namespace capnp { 
-    struct ReaderOptions; 
+namespace capnp {
+struct ReaderOptions;
 }
 
 /**
@@ -21,20 +21,19 @@ namespace capnp {
 class CapnProtoLoader : public DataLoader {
 public:
     CapnProtoLoader();
-    
+
     std::string getFormatId() const override;
-    bool supportsDataType(IODataType data_type) const override;
+    bool supportsDataType(DM_DataType data_type) const override;
     LoadResult loadData(
-        std::string const& file_path,
-        IODataType data_type,
-        nlohmann::json const& config
-    ) const override;
+            std::string const & file_path,
+            DM_DataType data_type,
+            nlohmann::json const & config) const override;
 
 private:
-    std::set<IODataType> _supported_types;
+    std::set<DM_DataType> _supported_types;
 
     // Type-specific loading methods
-    LoadResult loadLineData(std::string const& file_path, nlohmann::json const& config) const;
+    LoadResult loadLineData(std::string const & file_path, nlohmann::json const & config) const;
 };
 
-#endif // DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
+#endif// DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP

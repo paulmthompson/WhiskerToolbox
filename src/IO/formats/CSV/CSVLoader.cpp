@@ -17,8 +17,8 @@
 #include "lines/Line_Data_CSV.hpp"
 #include "mask/Mask_Data_CSV.hpp"
 
-#include "ParameterSchema/ParameterSchema.hpp"
 #include "CoreUtilities/json_reflection.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -26,12 +26,12 @@
 using namespace WhiskerToolbox::Reflection;
 
 LoadResult CSVLoader::load(std::string const & filepath,
-                           IODataType dataType,
+                           DM_DataType dataType,
                            nlohmann::json const & config) const {
     switch (dataType) {
-        case IODataType::Line:
+        case DM_DataType::Line:
             return loadLineDataCSV(filepath, config);
-        case IODataType::Points: {
+        case DM_DataType::Points: {
             // Check if DLC format
             std::string const csv_layout = config.value("csv_layout", "");
             std::string const format = config.value("format", "csv");
@@ -40,13 +40,13 @@ LoadResult CSVLoader::load(std::string const & filepath,
             }
             return loadPointDataCSV(filepath, config);
         }
-        case IODataType::Mask:
+        case DM_DataType::Mask:
             return loadMaskDataCSV(filepath, config);
-        case IODataType::Analog:
+        case DM_DataType::Analog:
             return loadAnalogCSV(filepath, config);
-        case IODataType::DigitalEvent:
+        case DM_DataType::DigitalEvent:
             return loadDigitalEventCSV(filepath, config);
-        case IODataType::DigitalInterval: {
+        case DM_DataType::DigitalInterval: {
             // Check for binary_state layout
             std::string const csv_layout = config.value("csv_layout", "intervals");
             if (csv_layout == "binary_state") {
@@ -60,19 +60,19 @@ LoadResult CSVLoader::load(std::string const & filepath,
     }
 }
 
-bool CSVLoader::supportsFormat(std::string const & format, IODataType dataType) const {
+bool CSVLoader::supportsFormat(std::string const & format, DM_DataType dataType) const {
     // Support CSV format for all supported data types
     if (format == "csv") {
-        return dataType == IODataType::Line ||
-               dataType == IODataType::Points ||
-               dataType == IODataType::Mask ||
-               dataType == IODataType::Analog ||
-               dataType == IODataType::DigitalEvent ||
-               dataType == IODataType::DigitalInterval;
+        return dataType == DM_DataType::Line ||
+               dataType == DM_DataType::Points ||
+               dataType == DM_DataType::Mask ||
+               dataType == DM_DataType::Analog ||
+               dataType == DM_DataType::DigitalEvent ||
+               dataType == DM_DataType::DigitalInterval;
     }
 
     // Support dlc_csv format for Points (legacy compatibility)
-    if (format == "dlc_csv" && dataType == IODataType::Points) {
+    if (format == "dlc_csv" && dataType == DM_DataType::Points) {
         return true;
     }
 
@@ -80,7 +80,7 @@ bool CSVLoader::supportsFormat(std::string const & format, IODataType dataType) 
 }
 
 bool CSVLoader::supportsBatchLoading(std::string const & format,
-                                     IODataType dataType) const {
+                                     DM_DataType dataType) const {
     if (format != "csv" && format != "dlc_csv") {
         return false;
     }
@@ -89,18 +89,18 @@ bool CSVLoader::supportsBatchLoading(std::string const & format,
     // - DigitalEvent (multiple series per identifier)
     // - DigitalInterval (multiple columns with binary_state layout)
     // - Points with DLC format (multiple bodyparts)
-    return dataType == IODataType::DigitalEvent ||
-           dataType == IODataType::DigitalInterval ||
-           dataType == IODataType::Points;
+    return dataType == DM_DataType::DigitalEvent ||
+           dataType == DM_DataType::DigitalInterval ||
+           dataType == DM_DataType::Points;
 }
 
 BatchLoadResult CSVLoader::loadBatch(std::string const & filepath,
-                                     IODataType dataType,
+                                     DM_DataType dataType,
                                      nlohmann::json const & config) const {
     switch (dataType) {
-        case IODataType::DigitalEvent:
+        case DM_DataType::DigitalEvent:
             return loadDigitalEventCSVBatch(filepath, config);
-        case IODataType::DigitalInterval: {
+        case DM_DataType::DigitalInterval: {
             // Check for binary_state layout with all_columns
             std::string const csv_layout = config.value("csv_layout", "intervals");
             bool const all_columns = config.value("all_columns", false);
@@ -115,7 +115,7 @@ BatchLoadResult CSVLoader::loadBatch(std::string const & filepath,
             }
             return BatchLoadResult::error(result.error_message);
         }
-        case IODataType::Points: {
+        case DM_DataType::Points: {
             // Check if DLC format with all_bodyparts
             std::string const csv_layout = config.value("csv_layout", "");
             std::string const format = config.value("format", "csv");
@@ -143,7 +143,7 @@ BatchLoadResult CSVLoader::loadBatch(std::string const & filepath,
 }
 
 LoadResult CSVLoader::save(std::string const & filepath,
-                           IODataType dataType,
+                           DM_DataType dataType,
                            nlohmann::json const & config,
                            void const * data) const {
     if (!data) {
@@ -151,17 +151,17 @@ LoadResult CSVLoader::save(std::string const & filepath,
     }
 
     switch (dataType) {
-        case IODataType::Line:
+        case DM_DataType::Line:
             return saveLineDataCSV(filepath, config, data);
-        case IODataType::Points:
+        case DM_DataType::Points:
             return savePointDataCSV(filepath, config, data);
-        case IODataType::Analog:
+        case DM_DataType::Analog:
             return saveAnalogCSV(filepath, config, data);
-        case IODataType::DigitalEvent:
+        case DM_DataType::DigitalEvent:
             return saveDigitalEventCSV(filepath, config, data);
-        case IODataType::DigitalInterval:
+        case DM_DataType::DigitalInterval:
             return saveDigitalIntervalCSV(filepath, config, data);
-        case IODataType::Mask:
+        case DM_DataType::Mask:
             return saveMaskDataCSV(filepath, config, data);
         default:
             return LoadResult("CSVLoader does not support saving data type: " +
@@ -900,17 +900,17 @@ LoadResult CSVLoader::saveMaskDataCSV(std::string const & filepath,
 std::vector<SaverInfo> CSVLoader::getSaverInfo() const {
     using WhiskerToolbox::Transforms::V2::extractParameterSchema;
     return {
-            {"csv", IODataType::Points, "CSV point data (frame, x, y)",
+            {"csv", DM_DataType::Points, "CSV point data (frame, x, y)",
              extractParameterSchema<CSVPointSaverOptions>()},
-            {"csv", IODataType::Analog, "CSV analog time series",
+            {"csv", DM_DataType::Analog, "CSV analog time series",
              extractParameterSchema<CSVAnalogSaverOptions>()},
-            {"csv", IODataType::DigitalEvent, "CSV digital event timestamps",
+            {"csv", DM_DataType::DigitalEvent, "CSV digital event timestamps",
              extractParameterSchema<CSVEventSaverOptions>()},
-            {"csv", IODataType::DigitalInterval, "CSV digital intervals (start/end)",
+            {"csv", DM_DataType::DigitalInterval, "CSV digital intervals (start/end)",
              extractParameterSchema<CSVIntervalSaverOptions>()},
-            {"csv", IODataType::Mask, "CSV mask RLE data",
+            {"csv", DM_DataType::Mask, "CSV mask RLE data",
              extractParameterSchema<CSVMaskRLESaverOptions>()},
-            {"csv", IODataType::Line, "CSV line data (single file)",
+            {"csv", DM_DataType::Line, "CSV line data (single file)",
              extractParameterSchema<CSVSingleFileLineSaverOptions>()},
     };
 }

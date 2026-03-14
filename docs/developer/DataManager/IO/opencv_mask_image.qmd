@@ -63,7 +63,7 @@ The `OpenCVFormatLoader` registers with the `LoaderRegistry` and reports saver
 capabilities through `getSaverInfo()`:
 
 - **Format:** `"image"`
-- **Data type:** `IODataType::Mask`
+- **Data type:** `DM_DataType::Mask`
 - **Schema:** Extracted from `ImageMaskSaverOptions` via `extractParameterSchema()`
 
 ## Atomic Writes

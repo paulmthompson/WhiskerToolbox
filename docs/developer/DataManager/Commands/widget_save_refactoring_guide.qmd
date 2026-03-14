@@ -301,7 +301,7 @@ TEST_CASE("SaveData round-trips DigitalEventSeries through CSV",
 │  LoaderRegistry::trySave()                   │
 │                                              │
 │  Routes to CSVLoader::save() based on        │
-│  format="csv" + IODataType::DigitalEvent     │
+│  format="csv" + DM_DataType::DigitalEvent     │
 └──────────────────────┬───────────────────────┘
                        │
                        ▼

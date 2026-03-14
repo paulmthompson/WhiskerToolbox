@@ -18,21 +18,21 @@ public:
      * @brief Load data from CapnProto file
      */
     LoadResult load(std::string const & filepath,
-                    IODataType dataType,
+                    DM_DataType dataType,
                     nlohmann::json const & config) const override;
 
     /**
      * @brief Save data to CapnProto file
      */
     LoadResult save(std::string const & filepath,
-                    IODataType dataType,
+                    DM_DataType dataType,
                     nlohmann::json const & config,
                     void const * data) const override;
 
     /**
      * @brief Check if this loader supports the format/dataType combination
      */
-    bool supportsFormat(std::string const & format, IODataType dataType) const override;
+    bool supportsFormat(std::string const & format, DM_DataType dataType) const override;
 
     /**
      * @brief Return metadata for all save operations this loader supports

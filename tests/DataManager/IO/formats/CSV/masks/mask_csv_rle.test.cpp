@@ -13,7 +13,7 @@
 
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
-#include "IO/core/IOTypes.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "IO/core/LoaderRegistry.hpp"
 #include "IO/formats/CSV/CSVLoader.hpp"
 #include "IO/formats/CSV/mask/Mask_Data_CSV.hpp"
@@ -198,8 +198,8 @@ TEST_CASE_METHOD(MaskCSVRLETestFixture,
                  "CSVLoader supports Mask data type",
                  "[MaskCSV][CSVLoader]") {
     CSVLoader loader;
-    CHECK(loader.supportsFormat("csv", IODataType::Mask));
-    CHECK_FALSE(loader.supportsFormat("dlc_csv", IODataType::Mask));
+    CHECK(loader.supportsFormat("csv", DM_DataType::Mask));
+    CHECK_FALSE(loader.supportsFormat("dlc_csv", DM_DataType::Mask));
 }
 
 TEST_CASE_METHOD(MaskCSVRLETestFixture,
@@ -209,14 +209,14 @@ TEST_CASE_METHOD(MaskCSVRLETestFixture,
 
     // Save via factory
     nlohmann::json save_config;
-    auto save_result = loader.save(csv_filepath.string(), IODataType::Mask, save_config,
+    auto save_result = loader.save(csv_filepath.string(), DM_DataType::Mask, save_config,
                                    original_mask_data.get());
     REQUIRE(save_result.success);
     REQUIRE(std::filesystem::exists(csv_filepath));
 
     // Load via factory
     nlohmann::json load_config;
-    auto load_result = loader.load(csv_filepath.string(), IODataType::Mask, load_config);
+    auto load_result = loader.load(csv_filepath.string(), DM_DataType::Mask, load_config);
     REQUIRE(load_result.success);
     REQUIRE(std::holds_alternative<std::shared_ptr<MaskData>>(load_result.data));
 

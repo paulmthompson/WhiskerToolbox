@@ -17,14 +17,14 @@ public:
     /**
      * @brief Load data from HDF5 file
      */
-    LoadResult load(std::string const& filepath, 
-                   IODataType dataType, 
-                   nlohmann::json const& config) const override;
+    LoadResult load(std::string const & filepath,
+                    DM_DataType dataType,
+                    nlohmann::json const & config) const override;
 
     /**
      * @brief Check if this loader supports the format/dataType combination
      */
-    bool supportsFormat(std::string const& format, IODataType dataType) const override;
+    bool supportsFormat(std::string const & format, DM_DataType dataType) const override;
 
     /**
      * @brief Get loader name for logging
@@ -35,26 +35,26 @@ private:
     /**
      * @brief Load MaskData from HDF5 file using existing functionality
      */
-    LoadResult loadMaskDataHDF5(std::string const& filepath, 
-                               nlohmann::json const& config) const;
+    LoadResult loadMaskDataHDF5(std::string const & filepath,
+                                nlohmann::json const & config) const;
 
     /**
      * @brief Load LineData from HDF5 file using existing functionality
      */
-    LoadResult loadLineDataHDF5(std::string const& filepath, 
-                               nlohmann::json const& config) const;
+    LoadResult loadLineDataHDF5(std::string const & filepath,
+                                nlohmann::json const & config) const;
 
     /**
      * @brief Load DigitalEventSeries from HDF5 file
      */
-    LoadResult loadDigitalEventDataHDF5(std::string const& filepath, 
-                                        nlohmann::json const& config) const;
+    LoadResult loadDigitalEventDataHDF5(std::string const & filepath,
+                                        nlohmann::json const & config) const;
 
     /**
      * @brief Load AnalogTimeSeries from HDF5 file
      */
-    LoadResult loadAnalogDataHDF5(std::string const& filepath, 
-                                  nlohmann::json const& config) const;
+    LoadResult loadAnalogDataHDF5(std::string const & filepath,
+                                  nlohmann::json const & config) const;
 };
 
-#endif // HDF5_FORMAT_LOADER_HPP
+#endif// HDF5_FORMAT_LOADER_HPP

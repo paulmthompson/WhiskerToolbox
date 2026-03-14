@@ -1,7 +1,7 @@
 #ifndef DATAMANAGER_IO_DATALOADER_HPP
 #define DATAMANAGER_IO_DATALOADER_HPP
 
-#include "IOTypes.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -22,15 +22,14 @@ class TensorData;
  * @brief Variant type for all possible data types that can be loaded
  */
 using LoadedDataVariant = std::variant<
-    std::shared_ptr<LineData>,
-    std::shared_ptr<PointData>,
-    std::shared_ptr<MaskData>,
-    std::shared_ptr<ImageData>,
-    std::shared_ptr<AnalogTimeSeries>,
-    std::shared_ptr<DigitalEventSeries>,
-    std::shared_ptr<DigitalIntervalSeries>,
-    std::shared_ptr<TensorData>
->;
+        std::shared_ptr<LineData>,
+        std::shared_ptr<PointData>,
+        std::shared_ptr<MaskData>,
+        std::shared_ptr<ImageData>,
+        std::shared_ptr<AnalogTimeSeries>,
+        std::shared_ptr<DigitalEventSeries>,
+        std::shared_ptr<DigitalIntervalSeries>,
+        std::shared_ptr<TensorData>>;
 
 /**
  * @brief Result of a data loading operation
@@ -39,15 +38,19 @@ struct LoadResult {
     bool success = false;
     std::string error_message;
     LoadedDataVariant data;
-    std::string name;  ///< Optional name for batch loading (e.g., channel name, bodypart name)
-    
+    std::string name;///< Optional name for batch loading (e.g., channel name, bodypart name)
+
     LoadResult() = default;
-    LoadResult(LoadedDataVariant&& loaded_data) 
-        : success(true), data(std::move(loaded_data)) {}
-    LoadResult(LoadedDataVariant&& loaded_data, std::string const& result_name) 
-        : success(true), data(std::move(loaded_data)), name(result_name) {}
-    LoadResult(std::string const& error) 
-        : success(false), error_message(error) {}
+    LoadResult(LoadedDataVariant && loaded_data)
+        : success(true),
+          data(std::move(loaded_data)) {}
+    LoadResult(LoadedDataVariant && loaded_data, std::string const & result_name)
+        : success(true),
+          data(std::move(loaded_data)),
+          name(result_name) {}
+    LoadResult(std::string const & error)
+        : success(false),
+          error_message(error) {}
 };
 
 /**
@@ -59,17 +62,17 @@ struct LoadResult {
 class DataLoader {
 public:
     virtual ~DataLoader() = default;
-    
+
     /**
      * @brief Get the format identifier (e.g., "capnp", "hdf5", "binary")
      */
     virtual std::string getFormatId() const = 0;
-    
+
     /**
      * @brief Check if this loader supports the given data type
      */
-    virtual bool supportsDataType(IODataType data_type) const = 0;
-    
+    virtual bool supportsDataType(DM_DataType data_type) const = 0;
+
     /**
      * @brief Load data from file
      * 
@@ -79,10 +82,9 @@ public:
      * @return LoadResult containing the loaded data or error information
      */
     virtual LoadResult loadData(
-        std::string const& file_path,
-        IODataType data_type,
-        nlohmann::json const& config
-    ) const = 0;
+            std::string const & file_path,
+            DM_DataType data_type,
+            nlohmann::json const & config) const = 0;
 };
 
-#endif // DATAMANAGER_IO_DATALOADER_HPP
+#endif// DATAMANAGER_IO_DATALOADER_HPP

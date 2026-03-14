@@ -29,7 +29,7 @@ CommandResult SaveData::execute(CommandContext const & ctx) {
                 "Data key '" + _params.data_key + "' not found in DataManager");
     }
 
-    auto const io_type = toIODataType(dm_type);
+    auto const io_type = dm_type;
 
     // Get the raw data pointer from the variant
     auto variant = ctx.data_manager->getDataVariant(_params.data_key);

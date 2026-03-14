@@ -3,8 +3,8 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
-#include "Masks/Mask_Data.hpp"
 #include "CoreUtilities/string_manip.hpp"
+#include "Masks/Mask_Data.hpp"
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>
@@ -19,8 +19,8 @@ std::string OpenCVLoader::getFormatId() const {
     return "image";
 }
 
-bool OpenCVLoader::supportsDataType(IODataType data_type) const {
-    using enum IODataType;
+bool OpenCVLoader::supportsDataType(DM_DataType data_type) const {
+    using enum DM_DataType;
     switch (data_type) {
         case Mask:
             return true;
@@ -30,32 +30,30 @@ bool OpenCVLoader::supportsDataType(IODataType data_type) const {
 }
 
 LoadResult OpenCVLoader::loadData(
-    std::string const& file_path,
-    IODataType data_type,
-    nlohmann::json const& config
-) const {
+        std::string const & file_path,
+        DM_DataType data_type,
+        nlohmann::json const & config) const {
     try {
-        using enum IODataType;
+        using enum DM_DataType;
         if (data_type == Mask) {
             return loadMaskData(file_path, config);
         }
         return LoadResult("Unsupported data type for OpenCV loader");
-    } catch (std::exception const& e) {
+    } catch (std::exception const & e) {
         return LoadResult("OpenCV loading error: " + std::string(e.what()));
     }
 }
 
 LoadResult OpenCVLoader::loadMaskData(
-    std::string const& file_path,
-    nlohmann::json const& config
-) const {
+        std::string const & file_path,
+        nlohmann::json const & config) const {
     try {
         // Extract configuration with defaults
         std::string file_pattern = "*.png";
         std::string filename_prefix = "";
         int threshold_value = 128;
         bool invert_mask = false;
-        
+
         if (config.contains("file_pattern")) {
             file_pattern = config["file_pattern"].get<std::string>();
         }
@@ -68,10 +66,10 @@ LoadResult OpenCVLoader::loadMaskData(
         if (config.contains("invert_mask")) {
             invert_mask = config["invert_mask"].get<bool>();
         }
-        
+
         // The file_path should be a directory containing image files
         std::string directory_path = file_path;
-        
+
         // Validate directory
         if (!std::filesystem::exists(directory_path) || !std::filesystem::is_directory(directory_path)) {
             return LoadResult("Error: Directory does not exist: " + directory_path);
@@ -113,7 +111,7 @@ LoadResult OpenCVLoader::loadMaskData(
 
         for (auto const & file_path_entry: image_files) {
             std::string filename = file_path_entry.filename().string();
-            std::string stem = file_path_entry.stem().string(); // Remove extension
+            std::string stem = file_path_entry.stem().string();// Remove extension
 
             // Remove prefix if specified
             if (!filename_prefix.empty()) {
@@ -123,7 +121,7 @@ LoadResult OpenCVLoader::loadMaskData(
                     files_skipped++;
                     continue;
                 }
-                stem = stem.substr(filename_prefix.length()); // Remove prefix
+                stem = stem.substr(filename_prefix.length());// Remove prefix
             }
 
             // Parse frame number
@@ -173,7 +171,7 @@ LoadResult OpenCVLoader::loadMaskData(
                 TimeFrameIndex frame_idx{frame_number};
                 mask_data->addAtTime(frame_idx, std::move(mask_points), NotifyObservers::No);
                 files_loaded++;
-                
+
                 // Store image dimensions (use the last loaded image dimensions)
                 detected_width = static_cast<uint32_t>(width);
                 detected_height = static_cast<uint32_t>(height);
@@ -207,8 +205,8 @@ LoadResult OpenCVLoader::loadMaskData(
         std::cout << std::endl;
 
         return LoadResult(std::move(mask_data));
-        
-    } catch (std::exception const& e) {
+
+    } catch (std::exception const & e) {
         return LoadResult("Error loading OpenCV mask data: " + std::string(e.what()));
     }
 }

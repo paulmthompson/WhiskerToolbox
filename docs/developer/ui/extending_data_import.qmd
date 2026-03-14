@@ -257,7 +257,7 @@ For file format handling, use the centralized `LoaderRegistry`:
 void MyImportWidget::_loadFile(QString const & filepath) {
     auto loader_result = LoaderRegistry::tryLoad(
         filepath.toStdString(),
-        IODataType::LineData,      // Target data type
+        DM_DataType::LineData,      // Target data type
         "my_data_key",             // Key in DataManager
         _loader_config,            // nlohmann::json config
         _data_manager.get()

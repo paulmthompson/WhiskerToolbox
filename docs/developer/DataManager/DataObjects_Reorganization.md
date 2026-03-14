@@ -174,16 +174,16 @@ DataManager               ← computation, transforms, snapshots, observers
 
 Consumers pick the lightest layer they actually need. This eliminates the "I need to link DataManager just for an enum" problem.
 
-### 3. Eliminate `IODataType` — use `DM_DataType` everywhere
+### 3. Eliminate `IODataType` — use `DM_DataType` everywhere (COMPLETED)
 
-With `DataTypeEnum` as a zero-dependency INTERFACE library, the IO system can link it directly. `IODataType` becomes completely redundant.
+With `DataTypeEnum` as a zero-dependency INTERFACE library, the IO system links it directly. `IODataType` has been eliminated.
 
-**What gets removed:**
+**What was removed:**
 - `IO/core/IOTypes.hpp` (the `IODataType` enum)
 - `toIODataType()` / `fromIODataType()` conversion functions in `DataManagerTypes.hpp`
 - All `static_assert` sync checks between the two enums
 
-**Migration:** Mechanical find-and-replace of `IODataType::X` → `DM_DataType::X` in IO code and tests. The only behavioral difference is `RaggedAnalog` — `IODataType` didn't have it. At the IO API level, `RaggedAnalog` can be handled as `Analog` (which the conversion functions already did).
+**Migration:** Mechanical find-and-replace of `IODataType::X` → `DM_DataType::X` in IO code, tests, and documentation. `DataTypeEnum` was added as a dependency to `DataManagerIO` and all format sub-libraries (CapnProto, HDF5, Numpy, OpenCV).
 
 ### 4. Move IO to `src/IO/`
 
@@ -230,8 +230,8 @@ Each data type library retains its current dependencies — they are already min
 - [ ] Create `DataTypeTraits` INTERFACE library (move from `DataManager/TypeTraits/`)
 - [ ] Move data type libraries: AnalogTimeSeries, DigitalTimeSeries, Lines, Masks, Points, Media, Tensors
 - [ ] Move `DataManager/IO/` → `src/IO/`
-- [ ] Replace `IODataType` with `DM_DataType` in all IO code
-- [ ] Remove `IOTypes.hpp`, `toIODataType()`, `fromIODataType()`
+- [x] Replace `IODataType` with `DM_DataType` in all IO code
+- [x] Remove `IOTypes.hpp`, `toIODataType()`, `fromIODataType()`
 - [ ] Update all `#include` paths
 - [ ] Update all `CMakeLists.txt` `target_link_libraries` to use new library names
 - [ ] Update `src/CMakeLists.txt` `add_subdirectory` calls

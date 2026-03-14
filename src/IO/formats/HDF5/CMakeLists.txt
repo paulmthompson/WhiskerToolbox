@@ -36,6 +36,7 @@ target_link_libraries(DataManagerHDF5 PRIVATE
 #    DataManagerIO            # For LoaderRegistry access
     NEURALYZER_GEOMETRY      # CoreGeometry for Point2D
     nlohmann_json::nlohmann_json  # For JSON config parsing
+    DataTypeEnum
     WhiskerToolbox::LineData
     WhiskerToolbox::MaskData
     WhiskerToolbox::DigitalTimeSeries   # For DigitalEventSeries

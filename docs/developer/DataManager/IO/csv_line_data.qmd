@@ -43,4 +43,4 @@ points, masks, analog, and digital time series.
 
 Both loader and saver are registered through `CSVLoader` in the format-centric loader
 architecture. The `CSVLoader::getSaverInfo()` method returns a `SaverInfo` entry for
-`IODataType::Line` with the single-file saver schema.
+`DM_DataType::Line` with the single-file saver schema.

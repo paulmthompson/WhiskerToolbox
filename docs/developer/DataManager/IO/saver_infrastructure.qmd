@@ -20,7 +20,7 @@ capability within a format loader:
 | Field         | Type              | Description |
 |---------------|-------------------|-------------|
 | `format`      | `std::string`     | Format identifier (e.g., `"csv"`, `"capnproto"`) |
-| `data_type`   | `IODataType`      | The data type this saver handles |
+| `data_type`   | `DM_DataType`      | The data type this saver handles |
 | `description` | `std::string`     | Human-readable summary |
 | `schema`      | `ParameterSchema` | Compile-time extracted parameter schema |
 
@@ -43,7 +43,7 @@ registered loaders:
 
 ```cpp
 std::vector<SaverInfo> getSupportedSaveFormats() const;
-std::vector<SaverInfo> getSupportedSaveFormats(IODataType type) const;
+std::vector<SaverInfo> getSupportedSaveFormats(DM_DataType type) const;
 ```
 
 The first returns all saver capabilities; the second filters by data type.

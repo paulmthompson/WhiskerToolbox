@@ -54,7 +54,7 @@ Undoable. `undo()` calls `DataManager::deleteData(data_key)` to remove the loade
 
 ## Execution Flow
 
-1. Map `data_type` string to `IODataType` enum via an internal lookup.
+1. Map `data_type` string to `DM_DataType` enum via an internal lookup.
 2. Convert `format_options` (if present) from `rfl::Generic` to `nlohmann::json`.
 3. Dispatch through `LoaderRegistry::getInstance().tryLoad()`.
 4. Convert the `LoadedDataVariant` in the result to a `DataTypeVariant`.

@@ -1,8 +1,8 @@
 #ifndef DATAMANAGER_IO_OPENCVLOADER_HPP
 #define DATAMANAGER_IO_OPENCVLOADER_HPP
 
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "IO/core/DataLoader.hpp"
-#include "IO/core/IOTypes.hpp"
 
 /**
  * @brief OpenCV data loader implementation
@@ -17,29 +17,27 @@ public:
      * @brief Get the format identifier
      */
     std::string getFormatId() const override;
-    
+
     /**
      * @brief Check if this loader supports the given data type
      */
-    bool supportsDataType(IODataType data_type) const override;
-    
+    bool supportsDataType(DM_DataType data_type) const override;
+
     /**
      * @brief Load data from image files using OpenCV
      */
     LoadResult loadData(
-        std::string const& file_path,
-        IODataType data_type,
-        nlohmann::json const& config
-    ) const override;
+            std::string const & file_path,
+            DM_DataType data_type,
+            nlohmann::json const & config) const override;
 
 private:
     /**
      * @brief Load MaskData from binary image files
      */
     LoadResult loadMaskData(
-        std::string const& file_path,
-        nlohmann::json const& config
-    ) const;
+            std::string const & file_path,
+            nlohmann::json const & config) const;
 };
 
-#endif // DATAMANAGER_IO_OPENCVLOADER_HPP
+#endif// DATAMANAGER_IO_OPENCVLOADER_HPP

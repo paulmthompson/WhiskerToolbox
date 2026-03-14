@@ -51,7 +51,7 @@ temporary file, and atomically renamed over the target path.
 ## Registry Integration
 
 The `CapnProtoFormatLoader` class overrides `getSaverInfo()` to register the binary line
-saver with format identifier `"capnp"` and data type `IODataType::Line`. This enables the
+saver with format identifier `"capnp"` and data type `DM_DataType::Line`. This enables the
 saver to be discovered via `LoaderRegistry::getSupportedSaveFormats()`.
 
 ## Round-Trip Guarantee

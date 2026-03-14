@@ -52,7 +52,7 @@ Not undoable (`isUndoable()` returns `false`). File writes cannot be reversed.
 ## Execution Flow
 
 1. Look up the data type via `DataManager::getType(data_key)` → `DM_DataType`.
-2. Convert to `IODataType` via `toIODataType()`.
+2. Convert to `DM_DataType` via `toDM_DataType()`.
 3. Extract the raw `void const *` pointer from `DataManager::getDataVariant()`.
 4. Convert `format_options` (if present) from `rfl::Generic` to `nlohmann::json`.
 5. Dispatch through `LoaderRegistry::getInstance().trySave()`.

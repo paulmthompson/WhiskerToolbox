@@ -29,10 +29,10 @@
 #include "nlohmann/json.hpp"
 #include <rfl.hpp>
 
+#include "CoreUtilities/string_manip.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 #include "utils/DerivedTimeFrame.hpp"
-#include "CoreUtilities/string_manip.hpp"
 
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
@@ -64,10 +64,10 @@ bool tryRegistryThenLegacyLoad(
 
         // Try registry system first
         LoaderRegistry & registry = LoaderRegistry::getInstance();
-        if (registry.isFormatSupported(format, toIODataType(data_type))) {
+        if (registry.isFormatSupported(format, data_type)) {
             std::cout << "Using registry loader for " << name << " (format: " << format << ")" << std::endl;
 
-            LoadResult result = registry.tryLoad(format, toIODataType(data_type), file_path, item);
+            LoadResult result = registry.tryLoad(format, data_type, file_path, item);
             if (result.success) {
                 // Handle data setting and post-loading setup based on data type
                 switch (data_type) {
@@ -211,7 +211,7 @@ bool tryBatchLoadFromRegistry(
 
     std::string const format = item["format"];
     LoaderRegistry & registry = LoaderRegistry::getInstance();
-    auto io_data_type = toIODataType(data_type);
+    auto const io_data_type = data_type;
 
     // Check if any loader supports batch loading for this format
     if (!registry.isBatchLoadingSupported(format, io_data_type)) {
@@ -1414,7 +1414,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
     return load_data_from_json_config(dm, j, base_path, nullptr);
 }
 
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath, const JsonLoadProgressCallback& progress_callback) {
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath, JsonLoadProgressCallback const & progress_callback) {
     // Open JSON file
     std::ifstream ifs(json_filepath);
     if (!ifs.is_open()) {

@@ -312,7 +312,7 @@ TEST_CASE_METHOD(MaskDataImageTestFixture, "DM - IO - MaskData - Image loader re
 
         // Get the registry and check if image format is supported for MaskData
         auto & registry = LoaderRegistry::getInstance();
-        bool image_supported = registry.isFormatSupported("image", IODataType::Mask);
+        bool image_supported = registry.isFormatSupported("image", DM_DataType::Mask);
 
 // This should be true if OpenCV is enabled at compile time
 #ifdef ENABLE_OPENCV
@@ -327,10 +327,10 @@ TEST_CASE_METHOD(MaskDataImageTestFixture, "DM - IO - MaskData - Image loader re
         auto data_manager = std::make_unique<DataManager>();
         auto & registry = LoaderRegistry::getInstance();
 
-        auto supported_formats = registry.getSupportedFormats(IODataType::Mask);
+        auto supported_formats = registry.getSupportedFormats(DM_DataType::Mask);
 
         // Debug: Print all supported formats
-        std::cout << "DEBUG: Supported formats for IODataType::Mask: ";
+        std::cout << "DEBUG: Supported formats for DM_DataType::Mask: ";
         for (auto const & format: supported_formats) {
             std::cout << "'" << format << "' ";
         }

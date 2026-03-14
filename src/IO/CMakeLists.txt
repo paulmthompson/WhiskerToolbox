@@ -5,7 +5,6 @@ find_package(nlohmann_json CONFIG REQUIRED)
 # Core plugin interface
 set(IO_CORE_SOURCES
     core/DataLoader.hpp
-    core/IOTypes.hpp
     core/IOFormats.hpp
     core/SaverInfo.hpp
     core/AtomicWrite.hpp
@@ -54,6 +53,7 @@ target_link_libraries(DataManagerIO PUBLIC
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
     ParameterSchema
+    DataTypeEnum
     LineData # Needed to populate CSV line data
     PointData # Needed for Point loaders
     MaskData # Needed for Mask RLE CSV loaders

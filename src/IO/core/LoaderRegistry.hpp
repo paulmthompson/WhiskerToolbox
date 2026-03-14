@@ -2,7 +2,7 @@
 #define LOADER_REGISTRY_HPP
 
 #include "DataLoader.hpp"
-#include "IOTypes.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 #include "SaverInfo.hpp"
 
 #include "nlohmann/json.hpp"
@@ -93,7 +93,7 @@ public:
      * @return LoadResult containing loaded data or error
      */
     virtual LoadResult load(std::string const & filepath,
-                            IODataType dataType,
+                            DM_DataType dataType,
                             nlohmann::json const & config) const = 0;
 
     /**
@@ -104,11 +104,11 @@ public:
      * with multiple bodyparts.
      * 
      * @param format Format string (e.g., "binary", "csv")
-     * @param dataType Type of data (e.g., IODataType::Analog)
+     * @param dataType Type of data (e.g., DM_DataType::Analog)
      * @return true if loadBatch() can return multiple objects for this combination
      */
     virtual bool supportsBatchLoading([[maybe_unused]] std::string const & format,
-                                      [[maybe_unused]] IODataType dataType) const {
+                                      [[maybe_unused]] DM_DataType dataType) const {
         return false;// Default: no batch support
     }
 
@@ -128,7 +128,7 @@ public:
      * @return BatchLoadResult containing all loaded data objects
      */
     virtual BatchLoadResult loadBatch(std::string const & filepath,
-                                      IODataType dataType,
+                                      DM_DataType dataType,
                                       nlohmann::json const & config) const {
         // Default implementation: wrap single load in BatchLoadResult
         auto result = load(filepath, dataType, config);
@@ -148,7 +148,7 @@ public:
      * @return LoadResult indicating success/failure (data field unused)
      */
     virtual LoadResult save(std::string const & /*filepath*/,
-                            IODataType /*dataType*/,
+                            DM_DataType /*dataType*/,
                             nlohmann::json const & /*config*/,
                             void const * /*data*/) const {
         return LoadResult("Saving not supported by this loader: " + getLoaderName());
@@ -158,10 +158,10 @@ public:
      * @brief Check if this loader supports the given format and data type
      * 
      * @param format Format string (e.g., "csv", "capnp", "hdf5")
-     * @param dataType Type of data (e.g., IODataType::Line, IODataType::Points)
+     * @param dataType Type of data (e.g., DM_DataType::Line, DM_DataType::Points)
      * @return true if this loader can handle the format/dataType combination
      */
-    virtual bool supportsFormat(std::string const & format, IODataType dataType) const = 0;
+    virtual bool supportsFormat(std::string const & format, DM_DataType dataType) const = 0;
 
     /**
      * @brief Get the name of this loader (for logging/debugging)
@@ -214,7 +214,7 @@ public:
      * @return LoadResult with loaded data or error message
      */
     LoadResult tryLoad(std::string const & format,
-                       IODataType dataType,
+                       DM_DataType dataType,
                        std::string const & filepath,
                        nlohmann::json const & config);
 
@@ -232,7 +232,7 @@ public:
      * @return LoadResult indicating success/failure (data field unused)
      */
     LoadResult trySave(std::string const & format,
-                       IODataType dataType,
+                       DM_DataType dataType,
                        std::string const & filepath,
                        nlohmann::json const & config,
                        void const * data);
@@ -244,7 +244,7 @@ public:
      * @param dataType Type of data
      * @return true if at least one loader supports this combination
      */
-    bool isFormatSupported(std::string const & format, IODataType dataType) const;
+    bool isFormatSupported(std::string const & format, DM_DataType dataType) const;
 
     /**
      * @brief Try to load multiple data objects from a single file using batch loading
@@ -263,7 +263,7 @@ public:
      * @return BatchLoadResult with all loaded data objects or error message
      */
     BatchLoadResult tryLoadBatch(std::string const & format,
-                                 IODataType dataType,
+                                 DM_DataType dataType,
                                  std::string const & filepath,
                                  nlohmann::json const & config);
 
@@ -274,7 +274,7 @@ public:
      * @param dataType Type of data
      * @return true if at least one loader supports batch loading for this combination
      */
-    bool isBatchLoadingSupported(std::string const & format, IODataType dataType) const;
+    bool isBatchLoadingSupported(std::string const & format, DM_DataType dataType) const;
 
     /**
      * @brief Get list of all supported formats for a data type
@@ -282,7 +282,7 @@ public:
      * @param dataType Type of data
      * @return Vector of format strings supported for this data type
      */
-    std::vector<std::string> getSupportedFormats(IODataType dataType) const;
+    std::vector<std::string> getSupportedFormats(DM_DataType dataType) const;
 
     /**
      * @brief Query all registered saver capabilities
@@ -295,7 +295,7 @@ public:
      * @param dataType Only return savers that handle this data type
      * @return Filtered vector of SaverInfo
      */
-    [[nodiscard]] std::vector<SaverInfo> getSupportedSaveFormats(IODataType dataType) const;
+    [[nodiscard]] std::vector<SaverInfo> getSupportedSaveFormats(DM_DataType dataType) const;
 
     /**
      * @brief Get singleton instance

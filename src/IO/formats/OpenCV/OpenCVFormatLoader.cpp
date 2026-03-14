@@ -6,10 +6,10 @@
 #include <iostream>
 
 LoadResult OpenCVFormatLoader::load(std::string const & filepath,
-                                    IODataType dataType,
+                                    DM_DataType dataType,
                                     nlohmann::json const & config) const {
     switch (dataType) {
-        case IODataType::Mask:
+        case DM_DataType::Mask:
             return loadMaskDataImage(filepath, config);
 
         default:
@@ -17,9 +17,9 @@ LoadResult OpenCVFormatLoader::load(std::string const & filepath,
     }
 }
 
-bool OpenCVFormatLoader::supportsFormat(std::string const & format, IODataType dataType) const {
+bool OpenCVFormatLoader::supportsFormat(std::string const & format, DM_DataType dataType) const {
     // Support image format for MaskData
-    if (format == "image" && dataType == IODataType::Mask) {
+    if (format == "image" && dataType == DM_DataType::Mask) {
         return true;
     }
 
@@ -27,10 +27,10 @@ bool OpenCVFormatLoader::supportsFormat(std::string const & format, IODataType d
 }
 
 LoadResult OpenCVFormatLoader::save(std::string const & filepath,
-                                    IODataType dataType,
+                                    DM_DataType dataType,
                                     nlohmann::json const & config,
                                     void const * data) const {
-    if (dataType != IODataType::Mask) {
+    if (dataType != DM_DataType::Mask) {
         return LoadResult("OpenCVFormatLoader only supports saving MaskData");
     }
 
@@ -75,7 +75,7 @@ std::string OpenCVFormatLoader::getLoaderName() const {
 std::vector<SaverInfo> OpenCVFormatLoader::getSaverInfo() const {
     using WhiskerToolbox::Transforms::V2::extractParameterSchema;
     return {
-            {"image", IODataType::Mask, "OpenCV binary image masks (one file per frame)",
+            {"image", DM_DataType::Mask, "OpenCV binary image masks (one file per frame)",
              extractParameterSchema<ImageMaskSaverOptions>()},
     };
 }

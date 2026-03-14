@@ -6,10 +6,10 @@
 #include <iostream>
 
 LoadResult CapnProtoFormatLoader::load(std::string const & filepath,
-                                       IODataType dataType,
+                                       DM_DataType dataType,
                                        nlohmann::json const & config) const {
     switch (dataType) {
-        case IODataType::Line:
+        case DM_DataType::Line:
             return loadLineDataCapnProto(filepath, config);
 
         default:
@@ -17,9 +17,9 @@ LoadResult CapnProtoFormatLoader::load(std::string const & filepath,
     }
 }
 
-bool CapnProtoFormatLoader::supportsFormat(std::string const & format, IODataType dataType) const {
+bool CapnProtoFormatLoader::supportsFormat(std::string const & format, DM_DataType dataType) const {
     // Support capnp and binary formats for LineData
-    if ((format == "capnp" || format == "binary") && dataType == IODataType::Line) {
+    if ((format == "capnp" || format == "binary") && dataType == DM_DataType::Line) {
         return true;
     }
 
@@ -28,10 +28,10 @@ bool CapnProtoFormatLoader::supportsFormat(std::string const & format, IODataTyp
 }
 
 LoadResult CapnProtoFormatLoader::save(std::string const & filepath,
-                                       IODataType dataType,
+                                       DM_DataType dataType,
                                        nlohmann::json const & config,
                                        void const * data) const {
-    if (dataType != IODataType::Line) {
+    if (dataType != DM_DataType::Line) {
         return LoadResult("CapnProtoFormatLoader only supports saving LineData");
     }
 
@@ -69,7 +69,7 @@ std::string CapnProtoFormatLoader::getLoaderName() const {
 std::vector<SaverInfo> CapnProtoFormatLoader::getSaverInfo() const {
     using WhiskerToolbox::Transforms::V2::extractParameterSchema;
     return {
-            {"capnp", IODataType::Line, "CapnProto binary line data",
+            {"capnp", DM_DataType::Line, "CapnProto binary line data",
              extractParameterSchema<BinaryLineSaverOptions>()},
     };
 }

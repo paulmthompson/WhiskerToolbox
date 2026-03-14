@@ -10,12 +10,12 @@
  * handles a specific file format (CSV) for all applicable data types.
  * 
  * Supported data types:
- * - IODataType::Line: Line/whisker data (single or multi-file CSV)
- * - IODataType::Points: Point tracking data (simple CSV or DLC format)
- * - IODataType::Mask: Mask data (RLE-encoded CSV)
- * - IODataType::Analog: Analog time series (single/two column CSV)
- * - IODataType::DigitalEvent: Digital event timestamps (with optional multi-series)
- * - IODataType::DigitalInterval: Digital intervals (start/end column pairs or binary state columns)
+ * - DM_DataType::Line: Line/whisker data (single or multi-file CSV)
+ * - DM_DataType::Points: Point tracking data (simple CSV or DLC format)
+ * - DM_DataType::Mask: Mask data (RLE-encoded CSV)
+ * - DM_DataType::Analog: Analog time series (single/two column CSV)
+ * - DM_DataType::DigitalEvent: Digital event timestamps (with optional multi-series)
+ * - DM_DataType::DigitalInterval: Digital intervals (start/end column pairs or binary state columns)
  * 
  * This loader supports batch loading for:
  * - DigitalEvent CSV with identifier column (returns one series per identifier)
@@ -42,7 +42,7 @@ public:
      * this returns only the first object. Use loadBatch() for all objects.
      */
     LoadResult load(std::string const & filepath,
-                    IODataType dataType,
+                    DM_DataType dataType,
                     nlohmann::json const & config) const override;
 
     /**
@@ -54,7 +54,7 @@ public:
      * - DigitalInterval with csv_layout="binary_state" (multiple columns)
      */
     bool supportsBatchLoading(std::string const & format,
-                              IODataType dataType) const override;
+                              DM_DataType dataType) const override;
 
     /**
      * @brief Load all data objects from a multi-series CSV file
@@ -64,14 +64,14 @@ public:
      * For DigitalInterval with binary_state layout, returns one series per data column.
      */
     BatchLoadResult loadBatch(std::string const & filepath,
-                              IODataType dataType,
+                              DM_DataType dataType,
                               nlohmann::json const & config) const override;
 
     /**
      * @brief Save data to CSV file
      */
     LoadResult save(std::string const & filepath,
-                    IODataType dataType,
+                    DM_DataType dataType,
                     nlohmann::json const & config,
                     void const * data) const override;
 
@@ -81,7 +81,7 @@ public:
      * Supports format "csv" for Line, Points, Mask, Analog, DigitalEvent, DigitalInterval
      * Supports format "dlc_csv" for Points (DLC/DeepLabCut format - legacy compatibility)
      */
-    bool supportsFormat(std::string const & format, IODataType dataType) const override;
+    bool supportsFormat(std::string const & format, DM_DataType dataType) const override;
 
     /**
      * @brief Get loader name for logging
@@ -98,45 +98,45 @@ private:
      * @brief Load LineData from CSV (single or multi-file)
      */
     static LoadResult loadLineDataCSV(std::string const & filepath,
-                               nlohmann::json const & config) ;
+                                      nlohmann::json const & config);
 
     /**
      * @brief Load PointData from simple CSV format
      */
     static LoadResult loadPointDataCSV(std::string const & filepath,
-                                nlohmann::json const & config) ;
+                                       nlohmann::json const & config);
 
     /**
      * @brief Load PointData from DLC format CSV
      */
     static LoadResult loadPointDataDLC(std::string const & filepath,
-                                nlohmann::json const & config) ;
+                                       nlohmann::json const & config);
 
     /**
      * @brief Load all bodyparts from DLC format CSV
      * @return BatchLoadResult with one LoadResult per bodypart
      */
     static BatchLoadResult loadPointDataDLCBatch(std::string const & filepath,
-                                          nlohmann::json const & config) ;
+                                                 nlohmann::json const & config);
 
     /**
      * @brief Load AnalogTimeSeries from CSV
      */
     static LoadResult loadAnalogCSV(std::string const & filepath,
-                             nlohmann::json const & config) ;
+                                    nlohmann::json const & config);
 
     /**
      * @brief Load DigitalEventSeries from CSV (single series)
      */
     static LoadResult loadDigitalEventCSV(std::string const & filepath,
-                                   nlohmann::json const & config) ;
+                                          nlohmann::json const & config);
 
     /**
      * @brief Load all DigitalEventSeries from CSV with identifiers
      * @return BatchLoadResult with one LoadResult per unique identifier
      */
     static BatchLoadResult loadDigitalEventCSVBatch(std::string const & filepath,
-                                             nlohmann::json const & config) ;
+                                                    nlohmann::json const & config);
 
     /**
      * @brief Load DigitalIntervalSeries from CSV
@@ -148,7 +148,7 @@ private:
      *   contiguous "on" regions.
      */
     static LoadResult loadDigitalIntervalCSV(std::string const & filepath,
-                                      nlohmann::json const & config) ;
+                                             nlohmann::json const & config);
 
     /**
      * @brief Load DigitalIntervalSeries from binary state CSV layout
@@ -165,7 +165,7 @@ private:
      * - binary_threshold: Values >= this are "on" (default: 0.5)
      */
     static LoadResult loadDigitalIntervalBinaryState(std::string const & filepath,
-                                              nlohmann::json const & config) ;
+                                                     nlohmann::json const & config);
 
     /**
      * @brief Load all columns from binary state CSV as DigitalIntervalSeries
@@ -174,55 +174,55 @@ private:
      * Each series is named using the column header from the file.
      */
     static BatchLoadResult loadDigitalIntervalBinaryStateBatch(std::string const & filepath,
-                                                        nlohmann::json const & config) ;
+                                                               nlohmann::json const & config);
 
     /**
      * @brief Save LineData to CSV
      */
     static LoadResult saveLineDataCSV(std::string const & filepath,
-                               nlohmann::json const & config,
-                               void const * data) ;
+                                      nlohmann::json const & config,
+                                      void const * data);
 
     /**
      * @brief Save PointData to CSV
      */
     static LoadResult savePointDataCSV(std::string const & filepath,
-                                nlohmann::json const & config,
-                                void const * data) ;
+                                       nlohmann::json const & config,
+                                       void const * data);
 
     /**
      * @brief Save AnalogTimeSeries to CSV
      */
     static LoadResult saveAnalogCSV(std::string const & filepath,
-                             nlohmann::json const & config,
-                             void const * data) ;
+                                    nlohmann::json const & config,
+                                    void const * data);
 
     /**
      * @brief Save DigitalEventSeries to CSV
      */
     static LoadResult saveDigitalEventCSV(std::string const & filepath,
-                                   nlohmann::json const & config,
-                                   void const * data) ;
+                                          nlohmann::json const & config,
+                                          void const * data);
 
     /**
      * @brief Save DigitalIntervalSeries to CSV
      */
     static LoadResult saveDigitalIntervalCSV(std::string const & filepath,
-                                      nlohmann::json const & config,
-                                      void const * data) ;
+                                             nlohmann::json const & config,
+                                             void const * data);
 
     /**
      * @brief Load MaskData from CSV with RLE encoding
      */
     static LoadResult loadMaskDataCSV(std::string const & filepath,
-                               nlohmann::json const & config) ;
+                                      nlohmann::json const & config);
 
     /**
      * @brief Save MaskData to CSV with RLE encoding
      */
     static LoadResult saveMaskDataCSV(std::string const & filepath,
-                               nlohmann::json const & config,
-                               void const * data) ;
+                                      nlohmann::json const & config,
+                                      void const * data);
 };
 
 #endif// CSV_FORMAT_LOADER_HPP
