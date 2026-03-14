@@ -42,9 +42,10 @@ DataTypeVariant generateCircleMask(CircleMaskParams const & params) {
         throw std::invalid_argument("CircleMask: num_frames must be > 0");
     }
 
-    auto const pixels = generate_ellipse_pixels(
+    auto pixels = generate_ellipse_pixels(
             params.center_x, params.center_y, params.radius, params.radius);
-    Mask2D const mask(pixels);
+    pixels = clipPixelsToImage(std::move(pixels), params.image_width, params.image_height);
+    Mask2D const mask(std::move(pixels));
 
     auto mask_data = std::make_shared<MaskData>();
     mask_data->setImageSize(ImageSize{params.image_width, params.image_height});

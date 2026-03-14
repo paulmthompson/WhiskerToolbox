@@ -59,3 +59,23 @@ TEST_CASE("RectangleMask rejects invalid parameters", "[RectangleMask]") {
     REQUIRE_FALSE(reg.generate("RectangleMask", R"({"image_width": 200, "image_height": 200, "center_x": 50, "center_y": 50, "width": -5, "height": 10, "num_frames": 1})").has_value());
     REQUIRE_FALSE(reg.generate("RectangleMask", R"({"image_width": 200, "image_height": 200, "center_x": 50, "center_y": 50, "width": 10, "height": -5, "num_frames": 1})").has_value());
 }
+
+TEST_CASE("RectangleMask clips pixels at image boundary", "[RectangleMask]") {
+    // Rectangle centered well inside: no clipping
+    auto md_interior = runRectangleMask(R"({"image_width": 300, "image_height": 300, "center_x": 150, "center_y": 150, "width": 40, "height": 20, "num_frames": 1})");
+    auto masks_interior = getMasksAtTime(*md_interior, 0);
+    REQUIRE(!masks_interior.empty());
+    auto const interior_count = masks_interior[0].size();
+
+    // Rectangle extending past the bottom-right corner
+    auto md_edge = runRectangleMask(R"({"image_width": 300, "image_height": 300, "center_x": 290, "center_y": 290, "width": 40, "height": 20, "num_frames": 1})");
+    auto masks_edge = getMasksAtTime(*md_edge, 0);
+    REQUIRE(!masks_edge.empty());
+    REQUIRE(masks_edge[0].size() < interior_count);
+
+    // Verify no pixel exceeds image bounds
+    for (auto const & p: masks_edge[0]) {
+        REQUIRE(p.x < 300);
+        REQUIRE(p.y < 300);
+    }
+}

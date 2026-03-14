@@ -13,6 +13,28 @@ static initialization time via `RegisterGenerator<Params>`.
 All generators produce a static shape repeated identically at every frame.
 None require `GeneratorContext` (no DataManager access needed).
 
+### Image-Bounds Clipping
+
+All mask generators clip their output pixels to the image bounds
+`[0, image_width) × [0, image_height)` using the shared `clipPixelsToImage()`
+utility from `CoreGeometry/masks.hpp`. Shapes placed near image edges will
+have reduced pixel counts — only the portion within the image is retained.
+This is the correct behavior: a circle half off-screen should have
+approximately half the expected area.
+
+### Shared Rasterization Helpers
+
+Mask generators delegate pixel generation to shared free functions in
+`CoreGeometry/masks.hpp`:
+
+- `generate_ellipse_pixels(center_x, center_y, radius_x, radius_y)` — axis-aligned ellipse/circle
+- `generate_rotated_ellipse_pixels(center_x, center_y, semi_major, semi_minor, angle_rad)` — rotated ellipse
+- `generate_rectangle_pixels(center_x, center_y, width, height)` — filled rectangle
+- `clipPixelsToImage(pixels, image_width, image_height)` — filter out-of-bounds pixels
+
+These functions are also intended for reuse by the planned MovingMask generator
+(Milestone 5b-ii), which re-rasterizes the shape at each frame position.
+
 ---
 
 ## Mask Generators
@@ -25,7 +47,8 @@ mask footprint. An `ImageSize` is set on the output `MaskData`.
 
 **Registration name**: `"CircleMask"` · **Category**: Spatial
 
-Generates a circular mask by calling `generate_ellipse_pixels()` with equal radii.
+Generates a circular mask by calling `generate_ellipse_pixels()` with equal radii,
+then clipping to image bounds via `clipPixelsToImage()`.
 The same mask is repeated at every frame.
 
 | Parameter | Type | Required | Default | Constraint |
@@ -49,8 +72,8 @@ The same mask is repeated at every frame.
 
 **Registration name**: `"RectangleMask"` · **Category**: Spatial
 
-Generates a rectangular mask by scanning all integer pixel coordinates within
-`[center - half_dim, center + half_dim]` and clamping to image bounds.
+Generates a rectangular mask by calling `generate_rectangle_pixels()` and
+clipping to image bounds via `clipPixelsToImage()`.
 
 | Parameter | Type | Required | Default | Constraint |
 |-----------|------|----------|---------|------------|
@@ -76,8 +99,9 @@ due to integer rounding of half-dimensions).
 **Registration name**: `"EllipseMask"` · **Category**: Spatial
 
 Generates an elliptical mask. For axis-aligned ellipses (`angle` omitted or 0),
-delegates to `generate_ellipse_pixels()`. For rotated ellipses, performs a
-bounding-box scan with inverse rotation to test pixel inclusion.
+delegates to `generate_ellipse_pixels()`. For rotated ellipses, delegates to
+`generate_rotated_ellipse_pixels()`. In both cases, the result is clipped
+to image bounds via `clipPixelsToImage()`.
 
 | Parameter | Type | Required | Default | Constraint |
 |-----------|------|----------|---------|------------|

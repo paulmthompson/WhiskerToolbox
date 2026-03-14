@@ -10,23 +10,25 @@
 class Mask2D {
 public:
     Mask2D() = default;
-    
+
     /**
      * @brief Construct a Mask2D from a vector of Point2D<uint32_t>.
      *
      * @pre None.
      * @post The mask contains the provided points.
      */
-    explicit Mask2D(std::vector<Point2D<uint32_t>> points) : points_(std::move(points)) {}
-    
+    explicit Mask2D(std::vector<Point2D<uint32_t>> points)
+        : points_(std::move(points)) {}
+
     /**
      * @brief Construct a Mask2D from an initializer list of Point2D<uint32_t>.
      *
      * @pre None.
      * @post The mask contains the provided points in the same order.
      */
-    Mask2D(std::initializer_list<Point2D<uint32_t>> points) : points_(points) {}
-    
+    Mask2D(std::initializer_list<Point2D<uint32_t>> points)
+        : points_(points) {}
+
     /**
      * @brief Construct a Mask2D from separate x and y coordinate vectors (uint32_t).
      *
@@ -34,7 +36,7 @@ public:
      * @post The mask contains points created from the x and y coordinates.
      */
     Mask2D(std::vector<uint32_t> const & x, std::vector<uint32_t> const & y);
-    
+
     /**
      * @brief Construct a Mask2D from separate x and y coordinate vectors (float).
      *
@@ -68,7 +70,7 @@ public:
     Point2D<uint32_t> back() const {
         return points_.back();
     }
-    
+
     Point2D<uint32_t> operator[](size_t index) const {
         return points_[index];
     }
@@ -80,11 +82,11 @@ public:
     std::vector<Point2D<uint32_t>>::iterator end() {
         return points_.end();
     }
-    
+
     std::vector<Point2D<uint32_t>>::const_iterator begin() const {
         return points_.begin();
     }
-    
+
     std::vector<Point2D<uint32_t>>::const_iterator end() const {
         return points_.end();
     }
@@ -147,6 +149,59 @@ std::vector<Point2D<uint32_t>> get_mask_outline(Mask2D const & mask);
 std::vector<Point2D<uint32_t>> generate_ellipse_pixels(float center_x, float center_y, float radius_x, float radius_y);
 
 /**
+ * @brief Generate mask pixels within a rotated elliptical region
+ *
+ * Generates all pixels within an ellipse defined by center, semi-axes, and rotation angle.
+ * Uses bounding-box scanning with inverse rotation to test pixel membership.
+ *
+ * @param center_x X coordinate of the ellipse center
+ * @param center_y Y coordinate of the ellipse center
+ * @param semi_major Semi-major axis length
+ * @param semi_minor Semi-minor axis length
+ * @param angle_rad Rotation angle in radians
+ * @return Vector of Point2D containing all pixels within the rotated ellipse
+ *
+ * @note Only returns pixels with non-negative coordinates
+ */
+std::vector<Point2D<uint32_t>> generate_rotated_ellipse_pixels(
+        float center_x, float center_y,
+        float semi_major, float semi_minor,
+        float angle_rad);
+
+/**
+ * @brief Generate mask pixels within a rectangular region
+ *
+ * Generates all integer-coordinate pixels within a rectangle defined by center and dimensions.
+ *
+ * @param center_x X coordinate of the rectangle center
+ * @param center_y Y coordinate of the rectangle center
+ * @param width Width of the rectangle
+ * @param height Height of the rectangle
+ * @return Vector of Point2D containing all pixels within the rectangle
+ *
+ * @note Only returns pixels with non-negative coordinates
+ */
+std::vector<Point2D<uint32_t>> generate_rectangle_pixels(
+        float center_x, float center_y,
+        float width, float height);
+
+/**
+ * @brief Remove pixels that fall outside image bounds
+ *
+ * Filters a pixel vector to keep only pixels within [0, image_width) x [0, image_height).
+ * Since pixel coordinates are unsigned, only the upper bounds need checking.
+ *
+ * @param pixels The pixels to clip (taken by value for move efficiency)
+ * @param image_width Width of the image in pixels
+ * @param image_height Height of the image in pixels
+ * @return Filtered vector containing only in-bounds pixels
+ */
+std::vector<Point2D<uint32_t>> clipPixelsToImage(
+        std::vector<Point2D<uint32_t>> pixels,
+        int image_width,
+        int image_height);
+
+/**
  * @brief Combine two masks using union operation (no duplicate pixels)
  *
  * Takes two masks and returns a new mask containing all pixels from both masks,
@@ -186,7 +241,6 @@ Mask2D subtract_masks(Mask2D const & mask1, Mask2D const & mask2);
  * @return New mask containing only the outline pixels
  */
 Mask2D generate_outline_mask(Mask2D const & mask, int thickness = 1, uint32_t image_width = UINT32_MAX, uint32_t image_height = UINT32_MAX);
-
 
 
 std::vector<Point2D<uint32_t>> extract_line_pixels(

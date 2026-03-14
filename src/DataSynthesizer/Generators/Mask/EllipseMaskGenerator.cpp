@@ -13,15 +13,12 @@
 #include "Masks/Mask_Data.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"
 
-#include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <cstdint>
 #include <memory>
 #include <numbers>
 #include <optional>
 #include <stdexcept>
-#include <vector>
 
 namespace {
 
@@ -58,39 +55,15 @@ DataTypeVariant generateEllipseMask(EllipseMaskParams const & params) {
     std::vector<Point2D<uint32_t>> pixels;
 
     if (std::abs(angle_rad) < 1e-6f) {
-        // Axis-aligned: use the existing utility
         pixels = generate_ellipse_pixels(
                 params.center_x, params.center_y, params.semi_major, params.semi_minor);
     } else {
-        // Rotated ellipse: scan the bounding box and test membership after inverse rotation
-        float const cos_a = std::cos(angle_rad);
-        float const sin_a = std::sin(angle_rad);
-
-        float const max_radius = std::max(params.semi_major, params.semi_minor);
-        auto const x_min = static_cast<int>(std::max(0.0f, params.center_x - max_radius));
-        auto const x_max = static_cast<int>(params.center_x + max_radius);
-        auto const y_min = static_cast<int>(std::max(0.0f, params.center_y - max_radius));
-        auto const y_max = static_cast<int>(params.center_y + max_radius);
-
-        float const a2 = params.semi_major * params.semi_major;
-        float const b2 = params.semi_minor * params.semi_minor;
-
-        for (int y = y_min; y <= y_max; ++y) {
-            for (int x = x_min; x <= x_max; ++x) {
-                float const dx = static_cast<float>(x) - params.center_x;
-                float const dy = static_cast<float>(y) - params.center_y;
-
-                // Rotate back to ellipse-local coordinates
-                float const lx = dx * cos_a + dy * sin_a;
-                float const ly = -dx * sin_a + dy * cos_a;
-
-                if ((lx * lx) / a2 + (ly * ly) / b2 <= 1.0f) {
-                    pixels.emplace_back(static_cast<uint32_t>(x), static_cast<uint32_t>(y));
-                }
-            }
-        }
+        pixels = generate_rotated_ellipse_pixels(
+                params.center_x, params.center_y,
+                params.semi_major, params.semi_minor, angle_rad);
     }
 
+    pixels = clipPixelsToImage(std::move(pixels), params.image_width, params.image_height);
     Mask2D const mask(std::move(pixels));
 
     auto mask_data = std::make_shared<MaskData>();

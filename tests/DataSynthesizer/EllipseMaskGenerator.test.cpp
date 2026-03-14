@@ -80,3 +80,35 @@ TEST_CASE("EllipseMask rejects invalid parameters", "[EllipseMask]") {
     REQUIRE_FALSE(reg.generate("EllipseMask", R"({"image_width": 300, "image_height": 300, "center_x": 100, "center_y": 100, "semi_major": -5, "semi_minor": 10, "num_frames": 1})").has_value());
     REQUIRE_FALSE(reg.generate("EllipseMask", R"({"image_width": 300, "image_height": 300, "center_x": 100, "center_y": 100, "semi_major": 20, "semi_minor": -5, "num_frames": 1})").has_value());
 }
+
+TEST_CASE("EllipseMask clips pixels at image boundary", "[EllipseMask]") {
+    // Ellipse centered well inside: no clipping
+    auto md_interior = runEllipseMask(R"({"image_width": 500, "image_height": 500, "center_x": 250, "center_y": 250, "semi_major": 30, "semi_minor": 15, "num_frames": 1})");
+    auto masks_interior = getMasksAtTime(*md_interior, 0);
+    REQUIRE(!masks_interior.empty());
+    auto const interior_count = masks_interior[0].size();
+
+    // Ellipse centered near right edge: should have fewer pixels
+    auto md_edge = runEllipseMask(R"({"image_width": 500, "image_height": 500, "center_x": 490, "center_y": 250, "semi_major": 30, "semi_minor": 15, "num_frames": 1})");
+    auto masks_edge = getMasksAtTime(*md_edge, 0);
+    REQUIRE(!masks_edge.empty());
+    REQUIRE(masks_edge[0].size() < interior_count);
+
+    // Verify no pixel exceeds image bounds
+    for (auto const & p: masks_edge[0]) {
+        REQUIRE(p.x < 500);
+        REQUIRE(p.y < 500);
+    }
+}
+
+TEST_CASE("EllipseMask rotated clips pixels at image boundary", "[EllipseMask]") {
+    // Rotated ellipse near edge
+    auto md = runEllipseMask(R"({"image_width": 200, "image_height": 200, "center_x": 190, "center_y": 190, "semi_major": 30, "semi_minor": 15, "angle": 45, "num_frames": 1})");
+    auto masks = getMasksAtTime(*md, 0);
+    REQUIRE(!masks.empty());
+
+    for (auto const & p: masks[0]) {
+        REQUIRE(p.x < 200);
+        REQUIRE(p.y < 200);
+    }
+}

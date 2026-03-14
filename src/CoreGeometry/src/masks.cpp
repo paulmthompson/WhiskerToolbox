@@ -9,7 +9,7 @@ Mask2D::Mask2D(std::vector<uint32_t> const & x, std::vector<uint32_t> const & y)
     points_.reserve(x.size());// Reserve space to avoid reallocations
 
     for (std::size_t i = 0; i < x.size(); i++) {
-        points_.push_back({x[i], y[i]});
+        points_.emplace_back(x[i], y[i]);
     }
 }
 
@@ -20,7 +20,7 @@ Mask2D::Mask2D(std::vector<float> const & x, std::vector<float> const & y) {
         // Round coordinates to nearest integers and ensure non-negative
         uint32_t const rounded_x = static_cast<uint32_t>(std::max(0.0f, std::round(x[i])));
         uint32_t const rounded_y = static_cast<uint32_t>(std::max(0.0f, std::round(y[i])));
-        points_.push_back({rounded_x, rounded_y});
+        points_.emplace_back(rounded_x, rounded_y);
     }
 }
 
@@ -102,7 +102,7 @@ std::vector<Point2D<uint32_t>> get_mask_outline(Mask2D const & mask) {
     extremal_points.reserve(extremal_points_set.size());
 
     for (auto const & [x, y]: extremal_points_set) {
-        extremal_points.push_back({x, y});
+        extremal_points.emplace_back(x, y);
     }
 
     if (extremal_points.size() < 3) {
@@ -152,13 +152,89 @@ std::vector<Point2D<uint32_t>> generate_ellipse_pixels(float center_x, float cen
 
                 // Only add pixels that are within valid bounds (non-negative)
                 if (x >= 0 && y >= 0) {
-                    ellipse_pixels.push_back({static_cast<uint32_t>(x), static_cast<uint32_t>(y)});
+                    ellipse_pixels.emplace_back(static_cast<uint32_t>(x), static_cast<uint32_t>(y));
                 }
             }
         }
     }
 
     return ellipse_pixels;
+}
+
+std::vector<Point2D<uint32_t>> generate_rotated_ellipse_pixels(
+        float center_x, float center_y,
+        float semi_major, float semi_minor,
+        float angle_rad) {
+
+    float const cos_a = std::cos(angle_rad);
+    float const sin_a = std::sin(angle_rad);
+
+    float const max_radius = std::max(semi_major, semi_minor);
+    auto const x_min = static_cast<int>(std::max(0.0f, center_x - max_radius));
+    auto const x_max = static_cast<int>(center_x + max_radius);
+    auto const y_min = static_cast<int>(std::max(0.0f, center_y - max_radius));
+    auto const y_max = static_cast<int>(center_y + max_radius);
+
+    float const a2 = semi_major * semi_major;
+    float const b2 = semi_minor * semi_minor;
+
+    std::vector<Point2D<uint32_t>> pixels;
+
+    for (int y = y_min; y <= y_max; ++y) {
+        for (int x = x_min; x <= x_max; ++x) {
+            float const dx = static_cast<float>(x) - center_x;
+            float const dy = static_cast<float>(y) - center_y;
+
+            // Rotate back to ellipse-local coordinates
+            float const lx = dx * cos_a + dy * sin_a;
+            float const ly = -dx * sin_a + dy * cos_a;
+
+            if ((lx * lx) / a2 + (ly * ly) / b2 <= 1.0f) {
+                pixels.emplace_back(static_cast<uint32_t>(x), static_cast<uint32_t>(y));
+            }
+        }
+    }
+
+    return pixels;
+}
+
+std::vector<Point2D<uint32_t>> generate_rectangle_pixels(
+        float center_x, float center_y,
+        float width, float height) {
+
+    float const half_w = width / 2.0f;
+    float const half_h = height / 2.0f;
+
+    auto const x_min = static_cast<int>(std::max(0.0f, center_x - half_w));
+    auto const x_max = static_cast<int>(center_x + half_w);
+    auto const y_min = static_cast<int>(std::max(0.0f, center_y - half_h));
+    auto const y_max = static_cast<int>(center_y + half_h);
+
+    std::vector<Point2D<uint32_t>> pixels;
+    pixels.reserve(static_cast<size_t>(x_max - x_min + 1) * static_cast<size_t>(y_max - y_min + 1));
+
+    for (int y = y_min; y <= y_max; ++y) {
+        for (int x = x_min; x <= x_max; ++x) {
+            pixels.emplace_back(static_cast<uint32_t>(x), static_cast<uint32_t>(y));
+        }
+    }
+
+    return pixels;
+}
+
+std::vector<Point2D<uint32_t>> clipPixelsToImage(
+        std::vector<Point2D<uint32_t>> pixels,
+        int image_width,
+        int image_height) {
+
+    auto const w = static_cast<uint32_t>(image_width);
+    auto const h = static_cast<uint32_t>(image_height);
+
+    std::erase_if(pixels, [w, h](Point2D<uint32_t> const & p) {
+        return p.x >= w || p.y >= h;
+    });
+
+    return pixels;
 }
 
 Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2) {
@@ -290,7 +366,7 @@ std::vector<Point2D<uint32_t>> extract_line_pixels(
     for (size_t row = 0; row < static_cast<size_t>(height); ++row) {
         for (size_t col = 0; col < static_cast<size_t>(width); ++col) {
             if (binary_img[row * static_cast<size_t>(width) + col] > 0) {
-                line_pixels.push_back({static_cast<uint32_t>(col), static_cast<uint32_t>(row)});
+                line_pixels.emplace_back(static_cast<uint32_t>(col), static_cast<uint32_t>(row));
             }
         }
     }

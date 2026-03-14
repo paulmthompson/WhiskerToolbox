@@ -13,12 +13,9 @@
 #include "Masks/Mask_Data.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"
 
-#include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <memory>
 #include <stdexcept>
-#include <vector>
 
 namespace {
 
@@ -49,22 +46,9 @@ DataTypeVariant generateRectangleMask(RectangleMaskParams const & params) {
         throw std::invalid_argument("RectangleMask: num_frames must be > 0");
     }
 
-    float const half_w = params.width / 2.0f;
-    float const half_h = params.height / 2.0f;
-
-    auto const x_min = static_cast<int>(std::max(0.0f, params.center_x - half_w));
-    auto const x_max = static_cast<int>(std::max(0.0f, params.center_x + half_w));
-    auto const y_min = static_cast<int>(std::max(0.0f, params.center_y - half_h));
-    auto const y_max = static_cast<int>(std::max(0.0f, params.center_y + half_h));
-
-    std::vector<Point2D<uint32_t>> pixels;
-    pixels.reserve(static_cast<size_t>((x_max - x_min + 1)) * static_cast<size_t>((y_max - y_min + 1)));
-
-    for (int y = y_min; y <= y_max; ++y) {
-        for (int x = x_min; x <= x_max; ++x) {
-            pixels.emplace_back(static_cast<uint32_t>(x), static_cast<uint32_t>(y));
-        }
-    }
+    auto pixels = generate_rectangle_pixels(
+            params.center_x, params.center_y, params.width, params.height);
+    pixels = clipPixelsToImage(std::move(pixels), params.image_width, params.image_height);
     Mask2D const mask(std::move(pixels));
 
     auto mask_data = std::make_shared<MaskData>();
