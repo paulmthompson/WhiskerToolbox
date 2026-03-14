@@ -11,6 +11,8 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "DataSynthesizer/GeneratorRegistry.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -29,6 +31,10 @@ std::size_t getSampleCount(DataTypeVariant const & data) {
         using T = std::decay_t<decltype(*ptr)>;
         if constexpr (std::is_same_v<T, AnalogTimeSeries>) {
             return ptr->getNumSamples();
+        } else if constexpr (std::is_same_v<T, DigitalEventSeries>) {
+            return ptr->size();
+        } else if constexpr (std::is_same_v<T, DigitalIntervalSeries>) {
+            return ptr->size();
         }
         return 0;
     },

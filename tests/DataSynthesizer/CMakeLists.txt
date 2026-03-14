@@ -15,6 +15,11 @@ add_executable(test_DataSynthesizer
     TriangleWaveGenerator.test.cpp
     GaussianNoiseGenerator.test.cpp
     UniformNoiseGenerator.test.cpp
+    PoissonEventsGenerator.test.cpp
+    RegularEventsGenerator.test.cpp
+    BurstEventsGenerator.test.cpp
+    RegularIntervalsGenerator.test.cpp
+    RandomIntervalsGenerator.test.cpp
 )
 
 target_include_directories(test_DataSynthesizer PRIVATE
@@ -24,6 +29,7 @@ target_include_directories(test_DataSynthesizer PRIVATE
 target_link_libraries(test_DataSynthesizer PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(test_DataSynthesizer PRIVATE DataManager)
 target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(test_DataSynthesizer PRIVATE WhiskerToolbox::DigitalTimeSeries)
 
 # Force whole-archive linking for DataSynthesizer to ensure static generator registration
 # (each generator .cpp has a file-scope RAII object that registers into GeneratorRegistry,

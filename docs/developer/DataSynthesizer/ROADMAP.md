@@ -9,7 +9,7 @@
 | **2b** — State & AutoParamWidget Integration | ✅ Complete | 2026-03-12 |
 | **2c** — OpenGL Signal Preview | ✅ Complete | 2026-03-12 |
 | **3** — More AnalogTimeSeries Generators | 🔲 Not started | — |
-| **4** — DigitalEventSeries & DigitalIntervalSeries Generators | 🔲 Not started | — |
+| **4** — DigitalEventSeries & DigitalIntervalSeries Generators | � Partial | 2026-03-14 |
 | **5** — Spatial Data Generators | 🔲 Not started | — |
 | **6** — Multi-Signal Generation & Correlation | 🔲 Not started | — |
 | **7** — Pipeline & Fuzz Testing Integration | 🔲 Not started | — |
@@ -133,18 +133,25 @@ Each generator is a self-contained `.cpp`, self-registering, with unit tests.
 
 **Goal**: Extend synthesis to event/interval data types.
 
+#### Completed (2026-03-14)
+
 | Generator | Output Type | Params | Notes |
 |-----------|------------|--------|-------|
 | **PoissonEvents** | `DigitalEventSeries` | `{num_samples, lambda, seed}` | Homogeneous Poisson process. |
-| **InhomogeneousPoissonEvents** | `DigitalEventSeries` | `{num_samples, rate_generator, seed}` | `rate_generator` is a nested generator spec (e.g., a SineWave descriptor) that produces λ(t). |
 | **RegularEvents** | `DigitalEventSeries` | `{num_samples, interval, jitter_stddev, seed}` | Evenly spaced with optional Gaussian jitter. |
 | **BurstEvents** | `DigitalEventSeries` | `{num_samples, burst_rate, within_burst_rate, burst_duration, seed}` | Clustered event patterns. |
 | **RegularIntervals** | `DigitalIntervalSeries` | `{num_samples, on_duration, off_duration, start_offset}` | Periodic on/off. |
 | **RandomIntervals** | `DigitalIntervalSeries` | `{num_samples, mean_duration, mean_gap, seed}` | Exponentially distributed durations and gaps. |
 
-**Design note — Nested generator specs**: The `InhomogeneousPoissonEvents` generator introduces the concept of a generator that takes another generator's output as input. The params struct includes a `rate_generator` field which is itself a `{generator_name, parameters}` descriptor. The implementation generates the rate signal first (as a temporary `AnalogTimeSeries`), then uses it to drive the Poisson process. This pattern generalizes to any generator that needs a time-varying input.
+The `SynthesizeData` command was updated to extract sample counts from `DigitalEventSeries` and `DigitalIntervalSeries` via `->size()`. CMake links `WhiskerToolbox::DigitalTimeSeries`.
 
-**Milestone 4 exit criteria**: Event/interval generators work via command, appear in GUI, and the nested-generator pattern is validated for `InhomogeneousPoissonEvents`.
+#### Deferred to Future Phase
+
+| Generator | Output Type | Params | Notes |
+|-----------|------------|--------|-------|
+| **InhomogeneousPoissonEvents** | `DigitalEventSeries` | `{num_samples, rate_generator, seed}` | `rate_generator` is a nested generator spec (e.g., a SineWave descriptor) that produces λ(t). Requires nested generator spec pattern. |
+
+**Design note — Nested generator specs**: The `InhomogeneousPoissonEvents` generator introduces the concept of a generator that takes another generator's output as input. The params struct includes a `rate_generator` field which is itself a `{generator_name, parameters}` descriptor. The implementation generates the rate signal first (as a temporary `AnalogTimeSeries`), then uses it to drive the Poisson process. This pattern generalizes to any generator that needs a time-varying input. This will be expanded in a future phase.
 
 ---
 
@@ -324,13 +331,20 @@ src/
 │   ├── GeneratorRegistry.cpp
 │   ├── GeneratorTypes.hpp
 │   ├── Registration.hpp
-│   └── Generators/
-│       └── Analog/
-│           ├── SineWaveGenerator.cpp
-│           ├── SquareWaveGenerator.cpp
-│           ├── TriangleWaveGenerator.cpp
-│           ├── GaussianNoiseGenerator.cpp
-│           └── UniformNoiseGenerator.cpp
+│  ├─ Generators/
+│  │  ├─ Analog/
+│  │  │  ├─ SineWaveGenerator.cpp
+│  │  │  ├─ SquareWaveGenerator.cpp
+│  │  │  ├─ TriangleWaveGenerator.cpp
+│  │  │  ├─ GaussianNoiseGenerator.cpp
+│  │  │  └─ UniformNoiseGenerator.cpp
+│  │  ├─ DigitalEvent/
+│  │  │  ├─ PoissonEventsGenerator.cpp
+│  │  │  ├─ RegularEventsGenerator.cpp
+│  │  │  └─ BurstEventsGenerator.cpp
+│  │  └─ DigitalInterval/
+│  │     ├─ RegularIntervalsGenerator.cpp
+│  │     └─ RandomIntervalsGenerator.cpp
 ├── Commands/                                 # ✅ Milestone 1 (complete)
 │   ├── SynthesizeData.hpp
 │   └── SynthesizeData.cpp
@@ -360,7 +374,12 @@ tests/
     ├── TriangleWaveGenerator.test.cpp
     ├── GaussianNoiseGenerator.test.cpp
     ├── UniformNoiseGenerator.test.cpp
-    └── SynthesizeDataCommand.test.cpp
+    ├── SynthesizeDataCommand.test.cpp
+    ├── PoissonEventsGenerator.test.cpp
+    ├── RegularEventsGenerator.test.cpp
+    ├── BurstEventsGenerator.test.cpp
+    ├── RegularIntervalsGenerator.test.cpp
+    └── RandomIntervalsGenerator.test.cpp
 
 docs/
 └── developer/
@@ -369,7 +388,9 @@ docs/
         ├── GeneratorRegistry.qmd   # ✅ Milestone 1
         ├── Widget.qmd              # ✅ Milestone 2
         └── Generators/
-            └── Analog.qmd         # ✅ Milestone 1
+            ├── Analog.qmd          # ✅ Milestone 1
+            ├── DigitalEvent.qmd    # ✅ Milestone 4
+            └── DigitalInterval.qmd # ✅ Milestone 4
 ```
 
 ## Key Design Decisions

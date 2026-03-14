@@ -10,6 +10,11 @@ add_library(DataSynthesizer STATIC
     Generators/Analog/TriangleWaveGenerator.cpp
     Generators/Analog/GaussianNoiseGenerator.cpp
     Generators/Analog/UniformNoiseGenerator.cpp
+    Generators/DigitalEvent/PoissonEventsGenerator.cpp
+    Generators/DigitalEvent/RegularEventsGenerator.cpp
+    Generators/DigitalEvent/BurstEventsGenerator.cpp
+    Generators/DigitalInterval/RegularIntervalsGenerator.cpp
+    Generators/DigitalInterval/RandomIntervalsGenerator.cpp
 )
 
 add_library(WhiskerToolbox::DataSynthesizer ALIAS DataSynthesizer)
@@ -29,7 +34,7 @@ target_link_libraries(DataSynthesizer PUBLIC WhiskerToolbox::ParameterSchema)
 target_link_libraries(DataSynthesizer PUBLIC reflectcpp::reflectcpp)
 
 target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::AnalogTimeSeries)
-#target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::DigitalTimeSeries)
 #target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::PointData)
 #target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::LineData)
 #target_link_libraries(DataSynthesizer PRIVATE WhiskerToolbox::MaskData)

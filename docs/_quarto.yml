@@ -84,6 +84,8 @@ website:
                 - section: "Generators"
                   contents:
                     - developer/DataSynthesizer/Generators/Analog.qmd
+                    - developer/DataSynthesizer/Generators/DigitalEvent.qmd
+                    - developer/DataSynthesizer/Generators/DigitalInterval.qmd
         - section: "Data Inspectors"
           contents:
             - developer/ui/data_inspectors/tensor_inspector.qmd

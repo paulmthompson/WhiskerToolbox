@@ -1,0 +1,86 @@
+---
+title: "Digital Event Generators"
+---
+
+## Overview
+
+Milestone 4 adds three `DigitalEventSeries` generators to the DataSynthesizer registry.
+Each generator is a self-contained `.cpp` file under
+`src/DataSynthesizer/Generators/DigitalEvent/` that self-registers at static initialization
+time via `RegisterGenerator<Params>`.
+
+All generators produce an `std::shared_ptr<DigitalEventSeries>` wrapped in a
+`DataTypeVariant`. Events are stored as `TimeFrameIndex` values representing discrete
+time points. All stochastic generators are deterministic given the same seed.
+
+---
+
+## Generators
+
+### PoissonEvents
+
+**Registration name**: `"PoissonEvents"` · **Category**: Events
+
+Generates events via a homogeneous Poisson process with constant rate `lambda`
+(events per sample). Inter-event intervals are drawn from an exponential
+distribution with rate parameter `lambda`. Continuous times are floored to integer
+`TimeFrameIndex` values and deduplicated.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | 1000 | > 0 |
+| `lambda` | `float` | ✅ | 0.05 | > 0 |
+| `seed` | `uint64_t` | ☐ | 42 | — |
+
+**Expected event count**: approximately `num_samples × lambda` (before deduplication).
+
+**Determinism guarantee**: same `(num_samples, lambda, seed)` tuple always produces
+identical output within a single build.
+
+---
+
+### RegularEvents
+
+**Registration name**: `"RegularEvents"` · **Category**: Events
+
+Generates evenly spaced events at positions `0, interval, 2×interval, ...` within
+`[0, num_samples)`. Optional Gaussian jitter displaces each event from its grid
+position. Jittered events are clamped to `[0, num_samples-1]` and deduplicated.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | 1000 | > 0 |
+| `interval` | `int` | ✅ | 20 | > 0 |
+| `jitter_stddev` | `float` | ☐ | 0.0 | ≥ 0 |
+| `seed` | `uint64_t` | ☐ | 42 | — |
+
+**Without jitter**: produces exactly `⌈num_samples / interval⌉` events at
+deterministic grid positions.
+
+**With jitter**: events are displaced by `round(N(0, jitter_stddev))` samples,
+then clamped and deduplicated. The final count may differ from the grid count
+due to deduplication.
+
+---
+
+### BurstEvents
+
+**Registration name**: `"BurstEvents"` · **Category**: Events
+
+Generates clustered burst event patterns. Burst onset times are drawn from a
+Poisson process at rate `burst_rate`. Within each burst, events are drawn from a
+second Poisson process at rate `within_burst_rate` for `burst_duration` samples.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | 10000 | > 0 |
+| `burst_rate` | `float` | ✅ | 0.005 | > 0 |
+| `within_burst_rate` | `float` | ✅ | 0.5 | > 0 |
+| `burst_duration` | `int` | ✅ | 20 | > 0 |
+| `seed` | `uint64_t` | ☐ | 42 | — |
+
+**Expected burst count**: approximately `num_samples × burst_rate`.
+
+**Expected events per burst**: approximately `burst_duration × within_burst_rate`.
+
+Events from all bursts are merged, sorted, and deduplicated.

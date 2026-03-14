@@ -1,0 +1,62 @@
+---
+title: "Digital Interval Generators"
+---
+
+## Overview
+
+Milestone 4 adds two `DigitalIntervalSeries` generators to the DataSynthesizer registry.
+Each generator is a self-contained `.cpp` file under
+`src/DataSynthesizer/Generators/DigitalInterval/` that self-registers at static
+initialization time via `RegisterGenerator<Params>`.
+
+All generators produce an `std::shared_ptr<DigitalIntervalSeries>` wrapped in a
+`DataTypeVariant`. Intervals are stored as `Interval{start, end}` (inclusive)
+where `start` and `end` are `int64_t` values.
+
+---
+
+## Generators
+
+### RegularIntervals
+
+**Registration name**: `"RegularIntervals"` · **Category**: Intervals
+
+Generates periodic on/off intervals with constant `on_duration` and `off_duration`.
+Intervals start at `start_offset` (default 0) and repeat with period
+`on_duration + off_duration`. The last interval is clamped to `[0, num_samples-1]`.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | 1000 | > 0 |
+| `on_duration` | `int` | ✅ | 50 | > 0 |
+| `off_duration` | `int` | ✅ | 50 | > 0 |
+| `start_offset` | `int` | ☐ | 0 | — |
+
+**Purely deterministic**: no RNG is involved.
+
+**Example**: `num_samples=300, on_duration=30, off_duration=70` produces intervals
+`[0,29]`, `[100,129]`, `[200,229]`.
+
+---
+
+### RandomIntervals
+
+**Registration name**: `"RandomIntervals"` · **Category**: Intervals
+
+Generates randomly spaced non-overlapping intervals. Interval durations are drawn
+from `Exp(1/mean_duration)` (minimum 1 sample), and gaps between intervals are
+drawn from `Exp(1/mean_gap)`. The sequence starts with an initial gap.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | 10000 | > 0 |
+| `mean_duration` | `float` | ✅ | 50.0 | > 0 |
+| `mean_gap` | `float` | ✅ | 100.0 | > 0 |
+| `seed` | `uint64_t` | ☐ | 42 | — |
+
+**Determinism guarantee**: same `(num_samples, mean_duration, mean_gap, seed)` tuple
+always produces identical output within a single build.
+
+**Properties**: intervals are guaranteed to be non-overlapping and sorted by start
+time. Each interval has a minimum duration of 1 sample. The last interval is
+clamped to end at `num_samples - 1` if it extends beyond the range.
