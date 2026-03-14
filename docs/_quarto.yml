@@ -87,6 +87,7 @@ website:
                     - developer/DataSynthesizer/Generators/DigitalEvent.qmd
                     - developer/DataSynthesizer/Generators/DigitalInterval.qmd
                     - developer/DataSynthesizer/Generators/Spatial.qmd
+                    - developer/DataSynthesizer/Generators/MotionModels.qmd
         - section: "Data Inspectors"
           contents:
             - developer/ui/data_inspectors/tensor_inspector.qmd

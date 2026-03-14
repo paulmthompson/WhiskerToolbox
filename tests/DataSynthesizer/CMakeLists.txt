@@ -27,6 +27,8 @@ add_executable(test_DataSynthesizer
     GridPointsGenerator.test.cpp
     RandomPointsGenerator.test.cpp
     StraightLineGenerator.test.cpp
+    Trajectory.test.cpp
+    MovingPointGenerator.test.cpp
 )
 
 target_include_directories(test_DataSynthesizer PRIVATE

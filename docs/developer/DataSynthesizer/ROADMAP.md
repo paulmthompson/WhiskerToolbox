@@ -11,7 +11,7 @@
 | **3** — More AnalogTimeSeries Generators | 🔲 Not started | — |
 | **4** — DigitalEventSeries & DigitalIntervalSeries Generators | ✅ Complete | 2026-03-14 |
 | **5a** — Static Shape Generators | ✅ Complete | — |
-| **5b-i** — Trajectory Library + MovingPoint | 🔲 Not started | — |
+| **5b-i** — Trajectory Library + MovingPoint | ✅ Complete | 2026-03-14 |
 | **5b-ii** — MovingMask + MovingLine Generators | 🔲 Not started | — |
 | **5b-iii** — Time-Varying Shape (Area-Driven Mask) | 🔲 Not started | — |
 | **6** — Multi-Signal Generation & Correlation | 🔲 Not started | — |
@@ -313,7 +313,7 @@ deferred until there is a real need.
 
 ---
 
-##### 5b-i. Trajectory Library + MovingPoint Generator 🔲
+##### 5b-i. Trajectory Library + MovingPoint Generator ✅ Complete (2026-03-14)
 
 **Goal**: Build the reusable trajectory library and validate it with the simplest generator.
 
@@ -340,6 +340,13 @@ deferred until there is a real need.
 
 **Exit criteria**: Trajectory library has independent unit tests. `MovingPoint` generator
 registered and produces correct trajectories for all motion × boundary combinations.
+
+**Implementation note**: Generator params structs with many fields must use `std::optional`
+for each trajectory-related field with `.value_or()` defaults. reflect-cpp does not reliably
+support aggregate default values when many fields are missing from JSON. This matches the
+established TransformsV2 pattern (e.g., `LineAngleParams`). The `TrajectoryParams` struct
+itself uses plain defaults since it is never parsed from JSON directly — generators convert
+their optional fields to `TrajectoryParams` via a `toTrajectoryParams()` helper.
 
 ---
 
@@ -546,7 +553,7 @@ src/
 │   ├── GeneratorRegistry.cpp
 │   ├── GeneratorTypes.hpp
 │   ├── Registration.hpp
-│  ├─ Trajectory/                            # 🔲 Milestone 5b-i (planned)
+│  ├─ Trajectory/                            # ✅ Milestone 5b-i (complete)
 │  │  ├─ Trajectory.hpp
 │  │  ├─ Trajectory.cpp
 │  │  └─ PixelClipping.hpp
@@ -573,7 +580,7 @@ src/
 │  │  ├─ Point/
 │  │  │  ├─ GridPointsGenerator.cpp          # ✅ 5a
 │  │  │  ├─ RandomPointsGenerator.cpp        # ✅ 5a
-│  │  │  └─ MovingPointGenerator.cpp         # 🔲 5b-i
+│  │  │  └─ MovingPointGenerator.cpp         # ✅ 5b-i
 │  │  └─ Line/
 │  │     ├─ StraightLineGenerator.cpp        # ✅ 5a
 │  │     └─ MovingLineGenerator.cpp          # 🔲 5b-ii
@@ -613,8 +620,8 @@ tests/
     ├── InhomogeneousPoissonEventsGenerator.test.cpp
     ├── RegularIntervalsGenerator.test.cpp
     ├── RandomIntervalsGenerator.test.cpp
-    ├── Trajectory.test.cpp                   # 🔲 5b-i (planned)
-    ├── MovingPointGenerator.test.cpp         # 🔲 5b-i (planned)
+    ├── Trajectory.test.cpp                   # ✅ 5b-i (complete)
+    ├── MovingPointGenerator.test.cpp         # ✅ 5b-i (complete)
     ├── MovingMaskGenerator.test.cpp          # 🔲 5b-ii (planned)
     └── MovingLineGenerator.test.cpp          # 🔲 5b-ii (planned)
 
@@ -629,7 +636,7 @@ docs/
             ├── DigitalEvent.qmd    # ✅ Milestone 4
             ├── DigitalInterval.qmd # ✅ Milestone 4
             ├── Spatial.qmd         # ✅ Milestone 5a
-            └── MotionModels.qmd    # 🔲 Milestone 5b (planned)
+            └── MotionModels.qmd    # ✅ Milestone 5b-i
 ```
 
 ## Key Design Decisions

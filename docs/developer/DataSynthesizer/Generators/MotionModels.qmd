@@ -1,0 +1,194 @@
+---
+title: "Motion Models"
+---
+
+## Overview
+
+Milestone 5b introduces motion models to the DataSynthesizer, enabling
+spatial generators to produce time-varying trajectories. The design separates
+three concerns — *where* something is (trajectory), *what* it looks like
+(shape), and *how* it gets stored (populate) — so that motion logic is
+shared across all spatial data types.
+
+### Architecture: Trajectory → Shape → Populate
+
+```
+  1. Trajectory          2. Shape                    3. Populate
+  (physics)              (rendering)                 (data storage)
+
+  computeTrajectory()    renderShape(pos, t, ...)    addAtTime(t, shape)
+  ─────────────────►     ─────────────────────►      ──────────────────►
+  produces               produces per-frame          writes into
+  vector<Point2D<float>> Mask2D / Line2D /           MaskData / LineData /
+  (one position per      Point2D<float>              PointData
+  frame)                 at that position
+```
+
+The trajectory library is shared by all moving generators. Each generator only
+needs to implement the shape-rendering step for its output type.
+
+---
+
+## Trajectory Library
+
+**Location**: `src/DataSynthesizer/Trajectory/Trajectory.hpp` + `Trajectory.cpp`
+
+### TrajectoryParams
+
+```cpp
+struct TrajectoryParams {
+    std::string model = "linear";       // "linear", "sinusoidal", "brownian"
+
+    // Linear
+    float velocity_x = 1.0f;
+    float velocity_y = 0.0f;
+
+    // Sinusoidal
+    float amplitude_x = 0.0f;
+    float amplitude_y = 0.0f;
+    float frequency_x = 0.0f;
+    float frequency_y = 0.0f;
+    float phase_x = 0.0f;
+    float phase_y = 0.0f;
+
+    // Brownian
+    float diffusion = 1.0f;
+    uint64_t seed = 42;
+
+    // Boundary
+    std::string boundary_mode = "clamp"; // "clamp", "bounce", "wrap"
+    float bounds_min_x = 0.0f;
+    float bounds_max_x = 640.0f;
+    float bounds_min_y = 0.0f;
+    float bounds_max_y = 480.0f;
+};
+```
+
+`TrajectoryParams` is used internally by `computeTrajectory()`. It is **not**
+used directly for JSON parsing — generators flatten these fields into their
+own params struct using `std::optional` for each field and provide defaults
+via `.value_or()`.
+
+### computeTrajectory()
+
+```cpp
+std::vector<Point2D<float>> computeTrajectory(
+    float start_x, float start_y,
+    int num_frames,
+    TrajectoryParams const & params);
+```
+
+Returns `num_frames` positions starting from `(start_x, start_y)`.
+Frame 0 is always the start position. Boundary enforcement is applied
+per-step.
+
+### Motion Models
+
+| Model | Formula | Key Parameters |
+|-------|---------|----------------|
+| **linear** | `pos(t) = start + velocity × t` | `velocity_x`, `velocity_y` |
+| **sinusoidal** | `pos(t) = start + amplitude × sin(2π × frequency × t + phase)` | `amplitude_*`, `frequency_*`, `phase_*` |
+| **brownian** | `pos(t) = pos(t-1) + N(0, diffusion)` | `diffusion`, `seed` |
+
+### Boundary Modes
+
+Boundaries are enforced per-step on each axis independently.
+
+| Mode | Behavior |
+|------|----------|
+| **clamp** | Position is clamped to `[min, max]`. Velocity unchanged. |
+| **bounce** | Position reflects off boundaries. Velocity is negated on reflection (linear model). |
+| **wrap** | Position wraps around: if `pos > max`, `pos -= range`; if `pos < min`, `pos += range`. |
+
+---
+
+## PixelClipping Utility
+
+**Location**: `src/DataSynthesizer/Trajectory/PixelClipping.hpp`
+
+A convenience header that re-exports `clipPixelsToImage()` and related
+rasterization functions from `CoreGeometry/masks.hpp`. Used by moving mask
+generators (Milestone 5b-ii) that need to clip rasterized pixels at each frame.
+
+---
+
+## MovingPoint Generator
+
+**Location**: `src/DataSynthesizer/Generators/Point/MovingPointGenerator.cpp`
+**Registration name**: `"MovingPoint"` · **Category**: Spatial · **Output**: `PointData`
+
+Produces a `PointData` with exactly one point per frame, following a trajectory
+computed by `computeTrajectory()`. This is the simplest moving generator and
+validates the trajectory library.
+
+### Parameters
+
+All trajectory parameters are optional with sensible defaults. Users only need
+to specify the parameters relevant to their chosen motion model.
+
+| Parameter | Type | Default | Notes |
+|-----------|------|---------|-------|
+| `start_x` | `float` | 100.0 | Starting X position |
+| `start_y` | `float` | 100.0 | Starting Y position |
+| `num_frames` | `int` | 100 | Number of frames to generate (required) |
+| `model` | `string` | `"linear"` | Motion model |
+| `velocity_x` | `float` | 1.0 | Linear velocity X |
+| `velocity_y` | `float` | 0.0 | Linear velocity Y |
+| `amplitude_x` | `float` | 0.0 | Sinusoidal amplitude X |
+| `amplitude_y` | `float` | 0.0 | Sinusoidal amplitude Y |
+| `frequency_x` | `float` | 0.0 | Sinusoidal frequency X |
+| `frequency_y` | `float` | 0.0 | Sinusoidal frequency Y |
+| `phase_x` | `float` | 0.0 | Sinusoidal phase X |
+| `phase_y` | `float` | 0.0 | Sinusoidal phase Y |
+| `diffusion` | `float` | 1.0 | Brownian diffusion coefficient |
+| `seed` | `uint64` | 42 | Random seed (Brownian) |
+| `boundary_mode` | `string` | `"clamp"` | Boundary enforcement mode |
+| `bounds_min_x` | `float` | 0.0 | Minimum X bound |
+| `bounds_max_x` | `float` | 640.0 | Maximum X bound |
+| `bounds_min_y` | `float` | 0.0 | Minimum Y bound |
+| `bounds_max_y` | `float` | 480.0 | Maximum Y bound |
+
+### Examples
+
+Linear motion:
+```json
+{"start_x": 0, "start_y": 100, "num_frames": 200, "model": "linear",
+ "velocity_x": 2, "velocity_y": 0.5, "bounds_max_x": 1000, "bounds_max_y": 1000}
+```
+
+Sinusoidal motion:
+```json
+{"start_x": 200, "start_y": 200, "num_frames": 100,
+ "model": "sinusoidal", "amplitude_x": 50, "frequency_x": 0.01,
+ "bounds_min_x": -1000, "bounds_max_x": 1000,
+ "bounds_min_y": -1000, "bounds_max_y": 1000}
+```
+
+Brownian motion with bounce:
+```json
+{"start_x": 320, "start_y": 240, "num_frames": 500,
+ "model": "brownian", "diffusion": 3, "seed": 12345,
+ "boundary_mode": "bounce",
+ "bounds_min_x": 0, "bounds_max_x": 640,
+ "bounds_min_y": 0, "bounds_max_y": 480}
+```
+
+---
+
+## Design Notes
+
+### Why `std::optional` for Generator Params
+
+The `MovingPointParams` struct uses `std::optional` for all trajectory-related
+fields. This follows the established project pattern (see `LineAngleParams`,
+`AnalogIntervalThresholdParams`) and is required because reflect-cpp does not
+reliably fall back to aggregate default values for missing JSON fields when
+structs have many members. Using `std::optional` with `.value_or()` ensures
+users only need to specify the fields relevant to their motion model.
+
+### Reuse in Future Generators
+
+`MovingMask` and `MovingLine` generators (Milestone 5b-ii) will follow the
+same pattern: flatten trajectory parameters into their params struct as
+optionals, convert to `TrajectoryParams` via a `toTrajectoryParams()` helper,
+and call `computeTrajectory()`.

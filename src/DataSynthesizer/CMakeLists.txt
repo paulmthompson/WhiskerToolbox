@@ -21,7 +21,11 @@ add_library(DataSynthesizer STATIC
     Generators/Mask/EllipseMaskGenerator.cpp
     Generators/Point/GridPointsGenerator.cpp
     Generators/Point/RandomPointsGenerator.cpp
+    Generators/Point/MovingPointGenerator.cpp
     Generators/Line/StraightLineGenerator.cpp
+    Trajectory/Trajectory.hpp
+    Trajectory/Trajectory.cpp
+    Trajectory/PixelClipping.hpp
 )
 
 add_library(WhiskerToolbox::DataSynthesizer ALIAS DataSynthesizer)
