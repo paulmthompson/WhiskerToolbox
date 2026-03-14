@@ -16,7 +16,20 @@
 #include <functional>
 #include <string>
 
+class DataManager;
+
 namespace WhiskerToolbox::DataSynthesizer {
+
+/**
+ * @brief Context passed to generators during execution.
+ *
+ * Provides optional access to a DataManager instance for generators
+ * that need to read existing data (e.g., InhomogeneousPoissonEvents
+ * reads a rate signal). Generators that don't need context can ignore it.
+ */
+struct GeneratorContext {
+    DataManager const * data_manager = nullptr;
+};
 
 /**
  * @brief Metadata describing a registered generator
@@ -40,7 +53,7 @@ struct GeneratorMetadata {
  * The generator is responsible for deserializing its own parameter struct from
  * the JSON string using rfl::json::read<SpecificParams>.
  */
-using GeneratorFunction = std::function<DataTypeVariant(std::string const & params_json)>;
+using GeneratorFunction = std::function<DataTypeVariant(std::string const & params_json, GeneratorContext const & ctx)>;
 
 /**
  * @brief A registry entry pairing a generator function with its metadata.

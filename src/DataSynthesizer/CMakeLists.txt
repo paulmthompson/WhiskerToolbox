@@ -13,6 +13,7 @@ add_library(DataSynthesizer STATIC
     Generators/DigitalEvent/PoissonEventsGenerator.cpp
     Generators/DigitalEvent/RegularEventsGenerator.cpp
     Generators/DigitalEvent/BurstEventsGenerator.cpp
+    Generators/DigitalEvent/InhomogeneousPoissonEventsGenerator.cpp
     Generators/DigitalInterval/RegularIntervalsGenerator.cpp
     Generators/DigitalInterval/RandomIntervalsGenerator.cpp
 )

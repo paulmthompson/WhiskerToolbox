@@ -18,6 +18,7 @@ add_executable(test_DataSynthesizer
     PoissonEventsGenerator.test.cpp
     RegularEventsGenerator.test.cpp
     BurstEventsGenerator.test.cpp
+    InhomogeneousPoissonEventsGenerator.test.cpp
     RegularIntervalsGenerator.test.cpp
     RandomIntervalsGenerator.test.cpp
 )

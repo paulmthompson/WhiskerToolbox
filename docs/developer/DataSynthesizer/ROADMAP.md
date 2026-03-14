@@ -9,7 +9,7 @@
 | **2b** — State & AutoParamWidget Integration | ✅ Complete | 2026-03-12 |
 | **2c** — OpenGL Signal Preview | ✅ Complete | 2026-03-12 |
 | **3** — More AnalogTimeSeries Generators | 🔲 Not started | — |
-| **4** — DigitalEventSeries & DigitalIntervalSeries Generators | � Partial | 2026-03-14 |
+| **4** — DigitalEventSeries & DigitalIntervalSeries Generators | ✅ Complete | 2026-03-14 |
 | **5** — Spatial Data Generators | 🔲 Not started | — |
 | **6** — Multi-Signal Generation & Correlation | 🔲 Not started | — |
 | **7** — Pipeline & Fuzz Testing Integration | 🔲 Not started | — |
@@ -140,18 +140,17 @@ Each generator is a self-contained `.cpp`, self-registering, with unit tests.
 | **PoissonEvents** | `DigitalEventSeries` | `{num_samples, lambda, seed}` | Homogeneous Poisson process. |
 | **RegularEvents** | `DigitalEventSeries` | `{num_samples, interval, jitter_stddev, seed}` | Evenly spaced with optional Gaussian jitter. |
 | **BurstEvents** | `DigitalEventSeries` | `{num_samples, burst_rate, within_burst_rate, burst_duration, seed}` | Clustered event patterns. |
+| **InhomogeneousPoissonEvents** | `DigitalEventSeries` | `{rate_signal_key, rate_scale, seed}` | Inhomogeneous Poisson process. Reads λ(t) from an AnalogTimeSeries in DataManager. Uses Lewis-Shedler thinning algorithm. First contextual generator (requires `GeneratorContext`). |
 | **RegularIntervals** | `DigitalIntervalSeries` | `{num_samples, on_duration, off_duration, start_offset}` | Periodic on/off. |
 | **RandomIntervals** | `DigitalIntervalSeries` | `{num_samples, mean_duration, mean_gap, seed}` | Exponentially distributed durations and gaps. |
 
 The `SynthesizeData` command was updated to extract sample counts from `DigitalEventSeries` and `DigitalIntervalSeries` via `->size()`. CMake links `WhiskerToolbox::DigitalTimeSeries`.
 
-#### Deferred to Future Phase
+The `GeneratorContext` infrastructure was added to support generators that need DataManager access. `GeneratorFunction` signature now includes `GeneratorContext const &`, and `RegisterGenerator` provides overloads for both context-aware and context-free generators. Existing generators are unaffected.
 
-| Generator | Output Type | Params | Notes |
-|-----------|------------|--------|-------|
-| **InhomogeneousPoissonEvents** | `DigitalEventSeries` | `{num_samples, rate_generator, seed}` | `rate_generator` is a nested generator spec (e.g., a SineWave descriptor) that produces λ(t). Requires nested generator spec pattern. |
+#### Future Extension — Nested Generator Specs
 
-**Design note — Nested generator specs**: The `InhomogeneousPoissonEvents` generator introduces the concept of a generator that takes another generator's output as input. The params struct includes a `rate_generator` field which is itself a `{generator_name, parameters}` descriptor. The implementation generates the rate signal first (as a temporary `AnalogTimeSeries`), then uses it to drive the Poisson process. This pattern generalizes to any generator that needs a time-varying input. This will be expanded in a future phase.
+The current `InhomogeneousPoissonEvents` implementation takes a `rate_signal_key` to read an existing AnalogTimeSeries from the DataManager. A future extension could allow specifying the rate signal as a nested generator descriptor (e.g., `{generator_name: "SineWave", parameters: {...}}`), which would generate the rate signal on-the-fly. This pattern generalizes to any generator that needs a time-varying input.
 
 ---
 
@@ -341,7 +340,8 @@ src/
 │  │  ├─ DigitalEvent/
 │  │  │  ├─ PoissonEventsGenerator.cpp
 │  │  │  ├─ RegularEventsGenerator.cpp
-│  │  │  └─ BurstEventsGenerator.cpp
+│  │  │  ├─ BurstEventsGenerator.cpp
+│  │  │  └─ InhomogeneousPoissonEventsGenerator.cpp
 │  │  └─ DigitalInterval/
 │  │     ├─ RegularIntervalsGenerator.cpp
 │  │     └─ RandomIntervalsGenerator.cpp
@@ -378,6 +378,7 @@ tests/
     ├── PoissonEventsGenerator.test.cpp
     ├── RegularEventsGenerator.test.cpp
     ├── BurstEventsGenerator.test.cpp
+    ├── InhomogeneousPoissonEventsGenerator.test.cpp
     ├── RegularIntervalsGenerator.test.cpp
     └── RandomIntervalsGenerator.test.cpp
 

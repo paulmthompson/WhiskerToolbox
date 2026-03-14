@@ -45,33 +45,60 @@ namespace WhiskerToolbox::DataSynthesizer {
  * @tparam Params The generator's parameter struct (must be reflect-cpp reflectable).
  *
  * The constructor:
- * 1. Wraps the typed generate function to accept a JSON string.
+ * 1. Wraps the typed generate function to accept a JSON string and GeneratorContext.
  * 2. Extracts the ParameterSchema from Params.
  * 3. Registers the generator into the global GeneratorRegistry.
  *
- * The typed generate function has the signature:
- *   DataTypeVariant(Params const &)
- *
- * The wrapper handles JSON deserialization, so individual generators
- * work with strongly-typed parameter structs.
+ * Two overloads are provided:
+ * - For generators that don't need context: DataTypeVariant(Params const &)
+ * - For generators that need DataManager access: DataTypeVariant(Params const &, GeneratorContext const &)
  */
 template<typename Params>
 class RegisterGenerator {
 public:
+    /// @brief Register a generator that does not need DataManager context.
     RegisterGenerator(
             std::string const & name,
             std::function<DataTypeVariant(Params const &)> typed_func,
             GeneratorMetadata metadata) {
 
-        // Wrap the typed function to accept a JSON string
+        // Wrap the typed function to accept a JSON string (context ignored)
         auto wrapper = [typed_func = std::move(typed_func), name](
-                               std::string const & params_json) -> DataTypeVariant {
+                               std::string const & params_json,
+                               GeneratorContext const & /*ctx*/) -> DataTypeVariant {
             auto parsed = rfl::json::read<Params>(params_json);
             if (!parsed) {
                 throw std::runtime_error(
                         "Generator '" + name + "': failed to parse parameters");
             }
             return typed_func(*parsed);
+        };
+
+        // Extract parameter schema from the Params type
+        metadata.parameter_schema = Transforms::V2::extractParameterSchema<Params>();
+
+        GeneratorRegistry::instance().registerGenerator(
+                name,
+                std::move(wrapper),
+                std::move(metadata));
+    }
+
+    /// @brief Register a generator that needs DataManager context.
+    RegisterGenerator(
+            std::string const & name,
+            std::function<DataTypeVariant(Params const &, GeneratorContext const &)> typed_func,
+            GeneratorMetadata metadata) {
+
+        // Wrap the typed function to accept a JSON string and pass context through
+        auto wrapper = [typed_func = std::move(typed_func), name](
+                               std::string const & params_json,
+                               GeneratorContext const & ctx) -> DataTypeVariant {
+            auto parsed = rfl::json::read<Params>(params_json);
+            if (!parsed) {
+                throw std::runtime_error(
+                        "Generator '" + name + "': failed to parse parameters");
+            }
+            return typed_func(*parsed, ctx);
         };
 
         // Extract parameter schema from the Params type

@@ -84,3 +84,47 @@ second Poisson process at rate `within_burst_rate` for `burst_duration` samples.
 **Expected events per burst**: approximately `burst_duration × within_burst_rate`.
 
 Events from all bursts are merged, sorted, and deduplicated.
+
+---
+
+### InhomogeneousPoissonEvents
+
+**Registration name**: `"InhomogeneousPoissonEvents"` · **Category**: Events
+
+Generates events via an inhomogeneous Poisson process with time-varying rate
+λ(t) read from an existing `AnalogTimeSeries` in the DataManager. This is a
+*contextual generator* — it requires a `GeneratorContext` with a non-null
+`DataManager` pointer.
+
+Uses the **Lewis-Shedler thinning algorithm**:
+
+1. Read λ(t) = `rate_scale` × `analog_values[t]` from the rate signal.
+2. Find λ_max = max(λ(t)).
+3. Generate candidate events from a homogeneous Poisson process with rate λ_max.
+4. Accept each candidate at time t with probability λ(t) / λ_max.
+
+This ensures the local event density tracks the rate signal faithfully.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `rate_signal_key` | `string` | ✅ | — | Must exist in DataManager as AnalogTimeSeries |
+| `rate_scale` | `float` | ☐ | 1.0 | > 0 |
+| `seed` | `uint64_t` | ☐ | 42 | — |
+
+**Preconditions**:
+
+- `GeneratorContext::data_manager` must not be null.
+- `rate_signal_key` must refer to an existing `AnalogTimeSeries`.
+- All rate values (after scaling) must be ≥ 0.
+
+**Zero-rate behavior**: If the rate signal is zero everywhere, no events are
+produced (returns an empty `DigitalEventSeries`).
+
+**Determinism guarantee**: same `(rate_signal_key, rate_scale, seed)` tuple
+with the same rate signal data always produces identical output within a single
+build.
+
+**Design note**: This is the first generator that requires `GeneratorContext`,
+which was added to support generators needing DataManager access. Existing
+generators that don't need context are unaffected — the `RegisterGenerator`
+template provides an overload that ignores the context automatically.

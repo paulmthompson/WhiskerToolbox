@@ -58,11 +58,13 @@ public:
      *
      * @param name The generator name
      * @param params_json JSON string of generator-specific parameters
+     * @param ctx Optional context providing DataManager access
      * @return The generated data as a DataTypeVariant, or std::nullopt on failure
      */
     [[nodiscard]] std::optional<DataTypeVariant> generate(
             std::string const & name,
-            std::string const & params_json) const;
+            std::string const & params_json,
+            GeneratorContext const & ctx = {}) const;
 
     /**
      * @brief List all registered generator names for a given output type.

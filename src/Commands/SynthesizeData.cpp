@@ -69,7 +69,9 @@ CommandResult SynthesizeData::execute(CommandContext const & ctx) {
 
     auto const params_json = rfl::json::write(_params.parameters);
 
-    auto result = registry.generate(_params.generator_name, params_json);
+    auto const gen_ctx = WhiskerToolbox::DataSynthesizer::GeneratorContext{
+            .data_manager = ctx.data_manager.get()};
+    auto result = registry.generate(_params.generator_name, params_json, gen_ctx);
     if (!result.has_value()) {
         return CommandResult::error(
                 "Generator '" + _params.generator_name + "' failed to produce data");

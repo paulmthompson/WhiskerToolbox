@@ -37,7 +37,8 @@ void GeneratorRegistry::registerGenerator(
 
 std::optional<DataTypeVariant> GeneratorRegistry::generate(
         std::string const & name,
-        std::string const & params_json) const {
+        std::string const & params_json,
+        GeneratorContext const & ctx) const {
     auto const it = entries_.find(name);
     if (it == entries_.end()) {
         std::cerr << "DataSynthesizer: Unknown generator '" << name << "'\n";
@@ -45,7 +46,7 @@ std::optional<DataTypeVariant> GeneratorRegistry::generate(
     }
 
     try {
-        return it->second.function(params_json);
+        return it->second.function(params_json, ctx);
     } catch (std::exception const & e) {
         std::cerr << "DataSynthesizer: Generator '" << name
                   << "' failed: " << e.what() << "\n";
