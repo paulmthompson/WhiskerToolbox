@@ -8,6 +8,7 @@ add_library(DataSynthesizer STATIC
     Generators/Analog/SineWaveGenerator.cpp
     Generators/Analog/SquareWaveGenerator.cpp
     Generators/Analog/TriangleWaveGenerator.cpp
+    Generators/Analog/SawtoothWaveGenerator.cpp
     Generators/Analog/GaussianNoiseGenerator.cpp
     Generators/Analog/UniformNoiseGenerator.cpp
 )
