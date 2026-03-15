@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QStackedWidget>
 #include <QVBoxLayout>
 
 #include <rfl/json.hpp>
@@ -74,6 +75,12 @@ void AutoParamWidget::setSchema(ParameterSchema const & schema) {
 
 void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
                                     QFormLayout * layout) {
+    // Variant (TaggedUnion) fields get a specialized layout
+    if (desc.is_variant) {
+        buildVariantRow(desc, layout);
+        return;
+    }
+
     FieldRow row;
     row.field_name = desc.name;
     row.type_name = desc.type_name;
@@ -260,6 +267,283 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
 }
 
 // ============================================================================
+// buildVariantRow — Create combo box + stacked sub-forms for a variant field
+// ============================================================================
+
+void AutoParamWidget::buildVariantRow(ParameterFieldDescriptor const & desc,
+                                      QFormLayout * layout) {
+    FieldRow row;
+    row.field_name = desc.name;
+    row.type_name = "variant";
+    row.is_variant = true;
+    row.variant_discriminator = desc.variant_discriminator;
+
+    // Container widget holds combo + stacked widget vertically
+    auto * container = new QWidget(this);
+    auto * v_layout = new QVBoxLayout(container);
+    v_layout->setContentsMargins(0, 0, 0, 0);
+    v_layout->setSpacing(4);
+
+    // Combo box for selecting the active alternative
+    auto * combo = new QComboBox(this);
+    for (auto const & alt: desc.variant_alternatives) {
+        combo->addItem(QString::fromStdString(alt.tag));
+    }
+    v_layout->addWidget(combo);
+    row.variant_combo = combo;
+
+    // Stacked widget: one page per alternative, each with its own form layout
+    auto * stack = new QStackedWidget(this);
+    row.variant_sub_rows.resize(desc.variant_alternatives.size());
+
+    for (size_t i = 0; i < desc.variant_alternatives.size(); ++i) {
+        auto const & alt = desc.variant_alternatives[i];
+        auto * page = new QWidget(this);
+        auto * page_layout = new QFormLayout(page);
+        page_layout->setContentsMargins(4, 4, 4, 4);
+        page_layout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
+
+        // Build sub-field rows for this alternative's schema
+        for (auto const & sub_desc: alt.schema->fields) {
+            FieldRow sub_row;
+            sub_row.field_name = sub_desc.name;
+            sub_row.type_name = sub_desc.type_name;
+            sub_row.is_optional = sub_desc.is_optional;
+
+            QWidget * value_widget = nullptr;
+
+            if (sub_desc.type_name == "float" || sub_desc.type_name == "double") {
+                auto * spin = new QDoubleSpinBox(page);
+                spin->setDecimals(6);
+                spin->setSingleStep(0.1);
+                double min_val = sub_desc.min_value.value_or(-1e9);
+                double max_val = sub_desc.max_value.value_or(1e9);
+                if (sub_desc.is_exclusive_min && sub_desc.min_value.has_value()) {
+                    min_val = sub_desc.min_value.value() + std::numeric_limits<double>::epsilon() * 100;
+                }
+                if (sub_desc.is_exclusive_max && sub_desc.max_value.has_value()) {
+                    max_val = sub_desc.max_value.value() - std::numeric_limits<double>::epsilon() * 100;
+                }
+                spin->setRange(min_val, max_val);
+                if (sub_desc.default_value_json.has_value()) {
+                    auto def_result = rfl::json::read<rfl::Generic>(sub_desc.default_value_json.value());
+                    if (def_result) {
+                        auto const & val = def_result.value().get();
+                        if (auto const * d = std::get_if<double>(&val)) {
+                            spin->setValue(*d);
+                        } else if (auto const * ii = std::get_if<int>(&val)) {
+                            spin->setValue(static_cast<double>(*ii));
+                        }
+                    }
+                }
+                connect(spin, &QDoubleSpinBox::valueChanged, this, &AutoParamWidget::onFieldChanged);
+                sub_row.double_spin = spin;
+                value_widget = spin;
+            } else if (sub_desc.type_name == "int") {
+                auto * spin = new QSpinBox(page);
+                int const min_val = sub_desc.min_value.has_value() ? static_cast<int>(sub_desc.min_value.value()) : -1000000;
+                int const max_val = sub_desc.max_value.has_value() ? static_cast<int>(sub_desc.max_value.value()) : 1000000;
+                spin->setRange(min_val, max_val);
+                if (sub_desc.default_value_json.has_value()) {
+                    auto def_result = rfl::json::read<rfl::Generic>(sub_desc.default_value_json.value());
+                    if (def_result) {
+                        auto const & val = def_result.value().get();
+                        if (auto const * ii = std::get_if<int>(&val)) {
+                            spin->setValue(*ii);
+                        } else if (auto const * d = std::get_if<double>(&val)) {
+                            spin->setValue(static_cast<int>(*d));
+                        }
+                    }
+                }
+                connect(spin, &QSpinBox::valueChanged, this, &AutoParamWidget::onFieldChanged);
+                sub_row.int_spin = spin;
+                value_widget = spin;
+            } else if (sub_desc.type_name == "bool") {
+                auto * check = new QCheckBox(page);
+                if (sub_desc.default_value_json.has_value()) {
+                    auto def_result = rfl::json::read<rfl::Generic>(sub_desc.default_value_json.value());
+                    if (def_result) {
+                        auto const & val = def_result.value().get();
+                        if (auto const * b = std::get_if<bool>(&val)) {
+                            check->setChecked(*b);
+                        }
+                    }
+                }
+                connect(check, &QCheckBox::toggled, this, &AutoParamWidget::onFieldChanged);
+                sub_row.bool_check = check;
+                value_widget = check;
+            } else if ((sub_desc.type_name == "std::string" || sub_desc.type_name == "enum") &&
+                       !sub_desc.allowed_values.empty()) {
+                auto * sub_combo = new QComboBox(page);
+                for (auto const & val: sub_desc.allowed_values) {
+                    sub_combo->addItem(QString::fromStdString(val));
+                }
+                if (sub_desc.default_value_json.has_value()) {
+                    auto def_result = rfl::json::read<rfl::Generic>(sub_desc.default_value_json.value());
+                    if (def_result) {
+                        auto const & val = def_result.value().get();
+                        if (auto const * s = std::get_if<std::string>(&val)) {
+                            int const idx = sub_combo->findText(QString::fromStdString(*s));
+                            if (idx >= 0) sub_combo->setCurrentIndex(idx);
+                        }
+                    }
+                }
+                connect(sub_combo, &QComboBox::currentIndexChanged, this, &AutoParamWidget::onFieldChanged);
+                sub_row.combo_box = sub_combo;
+                value_widget = sub_combo;
+            } else {
+                auto * edit = new QLineEdit(page);
+                if (sub_desc.default_value_json.has_value()) {
+                    auto def_result = rfl::json::read<rfl::Generic>(sub_desc.default_value_json.value());
+                    if (def_result) {
+                        auto const & val = def_result.value().get();
+                        if (auto const * s = std::get_if<std::string>(&val)) {
+                            edit->setText(QString::fromStdString(*s));
+                        }
+                    }
+                }
+                connect(edit, &QLineEdit::textChanged, this, &AutoParamWidget::onFieldChanged);
+                sub_row.line_edit = edit;
+                value_widget = edit;
+            }
+
+            if (value_widget) {
+                QString const label = QString::fromStdString(sub_desc.display_name);
+                page_layout->addRow(label, value_widget);
+                if (!sub_desc.tooltip.empty()) {
+                    value_widget->setToolTip(QString::fromStdString(sub_desc.tooltip));
+                }
+            }
+
+            row.variant_sub_rows[i].push_back(std::move(sub_row));
+        }
+
+        stack->addWidget(page);
+    }
+    v_layout->addWidget(stack);
+    row.variant_stack = stack;
+
+    // Connect combo box to switch stacked widget pages
+    connect(combo, &QComboBox::currentIndexChanged, stack, &QStackedWidget::setCurrentIndex);
+    connect(combo, &QComboBox::currentIndexChanged, this, &AutoParamWidget::onFieldChanged);
+
+    // Set default if available: parse the discriminator from the default JSON
+    if (desc.default_value_json.has_value()) {
+        auto def_result = rfl::json::read<rfl::Generic>(desc.default_value_json.value());
+        if (def_result) {
+            auto const * obj = std::get_if<rfl::Generic::Object>(&def_result.value().get());
+            if (obj) {
+                auto disc_val = obj->get(desc.variant_discriminator);
+                if (disc_val) {
+                    if (auto const * s = std::get_if<std::string>(&disc_val.value().get())) {
+                        int const idx = combo->findText(QString::fromStdString(*s));
+                        if (idx >= 0) {
+                            combo->setCurrentIndex(idx);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    QString const label = QString::fromStdString(desc.display_name);
+    layout->addRow(label, container);
+
+    _field_rows.push_back(std::move(row));
+}
+
+// ============================================================================
+// variantSubRowsToJson — Serialize the active variant alternative to JSON
+// ============================================================================
+
+std::string AutoParamWidget::variantSubRowsToJson(FieldRow const & row) {
+    std::ostringstream oss;
+    oss << "{";
+    oss << "\"" << row.variant_discriminator << "\":\""
+        << row.variant_combo->currentText().toStdString() << "\"";
+
+    int const active_idx = row.variant_combo->currentIndex();
+    if (active_idx >= 0 && active_idx < static_cast<int>(row.variant_sub_rows.size())) {
+        for (auto const & sub: row.variant_sub_rows[static_cast<size_t>(active_idx)]) {
+            oss << ",\"" << sub.field_name << "\":";
+            if (sub.double_spin) {
+                oss << sub.double_spin->value();
+            } else if (sub.int_spin) {
+                oss << sub.int_spin->value();
+            } else if (sub.bool_check) {
+                oss << (sub.bool_check->isChecked() ? "true" : "false");
+            } else if (sub.combo_box) {
+                oss << "\"" << sub.combo_box->currentText().toStdString() << "\"";
+            } else if (sub.line_edit) {
+                oss << "\"" << sub.line_edit->text().toStdString() << "\"";
+            }
+        }
+    }
+    oss << "}";
+    return oss.str();
+}
+
+// ============================================================================
+// variantSubRowsFromJson — Populate variant widgets from a JSON object string
+// ============================================================================
+
+void AutoParamWidget::variantSubRowsFromJson(FieldRow & row, std::string const & json_obj_str) {
+    auto result = rfl::json::read<rfl::Generic>(json_obj_str);
+    if (!result) return;
+
+    auto const * obj = std::get_if<rfl::Generic::Object>(&result.value().get());
+    if (!obj) return;
+
+    // Set the discriminator combo box
+    auto disc_val = obj->get(row.variant_discriminator);
+    if (disc_val) {
+        if (auto const * s = std::get_if<std::string>(&disc_val.value().get())) {
+            int const idx = row.variant_combo->findText(QString::fromStdString(*s));
+            if (idx >= 0) {
+                row.variant_combo->setCurrentIndex(idx);
+            }
+        }
+    }
+
+    // Populate sub-row widgets from the JSON fields
+    int const active_idx = row.variant_combo->currentIndex();
+    if (active_idx < 0 || active_idx >= static_cast<int>(row.variant_sub_rows.size())) return;
+
+    for (auto & sub: row.variant_sub_rows[static_cast<size_t>(active_idx)]) {
+        auto field_result = obj->get(sub.field_name);
+        if (!field_result) continue;
+
+        auto const & value = field_result.value().get();
+        if (sub.double_spin) {
+            if (auto const * num = std::get_if<double>(&value)) {
+                sub.double_spin->setValue(*num);
+            } else if (auto const * inum = std::get_if<int>(&value)) {
+                sub.double_spin->setValue(static_cast<double>(*inum));
+            }
+        } else if (sub.int_spin) {
+            if (auto const * num = std::get_if<int>(&value)) {
+                sub.int_spin->setValue(*num);
+            } else if (auto const * dnum = std::get_if<double>(&value)) {
+                sub.int_spin->setValue(static_cast<int>(*dnum));
+            }
+        } else if (sub.bool_check) {
+            if (auto const * b = std::get_if<bool>(&value)) {
+                sub.bool_check->setChecked(*b);
+            }
+        } else if (sub.combo_box) {
+            if (auto const * s = std::get_if<std::string>(&value)) {
+                int const idx = sub.combo_box->findText(QString::fromStdString(*s));
+                if (idx >= 0) sub.combo_box->setCurrentIndex(idx);
+            }
+        } else if (sub.line_edit) {
+            if (auto const * s = std::get_if<std::string>(&value)) {
+                sub.line_edit->setText(QString::fromStdString(*s));
+            }
+        }
+    }
+}
+
+// ============================================================================
 // toJson — Serialize current widget values to JSON
 // ============================================================================
 
@@ -281,7 +565,9 @@ std::string AutoParamWidget::toJson() const {
 
         oss << "\"" << row.field_name << "\":";
 
-        if (row.double_spin) {
+        if (row.is_variant && row.variant_combo) {
+            oss << variantSubRowsToJson(row);
+        } else if (row.double_spin) {
             oss << row.double_spin->value();
         } else if (row.int_spin) {
             oss << row.int_spin->value();
@@ -337,7 +623,11 @@ bool AutoParamWidget::fromJson(std::string const & json) {
 
         auto const & value = field_result.value().get();
 
-        if (row.double_spin) {
+        if (row.is_variant && row.variant_combo) {
+            // Variant fields: the value is a nested JSON object
+            auto variant_json = rfl::json::write(field_result.value());
+            variantSubRowsFromJson(row, variant_json);
+        } else if (row.double_spin) {
             if (auto const * num = std::get_if<double>(&value)) {
                 row.double_spin->setValue(*num);
             } else if (auto const * inum = std::get_if<int>(&value)) {

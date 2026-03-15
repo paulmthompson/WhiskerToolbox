@@ -202,7 +202,7 @@ needed for defaults.
 
 ---
 
-## Phase 2 — Tagged Variant Support
+## Phase 2 — Tagged Variant Support ✅ (Completed)
 
 ### Goal
 
@@ -454,6 +454,21 @@ combo box to that alternative, then populate the sub-form fields.
 - `toJson` / `fromJson` correctly (de)serialize the discriminated structure.
 - Existing flat-struct schemas unaffected.
 - All existing tests pass.
+
+### Implementation Notes
+
+Phase 2 was implemented with the following design decisions:
+
+- `VariantAlternative::schema` uses `std::unique_ptr<ParameterSchema>` to break
+  the circular type dependency (`VariantAlternative` → `ParameterSchema` →
+  `ParameterFieldDescriptor` → `VariantAlternative`).
+- Tag names are extracted at compile time by default-constructing each alternative
+  inside a `TaggedUnion`, serializing to JSON, and reading the discriminator field.
+  This gives the reflect-cpp canonical name (the struct name).
+- `rfl::TaggedUnion` has no default constructor. Params structs must provide a
+  default member initializer for variant fields (e.g. `= LinearMotionParams{}`).
+- Only Pattern A (`rfl::TaggedUnion`) is implemented. Pattern B (`std::variant` +
+  enum discriminator) is deferred.
 
 ---
 

@@ -404,3 +404,191 @@ TEST_CASE("extractParameterSchema - enum ParameterUIHints still work", "[transfo
     // type_name should remain "std::string" since it's a string, not an enum
     CHECK(mode->type_name == "std::string");
 }
+
+// ============================================================================
+// Tests: Phase 2 — Tagged variant (rfl::TaggedUnion) auto-detection
+// ============================================================================
+
+namespace test_variant {
+
+struct LinearMotionParams {
+    float velocity_x = 1.0f;
+    float velocity_y = 0.0f;
+};
+
+struct SinusoidalMotionParams {
+    float amplitude_x = 0.0f;
+    float amplitude_y = 0.0f;
+    float frequency_x = 1.0f;
+    float frequency_y = 1.0f;
+    float phase_x = 0.0f;
+    float phase_y = 0.0f;
+};
+
+struct BrownianMotionParams {
+    float diffusion = 1.0f;
+    int seed = 42;
+};
+
+using MotionVariant = rfl::TaggedUnion<
+        "model",
+        LinearMotionParams,
+        SinusoidalMotionParams,
+        BrownianMotionParams>;
+
+struct MovingPointParams {
+    float start_x = 100.0f;
+    float start_y = 100.0f;
+    int num_frames = 100;
+    MotionVariant motion = LinearMotionParams{};
+};
+
+}// namespace test_variant
+
+using test_variant::BrownianMotionParams;
+using test_variant::LinearMotionParams;
+using test_variant::MotionVariant;
+using test_variant::MovingPointParams;
+using test_variant::SinusoidalMotionParams;
+
+TEST_CASE("extractParameterSchema - TaggedUnion auto-detection", "[transforms][v2][schema][variant]") {
+    auto schema = extractParameterSchema<MovingPointParams>();
+
+    REQUIRE(schema.fields.size() == 4);
+
+    SECTION("Non-variant fields are unaffected") {
+        auto * sx = schema.field("start_x");
+        REQUIRE(sx != nullptr);
+        CHECK(sx->type_name == "float");
+        CHECK_FALSE(sx->is_variant);
+        CHECK(sx->variant_alternatives.empty());
+
+        auto * nf = schema.field("num_frames");
+        REQUIRE(nf != nullptr);
+        CHECK(nf->type_name == "int");
+    }
+
+    SECTION("Variant field is detected") {
+        auto * motion = schema.field("motion");
+        REQUIRE(motion != nullptr);
+        CHECK(motion->type_name == "variant");
+        CHECK(motion->is_variant);
+        CHECK(motion->variant_discriminator == "model");
+        CHECK(motion->display_name == "Motion");
+    }
+
+    SECTION("Variant field has correct alternatives") {
+        auto * motion = schema.field("motion");
+        REQUIRE(motion != nullptr);
+        REQUIRE(motion->variant_alternatives.size() == 3);
+
+        // Check tags match struct names
+        CHECK(motion->variant_alternatives[0].tag == "LinearMotionParams");
+        CHECK(motion->variant_alternatives[1].tag == "SinusoidalMotionParams");
+        CHECK(motion->variant_alternatives[2].tag == "BrownianMotionParams");
+
+        // allowed_values should match tags
+        REQUIRE(motion->allowed_values.size() == 3);
+        CHECK(motion->allowed_values[0] == "LinearMotionParams");
+        CHECK(motion->allowed_values[1] == "SinusoidalMotionParams");
+        CHECK(motion->allowed_values[2] == "BrownianMotionParams");
+    }
+
+    SECTION("Alternative sub-schemas have correct fields") {
+        auto * motion = schema.field("motion");
+        REQUIRE(motion != nullptr);
+        REQUIRE(motion->variant_alternatives.size() == 3);
+
+        // Linear: velocity_x, velocity_y
+        auto const & linear = *motion->variant_alternatives[0].schema;
+        CHECK(linear.fields.size() == 2);
+        CHECK(linear.field("velocity_x") != nullptr);
+        CHECK(linear.field("velocity_y") != nullptr);
+        CHECK(linear.field("velocity_x")->type_name == "float");
+
+        // Sinusoidal: 6 float fields
+        auto const & sinusoidal = *motion->variant_alternatives[1].schema;
+        CHECK(sinusoidal.fields.size() == 6);
+        CHECK(sinusoidal.field("amplitude_x") != nullptr);
+        CHECK(sinusoidal.field("frequency_x") != nullptr);
+        CHECK(sinusoidal.field("phase_y") != nullptr);
+
+        // Brownian: diffusion (float), seed (int)
+        auto const & brownian = *motion->variant_alternatives[2].schema;
+        CHECK(brownian.fields.size() == 2);
+        auto * diff = brownian.field("diffusion");
+        REQUIRE(diff != nullptr);
+        CHECK(diff->type_name == "float");
+        auto * s = brownian.field("seed");
+        REQUIRE(s != nullptr);
+        CHECK(s->type_name == "int");
+    }
+
+    SECTION("Alternative sub-schemas have default values") {
+        auto * motion = schema.field("motion");
+        REQUIRE(motion != nullptr);
+
+        auto const & linear = *motion->variant_alternatives[0].schema;
+        auto * vx = linear.field("velocity_x");
+        REQUIRE(vx != nullptr);
+        REQUIRE(vx->default_value_json.has_value());
+        // Default is 1.0f
+        auto def_result = rfl::json::read<rfl::Generic>(vx->default_value_json.value());
+        REQUIRE(def_result);
+        auto const * d = std::get_if<double>(&def_result.value().get());
+        REQUIRE(d != nullptr);
+        CHECK_THAT(*d, Catch::Matchers::WithinAbs(1.0, 0.001));
+    }
+}
+
+TEST_CASE("extractParameterSchema - TaggedUnion default value JSON", "[transforms][v2][schema][variant]") {
+    auto schema = extractParameterSchema<MovingPointParams>();
+
+    auto * motion = schema.field("motion");
+    REQUIRE(motion != nullptr);
+    REQUIRE(motion->default_value_json.has_value());
+
+    // Default-constructed MotionVariant holds the first alternative (LinearMotionParams)
+    auto def_result = rfl::json::read<rfl::Generic>(motion->default_value_json.value());
+    REQUIRE(def_result);
+    auto const * obj = std::get_if<rfl::Generic::Object>(&def_result.value().get());
+    REQUIRE(obj != nullptr);
+
+    // Should contain the discriminator field
+    auto model_val = obj->get("model");
+    REQUIRE(model_val);
+    auto const * model_str = std::get_if<std::string>(&model_val.value().get());
+    REQUIRE(model_str != nullptr);
+    CHECK(*model_str == "LinearMotionParams");
+}
+
+TEST_CASE("TaggedUnion JSON round-trip via reflect-cpp", "[transforms][v2][schema][variant]") {
+    SECTION("Default construction") {
+        MovingPointParams const params;
+        auto json = rfl::json::write(params);
+        auto result = rfl::json::read<MovingPointParams>(json);
+        REQUIRE(result);
+        CHECK_THAT(result.value().start_x, Catch::Matchers::WithinAbs(100.0, 0.001));
+        CHECK(result.value().num_frames == 100);
+    }
+
+    SECTION("With sinusoidal alternative") {
+        MovingPointParams params;
+        params.start_x = 50.0f;
+        params.motion = SinusoidalMotionParams{.amplitude_x = 10.0f, .amplitude_y = 5.0f};
+
+        auto json = rfl::json::write(params);
+        auto result = rfl::json::read<MovingPointParams>(json);
+        REQUIRE(result);
+        CHECK_THAT(result.value().start_x, Catch::Matchers::WithinAbs(50.0, 0.001));
+    }
+
+    SECTION("With brownian alternative") {
+        MovingPointParams params;
+        params.motion = BrownianMotionParams{.diffusion = 2.5f, .seed = 99};
+
+        auto json = rfl::json::write(params);
+        auto result = rfl::json::read<MovingPointParams>(json);
+        REQUIRE(result);
+    }
+}

@@ -39,6 +39,12 @@
 #include "TransformsV2/core/TypeChainResolver.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
 
+#include <QStackedWidget>
+#include <rfl.hpp>
+#include <rfl/json.hpp>
+
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
+
 using namespace WhiskerToolbox::Transforms::V2;
 
 // ============================================================================
@@ -68,7 +74,7 @@ public:
 TEST_CASE("AutoParamWidget generates correct layouts from ParameterSchema",
           "[TransformsV2Widget][AutoParamWidget][ui]") {
 
-    QtAppFixture qt;
+    QtAppFixture const qt;
 
     SECTION("Schema with float fields creates QDoubleSpinBox widgets") {
         // MaskAreaParams has 3 optional fields: scale_factor (float), min_area (float), exclude_holes (bool)
@@ -208,7 +214,7 @@ TEST_CASE("AutoParamWidget generates correct layouts from ParameterSchema",
         AutoParamWidget widget;
         widget.setSchema(*schema);
 
-        std::string json = R"({"scale_factor": 2.5, "min_area": 10.0, "exclude_holes": true})";
+        std::string const json = R"({"scale_factor": 2.5, "min_area": 10.0, "exclude_holes": true})";
         CHECK(widget.fromJson(json));
 
         // After fromJson, toJson should reflect the loaded values
@@ -225,7 +231,7 @@ TEST_CASE("AutoParamWidget generates correct layouts from ParameterSchema",
         AutoParamWidget widget;
         widget.setSchema(*schema);
 
-        std::string input_json = R"({"position": 0.5, "polynomial_order": 5})";
+        std::string const input_json = R"({"position": 0.5, "polynomial_order": 5})";
         REQUIRE(widget.fromJson(input_json));
 
         auto output_json = widget.toJson();
@@ -256,7 +262,7 @@ TEST_CASE("AutoParamWidget generates correct layouts from ParameterSchema",
 TEST_CASE("PipelineStepListWidget discovers transforms for input types",
           "[TransformsV2Widget][PipelineStepList][discovery]") {
 
-    QtAppFixture qt;
+    QtAppFixture const qt;
 
     auto & registry = ElementRegistry::instance();
 
@@ -431,7 +437,7 @@ TEST_CASE("PipelineStepListWidget discovers transforms for input types",
 TEST_CASE("StepConfigPanel shows correct config for transforms",
           "[TransformsV2Widget][StepConfigPanel][config]") {
 
-    QtAppFixture qt;
+    QtAppFixture const qt;
 
     SECTION("showStepConfig creates AutoParamWidget for parameterized transform") {
         StepConfigPanel panel;
@@ -503,7 +509,7 @@ TEST_CASE("StepConfigPanel shows correct config for transforms",
 
     SECTION("showStepConfig with existing params populates widget") {
         StepConfigPanel panel;
-        std::string params = R"({"scale_factor": 3.14})";
+        std::string const params = R"({"scale_factor": 3.14})";
         panel.showStepConfig("CalculateMaskArea", params);
 
         auto result = panel.currentParamsJson();
@@ -530,14 +536,14 @@ TEST_CASE("StepConfigPanel shows correct config for transforms",
 TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
           "[TransformsV2Widget][PropertiesWidget][integration]") {
 
-    QtAppFixture qt;
+    QtAppFixture const qt;
 
     auto data_manager = std::make_shared<DataManager>();
     auto state = std::make_shared<TransformsV2State>(data_manager);
     auto selection_context = std::make_unique<SelectionContext>();
 
     SECTION("Widget constructs successfully") {
-        TransformsV2Properties_Widget widget(state, selection_context.get());
+        TransformsV2Properties_Widget const widget(state, selection_context.get());
         QApplication::processEvents();
         REQUIRE(true);// If we get here, construction succeeded
     }
@@ -547,7 +553,7 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
         QApplication::processEvents();
 
         // Simulate data focus change to MaskData
-        EditorLib::SelectedDataKey key("test_mask_key");
+        EditorLib::SelectedDataKey const key("test_mask_key");
         widget.onDataFocusChanged(key, "MaskData");
         QApplication::processEvents();
 
@@ -564,7 +570,7 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
         TransformsV2Properties_Widget widget(state, selection_context.get());
         QApplication::processEvents();
 
-        EditorLib::SelectedDataKey key("test_line_key");
+        EditorLib::SelectedDataKey const key("test_line_key");
         widget.onDataFocusChanged(key, "LineData");
         QApplication::processEvents();
 
@@ -578,7 +584,7 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
         TransformsV2Properties_Widget widget(state, selection_context.get());
         QApplication::processEvents();
 
-        EditorLib::SelectedDataKey key("test_analog_key");
+        EditorLib::SelectedDataKey const key("test_analog_key");
         widget.onDataFocusChanged(key, "AnalogTimeSeries");
         QApplication::processEvents();
 
@@ -593,7 +599,7 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
         TransformsV2Properties_Widget widget(state, selection_context.get());
         QApplication::processEvents();
 
-        EditorLib::SelectedDataKey key("my_mask_data");
+        EditorLib::SelectedDataKey const key("my_mask_data");
         widget.onDataFocusChanged(key, "MaskData");
         QApplication::processEvents();
 
@@ -612,7 +618,7 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
         TransformsV2Properties_Widget widget(state, selection_context.get());
         QApplication::processEvents();
 
-        EditorLib::SelectedDataKey key("test_key");
+        EditorLib::SelectedDataKey const key("test_key");
         widget.onDataFocusChanged(key, "LineData");
         QApplication::processEvents();
 
@@ -630,7 +636,7 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
         TransformsV2Properties_Widget widget(state, selection_context.get());
         QApplication::processEvents();
 
-        EditorLib::SelectedDataKey key("stored_key");
+        EditorLib::SelectedDataKey const key("stored_key");
         widget.onDataFocusChanged(key, "MaskData");
         QApplication::processEvents();
 
@@ -661,11 +667,11 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
     }
 
     SECTION("SelectionContext signal triggers onDataFocusChanged") {
-        TransformsV2Properties_Widget widget(state, selection_context.get());
+        TransformsV2Properties_Widget const widget(state, selection_context.get());
         QApplication::processEvents();
 
         // Fire the SelectionContext signal
-        SelectionSource source{EditorLib::EditorInstanceId("test"), "test"};
+        SelectionSource const source{EditorLib::EditorInstanceId("test"), "test"};
         selection_context->setDataFocus(
                 EditorLib::SelectedDataKey("signal_test_key"),
                 "MaskData",
@@ -879,5 +885,149 @@ TEST_CASE("resolveTypeChain produces correct per-step type info",
         CHECK_FALSE(result.all_valid);
         CHECK_FALSE(result.steps[0].is_valid);
         CHECK(result.steps[0].output_type_name == "Unknown");
+    }
+}
+
+// ============================================================================
+// Section: AutoParamWidget — TaggedUnion (Variant) Support
+// ============================================================================
+
+namespace test_variant_widget {
+
+struct LinearMotionParams {
+    float velocity_x = 1.0f;
+    float velocity_y = 0.0f;
+};
+
+struct SinusoidalMotionParams {
+    float amplitude_x = 0.0f;
+    float amplitude_y = 0.0f;
+    float frequency_x = 1.0f;
+    float frequency_y = 1.0f;
+};
+
+struct BrownianMotionParams {
+    float diffusion = 1.0f;
+    int seed = 42;
+};
+
+using MotionVariant = rfl::TaggedUnion<
+        "model",
+        LinearMotionParams,
+        SinusoidalMotionParams,
+        BrownianMotionParams>;
+
+struct MovingPointParams {
+    float start_x = 100.0f;
+    int num_frames = 100;
+    MotionVariant motion = LinearMotionParams{};
+};
+
+}// namespace test_variant_widget
+
+TEST_CASE("AutoParamWidget handles TaggedUnion variant fields",
+          "[TransformsV2Widget][AutoParamWidget][variant]") {
+
+    QtAppFixture const qt;
+
+    auto schema = extractParameterSchema<test_variant_widget::MovingPointParams>();
+    REQUIRE(schema.fields.size() == 3);
+
+    AutoParamWidget widget;
+    widget.setSchema(schema);
+
+    SECTION("Creates QComboBox for variant discriminator") {
+        auto combos = widget.findChildren<QComboBox *>();
+        // Should have at least one combo (the variant discriminator)
+        CHECK_FALSE(combos.isEmpty());
+
+        // Find the variant combo by checking for alternative tags
+        bool found_variant_combo = false;
+        for (auto * combo: combos) {
+            if (combo->count() == 3 &&
+                combo->itemText(0) == "LinearMotionParams") {
+                found_variant_combo = true;
+                break;
+            }
+        }
+        CHECK(found_variant_combo);
+    }
+
+    SECTION("Creates QStackedWidget for variant alternatives") {
+        auto stacks = widget.findChildren<QStackedWidget *>();
+        CHECK_FALSE(stacks.isEmpty());
+        // Should have 3 pages (one per alternative)
+        CHECK(stacks[0]->count() == 3);
+    }
+
+    SECTION("toJson produces correct variant JSON structure") {
+        auto json_str = widget.toJson();
+        auto result = rfl::json::read<rfl::Generic>(json_str);
+        REQUIRE(result);
+
+        auto const * obj = std::get_if<rfl::Generic::Object>(&result.value().get());
+        REQUIRE(obj != nullptr);
+
+        // The "motion" field should be a nested object
+        auto motion_val = obj->get("motion");
+        REQUIRE(motion_val);
+        auto const * motion_obj = std::get_if<rfl::Generic::Object>(&motion_val.value().get());
+        REQUIRE(motion_obj != nullptr);
+
+        // Should have the discriminator
+        auto model_val = motion_obj->get("model");
+        REQUIRE(model_val);
+        auto const * model_str = std::get_if<std::string>(&model_val.value().get());
+        REQUIRE(model_str != nullptr);
+        CHECK(*model_str == "LinearMotionParams");
+
+        // Should have sub-fields from the active alternative
+        auto vx_val = motion_obj->get("velocity_x");
+        REQUIRE(vx_val);
+    }
+
+    SECTION("fromJson restores variant state") {
+        // Manually construct JSON with BrownianMotionParams alternative
+        std::string const json = R"({
+            "start_x": 50.0,
+            "num_frames": 200,
+            "motion": {
+                "model": "BrownianMotionParams",
+                "diffusion": 3.5,
+                "seed": 99
+            }
+        })";
+
+        REQUIRE(widget.fromJson(json));
+
+        // Verify the non-variant fields
+        auto round_json_str = widget.toJson();
+        auto result = rfl::json::read<rfl::Generic>(round_json_str);
+        REQUIRE(result);
+        auto const * obj = std::get_if<rfl::Generic::Object>(&result.value().get());
+        REQUIRE(obj != nullptr);
+
+        // Check start_x was updated
+        auto sx = obj->get("start_x");
+        REQUIRE(sx);
+        double sx_val = 0.0;
+        if (auto const * sx_d = std::get_if<double>(&sx.value().get())) {
+            sx_val = *sx_d;
+        } else if (auto const * sx_i = std::get_if<int>(&sx.value().get())) {
+            sx_val = static_cast<double>(*sx_i);
+        }
+        CHECK_THAT(sx_val, Catch::Matchers::WithinAbs(50.0, 0.1));
+
+        // Check motion discriminator
+        auto motion_val = obj->get("motion");
+        REQUIRE(motion_val);
+        auto const * motion_obj = std::get_if<rfl::Generic::Object>(&motion_val.value().get());
+        REQUIRE(motion_obj != nullptr);
+
+        auto model_val = motion_obj->get("model");
+        REQUIRE(model_val);
+        auto const * model_str = std::get_if<std::string>(&model_val.value().get());
+        REQUIRE(model_str != nullptr);
+        CHECK(*model_str == "BrownianMotionParams");
     }
 }

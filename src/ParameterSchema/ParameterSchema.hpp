@@ -14,6 +14,7 @@
 
 #include "TimeFrame/TimeFrameIndexReflector.hpp"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -31,9 +32,33 @@ namespace WhiskerToolbox::Transforms::V2 {
  * Created at compile-time via rfl::fields<T>() and augmented with
  * validator constraint parsing and optional UI hints.
  */
+
+// Forward declarations to break circular dependency:
+// VariantAlternative → ParameterSchema → ParameterFieldDescriptor → VariantAlternative
+struct ParameterSchema;
+
+/**
+ * @brief Describes one alternative in a tagged-union variant field
+ *
+ * Each alternative has a tag string (the discriminator value) and a
+ * sub-schema describing the fields for that alternative's struct.
+ * Uses unique_ptr to break the circular type dependency.
+ */
+struct VariantAlternative {
+    std::string tag;                        ///< Discriminator value (e.g., "LinearMotionParams")
+    std::unique_ptr<ParameterSchema> schema;///< Sub-schema for this alternative's fields
+
+    VariantAlternative();
+    ~VariantAlternative();
+    VariantAlternative(VariantAlternative const & other);
+    VariantAlternative & operator=(VariantAlternative const & other);
+    VariantAlternative(VariantAlternative && other) noexcept;
+    VariantAlternative & operator=(VariantAlternative && other) noexcept;
+};
+
 struct ParameterFieldDescriptor {
     std::string name;         ///< Field name from reflect-cpp (e.g., "scale_factor")
-    std::string type_name;    ///< Underlying type: "float", "int", "std::string", "bool"
+    std::string type_name;    ///< Underlying type: "float", "int", "std::string", "bool", "enum", "variant"
     std::string raw_type_name;///< Full raw type string from reflect-cpp
     std::string display_name; ///< snake_case → "Title Case" for UI display
 
@@ -57,6 +82,11 @@ struct ParameterFieldDescriptor {
 
     bool is_optional = false;///< True for std::optional<T> fields
     bool is_bound = false;   ///< True if typically populated from PipelineValueStore
+
+    // Variant support (populated only when type_name == "variant")
+    bool is_variant = false;                             ///< True for rfl::TaggedUnion fields
+    std::string variant_discriminator;                   ///< Discriminator field name (e.g., "model")
+    std::vector<VariantAlternative> variant_alternatives;///< One entry per union alternative
 };
 
 // ============================================================================
@@ -166,6 +196,75 @@ struct unwrap_optional<std::optional<T>> {
 template<typename T>
 using unwrap_optional_t = typename unwrap_optional<T>::type;
 
+/// Detect rfl::TaggedUnion<_discriminator, Ts...> via SFINAE
+template<typename T, typename = void>
+struct is_tagged_union : std::false_type {};
+
+template<typename T>
+struct is_tagged_union<T, std::void_t<
+                                  typename T::VariantType,
+                                  decltype(T::discrimininator_)>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_tagged_union_v = is_tagged_union<T>::value;
+
+}// namespace detail
+
+// Forward declaration for recursive use in detail::makeVariantAlternative
+template<typename Params>
+ParameterSchema extractParameterSchema();
+
+namespace detail {
+
+/// @brief Process a single alternative type in a TaggedUnion.
+///
+/// Extracts the tag name by serializing a default-constructed TaggedUnion holding
+/// the alternative, and recursively extracts the sub-schema for that alternative.
+template<typename TaggedUnionType, typename AltType>
+VariantAlternative makeVariantAlternative(std::string_view disc_str) {
+    VariantAlternative alt;
+    // Extract tag name: serialize a TaggedUnion holding a default-constructed AltType
+    TaggedUnionType tu{AltType{}};
+    auto json_str = rfl::json::write(tu);
+    auto parsed = rfl::json::read<rfl::Generic>(json_str);
+    if (parsed) {
+        auto const * obj = std::get_if<rfl::Generic::Object>(&parsed.value().get());
+        if (obj) {
+            auto disc_val = obj->get(std::string(disc_str));
+            if (disc_val) {
+                if (auto const * s = std::get_if<std::string>(&disc_val.value().get())) {
+                    alt.tag = *s;
+                }
+            }
+        }
+    }
+    // Recursively extract sub-schema for the alternative struct
+    *alt.schema = extractParameterSchema<AltType>();
+    return alt;
+}
+
+/// @brief Process all alternatives in a TaggedUnion and populate the field descriptor.
+template<rfl::internal::StringLiteral _disc, typename... Ts>
+void processTaggedUnion(
+        rfl::TaggedUnion<_disc, Ts...> const * /*type_tag*/,
+        ParameterFieldDescriptor & desc) {
+    using TU = rfl::TaggedUnion<_disc, Ts...>;
+    constexpr auto disc_sv = _disc.string_view();
+    desc.is_variant = true;
+    desc.type_name = "variant";
+    desc.variant_discriminator = std::string(disc_sv);
+    desc.variant_alternatives.clear();
+    desc.allowed_values.clear();
+
+    // Fold expression: process each alternative type
+    (([&] {
+         auto alt = makeVariantAlternative<TU, Ts>(disc_sv);
+         desc.allowed_values.push_back(alt.tag);
+         desc.variant_alternatives.push_back(std::move(alt));
+     }()),
+     ...);
+}
+
 }// namespace detail
 
 // ============================================================================
@@ -240,7 +339,13 @@ ParameterSchema extractParameterSchema() {
         using RawFieldType = std::remove_pointer_t<PtrType>;
         using InnerType = detail::unwrap_optional_t<RawFieldType>;
 
-        if constexpr (std::is_enum_v<InnerType>) {
+        if constexpr (detail::is_tagged_union_v<InnerType>) {
+            if (field_idx < schema.fields.size()) {
+                detail::processTaggedUnion(
+                        static_cast<InnerType const *>(nullptr),
+                        schema.fields[field_idx]);
+            }
+        } else if constexpr (std::is_enum_v<InnerType>) {
             if (field_idx < schema.fields.size()) {
                 auto & fd = schema.fields[field_idx];
                 fd.type_name = "enum";

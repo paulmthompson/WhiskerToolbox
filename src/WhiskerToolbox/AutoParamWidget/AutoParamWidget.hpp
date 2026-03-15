@@ -41,6 +41,7 @@ class QFormLayout;
 class QGroupBox;
 class QLineEdit;
 class QSpinBox;
+class QStackedWidget;
 class QVBoxLayout;
 
 /**
@@ -103,10 +104,21 @@ private:
 
         // For optional fields: checkbox that gates the value widget
         QCheckBox * optional_gate = nullptr;
+
+        // For variant (TaggedUnion) fields
+        bool is_variant = false;
+        std::string variant_discriminator;
+        QComboBox * variant_combo = nullptr;
+        QStackedWidget * variant_stack = nullptr;
+        std::vector<std::vector<FieldRow>> variant_sub_rows;///< One vector per alternative
     };
 
     void buildFieldRow(WhiskerToolbox::Transforms::V2::ParameterFieldDescriptor const & desc,
                        QFormLayout * layout);
+    void buildVariantRow(WhiskerToolbox::Transforms::V2::ParameterFieldDescriptor const & desc,
+                         QFormLayout * layout);
+    static std::string variantSubRowsToJson(FieldRow const & row);
+    static void variantSubRowsFromJson(FieldRow & row, std::string const & json_obj_str);
     void clearLayout();
     void onFieldChanged();
 

@@ -248,3 +248,31 @@ ConstraintInfo extractConstraints(std::string const & type_str) {
 }
 
 }// namespace WhiskerToolbox::Transforms::V2
+
+// ============================================================================
+// VariantAlternative special member functions
+// ============================================================================
+
+namespace WhiskerToolbox::Transforms::V2 {
+
+VariantAlternative::VariantAlternative()
+    : schema(std::make_unique<ParameterSchema>()) {}
+
+VariantAlternative::~VariantAlternative() = default;
+
+VariantAlternative::VariantAlternative(VariantAlternative const & other)
+    : tag(other.tag),
+      schema(other.schema ? std::make_unique<ParameterSchema>(*other.schema) : std::make_unique<ParameterSchema>()) {}
+
+VariantAlternative & VariantAlternative::operator=(VariantAlternative const & other) {
+    if (this != &other) {
+        tag = other.tag;
+        schema = other.schema ? std::make_unique<ParameterSchema>(*other.schema) : std::make_unique<ParameterSchema>();
+    }
+    return *this;
+}
+
+VariantAlternative::VariantAlternative(VariantAlternative && other) noexcept = default;
+VariantAlternative & VariantAlternative::operator=(VariantAlternative && other) noexcept = default;
+
+}// namespace WhiskerToolbox::Transforms::V2

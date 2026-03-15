@@ -41,6 +41,9 @@ Describes a single field in a parameter struct at runtime:
 | `is_advanced` | `bool` | Collapsed by default in the UI |
 | `is_optional` | `bool` | True for `std::optional<T>` fields |
 | `is_bound` | `bool` | True if typically populated from a value store |
+| `is_variant` | `bool` | True for `rfl::TaggedUnion` fields |
+| `variant_discriminator` | `std::string` | Tag field name (e.g. `"model"`) |
+| `variant_alternatives` | `std::vector<VariantAlternative>` | One entry per union alternative |
 
 ### `ParameterSchema`
 
@@ -110,6 +113,96 @@ struct MyParams {
   `rfl::config::enum_range<E>`).
 - The enum must be in a named namespace (anonymous namespaces break reflect-cpp's
   compile-time name extraction).
+
+### Tagged Variant (Discriminated Union) Auto-Detection
+
+`rfl::TaggedUnion` fields are automatically detected at compile time using a
+`is_tagged_union_v<T>` SFINAE trait (checks for `T::VariantType` and
+`T::discrimininator_`). When detected:
+
+- `type_name` is set to `"variant"`
+- `is_variant` is set to `true`
+- `variant_discriminator` is set to the compile-time discriminator string
+  (e.g. `"model"`)
+- `variant_alternatives` is populated with one `VariantAlternative` per union
+  alternative, each containing the tag name and a recursively-extracted
+  `ParameterSchema` for that alternative's fields
+- `allowed_values` is auto-populated with the tag names (for combo box rendering)
+- `default_value_json` is the full JSON serialization of the default-constructed
+  variant (including discriminator and sub-fields)
+
+```cpp
+struct LinearMotionParams {
+    float velocity_x = 1.0f;
+    float velocity_y = 0.0f;
+};
+
+struct SinusoidalMotionParams {
+    float amplitude_x = 0.0f;
+    float amplitude_y = 0.0f;
+    float frequency_x = 0.0f;
+    float frequency_y = 0.0f;
+    float phase_x = 0.0f;
+    float phase_y = 0.0f;
+};
+
+struct BrownianMotionParams {
+    float diffusion = 1.0f;
+    int seed = 42;
+};
+
+using MotionVariant = rfl::TaggedUnion<
+    "model",
+    LinearMotionParams,
+    SinusoidalMotionParams,
+    BrownianMotionParams>;
+
+struct MovingPointParams {
+    float start_x = 100.0f;
+    int num_frames = 100;
+    MotionVariant motion = LinearMotionParams{};  // ← variant field
+};
+```
+
+JSON output:
+```json
+{
+    "start_x": 100.0,
+    "num_frames": 100,
+    "motion": {
+        "model": "LinearMotionParams",
+        "velocity_x": 1.0,
+        "velocity_y": 0.0
+    }
+}
+```
+
+`AutoParamWidget` renders variant fields as a combo box (discriminator) above
+a `QStackedWidget` containing one sub-form per alternative. Changing the combo
+box selection swaps the visible sub-form.
+
+**Important:** `rfl::TaggedUnion` has no default constructor. The variant field
+in your params struct must have a default member initializer that provides one
+of the alternative types (e.g. `= LinearMotionParams{}`).
+
+**Limitations:**
+
+- Only `rfl::TaggedUnion` (internally tagged) variants are supported.
+  `std::variant` without a tag is not auto-detected.
+- Alternative structs must be default-constructible.
+
+#### `VariantAlternative`
+
+Describes one alternative in a variant field:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `tag` | `std::string` | Discriminator value (struct name, e.g. `"LinearMotionParams"`) |
+| `schema` | `std::unique_ptr<ParameterSchema>` | Sub-schema for this alternative's fields |
+
+`std::unique_ptr` is used to break the circular type dependency
+(`VariantAlternative` → `ParameterSchema` → `ParameterFieldDescriptor` →
+`VariantAlternative`).
 
 ## Helper Functions
 
