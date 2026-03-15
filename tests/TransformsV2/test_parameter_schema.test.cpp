@@ -24,7 +24,7 @@ TEST_CASE("snakeCaseToDisplay - basic conversions", "[transforms][v2][schema][he
     CHECK(snakeCaseToDisplay("min_area") == "Min Area");
     CHECK(snakeCaseToDisplay("exclude_holes") == "Exclude Holes");
     CHECK(snakeCaseToDisplay("position") == "Position");
-    CHECK(snakeCaseToDisplay("") == "");
+    CHECK(snakeCaseToDisplay("").empty());
     CHECK(snakeCaseToDisplay("x") == "X");
     CHECK(snakeCaseToDisplay("polynomial_order") == "Polynomial Order");
     CHECK(snakeCaseToDisplay("reference_x") == "Reference X");
@@ -303,4 +303,104 @@ TEST_CASE("ElementRegistry::getParameterSchema - works for container transforms"
         CHECK(schema->fields.size() == 3);
         CHECK(schema->field("threshold_value") != nullptr);
     }
+}
+
+// ============================================================================
+// Tests: Phase 1 — Enum class auto-detection
+// ============================================================================
+
+// Enum and struct must be in a named namespace for reflect-cpp's compile-time
+// enum name extraction (anonymous namespaces break __PRETTY_FUNCTION__ parsing).
+namespace test_enum {
+
+/// Test enum for schema extraction
+enum class TestMode { fast,
+                      balanced,
+                      accurate };
+
+/// Test struct with required and optional enum fields alongside a plain field
+struct TestEnumParams {
+    TestMode mode = TestMode::fast;
+    std::optional<TestMode> alt_mode;
+    float threshold = 0.5f;
+};
+
+}// namespace test_enum
+
+using test_enum::TestEnumParams;
+using test_enum::TestMode;
+
+TEST_CASE("extractParameterSchema - enum class auto-detection", "[transforms][v2][schema][enum]") {
+    auto schema = extractParameterSchema<TestEnumParams>();
+
+    REQUIRE(schema.fields.size() == 3);
+
+    SECTION("Required enum field") {
+        auto * mode = schema.field("mode");
+        REQUIRE(mode != nullptr);
+        CHECK(mode->type_name == "enum");
+        CHECK(mode->display_name == "Mode");
+        CHECK_FALSE(mode->is_optional);
+        REQUIRE(mode->allowed_values.size() == 3);
+        CHECK(mode->allowed_values[0] == "fast");
+        CHECK(mode->allowed_values[1] == "balanced");
+        CHECK(mode->allowed_values[2] == "accurate");
+    }
+
+    SECTION("Optional enum field") {
+        auto * alt = schema.field("alt_mode");
+        REQUIRE(alt != nullptr);
+        CHECK(alt->type_name == "enum");
+        CHECK(alt->display_name == "Alt Mode");
+        CHECK(alt->is_optional);
+        REQUIRE(alt->allowed_values.size() == 3);
+        CHECK(alt->allowed_values[0] == "fast");
+        CHECK(alt->allowed_values[1] == "balanced");
+        CHECK(alt->allowed_values[2] == "accurate");
+    }
+
+    SECTION("Non-enum fields are unaffected") {
+        auto * thresh = schema.field("threshold");
+        REQUIRE(thresh != nullptr);
+        CHECK(thresh->type_name == "float");
+        CHECK(thresh->allowed_values.empty());
+    }
+}
+
+TEST_CASE("extractParameterSchema - enum default value is JSON string", "[transforms][v2][schema][enum]") {
+    auto schema = extractParameterSchema<TestEnumParams>();
+
+    auto * mode = schema.field("mode");
+    REQUIRE(mode != nullptr);
+    REQUIRE(mode->default_value_json.has_value());
+    CHECK(mode->default_value_json.value() == "\"fast\"");
+}
+
+TEST_CASE("extractParameterSchema - enum JSON round-trip via reflect-cpp", "[transforms][v2][schema][enum]") {
+    TestEnumParams params;
+    params.mode = TestMode::accurate;
+    params.alt_mode = TestMode::balanced;
+    params.threshold = 0.75f;
+
+    auto json = rfl::json::write(params);
+    auto result = rfl::json::read<TestEnumParams>(json);
+
+    REQUIRE(result);
+    CHECK(result.value().mode == TestMode::accurate);
+    REQUIRE(result.value().alt_mode.has_value());
+    CHECK(result.value().alt_mode.value() == TestMode::balanced);
+    CHECK_THAT(result.value().threshold, Catch::Matchers::WithinAbs(0.75, 0.001));
+}
+
+TEST_CASE("extractParameterSchema - enum ParameterUIHints still work", "[transforms][v2][schema][enum]") {
+    // Verify that manual ParameterUIHints on string fields still work alongside enum auto-detection
+    auto schema = extractParameterSchema<TestHintParams>();
+
+    auto * mode = schema.field("mode");
+    REQUIRE(mode != nullptr);
+    // TestHintParams::mode is std::optional<std::string> with allowed_values set via UIHints
+    CHECK(mode->allowed_values.size() == 3);
+    CHECK(mode->allowed_values[0] == "fast");
+    // type_name should remain "std::string" since it's a string, not an enum
+    CHECK(mode->type_name == "std::string");
 }

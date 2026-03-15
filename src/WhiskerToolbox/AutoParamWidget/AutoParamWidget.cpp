@@ -177,7 +177,7 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
         row.bool_check = check;
         value_widget = check;
 
-    } else if (desc.type_name == "std::string" && !desc.allowed_values.empty()) {
+    } else if ((desc.type_name == "std::string" || desc.type_name == "enum") && !desc.allowed_values.empty()) {
         auto * combo = new QComboBox(this);
         for (auto const & val: desc.allowed_values) {
             combo->addItem(QString::fromStdString(val));

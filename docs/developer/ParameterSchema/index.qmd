@@ -29,12 +29,12 @@ Describes a single field in a parameter struct at runtime:
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | `std::string` | Reflect-cpp field name (snake_case) |
-| `type_name` | `std::string` | Underlying type: `"float"`, `"int"`, `"std::string"`, `"bool"` |
+| `type_name` | `std::string` | Underlying type: `"float"`, `"int"`, `"std::string"`, `"bool"`, `"enum"` |
 | `raw_type_name` | `std::string` | Full raw type string from reflect-cpp |
 | `display_name` | `std::string` | Human-readable "Title Case" label |
 | `min_value` / `max_value` | `std::optional<double>` | From `rfl::Validator` constraints |
 | `is_exclusive_min/max` | `bool` | Exclusive vs. inclusive bound |
-| `allowed_values` | `std::vector<std::string>` | For enum-like string fields |
+| `allowed_values` | `std::vector<std::string>` | For enum-like string fields; auto-populated for `enum class` fields |
 | `default_value_json` | `std::optional<std::string>` | Default value as JSON string |
 | `tooltip` | `std::string` | UI hint (from `ParameterUIHints`) |
 | `group` | `std::string` | Grouping label for the UI |
@@ -84,6 +84,32 @@ ParameterSchema schema = extractParameterSchema<MyParams>();
 
 This is typically called once per type — either at static registration time (TransformsV2)
 or lazily by the command factory (Command Architecture).
+
+### Enum Class Auto-Detection
+
+C++ `enum class` fields (including `std::optional<enum class>`) are automatically detected
+at compile time using `rfl::to_view()` and `std::is_enum_v`. When detected:
+
+- `type_name` is set to `"enum"`
+- `allowed_values` is populated with all enumerator names via `rfl::get_enumerator_array<E>()`
+- Default values serialize as JSON strings (e.g. `"fast"` for `MyEnum::fast`)
+- No `ParameterUIHints` specialization is needed
+
+```cpp
+enum class MotionModel { linear, sinusoidal, brownian };
+
+struct MyParams {
+    MotionModel model = MotionModel::linear;   // → combo box with 3 entries
+    std::optional<MotionModel> alt_model;      // → gated combo box
+};
+```
+
+**Limitations:**
+
+- Enum values must be in the range [-256, 256] (reflect-cpp default; configurable via
+  `rfl::config::enum_range<E>`).
+- The enum must be in a named namespace (anonymous namespaces break reflect-cpp's
+  compile-time name extraction).
 
 ## Helper Functions
 

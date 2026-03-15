@@ -16,6 +16,7 @@
 
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace WhiskerToolbox::Transforms::V2 {
@@ -146,6 +147,28 @@ struct ConstraintInfo {
 ConstraintInfo extractConstraints(std::string const & type_str);
 
 // ============================================================================
+// Compile-Time Helpers
+// ============================================================================
+
+namespace detail {
+
+/// Unwrap std::optional<T> to T; identity for non-optional types.
+template<typename T>
+struct unwrap_optional {
+    using type = T;
+};
+
+template<typename T>
+struct unwrap_optional<std::optional<T>> {
+    using type = T;
+};
+
+template<typename T>
+using unwrap_optional_t = typename unwrap_optional<T>::type;
+
+}// namespace detail
+
+// ============================================================================
 // Compile-Time Schema Extraction
 // ============================================================================
 
@@ -204,6 +227,32 @@ ParameterSchema extractParameterSchema() {
 
         schema.fields.push_back(std::move(desc));
     }
+
+    // Enum detection pass: rfl::fields() only provides type strings, but we
+    // need actual C++ types to use std::is_enum_v and rfl::get_enumerator_array.
+    // rfl::to_view() gives typed references to each field.
+    auto defaults_instance = Params{};
+    auto view = rfl::to_view(defaults_instance);
+    size_t field_idx = 0;
+    view.apply([&](auto const & field) {
+        // rfl::to_view returns pointer fields, so field.value() is T*
+        using PtrType = std::remove_cvref_t<decltype(field.value())>;
+        using RawFieldType = std::remove_pointer_t<PtrType>;
+        using InnerType = detail::unwrap_optional_t<RawFieldType>;
+
+        if constexpr (std::is_enum_v<InnerType>) {
+            if (field_idx < schema.fields.size()) {
+                auto & fd = schema.fields[field_idx];
+                fd.type_name = "enum";
+                fd.allowed_values.clear();
+                constexpr auto enumerators = rfl::get_enumerator_array<InnerType>();
+                for (auto const & [name, val]: enumerators) {
+                    fd.allowed_values.emplace_back(std::string(name));
+                }
+            }
+        }
+        ++field_idx;
+    });
 
     // Apply optional UI hints from specializations
     ParameterUIHints<Params>::annotate(schema);
