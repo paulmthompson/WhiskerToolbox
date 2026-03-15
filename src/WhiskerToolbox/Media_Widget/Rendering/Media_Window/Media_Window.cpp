@@ -371,26 +371,6 @@ void Media_Window::setGroupManager(GroupManager * group_manager) {
 
 void Media_Window::setMediaWidgetState(MediaWidgetState * state) {
     _media_widget_state = state;
-
-    // Initial sync: push current options to state
-    if (_media_widget_state) {
-        syncAllOptionsToState();
-    }
-}
-
-void Media_Window::syncAllOptionsToState() {
-    // Phase 4C: State is now the single source of truth for display options.
-    // This method is kept for API compatibility but is now a no-op since
-    // all options are stored directly in the state registry.
-    // No synchronization needed - there are no local _*_configs maps to sync.
-}
-
-void Media_Window::restoreOptionsFromState() {
-    // Phase 4C: State is now the single source of truth for display options.
-    // This method is kept for API compatibility but is now a no-op since
-    // all plotting methods read directly from the state registry.
-    // Just refresh the canvas to apply any state changes.
-    UpdateCanvas();
 }
 
 // === get*Config accessor implementations (Phase 4C: forward to state registry) ===

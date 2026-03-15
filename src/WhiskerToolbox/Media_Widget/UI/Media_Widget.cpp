@@ -582,11 +582,6 @@ void Media_Widget::restoreFromState() {
         ui->graphicsView->verticalScrollBar()->setValue(static_cast<int>(pan_y));
     }
 
-    // Restore display options in Media_Window
-    if (_scene) {
-        _scene->restoreOptionsFromState();
-    }
-
     // Restore enabled features by iterating through the state's options
     // and setting is_visible on the corresponding Media_Window configs
     auto const & data = _state->data();

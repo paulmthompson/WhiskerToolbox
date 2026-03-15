@@ -109,20 +109,6 @@ public:
     void setMediaWidgetState(MediaWidgetState * state);
 
     /**
-     * @brief Sync all display options to the state object
-     * 
-     * Call this after loading options or when state needs to be updated.
-     */
-    void syncAllOptionsToState();
-
-    /**
-     * @brief Restore display options from the state object
-     * 
-     * Call this when restoring from a saved workspace.
-     */
-    void restoreOptionsFromState();
-
-    /**
      *
      *
      */
