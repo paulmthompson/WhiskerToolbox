@@ -25,6 +25,7 @@ add_library(DataSynthesizer STATIC
     Generators/Line/StraightLineGenerator.cpp
     Trajectory/Trajectory.hpp
     Trajectory/Trajectory.cpp
+    Trajectory/MotionParams.hpp
     Trajectory/PixelClipping.hpp
 )
 

@@ -32,6 +32,7 @@
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
+#include <rfl/DefaultIfMissing.hpp>
 #include <rfl/json.hpp>
 
 #include <iostream>
@@ -66,7 +67,7 @@ public:
         auto wrapper = [typed_func = std::move(typed_func), name](
                                std::string const & params_json,
                                GeneratorContext const & /*ctx*/) -> DataTypeVariant {
-            auto parsed = rfl::json::read<Params>(params_json);
+            auto parsed = rfl::json::read<Params, rfl::DefaultIfMissing>(params_json);
             if (!parsed) {
                 throw std::runtime_error(
                         "Generator '" + name + "': failed to parse parameters");
@@ -93,7 +94,7 @@ public:
         auto wrapper = [typed_func = std::move(typed_func), name](
                                std::string const & params_json,
                                GeneratorContext const & ctx) -> DataTypeVariant {
-            auto parsed = rfl::json::read<Params>(params_json);
+            auto parsed = rfl::json::read<Params, rfl::DefaultIfMissing>(params_json);
             if (!parsed) {
                 throw std::runtime_error(
                         "Generator '" + name + "': failed to parse parameters");

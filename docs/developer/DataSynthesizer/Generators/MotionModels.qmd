@@ -65,9 +65,10 @@ struct TrajectoryParams {
 ```
 
 `TrajectoryParams` is used internally by `computeTrajectory()`. It is **not**
-used directly for JSON parsing — generators flatten these fields into their
-own params struct using `std::optional` for each field and provide defaults
-via `.value_or()`.
+used directly for JSON parsing — generators use typed parameter structs with
+`MotionModelVariant` (an `rfl::TaggedUnion`) and `BoundaryParams` (with
+`BoundaryMode` enum), then convert to `TrajectoryParams` via
+`toTrajectoryParams()`.
 
 ### computeTrajectory()
 
@@ -102,6 +103,86 @@ Boundaries are enforced per-step on each axis independently.
 
 ---
 
+## Typed Motion Parameter System (Milestone 5b-ia)
+
+**Location**: `src/DataSynthesizer/Trajectory/MotionParams.hpp`
+
+Milestone 5b-ia replaced the flat-optional parameter style with a typed
+system using `enum class` for boundary modes and `rfl::TaggedUnion` for
+motion model selection. This integrates with `ParameterSchema` and
+`AutoParamWidget` to provide:
+
+- A **combo box** for selecting motion model (linear / sinusoidal / brownian)
+- A **swapping sub-form** showing only the relevant parameters for the selected model
+- A **combo box** for selecting boundary mode (clamp / bounce / wrap)
+
+### Shared Types
+
+All moving generators reuse these types from `MotionParams.hpp`:
+
+```cpp
+// Boundary
+enum class BoundaryMode { clamp, bounce, wrap };
+
+struct BoundaryParams {
+    BoundaryMode boundary_mode = BoundaryMode::clamp;
+    float bounds_min_x = 0.0f;
+    float bounds_max_x = 640.0f;
+    float bounds_min_y = 0.0f;
+    float bounds_max_y = 480.0f;
+};
+
+// Per-model params
+struct LinearMotionParams {
+    float velocity_x = 1.0f;
+    float velocity_y = 0.0f;
+};
+
+struct SinusoidalMotionParams {
+    float amplitude_x = 0.0f;
+    float amplitude_y = 0.0f;
+    float frequency_x = 0.0f;
+    float frequency_y = 0.0f;
+    float phase_x = 0.0f;
+    float phase_y = 0.0f;
+};
+
+struct BrownianMotionParams {
+    float diffusion = 1.0f;
+    uint64_t seed = 42;
+};
+
+// Discriminated union
+using MotionModelVariant = rfl::TaggedUnion<
+    "model",
+    LinearMotionParams,
+    SinusoidalMotionParams,
+    BrownianMotionParams>;
+```
+
+### toTrajectoryParams()
+
+Converts from the typed variant + boundary params to the internal
+`TrajectoryParams` used by `computeTrajectory()`:
+
+```cpp
+TrajectoryParams toTrajectoryParams(
+    MotionModelVariant const & motion,
+    BoundaryParams const & boundary);
+```
+
+Uses `motion.visit()` to dispatch on the active variant alternative and
+populate the corresponding `TrajectoryParams` fields.
+
+### DefaultIfMissing
+
+The `RegisterGenerator` template uses `rfl::DefaultIfMissing` as a
+processor when parsing JSON, so missing fields in the JSON use the struct's
+default member initializer values. This means users only need to specify
+the fields they want to override.
+
+---
+
 ## PixelClipping Utility
 
 **Location**: `src/DataSynthesizer/Trajectory/PixelClipping.hpp`
@@ -123,72 +204,119 @@ validates the trajectory library.
 
 ### Parameters
 
-All trajectory parameters are optional with sensible defaults. Users only need
-to specify the parameters relevant to their chosen motion model.
+Uses `MotionModelVariant` and `BoundaryParams` for typed motion and boundary
+selection.
 
 | Parameter | Type | Default | Notes |
 |-----------|------|---------|-------|
 | `start_x` | `float` | 100.0 | Starting X position |
 | `start_y` | `float` | 100.0 | Starting Y position |
-| `num_frames` | `int` | 100 | Number of frames to generate (required) |
-| `model` | `string` | `"linear"` | Motion model |
-| `velocity_x` | `float` | 1.0 | Linear velocity X |
-| `velocity_y` | `float` | 0.0 | Linear velocity Y |
-| `amplitude_x` | `float` | 0.0 | Sinusoidal amplitude X |
-| `amplitude_y` | `float` | 0.0 | Sinusoidal amplitude Y |
-| `frequency_x` | `float` | 0.0 | Sinusoidal frequency X |
-| `frequency_y` | `float` | 0.0 | Sinusoidal frequency Y |
-| `phase_x` | `float` | 0.0 | Sinusoidal phase X |
-| `phase_y` | `float` | 0.0 | Sinusoidal phase Y |
-| `diffusion` | `float` | 1.0 | Brownian diffusion coefficient |
-| `seed` | `uint64` | 42 | Random seed (Brownian) |
-| `boundary_mode` | `string` | `"clamp"` | Boundary enforcement mode |
-| `bounds_min_x` | `float` | 0.0 | Minimum X bound |
-| `bounds_max_x` | `float` | 640.0 | Maximum X bound |
-| `bounds_min_y` | `float` | 0.0 | Minimum Y bound |
-| `bounds_max_y` | `float` | 480.0 | Maximum Y bound |
+| `num_frames` | `int` | 100 | Number of frames to generate |
+| `motion` | `MotionModelVariant` | `LinearMotionParams{}` | Tagged union — see sub-fields below |
+| `boundary` | `BoundaryParams` | defaults | Boundary configuration |
 
-### Examples
+**Motion sub-fields** (only the active model's fields are relevant):
+
+| Linear | Sinusoidal | Brownian |
+|--------|-----------|----------|
+| `velocity_x` (1.0) | `amplitude_x` (0.0) | `diffusion` (1.0) |
+| `velocity_y` (0.0) | `amplitude_y` (0.0) | `seed` (42) |
+| | `frequency_x` (0.0) | |
+| | `frequency_y` (0.0) | |
+| | `phase_x` (0.0) | |
+| | `phase_y` (0.0) | |
+
+### JSON Format
+
+The JSON format uses a nested `motion` object with a `"model"` discriminator
+and a nested `boundary` object:
 
 Linear motion:
 ```json
-{"start_x": 0, "start_y": 100, "num_frames": 200, "model": "linear",
- "velocity_x": 2, "velocity_y": 0.5, "bounds_max_x": 1000, "bounds_max_y": 1000}
+{
+    "start_x": 0, "start_y": 100, "num_frames": 200,
+    "motion": {
+        "model": "LinearMotionParams",
+        "velocity_x": 2.0, "velocity_y": 0.5
+    },
+    "boundary": {
+        "bounds_max_x": 1000, "bounds_max_y": 1000
+    }
+}
 ```
 
 Sinusoidal motion:
 ```json
-{"start_x": 200, "start_y": 200, "num_frames": 100,
- "model": "sinusoidal", "amplitude_x": 50, "frequency_x": 0.01,
- "bounds_min_x": -1000, "bounds_max_x": 1000,
- "bounds_min_y": -1000, "bounds_max_y": 1000}
+{
+    "start_x": 200, "start_y": 200, "num_frames": 100,
+    "motion": {
+        "model": "SinusoidalMotionParams",
+        "amplitude_x": 50, "frequency_x": 0.01
+    },
+    "boundary": {
+        "bounds_min_x": -1000, "bounds_max_x": 1000,
+        "bounds_min_y": -1000, "bounds_max_y": 1000
+    }
+}
 ```
 
 Brownian motion with bounce:
 ```json
-{"start_x": 320, "start_y": 240, "num_frames": 500,
- "model": "brownian", "diffusion": 3, "seed": 12345,
- "boundary_mode": "bounce",
- "bounds_min_x": 0, "bounds_max_x": 640,
- "bounds_min_y": 0, "bounds_max_y": 480}
+{
+    "start_x": 320, "start_y": 240, "num_frames": 500,
+    "motion": {
+        "model": "BrownianMotionParams",
+        "diffusion": 3, "seed": 12345
+    },
+    "boundary": {
+        "boundary_mode": "bounce",
+        "bounds_min_x": 0, "bounds_max_x": 640,
+        "bounds_min_y": 0, "bounds_max_y": 480
+    }
+}
 ```
+
+---
+
+## GUI Behavior
+
+In the DataSynthesizer widget, selecting `MovingPoint` as the generator shows:
+
+1. `start_x`, `start_y`, `num_frames` — always visible, non-optional fields.
+2. `motion` — rendered as a **combo box** with three choices
+   (`LinearMotionParams` / `SinusoidalMotionParams` / `BrownianMotionParams`)
+   and a `QStackedWidget` sub-form underneath. Selecting a model shows only
+   that model's relevant fields.
+3. `boundary` — rendered as a group with `boundary_mode` as a combo box
+   (clamp / bounce / wrap) and four float fields for bounds.
 
 ---
 
 ## Design Notes
 
-### Why `std::optional` for Generator Params
+### Why Typed Variants Instead of Flat Optionals
 
-The `MovingPointParams` struct uses `std::optional` for all trajectory-related
-fields. This follows the established project pattern (see `LineAngleParams`,
-`AnalogIntervalThresholdParams`) and is required because reflect-cpp does not
-reliably fall back to aggregate default values for missing JSON fields when
-structs have many members. Using `std::optional` with `.value_or()` ensures
-users only need to specify the fields relevant to their motion model.
+The original `MovingPointParams` had 18 optional fields for three
+mutually-exclusive motion models. Users saw all fields simultaneously with no
+indication that most were irrelevant. The typed system with `rfl::TaggedUnion`
+solves this by:
+
+- Showing only relevant fields for the selected model in the UI
+- Providing compile-time type safety for model-specific parameters
+- Producing cleaner, more self-documenting JSON
 
 ### Reuse in Future Generators
 
-`MovingMask` and `MovingLine` generators (Milestone 5b-ii) will follow the
-same pattern: flatten trajectory parameters into their params struct as
-optionals, convert to `TrajectoryParams` via a `toTrajectoryParams()` helper,
-and call `computeTrajectory()`.
+`MotionModelVariant` and `BoundaryParams` are defined once in
+`MotionParams.hpp` and reused by all moving generators. `MovingMask` and
+`MovingLine` generators (Milestone 5b-ii) will use the same types, getting
+combo-box-driven sub-forms automatically.
+
+### DefaultIfMissing Processor
+
+The `RegisterGenerator` RAII helper uses `rfl::DefaultIfMissing` when
+parsing JSON parameters. This means:
+
+- Fields with default values in the struct don't need to be in the JSON
+- The `boundary` object can be omitted entirely to use all defaults
+- Individual fields within `boundary` or the motion sub-struct can be omitted

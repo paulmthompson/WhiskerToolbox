@@ -12,7 +12,7 @@
 | **4** — DigitalEventSeries & DigitalIntervalSeries Generators | ✅ Complete | 2026-03-14 |
 | **5a** — Static Shape Generators | ✅ Complete | — |
 | **5b-i** — Trajectory Library + MovingPoint | ✅ Complete | 2026-03-14 |
-| **5b-ia** — Enum & Variant Params for Motion Generators | 🔲 Not started | — |
+| **5b-ia** — Enum & Variant Params for Motion Generators | ✅ Complete | 2026-03-14 |
 | **5b-ii** — MovingMask + MovingLine Generators | 🔲 Not started | — |
 | **5b-iii** — Time-Varying Shape (Area-Driven Mask) | 🔲 Not started | — |
 | **6** — Multi-Signal Generation & Correlation | 🔲 Not started | — |
@@ -351,7 +351,7 @@ their optional fields to `TrajectoryParams` via a `toTrajectoryParams()` helper.
 
 ---
 
-##### 5b-ia. Enum & Variant Params for Motion Generators 🔲
+##### 5b-ia. Enum & Variant Params for Motion Generators ✅ Complete (2026-03-14)
 
 **Goal**: Refactor `MovingPointParams` (and the future `MovingMask`/`MovingLine` params) to
 use native `enum class` for discriminator fields and `rfl::TaggedUnion` for mutually-exclusive
@@ -744,6 +744,7 @@ src/
 │  ├─ Trajectory/                            # ✅ Milestone 5b-i (complete)
 │  │  ├─ Trajectory.hpp
 │  │  ├─ Trajectory.cpp
+│  │  ├─ MotionParams.hpp                     # ✅ Milestone 5b-ia (complete)
 │  │  └─ PixelClipping.hpp
 │  ├─ Generators/
 │  │  ├─ Analog/
