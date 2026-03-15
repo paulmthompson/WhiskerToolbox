@@ -25,11 +25,11 @@
  */
 
 #include "fixtures/BenchmarkFixtures.hpp"
-#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
-#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
-#include "transforms/v2/core/TransformPipeline.hpp"
-#include "transforms/v2/core/ElementRegistry.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
+#include "TransformsV2/algorithms/MaskArea/MaskArea.hpp"
+#include "TransformsV2/algorithms/SumReduction/SumReduction.hpp"
+#include "TransformsV2/core/TransformPipeline.hpp"
+#include "TransformsV2/core/ElementRegistry.hpp"
+#include "TransformsV2/core/RegisteredTransforms.hpp"
 
 #include <benchmark/benchmark.h>
 #include <memory>
