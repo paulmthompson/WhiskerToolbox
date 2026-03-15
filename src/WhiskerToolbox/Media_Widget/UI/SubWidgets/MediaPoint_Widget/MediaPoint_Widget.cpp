@@ -8,6 +8,9 @@
 #include "DataManager/DataManager.hpp"
 #include "Points/Point_Data.hpp"
 
+#include "Core/GlyphStyleState.hpp"
+#include "GlyphStyleControls.hpp"
+
 #include <QPointF>
 #include <cmath>
 #include <iostream>
@@ -20,26 +23,16 @@ MediaPoint_Widget::MediaPoint_Widget(std::shared_ptr<DataManager> data_manager, 
       _state{state} {
     ui->setupUi(this);
 
-    connect(ui->color_picker, &ColorPicker_Widget::colorChanged,
-            this, &MediaPoint_Widget::_setPointColor);
-    connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
-            this, &MediaPoint_Widget::_setPointAlpha);
+    // Create GlyphStyleState and GlyphStyleControls
+    _glyph_state = new GlyphStyleState(this);
+    _glyph_controls = new GlyphStyleControls(_glyph_state, this);
 
-    // Connect point size controls
-    connect(ui->point_size_slider, &QSlider::valueChanged,
-            this, &MediaPoint_Widget::_setPointSize);
-    connect(ui->point_size_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &MediaPoint_Widget::_setPointSize);
+    // Insert GlyphStyleControls into the layout after the header grid
+    ui->verticalLayout->insertWidget(1, _glyph_controls);
 
-    // Connect marker shape control
-    connect(ui->marker_shape_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &MediaPoint_Widget::_setMarkerShape);
-
-    // Synchronize slider and spinbox
-    connect(ui->point_size_slider, &QSlider::valueChanged,
-            ui->point_size_spinbox, &QSpinBox::setValue);
-    connect(ui->point_size_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
-            ui->point_size_slider, &QSlider::setValue);
+    // Connect GlyphStyleState changes to update PointDisplayOptions
+    connect(_glyph_state, &GlyphStyleState::styleChanged,
+            this, &MediaPoint_Widget::_applyGlyphStateToOptions);
 }
 
 MediaPoint_Widget::~MediaPoint_Widget() {
@@ -75,28 +68,8 @@ void MediaPoint_Widget::setActiveKey(std::string const & key) {
     ui->name_label->setText(QString::fromStdString(key));
     _selection_enabled = !key.empty();
 
-    // Set the color picker to the current point color if available
-    if (!key.empty() && _state) {
-        auto const * config = _state->displayOptions().get<PointDisplayOptions>(QString::fromStdString(key));
-
-        if (config) {
-            ui->color_picker->setColor(QString::fromStdString(config->hex_color()));
-            ui->color_picker->setAlpha(static_cast<int>(config->alpha() * 100));
-
-            // Set point size controls
-            ui->point_size_slider->blockSignals(true);
-            ui->point_size_spinbox->blockSignals(true);
-            ui->point_size_slider->setValue(config->point_size);
-            ui->point_size_spinbox->setValue(config->point_size);
-            ui->point_size_slider->blockSignals(false);
-            ui->point_size_spinbox->blockSignals(false);
-
-            // Set marker shape control
-            ui->marker_shape_combo->blockSignals(true);
-            ui->marker_shape_combo->setCurrentIndex(static_cast<int>(config->marker_shape));
-            ui->marker_shape_combo->blockSignals(false);
-        }
-    }
+    // Sync GlyphStyleState from the current PointDisplayOptions
+    _syncGlyphStateFromOptions();
 }
 
 
@@ -121,7 +94,7 @@ void MediaPoint_Widget::_handlePointClickWithModifiers(qreal x_media, qreal y_me
     }
 
     // Regular click: select nearby point if exists
-    EntityId nearby_point = _findNearestPoint(x_media, y_media, _selection_threshold);
+    EntityId const nearby_point = _findNearestPoint(x_media, y_media, _selection_threshold);
     if (nearby_point != EntityId(0)) {
         _selectPoint(nearby_point);
     } else {
@@ -147,9 +120,9 @@ EntityId MediaPoint_Widget::_findNearestPoint(qreal x_media, qreal y_media, floa
     float min_distance = max_distance;
     int closest_point_index = -1;
     for (auto const & point: points) {
-        float dx = point.x - static_cast<float>(x_media);
-        float dy = point.y - static_cast<float>(y_media);
-        float distance = std::sqrt(dx * dx + dy * dy);
+        float const dx = point.x - static_cast<float>(x_media);
+        float const dy = point.y - static_cast<float>(y_media);
+        float const distance = std::sqrt(dx * dx + dy * dy);
 
         if (distance < min_distance) {
             min_distance = distance;
@@ -223,7 +196,7 @@ void MediaPoint_Widget::_addPointAtCurrentTime(qreal x_media, qreal y_media) {
     auto point_time_index = time_position.convertTo(point_data->getTimeFrame().get());
 
     if (point_data) {
-        Point2D<float> new_point(static_cast<float>(x_media), static_cast<float>(y_media));
+        Point2D<float> const new_point(static_cast<float>(x_media), static_cast<float>(y_media));
         point_data->addAtTime(point_time_index, new_point, NotifyObservers::No);
         std::cout << "Added new point at: (" << x_media << ", " << y_media << ") at time "
                   << point_time_index.getValue() << std::endl;
@@ -231,64 +204,40 @@ void MediaPoint_Widget::_addPointAtCurrentTime(qreal x_media, qreal y_media) {
     }
 }
 
-void MediaPoint_Widget::_setPointColor(QString const & hex_color) {
-    if (!_active_key.empty() && _state) {
-        auto const key = QString::fromStdString(_active_key);
-        auto * point_opts = _state->displayOptions().getMutable<PointDisplayOptions>(key);
-        if (point_opts) {
-            point_opts->hex_color() = hex_color.toStdString();
-            _state->displayOptions().notifyChanged<PointDisplayOptions>(key);
-        }
-        _scene->UpdateCanvas();
+void MediaPoint_Widget::_syncGlyphStateFromOptions() {
+    if (_active_key.empty() || !_state || !_glyph_state) {
+        return;
     }
+
+    auto const * config = _state->displayOptions().get<PointDisplayOptions>(QString::fromStdString(_active_key));
+    if (!config) {
+        return;
+    }
+
+    CorePlotting::GlyphStyleData style;
+    style.glyph_type = config->marker_shape;
+    style.size = static_cast<float>(config->point_size);
+    style.hex_color = config->hex_color();
+    style.alpha = config->alpha();
+    _glyph_state->setStyleSilent(style);
 }
 
-void MediaPoint_Widget::_setPointAlpha(int alpha) {
-    float const alpha_float = static_cast<float>(alpha) / 100;
-
-    if (!_active_key.empty() && _state) {
-        auto const key = QString::fromStdString(_active_key);
-        auto * point_opts = _state->displayOptions().getMutable<PointDisplayOptions>(key);
-        if (point_opts) {
-            point_opts->alpha() = alpha_float;
-            _state->displayOptions().notifyChanged<PointDisplayOptions>(key);
-        }
-        _scene->UpdateCanvas();
-    }
-}
-
-void MediaPoint_Widget::_setPointSize(int size) {
-    if (!_active_key.empty() && _state) {
-        auto const key = QString::fromStdString(_active_key);
-        auto * point_opts = _state->displayOptions().getMutable<PointDisplayOptions>(key);
-        if (point_opts) {
-            point_opts->point_size = size;
-            _state->displayOptions().notifyChanged<PointDisplayOptions>(key);
-        }
-        _scene->UpdateCanvas();
+void MediaPoint_Widget::_applyGlyphStateToOptions() {
+    if (_active_key.empty() || !_state || !_glyph_state) {
+        return;
     }
 
-    // Synchronize slider and spinbox if the signal came from one of them
-    QObject * sender_obj = sender();
-    if (sender_obj == ui->point_size_slider) {
-        ui->point_size_spinbox->blockSignals(true);
-        ui->point_size_spinbox->setValue(size);
-        ui->point_size_spinbox->blockSignals(false);
-    } else if (sender_obj == ui->point_size_spinbox) {
-        ui->point_size_slider->blockSignals(true);
-        ui->point_size_slider->setValue(size);
-        ui->point_size_slider->blockSignals(false);
+    auto const key = QString::fromStdString(_active_key);
+    auto * point_opts = _state->displayOptions().getMutable<PointDisplayOptions>(key);
+    if (!point_opts) {
+        return;
     }
-}
 
-void MediaPoint_Widget::_setMarkerShape(int shapeIndex) {
-    if (!_active_key.empty() && shapeIndex >= 0 && _state) {
-        auto const key = QString::fromStdString(_active_key);
-        auto * point_opts = _state->displayOptions().getMutable<PointDisplayOptions>(key);
-        if (point_opts) {
-            point_opts->marker_shape = static_cast<PointMarkerShape>(shapeIndex);
-            _state->displayOptions().notifyChanged<PointDisplayOptions>(key);
-        }
-        _scene->UpdateCanvas();
-    }
+    auto const & style = _glyph_state->data();
+    point_opts->marker_shape = style.glyph_type;
+    point_opts->point_size = static_cast<int>(style.size);
+    point_opts->hex_color() = style.hex_color;
+    point_opts->alpha() = style.alpha;
+    _state->displayOptions().notifyChanged<PointDisplayOptions>(key);
+    _scene->UpdateCanvas();
 }

@@ -46,6 +46,7 @@ website:
         - developer/fuzz/fuzzing.qmd
         - developer/intro_to_c.qmd
         - developer/analysis/static_analysis.qmd
+        - developer/analysis/precondition_protocol.qmd
         - section: "Testing"
           href: developer/testing/testing.qmd
           contents:
@@ -137,6 +138,7 @@ website:
             - developer/ui/data_manager/data_manager_widget.qmd
             - developer/ui/data_transform/data_transform_widget.qmd
             - developer/ui/media_widget/media_widget.qmd
+            - developer/ui/media_widget/media_point_widget.qmd
             - developer/ui/TriageSession_Widget/index.qmd
             - section: "Features"
               href: developer/ui/Features/overview.qmd

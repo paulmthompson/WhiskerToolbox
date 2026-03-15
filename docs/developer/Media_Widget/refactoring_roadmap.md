@@ -43,26 +43,14 @@ These can be done independently, in any order, without touching the rendering pi
 
 #### 1.1 Replace MediaPoint_Widget Styling with GlyphStyleControls
 
-**What exists:**
-- `MediaPoint_Widget` has bespoke color picker, alpha slider, size spinbox, and marker
-  shape combo box
-- `GlyphStyleControls` + `GlyphStyleState` (in `Plots/Common/GlyphStyleWidget/`) provides
-  the same controls as a reusable widget
+**Status: ✅ Complete**
 
-**Mismatch to resolve:**
-- `MediaPoint_Widget` uses `PointMarkerShape` enum (Circle, Square, Triangle, Cross, X,
-  Diamond)
-- `GlyphStyleControls` uses CorePlotting's `GlyphType` enum
-- Need a mapping function between the two, or unify onto one enum
-
-**Approach:**
-1. Add a `PointMarkerShape ↔ GlyphType` conversion (free functions in a small header)
-2. Replace the bespoke color/alpha/size/shape controls in `MediaPoint_Widget` with an
-   embedded `GlyphStyleControls` instance
-3. Wire `GlyphStyleState::styleChanged()` → update `PointDisplayOptions` in
-   `MediaWidgetState`
-
-**Estimated scope:** ~100 lines changed, 1 new tiny header for enum conversion
+Replaced bespoke `ColorPicker_Widget`, point size slider/spinbox, and marker shape
+combo box with an embedded `GlyphStyleControls` + `GlyphStyleState` instance.
+`PointMarkerShape` enum was removed; `PointDisplayOptions::marker_shape` now uses
+`CorePlotting::GlyphType` directly. The rendering code in `Media_Window::_plotPointData()`
+was updated to switch on `CorePlotting::GlyphType` values. The `Tick` glyph type (vertical
+line) replaces the old `X` marker shape.
 
 #### 1.2 Replace MediaLine_Widget Styling with LineStyleControls
 

@@ -208,7 +208,7 @@ TEST_CASE("DisplayOptionsRegistry PointDisplayOptions set/get", "[DisplayOptions
     PointDisplayOptions opts;
     opts.hex_color() = "#0000ff";
     opts.point_size = 10;
-    opts.marker_shape = PointMarkerShape::Square;
+    opts.marker_shape = CorePlotting::GlyphType::Square;
 
     registry.set(QStringLiteral("point_1"), opts);
 
@@ -216,7 +216,7 @@ TEST_CASE("DisplayOptionsRegistry PointDisplayOptions set/get", "[DisplayOptions
     REQUIRE(retrieved != nullptr);
     REQUIRE(retrieved->hex_color() == "#0000ff");
     REQUIRE(retrieved->point_size == 10);
-    REQUIRE(retrieved->marker_shape == PointMarkerShape::Square);
+    REQUIRE(retrieved->marker_shape == CorePlotting::GlyphType::Square);
 }
 
 // ==================== Tensor Display Options Tests ====================

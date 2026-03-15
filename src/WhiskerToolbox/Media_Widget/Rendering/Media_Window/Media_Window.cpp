@@ -669,7 +669,7 @@ void Media_Window::_plotMediaData() {
         if (media->getFormat() == MediaData::DisplayFormat::Gray) {
             // Handle grayscale images with potential colormap application
             bool const apply_colormap = active_media_config->colormap_active &&
-                                  active_media_config->colormap_options.colormap != ColormapType::None;
+                                        active_media_config->colormap_options.colormap != ColormapType::None;
 
             if (media->is8Bit()) {
                 // 8-bit grayscale processing
@@ -838,7 +838,7 @@ QImage Media_Window::_combineMultipleMedia() {
         }
 
         bool const apply_colormap = media_config->colormap_active &&
-                              media_config->colormap_options.colormap != ColormapType::None;
+                                    media_config->colormap_options.colormap != ColormapType::None;
 
         if (media->is8Bit()) {
             // Handle 8-bit media data
@@ -1657,7 +1657,7 @@ void Media_Window::_plotPointData() {
 
             // Create the appropriate marker shape based on configuration
             switch (point_config->marker_shape) {
-                case PointMarkerShape::Circle: {
+                case CorePlotting::GlyphType::Circle: {
                     QPen pen(point_color);
                     pen.setWidth(2);
                     QBrush const brush(point_color);
@@ -1666,7 +1666,7 @@ void Media_Window::_plotPointData() {
                     _points.append(ellipse);
                     break;
                 }
-                case PointMarkerShape::Square: {
+                case CorePlotting::GlyphType::Square: {
                     QPen pen(point_color);
                     pen.setWidth(2);
                     QBrush const brush(point_color);
@@ -1675,7 +1675,7 @@ void Media_Window::_plotPointData() {
                     _points.append(rect);
                     break;
                 }
-                case PointMarkerShape::Triangle: {
+                case CorePlotting::GlyphType::Triangle: {
                     QPen pen(point_color);
                     pen.setWidth(2);
                     QBrush const brush(point_color);
@@ -1691,7 +1691,7 @@ void Media_Window::_plotPointData() {
                     _points.append(polygon);
                     break;
                 }
-                case PointMarkerShape::Cross: {
+                case CorePlotting::GlyphType::Cross: {
                     QPen pen(point_color);
                     pen.setWidth(3);
 
@@ -1705,23 +1705,17 @@ void Media_Window::_plotPointData() {
                     _points.append(vLine);
                     break;
                 }
-                case PointMarkerShape::X: {
+                case CorePlotting::GlyphType::Tick: {
                     QPen pen(point_color);
                     pen.setWidth(3);
 
                     float const half_size = point_size / 2;
-                    // Draw diagonal line (\)
-                    auto dLine1 = addLine(x_pos - half_size, y_pos - half_size,
-                                          x_pos + half_size, y_pos + half_size, pen);
-                    _points.append(dLine1);
-
-                    // Draw diagonal line (/)
-                    auto dLine2 = addLine(x_pos - half_size, y_pos + half_size,
-                                          x_pos + half_size, y_pos - half_size, pen);
-                    _points.append(dLine2);
+                    // Draw vertical tick line
+                    auto vLine = addLine(x_pos, y_pos - half_size, x_pos, y_pos + half_size, pen);
+                    _points.append(vLine);
                     break;
                 }
-                case PointMarkerShape::Diamond: {
+                case CorePlotting::GlyphType::Diamond: {
                     QPen pen(point_color);
                     pen.setWidth(2);
                     QBrush const brush(point_color);
@@ -1868,7 +1862,7 @@ void Media_Window::_plotDigitalIntervalBorders() {
         // Check if an interval is present at the current frame
         // Use current_position - conversion handled internally
         bool const interval_present = interval_series->hasIntervalAtTime(current_position.index,
-                                                                   *current_position.time_frame);
+                                                                         *current_position.time_frame);
 
         // If an interval is present, draw a border around the entire image
         if (interval_present) {
@@ -2205,7 +2199,7 @@ void Media_Window::updateTemporaryLine(std::vector<Point2D<float>> const & point
     pointPen.setWidth(1);
     QBrush const pointBrush(Qt::NoBrush);// Open circles
 
-    for (auto point : points) {
+    for (auto point: points) {
         // Convert media coordinates to canvas coordinates
         float const x = point.x * xAspect;
         float const y = point.y * yAspect;
@@ -2237,7 +2231,7 @@ void Media_Window::_addRemoveData() {
     //New data key was added. This is where we may want to repopulate a custom table
 }
 
-bool Media_Window::_needsTimeFrameConversion(const std::shared_ptr<TimeFrame>& video_timeframe,
+bool Media_Window::_needsTimeFrameConversion(std::shared_ptr<TimeFrame> const & video_timeframe,
                                              std::shared_ptr<TimeFrame> const & interval_timeframe) {
     // If either timeframe is null, no conversion is possible/needed
     if (!video_timeframe || !interval_timeframe) {

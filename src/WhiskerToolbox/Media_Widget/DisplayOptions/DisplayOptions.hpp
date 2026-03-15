@@ -35,6 +35,7 @@
  * @see MediaWidgetStateData for full widget state serialization
  */
 
+#include "CorePlotting/DataTypes/GlyphStyleData.hpp"
 #include "CoreUtilities/color.hpp"
 #include "ImageProcessing/ProcessingOptions.hpp"
 
@@ -47,26 +48,11 @@
 // ==================== Enums ====================
 
 /**
- * @brief Enumeration for different point marker shapes
- * 
- * These shapes are used to render points in the Media_Widget.
- * reflect-cpp serializes these as strings automatically.
- */
-enum class PointMarkerShape {
-    Circle,  ///< Circular marker (filled ellipse)
-    Square,  ///< Square marker (filled rectangle)
-    Triangle,///< Triangular marker (filled triangle)
-    Cross,   ///< Cross/plus marker (+ shape)
-    X,       ///< X marker (× shape)
-    Diamond  ///< Diamond marker (rotated square)
-};
-
-/**
  * @brief Style for displaying digital intervals
  */
 enum class IntervalPlottingStyle {
-    Box,   ///< Box indicators in corners
-    Border ///< Border around entire image
+    Box,  ///< Box indicators in corners
+    Border///< Border around entire image
 };
 
 /**
@@ -89,7 +75,7 @@ int const POINT_SIZE = 5;
 int const LINE_THICKNESS = 2;
 int const TENSOR_DISPLAY_CHANNEL = 0;
 bool const SHOW_POINTS = false;
-PointMarkerShape const POINT_MARKER_SHAPE = PointMarkerShape::Circle;
+CorePlotting::GlyphType const POINT_MARKER_SHAPE = CorePlotting::GlyphType::Circle;
 
 std::vector<std::string> const DEFAULT_COLORS = {
         "#ff0000",// Red
@@ -131,9 +117,9 @@ inline std::string getColorForIndex(size_t index) {
  * ```
  */
 struct CommonDisplayFields {
-    std::string hex_color{DefaultDisplayValues::COLOR};  ///< Color in hex format (e.g., "#ff0000")
-    float alpha{DefaultDisplayValues::ALPHA};            ///< Alpha/opacity (0.0 - 1.0)
-    bool is_visible{DefaultDisplayValues::VISIBLE};      ///< Whether the data is currently visible
+    std::string hex_color{DefaultDisplayValues::COLOR};///< Color in hex format (e.g., "#ff0000")
+    float alpha{DefaultDisplayValues::ALPHA};          ///< Alpha/opacity (0.0 - 1.0)
+    bool is_visible{DefaultDisplayValues::VISIBLE};    ///< Whether the data is currently visible
 };
 
 // ==================== Display Options (Composition via rfl::Flatten) ====================
@@ -146,28 +132,28 @@ struct CommonDisplayFields {
  * that won't serialize cleanly (the mask vector).
  */
 struct MediaDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  ///< Flattened common fields
-    
-    // Processing chain active flags (managed at this level, not inside option structs)
-    bool contrast_active{false};               ///< Whether contrast filter is active
-    bool gamma_active{false};                  ///< Whether gamma filter is active
-    bool sharpen_active{false};                ///< Whether sharpen filter is active
-    bool clahe_active{false};                  ///< Whether CLAHE filter is active
-    bool bilateral_active{false};              ///< Whether bilateral filter is active
-    bool median_active{false};                 ///< Whether median filter is active
-    bool magic_eraser_active{false};           ///< Whether magic eraser is active
-    bool colormap_active{false};               ///< Whether colormap is active
+    rfl::Flatten<CommonDisplayFields> common;///< Flattened common fields
 
-    ContrastOptions contrast_options;          ///< Contrast/brightness settings
-    GammaOptions gamma_options;                ///< Gamma correction settings
-    SharpenOptions sharpen_options;            ///< Sharpening settings
-    ClaheOptions clahe_options;                ///< CLAHE settings
-    BilateralOptions bilateral_options;        ///< Bilateral filter settings
-    MedianOptions median_options;              ///< Median filter settings
-    MagicEraserParams magic_eraser_params;     ///< Magic eraser UI-editable parameters
-    MagicEraserState magic_eraser_state;       ///< Magic eraser runtime state (not serialized cleanly)
-    ColormapOptions colormap_options;          ///< Colormap settings
-    
+    // Processing chain active flags (managed at this level, not inside option structs)
+    bool contrast_active{false};    ///< Whether contrast filter is active
+    bool gamma_active{false};       ///< Whether gamma filter is active
+    bool sharpen_active{false};     ///< Whether sharpen filter is active
+    bool clahe_active{false};       ///< Whether CLAHE filter is active
+    bool bilateral_active{false};   ///< Whether bilateral filter is active
+    bool median_active{false};      ///< Whether median filter is active
+    bool magic_eraser_active{false};///< Whether magic eraser is active
+    bool colormap_active{false};    ///< Whether colormap is active
+
+    ContrastOptions contrast_options;     ///< Contrast/brightness settings
+    GammaOptions gamma_options;           ///< Gamma correction settings
+    SharpenOptions sharpen_options;       ///< Sharpening settings
+    ClaheOptions clahe_options;           ///< CLAHE settings
+    BilateralOptions bilateral_options;   ///< Bilateral filter settings
+    MedianOptions median_options;         ///< Median filter settings
+    MagicEraserParams magic_eraser_params;///< Magic eraser UI-editable parameters
+    MagicEraserState magic_eraser_state;  ///< Magic eraser runtime state (not serialized cleanly)
+    ColormapOptions colormap_options;     ///< Colormap settings
+
     // === Convenience accessors for common fields ===
     [[nodiscard]] std::string & hex_color() { return common.get().hex_color; }
     [[nodiscard]] std::string const & hex_color() const { return common.get().hex_color; }
@@ -181,11 +167,11 @@ struct MediaDisplayOptions {
  * @brief Display options for point data
  */
 struct PointDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  ///< Flattened common fields
-    
-    int point_size{DefaultDisplayValues::POINT_SIZE};              ///< Size of point markers in pixels
-    PointMarkerShape marker_shape{DefaultDisplayValues::POINT_MARKER_SHAPE};  ///< Shape of point markers
-    
+    rfl::Flatten<CommonDisplayFields> common;///< Flattened common fields
+
+    int point_size{DefaultDisplayValues::POINT_SIZE};                              ///< Size of point markers in pixels
+    CorePlotting::GlyphType marker_shape{DefaultDisplayValues::POINT_MARKER_SHAPE};///< Shape of point markers
+
     // === Convenience accessors for common fields ===
     [[nodiscard]] std::string & hex_color() { return common.get().hex_color; }
     [[nodiscard]] std::string const & hex_color() const { return common.get().hex_color; }
@@ -199,18 +185,18 @@ struct PointDisplayOptions {
  * @brief Display options for line/polyline data
  */
 struct LineDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  ///< Flattened common fields
-    
-    int line_thickness{DefaultDisplayValues::LINE_THICKNESS};  ///< Line width in pixels
-    bool show_points{DefaultDisplayValues::SHOW_POINTS};       ///< Show points as open circles along the line
-    bool edge_snapping{false};                                 ///< Enable edge snapping for new points
-    bool show_position_marker{false};                          ///< Show position marker at percentage distance
-    int position_percentage{20};                               ///< Percentage distance along line (0-100%)
-    bool show_segment{false};                                  ///< Show only a segment of the line
-    int segment_start_percentage{0};                           ///< Start percentage for line segment (0-100%)
-    int segment_end_percentage{100};                           ///< End percentage for line segment (0-100%)
-    int selected_line_index{-1};                               ///< Index of selected line (-1 = none selected)
-    
+    rfl::Flatten<CommonDisplayFields> common;///< Flattened common fields
+
+    int line_thickness{DefaultDisplayValues::LINE_THICKNESS};///< Line width in pixels
+    bool show_points{DefaultDisplayValues::SHOW_POINTS};     ///< Show points as open circles along the line
+    bool edge_snapping{false};                               ///< Enable edge snapping for new points
+    bool show_position_marker{false};                        ///< Show position marker at percentage distance
+    int position_percentage{20};                             ///< Percentage distance along line (0-100%)
+    bool show_segment{false};                                ///< Show only a segment of the line
+    int segment_start_percentage{0};                         ///< Start percentage for line segment (0-100%)
+    int segment_end_percentage{100};                         ///< End percentage for line segment (0-100%)
+    int selected_line_index{-1};                             ///< Index of selected line (-1 = none selected)
+
     // === Convenience accessors for common fields ===
     [[nodiscard]] std::string & hex_color() { return common.get().hex_color; }
     [[nodiscard]] std::string const & hex_color() const { return common.get().hex_color; }
@@ -224,12 +210,12 @@ struct LineDisplayOptions {
  * @brief Display options for mask data
  */
 struct MaskDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  ///< Flattened common fields
-    
-    bool show_bounding_box{false};     ///< Show bounding box around the mask
-    bool show_outline{false};          ///< Show outline of the mask as a thick line
-    bool use_as_transparency{false};   ///< Use mask as transparency layer (invert display)
-    
+    rfl::Flatten<CommonDisplayFields> common;///< Flattened common fields
+
+    bool show_bounding_box{false};  ///< Show bounding box around the mask
+    bool show_outline{false};       ///< Show outline of the mask as a thick line
+    bool use_as_transparency{false};///< Use mask as transparency layer (invert display)
+
     // === Convenience accessors for common fields ===
     [[nodiscard]] std::string & hex_color() { return common.get().hex_color; }
     [[nodiscard]] std::string const & hex_color() const { return common.get().hex_color; }
@@ -243,10 +229,10 @@ struct MaskDisplayOptions {
  * @brief Display options for tensor data
  */
 struct TensorDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  ///< Flattened common fields
-    
-    int display_channel{DefaultDisplayValues::TENSOR_DISPLAY_CHANNEL};  ///< Channel to display
-    
+    rfl::Flatten<CommonDisplayFields> common;///< Flattened common fields
+
+    int display_channel{DefaultDisplayValues::TENSOR_DISPLAY_CHANNEL};///< Channel to display
+
     // === Convenience accessors for common fields ===
     [[nodiscard]] std::string & hex_color() { return common.get().hex_color; }
     [[nodiscard]] std::string const & hex_color() const { return common.get().hex_color; }
@@ -260,18 +246,18 @@ struct TensorDisplayOptions {
  * @brief Display options for digital interval data
  */
 struct DigitalIntervalDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  ///< Flattened common fields
-    
-    IntervalPlottingStyle plotting_style{IntervalPlottingStyle::Box};  ///< Overall plotting style
-    
+    rfl::Flatten<CommonDisplayFields> common;///< Flattened common fields
+
+    IntervalPlottingStyle plotting_style{IntervalPlottingStyle::Box};///< Overall plotting style
+
     // Box style specific options
-    int box_size{20};                                       ///< Size of each interval box in pixels
-    int frame_range{2};                                     ///< Number of frames before/after current (+/- range)
-    IntervalLocation location{IntervalLocation::TopRight};  ///< Location of interval boxes
-    
+    int box_size{20};                                     ///< Size of each interval box in pixels
+    int frame_range{2};                                   ///< Number of frames before/after current (+/- range)
+    IntervalLocation location{IntervalLocation::TopRight};///< Location of interval boxes
+
     // Border style specific options
-    int border_thickness{5};                                ///< Thickness of border in pixels
-    
+    int border_thickness{5};///< Thickness of border in pixels
+
     // === Convenience accessors for common fields ===
     [[nodiscard]] std::string & hex_color() { return common.get().hex_color; }
     [[nodiscard]] std::string const & hex_color() const { return common.get().hex_color; }

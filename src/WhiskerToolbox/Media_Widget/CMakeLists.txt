@@ -112,6 +112,7 @@ target_link_libraries(Media_Widget PRIVATE Feature_Table_Widget)
 target_link_libraries(Media_Widget PRIVATE ColorPicker_Widget)
 target_link_libraries(Media_Widget PRIVATE Collapsible_Widget)
 target_link_libraries(Media_Widget PRIVATE AutoParamWidget)
+target_link_libraries(Media_Widget PRIVATE GlyphStyleWidget)
 target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::MediaProcessingPipeline)
 target_link_libraries(Media_Widget PRIVATE GroupManagementWidget)
 target_link_libraries(Media_Widget PRIVATE GroupContextMenu)
@@ -119,6 +120,7 @@ target_link_libraries(Media_Widget PRIVATE opencv_core opencv_imgproc opencv_hig
 
 target_link_libraries(Media_Widget PUBLIC CoreUtilities) # Color in header
 target_link_libraries(Media_Widget PUBLIC ImageProcessing) # Display options in header
+target_link_libraries(Media_Widget PUBLIC CorePlotting) # GlyphType in DisplayOptions header
 
 target_include_directories(Media_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"

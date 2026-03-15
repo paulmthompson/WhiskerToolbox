@@ -418,7 +418,7 @@ TEST_CASE("MediaWidgetStateData full serialization", "[MediaWidgetStateData]") {
         PointDisplayOptions point1;
         point1.hex_color() = "#0000ff";
         point1.point_size = 8;
-        point1.marker_shape = PointMarkerShape::Diamond;
+        point1.marker_shape = CorePlotting::GlyphType::Diamond;
         data.point_options["nose_tip"] = point1;
         
         // Preferences
@@ -453,7 +453,7 @@ TEST_CASE("MediaWidgetStateData full serialization", "[MediaWidgetStateData]") {
         REQUIRE(data_out.line_options.size() == 2);
         REQUIRE(data_out.line_options.at("whisker_1").line_thickness == 3);
         REQUIRE(data_out.line_options.at("whisker_2").hex_color() == "#00ff00");
-        REQUIRE(data_out.point_options.at("nose_tip").marker_shape == PointMarkerShape::Diamond);
+        REQUIRE(data_out.point_options.at("nose_tip").marker_shape == CorePlotting::GlyphType::Diamond);
         REQUIRE(data_out.line_prefs.edge_snapping_enabled == true);
         REQUIRE(data_out.mask_prefs.brush_size == 25);
         REQUIRE(data_out.text_overlays.size() == 1);
