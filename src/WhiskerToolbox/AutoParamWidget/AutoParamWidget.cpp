@@ -9,6 +9,7 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
+#include <QSizePolicy>
 #include <QSpinBox>
 #include <QStackedWidget>
 #include <QVBoxLayout>
@@ -423,9 +424,32 @@ void AutoParamWidget::buildVariantRow(ParameterFieldDescriptor const & desc,
     v_layout->addWidget(stack);
     row.variant_stack = stack;
 
+    // Set initial size policies: only the first (default) page should contribute
+    // to the stacked widget's size hint. All others are set to Ignored so the
+    // widget doesn't reserve space for the tallest alternative.
+    for (int i = 0; i < stack->count(); ++i) {
+        QWidget * page_widget = stack->widget(i);
+        QSizePolicy sp = page_widget->sizePolicy();
+        sp.setVerticalPolicy(i == 0 ? QSizePolicy::Preferred : QSizePolicy::Ignored);
+        page_widget->setSizePolicy(sp);
+    }
+
     // Connect combo box to switch stacked widget pages
     connect(combo, &QComboBox::currentIndexChanged, stack, &QStackedWidget::setCurrentIndex);
     connect(combo, &QComboBox::currentIndexChanged, this, &AutoParamWidget::onFieldChanged);
+
+    // When the active page changes, update size policies so the stack
+    // shrinks/grows to fit only the newly visible page.
+    connect(combo, &QComboBox::currentIndexChanged, this, [stack, this](int new_index) {
+        for (int i = 0; i < stack->count(); ++i) {
+            QWidget * page_widget = stack->widget(i);
+            QSizePolicy sp = page_widget->sizePolicy();
+            sp.setVerticalPolicy(i == new_index ? QSizePolicy::Preferred : QSizePolicy::Ignored);
+            page_widget->setSizePolicy(sp);
+        }
+        stack->adjustSize();
+        adjustSize();
+    });
 
     // Set default if available: parse the discriminator from the default JSON
     if (desc.default_value_json.has_value()) {
