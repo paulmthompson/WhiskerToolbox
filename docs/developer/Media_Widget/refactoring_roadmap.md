@@ -54,19 +54,13 @@ line) replaces the old `X` marker shape.
 
 #### 1.2 Replace MediaLine_Widget Styling with LineStyleControls
 
-**What exists:**
-- `MediaLine_Widget` has bespoke color picker, alpha slider, thickness spinbox
-- `LineStyleControls` + `LineStyleState` (in `Plots/Common/LineStyleControls/`) provides
-  these as a reusable widget
+**Status: ✅ Complete**
 
-**Approach:**
-1. Embed `LineStyleControls` in `MediaLine_Widget` for the color/alpha/thickness controls
-2. Wire `LineStyleState::styleChanged()` → update `LineDisplayOptions` in
-   `MediaWidgetState`
-3. Keep the line-specific controls (show_points, edge_snapping, segment controls,
-   position_marker) as they are — these are domain-specific, not worth abstracting
-
-**Estimated scope:** ~80 lines changed
+Replaced bespoke `ColorPicker_Widget`, line thickness slider/spinbox with an embedded
+`LineStyleControls` + `LineStyleState` instance. The color, alpha, and thickness
+controls are now provided by the reusable `LineStyleControls` widget from
+`Plots/Common/LineStyleControls/`. Line-specific controls (show_points, edge_snapping,
+segment controls, position_marker) remain unchanged as domain-specific features.
 
 #### 1.3 Replace MediaMask_Widget Styling with Reusable Controls
 

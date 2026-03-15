@@ -10,13 +10,16 @@
 #include "SelectionWidgets/LineSelectSelectionWidget.hpp"
 
 #include "CoreGeometry/point_geometry.hpp"
+#include "CoreMath/polynomial_fit.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataManager/transforms/Lines/Line_Angle/line_angle.hpp"
+#include "ImageProcessing/OpenCVUtility.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
-#include "DataManager/transforms/Lines/Line_Angle/line_angle.hpp"
-#include "CoreMath/polynomial_fit.hpp"
-#include "ImageProcessing/OpenCVUtility.hpp"
+
+#include "Core/LineStyleState.hpp"
+#include "LineStyleControls.hpp"
 
 #include <QButtonGroup>
 #include <QCheckBox>
@@ -39,6 +42,17 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
       _state{state} {
     ui->setupUi(this);
 
+    // Create LineStyleState and LineStyleControls
+    _line_style_state = new LineStyleState(this);
+    _line_style_controls = new LineStyleControls(_line_style_state, this);
+
+    // Insert LineStyleControls into the layout after the header grids (position 2)
+    ui->verticalLayout->insertWidget(2, _line_style_controls);
+
+    // Connect LineStyleState changes to update LineDisplayOptions
+    connect(_line_style_state, &LineStyleState::styleChanged,
+            this, &MediaLine_Widget::_applyLineStyleToOptions);
+
     _selection_modes["(None)"] = Selection_Mode::None;
     _selection_modes["Select Line"] = Selection_Mode::Select;
     _selection_modes["Draw Across All Frames"] = Selection_Mode::DrawAllFrames;
@@ -49,23 +63,6 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
 
     // Initialize the selection mode to match the current combo box selection
     _toggleSelectionMode(ui->selection_mode_combo->currentText());
-
-    connect(ui->color_picker, &ColorPicker_Widget::colorChanged,
-            this, &MediaLine_Widget::_setLineColor);
-    connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
-            this, &MediaLine_Widget::_setLineAlpha);
-
-    // Connect line thickness controls
-    connect(ui->line_thickness_slider, &QSlider::valueChanged,
-            this, &MediaLine_Widget::_setLineThickness);
-    connect(ui->line_thickness_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &MediaLine_Widget::_setLineThickness);
-
-    // Synchronize line thickness slider and spinbox
-    connect(ui->line_thickness_slider, &QSlider::valueChanged,
-            ui->line_thickness_spinbox, &QSpinBox::setValue);
-    connect(ui->line_thickness_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
-            ui->line_thickness_slider, &QSlider::setValue);
 
     connect(ui->show_points_checkbox, &QCheckBox::toggled, this, &MediaLine_Widget::_toggleShowPoints);
 
@@ -202,22 +199,14 @@ void MediaLine_Widget::setActiveKey(std::string const & key) {
     _active_key = key;
     ui->name_label->setText(QString::fromStdString(key));
 
-    // Set the color picker to the current line color if available
+    // Sync LineStyleState from the current LineDisplayOptions
+    _syncLineStyleFromOptions();
+
+    // Set domain-specific controls if available
     if (!key.empty() && _state) {
         auto const * config = _state->displayOptions().get<LineDisplayOptions>(QString::fromStdString(key));
 
         if (config) {
-            ui->color_picker->setColor(QString::fromStdString(config->hex_color()));
-            ui->color_picker->setAlpha(static_cast<int>(config->alpha() * 100));
-
-            // Set line thickness controls
-            ui->line_thickness_slider->blockSignals(true);
-            ui->line_thickness_spinbox->blockSignals(true);
-            ui->line_thickness_slider->setValue(config->line_thickness);
-            ui->line_thickness_spinbox->setValue(config->line_thickness);
-            ui->line_thickness_slider->blockSignals(false);
-            ui->line_thickness_spinbox->blockSignals(false);
-
             // Update the show points checkbox directly from the UI file
             ui->show_points_checkbox->blockSignals(true);
             ui->show_points_checkbox->setChecked(config->show_points);
@@ -260,32 +249,6 @@ void MediaLine_Widget::setActiveKey(std::string const & key) {
     }
 }
 
-void MediaLine_Widget::_setLineAlpha(int alpha) {
-    float const alpha_float = static_cast<float>(alpha) / 100;
-
-    if (!_active_key.empty() && _state) {
-        auto const key = QString::fromStdString(_active_key);
-        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
-        if (line_opts) {
-            line_opts->alpha() = alpha_float;
-            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
-        }
-        _scene->UpdateCanvas();
-    }
-}
-
-void MediaLine_Widget::_setLineColor(QString const & hex_color) {
-    if (!_active_key.empty() && _state) {
-        auto const key = QString::fromStdString(_active_key);
-        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
-        if (line_opts) {
-            line_opts->hex_color() = hex_color.toStdString();
-            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
-        }
-        _scene->UpdateCanvas();
-    }
-}
-
 void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canvas, Qt::KeyboardModifiers modifiers) {
     if (_active_key.empty()) {
         std::cout << "No active key" << std::endl;
@@ -322,9 +285,9 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
                 _erasePointsFromLine(x_media, y_media, current_time);
             } else {
                 // Normal click: Select/deselect lines
-                QPointF scene_pos(x_canvas * _scene->getXAspect(), y_canvas * _scene->getYAspect());
+                QPointF const scene_pos(x_canvas * _scene->getXAspect(), y_canvas * _scene->getYAspect());
                 std::string data_key, data_type;
-                EntityId entity_id = _scene->findEntityAtPosition(scene_pos, data_key, data_type);
+                EntityId const entity_id = _scene->findEntityAtPosition(scene_pos, data_key, data_type);
 
                 if (entity_id != EntityId(0) && data_type == "line" && data_key == _active_key) {
                     // Use the group-based selection system for consistency
@@ -356,7 +319,7 @@ void MediaLine_Widget::_mouseMoved(qreal x, qreal y) {
     // so we'll track it from the last click event)
     // For now, we'll show the eraser circle when in Select mode
     // This could be improved by tracking modifier state
-    static bool alt_held = false;
+    static bool const alt_held = false;
 
     // Update hover circle position and show/hide based on modifier state
     if (alt_held) {
@@ -383,7 +346,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
         return;
     }
 
-    EntityId selected_entity_id = *selected_entities.begin();
+    EntityId const selected_entity_id = *selected_entities.begin();
 
     auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
     if (!line_ref.has_value()) {
@@ -421,17 +384,17 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
             Point2D<float> const last_point = line.back();
 
             // Calculate distance between last point and new point
-            float dx = x_media - last_point.x;
-            float dy = y_media - last_point.y;
-            float distance = std::sqrt(dx * dx + dy * dy);
+            float const dx = x_media - last_point.x;
+            float const dy = y_media - last_point.y;
+            float const distance = std::sqrt(dx * dx + dy * dy);
 
             // Add interpolated points if the distance is significant
             if (distance > 5.0f) {// Threshold for adding interpolation
-                int num_interp_points = std::max(2, static_cast<int>(distance / 5.0f));
+                int const num_interp_points = std::max(2, static_cast<int>(distance / 5.0f));
                 for (int i = 1; i <= num_interp_points; ++i) {
-                    float t = static_cast<float>(i) / (num_interp_points + 1);
-                    float interp_x = last_point.x + t * dx;
-                    float interp_y = last_point.y + t * dy;
+                    float const t = static_cast<float>(i) / (num_interp_points + 1);
+                    float const interp_x = last_point.x + t * dx;
+                    float const interp_y = last_point.y + t * dy;
                     line.push_back(Point2D<float>{interp_x, interp_y});
                 }
             }
@@ -464,7 +427,7 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
         return;
     }
 
-    EntityId selected_entity_id = *selected_entities.begin();
+    EntityId const selected_entity_id = *selected_entities.begin();
 
     auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
     if (!line_ref.has_value()) {
@@ -487,10 +450,10 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
 
     // Find points within eraser radius and remove them
     std::vector<Point2D<float>> remaining_points;
-    Point2D<float> click_point{x_media, y_media};
+    Point2D<float> const click_point{x_media, y_media};
 
     for (auto const & point: line) {
-        float distance = calc_distance(click_point, point);
+        float const distance = calc_distance(click_point, point);
         if (distance > eraser_radius) {
             remaining_points.push_back(point);
         }
@@ -526,8 +489,8 @@ void MediaLine_Widget::_applyPolynomialFit(Line2D & line, int order) {
     }
 
     // Fit polynomials to x(t) and y(t) using the function from line_angle.hpp
-    std::vector<double> x_coeffs = fit_polynomial(t, x_coords, order);
-    std::vector<double> y_coeffs = fit_polynomial(t, y_coords, order);
+    std::vector<double> const x_coeffs = fit_polynomial(t, x_coords, order);
+    std::vector<double> const y_coeffs = fit_polynomial(t, y_coords, order);
 
     if (x_coeffs.empty() || y_coeffs.empty()) {
         // Fall back to simple smoothing if fitting failed
@@ -541,13 +504,13 @@ void MediaLine_Widget::_applyPolynomialFit(Line2D & line, int order) {
     smooth_line.reserve(num_points);
 
     for (int i = 0; i < num_points; ++i) {
-        double t_param = static_cast<double>(i) / (num_points - 1);
+        double const t_param = static_cast<double>(i) / (num_points - 1);
 
         // Evaluate polynomials at t_param using the function from line_angle.hpp
-        double x_val = evaluate_polynomial(x_coeffs, t_param);
-        double y_val = evaluate_polynomial(y_coeffs, t_param);
+        double const x_val = evaluate_polynomial(x_coeffs, t_param);
+        double const y_val = evaluate_polynomial(y_coeffs, t_param);
 
-        smooth_line.push_back(Point2D<float>{static_cast<float>(x_val), static_cast<float>(y_val)});
+        smooth_line.emplace_back(static_cast<float>(x_val), static_cast<float>(y_val));
     }
 
     // Replace the original line with the smooth one
@@ -564,13 +527,13 @@ void MediaLine_Widget::_setPolynomialOrder(int order) {
     std::cout << "Polynomial order set to: " << order << std::endl;
 }
 
-void MediaLine_Widget::_toggleSelectionMode(QString text) {
+void MediaLine_Widget::_toggleSelectionMode(const QString& text) {
     _selection_mode = _selection_modes[text];
     std::cout << "MediaLine_Widget: Selection mode changed to: " << text.toStdString()
               << " (enum value: " << static_cast<int>(_selection_mode) << ")" << std::endl;
 
     // Switch to the appropriate page in the stacked widget
-    int pageIndex = static_cast<int>(_selection_mode);
+    int const pageIndex = static_cast<int>(_selection_mode);
     ui->mode_stacked_widget->setCurrentIndex(pageIndex);
 
     // For Select Line mode, show both add and erase options
@@ -652,7 +615,7 @@ void MediaLine_Widget::LoadFrame(int frame_id) {
         auto line_data = _data_manager->getData<LineData>(_active_key);
         if (line_data) {
             auto lines = line_data->getAtTime(TimeFrameIndex(frame_id));
-            int num_lines = static_cast<int>(lines.size());
+            int const num_lines = static_cast<int>(lines.size());
 
             std::cout << "Frame " << frame_id << ": " << num_lines << " lines in " << _active_key << std::endl;
         }
@@ -720,17 +683,17 @@ std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
     }
 
     // Round x and y to integers (image coordinates)
-    int x_int = static_cast<int>(std::round(x));
-    int y_int = static_cast<int>(std::round(y));
+    int const x_int = static_cast<int>(std::round(x));
+    int const y_int = static_cast<int>(std::round(y));
 
     // Define search radius and initialize variables
-    int radius = _edge_search_radius;
+    int const radius = _edge_search_radius;
     float min_distance = radius * radius + 1;     // Initialize to something larger than possible
     std::pair<float, float> nearest_edge = {x, y};// Default to original point
 
     // Get image dimensions
-    int width = _current_edges.cols;
-    int height = _current_edges.rows;
+    int const width = _current_edges.cols;
+    int const height = _current_edges.rows;
 
     // Check if the point is within image bounds
     if (x_int < 0 || x_int >= width || y_int < 0 || y_int >= height) {
@@ -742,8 +705,8 @@ std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
     for (int dy = -radius; dy <= radius; dy++) {
         for (int dx = -radius; dx <= radius; dx++) {
             // Calculate current point to check
-            int nx = x_int + dx;
-            int ny = y_int + dy;
+            int const nx = x_int + dx;
+            int const ny = y_int + dy;
 
             if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
                 continue;
@@ -752,7 +715,7 @@ std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
             // Check if this is an edge pixel
             if (_current_edges.at<uchar>(ny, nx) > 0) {
                 // Calculate distance squared (avoid square root for performance)
-                float d_squared = dx * dx + dy * dy;
+                float const d_squared = dx * dx + dy * dy;
 
                 // Update nearest edge if this is closer
                 if (d_squared < min_distance) {
@@ -784,32 +747,6 @@ void MediaLine_Widget::_setEraserRadius(int radius) {
 void MediaLine_Widget::_toggleShowHoverCircle(bool checked) {
     _scene->setShowHoverCircle(checked);
     std::cout << "Show hover circle " << (checked ? "enabled" : "disabled") << std::endl;
-}
-
-void MediaLine_Widget::_setLineThickness(int thickness) {
-    if (!_active_key.empty() && _state) {
-        auto const key = QString::fromStdString(_active_key);
-        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
-        if (line_opts) {
-            line_opts->line_thickness = thickness;
-            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
-        }
-        _scene->UpdateCanvas();
-    }
-
-    // Synchronize slider and spinbox if the signal came from one of them
-    QObject * sender_obj = sender();
-    if (sender_obj == ui->line_thickness_slider) {
-        ui->line_thickness_spinbox->blockSignals(true);
-        ui->line_thickness_spinbox->setValue(thickness);
-        ui->line_thickness_spinbox->blockSignals(false);
-    } else if (sender_obj == ui->line_thickness_spinbox) {
-        ui->line_thickness_slider->blockSignals(true);
-        ui->line_thickness_slider->setValue(thickness);
-        ui->line_thickness_slider->blockSignals(false);
-    }
-
-    std::cout << "Line thickness set to: " << thickness << std::endl;
 }
 
 void MediaLine_Widget::_toggleShowPositionMarker(bool checked) {
@@ -873,7 +810,7 @@ void MediaLine_Widget::_setSegmentStartPercentage(int percentage) {
         auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
         if (line_opts) {
             // Ensure start percentage doesn't exceed end percentage - 1%
-            int max_start_percentage = line_opts->segment_end_percentage - 1;
+            int const max_start_percentage = line_opts->segment_end_percentage - 1;
             if (percentage > max_start_percentage) {
                 // Don't allow start to exceed end - 1%
                 QObject * sender_obj = sender();
@@ -920,7 +857,7 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
         auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
         if (line_opts) {
             // Ensure end percentage doesn't go below start percentage + 1%
-            int min_end_percentage = line_opts->segment_start_percentage + 1;
+            int const min_end_percentage = line_opts->segment_start_percentage + 1;
             if (percentage < min_end_percentage) {
                 // Don't allow end to go below start + 1%
                 QObject * sender_obj = sender();
@@ -970,7 +907,7 @@ void MediaLine_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
         return;
     }
 
-    EntityId selected_entity_id = *selected_entities.begin();
+    EntityId const selected_entity_id = *selected_entities.begin();
 
     auto x_media = static_cast<float>(x_canvas);
     auto y_media = static_cast<float>(y_canvas);
@@ -979,7 +916,7 @@ void MediaLine_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
     auto nearest_entity_id = _findNearestLine(x_media, y_media);
     if (nearest_entity_id.has_value() && nearest_entity_id.value() == selected_entity_id) {
         // Show context menu at the click position
-        QPoint global_pos = QCursor::pos();
+        QPoint const global_pos = QCursor::pos();
         _showLineContextMenu(global_pos);
     }
 }
@@ -994,8 +931,8 @@ void MediaLine_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
 float MediaLine_Widget::_calculateDistanceToLineSegment(Point2D<float> const & point,
                                                         Point2D<float> const & line_start,
                                                         Point2D<float> const & line_end) {
-    float dx = line_end.x - line_start.x;
-    float dy = line_end.y - line_start.y;
+    float const dx = line_end.x - line_start.x;
+    float const dy = line_end.y - line_start.y;
 
     // Handle degenerate case where line segment is actually a point
     if (dx == 0.0f && dy == 0.0f) {
@@ -1009,7 +946,7 @@ float MediaLine_Widget::_calculateDistanceToLineSegment(Point2D<float> const & p
     t = std::max(0.0f, std::min(1.0f, t));
 
     // Calculate the closest point on the line segment
-    Point2D<float> closest_point = {
+    Point2D<float> const closest_point = {
             line_start.x + t * dx,
             line_start.y + t * dy};
 
@@ -1035,7 +972,7 @@ std::optional<EntityId> MediaLine_Widget::_findNearestLine(float x, float y) {
         return std::nullopt;
     }
 
-    Point2D<float> click_point{x, y};
+    Point2D<float> const click_point{x, y};
     std::optional<EntityId> nearest_entity_id = std::nullopt;
     float min_distance = _line_selection_threshold + 1;// Initialize beyond threshold
 
@@ -1050,7 +987,7 @@ std::optional<EntityId> MediaLine_Widget::_findNearestLine(float x, float y) {
         // Calculate distance to each line segment
         float min_segment_distance = std::numeric_limits<float>::max();
         for (size_t i = 0; i < line.size() - 1; ++i) {
-            float segment_distance = _calculateDistanceToLineSegment(click_point, line[i], line[i + 1]);
+            float const segment_distance = _calculateDistanceToLineSegment(click_point, line[i], line[i + 1]);
             if (segment_distance < min_segment_distance) {
                 min_segment_distance = segment_distance;
             }
@@ -1059,13 +996,13 @@ std::optional<EntityId> MediaLine_Widget::_findNearestLine(float x, float y) {
         // Also check distance to vertices for completeness
         float min_vertex_distance = std::numeric_limits<float>::max();
         for (auto const & vertex: line) {
-            float vertex_distance = calc_distance(click_point, vertex);
+            float const vertex_distance = calc_distance(click_point, vertex);
             if (vertex_distance < min_vertex_distance) {
                 min_vertex_distance = vertex_distance;
             }
         }
 
-        float line_distance = std::min(min_vertex_distance, min_segment_distance);
+        float const line_distance = std::min(min_vertex_distance, min_segment_distance);
 
         if (line_distance < min_distance) {
             min_distance = line_distance;
@@ -1157,7 +1094,7 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
         return;
     }
 
-    EntityId selected_entity_id = *selected_entities.begin();
+    EntityId const selected_entity_id = *selected_entities.begin();
 
     auto source_line_data = _data_manager->getData<LineData>(_active_key);
     auto target_line_data = _data_manager->getData<LineData>(target_key);
@@ -1174,7 +1111,7 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
         return;
     }
 
-    Line2D selected_line = selected_line_opt.value().get();
+    Line2D const selected_line = selected_line_opt.value().get();
 
     auto const current_position = _state->current_position;
     auto const current_time = current_position.convertTo(target_line_data->getTimeFrame().get());
@@ -1208,7 +1145,7 @@ void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
         return;
     }
 
-    EntityId selected_entity_id = *selected_entities.begin();
+    EntityId const selected_entity_id = *selected_entities.begin();
 
     auto source_line_data = _data_manager->getData<LineData>(_active_key);
     auto target_line_data = _data_manager->getData<LineData>(target_key);
@@ -1225,7 +1162,7 @@ void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
         return;
     }
 
-    Line2D selected_line = selected_line_opt.value().get();
+    Line2D const selected_line = selected_line_opt.value().get();
 
     auto const current_position = _state->current_position;
     auto const current_time = current_position.convertTo(target_line_data->getTimeFrame().get());
@@ -1280,17 +1217,17 @@ void MediaLine_Widget::_applyLineToAllFrames() {
 
             // If the line data has specific image dimensions, convert coordinates
             if (image_size.width != -1 && image_size.height != -1) {
-                float default_xAspect = _scene->getXAspect();
-                float default_yAspect = _scene->getYAspect();
-                float line_xAspect = static_cast<float>(_scene->getCanvasSize().first) / image_size.width;
-                float line_yAspect = static_cast<float>(_scene->getCanvasSize().second) / image_size.height;
+                float const default_xAspect = _scene->getXAspect();
+                float const default_yAspect = _scene->getYAspect();
+                float const line_xAspect = static_cast<float>(_scene->getCanvasSize().first) / image_size.width;
+                float const line_yAspect = static_cast<float>(_scene->getCanvasSize().second) / image_size.height;
 
                 // Convert each point from default media coordinates to line-specific coordinates
                 for (auto const & point: line_points) {
-                    float x_canvas = point.x * default_xAspect;
-                    float y_canvas = point.y * default_yAspect;
-                    float x_converted = x_canvas / line_xAspect;
-                    float y_converted = y_canvas / line_yAspect;
+                    float const x_canvas = point.x * default_xAspect;
+                    float const y_canvas = point.y * default_yAspect;
+                    float const x_converted = x_canvas / line_xAspect;
+                    float const y_converted = y_canvas / line_yAspect;
                     line_to_apply.push_back(Point2D<float>{x_converted, y_converted});
                 }
             } else {
@@ -1332,7 +1269,7 @@ std::vector<TimeFrameIndex> MediaLine_Widget::_getAllFrameTimes() {
         return frame_times;
     }
 
-    int total_frames = media_data->getTotalFrameCount();
+    int const total_frames = media_data->getTotalFrameCount();
     if (total_frames <= 0) {
         std::cout << "Invalid frame count: " << total_frames << std::endl;
         return frame_times;
@@ -1370,4 +1307,40 @@ void MediaLine_Widget::_updateTemporaryLineFromWidget() {
         auto current_points = _drawAllFramesSelectionWidget->getCurrentLinePoints();
         _scene->updateTemporaryLine(current_points, "");// Use default aspect ratios
     }
+}
+
+void MediaLine_Widget::_syncLineStyleFromOptions() {
+    if (_active_key.empty() || !_state || !_line_style_state) {
+        return;
+    }
+
+    auto const * config = _state->displayOptions().get<LineDisplayOptions>(QString::fromStdString(_active_key));
+    if (!config) {
+        return;
+    }
+
+    CorePlotting::LineStyleData style;
+    style.hex_color = config->hex_color();
+    style.thickness = static_cast<float>(config->line_thickness);
+    style.alpha = config->alpha();
+    _line_style_state->setStyleSilent(style);
+}
+
+void MediaLine_Widget::_applyLineStyleToOptions() {
+    if (_active_key.empty() || !_state || !_line_style_state) {
+        return;
+    }
+
+    auto const key = QString::fromStdString(_active_key);
+    auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+    if (!line_opts) {
+        return;
+    }
+
+    auto const & style = _line_style_state->data();
+    line_opts->hex_color() = style.hex_color;
+    line_opts->line_thickness = static_cast<int>(style.thickness);
+    line_opts->alpha() = style.alpha;
+    _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
+    _scene->UpdateCanvas();
 }

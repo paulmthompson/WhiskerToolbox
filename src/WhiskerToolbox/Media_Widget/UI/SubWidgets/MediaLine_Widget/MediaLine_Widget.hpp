@@ -10,8 +10,8 @@
 #include <QWidget>
 
 #include <memory>
-#include <optional>
 #include <opencv2/opencv.hpp>
+#include <optional>
 #include <string>
 
 namespace Ui {
@@ -27,6 +27,8 @@ class LineDrawAllFramesSelectionWidget;
 }// namespace line_widget
 
 class DataManager;
+class LineStyleControls;
+class LineStyleState;
 class Media_Window;
 class MediaWidgetState;
 
@@ -49,6 +51,11 @@ private:
     Media_Window * _scene;
     MediaWidgetState * _state{nullptr};
     std::string _active_key;
+
+    // Line style controls (replaces bespoke color/alpha/thickness controls)
+    LineStyleState * _line_style_state{nullptr};
+    LineStyleControls * _line_style_controls{nullptr};
+
     enum class Selection_Mode {
         None,
         Add,
@@ -89,7 +96,7 @@ private:
     void _setupSelectionModePages();
     void _addPointToLine(float x_media, float y_media, TimeFrameIndex current_time);
     void _erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time);
-    void _applyPolynomialFit(Line2D & line, int order);
+    static void _applyPolynomialFit(Line2D & line, int order);
 
     void _detectEdges();
     std::pair<float, float> _findNearestEdge(float x, float y);
@@ -100,7 +107,7 @@ private:
     void _clearLineSelection();
 
     // Helper function for calculating distance from point to line segment
-    float _calculateDistanceToLineSegment(Point2D<float> const & point,
+    static float _calculateDistanceToLineSegment(Point2D<float> const & point,
                                           Point2D<float> const & line_start,
                                           Point2D<float> const & line_end);
 
@@ -116,16 +123,19 @@ private:
     std::vector<TimeFrameIndex> _getAllFrameTimes();
     void _updateTemporaryLineFromWidget();
 
+    /// @brief Sync LineStyleState from the current LineDisplayOptions
+    void _syncLineStyleFromOptions();
+
+    /// @brief Apply LineStyleState changes back to LineDisplayOptions
+    void _applyLineStyleToOptions();
+
 private slots:
     void _clickedInVideoWithModifiers(qreal x, qreal y, Qt::KeyboardModifiers modifiers);
     void _rightClickedInVideo(qreal x, qreal y);
     void _mouseMoved(qreal x, qreal y);
-    void _toggleSelectionMode(QString text);
+    void _toggleSelectionMode(const QString& text);
     void _setSmoothingMode(int index);
     void _setPolynomialOrder(int order);
-    void _setLineAlpha(int alpha);
-    void _setLineColor(QString const & hex_color);
-    void _setLineThickness(int thickness);
     void _toggleShowPoints(bool checked);
     void _toggleShowPositionMarker(bool checked);
     void _setPositionPercentage(int percentage);
@@ -137,7 +147,7 @@ private slots:
     void _setEdgeSearchRadius(int radius);
     void _setEraserRadius(int radius);
     void _toggleShowHoverCircle(bool checked);
-    
+
     // Helper method to get selected EntityId from group-based selection system
     std::optional<EntityId> _getSelectedEntityIdFromGroupSystem() const;
 };
