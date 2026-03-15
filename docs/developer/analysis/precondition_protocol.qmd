@@ -1,0 +1,249 @@
+---
+title: "Precondition Documentation Protocol"
+format: html
+---
+
+## Overview
+
+A repeatable, LLM-executable protocol for systematically documenting function preconditions
+as `@pre` Doxygen tags with enforcement classification, then tracing callers transitively
+to verify precondition propagation.
+
+This protocol is **documentation only** — it adds `@pre` tags but does not add asserts,
+change control flow, or refactor code. The `(enforcement: none)` markers create a clean
+backlog for a separate refactoring phase, keeping documentation and behavioral changes
+strictly separated.
+
+## Enforcement Classification
+
+Every `@pre` tag carries an **enforcement suffix** recording what exists today:
+
+```cpp
+/// @brief Computes the median filter of an image.
+/// @pre image_data must not be empty (enforcement: assert)
+/// @pre width > 0 and height > 0 (enforcement: runtime_check)
+/// @pre kernel_size is odd and >= 1 (enforcement: none)
+void medianFilter(std::span<uint8_t const> image_data, int width, int height, int kernel_size);
+```
+
+Five categories:
+
+| Enforcement | Meaning |
+|---|---|
+| `assert` | Guarded by `assert()` or `Q_ASSERT()` (debug-only) |
+| `runtime_check` | Guarded by `if` / early-return / error-code (always active) |
+| `exception` | Guarded by `throw` (always active, unwinding) |
+| `static` | Guarded by `static_assert` or concept (compile-time) |
+| `none` | No enforcement exists; the assumption is implicit |
+
+The `none` markers become a greppable TODO list for the later refactoring phase:
+
+```bash
+# Count total precondition debt
+grep -rn "enforcement: none" src/ --include="*.hpp" | wc -l
+
+# Find critical unenforced preconditions
+grep -rn "enforcement: none\] \[CRITICAL\]" src/ --include="*.hpp"
+```
+
+## Per-Function Protocol
+
+### Step 1 — Parameter Inventory
+
+For each parameter, ask type-specific questions:
+
+| Parameter Type | Questions |
+|---|---|
+| Raw pointer (`T*`, `T const*`) | Nullable? Who owns? Lifetime? |
+| `std::span<T>` | Can be empty? Minimum size? |
+| `std::string_view` / `string const&` | Can be empty? Format constraints? |
+| `std::optional<T>` | Is `.value()` called without guard? |
+| Numeric (`int`, `float`, `size_t`) | Range? Sign? Zero valid? |
+| `TimeFrameIndex` | Bounds relative to what data object? |
+| Container (`vector`, `map`) | Can be empty? Sorted? Unique elements? |
+| Enum | All values handled? |
+| `std::function` / callable | Can be null/empty? |
+| Smart pointer (`shared_ptr`, `unique_ptr`) | Can be null? |
+
+### Step 2 — Implementation Scan
+
+Read the function body and identify:
+
+- Every place a parameter is dereferenced, indexed, or used in arithmetic
+- Every existing check (`assert`, `if`, `throw`, early return) that guards a parameter
+- Every downstream call that imposes its own documented `@pre` on values derived from our parameters
+- Any implicit assumptions (e.g., dividing by a parameter without checking for zero)
+
+### Step 3 — Precondition Enumeration
+
+For each identified precondition, produce:
+
+```
+@pre <condition text> (enforcement: assert | runtime_check | exception | static | none)
+```
+
+Optionally add a severity tag for unenforced preconditions:
+
+- `(enforcement: none) [CRITICAL]` — null deref, out-of-bounds, use-after-free
+- `(enforcement: none) [IMPORTANT]` — produces wrong results silently
+- `(enforcement: none) [LOW]` — unlikely to occur in practice
+
+### Step 4 — Write `@pre` Tags
+
+Add to the function's Doxygen comment in the **header file** declaration.
+
+Rules:
+
+- Document ALL preconditions, even those already enforced
+- The `(enforcement: X)` suffix is required — it differentiates documentation from refactoring
+- Omit preconditions obvious from the type system (e.g., `std::span` is contiguous)
+- Order: most critical first (null safety > bounds > domain constraints)
+
+### Step 5 — Find All Callers
+
+Use clangd "Find All References" to find every call site of the analyzed function.
+
+### Step 6 — Classify Each Caller
+
+For each caller, determine whether it:
+
+- **Guarantees** the precondition (constructs the value in a way that satisfies it)
+- **Passes through** a parameter that should carry the same precondition
+- **Violates** the precondition (potential bug — flag explicitly)
+
+For pass-through cases, the same `@pre` must exist on the caller.
+
+### Step 7 — Transitive Walk
+
+Repeat Steps 5–6 for each pass-through caller until reaching:
+
+- A function that **establishes** the precondition (constructs a valid value)
+- A public API boundary (user-facing function)
+- A UI event handler or entry point
+
+## Precondition Reference Checklist
+
+### Critical (Crashes / Undefined Behavior)
+
+1. **Null pointer dereference** — raw or smart pointer is null when dereferenced
+2. **Out-of-bounds access** — index >= container.size(), negative index, `size_t` underflow
+3. **Use-after-free / dangling reference** — pointer/reference to destroyed object
+4. **Iterator invalidation** — container modified during iteration
+5. **Division by zero** — numeric denominator is zero
+6. **Uninitialized state** — object method called before initialization
+7. **Buffer overflow** — data size exceeds allocated buffer
+8. **Integer overflow/underflow** — arithmetic exceeds type range
+
+### Important (Silent Wrong Results)
+
+9. **Container emptiness** — algorithm assumes non-empty input
+10. **Container size matching** — two parallel containers must have same length
+11. **Sorted order** — binary search or merge assumes sorted input
+12. **Uniqueness** — map key or set element assumed unique
+13. **Numeric range** — value must be positive, in [0,1], finite, non-NaN
+14. **String format** — expected format (path, JSON, delimited)
+15. **Enum completeness** — switch handles all enum values
+16. **Mathematical validity** — matrix invertible, value finite
+
+### Ownership & Lifetime
+
+17. **Pointer ownership** — who creates, who destroys
+18. **Callback lifetime** — captured references outlive the callback
+19. **Thread safety** — concurrent access to mutable state
+
+### Project-Specific
+
+20. **`TimeFrameIndex` bounds** — index within valid time range for the data object
+21. **`DataManager` key existence** — `getData` called with key that exists
+22. **`ObserverData` `CallbackID` management** — properly unregistered in destructors
+23. **OpenGL context validity** — GL calls made with valid current context
+
+## Library Ordering (Bottom-Up)
+
+Apply the protocol starting from leaf libraries so that preconditions propagate naturally
+upward through callers:
+
+1. `CoreGeometry`
+2. `CoreMath`
+3. `TimeFrame`
+4. `Entity`
+5. `DataObjects/*` (RaggedTimeSeries, AnalogTimeSeries, DigitalTimeSeries, Lines, Points, Masks, Tensors, Media)
+6. `SpatialIndex`
+7. `ImageProcessing`
+8. `ParameterSchema`
+9. `CorePlotting`
+10. `IO`
+11. `DataManager`
+12. `TransformsV2`
+13. `FeatureExtraction` / `GatherResult`
+14. `MLCore` / `DeepLearning`
+15. `PlottingOpenGL`
+16. `WhiskerToolbox` widgets
+
+## LLM Prompt Template
+
+When pointing an LLM at a specific function, use this prompt:
+
+> Analyze `<function signature>` in `<header path>` (implementation: `<cpp path>`) for
+> preconditions using the Precondition Documentation Protocol.
+>
+> 1. Read the function signature and implementation
+> 2. For each parameter, identify preconditions using the Reference Checklist
+> 3. Scan the implementation for existing enforcement (assert, if-check, throw, or none)
+> 4. Check downstream calls for documented `@pre` tags that impose requirements on our parameters
+> 5. Write `@pre` tags with `(enforcement: X)` classification
+> 6. Find all callers transitively and check precondition propagation
+>
+> Output:
+>
+> - The updated Doxygen comment block with `@pre` tags
+> - A caller propagation table:
+>
+>   | Caller | File:Line | Precondition Status | Action Needed |
+>   |--------|-----------|---------------------|---------------|
+>
+> - Any potential bugs discovered (precondition violations at call sites)
+
+## Additional Techniques
+
+### Postconditions (`@post`)
+
+While analyzing a function, also note postconditions — what the function guarantees about
+its return value. A function's `@post` becomes its callers' established preconditions,
+closing the propagation chain.
+
+### Contradiction Detection
+
+If a function has `@pre x > 0` but a caller can pass zero, that's a **bug**, not just
+missing documentation. Flag these explicitly as potential defects.
+
+### Automated Assert Injection (Future Phase)
+
+After the documentation phase is complete, a follow-up phase can convert
+`(enforcement: none)` preconditions into `assert()` statements based on condition text
+patterns. This is the refactoring phase, kept cleanly separate from documentation.
+
+### Compiler Attribute Follow-Up (Future Phase)
+
+After documentation stabilizes, `[[gnu::nonnull]]` or SAL annotations (`_In_`, `_Notnull_`)
+can give compilers the same knowledge for static warnings.
+
+## Verification
+
+Track progress with these commands:
+
+```bash
+# Total documented preconditions (should grow)
+grep -rn "@pre" src/ --include="*.hpp" | wc -l
+
+# Remaining unenforced preconditions (should shrink over time)
+grep -rn "enforcement: none" src/ --include="*.hpp" | wc -l
+
+# Build succeeds after each batch
+cmake --build --preset linux-clang-release > build_log.txt 2>&1
+```
+
+Spot-check:
+
+- Pick 3 functions with `enforcement: none` and manually verify the precondition is real
+- Pick 3 caller propagation chains and verify they are correct
