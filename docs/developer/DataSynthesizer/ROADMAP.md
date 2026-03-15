@@ -12,6 +12,7 @@
 | **4** — DigitalEventSeries & DigitalIntervalSeries Generators | ✅ Complete | 2026-03-14 |
 | **5a** — Static Shape Generators | ✅ Complete | — |
 | **5b-i** — Trajectory Library + MovingPoint | ✅ Complete | 2026-03-14 |
+| **5b-ia** — Enum & Variant Params for Motion Generators | 🔲 Not started | — |
 | **5b-ii** — MovingMask + MovingLine Generators | 🔲 Not started | — |
 | **5b-iii** — Time-Varying Shape (Area-Driven Mask) | 🔲 Not started | — |
 | **6** — Multi-Signal Generation & Correlation | 🔲 Not started | — |
@@ -350,6 +351,192 @@ their optional fields to `TrajectoryParams` via a `toTrajectoryParams()` helper.
 
 ---
 
+##### 5b-ia. Enum & Variant Params for Motion Generators 🔲
+
+**Goal**: Refactor `MovingPointParams` (and the future `MovingMask`/`MovingLine` params) to
+use native `enum class` for discriminator fields and `rfl::TaggedUnion` for mutually-exclusive
+motion parameters. This eliminates the confusing flat-optional UI and replaces it with a
+combo-box-driven sub-form that shows only the relevant fields.
+
+**Depends on**: ParameterSchema enum support (Phase 1) and variant support (Phase 2) from the
+[ParameterSchema Enum & Variant Roadmap](../ParameterSchema/enum_variant_roadmap.qmd).
+
+**Problem**: `MovingPointParams` currently has 18 optional fields for three mutually-exclusive
+motion models (linear, sinusoidal, brownian) plus boundary parameters. The `model` and
+`boundary_mode` fields are `std::optional<std::string>`, rendered as free-text `QLineEdit`
+widgets. Users see all 18 fields simultaneously with no indication that most are irrelevant
+for their chosen model.
+
+**Solution**: Restructure the params into typed sub-structs and use `rfl::TaggedUnion` to
+represent the motion model choice.
+
+###### Before (current)
+
+```cpp
+struct MovingPointParams {
+    std::optional<float> start_x;
+    std::optional<float> start_y;
+    int num_frames = 100;
+    std::optional<std::string> model;         // "linear", "sinusoidal", "brownian"
+    std::optional<float> velocity_x;          // linear only
+    std::optional<float> velocity_y;          // linear only
+    std::optional<float> amplitude_x;         // sinusoidal only
+    std::optional<float> amplitude_y;         // sinusoidal only
+    std::optional<float> frequency_x;         // sinusoidal only
+    std::optional<float> frequency_y;         // sinusoidal only
+    std::optional<float> phase_x;             // sinusoidal only
+    std::optional<float> phase_y;             // sinusoidal only
+    std::optional<float> diffusion;           // brownian only
+    std::optional<uint64_t> seed;             // brownian only
+    std::optional<std::string> boundary_mode; // all
+    // ... 4 more boundary fields ...
+};
+```
+
+###### After (proposed)
+
+```cpp
+// Shared boundary params (used by all motion models and all moving generators)
+enum class BoundaryMode { clamp, bounce, wrap };
+
+struct BoundaryParams {
+    BoundaryMode boundary_mode = BoundaryMode::clamp;
+    float bounds_min_x = 0.0f;
+    float bounds_max_x = 640.0f;
+    float bounds_min_y = 0.0f;
+    float bounds_max_y = 480.0f;
+};
+
+// Per-model params
+struct LinearMotionParams {
+    float velocity_x = 1.0f;
+    float velocity_y = 0.0f;
+};
+
+struct SinusoidalMotionParams {
+    float amplitude_x = 0.0f;
+    float amplitude_y = 0.0f;
+    float frequency_x = 0.0f;
+    float frequency_y = 0.0f;
+    float phase_x = 0.0f;
+    float phase_y = 0.0f;
+};
+
+struct BrownianMotionParams {
+    float diffusion = 1.0f;
+    uint64_t seed = 42;
+};
+
+using MotionModelVariant = rfl::TaggedUnion<
+    "model",
+    LinearMotionParams,
+    SinusoidalMotionParams,
+    BrownianMotionParams>;
+
+struct MovingPointParams {
+    float start_x = 100.0f;
+    float start_y = 100.0f;
+    int num_frames = 100;
+    MotionModelVariant motion;    // ← combo box + swapping sub-form
+    BoundaryParams boundary;      // ← always visible, grouped
+};
+```
+
+###### GUI Behavior
+
+With ParameterSchema Phase 1 + Phase 2:
+
+1. `start_x`, `start_y`, `num_frames` — always visible, non-optional.
+2. `motion` — rendered as combo box (`"LinearMotionParams"` / `"SinusoidalMotionParams"` /
+   `"BrownianMotionParams"`) with a `QStackedWidget` sub-form underneath. Selecting
+   "Linear" shows `velocity_x` and `velocity_y`. Selecting "Sinusoidal" shows amplitude,
+   frequency, and phase fields. Selecting "Brownian" shows `diffusion` and `seed`.
+3. `boundary` — rendered as a collapsible group (using `ParameterUIHints::is_advanced`
+   or a `group` annotation). Always visible regardless of motion model selection.
+
+###### JSON Compatibility
+
+The new JSON format is:
+```json
+{
+    "start_x": 0,
+    "start_y": 100,
+    "num_frames": 200,
+    "motion": {
+        "model": "LinearMotionParams",
+        "velocity_x": 2.0,
+        "velocity_y": 0.5
+    },
+    "boundary": {
+        "boundary_mode": "clamp",
+        "bounds_min_x": 0,
+        "bounds_max_x": 1000
+    }
+}
+```
+
+This is a **breaking change** from the flat-optional format. Since MovingPoint is new
+(Milestone 5b-i was just completed), there are no external consumers to migrate.
+
+###### Shared Sub-Structs for MovingMask and MovingLine
+
+`MotionModelVariant` and `BoundaryParams` are defined once (in the Trajectory library
+or a shared header) and reused by all moving generators. This means MovingMask (5b-ii)
+and MovingLine (5b-ii) automatically get the same combo-box UI with no per-generator
+annotation.
+
+###### `toTrajectoryParams()` Update
+
+The `toTrajectoryParams()` helper is updated to construct `TrajectoryParams` from the
+typed variant using `std::visit` (or `rfl::visit`):
+
+```cpp
+TrajectoryParams toTrajectoryParams(
+    MotionModelVariant const & motion,
+    BoundaryParams const & boundary) {
+    return motion.variant().visit([&](auto const & model_params) {
+        TrajectoryParams tp;
+        tp.boundary_mode = to_string(boundary.boundary_mode);
+        tp.bounds_min_x = boundary.bounds_min_x;
+        // ... other boundary fields ...
+        if constexpr (std::is_same_v<decltype(model_params), LinearMotionParams const &>) {
+            tp.model = "linear";
+            tp.velocity_x = model_params.velocity_x;
+            tp.velocity_y = model_params.velocity_y;
+        } else if constexpr (...) {
+            // sinusoidal, brownian branches
+        }
+        return tp;
+    });
+}
+```
+
+`TrajectoryParams` itself remains a plain internal struct with string-based model/mode
+fields — it is never exposed to JSON or the UI.
+
+###### Deliverables
+
+| Item | Description |
+|------|-------------|
+| `BoundaryMode` enum | Shared `enum class` for boundary modes |
+| `BoundaryParams` struct | Shared boundary fields (non-optional, with defaults) |
+| `LinearMotionParams` / `SinusoidalMotionParams` / `BrownianMotionParams` | Per-model param sub-structs |
+| `MotionModelVariant` | `rfl::TaggedUnion<"model", ...>` type alias |
+| Refactored `MovingPointParams` | Uses `MotionModelVariant` + `BoundaryParams` |
+| Updated `toTrajectoryParams()` | Dispatches via variant visitor |
+| Updated tests | `MovingPointGenerator.test.cpp` adapted to new JSON format |
+| Updated `MotionModels.qmd` | Developer docs reflect new param structure |
+
+###### Exit Criteria
+
+- `MovingPoint` generator produces identical trajectories as before (same math, different params API).
+- All existing `MovingPointGenerator.test.cpp` tests pass with updated JSON.
+- `Trajectory.test.cpp` tests unchanged (internal `TrajectoryParams` not modified).
+- DataSynthesizer widget: selecting `MovingPoint` → `model` is a combo box → selecting
+  a model shows only relevant fields → generating works end-to-end.
+
+---
+
 ##### 5b-ii. MovingMask + MovingLine Generators 🔲
 
 **Goal**: Apply the trajectory library to mask and line output types.
@@ -360,14 +547,14 @@ their optional fields to `TrajectoryParams` via a `toTrajectoryParams()` helper.
    - One generator, shape is a parameter: `shape = "circle" | "rectangle" | "ellipse"`.
    - Shape-specific fields: `radius` (circle), `width`/`height` (rectangle),
      `semi_major`/`semi_minor`/`angle` (ellipse). Unused fields are ignored.
-   - `image_width`, `image_height`, `start_x`, `start_y`, `num_frames`, plus flattened
-     `TrajectoryParams`.
+   - `image_width`, `image_height`, `start_x`, `start_y`, `num_frames`, plus
+     `MotionModelVariant` and `BoundaryParams` from 5b-ia.
    - At each frame: rasterize shape at trajectory position, clip to image bounds, store.
    - Uses `clipPixelsToImage()` from the trajectory library.
 
 2. **`MovingLine` generator** (`src/DataSynthesizer/Generators/Line/MovingLineGenerator.cpp`):
    - Parameters: `start_x`, `start_y`, `end_x`, `end_y`, `num_points_per_line`, `num_frames`,
-     plus flattened `TrajectoryParams`.
+     plus `MotionModelVariant` and `BoundaryParams` from 5b-ia.
    - Line shape defined once as offsets from centroid. At each frame, all vertices translated
      by trajectory offset. No clipping.
 
@@ -422,12 +609,13 @@ shape→populate step.
 | Sub-phase | Generator(s) | Output Type | Key Concept |
 |-----------|-------------|-------------|-------------|
 | **5b-i** | `MovingPoint` | `PointData` | Trajectory library (shared) |
+| **5b-ia** | `MovingPoint` (refactor) | `PointData` | Enum & variant params (ParameterSchema Phase 1+2) |
 | **5b-ii** | `MovingMask`, `MovingLine` | `MaskData`, `LineData` | Shape rendering + pixel clipping |
 | **5b-iii** | `AreaDrivenMask` | `MaskData` | Time-varying shape |
 
-All sub-phases share the same trajectory library from 5b-i. Each is independently testable.
-Multi-entity support comes for free via `count` parameter in a future iteration — no
-new types required.
+All sub-phases share the same trajectory library from 5b-i. 5b-ia introduces shared
+`MotionModelVariant` and `BoundaryParams` types that are reused by 5b-ii generators,
+so those generators get combo-box-driven sub-forms automatically.
 
 ---
 

@@ -1,0 +1,552 @@
+---
+title: "Enum & Variant Support — Roadmap"
+---
+
+## Motivation
+
+`ParameterSchema` and `AutoParamWidget` currently support five field types:
+`float`, `double`, `int`, `bool`, and `std::string`. Enum-like selection is
+achieved by manually populating `allowed_values` in a `ParameterUIHints`
+specialization on a `std::string` field. This has three problems:
+
+1. **No compile-time safety.** Typos in string values are not caught until
+   runtime. Nothing prevents a generator from comparing `model == "linier"`
+   and silently falling through.
+2. **Manual duplication.** The enum values must be listed once in the code
+   that checks the string, and again in the `ParameterUIHints`. They can
+   drift apart.
+3. **No variant/conditional UI.** When a parameter struct has mutually
+   exclusive groups of fields (e.g., linear-motion params vs sinusoidal vs
+   Brownian), all fields are displayed simultaneously with optional
+   checkboxes. The user sees 20+ fields with no indication that most are
+   irrelevant for the chosen mode.
+
+This roadmap adds two capabilities to the ParameterSchema / AutoParamWidget
+stack:
+
+- **Phase 1 — Native `enum class` support**: Auto-detect C++ scoped enum
+  fields, extract their enumerator names at compile time, and render them as
+  combo boxes with zero manual annotation.
+- **Phase 2 — Tagged variant support**: Represent mutually-exclusive
+  parameter groups as a discriminated union. The UI dynamically swaps the
+  displayed sub-form when the discriminator changes.
+
+---
+
+## Current Architecture
+
+```
+  Params struct (reflect-cpp)
+        │
+        ▼
+  extractParameterSchema<T>()    ← rfl::fields<T>() + type-string parsing
+        │
+        ▼
+  ParameterSchema { vector<ParameterFieldDescriptor> }
+        │
+        ▼
+  AutoParamWidget::setSchema()   ← builds form rows from descriptors
+```
+
+`extractParameterSchema` is a **header-only template** that calls
+`rfl::fields<Params>()` to get a compile-time list of `rfl::MetaField`
+objects. Each `MetaField` provides `.name()` (string) and `.type()` (string).
+The template then calls `parseUnderlyingType()` (a non-template function in
+the `.cpp`) to classify the type string into one of the five known base types.
+
+**Key constraint**: `rfl::fields()` gives us field types **as strings**, not
+as actual C++ types. However, `extractParameterSchema` is a template
+instantiated with `Params`, so we have full compile-time access to the actual
+struct type. We can use `rfl::to_view(Params{})` or structured bindings to
+get the actual field types and use `std::is_enum_v<FieldType>` and
+`rfl::get_enumerator_array<FieldType>()`.
+
+---
+
+## Phase 1 — Native `enum class` Support
+
+### Goal
+
+A parameter struct can use a C++ `enum class` (or `std::optional<enum class>`)
+for any field. `extractParameterSchema` auto-detects it, populates
+`allowed_values` with the enumerator names, sets `type_name = "enum"`, and
+`AutoParamWidget` renders a `QComboBox`. No `ParameterUIHints` needed.
+
+### Design
+
+#### 1a. Compile-Time Enum Detection in `extractParameterSchema`
+
+The template already has full compile-time knowledge of `Params`. We enhance
+the per-field loop to detect enums:
+
+```cpp
+template<typename Params>
+ParameterSchema extractParameterSchema() {
+    // ... existing code ...
+
+    // For each field, we use rfl::to_view to get the actual typed reference.
+    // rfl::to_view returns a named tuple of references to each field.
+    auto const defaults = Params{};
+    auto const view = rfl::to_view(defaults);
+
+    int order = 0;
+    rfl::apply([&](auto const &... field_refs) {
+        auto meta_it = meta_fields.begin();
+        ((processField<Params>(desc, *meta_it++, field_refs, order++, defaults_obj, schema)), ...);
+    }, view);
+
+    ParameterUIHints<Params>::annotate(schema);
+    return schema;
+}
+```
+
+A helper `processField` template function receives the actual typed reference,
+enabling:
+
+```cpp
+template<typename FieldRef>
+void processField(...) {
+    using FieldType = std::remove_cvref_t<decltype(field_ref.value())>;
+    using InnerType = unwrap_optional_t<FieldType>; // strips std::optional
+
+    if constexpr (std::is_enum_v<InnerType>) {
+        desc.type_name = "enum";
+        auto const enumerators = rfl::get_enumerator_array<InnerType>();
+        for (auto const & [name, value] : enumerators) {
+            desc.allowed_values.emplace_back(std::string(name));
+        }
+    }
+}
+```
+
+`rfl::get_enumerator_array<E>()` returns a `std::array<std::pair<StringView, E>, N>`
+containing all enumerator names and values. This is a compile-time operation
+provided by reflect-cpp for scoped enums with values in [0, 127].
+
+#### 1b. `ParameterFieldDescriptor` Changes
+
+```cpp
+struct ParameterFieldDescriptor {
+    // ... existing fields ...
+    std::string type_name; // Now also: "enum"
+    // allowed_values: already exists, populated automatically for enums
+};
+```
+
+No new fields needed. The existing `allowed_values` vector is populated
+automatically. `type_name` gets a new value `"enum"` to distinguish from
+string-with-allowed-values (though `AutoParamWidget` treats both identically).
+
+#### 1c. `AutoParamWidget` Changes
+
+Minimal. The existing branch for `std::string` with `allowed_values` already
+creates a `QComboBox`. Add a parallel branch for `type_name == "enum"`:
+
+```cpp
+} else if (desc.type_name == "enum" && !desc.allowed_values.empty()) {
+    // Same QComboBox logic as std::string with allowed_values
+    auto * combo = new QComboBox(this);
+    for (auto const & val : desc.allowed_values) {
+        combo->addItem(QString::fromStdString(val));
+    }
+    // ... default value, signals ...
+}
+```
+
+`toJson()` emits the enum value as a JSON string (matching reflect-cpp's
+serialization). `fromJson()` sets the combo box by text.
+
+#### 1d. `parseUnderlyingType` Enhancement
+
+For the non-template string-based path (used when a params struct contains
+enum types), the type string will contain the enum's qualified name (e.g.,
+`"MotionModel"` or `"std::optional<MotionModel>"`). Since the template-based
+path handles enum detection directly, `parseUnderlyingType` does not need to
+identify enums — it can continue to return the raw type string for unknown
+types. The template path overrides `type_name` before it is used.
+
+#### 1e. Default Value Handling
+
+reflect-cpp serializes enums as their string name. The existing JSON-based
+default extraction (`rfl::json::write(Params{})` → parse) already produces
+`"linear"` for an enum field defaulting to `MotionModel::linear`. No changes
+needed for defaults.
+
+### Deliverables
+
+| Item | File | Description |
+|------|------|-------------|
+| Compile-time enum detection | `ParameterSchema.hpp` | Template detects `std::is_enum_v` via `rfl::to_view`, calls `rfl::get_enumerator_array` |
+| `type_name = "enum"` | `ParameterSchema.hpp` | Set for detected enum fields |
+| `allowed_values` auto-population | `ParameterSchema.hpp` | From `rfl::get_enumerator_array` |
+| QComboBox for `"enum"` type | `AutoParamWidget.cpp` | Same pattern as string+allowed_values |
+| `toJson` / `fromJson` for enums | `AutoParamWidget.cpp` | Emit/parse as JSON strings |
+| Unit tests | `test_parameter_schema.test.cpp` | Struct with enum field → schema has `type_name="enum"`, `allowed_values` correct |
+
+### Testing
+
+1. Define a test `enum class TestMode { fast, balanced, accurate };` and a
+   params struct with a `TestMode` field and an `std::optional<TestMode>` field.
+2. `extractParameterSchema<TestParams>()` → verify `type_name == "enum"`,
+   `allowed_values == {"fast", "balanced", "accurate"}`.
+3. Default-constructed struct → `default_value_json == "\"fast\""`.
+4. Round-trip: `rfl::json::write(params)` → `rfl::json::read<TestParams>(json)`
+   preserves enum values.
+
+### Exit Criteria
+
+- No `ParameterUIHints` specialization needed for enum fields.
+- `AutoParamWidget` renders enum fields as combo boxes automatically.
+- Existing string+allowed_values pattern still works unchanged.
+- All existing tests pass.
+
+---
+
+## Phase 2 — Tagged Variant Support
+
+### Goal
+
+A parameter struct can contain a **discriminated union** field that represents
+mutually exclusive parameter groups. `extractParameterSchema` produces a
+nested schema structure. `AutoParamWidget` renders the discriminator as a
+combo box and dynamically swaps the visible sub-form when the selection
+changes.
+
+### Design
+
+This phase has two sub-parts: the **schema representation** (ParameterSchema)
+and the **UI rendering** (AutoParamWidget).
+
+#### 2a. Schema Representation
+
+##### Variant Field Descriptor
+
+A new struct represents a variant (discriminated union) field:
+
+```cpp
+struct VariantAlternative {
+    std::string tag;        ///< Discriminator value (e.g., "linear")
+    ParameterSchema schema; ///< Sub-schema for this alternative's fields
+};
+
+struct ParameterFieldDescriptor {
+    // ... existing fields ...
+
+    // Variant support (populated only for variant fields)
+    bool is_variant = false;
+    std::string variant_discriminator; ///< Field name used as tag (e.g., "model")
+    std::vector<VariantAlternative> variant_alternatives;
+};
+```
+
+When `is_variant == true`:
+
+- `type_name` is `"variant"`
+- `variant_discriminator` names the JSON tag field
+- `variant_alternatives` contains one entry per union alternative, each with
+  its own `ParameterSchema` describing the fields for that alternative
+- `allowed_values` is auto-populated with the tag names (for combo box)
+
+##### Two Integration Patterns
+
+There are two ways users can express variants in their params structs.
+ParameterSchema should support both:
+
+**Pattern A — `rfl::TaggedUnion` (reflect-cpp native)**
+
+```cpp
+struct LinearMotionParams {
+    float velocity_x = 1.0f;
+    float velocity_y = 0.0f;
+};
+
+struct SinusoidalMotionParams {
+    float amplitude_x = 0.0f;
+    float amplitude_y = 0.0f;
+    float frequency_x = 0.0f;
+    float frequency_y = 0.0f;
+    float phase_x = 0.0f;
+    float phase_y = 0.0f;
+};
+
+struct BrownianMotionParams {
+    float diffusion = 1.0f;
+    uint64_t seed = 42;
+};
+
+using MotionVariant = rfl::TaggedUnion<
+    "model",
+    LinearMotionParams,
+    SinusoidalMotionParams,
+    BrownianMotionParams>;
+
+struct MovingPointParams {
+    float start_x = 100.0f;
+    float start_y = 100.0f;
+    int num_frames = 100;
+    MotionVariant motion;      // ← variant field
+    // ... boundary params ...
+};
+```
+
+JSON:
+```json
+{
+    "start_x": 100,
+    "num_frames": 200,
+    "motion": {
+        "model": "LinearMotionParams",
+        "velocity_x": 2.0,
+        "velocity_y": 0.5
+    }
+}
+```
+
+**Pattern B — `std::variant` + discriminator enum (no rfl::TaggedUnion)**
+
+```cpp
+enum class MotionModel { linear, sinusoidal, brownian };
+
+struct MovingPointParams {
+    float start_x = 100.0f;
+    int num_frames = 100;
+    MotionModel model = MotionModel::linear; // discriminator (Phase 1 enum)
+    std::variant<LinearMotionParams, SinusoidalMotionParams, BrownianMotionParams> motion_params;
+};
+```
+
+This requires manual serialization logic but integrates naturally with
+Phase 1 enum support.
+
+**Recommendation**: Support **Pattern A** (`rfl::TaggedUnion`) first because
+reflect-cpp handles serialization automatically. Pattern B can be added later
+if needed; it's more work because `std::variant` doesn't self-describe its
+discriminator.
+
+##### Compile-Time Detection
+
+In `extractParameterSchema`, detect `rfl::TaggedUnion` fields:
+
+```cpp
+if constexpr (is_tagged_union_v<InnerType>) {
+    desc.is_variant = true;
+    desc.type_name = "variant";
+    desc.variant_discriminator = InnerType::discriminator_; // compile-time string
+    // For each alternative type in the union:
+    rfl::apply_to_tagged_union<InnerType>([&](auto type_tag) {
+        using AltType = typename decltype(type_tag)::type;
+        VariantAlternative alt;
+        alt.tag = typeid(AltType).name(); // or rfl-provided name
+        alt.schema = extractParameterSchema<AltType>();
+        desc.variant_alternatives.push_back(std::move(alt));
+    });
+    // Populate allowed_values for the combo box
+    for (auto const & alt : desc.variant_alternatives) {
+        desc.allowed_values.push_back(alt.tag);
+    }
+}
+```
+
+The exact compile-time introspection API for `rfl::TaggedUnion` needs
+verification — reflect-cpp exposes the alternative types as a type list.
+A `is_tagged_union_v<T>` trait will be needed (simple SFINAE or concept check
+on the `discriminator_` member).
+
+#### 2b. AutoParamWidget — Dynamic Sub-Form Swapping
+
+##### Widget Architecture
+
+For a variant field, `AutoParamWidget` creates:
+
+1. A **combo box** populated from `allowed_values` (one entry per alternative)
+2. A **stacked widget** (`QStackedWidget`) containing one sub-form per alternative
+3. Each sub-form is built by recursively calling `buildFieldRow` for each field
+   in the alternative's `ParameterSchema`
+
+When the combo box selection changes, the stacked widget switches pages.
+
+```
+┌─────────────────────────────────┐
+│  Motion Model: [Linear     ▾]  │   ← combo box (discriminator)
+├─────────────────────────────────┤
+│  ┌────────────────────────────┐ │
+│  │  Velocity X: [1.0      ]  │ │   ← sub-form for "Linear"
+│  │  Velocity Y: [0.0      ]  │ │
+│  └────────────────────────────┘ │
+└─────────────────────────────────┘
+
+  ─── user selects "Sinusoidal" ───
+
+┌─────────────────────────────────┐
+│  Motion Model: [Sinusoidal  ▾]  │
+├─────────────────────────────────┤
+│  ┌────────────────────────────┐ │
+│  │  Amplitude X: [0.0     ]  │ │   ← sub-form for "Sinusoidal"
+│  │  Amplitude Y: [0.0     ]  │ │
+│  │  Frequency X: [0.0     ]  │ │
+│  │  Frequency Y: [0.0     ]  │ │
+│  │  Phase X:     [0.0     ]  │ │
+│  │  Phase Y:     [0.0     ]  │ │
+│  └────────────────────────────┘ │
+└─────────────────────────────────┘
+```
+
+##### `FieldRow` Extension
+
+```cpp
+struct FieldRow {
+    // ... existing fields ...
+
+    // Variant support
+    bool is_variant = false;
+    QComboBox * variant_combo = nullptr;
+    QStackedWidget * variant_stack = nullptr;
+    std::vector<std::vector<FieldRow>> variant_sub_rows; // one vector per alternative
+};
+```
+
+##### `toJson` / `fromJson` for Variants
+
+`toJson()`: When encountering a variant `FieldRow`, emit a JSON object with:
+
+- The discriminator field (tag name from combo box text)
+- All fields from the currently-selected sub-form
+
+```json
+"motion": {
+    "model": "LinearMotionParams",
+    "velocity_x": 2.0,
+    "velocity_y": 0.5
+}
+```
+
+`fromJson()`: Read the discriminator value from the JSON object, switch the
+combo box to that alternative, then populate the sub-form fields.
+
+### Deliverables
+
+| Item | File | Description |
+|------|------|-------------|
+| `VariantAlternative` struct | `ParameterSchema.hpp` | Tag + sub-schema |
+| Variant fields in `ParameterFieldDescriptor` | `ParameterSchema.hpp` | `is_variant`, `variant_discriminator`, `variant_alternatives` |
+| `is_tagged_union_v<T>` trait | `ParameterSchema.hpp` | SFINAE detection |
+| Compile-time variant extraction | `ParameterSchema.hpp` | Template in `extractParameterSchema` |
+| `QStackedWidget` sub-form | `AutoParamWidget.cpp` | Dynamic page swapping |
+| Variant `FieldRow` members | `AutoParamWidget.hpp` | `variant_combo`, `variant_stack`, `variant_sub_rows` |
+| `toJson` / `fromJson` variant logic | `AutoParamWidget.cpp` | Nested JSON object with discriminator |
+| Unit tests | `test_parameter_schema.test.cpp` | TaggedUnion schema extraction, alternative enumeration |
+| Widget test | `test_auto_param_widget.test.cpp` | Combo box selection changes visible sub-form |
+
+### Testing
+
+1. Define three alternative structs (`LinearParams`, `SinParams`, `BrownianParams`)
+   and a `rfl::TaggedUnion<"model", ...>`.
+2. `extractParameterSchema<OuterParams>()` → verify variant field has three
+   alternatives, each with correct sub-field schemas.
+3. JSON round-trip: write params with each alternative → read back → values preserved.
+4. AutoParamWidget: `setSchema()` creates combo + stacked widget → `toJson()` produces
+   correct nested JSON → `fromJson()` restores correct alternative and values.
+
+### Exit Criteria
+
+- Variant fields auto-detected from `rfl::TaggedUnion` — no manual annotation.
+- AutoParamWidget swaps sub-forms on combo box change.
+- `toJson` / `fromJson` correctly (de)serialize the discriminated structure.
+- Existing flat-struct schemas unaffected.
+- All existing tests pass.
+
+---
+
+## Phase 3 — Enhanced UI: Conditional Visibility (Optional)
+
+### Goal
+
+For cases where a full `rfl::TaggedUnion` is too heavyweight, support
+**conditional field visibility** using `ParameterUIHints` annotations. This
+lets a flat parameter struct hide irrelevant fields based on a controlling
+enum or combo box field.
+
+### Design
+
+Add two new annotation fields to `ParameterFieldDescriptor`:
+
+```cpp
+struct ParameterFieldDescriptor {
+    // ... existing fields ...
+
+    /// If non-empty, this field is only visible when the named controller
+    /// field has one of the specified values.
+    std::string visibility_controller;
+    std::vector<std::string> visibility_values;
+};
+```
+
+Usage via `ParameterUIHints`:
+
+```cpp
+template<>
+struct ParameterUIHints<MyParams> {
+    static void annotate(ParameterSchema & schema) {
+        schema.field("velocity_x")->visibility_controller = "model";
+        schema.field("velocity_x")->visibility_values = {"linear"};
+        schema.field("diffusion")->visibility_controller = "model";
+        schema.field("diffusion")->visibility_values = {"brownian"};
+    }
+};
+```
+
+`AutoParamWidget` connects combo box `currentIndexChanged` signals to a slot
+that iterates all `FieldRow`s and shows/hides rows based on visibility rules.
+
+This is a simpler alternative to Phase 2 for cases where the flat-struct
+pattern is preferred (e.g., when the params struct is already established and
+refactoring to `rfl::TaggedUnion` would break existing JSON configs).
+
+### Exit Criteria
+
+- Fields with `visibility_controller` annotations are hidden/shown correctly.
+- `toJson()` excludes hidden optional fields (same as unchecked optional gate).
+- No interaction with Phase 1 (enum) or Phase 2 (variant) — orthogonal feature.
+
+---
+
+## Implementation Order
+
+| Phase | Scope | Dependency | Estimated Complexity |
+|-------|-------|------------|---------------------|
+| **1** | Enum class auto-detection | None | Low — mostly template additions |
+| **2** | Tagged variant support | Phase 1 (enums useful as discriminators) | Medium — new schema type + UI widget |
+| **3** | Conditional visibility | None (orthogonal) | Low — annotation + show/hide logic |
+
+**Recommended order**: Phase 1 → Phase 2 → Phase 3.
+
+Phase 1 is independently useful and unblocks Phase 2 (enums are natural
+discriminators). Phase 3 is orthogonal and can be done at any time, but is
+lower priority since Phase 2 provides a cleaner solution for the main
+use case.
+
+---
+
+## Compiler Compatibility Notes
+
+### `rfl::get_enumerator_array<E>()`
+
+reflect-cpp uses `std::source_location` + compiler function name parsing to
+extract enum names at compile time. Requirements:
+
+- **C++20 or later** (this project uses C++23 ✓)
+- **Scoped enums only** (`enum class`, not unscoped `enum`)
+- **Values in [0, 127]** by default (configurable via `RFL_ENUM_RANGE`)
+- **GCC, Clang, MSVC** all supported ✓
+
+### `rfl::TaggedUnion`
+
+Available in reflect-cpp ≥ 0.10. Serializes as a JSON object with a
+discriminator field. All three target compilers support it.
+
+### Type String Portability
+
+`rfl::fields<T>()` type strings differ between compilers. Phase 1 avoids
+this problem entirely by using `rfl::to_view()` + `std::is_enum_v` for
+compile-time detection rather than parsing the type string. Phase 2 similarly
+uses compile-time type traits (`is_tagged_union_v`) rather than string parsing.

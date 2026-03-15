@@ -77,6 +77,8 @@ website:
                 - developer/transforms_v2/adding_transforms.qmd
             - section: "ParameterSchema"
               href: developer/ParameterSchema/index.qmd
+              contents:
+                - developer/ParameterSchema/enum_variant_roadmap.qmd
             - section: "Data Synthesizer"
               contents:
                 - developer/DataSynthesizer/GeneratorRegistry.qmd
