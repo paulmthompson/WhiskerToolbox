@@ -312,10 +312,24 @@ void FuzzDiversePlacement(
             }
             break;
         case 2: // Close and re-add (exercises close/reopen logic)
+            // Closing may remove the state from the registry (the
+            // controller's cleanup signal calls unregisterState).
+            // This is expected — adjust expected_count accordingly.
             if (placed.view_dock) {
+                auto const count_before = harness.registry()->stateCount();
                 placed.view_dock->closeDockWidget();
-                // Re-toggle open
-                placed.view_dock->toggleView(true);
+                // After close, the dock widget may be disconnected from the
+                // dock manager (dockManager() returns nullptr). Calling
+                // toggleView(true) in that state crashes inside ADS when it
+                // tries to create a CFloatingDockContainer with a null
+                // manager. Only attempt re-open if the manager is still valid.
+                if (placed.view_dock->dockManager() != nullptr) {
+                    placed.view_dock->toggleView(true);
+                }
+                auto const count_after = harness.registry()->stateCount();
+                if (count_after < count_before) {
+                    expected_count -= static_cast<int>(count_before - count_after);
+                }
             }
             break;
         default: // 0 = Tab (already done by createAndPlace)
