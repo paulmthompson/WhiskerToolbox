@@ -34,12 +34,17 @@ public:
      */
     void setOptions(GammaOptions const& options);
 
+    [[nodiscard]] bool isActive() const;
+    void setActive(bool active);
+
 signals:
     /**
      * @brief Emitted when any gamma option changes
      * @param options Updated GammaOptions structure
      */
     void optionsChanged(GammaOptions const& options);
+
+    void activeChanged(bool active);
 
 private slots:
     void _onActiveChanged();

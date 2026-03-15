@@ -63,13 +63,13 @@ private:
     Section * _colormap_section;
 
     void _setupProcessingWidgets();
-    void _applyContrastFilter(ContrastOptions const & options);
-    void _applyGammaFilter(GammaOptions const & options);
-    void _applySharpenFilter(SharpenOptions const & options);
-    void _applyClaheFilter(ClaheOptions const & options);
-    void _applyBilateralFilter(BilateralOptions const & options);
-    void _applyMedianFilter(MedianOptions const & options);
-    void _applyMagicEraser(MagicEraserOptions const & options);
+    void _applyContrastFilter(ContrastOptions const & options, bool active);
+    void _applyGammaFilter(GammaOptions const & options, bool active);
+    void _applySharpenFilter(SharpenOptions const & options, bool active);
+    void _applyClaheFilter(ClaheOptions const & options, bool active);
+    void _applyBilateralFilter(BilateralOptions const & options, bool active);
+    void _applyMedianFilter(MedianOptions const & options, bool active);
+    void _applyMagicEraser(MagicEraserOptions const & options, bool active);
 
     void _loadProcessingChainFromMedia();
 
@@ -90,6 +90,16 @@ private slots:
     void _onDrawingFinished();
     void _onMagicEraserClearMaskRequested();
     void _onColormapOptionsChanged(ColormapOptions const & options);
+
+    // Active state change handlers
+    void _onContrastActiveChanged(bool active);
+    void _onGammaActiveChanged(bool active);
+    void _onSharpenActiveChanged(bool active);
+    void _onClaheActiveChanged(bool active);
+    void _onBilateralActiveChanged(bool active);
+    void _onMedianActiveChanged(bool active);
+    void _onMagicEraserActiveChanged(bool active);
+    void _onColormapActiveChanged(bool active);
 };
 
 #endif// MEDIAPROCESSING_WIDGET_HPP

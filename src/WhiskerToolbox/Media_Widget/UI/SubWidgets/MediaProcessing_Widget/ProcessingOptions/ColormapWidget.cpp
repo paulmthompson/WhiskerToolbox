@@ -31,11 +31,20 @@ ColormapWidget::~ColormapWidget() {
 
 ColormapOptions ColormapWidget::getOptions() const {
     ColormapOptions options;
-    options.active = ui->active_checkbox->isChecked();
     options.colormap = _getColormapTypeFromIndex(ui->colormap_combobox->currentIndex());
     options.alpha = ui->alpha_spinbox->value();
     options.normalize = ui->normalize_checkbox->isChecked();
     return options;
+}
+
+bool ColormapWidget::isActive() const {
+    return ui->active_checkbox->isChecked();
+}
+
+void ColormapWidget::setActive(bool active) {
+    ui->active_checkbox->blockSignals(true);
+    ui->active_checkbox->setChecked(active);
+    ui->active_checkbox->blockSignals(false);
 }
 
 void ColormapWidget::setOptions(ColormapOptions const& options) {
@@ -54,6 +63,7 @@ void ColormapWidget::setColormapEnabled(bool enabled) {
 }
 
 void ColormapWidget::_onActiveChanged() {
+    emit activeChanged(ui->active_checkbox->isChecked());
     _updateOptions();
 }
 
@@ -86,17 +96,14 @@ void ColormapWidget::_updateOptions() {
 }
 
 void ColormapWidget::_blockSignalsAndSetValues(ColormapOptions const& options) {
-    ui->active_checkbox->blockSignals(true);
     ui->colormap_combobox->blockSignals(true);
     ui->alpha_spinbox->blockSignals(true);
     ui->normalize_checkbox->blockSignals(true);
 
-    ui->active_checkbox->setChecked(options.active);
     ui->colormap_combobox->setCurrentIndex(_getIndexFromColormapType(options.colormap));
     ui->alpha_spinbox->setValue(options.alpha);
     ui->normalize_checkbox->setChecked(options.normalize);
 
-    ui->active_checkbox->blockSignals(false);
     ui->colormap_combobox->blockSignals(false);
     ui->alpha_spinbox->blockSignals(false);
     ui->normalize_checkbox->blockSignals(false);

@@ -83,6 +83,7 @@ website:
               contents:
                 - developer/DataSynthesizer/GeneratorRegistry.qmd
                 - developer/DataSynthesizer/Widget.qmd
+            - developer/MediaProcessingPipeline/index.qmd
                 - section: "Generators"
                   contents:
                     - developer/DataSynthesizer/Generators/Analog.qmd

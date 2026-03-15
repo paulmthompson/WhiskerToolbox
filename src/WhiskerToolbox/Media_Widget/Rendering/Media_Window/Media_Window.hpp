@@ -313,7 +313,7 @@ private:
     void _addRemoveData();
 
     // Helper for timeframe conversion
-    bool _needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe,
+    static bool _needsTimeFrameConversion(const std::shared_ptr<TimeFrame>& video_timeframe,
                                    std::shared_ptr<TimeFrame> const & interval_timeframe);
     
     // Group-aware color helpers
@@ -328,7 +328,7 @@ private:
     EntityId _findMaskAtPosition(QPointF const & scene_pos, std::string const & mask_key);
     void _createContextMenu();
     void _showContextMenu(QPoint const & global_pos);
-    float _calculateDistanceToLineSegment(float px, float py, float x1, float y1, float x2, float y2);
+    static float _calculateDistanceToLineSegment(float px, float py, float x1, float y1, float x2, float y2);
 
 public slots:
     void LoadFrame(TimePosition const & time_position);

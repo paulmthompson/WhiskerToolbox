@@ -1,0 +1,62 @@
+---
+title: "MediaProcessingPipeline"
+---
+
+## Overview
+
+`MediaProcessingPipeline` is a lightweight, Qt-free static library that provides a registry of image processing steps. It bridges the `ImageProcessing` library's option structs with the `ParameterSchema`/`AutoParamWidget` system, enabling auto-generated UIs for processing parameters.
+
+## Location
+
+`src/MediaProcessingPipeline/`
+
+## Dependencies
+
+- `ImageProcessing` — option structs and processing functions
+- `ParameterSchema` — `extractParameterSchema<T>()` and `ParameterUIHints<T>`
+- `reflectcpp` — struct reflection for schema extraction
+
+## Key Components
+
+### ProcessingOptionsSchema.hpp
+
+Companion header providing `ParameterUIHints<T>` specializations for each processing option struct defined in `ImageProcessing/ProcessingOptions.hpp`. This keeps the `rfl` dependency out of `ImageProcessing` while adding UI annotations (tooltips, value ranges) for `AutoParamWidget`.
+
+Annotated structs:
+
+- `ContrastOptions` — alpha/beta/display range
+- `GammaOptions` — gamma value
+- `SharpenOptions` — sigma
+- `ClaheOptions` — grid size, clip limit
+- `BilateralOptions` — diameter, color/spatial sigma
+- `MedianOptions` — kernel size
+- `MagicEraserParams` — brush size, median filter size
+- `ColormapOptions` — colormap type, alpha, normalize
+
+### ProcessingStep.hpp
+
+Descriptor struct for a named processing step:
+
+- `display_name` — human-readable name for UI sections
+- `chain_key` — key used with `MediaData::addProcessingStep()` (e.g., `"1__lineartransform"`)
+- `schema` — `ParameterSchema` for auto-generating the parameter UI
+- `apply` — type-erased function `void(cv::Mat&, nlohmann::json const&)` that applies the step
+
+### ProcessingStepRegistry
+
+Singleton registry mapping step names to `ProcessingStep` descriptors. Steps register at static-initialization time via the `RegisterStep<Params>` RAII helper (same pattern as `DataSynthesizer`'s `RegisterGenerator` and `TransformsV2`'s static registration).
+
+```cpp
+// Example registration
+static RegisterStep<ContrastOptions> const reg_contrast{
+    "Linear Transform",
+    "1__lineartransform",
+    [](cv::Mat& m, ContrastOptions const& o) { ImageProcessing::linear_transform(m, o); }
+};
+```
+
+Currently registered steps: Linear Transform, Gamma Correction, Image Sharpening, CLAHE, Bilateral Filter, Median Filter. Magic Eraser and Colormap are handled specially due to their state/rendering requirements.
+
+## Design Rationale
+
+This library exists to support the phased refactoring of `MediaProcessing_Widget` from hand-written per-filter widgets to `AutoParamWidget`-driven generic UI. See the [refactoring roadmap](MediaProcessing_Refactoring_Roadmap.md) for the full plan.

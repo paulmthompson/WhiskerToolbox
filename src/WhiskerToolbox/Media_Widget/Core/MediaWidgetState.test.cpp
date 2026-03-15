@@ -11,8 +11,7 @@
 namespace {
 // Ensures a QApplication exists for the process. Must be called before using any Qt widgets/signals.
 // Uses a leaked pointer intentionally - QApplication must outlive all Qt objects in tests.
-void ensureQApplication()
-{
+void ensureQApplication() {
     if (!QApplication::instance()) {
         static int argc = 1;
         static char app_name[] = "test";
@@ -316,17 +315,17 @@ TEST_CASE("MediaWidgetState feature management", "[MediaWidgetState]") {
 
     SECTION("Set and check feature enabled - all types") {
         MediaWidgetState state;
-        
+
         // Test all supported types
         std::vector<std::string> types = {"line", "mask", "point", "tensor", "interval", "media"};
-        
-        for (auto const& type : types) {
+
+        for (auto const & type: types) {
             QString qtype = QString::fromStdString(type);
             REQUIRE_FALSE(state.isFeatureEnabled("test_key", qtype));
-            
+
             state.setFeatureEnabled("test_key", qtype, true);
             REQUIRE(state.isFeatureEnabled("test_key", qtype));
-            
+
             state.setFeatureEnabled("test_key", qtype, false);
             REQUIRE_FALSE(state.isFeatureEnabled("test_key", qtype));
         }
@@ -334,7 +333,7 @@ TEST_CASE("MediaWidgetState feature management", "[MediaWidgetState]") {
 
     SECTION("Enabled features list") {
         MediaWidgetState state;
-        
+
         state.setFeatureEnabled("line_1", "line", true);
         state.setFeatureEnabled("line_2", "line", true);
         state.setFeatureEnabled("line_3", "line", false);
@@ -375,10 +374,10 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.hex_color() = "#ff0000";
         opts.line_thickness = 3;
         opts.is_visible() = true;
-        
+
         state.displayOptions().set("whisker_1", opts);
-        
-        auto* retrieved = state.displayOptions().get<LineDisplayOptions>("whisker_1");
+
+        auto * retrieved = state.displayOptions().get<LineDisplayOptions>("whisker_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->hex_color() == "#ff0000");
         REQUIRE(retrieved->line_thickness == 3);
@@ -399,10 +398,10 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.hex_color() = "#00ff00";
         opts.show_bounding_box = true;
         opts.show_outline = true;
-        
+
         state.displayOptions().set("mask_1", opts);
-        
-        auto* retrieved = state.displayOptions().get<MaskDisplayOptions>("mask_1");
+
+        auto * retrieved = state.displayOptions().get<MaskDisplayOptions>("mask_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->hex_color() == "#00ff00");
         REQUIRE(retrieved->show_bounding_box == true);
@@ -419,10 +418,10 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.hex_color() = "#0000ff";
         opts.point_size = 10;
         opts.marker_shape = PointMarkerShape::Square;
-        
+
         state.displayOptions().set("point_1", opts);
-        
-        auto* retrieved = state.displayOptions().get<PointDisplayOptions>("point_1");
+
+        auto * retrieved = state.displayOptions().get<PointDisplayOptions>("point_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->hex_color() == "#0000ff");
         REQUIRE(retrieved->point_size == 10);
@@ -438,10 +437,10 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         TensorDisplayOptions opts;
         opts.display_channel = 2;
         opts.alpha() = 0.5f;
-        
+
         state.displayOptions().set("tensor_1", opts);
-        
-        auto* retrieved = state.displayOptions().get<TensorDisplayOptions>("tensor_1");
+
+        auto * retrieved = state.displayOptions().get<TensorDisplayOptions>("tensor_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->display_channel == 2);
         REQUIRE(retrieved->alpha() == 0.5f);
@@ -456,10 +455,10 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         DigitalIntervalDisplayOptions opts;
         opts.plotting_style = IntervalPlottingStyle::Border;
         opts.border_thickness = 10;
-        
+
         state.displayOptions().set("interval_1", opts);
-        
-        auto* retrieved = state.displayOptions().get<DigitalIntervalDisplayOptions>("interval_1");
+
+        auto * retrieved = state.displayOptions().get<DigitalIntervalDisplayOptions>("interval_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->plotting_style == IntervalPlottingStyle::Border);
         REQUIRE(retrieved->border_thickness == 10);
@@ -473,15 +472,15 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
 
         MediaDisplayOptions opts;
         opts.hex_color() = "#ffffff";
-        opts.contrast_options.active = true;
+        opts.contrast_active = true;
         opts.contrast_options.alpha = 1.5;
-        
+
         state.displayOptions().set("video_1", opts);
-        
-        auto* retrieved = state.displayOptions().get<MediaDisplayOptions>("video_1");
+
+        auto * retrieved = state.displayOptions().get<MediaDisplayOptions>("video_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->hex_color() == "#ffffff");
-        REQUIRE(retrieved->contrast_options.active == true);
+        REQUIRE(retrieved->contrast_active == true);
         REQUIRE(retrieved->contrast_options.alpha == 1.5);
 
         state.displayOptions().remove<MediaDisplayOptions>("video_1");
@@ -490,7 +489,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
 
     SECTION("Display options round-trip serialization") {
         MediaWidgetState original;
-        
+
         LineDisplayOptions line_opts;
         line_opts.hex_color() = "#ff0000";
         line_opts.line_thickness = 5;
@@ -506,13 +505,13 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         MediaWidgetState restored;
         REQUIRE(restored.fromJson(json));
 
-        auto* restored_line = restored.displayOptions().get<LineDisplayOptions>("line_1");
+        auto * restored_line = restored.displayOptions().get<LineDisplayOptions>("line_1");
         REQUIRE(restored_line != nullptr);
         REQUIRE(restored_line->hex_color() == "#ff0000");
         REQUIRE(restored_line->line_thickness == 5);
         REQUIRE(restored_line->is_visible() == true);
 
-        auto* restored_mask = restored.displayOptions().get<MaskDisplayOptions>("mask_1");
+        auto * restored_mask = restored.displayOptions().get<MaskDisplayOptions>("mask_1");
         REQUIRE(restored_mask != nullptr);
         REQUIRE(restored_mask->hex_color() == "#00ff00");
         REQUIRE(restored_mask->show_outline == true);
@@ -529,7 +528,7 @@ TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
         QSignalSpy spy(&state, &MediaWidgetState::interactionPrefsChanged);
 
         // Check defaults
-        auto const& initial = state.linePrefs();
+        auto const & initial = state.linePrefs();
         REQUIRE(initial.smoothing_mode == "SimpleSmooth");
         REQUIRE(initial.edge_snapping_enabled == false);
 
@@ -539,12 +538,12 @@ TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
         prefs.polynomial_order = 5;
         prefs.edge_snapping_enabled = true;
         prefs.edge_threshold = 150;
-        
+
         state.setLinePrefs(prefs);
         REQUIRE(spy.count() == 1);
         REQUIRE(spy.at(0).at(0).toString() == "line");
-        
-        auto const& updated = state.linePrefs();
+
+        auto const & updated = state.linePrefs();
         REQUIRE(updated.smoothing_mode == "PolynomialFit");
         REQUIRE(updated.polynomial_order == 5);
         REQUIRE(updated.edge_snapping_enabled == true);
@@ -559,12 +558,12 @@ TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
         prefs.brush_size = 25;
         prefs.hover_circle_visible = false;
         prefs.allow_empty_mask = true;
-        
+
         state.setMaskPrefs(prefs);
         REQUIRE(spy.count() == 1);
         REQUIRE(spy.at(0).at(0).toString() == "mask");
-        
-        auto const& updated = state.maskPrefs();
+
+        auto const & updated = state.maskPrefs();
         REQUIRE(updated.brush_size == 25);
         REQUIRE(updated.hover_circle_visible == false);
         REQUIRE(updated.allow_empty_mask == true);
@@ -576,18 +575,18 @@ TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
 
         PointInteractionPrefs prefs;
         prefs.selection_threshold = 20.0f;
-        
+
         state.setPointPrefs(prefs);
         REQUIRE(spy.count() == 1);
         REQUIRE(spy.at(0).at(0).toString() == "point");
 
-        auto const& updated = state.pointPrefs();
+        auto const & updated = state.pointPrefs();
         REQUIRE(updated.selection_threshold == 20.0f);
     }
 
     SECTION("Preferences round-trip serialization") {
         MediaWidgetState original;
-        
+
         LineInteractionPrefs line_prefs;
         line_prefs.smoothing_mode = "PolynomialFit";
         line_prefs.polynomial_order = 7;
@@ -664,11 +663,11 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
         REQUIRE(state.updateTextOverlay(id, updated) == true);
         REQUIRE(spy.count() == 1);
 
-        auto* retrieved = state.getTextOverlay(id);
+        auto * retrieved = state.getTextOverlay(id);
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->text == "Updated");
         REQUIRE(retrieved->font_size == 24);
-        REQUIRE(retrieved->id == id); // ID preserved
+        REQUIRE(retrieved->id == id);// ID preserved
 
         // Updating non-existent returns false
         REQUIRE(state.updateTextOverlay(9999, updated) == false);
@@ -689,7 +688,7 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
 
         // Clear on empty does nothing
         state.clearTextOverlays();
-        REQUIRE(spy.count() == 1); // No additional signal
+        REQUIRE(spy.count() == 1);// No additional signal
     }
 
     SECTION("Get text overlay by ID") {
@@ -698,15 +697,15 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
         int id1 = state.addTextOverlay(TextOverlayData{.text = "First"});
         int id2 = state.addTextOverlay(TextOverlayData{.text = "Second"});
 
-        auto* first = state.getTextOverlay(id1);
+        auto * first = state.getTextOverlay(id1);
         REQUIRE(first != nullptr);
         REQUIRE(first->text == "First");
 
-        auto* second = state.getTextOverlay(id2);
+        auto * second = state.getTextOverlay(id2);
         REQUIRE(second != nullptr);
         REQUIRE(second->text == "Second");
 
-        auto* nonexistent = state.getTextOverlay(9999);
+        auto * nonexistent = state.getTextOverlay(9999);
         REQUIRE(nonexistent == nullptr);
     }
 
@@ -732,8 +731,8 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
         REQUIRE(restored.fromJson(json));
 
         REQUIRE(restored.textOverlays().size() == 2);
-        
-        auto const& r1 = restored.textOverlays()[0];
+
+        auto const & r1 = restored.textOverlays()[0];
         REQUIRE(r1.text == "Label 1");
         REQUIRE(r1.x_position == 0.2f);
         REQUIRE(r1.y_position == 0.3f);
@@ -741,7 +740,7 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
         REQUIRE(r1.font_size == 18);
         REQUIRE(r1.orientation == TextOverlayOrientation::Vertical);
 
-        auto const& r2 = restored.textOverlays()[1];
+        auto const & r2 = restored.textOverlays()[1];
         REQUIRE(r2.text == "Label 2");
         REQUIRE(r2.enabled == false);
     }
@@ -825,7 +824,7 @@ TEST_CASE("MediaWidgetState direct data access", "[MediaWidgetState]") {
         state.setDisplayedDataKey("test_key");
         state.setZoom(2.0);
 
-        auto const& data = state.data();
+        auto const & data = state.data();
         REQUIRE(data.displayed_media_key == "test_key");
         REQUIRE(data.viewport.zoom == 2.0);
     }
@@ -835,7 +834,7 @@ TEST_CASE("MediaWidgetState direct data access", "[MediaWidgetState]") {
         state.setZoom(1.5);
         state.setPan(10.0, 20.0);
 
-        auto const& viewport = state.viewport();
+        auto const & viewport = state.viewport();
         REQUIRE(viewport.zoom == 1.5);
         REQUIRE(viewport.pan_x == 10.0);
         REQUIRE(viewport.pan_y == 20.0);
@@ -848,59 +847,59 @@ TEST_CASE("MediaWidgetState complex state round-trip", "[MediaWidgetState]") {
     ensureQApplication();
 
     MediaWidgetState original;
-    
+
     // Set all state properties
     original.setDisplayName("Complex Test");
     original.setDisplayedDataKey("video.mp4");
-    
+
     // Viewport
     original.setZoom(2.5);
     original.setPan(100.0, 200.0);
     original.setCanvasSize(1920, 1080);
-    
+
     // Display options
     LineDisplayOptions line_opts;
     line_opts.hex_color() = "#ff0000";
     line_opts.line_thickness = 4;
     line_opts.is_visible() = true;
     original.displayOptions().set("whisker_1", line_opts);
-    
+
     MaskDisplayOptions mask_opts;
     mask_opts.hex_color() = "#00ff00";
     mask_opts.show_outline = true;
     mask_opts.is_visible() = true;
     original.displayOptions().set("mask_1", mask_opts);
-    
+
     // Interaction preferences
     LineInteractionPrefs line_prefs;
     line_prefs.smoothing_mode = "PolynomialFit";
     line_prefs.polynomial_order = 5;
     original.setLinePrefs(line_prefs);
-    
+
     // Text overlays
     TextOverlayData overlay;
     overlay.text = "Test Overlay";
     overlay.font_size = 20;
     overlay.color = "#ffffff";
     original.addTextOverlay(overlay);
-    
+
     // Tool modes
     original.setActiveLineMode(LineToolMode::Add);
     original.setActiveMaskMode(MaskToolMode::Brush);
-    
+
     // Serialize
     auto json = original.toJson();
     REQUIRE_FALSE(json.empty());
-    
+
     // Restore
     MediaWidgetState restored;
     REQUIRE(restored.fromJson(json));
-    
+
     // Verify all state
     REQUIRE(restored.getDisplayName() == "Complex Test");
     REQUIRE(restored.displayedDataKey() == "video.mp4");
     REQUIRE(restored.getInstanceId() == original.getInstanceId());
-    
+
     // Viewport
     REQUIRE(restored.zoom() == 2.5);
     auto [px, py] = restored.pan();
@@ -909,28 +908,28 @@ TEST_CASE("MediaWidgetState complex state round-trip", "[MediaWidgetState]") {
     auto [cw, ch] = restored.canvasSize();
     REQUIRE(cw == 1920);
     REQUIRE(ch == 1080);
-    
+
     // Display options
-    auto* r_line = restored.displayOptions().get<LineDisplayOptions>("whisker_1");
+    auto * r_line = restored.displayOptions().get<LineDisplayOptions>("whisker_1");
     REQUIRE(r_line != nullptr);
     REQUIRE(r_line->hex_color() == "#ff0000");
     REQUIRE(r_line->line_thickness == 4);
     REQUIRE(r_line->is_visible() == true);
-    
-    auto* r_mask = restored.displayOptions().get<MaskDisplayOptions>("mask_1");
+
+    auto * r_mask = restored.displayOptions().get<MaskDisplayOptions>("mask_1");
     REQUIRE(r_mask != nullptr);
     REQUIRE(r_mask->hex_color() == "#00ff00");
     REQUIRE(r_mask->show_outline == true);
-    
+
     // Interaction preferences
     REQUIRE(restored.linePrefs().smoothing_mode == "PolynomialFit");
     REQUIRE(restored.linePrefs().polynomial_order == 5);
-    
+
     // Text overlays
     REQUIRE(restored.textOverlays().size() == 1);
     REQUIRE(restored.textOverlays()[0].text == "Test Overlay");
     REQUIRE(restored.textOverlays()[0].font_size == 20);
-    
+
     // Tool modes
     REQUIRE(restored.activeLineMode() == LineToolMode::Add);
     REQUIRE(restored.activeMaskMode() == MaskToolMode::Brush);

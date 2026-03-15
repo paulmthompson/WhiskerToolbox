@@ -33,12 +33,21 @@ ContrastWidget::~ContrastWidget() {
 
 ContrastOptions ContrastWidget::getOptions() const {
     ContrastOptions options;
-    options.active = ui->active_checkbox->isChecked();
     options.alpha = ui->alpha_spinbox->value();
     options.beta = ui->beta_spinbox->value();
     options.display_min = ui->display_min_spinbox->value();
     options.display_max = ui->display_max_spinbox->value();
     return options;
+}
+
+bool ContrastWidget::isActive() const {
+    return ui->active_checkbox->isChecked();
+}
+
+void ContrastWidget::setActive(bool active) {
+    ui->active_checkbox->blockSignals(true);
+    ui->active_checkbox->setChecked(active);
+    ui->active_checkbox->blockSignals(false);
 }
 
 void ContrastWidget::setOptions(ContrastOptions const& options) {
@@ -47,6 +56,7 @@ void ContrastWidget::setOptions(ContrastOptions const& options) {
 }
 
 void ContrastWidget::_onActiveChanged() {
+    emit activeChanged(ui->active_checkbox->isChecked());
     _updateOptions();
 }
 
@@ -125,21 +135,18 @@ void ContrastWidget::_updateOptions() {
 
 void ContrastWidget::_blockSignalsAndSetValues(ContrastOptions const& options) {
     // Block signals to prevent recursive updates
-    ui->active_checkbox->blockSignals(true);
     ui->alpha_spinbox->blockSignals(true);
     ui->beta_spinbox->blockSignals(true);
     ui->display_min_spinbox->blockSignals(true);
     ui->display_max_spinbox->blockSignals(true);
 
     // Set values
-    ui->active_checkbox->setChecked(options.active);
     ui->alpha_spinbox->setValue(options.alpha);
     ui->beta_spinbox->setValue(options.beta);
     ui->display_min_spinbox->setValue(static_cast<int>(std::round(options.display_min)));
     ui->display_max_spinbox->setValue(static_cast<int>(std::round(options.display_max)));
 
     // Unblock signals
-    ui->active_checkbox->blockSignals(false);
     ui->alpha_spinbox->blockSignals(false);
     ui->beta_spinbox->blockSignals(false);
     ui->display_min_spinbox->blockSignals(false);

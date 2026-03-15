@@ -35,6 +35,9 @@ public:
      */
     void setOptions(ColormapOptions const& options);
 
+    [[nodiscard]] bool isActive() const;
+    void setActive(bool active);
+
     /**
      * @brief Set whether the widget should be enabled (for grayscale images only)
      * @param enabled True if the media is grayscale and colormap can be applied
@@ -47,6 +50,8 @@ signals:
      * @param options Updated ColormapOptions structure
      */
     void optionsChanged(ColormapOptions const& options);
+
+    void activeChanged(bool active);
 
 private slots:
     void _onActiveChanged();

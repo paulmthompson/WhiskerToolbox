@@ -32,11 +32,20 @@ MagicEraserWidget::~MagicEraserWidget() {
 
 MagicEraserOptions MagicEraserWidget::getOptions() const {
     MagicEraserOptions options;
-    options.active = ui->active_checkbox->isChecked();
     options.brush_size = ui->brush_size_spinbox->value();
     options.median_filter_size = ui->filter_size_spinbox->value();
     options.drawing_mode = ui->drawing_mode_button->isChecked();
     return options;
+}
+
+bool MagicEraserWidget::isActive() const {
+    return ui->active_checkbox->isChecked();
+}
+
+void MagicEraserWidget::setActive(bool active) {
+    ui->active_checkbox->blockSignals(true);
+    ui->active_checkbox->setChecked(active);
+    ui->active_checkbox->blockSignals(false);
 }
 
 void MagicEraserWidget::setOptions(MagicEraserOptions const& options) {
@@ -44,6 +53,7 @@ void MagicEraserWidget::setOptions(MagicEraserOptions const& options) {
 }
 
 void MagicEraserWidget::_onActiveChanged() {
+    emit activeChanged(ui->active_checkbox->isChecked());
     _updateOptions();
 }
 
@@ -100,13 +110,11 @@ void MagicEraserWidget::_updateOptions() {
 
 void MagicEraserWidget::_blockSignalsAndSetValues(MagicEraserOptions const& options) {
     // Block signals to prevent recursive updates
-    ui->active_checkbox->blockSignals(true);
     ui->brush_size_spinbox->blockSignals(true);
     ui->filter_size_spinbox->blockSignals(true);
     ui->drawing_mode_button->blockSignals(true);
 
     // Set values
-    ui->active_checkbox->setChecked(options.active);
     ui->brush_size_spinbox->setValue(options.brush_size);
     ui->filter_size_spinbox->setValue(options.median_filter_size);
     ui->drawing_mode_button->setChecked(options.drawing_mode);
@@ -115,7 +123,6 @@ void MagicEraserWidget::_blockSignalsAndSetValues(MagicEraserOptions const& opti
     ui->drawing_mode_button->setText(options.drawing_mode ? "Stop Drawing" : "Start Drawing");
 
     // Unblock signals
-    ui->active_checkbox->blockSignals(false);
     ui->brush_size_spinbox->blockSignals(false);
     ui->filter_size_spinbox->blockSignals(false);
     ui->drawing_mode_button->blockSignals(false);

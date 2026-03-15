@@ -10,8 +10,7 @@ using Catch::Matchers::WithinAbs;
 
 // ==================== Type Name Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry type names are correct", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry type names are correct", "[DisplayOptionsRegistry]") {
     REQUIRE(DisplayOptionsRegistry::typeName<LineDisplayOptions>() == "line");
     REQUIRE(DisplayOptionsRegistry::typeName<MaskDisplayOptions>() == "mask");
     REQUIRE(DisplayOptionsRegistry::typeName<PointDisplayOptions>() == "point");
@@ -22,8 +21,7 @@ TEST_CASE("DisplayOptionsRegistry type names are correct", "[DisplayOptionsRegis
 
 // ==================== Line Display Options Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry LineDisplayOptions set/get", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry LineDisplayOptions set/get", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -43,8 +41,7 @@ TEST_CASE("DisplayOptionsRegistry LineDisplayOptions set/get", "[DisplayOptionsR
     REQUIRE(retrieved->show_points == true);
 }
 
-TEST_CASE("DisplayOptionsRegistry LineDisplayOptions signal emission", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry LineDisplayOptions signal emission", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -60,8 +57,7 @@ TEST_CASE("DisplayOptionsRegistry LineDisplayOptions signal emission", "[Display
     REQUIRE(args.at(1).toString() == "line");
 }
 
-TEST_CASE("DisplayOptionsRegistry LineDisplayOptions remove", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry LineDisplayOptions remove", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -82,8 +78,7 @@ TEST_CASE("DisplayOptionsRegistry LineDisplayOptions remove", "[DisplayOptionsRe
     REQUIRE_FALSE(removed);
 }
 
-TEST_CASE("DisplayOptionsRegistry LineDisplayOptions keys", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry LineDisplayOptions keys", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -99,8 +94,7 @@ TEST_CASE("DisplayOptionsRegistry LineDisplayOptions keys", "[DisplayOptionsRegi
     REQUIRE(keys.contains("line_c"));
 }
 
-TEST_CASE("DisplayOptionsRegistry LineDisplayOptions enabledKeys", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry LineDisplayOptions enabledKeys", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -120,8 +114,7 @@ TEST_CASE("DisplayOptionsRegistry LineDisplayOptions enabledKeys", "[DisplayOpti
     REQUIRE(enabled.contains("line_c"));
 }
 
-TEST_CASE("DisplayOptionsRegistry LineDisplayOptions count", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry LineDisplayOptions count", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -138,8 +131,7 @@ TEST_CASE("DisplayOptionsRegistry LineDisplayOptions count", "[DisplayOptionsReg
     REQUIRE(registry.count<LineDisplayOptions>() == 1);
 }
 
-TEST_CASE("DisplayOptionsRegistry LineDisplayOptions getMutable", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry LineDisplayOptions getMutable", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -155,8 +147,7 @@ TEST_CASE("DisplayOptionsRegistry LineDisplayOptions getMutable", "[DisplayOptio
     REQUIRE(retrieved->line_thickness == 10);
 }
 
-TEST_CASE("DisplayOptionsRegistry LineDisplayOptions notifyChanged", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry LineDisplayOptions notifyChanged", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -176,8 +167,7 @@ TEST_CASE("DisplayOptionsRegistry LineDisplayOptions notifyChanged", "[DisplayOp
 
 // ==================== Mask Display Options Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry MaskDisplayOptions set/get", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry MaskDisplayOptions set/get", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -197,8 +187,7 @@ TEST_CASE("DisplayOptionsRegistry MaskDisplayOptions set/get", "[DisplayOptionsR
     REQUIRE(retrieved->show_outline == true);
 }
 
-TEST_CASE("DisplayOptionsRegistry MaskDisplayOptions keys and count", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry MaskDisplayOptions keys and count", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -212,8 +201,7 @@ TEST_CASE("DisplayOptionsRegistry MaskDisplayOptions keys and count", "[DisplayO
 
 // ==================== Point Display Options Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry PointDisplayOptions set/get", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry PointDisplayOptions set/get", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -233,8 +221,7 @@ TEST_CASE("DisplayOptionsRegistry PointDisplayOptions set/get", "[DisplayOptions
 
 // ==================== Tensor Display Options Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry TensorDisplayOptions set/get", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry TensorDisplayOptions set/get", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -252,8 +239,7 @@ TEST_CASE("DisplayOptionsRegistry TensorDisplayOptions set/get", "[DisplayOption
 
 // ==================== Interval Display Options Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry DigitalIntervalDisplayOptions set/get", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry DigitalIntervalDisplayOptions set/get", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -275,16 +261,15 @@ TEST_CASE("DisplayOptionsRegistry DigitalIntervalDisplayOptions set/get", "[Disp
 
 // ==================== Media Display Options Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry MediaDisplayOptions set/get", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry MediaDisplayOptions set/get", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
     MediaDisplayOptions opts;
     opts.hex_color() = "#00ffff";
-    opts.contrast_options.active = true;
+    opts.contrast_active = true;
     opts.contrast_options.alpha = 1.5;
-    opts.gamma_options.active = true;
+    opts.gamma_active = true;
     opts.gamma_options.gamma = 2.2;
 
     registry.set(QStringLiteral("media_1"), opts);
@@ -292,16 +277,15 @@ TEST_CASE("DisplayOptionsRegistry MediaDisplayOptions set/get", "[DisplayOptions
     auto const * retrieved = registry.get<MediaDisplayOptions>(QStringLiteral("media_1"));
     REQUIRE(retrieved != nullptr);
     REQUIRE(retrieved->hex_color() == "#00ffff");
-    REQUIRE(retrieved->contrast_options.active == true);
+    REQUIRE(retrieved->contrast_active == true);
     REQUIRE_THAT(retrieved->contrast_options.alpha, WithinAbs(1.5, 0.001));
-    REQUIRE(retrieved->gamma_options.active == true);
+    REQUIRE(retrieved->gamma_active == true);
     REQUIRE_THAT(retrieved->gamma_options.gamma, WithinAbs(2.2, 0.001));
 }
 
 // ==================== Visibility Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry setVisible/isVisible", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry setVisible/isVisible", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -340,8 +324,7 @@ TEST_CASE("DisplayOptionsRegistry setVisible/isVisible", "[DisplayOptionsRegistr
     REQUIRE(visibility_spy.count() == 1);
 }
 
-TEST_CASE("DisplayOptionsRegistry setVisible with non-existent key", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry setVisible with non-existent key", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -349,8 +332,7 @@ TEST_CASE("DisplayOptionsRegistry setVisible with non-existent key", "[DisplayOp
     REQUIRE_FALSE(registry.isVisible(QStringLiteral("nonexistent"), QStringLiteral("line")));
 }
 
-TEST_CASE("DisplayOptionsRegistry setVisible all types", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry setVisible all types", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -387,8 +369,7 @@ TEST_CASE("DisplayOptionsRegistry setVisible all types", "[DisplayOptionsRegistr
 
 // ==================== Get Non-Existent Key Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry get returns nullptr for non-existent key", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry get returns nullptr for non-existent key", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -400,8 +381,7 @@ TEST_CASE("DisplayOptionsRegistry get returns nullptr for non-existent key", "[D
     REQUIRE(registry.get<MediaDisplayOptions>(QStringLiteral("nonexistent")) == nullptr);
 }
 
-TEST_CASE("DisplayOptionsRegistry getMutable returns nullptr for non-existent key", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry getMutable returns nullptr for non-existent key", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -411,8 +391,7 @@ TEST_CASE("DisplayOptionsRegistry getMutable returns nullptr for non-existent ke
 
 // ==================== Multiple Types Same Key Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry different types can use same key", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry different types can use same key", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 
@@ -443,8 +422,7 @@ TEST_CASE("DisplayOptionsRegistry different types can use same key", "[DisplayOp
 
 // ==================== Overwrite Tests ====================
 
-TEST_CASE("DisplayOptionsRegistry set overwrites existing options", "[DisplayOptionsRegistry]")
-{
+TEST_CASE("DisplayOptionsRegistry set overwrites existing options", "[DisplayOptionsRegistry]") {
     MediaWidgetStateData data;
     DisplayOptionsRegistry registry(&data);
 

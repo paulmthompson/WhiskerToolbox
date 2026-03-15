@@ -28,11 +28,20 @@ BilateralWidget::~BilateralWidget() {
 
 BilateralOptions BilateralWidget::getOptions() const {
     BilateralOptions options;
-    options.active = ui->active_checkbox->isChecked();
     options.diameter = ui->d_spinbox->value();
     options.sigma_color = ui->sigma_color_spinbox->value();
     options.sigma_spatial = ui->sigma_space_spinbox->value();
     return options;
+}
+
+bool BilateralWidget::isActive() const {
+    return ui->active_checkbox->isChecked();
+}
+
+void BilateralWidget::setActive(bool active) {
+    ui->active_checkbox->blockSignals(true);
+    ui->active_checkbox->setChecked(active);
+    ui->active_checkbox->blockSignals(false);
 }
 
 void BilateralWidget::setOptions(BilateralOptions const& options) {
@@ -40,6 +49,7 @@ void BilateralWidget::setOptions(BilateralOptions const& options) {
 }
 
 void BilateralWidget::_onActiveChanged() {
+    emit activeChanged(ui->active_checkbox->isChecked());
     _updateOptions();
 }
 
@@ -79,19 +89,16 @@ void BilateralWidget::_updateOptions() {
 
 void BilateralWidget::_blockSignalsAndSetValues(BilateralOptions const& options) {
     // Block signals to prevent recursive updates
-    ui->active_checkbox->blockSignals(true);
     ui->d_spinbox->blockSignals(true);
     ui->sigma_color_spinbox->blockSignals(true);
     ui->sigma_space_spinbox->blockSignals(true);
 
     // Set values
-    ui->active_checkbox->setChecked(options.active);
     ui->d_spinbox->setValue(options.diameter);
     ui->sigma_color_spinbox->setValue(options.sigma_color);
     ui->sigma_space_spinbox->setValue(options.sigma_spatial);
 
     // Unblock signals
-    ui->active_checkbox->blockSignals(false);
     ui->d_spinbox->blockSignals(false);
     ui->sigma_color_spinbox->blockSignals(false);
     ui->sigma_space_spinbox->blockSignals(false);

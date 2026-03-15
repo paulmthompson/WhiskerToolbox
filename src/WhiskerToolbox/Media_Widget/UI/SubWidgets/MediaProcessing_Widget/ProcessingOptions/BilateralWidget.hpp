@@ -34,12 +34,17 @@ public:
      */
     void setOptions(BilateralOptions const& options);
 
+    [[nodiscard]] bool isActive() const;
+    void setActive(bool active);
+
 signals:
     /**
      * @brief Emitted when any bilateral option changes
      * @param options Updated BilateralOptions structure
      */
     void optionsChanged(BilateralOptions const& options);
+
+    void activeChanged(bool active);
 
 private slots:
     void _onActiveChanged();

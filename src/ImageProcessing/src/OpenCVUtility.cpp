@@ -432,7 +432,7 @@ void apply_magic_eraser(cv::Mat& mat, MagicEraserOptions const& options) {
 }
 
 void apply_colormap(cv::Mat& mat, ColormapOptions const& options) {
-    if (!options.active || options.colormap == ColormapType::None) {
+    if (options.colormap == ColormapType::None) {
         return;
     }
     
@@ -551,7 +551,7 @@ void apply_colormap(cv::Mat& mat, ColormapOptions const& options) {
 std::vector<uint8_t> apply_colormap_for_display(std::vector<uint8_t> const& grayscale_data, 
                                                ImageSize image_size,
                                                ColormapOptions const& options) {
-    if (!options.active || options.colormap == ColormapType::None) {
+    if (options.colormap == ColormapType::None) {
         return {}; // Return empty vector to indicate no colormap applied
     }
     

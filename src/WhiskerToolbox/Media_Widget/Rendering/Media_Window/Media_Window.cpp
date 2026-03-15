@@ -11,13 +11,13 @@
 #include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "GroupContextMenu/GroupContextMenuHandler.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
+#include "ImageProcessing/OpenCVUtility.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "Points/Point_Data.hpp"
-#include "GroupContextMenu/GroupContextMenuHandler.hpp"
-#include "GroupManagementWidget/GroupManager.hpp"
-#include "ImageProcessing/OpenCVUtility.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
@@ -99,7 +99,7 @@ void Media_Window::addMediaDataToScene(std::string const & media_key) {
     // Check if options already exist in state
     if (!_media_widget_state->displayOptions().has<MediaDisplayOptions>(key_q)) {
         // Create default options in state
-        MediaDisplayOptions media_config;
+        MediaDisplayOptions const media_config;
         _media_widget_state->displayOptions().set(key_q, media_config);
     }
 
@@ -508,7 +508,7 @@ void Media_Window::LoadFrame(TimePosition const & position) {
         }
 
         auto media_tf = _data_manager->getTime();
-        int frame_value = position.convertTo(media_tf.get()).getValue();
+        int const frame_value = position.convertTo(media_tf.get()).getValue();
         media->LoadFrame(frame_value);
     }
 
@@ -633,11 +633,11 @@ void Media_Window::_plotMediaData() {
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return; // No valid time position
+        return;// No valid time position
     }
 
     auto media_tf = _data_manager->getTime();
-    const auto frame_value = current_position.convertTo(media_tf.get()).getValue();
+    auto const frame_value = current_position.convertTo(media_tf.get()).getValue();
 
     int total_visible_media = 0;
     std::string active_media_key;
@@ -668,7 +668,7 @@ void Media_Window::_plotMediaData() {
 
         if (media->getFormat() == MediaData::DisplayFormat::Gray) {
             // Handle grayscale images with potential colormap application
-            bool apply_colormap = active_media_config->colormap_options.active &&
+            bool const apply_colormap = active_media_config->colormap_active &&
                                   active_media_config->colormap_options.colormap != ColormapType::None;
 
             if (media->is8Bit()) {
@@ -705,9 +705,9 @@ void Media_Window::_plotMediaData() {
                     std::vector<uint8_t> converted_8bit;
                     converted_8bit.reserve(unscaled_image_data_32bit.size());
 
-                    for (float pixel_value: unscaled_image_data_32bit) {
+                    for (float const pixel_value: unscaled_image_data_32bit) {
                         // Clamp to 0-255 range and convert to uint8_t
-                        uint8_t byte_value = static_cast<uint8_t>(std::max(0.0f, std::min(255.0f, pixel_value)));
+                        uint8_t const byte_value = static_cast<uint8_t>(std::max(0.0f, std::min(255.0f, pixel_value)));
                         converted_8bit.push_back(byte_value);
                     }
 
@@ -727,9 +727,9 @@ void Media_Window::_plotMediaData() {
                     std::vector<uint16_t> converted_16bit;
                     converted_16bit.reserve(unscaled_image_data_32bit.size());
 
-                    for (float pixel_value: unscaled_image_data_32bit) {
+                    for (float const pixel_value: unscaled_image_data_32bit) {
                         // Scale from 0-255 range to 0-65535 range
-                        uint16_t value_16bit = static_cast<uint16_t>(std::max(0.0f, std::min(255.0f, pixel_value)) * 257.0f);
+                        uint16_t const value_16bit = static_cast<uint16_t>(std::max(0.0f, std::min(255.0f, pixel_value)) * 257.0f);
                         converted_16bit.push_back(value_16bit);
                     }
 
@@ -790,16 +790,16 @@ void Media_Window::_plotMediaData() {
 
 
 QImage Media_Window::_combineMultipleMedia() {
-    if (!_media_widget_state) return QImage();
+    if (!_media_widget_state) return {};
 
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return QImage(); // No valid time position
+        return {};// No valid time position
     }
 
     auto media_tf = _data_manager->getTime();
-    const auto frame_value = current_position.convertTo(media_tf.get()).getValue();
+    auto const frame_value = current_position.convertTo(media_tf.get()).getValue();
 
     // Loop through configs and get the largest image size
     std::vector<ImageSize> media_sizes;
@@ -814,7 +814,7 @@ QImage Media_Window::_combineMultipleMedia() {
         media_sizes.push_back(media->getImageSize());
     }
 
-    if (media_sizes.empty()) return QImage();
+    if (media_sizes.empty()) return {};
 
     // Find the maximum width and height
     int width = 0;
@@ -837,7 +837,7 @@ QImage Media_Window::_combineMultipleMedia() {
             continue;// Skip non-grayscale media
         }
 
-        bool apply_colormap = media_config->colormap_options.active &&
+        bool const apply_colormap = media_config->colormap_active &&
                               media_config->colormap_options.colormap != ColormapType::None;
 
         if (media->is8Bit()) {
@@ -861,7 +861,7 @@ QImage Media_Window::_combineMultipleMedia() {
                         uint8_t const a = colormap_data[pixel_idx + 3];// Alpha channel
 
                         // Get current pixel from combined image
-                        QRgb current_pixel = combined_image.pixel(x, y);
+                        QRgb const current_pixel = combined_image.pixel(x, y);
 
                         // Additive blending (common for multi-channel microscopy)
                         uint8_t const new_r = std::min(255, qRed(current_pixel) + r);
@@ -879,7 +879,7 @@ QImage Media_Window::_combineMultipleMedia() {
                         uint8_t const gray_value = media_data_8bit[pixel_idx];
 
                         // Get current pixel from combined image
-                        QRgb current_pixel = combined_image.pixel(x, y);
+                        QRgb const current_pixel = combined_image.pixel(x, y);
 
                         // Additive blending
                         uint8_t const new_r = std::min(255, qRed(current_pixel) + gray_value);
@@ -899,8 +899,8 @@ QImage Media_Window::_combineMultipleMedia() {
                 std::vector<uint8_t> converted_8bit;
                 converted_8bit.reserve(media_data_32bit.size());
 
-                for (float pixel_value: media_data_32bit) {
-                    uint8_t byte_value = static_cast<uint8_t>(std::max(0.0f, std::min(255.0f, pixel_value)));
+                for (float const pixel_value: media_data_32bit) {
+                    uint8_t const byte_value = static_cast<uint8_t>(std::max(0.0f, std::min(255.0f, pixel_value)));
                     converted_8bit.push_back(byte_value);
                 }
 
@@ -920,7 +920,7 @@ QImage Media_Window::_combineMultipleMedia() {
                         uint8_t const a = colormap_data[pixel_idx + 3];// Alpha channel
 
                         // Get current pixel from combined image
-                        QRgb current_pixel = combined_image.pixel(x, y);
+                        QRgb const current_pixel = combined_image.pixel(x, y);
 
                         // Additive blending
                         uint8_t const new_r = std::min(255, qRed(current_pixel) + r);
@@ -939,7 +939,7 @@ QImage Media_Window::_combineMultipleMedia() {
                         uint8_t const gray_value = static_cast<uint8_t>(std::max(0.0f, std::min(255.0f, float_value)));
 
                         // Get current pixel from combined image
-                        QRgb current_pixel = combined_image.pixel(x, y);
+                        QRgb const current_pixel = combined_image.pixel(x, y);
 
                         // Additive blending
                         uint8_t const new_r = std::min(255, qRed(current_pixel) + gray_value);
@@ -974,7 +974,7 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
         } else if (_group_selection_enabled) {
             // Handle selection on left click (when not in drawing mode and group selection is enabled)
             std::string data_key, data_type;
-            EntityId entity_id = _findEntityAtPosition(event->scenePos(), data_key, data_type);
+            EntityId const entity_id = _findEntityAtPosition(event->scenePos(), data_key, data_type);
 
             if (entity_id != EntityId(0)) {
                 // Use group-based selection for all entity types
@@ -1184,7 +1184,7 @@ void Media_Window::_plotLineData() {
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return; // No valid time position
+        return;// No valid time position
     }
 
     // Create TimeIndexAndFrame from current_position for data access
@@ -1226,11 +1226,11 @@ void Media_Window::_plotLineData() {
         }
 
         // Ensure we have matching line data and entity IDs
-        size_t line_count = std::min(lineData.size(), entityIds.size());
+        size_t const line_count = std::min(lineData.size(), entityIds.size());
 
         for (int line_idx = 0; line_idx < static_cast<int>(line_count); ++line_idx) {
             auto const & single_line = lineData[line_idx];
-            EntityId entity_id = static_cast<size_t>(line_idx) < entityIds.size() ? entityIds[line_idx] : EntityId(0);
+            EntityId const entity_id = static_cast<size_t>(line_idx) < entityIds.size() ? entityIds[line_idx] : EntityId(0);
 
             if (single_line.empty()) {
                 continue;
@@ -1242,7 +1242,7 @@ void Media_Window::_plotLineData() {
             }
 
             // Use group-aware color if available, otherwise use default plot color
-            QColor line_color = _getGroupAwareColor(entity_id, QColor::fromRgba(plot_color));
+            QColor const line_color = _getGroupAwareColor(entity_id, QColor::fromRgba(plot_color));
 
             // Use segment if enabled, otherwise use full line
             Line2D line_to_plot;
@@ -1345,11 +1345,11 @@ void Media_Window::_plotMaskData() {
 
     // Note: MaskData does not currently support EntityIds for group-aware coloring
     // This would need to be implemented similar to PointData and LineData
-    
+
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return; // No valid time position
+        return;// No valid time position
     }
 
     // Create TimeIndexAndFrame from current_position for data access
@@ -1510,7 +1510,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return media_image; // No valid time position
+        return media_image;// No valid time position
     }
 
     // Create TimeIndexAndFrame from current_position for data access
@@ -1584,7 +1584,7 @@ void Media_Window::_plotPointData() {
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return; // No valid time position
+        return;// No valid time position
     }
 
     // Create TimeIndexAndFrame from current_position for data access
@@ -1621,14 +1621,14 @@ void Media_Window::_plotPointData() {
         auto entityIds = point->getEntityIdsAtTime(current_position.index, *current_position.time_frame);
 
         // Get configurable point size
-        float const point_size = static_cast<float>(point_config->point_size);
+        auto const point_size = static_cast<float>(point_config->point_size);
 
         // Ensure we have matching point data and entity IDs
-        size_t count = std::min(pointData.size(), entityIds.size());
+        size_t const count = std::min(pointData.size(), entityIds.size());
 
         for (size_t i = 0; i < count; ++i) {
             auto const & single_point = pointData[i];
-            EntityId entity_id = entityIds[i];
+            EntityId const entity_id = entityIds[i];
 
             // Check if the entity's group is visible
             if (!_isEntityGroupVisible(entity_id)) {
@@ -1639,16 +1639,16 @@ void Media_Window::_plotPointData() {
             float const y_pos = single_point.y * yAspect;
 
             // Use group-aware color if available, otherwise use default plot color
-            QColor point_color = _getGroupAwareColor(entity_id, QColor::fromRgba(plot_color));
+            QColor const point_color = _getGroupAwareColor(entity_id, QColor::fromRgba(plot_color));
 
             // Check if this point is selected to add highlight
-            bool is_selected = _selected_entities.count(entity_id) > 0;
+            bool const is_selected = _selected_entities.count(entity_id) > 0;
 
             // Add selection highlight if point is selected
             if (is_selected) {
                 QPen highlight_pen(Qt::yellow);
                 highlight_pen.setWidth(4);
-                QBrush highlight_brush(Qt::transparent);
+                QBrush const highlight_brush(Qt::transparent);
                 auto highlight_circle = addEllipse(x_pos - point_size, y_pos - point_size,
                                                    point_size * 2, point_size * 2,
                                                    highlight_pen, highlight_brush);
@@ -1724,7 +1724,7 @@ void Media_Window::_plotPointData() {
                 case PointMarkerShape::Diamond: {
                     QPen pen(point_color);
                     pen.setWidth(2);
-                    QBrush brush(point_color);
+                    QBrush const brush(point_color);
 
                     // Create diamond polygon (rotated square)
                     QPolygonF diamond;
@@ -1749,7 +1749,7 @@ void Media_Window::_plotDigitalIntervalSeries() {
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return; // No valid time position
+        return;// No valid time position
     }
 
     // Get video timeframe for relative time calculations
@@ -1812,11 +1812,11 @@ void Media_Window::_plotDigitalIntervalSeries() {
             // Calculate relative time position
             int const current_time_value = current_position.index.getValue();
             int const video_time = current_time_value + relative_times[i];
-            
+
             // Create TimePosition for the relative time
-            TimePosition relative_position(TimeFrameIndex(video_time), video_timeframe);
-            
-            TimeFrameIndex query_time_index = TimeFrameIndex(video_time);// Default: no conversion needed
+            TimePosition const relative_position(TimeFrameIndex(video_time), video_timeframe);
+
+            auto query_time_index = TimeFrameIndex(video_time);// Default: no conversion needed
 
             if (needs_conversion) {
                 // Convert from video timeframe to interval series timeframe
@@ -1850,7 +1850,7 @@ void Media_Window::_plotDigitalIntervalBorders() {
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return; // No valid time position
+        return;// No valid time position
     }
 
     // Iterate over interval options from state registry
@@ -1867,7 +1867,7 @@ void Media_Window::_plotDigitalIntervalBorders() {
 
         // Check if an interval is present at the current frame
         // Use current_position - conversion handled internally
-        bool interval_present = interval_series->hasIntervalAtTime(current_position.index,
+        bool const interval_present = interval_series->hasIntervalAtTime(current_position.index,
                                                                    *current_position.time_frame);
 
         // If an interval is present, draw a border around the entire image
@@ -1906,7 +1906,7 @@ void Media_Window::_plotTensorData() {
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return; // No valid time position
+        return;// No valid time position
     }
 
     // Iterate over tensor options from state registry
@@ -1929,7 +1929,7 @@ void Media_Window::_plotTensorData() {
         std::size_t row_index = 0;
         if (tensor_data->rowType() == RowType::TimeFrameIndex) {
             auto pos = tensor_data->rows().timeStorage().findArrayPositionForTimeIndex(tensor_time);
-            if (!pos.has_value()) continue; // No data at this time
+            if (!pos.has_value()) continue;// No data at this time
             row_index = pos.value();
         } else {
             // Ordinal: use raw index value, clamped
@@ -2000,14 +2000,14 @@ void Media_Window::_plotTensorData() {
             for (std::size_t y = 0; y < img_height; ++y) {
                 for (std::size_t x = 0; x < img_width; ++x) {
                     // row_data layout (row-major): [h, w, channels, ...]
-                    auto const flat_idx = (y * img_width + x) * num_channels
-                                          + static_cast<std::size_t>(channel);
+                    auto const flat_idx = (y * img_width + x) * num_channels + static_cast<std::size_t>(channel);
                     display_data[y * img_width + x] = (flat_idx < row_data.size())
-                                                      ? row_data[flat_idx] : 0.0f;
+                                                              ? row_data[flat_idx]
+                                                              : 0.0f;
                 }
             }
         } else {
-            continue; // 1D or scalar — nothing to display spatially
+            continue;// 1D or scalar — nothing to display spatially
         }
 
         // Create a QImage from the display data
@@ -2029,7 +2029,7 @@ void Media_Window::_plotTensorData() {
 
         // Scale the tensor image to the size of the canvas
         QImage const scaled_tensor_image = tensor_image.scaled(
-            _canvasWidth, _canvasHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+                _canvasWidth, _canvasHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
         auto tensor_pixmap = addPixmap(QPixmap::fromImage(scaled_tensor_image));
         _tensors.append(tensor_pixmap);
@@ -2047,7 +2047,7 @@ std::vector<uint8_t> Media_Window::getDrawingMask() {
 
     for (auto const & point: _drawing_points) {
         // Draw a filled circle with the current brush size (hover circle radius)
-        float const radius = static_cast<float>(_hover_circle_radius);
+        auto const radius = static_cast<float>(_hover_circle_radius);
         painter.drawEllipse(point, radius, radius);
     }
     painter.end();
@@ -2169,12 +2169,12 @@ void Media_Window::updateTemporaryLine(std::vector<Point2D<float>> const & point
     if (points.size() < 2) {
         // If only one point, just show a marker
         // Convert media coordinates to canvas coordinates
-        float x = points[0].x * xAspect;
-        float y = points[0].y * yAspect;
+        float const x = points[0].x * xAspect;
+        float const y = points[0].y * yAspect;
 
         QPen pointPen(Qt::yellow);
         pointPen.setWidth(2);
-        QBrush pointBrush(Qt::yellow);
+        QBrush const pointBrush(Qt::yellow);
 
         auto pointItem = addEllipse(x - 3, y - 3, 6, 6, pointPen, pointBrush);
         _temporary_line_points.push_back(pointItem);
@@ -2203,12 +2203,12 @@ void Media_Window::updateTemporaryLine(std::vector<Point2D<float>> const & point
     // Add point markers
     QPen pointPen(Qt::yellow);
     pointPen.setWidth(1);
-    QBrush pointBrush(Qt::NoBrush);// Open circles
+    QBrush const pointBrush(Qt::NoBrush);// Open circles
 
-    for (size_t i = 0; i < points.size(); ++i) {
+    for (auto point : points) {
         // Convert media coordinates to canvas coordinates
-        float x = points[i].x * xAspect;
-        float y = points[i].y * yAspect;
+        float const x = point.x * xAspect;
+        float const y = point.y * yAspect;
 
         auto pointItem = addEllipse(x - 2.5, y - 2.5, 5, 5, pointPen, pointBrush);
         _temporary_line_points.push_back(pointItem);
@@ -2237,7 +2237,7 @@ void Media_Window::_addRemoveData() {
     //New data key was added. This is where we may want to repopulate a custom table
 }
 
-bool Media_Window::_needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe,
+bool Media_Window::_needsTimeFrameConversion(const std::shared_ptr<TimeFrame>& video_timeframe,
                                              std::shared_ptr<TimeFrame> const & interval_timeframe) {
     // If either timeframe is null, no conversion is possible/needed
     if (!video_timeframe || !interval_timeframe) {
@@ -2282,7 +2282,7 @@ void Media_Window::onGroupChanged() {
 QColor Media_Window::_getGroupAwareColor(EntityId entity_id, QColor const & default_color) const {
     // Handle selection highlighting first
     if (_selected_entities.count(entity_id) > 0) {
-        return QColor(255, 255, 0);// Bright yellow for selected entities
+        return {255, 255, 0};// Bright yellow for selected entities
     }
 
     if (!_group_manager || entity_id == EntityId(0)) {
@@ -2310,7 +2310,7 @@ QRgb Media_Window::_getGroupAwareColorRgb(EntityId entity_id, QRgb default_color
         return default_color;
     }
 
-    QColor group_color = _group_manager->getEntityColor(entity_id, QColor::fromRgba(default_color));
+    QColor const group_color = _group_manager->getEntityColor(entity_id, QColor::fromRgba(default_color));
     return group_color.rgba();
 }
 
@@ -2365,8 +2365,8 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
     if (!_media_widget_state) return EntityId(0);
 
     // Convert scene coordinates to media coordinates
-    float x_media = static_cast<float>(scene_pos.x() / getXAspect());
-    float y_media = static_cast<float>(scene_pos.y() / getYAspect());
+    auto const x_media = static_cast<float>(scene_pos.x() / getXAspect());
+    auto const y_media = static_cast<float>(scene_pos.y() / getYAspect());
 
     // Search through lines first (as they're typically most precise)
     for (auto const & key_q: _media_widget_state->displayOptions().keys<LineDisplayOptions>()) {
@@ -2423,7 +2423,7 @@ EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::strin
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return EntityId(0); // No valid time position
+        return EntityId(0);// No valid time position
     }
 
     // Create TimeIndexAndFrame from current_position for data access
@@ -2452,7 +2452,7 @@ EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::strin
 
     // Find the nearest line (minimum distance) rather than returning on first hit
     float best_dist = std::numeric_limits<float>::max();
-    std::size_t best_index = static_cast<std::size_t>(-1);
+    auto best_index = static_cast<std::size_t>(-1);
 
     for (std::size_t i = 0; i < lines.size(); ++i) {
         auto const & line = lines[i];
@@ -2497,7 +2497,7 @@ EntityId Media_Window::_findPointAtPosition(QPointF const & scene_pos, std::stri
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return EntityId(0); // No valid time position
+        return EntityId(0);// No valid time position
     }
 
     // Create TimeIndexAndFrame from current_position for data access
@@ -2515,13 +2515,13 @@ EntityId Media_Window::_findPointAtPosition(QPointF const & scene_pos, std::stri
         auto const & point = points[i];
 
         // Convert point to scene coordinates
-        float x_scene = point.x * getXAspect();
-        float y_scene = point.y * getYAspect();
+        float const x_scene = point.x * getXAspect();
+        float const y_scene = point.y * getYAspect();
 
         // Calculate distance
-        float dx = scene_pos.x() - x_scene;
-        float dy = scene_pos.y() - y_scene;
-        float distance = std::sqrt(dx * dx + dy * dy);
+        float const dx = scene_pos.x() - x_scene;
+        float const dy = scene_pos.y() - y_scene;
+        float const distance = std::sqrt(dx * dx + dy * dy);
 
         if (distance <= threshold) {
             return entity_ids[i];
@@ -2540,7 +2540,7 @@ EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::strin
     // Get current time position from state
     TimePosition const & current_position = _media_widget_state->current_position;
     if (!current_position.time_frame) {
-        return EntityId(0); // No valid time position
+        return EntityId(0);// No valid time position
     }
 
     // Create TimeIndexAndFrame from current_position for data access
@@ -2550,8 +2550,8 @@ EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::strin
     // MaskData doesn't currently support EntityIds, so we'll use position-based indices for now
     // This is a simplified implementation that can be improved when MaskData gets EntityId support
 
-    float x_media = static_cast<float>(scene_pos.x() / getXAspect());
-    float y_media = static_cast<float>(scene_pos.y() / getYAspect());
+    auto const x_media = static_cast<float>(scene_pos.x() / getXAspect());
+    auto const y_media = static_cast<float>(scene_pos.y() / getYAspect());
 
     for (size_t i = 0; i < masks.size(); ++i) {
         auto const & mask = masks[i];
@@ -2611,24 +2611,24 @@ void Media_Window::_showContextMenu(QPoint const & global_pos) {
 }
 
 float Media_Window::_calculateDistanceToLineSegment(float px, float py, float x1, float y1, float x2, float y2) {
-    float dx = x2 - x1;
-    float dy = y2 - y1;
+    float const dx = x2 - x1;
+    float const dy = y2 - y1;
 
     if (dx == 0 && dy == 0) {
         // Point to point distance
-        float dpx = px - x1;
-        float dpy = py - y1;
+        float const dpx = px - x1;
+        float const dpy = py - y1;
         return std::sqrt(dpx * dpx + dpy * dpy);
     }
 
     float t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
     t = std::max(0.0f, std::min(1.0f, t));
 
-    float projection_x = x1 + t * dx;
-    float projection_y = y1 + t * dy;
+    float const projection_x = x1 + t * dx;
+    float const projection_y = y1 + t * dy;
 
-    float dist_x = px - projection_x;
-    float dist_y = py - projection_y;
+    float const dist_x = px - projection_x;
+    float const dist_y = py - projection_y;
 
     return std::sqrt(dist_x * dist_x + dist_y * dist_y);
 }
@@ -2645,10 +2645,10 @@ void Media_Window::keyPressEvent(QKeyEvent * event) {
     }
 
     // Check if the pressed key is a digit from 1 to 9
-    int key_value = event->key();
+    int const key_value = event->key();
     if (key_value >= Qt::Key_1 && key_value <= Qt::Key_9) {
         // Convert key to group number (Qt::Key_1 = 49, so subtract 48 to get 1-9)
-        int group_number = key_value - Qt::Key_0;
+        int const group_number = key_value - Qt::Key_0;
 
         // Get available groups from the group manager
         auto groups = _group_manager->getGroupsForContextMenu();
@@ -2658,7 +2658,7 @@ void Media_Window::keyPressEvent(QKeyEvent * event) {
             // Groups are returned in order, so we can use index-based access
             auto it = groups.begin();
             std::advance(it, group_number - 1);
-            int group_id = it->first;
+            int const group_id = it->first;
 
             // Assign selected entities to the group using group manager directly
             _group_manager->assignEntitiesToGroup(group_id, _selected_entities);

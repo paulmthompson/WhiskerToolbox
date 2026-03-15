@@ -23,9 +23,18 @@ SharpenWidget::~SharpenWidget() {
 
 SharpenOptions SharpenWidget::getOptions() const {
     SharpenOptions options;
-    options.active = ui->active_checkbox->isChecked();
     options.sigma = ui->sigma_spinbox->value();
     return options;
+}
+
+bool SharpenWidget::isActive() const {
+    return ui->active_checkbox->isChecked();
+}
+
+void SharpenWidget::setActive(bool active) {
+    ui->active_checkbox->blockSignals(true);
+    ui->active_checkbox->setChecked(active);
+    ui->active_checkbox->blockSignals(false);
 }
 
 void SharpenWidget::setOptions(SharpenOptions const& options) {
@@ -33,6 +42,7 @@ void SharpenWidget::setOptions(SharpenOptions const& options) {
 }
 
 void SharpenWidget::_onActiveChanged() {
+    emit activeChanged(ui->active_checkbox->isChecked());
     _updateOptions();
 }
 
@@ -52,14 +62,11 @@ void SharpenWidget::_updateOptions() {
 
 void SharpenWidget::_blockSignalsAndSetValues(SharpenOptions const& options) {
     // Block signals to prevent recursive updates
-    ui->active_checkbox->blockSignals(true);
     ui->sigma_spinbox->blockSignals(true);
 
     // Set values
-    ui->active_checkbox->setChecked(options.active);
     ui->sigma_spinbox->setValue(options.sigma);
 
     // Unblock signals
-    ui->active_checkbox->blockSignals(false);
     ui->sigma_spinbox->blockSignals(false);
 } 

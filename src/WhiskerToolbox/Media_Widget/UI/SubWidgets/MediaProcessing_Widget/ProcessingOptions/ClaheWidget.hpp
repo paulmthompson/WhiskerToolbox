@@ -34,12 +34,17 @@ public:
      */
     void setOptions(ClaheOptions const& options);
 
+    [[nodiscard]] bool isActive() const;
+    void setActive(bool active);
+
 signals:
     /**
      * @brief Emitted when any CLAHE option changes
      * @param options Updated ClaheOptions structure
      */
     void optionsChanged(ClaheOptions const& options);
+
+    void activeChanged(bool active);
 
 private slots:
     void _onActiveChanged();

@@ -34,12 +34,17 @@ public:
      */
     void setOptions(SharpenOptions const& options);
 
+    [[nodiscard]] bool isActive() const;
+    void setActive(bool active);
+
 signals:
     /**
      * @brief Emitted when any sharpen option changes
      * @param options Updated SharpenOptions structure
      */
     void optionsChanged(SharpenOptions const& options);
+
+    void activeChanged(bool active);
 
 private slots:
     void _onActiveChanged();

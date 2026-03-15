@@ -148,13 +148,24 @@ struct CommonDisplayFields {
 struct MediaDisplayOptions {
     rfl::Flatten<CommonDisplayFields> common;  ///< Flattened common fields
     
+    // Processing chain active flags (managed at this level, not inside option structs)
+    bool contrast_active{false};               ///< Whether contrast filter is active
+    bool gamma_active{false};                  ///< Whether gamma filter is active
+    bool sharpen_active{false};                ///< Whether sharpen filter is active
+    bool clahe_active{false};                  ///< Whether CLAHE filter is active
+    bool bilateral_active{false};              ///< Whether bilateral filter is active
+    bool median_active{false};                 ///< Whether median filter is active
+    bool magic_eraser_active{false};           ///< Whether magic eraser is active
+    bool colormap_active{false};               ///< Whether colormap is active
+
     ContrastOptions contrast_options;          ///< Contrast/brightness settings
     GammaOptions gamma_options;                ///< Gamma correction settings
     SharpenOptions sharpen_options;            ///< Sharpening settings
     ClaheOptions clahe_options;                ///< CLAHE settings
     BilateralOptions bilateral_options;        ///< Bilateral filter settings
     MedianOptions median_options;              ///< Median filter settings
-    MagicEraserOptions magic_eraser_options;   ///< Magic eraser settings (runtime only)
+    MagicEraserParams magic_eraser_params;     ///< Magic eraser UI-editable parameters
+    MagicEraserState magic_eraser_state;       ///< Magic eraser runtime state (not serialized cleanly)
     ColormapOptions colormap_options;          ///< Colormap settings
     
     // === Convenience accessors for common fields ===

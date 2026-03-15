@@ -35,12 +35,17 @@ public:
      */
     void setOptions(MagicEraserOptions const& options);
 
+    [[nodiscard]] bool isActive() const;
+    void setActive(bool active);
+
 signals:
     /**
      * @brief Emitted when any magic eraser option changes
      * @param options Updated MagicEraserOptions structure
      */
     void optionsChanged(MagicEraserOptions const& options);
+
+    void activeChanged(bool active);
 
     /**
      * @brief Emitted when drawing mode is toggled

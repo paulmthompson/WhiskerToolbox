@@ -1,9 +1,9 @@
 #include "MediaProcessing_Widget.hpp"
 #include "ui_MediaProcessing_Widget.h"
 
-#include "Media_Widget/UI/Media_Widget.hpp"
-#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+#include "Media_Widget/UI/Media_Widget.hpp"
 #include "ProcessingOptions/BilateralWidget.hpp"
 #include "ProcessingOptions/ClaheWidget.hpp"
 #include "ProcessingOptions/ColormapWidget.hpp"
@@ -15,8 +15,8 @@
 
 #include "Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
-#include "Media/Media_Data.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
+#include "Media/Media_Data.hpp"
 
 
 #include <QHideEvent>
@@ -105,6 +105,8 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     // Connect contrast widget signals
     connect(_contrast_widget, &ContrastWidget::optionsChanged,
             this, &MediaProcessing_Widget::_onContrastOptionsChanged);
+    connect(_contrast_widget, &ContrastWidget::activeChanged,
+            this, &MediaProcessing_Widget::_onContrastActiveChanged);
 
     // Add contrast section to the scroll layout (before the spacer)
     scroll_layout->insertWidget(scroll_layout->count() - 1, _contrast_section);
@@ -122,6 +124,8 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     // Connect gamma widget signals
     connect(_gamma_widget, &GammaWidget::optionsChanged,
             this, &MediaProcessing_Widget::_onGammaOptionsChanged);
+    connect(_gamma_widget, &GammaWidget::activeChanged,
+            this, &MediaProcessing_Widget::_onGammaActiveChanged);
 
     // Add gamma section to the scroll layout (before the spacer)
     scroll_layout->insertWidget(scroll_layout->count() - 1, _gamma_section);
@@ -139,6 +143,8 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     // Connect sharpen widget signals
     connect(_sharpen_widget, &SharpenWidget::optionsChanged,
             this, &MediaProcessing_Widget::_onSharpenOptionsChanged);
+    connect(_sharpen_widget, &SharpenWidget::activeChanged,
+            this, &MediaProcessing_Widget::_onSharpenActiveChanged);
 
     // Add sharpen section to the scroll layout (before the spacer)
     scroll_layout->insertWidget(scroll_layout->count() - 1, _sharpen_section);
@@ -156,6 +162,8 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     // Connect clahe widget signals
     connect(_clahe_widget, &ClaheWidget::optionsChanged,
             this, &MediaProcessing_Widget::_onClaheOptionsChanged);
+    connect(_clahe_widget, &ClaheWidget::activeChanged,
+            this, &MediaProcessing_Widget::_onClaheActiveChanged);
 
     // Add clahe section to the scroll layout (before the spacer)
     scroll_layout->insertWidget(scroll_layout->count() - 1, _clahe_section);
@@ -173,6 +181,8 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     // Connect bilateral widget signals
     connect(_bilateral_widget, &BilateralWidget::optionsChanged,
             this, &MediaProcessing_Widget::_onBilateralOptionsChanged);
+    connect(_bilateral_widget, &BilateralWidget::activeChanged,
+            this, &MediaProcessing_Widget::_onBilateralActiveChanged);
 
     // Add bilateral section to the scroll layout (before the spacer)
     scroll_layout->insertWidget(scroll_layout->count() - 1, _bilateral_section);
@@ -190,6 +200,8 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     // Connect median widget signals
     connect(_median_widget, &MedianWidget::optionsChanged,
             this, &MediaProcessing_Widget::_onMedianOptionsChanged);
+    connect(_median_widget, &MedianWidget::activeChanged,
+            this, &MediaProcessing_Widget::_onMedianActiveChanged);
 
     // Add median section to the scroll layout (before the spacer)
     scroll_layout->insertWidget(scroll_layout->count() - 1, _median_section);
@@ -207,6 +219,8 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     // Connect magic eraser widget signals
     connect(_magic_eraser_widget, &MagicEraserWidget::optionsChanged,
             this, &MediaProcessing_Widget::_onMagicEraserOptionsChanged);
+    connect(_magic_eraser_widget, &MagicEraserWidget::activeChanged,
+            this, &MediaProcessing_Widget::_onMagicEraserActiveChanged);
     connect(_magic_eraser_widget, &MagicEraserWidget::drawingModeChanged,
             this, &MediaProcessing_Widget::_onMagicEraserDrawingModeChanged);
     connect(_magic_eraser_widget, &MagicEraserWidget::clearMaskRequested,
@@ -228,6 +242,8 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     // Connect colormap widget signals
     connect(_colormap_widget, &ColormapWidget::optionsChanged,
             this, &MediaProcessing_Widget::_onColormapOptionsChanged);
+    connect(_colormap_widget, &ColormapWidget::activeChanged,
+            this, &MediaProcessing_Widget::_onColormapActiveChanged);
 
     // Add colormap section to the scroll layout (before the spacer)
     scroll_layout->insertWidget(scroll_layout->count() - 1, _colormap_section);
@@ -243,11 +259,11 @@ void MediaProcessing_Widget::_onContrastOptionsChanged(ContrastOptions const & o
             auto modified = *media_opts;
             modified.contrast_options = options;
             _state->displayOptions().set(key, modified);
-            _applyContrastFilter(options);
+            _applyContrastFilter(options, modified.contrast_active);
         }
     }
 
-    std::cout << "Contrast options changed - Active: " << options.active
+    std::cout << "Contrast options changed"
               << ", Alpha: " << options.alpha << ", Beta: " << options.beta << std::endl;
 }
 
@@ -258,11 +274,11 @@ void MediaProcessing_Widget::_onGammaOptionsChanged(GammaOptions const & options
             auto modified = *media_opts;
             modified.gamma_options = options;
             _state->displayOptions().set(key, modified);
-            _applyGammaFilter(options);
+            _applyGammaFilter(options, modified.gamma_active);
         }
     }
 
-    std::cout << "Gamma options changed - Active: " << options.active
+    std::cout << "Gamma options changed"
               << ", Gamma: " << options.gamma << std::endl;
 }
 
@@ -273,11 +289,11 @@ void MediaProcessing_Widget::_onSharpenOptionsChanged(SharpenOptions const & opt
             auto modified = *media_opts;
             modified.sharpen_options = options;
             _state->displayOptions().set(key, modified);
-            _applySharpenFilter(options);
+            _applySharpenFilter(options, modified.sharpen_active);
         }
     }
 
-    std::cout << "Sharpen options changed - Active: " << options.active
+    std::cout << "Sharpen options changed"
               << ", Sigma: " << options.sigma << std::endl;
 }
 
@@ -288,11 +304,11 @@ void MediaProcessing_Widget::_onClaheOptionsChanged(ClaheOptions const & options
             auto modified = *media_opts;
             modified.clahe_options = options;
             _state->displayOptions().set(key, modified);
-            _applyClaheFilter(options);
+            _applyClaheFilter(options, modified.clahe_active);
         }
     }
 
-    std::cout << "CLAHE options changed - Active: " << options.active
+    std::cout << "CLAHE options changed"
               << ", Clip Limit: " << options.clip_limit << ", Grid Size: " << options.grid_size << std::endl;
 }
 
@@ -303,11 +319,11 @@ void MediaProcessing_Widget::_onBilateralOptionsChanged(BilateralOptions const &
             auto modified = *media_opts;
             modified.bilateral_options = options;
             _state->displayOptions().set(key, modified);
-            _applyBilateralFilter(options);
+            _applyBilateralFilter(options, modified.bilateral_active);
         }
     }
 
-    std::cout << "Bilateral options changed - Active: " << options.active
+    std::cout << "Bilateral options changed"
               << ", D: " << options.diameter << ", Color Sigma: " << options.sigma_color
               << ", Space Sigma: " << options.sigma_spatial << std::endl;
 }
@@ -319,11 +335,11 @@ void MediaProcessing_Widget::_onMedianOptionsChanged(MedianOptions const & optio
             auto modified = *media_opts;
             modified.median_options = options;
             _state->displayOptions().set(key, modified);
-            _applyMedianFilter(options);
+            _applyMedianFilter(options, modified.median_active);
         }
     }
 
-    std::cout << "Median options changed - Active: " << options.active
+    std::cout << "Median options changed"
               << ", Kernel Size: " << options.kernel_size << std::endl;
 }
 
@@ -332,17 +348,20 @@ void MediaProcessing_Widget::_onMagicEraserOptionsChanged(MagicEraserOptions con
         auto const key = QString::fromStdString(_active_key);
         if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
-            modified.magic_eraser_options = options;
-            if (!options.active) {
-                modified.magic_eraser_options.mask.clear();
-                modified.magic_eraser_options.image_size = {0, 0};
+            modified.magic_eraser_params.brush_size = options.brush_size;
+            modified.magic_eraser_params.median_filter_size = options.median_filter_size;
+            modified.magic_eraser_state.drawing_mode = options.drawing_mode;
+            if (!modified.magic_eraser_active) {
+                modified.magic_eraser_state.mask.clear();
+                modified.magic_eraser_state.image_size = {0, 0};
             }
             _state->displayOptions().set(key, modified);
-            _applyMagicEraser(options);
+            auto combined = MagicEraserOptions::fromParamsAndState(modified.magic_eraser_params, modified.magic_eraser_state);
+            _applyMagicEraser(combined, modified.magic_eraser_active);
         }
     }
 
-    std::cout << "Magic Eraser options changed - Active: " << options.active
+    std::cout << "Magic Eraser options changed"
               << ", Brush Size: " << options.brush_size << ", Median Filter Size: " << options.median_filter_size
               << ", Drawing Mode: " << options.drawing_mode << std::endl;
 }
@@ -352,11 +371,10 @@ void MediaProcessing_Widget::_onMagicEraserDrawingModeChanged(bool enabled) {
     if (!_active_key.empty() && _state) {
         auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(QString::fromStdString(_active_key));
         if (media_opts) {
-            auto const & magic_eraser_options = media_opts->magic_eraser_options;
-            if (_scene && magic_eraser_options.active) {
+            if (_scene && media_opts->magic_eraser_active) {
                 _scene->setDrawingMode(enabled);
                 if (enabled) {
-                    _scene->setHoverCircleRadius(magic_eraser_options.brush_size);
+                    _scene->setHoverCircleRadius(media_opts->magic_eraser_params.brush_size);
                     _scene->setShowHoverCircle(true);
                 } else {
                     _scene->setShowHoverCircle(false);
@@ -374,14 +392,15 @@ void MediaProcessing_Widget::_onMagicEraserClearMaskRequested() {
         auto const key = QString::fromStdString(_active_key);
         if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
-            modified.magic_eraser_options.mask.clear();
-            modified.magic_eraser_options.image_size = {0, 0};
+            modified.magic_eraser_state.mask.clear();
+            modified.magic_eraser_state.image_size = {0, 0};
             _state->displayOptions().set(key, modified);
 
-            _applyMagicEraser(modified.magic_eraser_options);
+            auto combined = MagicEraserOptions::fromParamsAndState(modified.magic_eraser_params, modified.magic_eraser_state);
+            _applyMagicEraser(combined, modified.magic_eraser_active);
         }
     }
-    
+
     std::cout << "Magic eraser mask cleared" << std::endl;
 }
 
@@ -410,7 +429,7 @@ void MediaProcessing_Widget::_onDrawingFinished() {
     }
 
     auto modified = *media_opts;
-    auto & magic_eraser_options = modified.magic_eraser_options;
+    auto & eraser_state = modified.magic_eraser_state;
 
     auto media_data = _data_manager->getData<MediaData>(_active_key);
     if (!media_data) {
@@ -422,205 +441,185 @@ void MediaProcessing_Widget::_onDrawingFinished() {
     auto image_size = media_data->getImageSize();
 
     // If we already have a mask stored, merge the new drawing with the existing mask
-    if (!magic_eraser_options.mask.empty() &&
-        magic_eraser_options.image_size.width == image_size.width &&
-        magic_eraser_options.image_size.height == image_size.height) {
+    if (!eraser_state.mask.empty() &&
+        eraser_state.image_size.width == image_size.width &&
+        eraser_state.image_size.height == image_size.height) {
 
         // Merge new mask with existing mask using bitwise OR operation
         // Both masks should be the same size
-        if (magic_eraser_options.mask.size() == new_mask.size()) {
+        if (eraser_state.mask.size() == new_mask.size()) {
             for (size_t i = 0; i < new_mask.size(); ++i) {
                 // Combine masks: if either pixel is non-zero, result is non-zero
-                magic_eraser_options.mask[i] = std::max(magic_eraser_options.mask[i], new_mask[i]);
+                eraser_state.mask[i] = std::max(eraser_state.mask[i], new_mask[i]);
             }
             std::cout << "Magic eraser: Merged new drawing with existing mask" << std::endl;
         } else {
             // Size mismatch, replace with new mask
-            magic_eraser_options.mask = new_mask;
+            eraser_state.mask = new_mask;
             std::cout << "Magic eraser: Size mismatch, replaced existing mask" << std::endl;
         }
     } else {
         // No existing mask or different image size, use the new mask
-        magic_eraser_options.mask = new_mask;
+        eraser_state.mask = new_mask;
         std::cout << "Magic eraser: Created new mask" << std::endl;
     }
 
     // Update the stored image size
-    magic_eraser_options.image_size = image_size;
+    eraser_state.image_size = image_size;
 
     // Save modified options back to state
     _state->displayOptions().set(key, modified);
 
     // Apply the magic eraser to the process chain
-    _applyMagicEraser(magic_eraser_options);
+    auto combined = MagicEraserOptions::fromParamsAndState(modified.magic_eraser_params, eraser_state);
+    _applyMagicEraser(combined, modified.magic_eraser_active);
 
     std::cout << "Magic eraser mask stored and applied to process chain. Mask size: "
-              << magic_eraser_options.mask.size() << " pixels" << std::endl;
+              << eraser_state.mask.size() << " pixels" << std::endl;
     std::cout << "The number of non zero pixels in the mask is: "
-              << std::count_if(magic_eraser_options.mask.begin(), magic_eraser_options.mask.end(), [](uint8_t pixel) { return pixel != 0; }) << std::endl;
+              << std::count_if(eraser_state.mask.begin(), eraser_state.mask.end(), [](uint8_t pixel) { return pixel != 0; }) << std::endl;
 }
 
-void MediaProcessing_Widget::_applyContrastFilter(ContrastOptions const & options) {
+void MediaProcessing_Widget::_applyContrastFilter(ContrastOptions const & options, bool active) {
     if (_active_key.empty()) return;
 
     auto media_data = _data_manager->getData<MediaData>(_active_key);
     if (!media_data) return;
 
-    if (options.active) {
-        // Add or update the contrast filter in the processing chain using the options structure
+    if (active) {
         media_data->addProcessingStep("1__lineartransform", [options](void * input) {
-            cv::Mat * mat = static_cast<cv::Mat *>(input);
+            auto * mat = static_cast<cv::Mat *>(input);
             ImageProcessing::linear_transform(*mat, options);
         });
     } else {
-        // Remove the contrast filter from the processing chain
         media_data->removeProcessingStep("1__lineartransform");
     }
 
-    // Update the canvas
     if (_scene) {
         _scene->UpdateCanvas();
     }
 }
 
-void MediaProcessing_Widget::_applyGammaFilter(GammaOptions const & options) {
+void MediaProcessing_Widget::_applyGammaFilter(GammaOptions const & options, bool active) {
     if (_active_key.empty()) return;
 
     auto media_data = _data_manager->getData<MediaData>(_active_key);
     if (!media_data) return;
 
-    if (options.active) {
-        // Add or update the gamma filter in the processing chain using the options structure
+    if (active) {
         media_data->addProcessingStep("2__gamma", [options](void * input) {
-            cv::Mat * mat = static_cast<cv::Mat *>(input);
+            auto * mat = static_cast<cv::Mat *>(input);
             ImageProcessing::gamma_transform(*mat, options);
         });
     } else {
-        // Remove the gamma filter from the processing chain
         media_data->removeProcessingStep("2__gamma");
     }
 
-    // Update the canvas
     if (_scene) {
         _scene->UpdateCanvas();
     }
 }
 
-void MediaProcessing_Widget::_applySharpenFilter(SharpenOptions const & options) {
+void MediaProcessing_Widget::_applySharpenFilter(SharpenOptions const & options, bool active) {
     if (_active_key.empty()) return;
 
     auto media_data = _data_manager->getData<MediaData>(_active_key);
     if (!media_data) return;
 
-    if (options.active) {
-        // Add or update the sharpen filter in the processing chain using the options structure
+    if (active) {
         media_data->addProcessingStep("3__sharpen", [options](void * input) {
-            cv::Mat * mat = static_cast<cv::Mat *>(input);
+            auto * mat = static_cast<cv::Mat *>(input);
             ImageProcessing::sharpen_image(*mat, options);
         });
     } else {
-        // Remove the sharpen filter from the processing chain
         media_data->removeProcessingStep("3__sharpen");
     }
 
-    // Update the canvas
     if (_scene) {
         _scene->UpdateCanvas();
     }
 }
 
-void MediaProcessing_Widget::_applyClaheFilter(ClaheOptions const & options) {
+void MediaProcessing_Widget::_applyClaheFilter(ClaheOptions const & options, bool active) {
     if (_active_key.empty()) return;
 
     auto media_data = _data_manager->getData<MediaData>(_active_key);
     if (!media_data) return;
 
-    if (options.active) {
-        // Add or update the CLAHE filter in the processing chain using the options structure
+    if (active) {
         media_data->addProcessingStep("4__clahe", [options](void * input) {
-            cv::Mat * mat = static_cast<cv::Mat *>(input);
+            auto * mat = static_cast<cv::Mat *>(input);
             ImageProcessing::clahe(*mat, options);
         });
     } else {
-        // Remove the CLAHE filter from the processing chain
         media_data->removeProcessingStep("4__clahe");
     }
 
-    // Update the canvas
     if (_scene) {
         _scene->UpdateCanvas();
     }
 }
 
-void MediaProcessing_Widget::_applyBilateralFilter(BilateralOptions const & options) {
+void MediaProcessing_Widget::_applyBilateralFilter(BilateralOptions const & options, bool active) {
     if (_active_key.empty()) return;
 
     auto media_data = _data_manager->getData<MediaData>(_active_key);
     if (!media_data) return;
 
-    if (options.active) {
-        // Add or update the bilateral filter in the processing chain using the options structure
+    if (active) {
         media_data->addProcessingStep("5__bilateral", [options](void * input) {
-            cv::Mat * mat = static_cast<cv::Mat *>(input);
+            auto * mat = static_cast<cv::Mat *>(input);
             ImageProcessing::bilateral_filter(*mat, options);
         });
     } else {
-        // Remove the bilateral filter from the processing chain
         media_data->removeProcessingStep("5__bilateral");
     }
 
-    // Update the canvas
     if (_scene) {
         _scene->UpdateCanvas();
     }
 }
 
-void MediaProcessing_Widget::_applyMedianFilter(MedianOptions const & options) {
+void MediaProcessing_Widget::_applyMedianFilter(MedianOptions const & options, bool active) {
     if (_active_key.empty()) return;
 
     auto media_data = _data_manager->getData<MediaData>(_active_key);
     if (!media_data) return;
 
-    if (options.active) {
-        // Add or update the median filter in the processing chain using the options structure
+    if (active) {
         media_data->addProcessingStep("6__median", [options](void * input) {
-            cv::Mat * mat = static_cast<cv::Mat *>(input);
+            auto * mat = static_cast<cv::Mat *>(input);
             ImageProcessing::median_filter(*mat, options);
         });
     } else {
-        // Remove the median filter from the processing chain
         media_data->removeProcessingStep("6__median");
     }
 
-    // Update the canvas
     if (_scene) {
         _scene->UpdateCanvas();
     }
 }
 
-void MediaProcessing_Widget::_applyMagicEraser(MagicEraserOptions const & options) {
+void MediaProcessing_Widget::_applyMagicEraser(MagicEraserOptions const & options, bool active) {
     if (_active_key.empty()) return;
 
     auto media_data = _data_manager->getData<MediaData>(_active_key);
     if (!media_data) return;
 
-    if (options.active && !options.mask.empty()) {
-        // Add or update the magic eraser filter in the processing chain
+    if (active && !options.mask.empty()) {
         media_data->addProcessingStep("7__magic_eraser", [options](void * input) {
-            cv::Mat * mat = static_cast<cv::Mat *>(input);
+            auto * mat = static_cast<cv::Mat *>(input);
             ImageProcessing::apply_magic_eraser(*mat, options);
         });
     } else {
-        // Remove the magic eraser filter from the processing chain
         media_data->removeProcessingStep("7__magic_eraser");
     }
 
-    // Update the canvas
     if (_scene) {
         _scene->UpdateCanvas();
     }
 
-    std::cout << "Magic eraser process chain updated - Active: " << options.active
+    std::cout << "Magic eraser process chain updated - Active: " << active
               << ", Has mask: " << (!options.mask.empty()) << std::endl;
 }
 
@@ -636,15 +635,13 @@ void MediaProcessing_Widget::_updateColormapAvailability() {
     }
 
     // Enable colormap only for grayscale images
-    bool is_grayscale = (media_data->getFormat() == MediaData::DisplayFormat::Gray);
+    bool const is_grayscale = (media_data->getFormat() == MediaData::DisplayFormat::Gray);
     _colormap_widget->setColormapEnabled(is_grayscale);
 
     std::cout << "Colormap availability updated - Grayscale: " << (is_grayscale ? "YES" : "NO") << std::endl;
 }
 
 void MediaProcessing_Widget::_onColormapOptionsChanged(ColormapOptions const & options) {
-    
-    
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
         if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
@@ -655,7 +652,7 @@ void MediaProcessing_Widget::_onColormapOptionsChanged(ColormapOptions const & o
         }
 
         std::cout << "Colormap options changed for media '" << _active_key
-                  << "' - Active: " << options.active
+                  << "' - Active: " << _colormap_widget->isActive()
                   << ", Type: " << static_cast<int>(options.colormap)
                   << ", Alpha: " << options.alpha << std::endl;
     }
@@ -699,43 +696,43 @@ void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
     bool needs_update = false;
 
     if (media_data->hasProcessingStep("1__contrast")) {
-        modified.contrast_options.active = true;
+        modified.contrast_active = true;
         needs_update = true;
         std::cout << "Found contrast processing step" << std::endl;
     }
 
     if (media_data->hasProcessingStep("2__gamma")) {
-        modified.gamma_options.active = true;
+        modified.gamma_active = true;
         needs_update = true;
         std::cout << "Found gamma processing step" << std::endl;
     }
 
     if (media_data->hasProcessingStep("3__sharpen")) {
-        modified.sharpen_options.active = true;
+        modified.sharpen_active = true;
         needs_update = true;
         std::cout << "Found sharpen processing step" << std::endl;
     }
 
     if (media_data->hasProcessingStep("4__clahe")) {
-        modified.clahe_options.active = true;
+        modified.clahe_active = true;
         needs_update = true;
         std::cout << "Found CLAHE processing step" << std::endl;
     }
 
     if (media_data->hasProcessingStep("5__bilateral")) {
-        modified.bilateral_options.active = true;
+        modified.bilateral_active = true;
         needs_update = true;
         std::cout << "Found bilateral processing step" << std::endl;
     }
 
     if (media_data->hasProcessingStep("6__median")) {
-        modified.median_options.active = true;
+        modified.median_active = true;
         needs_update = true;
         std::cout << "Found median processing step" << std::endl;
     }
 
     if (media_data->hasProcessingStep("7__magic_eraser")) {
-        modified.magic_eraser_options.active = true;
+        modified.magic_eraser_active = true;
         needs_update = true;
         std::cout << "Found magic eraser processing step" << std::endl;
     }
@@ -748,27 +745,37 @@ void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
     // Update all UI widgets with the loaded options
     if (_contrast_widget) {
         _contrast_widget->setOptions(modified.contrast_options);
+        _contrast_widget->setActive(modified.contrast_active);
     }
     if (_gamma_widget) {
         _gamma_widget->setOptions(modified.gamma_options);
+        _gamma_widget->setActive(modified.gamma_active);
     }
     if (_sharpen_widget) {
         _sharpen_widget->setOptions(modified.sharpen_options);
+        _sharpen_widget->setActive(modified.sharpen_active);
     }
     if (_clahe_widget) {
         _clahe_widget->setOptions(modified.clahe_options);
+        _clahe_widget->setActive(modified.clahe_active);
     }
     if (_bilateral_widget) {
         _bilateral_widget->setOptions(modified.bilateral_options);
+        _bilateral_widget->setActive(modified.bilateral_active);
     }
     if (_median_widget) {
         _median_widget->setOptions(modified.median_options);
+        _median_widget->setActive(modified.median_active);
     }
     if (_magic_eraser_widget) {
-        _magic_eraser_widget->setOptions(modified.magic_eraser_options);
+        auto eraser_opts = MagicEraserOptions::fromParamsAndState(
+                modified.magic_eraser_params, modified.magic_eraser_state);
+        _magic_eraser_widget->setOptions(eraser_opts);
+        _magic_eraser_widget->setActive(modified.magic_eraser_active);
     }
     if (_colormap_widget) {
         _colormap_widget->setOptions(modified.colormap_options);
+        _colormap_widget->setActive(modified.colormap_active);
     }
 
     // Update colormap availability based on media format
@@ -788,9 +795,108 @@ void MediaProcessing_Widget::_updateMedianKernelConstraints() {
         return;
     }
 
-    bool is_8bit_grayscale = media_data->is8Bit() && (media_data->getFormat() == MediaData::DisplayFormat::Gray);
+    bool const is_8bit_grayscale = media_data->is8Bit() && (media_data->getFormat() == MediaData::DisplayFormat::Gray);
     _median_widget->setKernelConstraints(is_8bit_grayscale);
 
     std::cout << "Median kernel constraints updated - 8-bit grayscale: "
               << (is_8bit_grayscale ? "YES" : "NO") << std::endl;
+}
+
+void MediaProcessing_Widget::_onContrastActiveChanged(bool active) {
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
+            auto modified = *media_opts;
+            modified.contrast_active = active;
+            _state->displayOptions().set(key, modified);
+            _applyContrastFilter(modified.contrast_options, active);
+        }
+    }
+}
+
+void MediaProcessing_Widget::_onGammaActiveChanged(bool active) {
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
+            auto modified = *media_opts;
+            modified.gamma_active = active;
+            _state->displayOptions().set(key, modified);
+            _applyGammaFilter(modified.gamma_options, active);
+        }
+    }
+}
+
+void MediaProcessing_Widget::_onSharpenActiveChanged(bool active) {
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
+            auto modified = *media_opts;
+            modified.sharpen_active = active;
+            _state->displayOptions().set(key, modified);
+            _applySharpenFilter(modified.sharpen_options, active);
+        }
+    }
+}
+
+void MediaProcessing_Widget::_onClaheActiveChanged(bool active) {
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
+            auto modified = *media_opts;
+            modified.clahe_active = active;
+            _state->displayOptions().set(key, modified);
+            _applyClaheFilter(modified.clahe_options, active);
+        }
+    }
+}
+
+void MediaProcessing_Widget::_onBilateralActiveChanged(bool active) {
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
+            auto modified = *media_opts;
+            modified.bilateral_active = active;
+            _state->displayOptions().set(key, modified);
+            _applyBilateralFilter(modified.bilateral_options, active);
+        }
+    }
+}
+
+void MediaProcessing_Widget::_onMedianActiveChanged(bool active) {
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
+            auto modified = *media_opts;
+            modified.median_active = active;
+            _state->displayOptions().set(key, modified);
+            _applyMedianFilter(modified.median_options, active);
+        }
+    }
+}
+
+void MediaProcessing_Widget::_onMagicEraserActiveChanged(bool active) {
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
+            auto modified = *media_opts;
+            modified.magic_eraser_active = active;
+            _state->displayOptions().set(key, modified);
+
+            auto eraser_opts = MagicEraserOptions::fromParamsAndState(
+                    modified.magic_eraser_params, modified.magic_eraser_state);
+            _applyMagicEraser(eraser_opts, active);
+        }
+    }
+}
+
+void MediaProcessing_Widget::_onColormapActiveChanged(bool active) {
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
+            auto modified = *media_opts;
+            modified.colormap_active = active;
+            _state->displayOptions().set(key, modified);
+            _scene->UpdateCanvas();
+        }
+    }
 }

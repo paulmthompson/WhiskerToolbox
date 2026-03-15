@@ -34,12 +34,17 @@ public:
      */
     void setOptions(ContrastOptions const& options);
 
+    [[nodiscard]] bool isActive() const;
+    void setActive(bool active);
+
 signals:
     /**
      * @brief Emitted when any contrast option changes
      * @param options Updated ContrastOptions structure
      */
     void optionsChanged(ContrastOptions const& options);
+
+    void activeChanged(bool active);
 
 private slots:
     void _onActiveChanged();

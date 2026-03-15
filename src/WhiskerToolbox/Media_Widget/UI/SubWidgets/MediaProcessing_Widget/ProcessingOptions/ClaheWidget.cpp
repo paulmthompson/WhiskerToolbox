@@ -25,10 +25,19 @@ ClaheWidget::~ClaheWidget() {
 
 ClaheOptions ClaheWidget::getOptions() const {
     ClaheOptions options;
-    options.active = ui->active_checkbox->isChecked();
     options.clip_limit = ui->clip_limit_spinbox->value();
     options.grid_size = ui->grid_size_spinbox->value();
     return options;
+}
+
+bool ClaheWidget::isActive() const {
+    return ui->active_checkbox->isChecked();
+}
+
+void ClaheWidget::setActive(bool active) {
+    ui->active_checkbox->blockSignals(true);
+    ui->active_checkbox->setChecked(active);
+    ui->active_checkbox->blockSignals(false);
 }
 
 void ClaheWidget::setOptions(ClaheOptions const& options) {
@@ -36,6 +45,7 @@ void ClaheWidget::setOptions(ClaheOptions const& options) {
 }
 
 void ClaheWidget::_onActiveChanged() {
+    emit activeChanged(ui->active_checkbox->isChecked());
     _updateOptions();
 }
 
@@ -65,17 +75,14 @@ void ClaheWidget::_updateOptions() {
 
 void ClaheWidget::_blockSignalsAndSetValues(ClaheOptions const& options) {
     // Block signals to prevent triggering optionsChanged during programmatic updates
-    ui->active_checkbox->blockSignals(true);
     ui->clip_limit_spinbox->blockSignals(true);
     ui->grid_size_spinbox->blockSignals(true);
 
     // Set values
-    ui->active_checkbox->setChecked(options.active);
     ui->clip_limit_spinbox->setValue(options.clip_limit);
     ui->grid_size_spinbox->setValue(options.grid_size);
 
     // Unblock signals
-    ui->active_checkbox->blockSignals(false);
     ui->clip_limit_spinbox->blockSignals(false);
     ui->grid_size_spinbox->blockSignals(false);
 

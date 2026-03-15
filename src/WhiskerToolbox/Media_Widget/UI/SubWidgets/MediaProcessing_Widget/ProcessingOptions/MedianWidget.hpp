@@ -34,6 +34,9 @@ public:
      */
     void setOptions(MedianOptions const& options);
 
+    [[nodiscard]] bool isActive() const;
+    void setActive(bool active);
+
     /**
      * @brief Configure kernel size constraints according to image type
      * If the image is 8-bit grayscale, larger odd sizes are allowed (default max).
@@ -48,6 +51,8 @@ signals:
      * @param options Updated MedianOptions structure
      */
     void optionsChanged(MedianOptions const& options);
+
+    void activeChanged(bool active);
 
 private slots:
     void _onActiveChanged();
