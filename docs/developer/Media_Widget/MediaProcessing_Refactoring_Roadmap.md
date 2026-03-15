@@ -7,8 +7,8 @@
 | 1 | ✅ Complete | Option B implemented — `ProcessingOptionsSchema.hpp` in `MediaProcessingPipeline` |
 | 2 | ✅ Complete | `active` removed from all option structs; `MagicEraserOptions` split |
 | 3 | ✅ Complete | `MediaProcessingPipeline` library created and wired into build |
-| 4 | ⏳ Not started | Requires Phase 3 |
-| 5 | ⏳ Not started | Requires Phase 4 |
+| 4 | ✅ Complete | 22 widget files deleted; `MediaProcessing_Widget` rewritten with generic registry loop |
+| 5 | ✅ Complete | All special cases handled: contrast hook, median constraints, colormap gating, magic eraser composition, auto-enable |
 | 6 | ⏳ Not started | Optional polish |
 
 ---
@@ -136,9 +136,17 @@ MediaProcessingPipeline → ImageProcessing, ParameterSchema, reflectcpp
 
 ---
 
-## Phase 4: Replace ProcessingOptions widgets with AutoParamWidget
+## Phase 4: Replace ProcessingOptions widgets with AutoParamWidget ✅ COMPLETE
 
-**Goal:** Delete all 24 files in `ProcessingOptions/` and replace them with `AutoParamWidget` instances driven by the registry.
+**What was done:**
+- Deleted 22 files from `ProcessingOptions/` (7 widgets × 3 files each + `MagicEraserWidget.ui`). Only `MagicEraserWidget.hpp/.cpp` retained (slimmed to drawing controls only).
+- Rewrote `MediaProcessing_Widget.hpp/.cpp` from ~902 lines of per-filter boilerplate to ~650 lines of generic registry-driven code.
+- New `ProcessingSection` struct vector replaces 8 per-filter widget pointers, 8 Section pointers, and 8 per-filter slots.
+- `_setupRegistrySections()` iterates `ProcessingStepRegistry::instance().steps()` and creates `AutoParamWidget` + `QCheckBox` + `Section` for each step.
+- `_applyRegistryStep()` uses `ProcessingStepRegistry::findByKey()` to get the step's apply function.
+- Updated `CMakeLists.txt`: removed 21 file references, added `AutoParamWidget` and `WhiskerToolbox::MediaProcessingPipeline` dependencies.
+
+**Original goal:** Delete all 24 files in `ProcessingOptions/` and replace them with `AutoParamWidget` instances driven by the registry.
 
 ### New `MediaProcessing_Widget` Flow
 
@@ -162,9 +170,16 @@ For each step in ProcessingStepRegistry:
 
 ---
 
-## Phase 5: Handle special cases
+## Phase 5: Handle special cases ✅ COMPLETE
 
-Some widgets have behavior that `AutoParamWidget` doesn't natively support. These need targeted solutions:
+**What was done:**
+- **Contrast bidirectional**: Installed `PostEditHook` on the Linear Transform `AutoParamWidget` that calls `ContrastOptions::calculateAlphaBetaFromMinMax()` after any field change.
+- **Median kernel constraints**: `_updateMedianKernelConstraints()` rebuilds the schema with adjusted `max_value` (21 for 8-bit grayscale, 5 otherwise) when media changes.
+- **Colormap availability**: Section enabled/disabled based on `MediaData::DisplayFormat::Gray`; auto-unchecks active when non-grayscale.
+- **Magic Eraser composition**: Separate section with `AutoParamWidget` for `MagicEraserParams` (brush_size, filter_size) + slimmed `MagicEraserWidget` for drawing mode toggle and mask clearing.
+- **Auto-enable checkbox**: All sections auto-check their active checkbox when `parametersChanged` fires.
+
+**Original description:** Some widgets have behavior that `AutoParamWidget` doesn't natively support. These need targeted solutions:
 
 | Widget | Special Behavior | Solution |
 |--------|-----------------|----------|
@@ -196,11 +211,11 @@ Some widgets have behavior that `AutoParamWidget` doesn't natively support. Thes
 | 1 | None | Low — additive changes to existing structs | Small | ✅ Complete |
 | 2 | Phase 1 | Low — struct split, find-and-replace | Small | ✅ Complete |
 | 3 | Phase 1 | Medium — new library, CMake wiring | Medium | ✅ Complete |
-| 4 | Phase 3 | Medium — main widget rewrite, large diff | Large | ⏳ Not started |
-| 5 | Phase 4 | Medium — special-case handling | Medium | ⏳ Not started |
+| 4 | Phase 3 | Medium — main widget rewrite, large diff | Large | ✅ Complete |
+| 5 | Phase 4 | Medium — special-case handling | Medium | ✅ Complete |
 | 6 | Phase 4 | Low — optional, can defer | Small | ⏳ Not started |
 
-**Recommended approach:** Phases 1–3 are complete. Phase 4 is the next focus — a single PR replacing the 24 hand-written widget files with `AutoParamWidget`-driven generic UI. Phase 5 can be interleaved with Phase 4 on a per-widget basis. Phase 6 is optional polish.
+**Current status:** Phases 1–5 are complete. Phase 6 (generic `MediaDisplayOptions` serialization) is optional polish and deferred.
 
 ---
 
@@ -208,15 +223,16 @@ Some widgets have behavior that `AutoParamWidget` doesn't natively support. Thes
 
 | Component | Fate |
 |-----------|------|
-| `BilateralWidget.*` (3 files) | **Delete** |
-| `ClaheWidget.*` (3 files) | **Delete** |
-| `ContrastWidget.*` (3 files) | **Delete** (replaced by AutoParamWidget + post-edit hook) |
-| `GammaWidget.*` (3 files) | **Delete** |
-| `MedianWidget.*` (3 files) | **Delete** |
-| `SharpenWidget.*` (3 files) | **Delete** |
-| `ColormapWidget.*` (3 files) | **Delete** |
-| `MagicEraserWidget.*` (3 files) | **Slim down** to drawing controls only; params via AutoParamWidget |
-| `MediaProcessing_Widget.*` | **Rewrite** — generic loop replaces per-filter boilerplate |
-| `ProcessingOptions.hpp` | **Keep** in `ImageProcessing` (no rfl dependency added) |
-| `ProcessingOptionsSchema.hpp` | **New** — in `MediaProcessingPipeline` lib |
-| `ProcessingStepRegistry.*` | **New** — in `MediaProcessingPipeline` lib |
+| `BilateralWidget.*` (3 files) | **Deleted** ✅ |
+| `ClaheWidget.*` (3 files) | **Deleted** ✅ |
+| `ContrastWidget.*` (3 files) | **Deleted** ✅ (replaced by AutoParamWidget + post-edit hook) |
+| `GammaWidget.*` (3 files) | **Deleted** ✅ |
+| `MedianWidget.*` (3 files) | **Deleted** ✅ |
+| `SharpenWidget.*` (3 files) | **Deleted** ✅ |
+| `ColormapWidget.*` (3 files) | **Deleted** ✅ |
+| `MagicEraserWidget.ui` | **Deleted** ✅ |
+| `MagicEraserWidget.hpp/.cpp` | **Slimmed** ✅ — drawing controls only; params via AutoParamWidget |
+| `MediaProcessing_Widget.*` | **Rewritten** ✅ — generic loop replaces per-filter boilerplate |
+| `ProcessingOptions.hpp` | **Kept** in `ImageProcessing` (no rfl dependency added) |
+| `ProcessingOptionsSchema.hpp` | **Created** in `MediaProcessingPipeline` lib |
+| `ProcessingStepRegistry.*` | **Created** in `MediaProcessingPipeline` lib |

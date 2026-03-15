@@ -1,6 +1,16 @@
 #ifndef MEDIAPROCESSING_WIDGET_HPP
 #define MEDIAPROCESSING_WIDGET_HPP
 
+/**
+ * @file MediaProcessing_Widget.hpp
+ * @brief Generic media processing widget driven by ProcessingStepRegistry and AutoParamWidget
+ *
+ * Replaces the former 8 hand-written processing option widgets with auto-generated
+ * forms. Standard image filters (Linear Transform, Gamma, Sharpen, CLAHE, Bilateral,
+ * Median) are driven entirely by the ProcessingStepRegistry. Colormap and Magic Eraser
+ * receive special handling due to rendering-level integration and canvas interaction.
+ */
+
 #include "ImageProcessing/ProcessingOptions.hpp"
 
 #include <QWidget>
@@ -13,17 +23,12 @@ namespace Ui {
 class MediaProcessing_Widget;
 }
 
+class AutoParamWidget;
 class DataManager;
+class MagicEraserWidget;
 class Media_Window;
 class MediaWidgetState;
-class ContrastWidget;
-class GammaWidget;
-class SharpenWidget;
-class ClaheWidget;
-class BilateralWidget;
-class MedianWidget;
-class MagicEraserWidget;
-class ColormapWidget;
+class QCheckBox;
 class Section;
 
 class MediaProcessing_Widget : public QWidget {
@@ -44,63 +49,52 @@ private:
     MediaWidgetState * _state;
     std::string _active_key;
 
-    // Processing widgets
-    ContrastWidget * _contrast_widget;
-    Section * _contrast_section;
-    GammaWidget * _gamma_widget;
-    Section * _gamma_section;
-    SharpenWidget * _sharpen_widget;
-    Section * _sharpen_section;
-    ClaheWidget * _clahe_widget;
-    Section * _clahe_section;
-    BilateralWidget * _bilateral_widget;
-    Section * _bilateral_section;
-    MedianWidget * _median_widget;
-    Section * _median_section;
-    MagicEraserWidget * _magic_eraser_widget;
-    Section * _magic_eraser_section;
-    ColormapWidget * _colormap_widget;
-    Section * _colormap_section;
+    // --- Generic registry-driven processing sections ---
+    struct ProcessingSection {
+        std::string chain_key;
+        Section * section = nullptr;
+        QCheckBox * active_checkbox = nullptr;
+        AutoParamWidget * param_widget = nullptr;
+    };
+    std::vector<ProcessingSection> _processing_sections;
 
-    void _setupProcessingWidgets();
-    void _applyContrastFilter(ContrastOptions const & options, bool active);
-    void _applyGammaFilter(GammaOptions const & options, bool active);
-    void _applySharpenFilter(SharpenOptions const & options, bool active);
-    void _applyClaheFilter(ClaheOptions const & options, bool active);
-    void _applyBilateralFilter(BilateralOptions const & options, bool active);
-    void _applyMedianFilter(MedianOptions const & options, bool active);
-    void _applyMagicEraser(MagicEraserOptions const & options, bool active);
+    void _setupRegistrySections();
+    void _applyRegistryStep(ProcessingSection const & ps);
+    void _onRegistryParamsChanged(ProcessingSection const & ps);
+    void _onRegistryActiveChanged(ProcessingSection const & ps, bool active);
 
-    void _loadProcessingChainFromMedia();
+    // --- Contrast post-edit hook (Phase 5: bidirectional alpha/beta ↔ min/max) ---
+    static std::string _contrastPostEditHook(std::string const & json);
 
+    // --- Magic Eraser (special: canvas interaction) ---
+    MagicEraserWidget * _magic_eraser_drawing_widget = nullptr;
+    AutoParamWidget * _magic_eraser_param_widget = nullptr;
+    QCheckBox * _magic_eraser_active_checkbox = nullptr;
+    Section * _magic_eraser_section = nullptr;
+
+    void _setupMagicEraserSection();
+    void _applyMagicEraser(bool active);
+    void _onMagicEraserParamsChanged();
+    void _onMagicEraserActiveChanged(bool active);
+    void _onMagicEraserDrawingModeChanged(bool enabled);
+    void _onMagicEraserClearMaskRequested();
+
+    // --- Colormap (special: rendering-level, not processing chain) ---
+    AutoParamWidget * _colormap_param_widget = nullptr;
+    QCheckBox * _colormap_active_checkbox = nullptr;
+    Section * _colormap_section = nullptr;
+
+    void _setupColormapSection();
+    void _onColormapParamsChanged();
+    void _onColormapActiveChanged(bool active);
     void _updateColormapAvailability();
 
-    // Ensure Median kernel UI honors OpenCV constraints depending on image type
+    // --- Common ---
+    void _loadProcessingChainFromMedia();
     void _updateMedianKernelConstraints();
 
 private slots:
-    void _onContrastOptionsChanged(ContrastOptions const & options);
-    void _onGammaOptionsChanged(GammaOptions const & options);
-    void _onSharpenOptionsChanged(SharpenOptions const & options);
-    void _onClaheOptionsChanged(ClaheOptions const & options);
-    void _onBilateralOptionsChanged(BilateralOptions const & options);
-    void _onMedianOptionsChanged(MedianOptions const & options);
-    void _onMagicEraserOptionsChanged(MagicEraserOptions const & options);
-    void _onMagicEraserDrawingModeChanged(bool enabled);
     void _onDrawingFinished();
-    void _onMagicEraserClearMaskRequested();
-    void _onColormapOptionsChanged(ColormapOptions const & options);
-
-    // Active state change handlers
-    void _onContrastActiveChanged(bool active);
-    void _onGammaActiveChanged(bool active);
-    void _onSharpenActiveChanged(bool active);
-    void _onClaheActiveChanged(bool active);
-    void _onBilateralActiveChanged(bool active);
-    void _onMedianActiveChanged(bool active);
-    void _onMagicEraserActiveChanged(bool active);
-    void _onColormapActiveChanged(bool active);
 };
 
 #endif// MEDIAPROCESSING_WIDGET_HPP
-

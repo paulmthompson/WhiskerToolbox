@@ -1,129 +1,58 @@
+/**
+ * @file MagicEraserWidget.cpp
+ * @brief Drawing controls for the magic eraser tool
+ */
+
 #include "MagicEraserWidget.hpp"
-#include "ui_MagicEraserWidget.h"
 
-#include <QCheckBox>
+#include <QLabel>
 #include <QPushButton>
-#include <QSpinBox>
+#include <QVBoxLayout>
 
-#include <iostream>
+MagicEraserWidget::MagicEraserWidget(QWidget * parent)
+    : QWidget(parent) {
+    auto * layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
 
-MagicEraserWidget::MagicEraserWidget(QWidget* parent)
-    : QWidget(parent),
-      ui(new Ui::MagicEraserWidget) {
-    
-    ui->setupUi(this);
+    _drawing_mode_button = new QPushButton(tr("Start Drawing"), this);
+    _drawing_mode_button->setCheckable(true);
+    _drawing_mode_button->setToolTip(tr("Toggle drawing mode to paint areas for erasing"));
+    layout->addWidget(_drawing_mode_button);
 
-    // Connect UI controls to slots
-    connect(ui->active_checkbox, &QCheckBox::toggled,
-            this, &MagicEraserWidget::_onActiveChanged);
-    connect(ui->brush_size_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &MagicEraserWidget::_onBrushSizeChanged);
-    connect(ui->filter_size_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &MagicEraserWidget::_onMedianFilterSizeChanged);
-    connect(ui->drawing_mode_button, &QPushButton::toggled,
+    _clear_mask_button = new QPushButton(tr("Clear Mask"), this);
+    _clear_mask_button->setToolTip(tr("Clear the current magic eraser mask"));
+    layout->addWidget(_clear_mask_button);
+
+    auto * instructions = new QLabel(
+            tr("Instructions: Enable drawing mode and paint over areas to erase.\n"
+               "The erased areas will be replaced with median-filtered content."),
+            this);
+    instructions->setWordWrap(true);
+    layout->addWidget(instructions);
+
+    connect(_drawing_mode_button, &QPushButton::toggled,
             this, &MagicEraserWidget::_onDrawingModeChanged);
-    connect(ui->clear_mask_button, &QPushButton::clicked,
+    connect(_clear_mask_button, &QPushButton::clicked,
             this, &MagicEraserWidget::_onClearMaskClicked);
 }
 
-MagicEraserWidget::~MagicEraserWidget() {
-    delete ui;
+bool MagicEraserWidget::isDrawingMode() const {
+    return _drawing_mode_button->isChecked();
 }
 
-MagicEraserOptions MagicEraserWidget::getOptions() const {
-    MagicEraserOptions options;
-    options.brush_size = ui->brush_size_spinbox->value();
-    options.median_filter_size = ui->filter_size_spinbox->value();
-    options.drawing_mode = ui->drawing_mode_button->isChecked();
-    return options;
-}
-
-bool MagicEraserWidget::isActive() const {
-    return ui->active_checkbox->isChecked();
-}
-
-void MagicEraserWidget::setActive(bool active) {
-    ui->active_checkbox->blockSignals(true);
-    ui->active_checkbox->setChecked(active);
-    ui->active_checkbox->blockSignals(false);
-}
-
-void MagicEraserWidget::setOptions(MagicEraserOptions const& options) {
-    _blockSignalsAndSetValues(options);
-}
-
-void MagicEraserWidget::_onActiveChanged() {
-    emit activeChanged(ui->active_checkbox->isChecked());
-    _updateOptions();
-}
-
-void MagicEraserWidget::_onBrushSizeChanged() {
-    // Auto-enable when user changes values
-    if (!ui->active_checkbox->isChecked()) {
-        ui->active_checkbox->blockSignals(true);
-        ui->active_checkbox->setChecked(true);
-        ui->active_checkbox->blockSignals(false);
-    }
-    _updateOptions();
-}
-
-void MagicEraserWidget::_onMedianFilterSizeChanged() {
-    // Ensure filter size is odd
-    int value = ui->filter_size_spinbox->value();
-    if (value % 2 == 0) {
-        ui->filter_size_spinbox->blockSignals(true);
-        ui->filter_size_spinbox->setValue(value + 1);
-        ui->filter_size_spinbox->blockSignals(false);
-    }
-    
-    // Auto-enable when user changes values
-    if (!ui->active_checkbox->isChecked()) {
-        ui->active_checkbox->blockSignals(true);
-        ui->active_checkbox->setChecked(true);
-        ui->active_checkbox->blockSignals(false);
-    }
-    _updateOptions();
+void MagicEraserWidget::setDrawingMode(bool enabled) {
+    _drawing_mode_button->blockSignals(true);
+    _drawing_mode_button->setChecked(enabled);
+    _drawing_mode_button->setText(enabled ? tr("Stop Drawing") : tr("Start Drawing"));
+    _drawing_mode_button->blockSignals(false);
 }
 
 void MagicEraserWidget::_onDrawingModeChanged() {
-    bool drawing_mode = ui->drawing_mode_button->isChecked();
-    
-    // Update button text
-    ui->drawing_mode_button->setText(drawing_mode ? "Stop Drawing" : "Start Drawing");
-    
-    // Emit the drawing mode change signal
-    emit drawingModeChanged(drawing_mode);
-    
-    _updateOptions();
+    bool const drawing = _drawing_mode_button->isChecked();
+    _drawing_mode_button->setText(drawing ? tr("Stop Drawing") : tr("Start Drawing"));
+    emit drawingModeChanged(drawing);
 }
 
 void MagicEraserWidget::_onClearMaskClicked() {
-    // Emit signal to request mask clearing
     emit clearMaskRequested();
-    
-    std::cout << "Magic eraser mask clear requested" << std::endl;
 }
-
-void MagicEraserWidget::_updateOptions() {
-    emit optionsChanged(getOptions());
-}
-
-void MagicEraserWidget::_blockSignalsAndSetValues(MagicEraserOptions const& options) {
-    // Block signals to prevent recursive updates
-    ui->brush_size_spinbox->blockSignals(true);
-    ui->filter_size_spinbox->blockSignals(true);
-    ui->drawing_mode_button->blockSignals(true);
-
-    // Set values
-    ui->brush_size_spinbox->setValue(options.brush_size);
-    ui->filter_size_spinbox->setValue(options.median_filter_size);
-    ui->drawing_mode_button->setChecked(options.drawing_mode);
-    
-    // Update button text based on drawing mode
-    ui->drawing_mode_button->setText(options.drawing_mode ? "Stop Drawing" : "Start Drawing");
-
-    // Unblock signals
-    ui->brush_size_spinbox->blockSignals(false);
-    ui->filter_size_spinbox->blockSignals(false);
-    ui->drawing_mode_button->blockSignals(false);
-} 

@@ -26,30 +26,8 @@ set(MEDIA_WIDGET_SOURCES
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.cpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.hpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.ui
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/ColormapWidget.cpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/ColormapWidget.hpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/ColormapWidget.ui
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.cpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.hpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.ui
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/GammaWidget.cpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/GammaWidget.hpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/GammaWidget.ui
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/SharpenWidget.cpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/SharpenWidget.hpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/SharpenWidget.ui
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.cpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.hpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.ui
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.cpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.hpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.ui
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/MedianWidget.cpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/MedianWidget.hpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/MedianWidget.ui
     UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.cpp
     UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.hpp
-    UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.ui
 
     UI/SubWidgets/MediaMask_Widget/MediaMask_Widget.hpp
     UI/SubWidgets/MediaMask_Widget/MediaMask_Widget.cpp
@@ -133,6 +111,8 @@ target_link_libraries(Media_Widget PUBLIC WhiskerToolbox::CoreMath)
 target_link_libraries(Media_Widget PRIVATE Feature_Table_Widget)
 target_link_libraries(Media_Widget PRIVATE ColorPicker_Widget)
 target_link_libraries(Media_Widget PRIVATE Collapsible_Widget)
+target_link_libraries(Media_Widget PRIVATE AutoParamWidget)
+target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::MediaProcessingPipeline)
 target_link_libraries(Media_Widget PRIVATE GroupManagementWidget)
 target_link_libraries(Media_Widget PRIVATE GroupContextMenu)
 target_link_libraries(Media_Widget PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)

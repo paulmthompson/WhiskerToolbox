@@ -1,52 +1,28 @@
 #ifndef MAGIC_ERASER_WIDGET_HPP
 #define MAGIC_ERASER_WIDGET_HPP
 
-#include "ImageProcessing/ProcessingOptions.hpp"
-
 #include <QWidget>
 
-namespace Ui {
-class MagicEraserWidget;
-}
+class QPushButton;
+class QLabel;
+class QVBoxLayout;
 
 /**
- * @brief Widget for controlling magic eraser tool options
- * 
- * This widget provides UI controls for adjusting brush size and median filter parameters
- * for the magic eraser functionality. The magic eraser replaces brush strokes with
- * median filtered content from the underlying image.
+ * @brief Widget for magic eraser drawing controls
+ *
+ * Only manages drawing mode toggle and mask clearing. Parameter editing
+ * (brush size, filter size) is handled by an external AutoParamWidget.
  */
 class MagicEraserWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MagicEraserWidget(QWidget* parent = nullptr);
-    ~MagicEraserWidget() override;
+    explicit MagicEraserWidget(QWidget * parent = nullptr);
 
-    /**
-     * @brief Get the current magic eraser options
-     * @return Current MagicEraserOptions structure
-     */
-    MagicEraserOptions getOptions() const;
-
-    /**
-     * @brief Set the magic eraser options and update UI controls
-     * @param options MagicEraserOptions to apply to the widget
-     */
-    void setOptions(MagicEraserOptions const& options);
-
-    [[nodiscard]] bool isActive() const;
-    void setActive(bool active);
+    [[nodiscard]] bool isDrawingMode() const;
+    void setDrawingMode(bool enabled);
 
 signals:
-    /**
-     * @brief Emitted when any magic eraser option changes
-     * @param options Updated MagicEraserOptions structure
-     */
-    void optionsChanged(MagicEraserOptions const& options);
-
-    void activeChanged(bool active);
-
     /**
      * @brief Emitted when drawing mode is toggled
      * @param enabled True if drawing mode is active
@@ -59,17 +35,12 @@ signals:
     void clearMaskRequested();
 
 private slots:
-    void _onActiveChanged();
-    void _onBrushSizeChanged();
-    void _onMedianFilterSizeChanged();
     void _onDrawingModeChanged();
     void _onClearMaskClicked();
 
 private:
-    Ui::MagicEraserWidget* ui;
-
-    void _updateOptions();
-    void _blockSignalsAndSetValues(MagicEraserOptions const& options);
+    QPushButton * _drawing_mode_button;
+    QPushButton * _clear_mask_button;
 };
 
-#endif // MAGIC_ERASER_WIDGET_HPP 
+#endif// MAGIC_ERASER_WIDGET_HPP
