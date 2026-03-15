@@ -25,6 +25,7 @@
 
 #include <QWidget>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -82,6 +83,26 @@ public:
      */
     void clear();
 
+    /**
+     * @brief Callback type for post-edit hooks
+     *
+     * Receives the current JSON from the widget after a user edit.
+     * Should return the (possibly modified) JSON. If the returned JSON
+     * differs from the input, the widget re-populates itself with the
+     * new values (without re-triggering the hook).
+     *
+     * Use cases:
+     *   - Bidirectional derived-field calculation (e.g., alpha/beta ↔ min/max)
+     *   - Clamping or snapping values (e.g., forcing odd kernel sizes)
+     */
+    using PostEditHook = std::function<std::string(std::string const & json)>;
+
+    /**
+     * @brief Install a post-edit hook that can transform parameter values after each edit
+     * @param hook Callback invoked after each edit; pass nullptr / empty function to remove
+     */
+    void setPostEditHook(PostEditHook hook);
+
 signals:
     /**
      * @brief Emitted whenever any parameter value changes
@@ -128,7 +149,8 @@ private:
     QFormLayout * _advanced_layout = nullptr;
 
     std::vector<FieldRow> _field_rows;
-    bool _updating = false;// Guard against recursive signal emission
+    bool _updating = false;      // Guard against recursive signal emission
+    PostEditHook _post_edit_hook;// Optional post-edit transformation hook
 };
 
 #endif// WHISKERTOOLBOX_AUTO_PARAM_WIDGET_HPP

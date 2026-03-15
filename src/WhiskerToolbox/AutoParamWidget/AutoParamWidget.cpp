@@ -681,8 +681,11 @@ bool AutoParamWidget::fromJson(std::string const & json) {
         }
     }
 
+    bool const was_external = !_updating;
     _updating = false;
-    emit parametersChanged();
+    if (was_external) {
+        emit parametersChanged();
+    }
     return true;
 }
 
@@ -692,6 +695,10 @@ bool AutoParamWidget::fromJson(std::string const & json) {
 
 void AutoParamWidget::clear() {
     clearLayout();
+}
+
+void AutoParamWidget::setPostEditHook(PostEditHook hook) {
+    _post_edit_hook = std::move(hook);
 }
 
 // ============================================================================
@@ -724,6 +731,16 @@ void AutoParamWidget::clearLayout() {
 
 void AutoParamWidget::onFieldChanged() {
     if (!_updating) {
+        if (_post_edit_hook) {
+            auto const current = toJson();
+            auto const modified = _post_edit_hook(current);
+            if (modified != current) {
+                // Re-populate without re-triggering the hook
+                _updating = true;
+                fromJson(modified);
+                _updating = false;
+            }
+        }
         emit parametersChanged();
     }
 }
