@@ -22,6 +22,7 @@
 
 namespace {
 
+using WhiskerToolbox::DataSynthesizer::BoundaryMode;
 using WhiskerToolbox::DataSynthesizer::BoundaryParams;
 using WhiskerToolbox::DataSynthesizer::LinearMotionParams;
 using WhiskerToolbox::DataSynthesizer::MotionModelVariant;
@@ -31,7 +32,11 @@ struct MovingPointParams {
     float start_y = 100.0f;
     int num_frames = 100;
     MotionModelVariant motion = LinearMotionParams{};
-    BoundaryParams boundary;
+    BoundaryMode boundary_mode = BoundaryMode::clamp;
+    float bounds_min_x = 0.0f;
+    float bounds_max_x = 640.0f;
+    float bounds_min_y = 0.0f;
+    float bounds_max_y = 480.0f;
 };
 
 DataTypeVariant generateMovingPoint(MovingPointParams const & params) {
@@ -39,8 +44,14 @@ DataTypeVariant generateMovingPoint(MovingPointParams const & params) {
         throw std::invalid_argument("MovingPoint: num_frames must be > 0");
     }
 
+    BoundaryParams const boundary{
+            params.boundary_mode,
+            params.bounds_min_x,
+            params.bounds_max_x,
+            params.bounds_min_y,
+            params.bounds_max_y};
     auto const tp = WhiskerToolbox::DataSynthesizer::toTrajectoryParams(
-            params.motion, params.boundary);
+            params.motion, boundary);
 
     auto const trajectory = WhiskerToolbox::DataSynthesizer::computeTrajectory(
             params.start_x,

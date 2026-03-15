@@ -34,7 +34,7 @@ TEST_CASE("MovingPoint produces correct number of frames", "[MovingPoint]") {
             R"({
                 "start_x": 100, "start_y": 100, "num_frames": 20,
                 "motion": {"model": "LinearMotionParams", "velocity_x": 1, "velocity_y": 0},
-                "boundary": {"bounds_max_x": 10000, "bounds_max_y": 10000}
+                "bounds_max_x": 10000, "bounds_max_y": 10000
             })");
     REQUIRE(pd->getTimeCount() == 20);
 }
@@ -44,7 +44,7 @@ TEST_CASE("MovingPoint has exactly one point per frame", "[MovingPoint]") {
             R"({
                 "start_x": 50, "start_y": 50, "num_frames": 10,
                 "motion": {"model": "LinearMotionParams", "velocity_x": 2, "velocity_y": 0},
-                "boundary": {"bounds_max_x": 10000, "bounds_max_y": 10000}
+                "bounds_max_x": 10000, "bounds_max_y": 10000
             })");
 
     for (int f = 0; f < 10; ++f) {
@@ -58,7 +58,7 @@ TEST_CASE("MovingPoint linear motion reaches expected position", "[MovingPoint]"
             R"({
                 "start_x": 0, "start_y": 0, "num_frames": 11,
                 "motion": {"model": "LinearMotionParams", "velocity_x": 5, "velocity_y": 3},
-                "boundary": {"bounds_max_x": 10000, "bounds_max_y": 10000}
+                "bounds_max_x": 10000, "bounds_max_y": 10000
             })");
 
     auto pts_0 = getPointsAtTime(*pd, 0);
@@ -80,10 +80,8 @@ TEST_CASE("MovingPoint sinusoidal returns near start after one period", "[Moving
                     "amplitude_x": 50, "amplitude_y": 30,
                     "frequency_x": 0.01, "frequency_y": 0.01
                 },
-                "boundary": {
-                    "bounds_min_x": -1000, "bounds_max_x": 1000,
-                    "bounds_min_y": -1000, "bounds_max_y": 1000
-                }
+                "bounds_min_x": -1000, "bounds_max_x": 1000,
+                "bounds_min_y": -1000, "bounds_max_y": 1000
             })");
 
     auto pts_0 = getPointsAtTime(*pd, 0);
@@ -98,11 +96,9 @@ TEST_CASE("MovingPoint clamp boundary keeps point in bounds", "[MovingPoint]") {
             R"({
                 "start_x": 0, "start_y": 0, "num_frames": 20,
                 "motion": {"model": "LinearMotionParams", "velocity_x": 10, "velocity_y": 0},
-                "boundary": {
-                    "boundary_mode": "clamp",
-                    "bounds_min_x": 0, "bounds_max_x": 50,
-                    "bounds_min_y": 0, "bounds_max_y": 100
-                }
+                "boundary_mode": "clamp",
+                "bounds_min_x": 0, "bounds_max_x": 50,
+                "bounds_min_y": 0, "bounds_max_y": 100
             })");
 
     for (int f = 0; f < 20; ++f) {
@@ -117,11 +113,9 @@ TEST_CASE("MovingPoint bounce boundary keeps point in bounds", "[MovingPoint]") 
             R"({
                 "start_x": 0, "start_y": 0, "num_frames": 30,
                 "motion": {"model": "LinearMotionParams", "velocity_x": 10, "velocity_y": 0},
-                "boundary": {
-                    "boundary_mode": "bounce",
-                    "bounds_min_x": 0, "bounds_max_x": 50,
-                    "bounds_min_y": 0, "bounds_max_y": 100
-                }
+                "boundary_mode": "bounce",
+                "bounds_min_x": 0, "bounds_max_x": 50,
+                "bounds_min_y": 0, "bounds_max_y": 100
             })");
 
     for (int f = 0; f < 30; ++f) {
@@ -136,11 +130,9 @@ TEST_CASE("MovingPoint wrap boundary keeps point in bounds", "[MovingPoint]") {
             R"({
                 "start_x": 0, "start_y": 0, "num_frames": 30,
                 "motion": {"model": "LinearMotionParams", "velocity_x": 10, "velocity_y": 0},
-                "boundary": {
-                    "boundary_mode": "wrap",
-                    "bounds_min_x": 0, "bounds_max_x": 50,
-                    "bounds_min_y": 0, "bounds_max_y": 100
-                }
+                "boundary_mode": "wrap",
+                "bounds_min_x": 0, "bounds_max_x": 50,
+                "bounds_min_y": 0, "bounds_max_y": 100
             })");
 
     for (int f = 0; f < 30; ++f) {
@@ -169,10 +161,8 @@ TEST_CASE("MovingPoint Brownian is deterministic with seed", "[MovingPoint]") {
             R"({
                 "start_x": 100, "start_y": 100, "num_frames": 20,
                 "motion": {"model": "BrownianMotionParams", "diffusion": 5, "seed": 777},
-                "boundary": {
-                    "bounds_min_x": -10000, "bounds_max_x": 10000,
-                    "bounds_min_y": -10000, "bounds_max_y": 10000
-                }
+                "bounds_min_x": -10000, "bounds_max_x": 10000,
+                "bounds_min_y": -10000, "bounds_max_y": 10000
             })";
 
     auto pd1 = runMovingPoint(json);
@@ -234,7 +224,8 @@ TEST_CASE("MovingPoint schema has enum field for boundary_mode", "[MovingPoint]"
 
     auto const & schema = *schema_opt;
 
-    // boundary is a nested struct; find its sub-fields via the boundary field
-    auto * boundary_field = schema.field("boundary");
-    REQUIRE(boundary_field != nullptr);
+    auto * bm_field = schema.field("boundary_mode");
+    REQUIRE(bm_field != nullptr);
+    CHECK(bm_field->type_name == "enum");
+    CHECK(bm_field->allowed_values.size() == 3);
 }
