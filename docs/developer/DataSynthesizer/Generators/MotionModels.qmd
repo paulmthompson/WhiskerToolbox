@@ -278,6 +278,89 @@ Brownian motion with bounce:
 
 ---
 
+## MovingMask Generator
+
+**Location**: `src/DataSynthesizer/Generators/Mask/MovingMaskGenerator.cpp`
+**Registration name**: `"MovingMask"` · **Category**: Spatial · **Output**: `MaskData`
+
+Produces a `MaskData` where each frame contains a shape (circle, rectangle,
+or ellipse) at a position determined by `computeTrajectory()`. At each frame,
+the shape is re-rasterized at the trajectory position and pixels are clipped
+to image bounds via `clipPixelsToImage()`.
+
+### Shape Selection
+
+The `shape` parameter is an `enum class MaskShape` (circle / rectangle / ellipse),
+rendered as a combo box in the GUI. Shape-specific size parameters are provided
+as flat fields; only the fields relevant to the selected shape are used:
+
+| Shape | Size parameters used |
+|-------|---------------------|
+| `circle` | `radius` |
+| `rectangle` | `width`, `height` |
+| `ellipse` | `semi_major`, `semi_minor`, `angle` |
+
+The `MaskShape` enum is defined in `namespace WhiskerToolbox::DataSynthesizer`
+(not the anonymous namespace) because reflect-cpp requires named-namespace enums
+for compile-time enum value detection.
+
+### Parameters
+
+| Parameter | Type | Default | Notes |
+|-----------|------|---------|-------|
+| `shape` | `MaskShape` | `circle` | Shape type (circle / rectangle / ellipse) |
+| `image_width` | `int` | 640 | Output image width |
+| `image_height` | `int` | 480 | Output image height |
+| `start_x` | `float` | 320.0 | Starting center X |
+| `start_y` | `float` | 240.0 | Starting center Y |
+| `radius` | `float` | 50.0 | Circle radius |
+| `width` | `float` | 100.0 | Rectangle width |
+| `height` | `float` | 60.0 | Rectangle height |
+| `semi_major` | `float` | 80.0 | Ellipse semi-major axis |
+| `semi_minor` | `float` | 40.0 | Ellipse semi-minor axis |
+| `angle` | `float` | 0.0 | Ellipse rotation (degrees) |
+| `num_frames` | `int` | 100 | Number of frames |
+| `motion` | `MotionModelVariant` | `LinearMotionParams{}` | Motion model |
+| `boundary_mode` | `BoundaryMode` | `clamp` | Boundary enforcement |
+| `bounds_*` | `float` | varies | Boundary box limits |
+
+### JSON Format
+
+Circle moving linearly:
+```json
+{
+    "shape": "circle", "radius": 20,
+    "image_width": 640, "image_height": 480,
+    "start_x": 100, "start_y": 240, "num_frames": 200,
+    "motion": {"model": "LinearMotionParams", "velocity_x": 2, "velocity_y": 0},
+    "boundary_mode": "bounce",
+    "bounds_min_x": 0, "bounds_max_x": 640,
+    "bounds_min_y": 0, "bounds_max_y": 480
+}
+```
+
+Rectangle with Brownian motion:
+```json
+{
+    "shape": "rectangle", "width": 40, "height": 30,
+    "image_width": 640, "image_height": 480,
+    "start_x": 320, "start_y": 240, "num_frames": 500,
+    "motion": {"model": "BrownianMotionParams", "diffusion": 3, "seed": 42},
+    "boundary_mode": "clamp",
+    "bounds_min_x": 50, "bounds_max_x": 590,
+    "bounds_min_y": 50, "bounds_max_y": 430
+}
+```
+
+### Pixel Clipping Behavior
+
+At every frame, pixels are regenerated at the trajectory position and clipped
+to `[0, image_width) × [0, image_height)`. A mask fully interior to the image
+has constant pixel count across frames. A mask near an edge has reduced pixel
+count due to clipping — only the portion within the image is stored.
+
+---
+
 ## GUI Behavior
 
 In the DataSynthesizer widget, selecting `MovingPoint` as the generator shows:
@@ -308,9 +391,10 @@ solves this by:
 ### Reuse in Future Generators
 
 `MotionModelVariant` and `BoundaryParams` are defined once in
-`MotionParams.hpp` and reused by all moving generators. `MovingMask` and
-`MovingLine` generators (Milestone 5b-ii) will use the same types, getting
-combo-box-driven sub-forms automatically.
+`MotionParams.hpp` and reused by all moving generators. `MovingMask` uses
+the same types as `MovingPoint`, getting combo-box-driven sub-forms
+automatically. The planned `MovingLine` generator (Milestone 5b-ii) will
+also reuse these types.
 
 ### DefaultIfMissing Processor
 

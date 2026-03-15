@@ -29,6 +29,7 @@ add_executable(test_DataSynthesizer
     StraightLineGenerator.test.cpp
     Trajectory.test.cpp
     MovingPointGenerator.test.cpp
+    MovingMaskGenerator.test.cpp
 )
 
 target_include_directories(test_DataSynthesizer PRIVATE

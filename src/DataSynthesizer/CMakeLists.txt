@@ -19,6 +19,7 @@ add_library(DataSynthesizer STATIC
     Generators/Mask/CircleMaskGenerator.cpp
     Generators/Mask/RectangleMaskGenerator.cpp
     Generators/Mask/EllipseMaskGenerator.cpp
+    Generators/Mask/MovingMaskGenerator.cpp
     Generators/Point/GridPointsGenerator.cpp
     Generators/Point/RandomPointsGenerator.cpp
     Generators/Point/MovingPointGenerator.cpp
