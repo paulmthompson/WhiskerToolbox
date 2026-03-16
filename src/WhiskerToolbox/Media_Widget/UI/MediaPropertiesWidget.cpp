@@ -15,6 +15,7 @@
 #include "Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
 
+#include <QResizeEvent>
 #include <QTimer>
 #include <QVBoxLayout>
 
@@ -30,6 +31,8 @@ MediaPropertiesWidget::MediaPropertiesWidget(std::shared_ptr<MediaWidgetState> s
       _data_manager(std::move(data_manager)),
       _media_window(media_window) {
     ui->setupUi(this);
+
+    ui->scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     _setupTextOverlays();
     _setupCanvasCoordSection();
@@ -51,6 +54,20 @@ MediaPropertiesWidget::~MediaPropertiesWidget() {
     }
 
     delete ui;
+}
+
+void MediaPropertiesWidget::resizeEvent(QResizeEvent * event) {
+    QWidget::resizeEvent(event);
+    _updateChildWidths();
+}
+
+void MediaPropertiesWidget::_updateChildWidths() {
+    int const w = ui->scrollArea->viewport()->width();
+    if (w <= 0) {
+        return;
+    }
+    ui->feature_table_widget->setFixedWidth(w);
+    ui->stackedWidget->setFixedWidth(w);
 }
 
 void MediaPropertiesWidget::setMediaWindow(Media_Window * media_window) {
@@ -150,13 +167,8 @@ void MediaPropertiesWidget::_setupFeatureTable() {
                 _addFeatureToDisplay(feature, false);
             });
 
-    // Sizing adjustments after layout
-    QTimer::singleShot(0, this, [this]() {
-        int scrollAreaWidth = ui->scrollArea->width();
-        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 10);
-        ui->stackedWidget->setFixedWidth(scrollAreaWidth - 10);
-    });
 }
+
 
 void MediaPropertiesWidget::_createStackedWidgets() {
     if (!_data_manager || !_state) {
@@ -181,24 +193,15 @@ void MediaPropertiesWidget::_createStackedWidgets() {
     _processing_widget = new MediaProcessing_Widget(_data_manager, _media_window, _state.get());
     ui->stackedWidget->addWidget(_processing_widget);
 
-    // Size widgets properly after a short delay
-    QTimer::singleShot(100, this, [this]() {
-        int scrollAreaWidth = ui->scrollArea->width();
-        for (int i = 0; i < ui->stackedWidget->count(); ++i) {
-            QWidget * widget = ui->stackedWidget->widget(i);
-            if (widget) {
-                widget->setFixedWidth(scrollAreaWidth - 10);
-                widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-                // If this is a MediaProcessing_Widget, make sure it fills its container
-                auto processingWidget = qobject_cast<MediaProcessing_Widget *>(widget);
-                if (processingWidget) {
-                    processingWidget->setMinimumWidth(scrollAreaWidth - 10);
-                    processingWidget->adjustSize();
-                }
-            }
+    // Set Expanding size policy on all sub-widgets so they fill the stacked widget.
+    // Widths will be set by _updateChildWidths() via resizeEvent.
+    for (int i = 0; i < ui->stackedWidget->count(); ++i) {
+        QWidget * widget = ui->stackedWidget->widget(i);
+        if (widget) {
+            widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         }
-    });
+    }
+    _updateChildWidths();
 }
 
 void MediaPropertiesWidget::_featureSelected(QString const & feature) {
