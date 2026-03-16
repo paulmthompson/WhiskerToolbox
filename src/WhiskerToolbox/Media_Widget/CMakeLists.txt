@@ -23,6 +23,9 @@ set(MEDIA_WIDGET_SOURCES
     UI/MediaPropertiesWidget.cpp
     UI/MediaPropertiesWidget.ui
 
+    UI/CanvasCoord_Widget.hpp
+    UI/CanvasCoord_Widget.cpp
+
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.cpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.hpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.ui

@@ -128,25 +128,132 @@ These changes address the immediate pain point of rendering without media.
 #### 2.1 Decouple Canvas Coordinate System from Media
 
 **Current state:**
-- `getXAspect()` / `getYAspect()` compute canvas-to-media scaling ratios
-- Line and mask rendering use media-specific width/height for coordinate conversion
-- When no media exists, these ratios may be meaningless or undefined
+
+The coordinate mapping has three interacting pieces:
+
+1. **Canvas pixel dimensions** (`_canvasWidth`, `_canvasHeight`): fixed at 640×480 by
+   default. This is the QGraphicsScene / QImage backing size. Media frames are scaled
+   *to* this size.
+2. **Canvas coordinate system**: the logical resolution that overlay data coordinates
+   are interpreted against. Currently this is implicitly the active media's native
+   resolution (e.g., 640×480 for a 640×480 video). `getXAspect()` = `_canvasWidth /
+   media.getWidth()` and `getYAspect()` = `_canvasHeight / media.getHeight()`.
+3. **Per-data ImageSize**: `LineData`, `PointData`, and `MaskData` each carry an
+   `ImageSize` (from `RaggedTimeSeries`). If defined (not -1,‑1), the overlay rendering
+   substitutes this for the media resolution, computing `xAspect = _canvasWidth /
+   data.getImageSize().width`. If undefined (-1,‑1), the data trusts the media
+   resolution.
+
+**Key behaviors to preserve (and formalize):**
+
+- **MediaData is always "correct":** its native resolution defines the authoritative
+  canvas coordinate system when loaded. (Note: `MediaData` defaults to 640×480 when
+  uninitialized — it never uses -1,‑1 — so an empty media object silently produces a
+  coordinate system that may not match loaded overlay data.)
+- **ImageSize -1,‑1 means "undefined":** data objects with undefined image size defer
+  to the canvas coordinate system (currently media).
+- **Scaling is "stretch to fill", not "spatial subset":** when `PointData` has
+  ImageSize 256×256 and media is 640×480, the points are scaled up so the 256×256 grid
+  fills the full canvas. The implicit assumption is that the lower-resolution data
+  represents the same spatial extent at coarser sampling, **not** a 256×256 crop of
+  the 640×480 field of view. There is currently no way to express the alternative
+  interpretation.
+
+**Problems this creates for no-media mode:**
+
+- The program launches with empty `MediaData` whose size defaults to 640×480. If overlay
+  data (e.g., masks at 512×512) is loaded without media, `getXAspect()` returns 1.0
+  (because no *visible* media → fallback), which silently misaligns data that expects
+  coordinate mapping.
+- There is no explicit "canvas coordinate system" object — it is scattered across
+  `getXAspect()`, `getYAspect()`, and per-overlay ad-hoc scaling logic, making it
+  impossible for the user to inspect or override.
+- There is no mechanism for a data object to declare whether it should be stretched to
+  fill the canvas or whether it represents a spatial subset (crop / ROI) of the canvas
+  coordinates.
 
 **Approach:**
-1. Introduce an explicit `CanvasCoordinateSystem` concept: a { width, height } pair
-   defining the coordinate space for overlays
-2. When media is loaded: canvas coords = media resolution
-3. When no media: canvas coords = either a user-specified size or the largest data
-   object's bounds (e.g., mask image dimensions)
-4. All `_plotXxxData()` methods use `CanvasCoordinateSystem` instead of querying media
-   dimensions directly
 
-**This is the key unlock** — once overlay rendering is independent of media presence,
-plotting without media becomes trivial.
+1. **Introduce `CanvasCoordinateSystem`** — a small struct holding the logical
+   `{ width, height }` that defines the coordinate space overlays are plotted into.
+   This replaces the implicit "ask the active media for its resolution" pattern.
+
+2. **Resolution priority chain** — the canvas coordinate system should be determined
+   by the first source that provides a valid (non -1,‑1) resolution, in this order:
+   1. **User override** (explicit manual setting via UI / state — highest priority)
+   2. **Active media** (`MediaData::getImageSize()`, if visible and not default-only)
+   3. **First loaded data object with defined ImageSize** (e.g., a MaskData at 512×512)
+   4. **Fallback default** (640×480, matching the current behavior)
+
+   When media is loaded/unloaded or data objects are added/removed, the coordinate
+   system should be re-evaluated unless there is an active user override.
+
+3. **Per-data coordinate mapping mode** — add a per-data-object setting (likely in the
+   display options, e.g., `PointDisplayOptions`, `LineDisplayOptions`,
+   `MaskDisplayOptions`) that controls how the data's ImageSize relates to the canvas:
+
+   | Mode | Meaning | Scaling |
+   |------|---------|---------|
+   | `ScaleToCanvas` (default) | Data covers the full canvas extent at its own resolution. Equivalent to current behavior. | `xAspect = canvasPixelWidth / data.imageSize.width` |
+   | `SubsetOfCanvas` | Data occupies a spatial sub-region. Coordinates are in canvas-coordinate-system units already. | `xAspect = canvasPixelWidth / canvasCoordSystem.width` (same as media-based scaling) |
+
+   `ScaleToCanvas` preserves backward compatibility: data at 256×256 is stretched to
+   fill a 640×480 canvas. `SubsetOfCanvas` allows, e.g., a 256×256 point cloud that
+   lives in the top-left quadrant of a 640×480 canvas.
+
+   When ImageSize is -1,‑1, the mode is moot — the data uses the canvas coordinate
+   system directly (equivalent to `SubsetOfCanvas` with matching dimensions).
+
+4. **Replace `getXAspect()` / `getYAspect()`** — these methods currently encode the
+   full priority chain in an ad-hoc way. Replace them with a single method (or free
+   function) that takes `CanvasCoordinateSystem`, the data's `ImageSize`, and the
+   mapping mode, returning the x/y scale factors. All `_plotXxxData()` methods call
+   this instead of computing their own scaling.
+
+5. **UI for canvas coordinate system** — expose the resolved canvas coordinate system
+   in the Media_Widget UI (read-only display showing source: "from media", "from
+   MaskData 'whiskers'", "manual override"). Provide width/height spinboxes for
+   manual override. This can live in MediaWidgetState as a serializable field.
+
+**Status: ✅ Complete**
+
+**Sub-tasks:**
+- [x] Define `CanvasCoordinateSystem` struct — `src/CorePlotting/Layout/CanvasCoordinateSystem.hpp`
+- [x] Define `CoordinateMappingMode` enum (`ScaleToCanvas`, `SubsetOfCanvas`) — same file
+- [x] Add `CoordinateMappingMode` field to `LineDisplayOptions`, `PointDisplayOptions`,
+      `MaskDisplayOptions` (default: `ScaleToCanvas`) — `DisplayOptions.hpp`
+- [x] Add `CanvasCoordinateSystem` to `MediaWidgetState` (with optional user override) — `MediaWidgetStateData.hpp`, `MediaWidgetState.hpp/.cpp`
+- [x] Implement resolution priority chain in `Media_Window::resolveCanvasCoordinateSystem()` —
+      called at the top of each `UpdateCanvas()`; priority: user override → active media →
+      first data object with defined ImageSize → 640×480 fallback
+- [x] Replace `getXAspect()` / `getYAspect()` with unified scaling function —
+      `computeScalingFactors()` / `computeInverseScalingFactors()` free functions in
+      `CanvasCoordinateSystem.hpp`; `getXAspect()`/`getYAspect()` kept as backward-compatible
+      wrappers (used by `MediaLine_Widget.cpp`)
+- [x] Update all `_plotXxxData()` and hit-testing methods to use new scaling function —
+      `_plotLineData`, `_plotPointData`, `_plotMaskData` (bounding box), `_findLineAtPosition`,
+      `_findPointAtPosition` (**bug fix**: was ignoring ImageSize entirely), `_findMaskAtPosition`,
+      `updateTemporaryLine` (**bug fix**: fetched ImageSize but never used it)
+- [x] Add UI controls in Media_Widget for viewing/overriding canvas coordinate system —
+      `CanvasCoord_Widget` in `Media_Widget/UI/`, integrated into `MediaPropertiesWidget` as a
+      collapsible section; shows resolved width×height and source, with manual override
+      via QCheckBox + QSpinBox pair
+- [x] Unit tests for coordinate mapping (pure math, no Qt dependency) —
+      `tests/CorePlotting/CanvasCoordinateSystem.test.cpp`, 19 test cases / 44 assertions
+
+**This is the key unlock** — once the canvas coordinate system is an explicit,
+inspectable, overridable entity, overlay rendering becomes independent of media
+presence, and plotting without media becomes trivial.
 
 #### 2.2 Add Canvas-Only Mode to Media_Window
 
-**Approach:**
+**Completed prerequisite:** `Media_Widget::setDataManager()` now calls `updateMedia()` at
+the end of setup, wiring the QGraphicsScene to the QGraphicsView immediately on widget
+creation. Previously this was only called from `MainWindow::loadData()`, which meant
+overlays were invisible until the user loaded a media file. The legacy loop in
+`MainWindow::loadData()` has been removed.
+
+**Remaining approach:**
 1. Add a `bool _has_media` flag or derive from whether any media data key is registered
 2. In `UpdateCanvas()`: if no media, skip `_plotMediaData()` but still render all overlays
 3. Allow background color configuration (currently hardcoded black)
@@ -332,8 +439,9 @@ immediate feature request. Phase 3 removes duplicated logic. Phase 4 is aspirati
 1.1, 1.2, 1.3  ──(independent)──  no prerequisites
 1.4, 1.5, 1.6  ──(independent)──  no prerequisites (AutoParamWidget already exists)
 
-2.1  ← required by 2.2 and 2.3
-2.2  ← 2.1
+2.1  ← required by 2.2 and 2.3; no code prerequisites, but benefits from 1.3 (mask styling)
+     being done first to reduce churn in MaskDisplayOptions
+2.2  ← 2.1 (canvas-only mode is trivial once coordinate system is explicit)
 2.3  ← 2.1
 
 3.1  ← no prerequisites (CorePlotting mappers exist)
@@ -351,7 +459,7 @@ immediate feature request. Phase 3 removes duplicated logic. Phase 4 is aspirati
 |--------|------|-----------|
 | 1.1-1.3 Style widget replacement | **Low** | Pure UI swap; rendering unchanged |
 | 1.4-1.6 AutoParamWidget conversion | **Low** | Same pattern as media processing; proven |
-| 2.1 Coordinate decoupling | **Medium** | Touches all _plotXxxData() methods; regression risk on coordinate math |
+| 2.1 Coordinate decoupling | **Low** | Complete. All sub-tasks done: struct, priority chain, scaling functions, rendering/hit-testing updates, UI controls (CanvasCoord_Widget), and unit tests (19 test cases). |
 | 2.2 Canvas-only mode | **Low** | Additive; just new guards in UpdateCanvas() |
 | 2.3 Coordinate utility extraction | **Low** | Pure refactor; testable |
 | 3.1 CorePlotting mappers | **Medium** | Changes data traversal; need to verify visual equivalence |

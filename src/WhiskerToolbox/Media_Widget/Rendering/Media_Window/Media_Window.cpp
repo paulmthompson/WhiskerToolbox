@@ -549,6 +549,9 @@ void Media_Window::UpdateCanvas() {
     _clearTextOverlays();
     _clearMedia();
 
+    // Resolve the canvas coordinate system before any plotting
+    resolveCanvasCoordinateSystem();
+
     _plotMediaData();
 
     _plotLineData();
@@ -1122,60 +1125,97 @@ void Media_Window::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
 }
 
 float Media_Window::getXAspect() const {
-    if (!_media_widget_state) {
-        return 1.0f;
-    }
-
-    std::string active_media_key;
-    for (auto const & config_key: _media_widget_state->displayOptions().keys<MediaDisplayOptions>()) {
-        auto const * config = _media_widget_state->displayOptions().get<MediaDisplayOptions>(
-                config_key);
-        if (config && config->is_visible()) {
-            active_media_key = config_key.toStdString();
-            break;
-        }
-    }
-    if (active_media_key.empty()) {
-        // No active media, return default aspect ratio
-        return 1.0f;
-    }
-
-    auto _media = _data_manager->getData<MediaData>(active_media_key);
-    if (!_media) {
-        return 1.0f;// Default aspect ratio
-    }
-
-    float const scale_width = static_cast<float>(_canvasWidth) / static_cast<float>(_media->getWidth());
-
-    return scale_width;
+    return static_cast<float>(_canvasWidth) / static_cast<float>(_canvas_coord_system.width);
 }
 
 float Media_Window::getYAspect() const {
+    return static_cast<float>(_canvasHeight) / static_cast<float>(_canvas_coord_system.height);
+}
+
+void Media_Window::resolveCanvasCoordinateSystem() {
     if (!_media_widget_state) {
-        return 1.0f;
+        _canvas_coord_system = CanvasCoordinateSystem{};
+        return;
     }
 
-    std::string active_media_key;
+    // Priority 1: User override
+    if (_media_widget_state->isCanvasCoordOverrideActive()) {
+        auto const & data = _media_widget_state->data();
+        _canvas_coord_system = {data.canvas_coord_override_width,
+                                data.canvas_coord_override_height,
+                                CanvasCoordinateSource::UserOverride,
+                                {}};
+        _media_widget_state->setCanvasCoordinateSystem(_canvas_coord_system);
+        return;
+    }
+
+    // Priority 2: Active media
     for (auto const & config_key: _media_widget_state->displayOptions().keys<MediaDisplayOptions>()) {
         auto const * config = _media_widget_state->displayOptions().get<MediaDisplayOptions>(config_key);
         if (config && config->is_visible()) {
-            active_media_key = config_key.toStdString();
-            break;
+            std::string const media_key = config_key.toStdString();
+            auto media = _data_manager->getData<MediaData>(media_key);
+            if (media) {
+                _canvas_coord_system = {media->getWidth(),
+                                        media->getHeight(),
+                                        CanvasCoordinateSource::Media,
+                                        media_key};
+                _media_widget_state->setCanvasCoordinateSystem(_canvas_coord_system);
+                return;
+            }
         }
     }
-    if (active_media_key.empty()) {
-        // No active media, return default aspect ratio
-        return 1.0f;
+
+    // Priority 3: First data object with defined ImageSize
+    // Check masks
+    for (auto const & key_q: _media_widget_state->displayOptions().keys<MaskDisplayOptions>()) {
+        auto const * cfg = _media_widget_state->displayOptions().get<MaskDisplayOptions>(key_q);
+        if (cfg && cfg->is_visible()) {
+            auto data = _data_manager->getData<MaskData>(key_q.toStdString());
+            if (data && data->getImageSize().isDefined()) {
+                auto const & sz = data->getImageSize();
+                _canvas_coord_system = {sz.width, sz.height,
+                                        CanvasCoordinateSource::DataObject,
+                                        key_q.toStdString()};
+                _media_widget_state->setCanvasCoordinateSystem(_canvas_coord_system);
+                return;
+            }
+        }
+    }
+    // Check lines
+    for (auto const & key_q: _media_widget_state->displayOptions().keys<LineDisplayOptions>()) {
+        auto const * cfg = _media_widget_state->displayOptions().get<LineDisplayOptions>(key_q);
+        if (cfg && cfg->is_visible()) {
+            auto data = _data_manager->getData<LineData>(key_q.toStdString());
+            if (data && data->getImageSize().isDefined()) {
+                auto const & sz = data->getImageSize();
+                _canvas_coord_system = {sz.width, sz.height,
+                                        CanvasCoordinateSource::DataObject,
+                                        key_q.toStdString()};
+                _media_widget_state->setCanvasCoordinateSystem(_canvas_coord_system);
+                return;
+            }
+        }
+    }
+    // Check points
+    for (auto const & key_q: _media_widget_state->displayOptions().keys<PointDisplayOptions>()) {
+        auto const * cfg = _media_widget_state->displayOptions().get<PointDisplayOptions>(key_q);
+        if (cfg && cfg->is_visible()) {
+            auto data = _data_manager->getData<PointData>(key_q.toStdString());
+            if (data && data->getImageSize().isDefined()) {
+                auto const & sz = data->getImageSize();
+                _canvas_coord_system = {sz.width, sz.height,
+                                        CanvasCoordinateSource::DataObject,
+                                        key_q.toStdString()};
+                _media_widget_state->setCanvasCoordinateSystem(_canvas_coord_system);
+                return;
+            }
+        }
     }
 
-    auto _media = _data_manager->getData<MediaData>(active_media_key);
-    if (!_media) {
-        return 1.0f;// Default aspect ratio
-    }
-
-    float const scale_height = static_cast<float>(_canvasHeight) / static_cast<float>(_media->getHeight());
-
-    return scale_height;
+    // Priority 4: Default fallback
+    _canvas_coord_system = CanvasCoordinateSystem{};
+    _media_widget_state->setCanvasCoordinateSystem(_canvas_coord_system);
 }
 
 void Media_Window::_plotLineData() {
@@ -1189,9 +1229,6 @@ void Media_Window::_plotLineData() {
 
     // Create TimeIndexAndFrame from current_position for data access
     TimeIndexAndFrame const time_index_and_frame(current_position.index, current_position.time_frame.get());
-
-    auto xAspect = getXAspect();
-    auto yAspect = getYAspect();
 
     // Iterate over line options from state registry
     for (auto const & line_key_q: _media_widget_state->displayOptions().keys<LineDisplayOptions>()) {
@@ -1208,18 +1245,12 @@ void Media_Window::_plotLineData() {
         auto lineData = line_data->getAtTime(time_index_and_frame);
         auto entityIds = line_data->getEntityIdsAtTime(current_position.index, *current_position.time_frame);
 
-        // Check for line-specific image size scaling
-        auto image_size = line_data->getImageSize();
-
-        if (image_size.height != -1) {
-            auto const line_height = static_cast<float>(image_size.height);
-            yAspect = static_cast<float>(_canvasHeight) / line_height;
-        }
-
-        if (image_size.width != -1) {
-            auto const line_width = static_cast<float>(image_size.width);
-            xAspect = static_cast<float>(_canvasWidth) / line_width;
-        }
+        // Compute scaling factors using the unified coordinate system
+        auto const factors = computeScalingFactors(
+                _canvasWidth, _canvasHeight, _canvas_coord_system,
+                line_data->getImageSize(), line_config->coordinate_mapping);
+        auto const xAspect = factors.x;
+        auto const yAspect = factors.y;
 
         if (lineData.empty()) {
             continue;
@@ -1389,9 +1420,12 @@ void Media_Window::_plotMaskData() {
 
         // Plot bounding boxes if enabled
         if (mask_config->show_bounding_box) {
-            // Calculate scaling factors based on mask image size, not media aspect ratio
-            float const xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
-            float const yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
+            // Compute scaling factors using the unified coordinate system
+            auto const bb_factors = computeScalingFactors(
+                    _canvasWidth, _canvasHeight, _canvas_coord_system,
+                    image_size, mask_config->coordinate_mapping);
+            float const xAspect = bb_factors.x;
+            float const yAspect = bb_factors.y;
 
             // For current time masks
             for (auto const & single_mask: maskData) {
@@ -1601,20 +1635,12 @@ void Media_Window::_plotPointData() {
         auto point = _data_manager->getData<PointData>(point_key);
         if (!point) continue;
 
-        auto xAspect = getXAspect();
-        auto yAspect = getYAspect();
-
-        auto image_size = point->getImageSize();
-
-        if (image_size.height != -1) {
-            auto const mask_height = static_cast<float>(image_size.height);
-            yAspect = static_cast<float>(_canvasHeight) / mask_height;
-        }
-
-        if (image_size.width != -1) {
-            auto const mask_width = static_cast<float>(image_size.width);
-            xAspect = static_cast<float>(_canvasWidth) / mask_width;
-        }
+        // Compute scaling factors using the unified coordinate system
+        auto const factors = computeScalingFactors(
+                _canvasWidth, _canvasHeight, _canvas_coord_system,
+                point->getImageSize(), point_config->coordinate_mapping);
+        auto const xAspect = factors.x;
+        auto const yAspect = factors.y;
 
         // Use TimeIndexAndFrame - conversion handled internally
         auto pointData = point->getAtTime(time_index_and_frame);
@@ -2148,17 +2174,21 @@ void Media_Window::updateTemporaryLine(std::vector<Point2D<float>> const & point
     // Clear existing temporary line
     clearTemporaryLine();
 
-    // Use the same aspect ratio calculation as the target line data
-    auto xAspect = getXAspect();
-    auto yAspect = getYAspect();
-
-    // If we have a line key, use the same image size scaling as that line data
+    // Use the same scaling as the target line data
+    ScalingFactors line_factors;
     if (!line_key.empty()) {
         auto line_data = _data_manager->getData<LineData>(line_key);
-        if (line_data) {
-            auto image_size = line_data->getImageSize();
-        }
+        auto const * line_config = _media_widget_state
+                                           ? _media_widget_state->displayOptions().get<LineDisplayOptions>(QString::fromStdString(line_key))
+                                           : nullptr;
+        CoordinateMappingMode const mapping = line_config ? line_config->coordinate_mapping : CoordinateMappingMode::ScaleToCanvas;
+        ImageSize const img_size = line_data ? line_data->getImageSize() : ImageSize{};
+        line_factors = computeScalingFactors(_canvasWidth, _canvasHeight, _canvas_coord_system, img_size, mapping);
+    } else {
+        line_factors = computeScalingFactors(_canvasWidth, _canvasHeight, _canvas_coord_system, ImageSize{}, CoordinateMappingMode::ScaleToCanvas);
     }
+    auto const xAspect = line_factors.x;
+    auto const yAspect = line_factors.y;
 
     if (points.size() < 2) {
         // If only one point, just show a marker
@@ -2358,10 +2388,6 @@ void Media_Window::selectEntity(EntityId entity_id, std::string const & data_key
 EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type) {
     if (!_media_widget_state) return EntityId(0);
 
-    // Convert scene coordinates to media coordinates
-    auto const x_media = static_cast<float>(scene_pos.x() / getXAspect());
-    auto const y_media = static_cast<float>(scene_pos.y() / getYAspect());
-
     // Search through lines first (as they're typically most precise)
     for (auto const & key_q: _media_widget_state->displayOptions().keys<LineDisplayOptions>()) {
         auto const * config = _media_widget_state->displayOptions().get<LineDisplayOptions>(key_q);
@@ -2430,17 +2456,13 @@ EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::strin
     }
 
     // Match scaling used in _plotLineData for this line dataset
-    float xAspect = getXAspect();
-    float yAspect = getYAspect();
-    auto const image_size = line_data->getImageSize();
-    if (image_size.height != -1) {
-        auto const line_height = static_cast<float>(image_size.height);
-        yAspect = static_cast<float>(_canvasHeight) / line_height;
-    }
-    if (image_size.width != -1) {
-        auto const line_width = static_cast<float>(image_size.width);
-        xAspect = static_cast<float>(_canvasWidth) / line_width;
-    }
+    auto const * line_config = _media_widget_state->displayOptions().get<LineDisplayOptions>(QString::fromStdString(line_key));
+    CoordinateMappingMode const mapping = line_config ? line_config->coordinate_mapping : CoordinateMappingMode::ScaleToCanvas;
+    auto const factors = computeScalingFactors(
+            _canvasWidth, _canvasHeight, _canvas_coord_system,
+            line_data->getImageSize(), mapping);
+    float const xAspect = factors.x;
+    float const yAspect = factors.y;
 
     float const threshold = 10.0f;// pixels
 
@@ -2503,14 +2525,21 @@ EntityId Media_Window::_findPointAtPosition(QPointF const & scene_pos, std::stri
         return EntityId(0);
     }
 
+    // Match scaling used in _plotPointData for this point dataset
+    auto const * point_config = _media_widget_state->displayOptions().get<PointDisplayOptions>(QString::fromStdString(point_key));
+    CoordinateMappingMode const mapping = point_config ? point_config->coordinate_mapping : CoordinateMappingMode::ScaleToCanvas;
+    auto const factors = computeScalingFactors(
+            _canvasWidth, _canvasHeight, _canvas_coord_system,
+            point_data->getImageSize(), mapping);
+
     float const threshold = 15.0f;// pixels
 
     for (size_t i = 0; i < points.size(); ++i) {
         auto const & point = points[i];
 
         // Convert point to scene coordinates
-        float const x_scene = point.x * getXAspect();
-        float const y_scene = point.y * getYAspect();
+        float const x_scene = point.x * factors.x;
+        float const y_scene = point.y * factors.y;
 
         // Calculate distance
         float const dx = scene_pos.x() - x_scene;
@@ -2544,8 +2573,14 @@ EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::strin
     // MaskData doesn't currently support EntityIds, so we'll use position-based indices for now
     // This is a simplified implementation that can be improved when MaskData gets EntityId support
 
-    auto const x_media = static_cast<float>(scene_pos.x() / getXAspect());
-    auto const y_media = static_cast<float>(scene_pos.y() / getYAspect());
+    // Compute inverse scaling to convert scene coordinates to data coordinates
+    auto const * mask_config = _media_widget_state->displayOptions().get<MaskDisplayOptions>(QString::fromStdString(mask_key));
+    CoordinateMappingMode const mapping = mask_config ? mask_config->coordinate_mapping : CoordinateMappingMode::ScaleToCanvas;
+    auto const factors = computeScalingFactors(
+            _canvasWidth, _canvasHeight, _canvas_coord_system,
+            mask_data->getImageSize(), mapping);
+    auto const x_media = static_cast<float>(scene_pos.x()) / factors.x;
+    auto const y_media = static_cast<float>(scene_pos.y()) / factors.y;
 
     for (size_t i = 0; i < masks.size(); ++i) {
         auto const & mask = masks[i];

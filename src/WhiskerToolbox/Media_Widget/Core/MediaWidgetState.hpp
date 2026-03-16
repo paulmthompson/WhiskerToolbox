@@ -77,6 +77,7 @@
 #include "MediaWidgetStateData.hpp"
 #include "DisplayOptionsRegistry.hpp"
 
+#include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <rfl.hpp>
@@ -292,6 +293,43 @@ public:
      */
     void setViewport(ViewportState const & viewport);
 
+    // === Canvas Coordinate System ===
+
+    /**
+     * @brief Get the current canvas coordinate system
+     * 
+     * This is the resolved coordinate system (after applying the priority chain).
+     * Set by Media_Window during UpdateCanvas via resolveCanvasCoordinateSystem().
+     * 
+     * @return The current CanvasCoordinateSystem
+     */
+    [[nodiscard]] CanvasCoordinateSystem const & canvasCoordinateSystem() const { return _canvas_coord_system; }
+
+    /**
+     * @brief Set the resolved canvas coordinate system (called by Media_Window)
+     * @param coord_system The resolved coordinate system
+     */
+    void setCanvasCoordinateSystem(CanvasCoordinateSystem const & coord_system);
+
+    /**
+     * @brief Check if the user has manually overridden the coordinate system
+     */
+    [[nodiscard]] bool isCanvasCoordOverrideActive() const { return _data.canvas_coord_override_active; }
+
+    /**
+     * @brief Set a manual canvas coordinate system override
+     * @param width Logical width
+     * @param height Logical height
+     */
+    void setCanvasCoordOverride(int width, int height);
+
+    /**
+     * @brief Clear the manual canvas coordinate system override
+     * 
+     * The coordinate system will be auto-determined from media/data objects.
+     */
+    void clearCanvasCoordOverride();
+
     // === Feature Management ===
 
     /**
@@ -478,6 +516,12 @@ signals:
      */
     void viewportChanged();
 
+    /**
+     * @brief Emitted when the canvas coordinate system changes
+     * @param coord_system The new coordinate system
+     */
+    void canvasCoordinateSystemChanged(CanvasCoordinateSystem const & coord_system);
+
     // === Feature Signals ===
 
     /**
@@ -560,6 +604,9 @@ public:
 private:
     MediaWidgetStateData _data;
     DisplayOptionsRegistry _display_options{&_data, this};
+
+    /// Resolved canvas coordinate system (not serialized — recomputed at runtime)
+    CanvasCoordinateSystem _canvas_coord_system;
 
     /// Transient canvas image (not serialized) - updated by Media_Window
     QImage _canvas_image;

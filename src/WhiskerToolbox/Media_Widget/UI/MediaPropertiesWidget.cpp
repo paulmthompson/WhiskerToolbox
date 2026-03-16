@@ -1,6 +1,7 @@
 #include "MediaPropertiesWidget.hpp"
 #include "ui_MediaPropertiesWidget.h"
 
+#include "CanvasCoord_Widget.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/UI/SubWidgets/MediaInterval_Widget/MediaInterval_Widget.hpp"
 #include "Media_Widget/UI/SubWidgets/MediaLine_Widget/MediaLine_Widget.hpp"
@@ -31,6 +32,7 @@ MediaPropertiesWidget::MediaPropertiesWidget(std::shared_ptr<MediaWidgetState> s
     ui->setupUi(this);
 
     _setupTextOverlays();
+    _setupCanvasCoordSection();
     _setupFeatureTable();
     _createStackedWidgets();
     _connectTextWidgetToScene();
@@ -83,6 +85,21 @@ void MediaPropertiesWidget::_setupTextOverlays() {
     // Insert text section at the beginning of the content layout
     // (before the feature table widget)
     ui->contentLayout->insertWidget(0, _text_section);
+}
+
+void MediaPropertiesWidget::_setupCanvasCoordSection() {
+    _canvas_coord_section = new Section(this, "Canvas Coordinates");
+    _canvas_coord_widget = new CanvasCoord_Widget(this);
+    _canvas_coord_section->setContentLayout(*new QVBoxLayout());
+    _canvas_coord_section->layout()->addWidget(_canvas_coord_widget);
+    _canvas_coord_section->autoSetContentLayout();
+
+    if (_state) {
+        _canvas_coord_widget->setState(_state.get());
+    }
+
+    // Insert after text overlays section (index 1)
+    ui->contentLayout->insertWidget(1, _canvas_coord_section);
 }
 
 void MediaPropertiesWidget::_connectTextWidgetToScene() {

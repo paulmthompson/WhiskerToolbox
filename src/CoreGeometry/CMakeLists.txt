@@ -4,6 +4,7 @@
 set(NEURALYZER_GEOMETRY_INCLUDES
     include/CoreGeometry/angle.hpp
     include/CoreGeometry/boundingbox.hpp
+    include/CoreGeometry/CanvasCoordinateSystem.hpp
     include/CoreGeometry/geometry.hpp
     include/CoreGeometry/Image.hpp
     include/CoreGeometry/ImageSize.hpp

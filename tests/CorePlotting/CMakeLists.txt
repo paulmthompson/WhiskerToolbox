@@ -39,6 +39,7 @@ add_executable(test_coreplotting
     Colormap.test.cpp
     HeatmapMapper.test.cpp
     PolygonSelection.test.cpp
+    CanvasCoordinateSystem.test.cpp
     # LineBatch
     LineBatch/LineBatchData.test.cpp
     LineBatch/CpuLineBatchIntersector.test.cpp

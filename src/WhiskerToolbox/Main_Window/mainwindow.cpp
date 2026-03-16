@@ -30,10 +30,10 @@
 
 // Module registration headers - each module defines its own factory functions
 #include "BatchProcessing_Widget/BatchProcessingWidgetRegistration.hpp"
+#include "CommandLog_Widget/CommandLogWidgetRegistration.hpp"
 #include "DataImport_Widget/DataImportWidgetRegistration.hpp"
 #include "DataInspector_Widget/DataInspectorWidgetRegistration.hpp"
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
-#include "CommandLog_Widget/CommandLogWidgetRegistration.hpp"
 #include "DataSynthesizer_Widget/DataSynthesizerWidgetRegistration.hpp"
 #include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
 #include "DataViewer_Widget/DataViewerWidgetRegistration.hpp"
@@ -603,15 +603,6 @@ void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
 void MainWindow::loadData() {
 
     _updateFrameCount();
-
-    // Update media for all MediaWidget instances via dock manager
-    // Each widget will refresh its view when time changes (via EditorRegistry::timeChanged)
-    // but we also need to call updateMedia() to initialize the graphics view
-    for (auto * dock: _m_DockManager->dockWidgetsMap()) {
-        if (auto * media_widget = dynamic_cast<Media_Widget *>(dock->widget())) {
-            media_widget->updateMedia();
-        }
-    }
 }
 
 void MainWindow::_updateFrameCount() {

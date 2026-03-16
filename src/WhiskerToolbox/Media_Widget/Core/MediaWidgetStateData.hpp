@@ -47,6 +47,8 @@
 
 #include "DisplayOptions/DisplayOptions.hpp"
 
+#include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
+
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
@@ -219,6 +221,15 @@ struct MediaWidgetStateData {
     
     // === Viewport (nested object in JSON) ===
     ViewportState viewport;                         ///< Zoom, pan, and canvas state
+    
+    // === Canvas Coordinate System Override ===
+    /// When true, the user has manually set the canvas coordinate system.
+    /// The priority chain will not auto-update it from media or data objects.
+    bool canvas_coord_override_active{false};
+    /// User-specified logical width (only used when canvas_coord_override_active is true)
+    int canvas_coord_override_width{640};
+    /// User-specified logical height (only used when canvas_coord_override_active is true)
+    int canvas_coord_override_height{480};
     
     // === Per-Feature Display Options ===
     // Each key is a data key (e.g., "whisker_1"), value is the display options.

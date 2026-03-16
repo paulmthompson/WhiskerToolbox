@@ -35,6 +35,7 @@
  * @see MediaWidgetStateData for full widget state serialization
  */
 
+#include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
 #include "CorePlotting/DataTypes/GlyphStyleData.hpp"
 #include "CoreUtilities/color.hpp"
 #include "ImageProcessing/ProcessingOptions.hpp"
@@ -171,6 +172,7 @@ struct PointDisplayOptions {
 
     int point_size{DefaultDisplayValues::POINT_SIZE};                              ///< Size of point markers in pixels
     CorePlotting::GlyphType marker_shape{DefaultDisplayValues::POINT_MARKER_SHAPE};///< Shape of point markers
+    CoordinateMappingMode coordinate_mapping{CoordinateMappingMode::ScaleToCanvas};///< How data coordinates map to canvas
 
     // === Convenience accessors for common fields ===
     [[nodiscard]] std::string & hex_color() { return common.get().hex_color; }
@@ -190,6 +192,7 @@ struct LineDisplayOptions {
     int line_thickness{DefaultDisplayValues::LINE_THICKNESS};///< Line width in pixels
     bool show_points{DefaultDisplayValues::SHOW_POINTS};     ///< Show points as open circles along the line
     bool edge_snapping{false};                               ///< Enable edge snapping for new points
+    CoordinateMappingMode coordinate_mapping{CoordinateMappingMode::ScaleToCanvas};///< How data coordinates map to canvas
     bool show_position_marker{false};                        ///< Show position marker at percentage distance
     int position_percentage{20};                             ///< Percentage distance along line (0-100%)
     bool show_segment{false};                                ///< Show only a segment of the line
@@ -215,6 +218,7 @@ struct MaskDisplayOptions {
     bool show_bounding_box{false};  ///< Show bounding box around the mask
     bool show_outline{false};       ///< Show outline of the mask as a thick line
     bool use_as_transparency{false};///< Use mask as transparency layer (invert display)
+    CoordinateMappingMode coordinate_mapping{CoordinateMappingMode::ScaleToCanvas};///< How data coordinates map to canvas
 
     // === Convenience accessors for common fields ===
     [[nodiscard]] std::string & hex_color() { return common.get().hex_color; }
