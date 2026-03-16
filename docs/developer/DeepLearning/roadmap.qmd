@@ -28,157 +28,6 @@ These require Python model export as a prerequisite.
 - [ ] **End-to-end UI test** — Select a model in the widget, configure bindings, execute 
   inference, verify results appear in DataManager
 
-### Input Pipeline Architecture
-
-The input system supports three distinct input modes: **Dynamic**, **Static**, and 
-**Recurrent**. Each mode has different batch-size implications, different assembly 
-semantics in `SlotAssembler`, and different UI requirements. This section tracks the 
-staged implementation plan.
-
-#### Phase 1: Dynamic Input Time Offsets
-
-Dynamic inputs (`SlotBindingData`) currently read at `current_frame + batch_index`. 
-Adding a `time_offset` field lets users specify temporal offsets (e.g., "read one frame 
-behind") without the static input machinery.
-
-- [x] **Add `time_offset` to `SlotBindingData`** — New `int time_offset = 0` field. During 
-  assembly, each frame encodes at `current_frame + batch_index + time_offset`
-- [x] **Update `SlotAssembler::assembleInputs()`** — Apply `time_offset` in the dynamic 
-  input encoding loop
-- [x] **UI: time offset spinbox** — Add a spinbox for each dynamic input slot in the 
-  Properties widget
-- [x] **Tests** — Verify that negative offsets clamp to frame 0, positive offsets 
-  clamp to max frame
-
-#### Phase 2: Static Input Capture & Preview
-
-`StaticInputData` currently re-encodes at `current_frame + time_offset` every invocation. 
-True "capture once, reuse forever" requires caching the encoded tensor.
-
-- [x] **Absolute vs relative capture mode** — Add a `capture_mode` field to 
-  `StaticInputData`: `Relative` (current behavior, re-encodes each run at 
-  `current_frame + time_offset`) vs `Absolute` (encode once at a fixed frame, cache 
-  the tensor)
-- [x] **Tensor cache in SlotAssembler** — Store captured tensors in 
-  `map<string, Tensor> _static_cache` keyed by `slot_name + memory_index`. Skip 
-  re-encoding when a cached tensor exists for an `Absolute`-mode entry
-- [x] **"Capture Current Frame" button** — Widget action: encodes the current frame's data 
-  for a static slot and stores it in the cache. User navigates to the desired frame, 
-  clicks capture, and the tensor is frozen
-- [x] **Static tensor preview in ViewWidget** — Render color-mapped thumbnails of cached 
-  static tensors so the user can verify what the model will see as its memory input
-- [x] **Batch dimension expansion** — For `Absolute`-mode static inputs, `.expand()` the 
-  cached tensor along the batch dimension so batch_size can be > 1
-- [x] **Cache invalidation** — Clear cached tensors when the user changes `data_key`, 
-  re-captures, or switches models
-
-#### Phase 3: Multi-Frame Sequence Inputs
-
-Support stacking multiple captured frames along a slot's `sequence_dim` axis. This 
-enables architectures like NeuroSAM that consume N memory frames (e.g., 4 reference 
-images along a sequence dimension).
-
-- [x] **Sequence packing** — When `TensorSlotDescriptor::sequence_dim >= 0`, assemble 
-  multiple `StaticInputData` entries along that axis using `memory_index` to place 
-  each capture at the correct position
-- [x] **UI: sequence entry manager** — Add/remove/reorder buttons for sequence slots in 
-  the Properties widget. Each entry shows its `memory_index`, source `data_key`, and 
-  captured frame number
-- [x] **Variable-length sequences** — Handle cases where the user captures fewer frames 
-  than the sequence dimension size (zero-pad unused positions) and surface a warning
-- [x] **Boolean mask alignment** — Ensure `is_boolean_mask` slots with `sequence_dim` 
-  correctly set active/inactive flags for each sequence position
-
-#### Phase 4: Recurrent (Feedback) Inputs
-
-Map a model output slot back to an input slot for sequential frame-by-frame processing. 
-The prediction at frame t becomes an input at frame t+1.
-
-- [x] **`RecurrentBindingData` struct** — New binding type with fields: `input_slot_name`, 
-  `output_slot_name`, `init_mode` (`"zeros"` | `"static_capture"` | `"first_output"`), 
-  optional `init_data_key` and `init_frame` for the `static_capture` init mode
-- [x] **Sequential inference loop** — When recurrent bindings exist, `SlotAssembler` runs 
-  a sequential loop: for each frame, assemble inputs (injecting the previous output 
-  tensor into the recurrent input slot), call `forward()`, decode, carry the output 
-  tensor forward
-- [x] **t=0 initialization** — Implement the three init strategies:
-    - `zeros`: start with an all-zeros tensor matching the input slot shape
-    - `static_capture`: use a user-provided captured tensor (e.g., ground-truth mask at 
-      a reference frame)
-    - `first_output`: run the model once with zeros, discard the decoded result, use the 
-      raw output tensor as the initial state for the real sequence
-- [x] **Auto-constrain batch_size = 1** — When any `RecurrentBindingData` is present, 
-  force `batch_size = 1` in the widget and disable the batch size spinbox. Display 
-  an explanatory tooltip
-- [x] **UI: recurrent binding panel** — Combo boxes to map an output slot to an input 
-  slot, plus init mode selector and optional capture controls for `static_capture`
-- [x] **Progress reporting** — Show per-frame progress bar during sequential recurrent 
-  inference (frame N of M)
-
-#### Phase 5: Hybrid Sequence Inputs (Static + Recurrent)
-
-A single sequence slot (e.g., `memory_images` with shape `[5, 3, 256, 256]` and 
-`sequence_dim=0`) may need mixed sourcing: some positions filled from static captures 
-and others fed recurrently from the model's previous output. Example: 4 user-selected 
-reference frames at positions 0–3 and the model's own prediction at position 4.
-
-- [x] **Per-position source tagging** — Extend the binding model so each position along 
-  `sequence_dim` independently declares its source. `StaticInputData` entries already 
-  target a `memory_index`; add an optional `target_memory_index` to 
-  `RecurrentBindingData` so it can inject into a specific sequence position rather than 
-  replacing the entire slot tensor
-- [x] **Hybrid tensor assembly** — Update `SlotAssembler` to compose a single sequence 
-  tensor from mixed sources in one pass:
-    1. Start with the full `[batch, seq, ...]` tensor (zeros)
-    2. Fill static positions from the tensor cache (Phase 2/3)
-    3. Fill recurrent position(s) from the carried-forward output tensor (Phase 4)
-    4. Validate: error if any position is claimed by both a static entry and a recurrent 
-       binding, or if a position has no source at all (warn on zero-filled gaps)
-- [x] **t=0 init for recurrent positions only** — In hybrid mode, the init strategy 
-  (`zeros`, `static_capture`, `first_output`) applies only to the recurrent position(s). 
-  Static positions are always populated regardless of frame index
-- [x] **Batch constraint propagation** — Hybrid slots with any recurrent position force 
-  batch=1 (same as Phase 4). If all recurrent positions are removed, batch constraint 
-  relaxes back to the static/dynamic default
-- [x] **UI: unified sequence editor** — Each row in the sequence entry manager (Phase 3) 
-  gains a source-type selector: **Static** (capture controls) or **Recurrent** (output 
-  slot + init mode). The panel visually distinguishes the two types (e.g., static rows 
-  show the captured frame thumbnail, recurrent rows show the output mapping)
-- [x] **Validation & diagnostics** — At assembly time, warn if the recurrent output 
-  tensor shape doesn't match the target sequence position slice. Surface mismatches in 
-  the Properties widget status area
-
-#### Phase 6: Batch Size & AOT Inductor Compatibility
-
-Different input modes impose different batch-size constraints. This phase ensures the 
-model compilation story and multi-mode switching are clean.
-
-- [x] **Model batch mode metadata** — Extend `ModelBase` (or `TensorSlotDescriptor`) with 
-  a `BatchMode` concept: `Fixed(N)`, `Dynamic(min, max)`, or `RecurrentOnly` (fixed 1). 
-  Models report which modes they support
-- [x] **Multi-variant model loading** — Support loading separate `.pt2` files for 
-  different batch configurations (e.g., `neurosam_recurrent.pt2` compiled with batch=1, 
-  `neurosam_batched.pt2` compiled with batch=8 or dynamic batch). The widget 
-  auto-selects the variant based on active bindings
-- [x] **Dynamic-shape AOT export documentation** — Document the `torch.export` workflow 
-  with `dynamic_shapes={...: {0: Dim("batch")}}` for users who want a single `.pt2` 
-  supporting variable batch sizes
-- [x] **Widget batch-size logic** — Auto-detect constraints: recurrent bindings → batch=1; 
-  all-static or all-dynamic → clamp to `model.maxBatchSize()`; mixed → use the most 
-  restrictive constraint. Surface the reasoning in the UI
-
-### Batch Inference
-
-The widget currently supports single-frame inference. Batch processing over multiple frames 
-is partially implemented.
-
-- [x] **Implement "Run Batch" action** — Loop over frames in a user-specified range 
-  [start_frame, end_frame], encode each, call `forward()`, decode each output back into 
-  the DataManager. The user selects the range via a dialog with start/end frame spinboxes.
-- [x] **Progress reporting** — Show a progress bar in the View widget during batch processing
-- [ ] **TimeFrame integration** — Ensure batch inference correctly resolves time offsets for 
-  memory/static inputs relative to each frame being processed
-
 ### Tensor Preview Visualization
 
 The View widget has placeholder areas for tensor channel previews.
@@ -212,10 +61,146 @@ The View widget has placeholder areas for tensor channel previews.
 - [ ] **`TensorToAnalogTimeSeries`** decoder — For models that output scalar time series 
   rather than spatial maps
 
+### General Encoder Model Wrapper
+
+NeuroSAM is a task-specific wrapper with hard-coded 256×256 resolution and a three-input 
+forward pass. Many use cases only need a standalone encoder (e.g. a ViT, ResNet, or 
+similar backbone) that maps an input image to a feature tensor. This section covers 
+providing a reusable `GeneralEncoder` wrapper.
+
+#### Design Notes — Compile-Time vs. Runtime Shapes
+
+Input and output resolution **do not need to be known at compile time.** The existing 
+architecture already separates shape declarations (which are metadata for the UI and 
+pre-allocation) from actual tensor operations:
+
+- **TorchScript** (`.pt`) accepts arbitrary dynamic shapes natively.
+- **AOT Inductor** (`.pt2`) supports dynamic shapes via `torch.export.Dim()` at export 
+  time — dimensions marked as dynamic can vary at runtime within declared bounds.
+- **`RuntimeModel`** already reads shapes from a JSON spec at runtime, so a 
+  `GeneralEncoder` can also be fully JSON-driven using `RuntimeModelSpec` rather than 
+  requiring a new compiled `ModelBase` subclass.
+
+Therefore the recommended approach is:
+
+1. **For most users:** Define the encoder via a `RuntimeModelSpec` JSON file specifying 
+   input shape (e.g. `[3, 224, 224]`) and output shape (e.g. `[384, 16, 16]`). No C++ 
+   changes needed.
+2. **For convenience:** Provide a thin `GeneralEncoderModel` C++ wrapper with 
+   configurable resolution (constructor parameters or setters) that registers in the 
+   `ModelRegistry` and offers sensible defaults.
+
+#### Tasks
+
+- [ ] **`GeneralEncoderModel` C++ wrapper** — A `ModelBase` subclass with configurable 
+  input resolution, input channels, and output feature shape. Single input slot 
+  (`"image"`) and single output slot (`"features"`). Batch mode: `DynamicBatch{1, max}`. 
+  Register via `DL_REGISTER_MODEL`.
+- [ ] **Example `RuntimeModelSpec` JSON for encoder** — A documented JSON template for 
+  a generic encoder (e.g. ViT-Small producing `[384, 16, 16]` from `[3, 224, 224]`). 
+  Commit to `examples/`.
+- [ ] **Export script for generic encoders** — Python script that takes a 
+  `torchvision`/`timm` encoder, wraps it, and exports as `.pt` and `.pt2` with dynamic 
+  batch support. Commit to `examples/` or `scripts/`.
+- [ ] **Unit tests** — Verify `GeneralEncoderModel` slot metadata, construction with 
+  various resolutions, and forward pass with a trivial identity `.pt` model.
+- [ ] **Documentation** — Add a user-guide article and a developer doc entry for the 
+  general encoder workflow.
+
+### Post-Encoder Feature Extraction Modules
+
+After an encoder produces a spatial feature tensor (e.g. `[B, C, H, W]` such as 
+`[1, 384, 16, 16]`), downstream tasks often need a reduced feature vector rather than 
+the full spatial map. This section covers composable post-processing modules that run 
+after the encoder forward pass, using libtorch operations directly (no additional model 
+weights required).
+
+These modules operate on the output tensor before it reaches the decoder stage. They 
+transform a `[B, C, H, W]` feature map into a `[B, C]` (or `[B, C, 1, 1]`) feature 
+vector suitable for downstream use such as writing to `TensorData` or feeding into a 
+classification head.
+
+#### Architecture — `PostEncoderModule` Interface
+
+```cpp
+class PostEncoderModule {
+public:
+    virtual ~PostEncoderModule() = default;
+    virtual std::string name() const = 0;
+    virtual torch::Tensor apply(torch::Tensor const & features) = 0;
+};
+```
+
+Modules are pure libtorch operations — no model weights, no DataManager dependency. 
+They compose into a pipeline via a `PostEncoderPipeline` that chains modules 
+sequentially. The pipeline is configured per-model (either in code or via JSON spec).
+
+#### Module: Global Average Pooling
+
+Reduces `[B, C, H, W]` → `[B, C]` by averaging over spatial dimensions. This is the 
+standard approach for converting a spatial feature map into a global feature descriptor 
+(e.g. for classification or retrieval).
+
+Implementation: `torch::adaptive_avg_pool2d(features, {1, 1}).squeeze(-1).squeeze(-1)`.
+
+- [ ] **`GlobalAvgPoolModule`** — Implement `PostEncoderModule` subclass using 
+  `torch::adaptive_avg_pool2d`. Input: `[B, C, H, W]`. Output: `[B, C]`.
+- [ ] **Unit test** — Verify output shape and values (average of spatial elements) for 
+  known input tensors.
+
+#### Module: Spatial Point Feature Extraction
+
+Given a 2D position from a `PointData` object (in original image coordinates), extract 
+the feature vector at the nearest spatial location in the feature map. This is useful for 
+probing "what does the encoder think at this location?" — e.g. extracting the feature 
+vector at a whisker tip or a labeled landmark.
+
+The module takes the feature tensor `[B, C, H, W]` and a `Point2D<float>` in source 
+image coordinates, scales the point to feature map coordinates 
+(`x_feat = x_src * W / src_W`, `y_feat = y_src * H / src_H`), rounds to the nearest 
+integer index, and extracts `features[:, :, y_feat, x_feat]` → `[B, C]`.
+
+- [ ] **`SpatialPointExtractModule`** — Implement `PostEncoderModule` subclass. 
+  Constructor takes `ImageSize source_image_size` for coordinate scaling. Provide a 
+  `setPoint(Point2D<float>)` method to update the query location per frame. 
+  Input: `[B, C, H, W]`. Output: `[B, C]`.
+- [ ] **Bilinear interpolation variant** — Instead of nearest-neighbor, use 
+  `torch::nn::functional::grid_sample` for sub-pixel accuracy. Expose as a constructor 
+  option (`InterpolationMode::Nearest` vs `InterpolationMode::Bilinear`).
+- [ ] **Integration with `SlotAssembler`** — Wire the point source so that 
+  `SlotAssembler` reads the current `PointData` value from DataManager each frame and 
+  passes it to the module before `apply()`.
+- [ ] **Unit tests** — Verify coordinate scaling and extraction for known feature maps 
+  and point positions. Test edge cases (point at image boundary, feature map 1×1).
+
+#### Pipeline and Configuration
+
+- [ ] **`PostEncoderPipeline`** — A container that holds an ordered list of 
+  `PostEncoderModule` instances, chains `apply()` calls sequentially, and validates 
+  shape compatibility between steps.
+- [ ] **JSON configuration** — Extend `RuntimeModelSpec` with an optional 
+  `"post_encoder"` array field. Each entry specifies a module by name and parameters 
+  (e.g. `{"module": "global_avg_pool"}` or 
+  `{"module": "spatial_point", "interpolation": "bilinear"}`).
+- [ ] **Factory registration** — Register modules in a `PostEncoderModuleFactory` 
+  (string key → factory function) so JSON specs can instantiate them by name.
+- [ ] **Widget UI integration** — Add a "Post-Processing" section to the Deep Learning 
+  Properties widget. Allow users to add/remove/reorder post-encoder modules and 
+  configure their parameters. For `SpatialPointExtractModule`, provide a DataManager 
+  key selector for the point source.
+- [ ] **`TensorToFeatureVector` decoder** — A new decoder that writes a `[B, C]` 
+  output (after post-encoder processing) to a `TensorData` object in DataManager, 
+  storing one feature vector per frame.
+
+#### Documentation
+
+- [ ] **Developer doc** — Architecture overview for `PostEncoderModule`, the pipeline, 
+  and the factory. Place at `docs/developer/DeepLearning/post_encoder_modules.qmd`.
+- [ ] **User guide** — Practical walkthrough: load an encoder, add global average 
+  pooling, extract per-frame features, visualize in DataViewer.
+
 ### Performance
 
-- [ ] **Async inference** — Add `forwardAsync()` returning `std::future` to `ModelBase` for 
-  non-blocking inference during batch processing
 - [ ] **GPU memory management** — Track and display GPU memory usage in the widget; warn 
   when approaching limits
 - [ ] **Benchmark suite** — Benchmark encode/decode throughput and end-to-end inference 

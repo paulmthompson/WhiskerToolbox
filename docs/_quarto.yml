@@ -173,6 +173,8 @@ website:
           contents:
             - text: "Keypoint Labeling"
               href: examples/keypoint_labeling.qmd
+            - text: "HMM Behavioral Epoch Prediction"
+              href: learning-resources/how-to/hmm_behavioral_epochs.qmd
         - section: "Concepts"
           contents: 
             - concepts/timeframe.qmd
@@ -192,6 +194,8 @@ website:
               href: learning-resources/how-to/triage_line_data.qmd
             - text: "Label Video Intervals"
               href: learning-resources/how-to/label_video_intervals.qmd
+            - text: "Export an AOTI Encoder Model"
+              href: learning-resources/how-to/exporting_aoti_encoder.qmd
 
     - title: "User Guide"
       style: "docked"
