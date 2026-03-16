@@ -361,6 +361,80 @@ count due to clipping — only the portion within the image is stored.
 
 ---
 
+## MovingLine Generator
+
+**Location**: `src/DataSynthesizer/Generators/Line/MovingLineGenerator.cpp`
+**Registration name**: `"MovingLine"` · **Category**: Spatial · **Output**: `LineData`
+
+Produces a `LineData` where each frame contains a line segment whose centroid
+follows a trajectory computed by `computeTrajectory()`. The line shape is
+defined once by start/end points, decomposed into offsets from the centroid,
+then rigidly translated at each frame. No clipping is applied — vertices are
+float-valued and may extend beyond any nominal bounds.
+
+### Parameters
+
+| Parameter | Type | Default | Notes |
+|-----------|------|---------|-------|
+| `start_x` | `float` | 0.0 | Line definition start X |
+| `start_y` | `float` | 0.0 | Line definition start Y |
+| `end_x` | `float` | 100.0 | Line definition end X |
+| `end_y` | `float` | 100.0 | Line definition end Y |
+| `num_points_per_line` | `int` | 50 | Number of sample points on the line |
+| `num_frames` | `int` | 100 | Number of frames |
+| `trajectory_start_x` | `float` | 100.0 | Starting X for trajectory centroid |
+| `trajectory_start_y` | `float` | 100.0 | Starting Y for trajectory centroid |
+| `motion` | `MotionModelVariant` | `LinearMotionParams{}` | Motion model |
+| `boundary_mode` | `BoundaryMode` | `clamp` | Boundary enforcement for centroid |
+| `bounds_*` | `float` | varies | Boundary box limits for centroid |
+
+### How It Works
+
+1. The line shape is defined by `(start_x, start_y)` to `(end_x, end_y)` with
+   `num_points_per_line` evenly spaced sample points.
+2. The centroid of the line definition is computed:
+   `centroid = ((start_x + end_x) / 2, (start_y + end_y) / 2)`.
+3. Each vertex is stored as an offset from this centroid.
+4. The trajectory is computed starting from
+   `(trajectory_start_x, trajectory_start_y)`.
+5. At each frame, all vertex offsets are added to the trajectory position to
+   produce the translated line.
+
+### No Clipping
+
+Unlike `MovingMask`, no pixel clipping is performed. Line vertices are
+float-valued and the renderer handles visibility. This means vertices may
+extend beyond the trajectory bounds — only the centroid is constrained by
+boundary enforcement.
+
+### JSON Format
+
+Linear motion:
+```json
+{
+    "start_x": -50, "start_y": 0, "end_x": 50, "end_y": 0,
+    "num_points_per_line": 20, "num_frames": 200,
+    "trajectory_start_x": 100, "trajectory_start_y": 100,
+    "motion": {"model": "LinearMotionParams", "velocity_x": 2, "velocity_y": 1},
+    "bounds_max_x": 640, "bounds_max_y": 480
+}
+```
+
+Brownian motion:
+```json
+{
+    "start_x": -30, "start_y": -10, "end_x": 30, "end_y": 10,
+    "num_points_per_line": 15, "num_frames": 500,
+    "trajectory_start_x": 320, "trajectory_start_y": 240,
+    "motion": {"model": "BrownianMotionParams", "diffusion": 3, "seed": 42},
+    "boundary_mode": "bounce",
+    "bounds_min_x": 50, "bounds_max_x": 590,
+    "bounds_min_y": 50, "bounds_max_y": 430
+}
+```
+
+---
+
 ## GUI Behavior
 
 In the DataSynthesizer widget, selecting `MovingPoint` as the generator shows:
@@ -391,10 +465,9 @@ solves this by:
 ### Reuse in Future Generators
 
 `MotionModelVariant` and `BoundaryParams` are defined once in
-`MotionParams.hpp` and reused by all moving generators. `MovingMask` uses
-the same types as `MovingPoint`, getting combo-box-driven sub-forms
-automatically. The planned `MovingLine` generator (Milestone 5b-ii) will
-also reuse these types.
+`MotionParams.hpp` and reused by all moving generators. `MovingMask` and
+`MovingLine` use the same types as `MovingPoint`, getting combo-box-driven
+sub-forms automatically.
 
 ### DefaultIfMissing Processor
 

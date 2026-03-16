@@ -24,6 +24,7 @@ add_library(DataSynthesizer STATIC
     Generators/Point/RandomPointsGenerator.cpp
     Generators/Point/MovingPointGenerator.cpp
     Generators/Line/StraightLineGenerator.cpp
+    Generators/Line/MovingLineGenerator.cpp
     Trajectory/Trajectory.hpp
     Trajectory/Trajectory.cpp
     Trajectory/MotionParams.hpp

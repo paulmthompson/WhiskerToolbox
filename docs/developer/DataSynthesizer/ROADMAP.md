@@ -11,7 +11,7 @@
 | **5a** — Static Shape Generators | ✅ Complete | 2026-03-14 |
 | **5b-i** — Trajectory Library + MovingPoint | ✅ Complete | 2026-03-14 |
 | **5b-ia** — Enum & Variant Params for Motion Generators | ✅ Complete | 2026-03-14 |
-| **5b-ii** — MovingMask + MovingLine Generators | � In progress | — |
+| **5b-ii** — MovingMask + MovingLine Generators | ✅ Complete | 2026-03-16 |
 | **5b-iii** — Time-Varying Shape (Area-Driven Mask) | 🔲 Not started | — |
 | **6** — Multi-Signal Generation & Correlation | 🔲 Not started | — |
 | **7** — Pipeline & Fuzz Testing Integration | 🔲 Not started | — |
@@ -150,21 +150,18 @@ The trajectory → shape → populate pipeline design is documented in `Generato
    - Tests: `MovingMaskGenerator.test.cpp` — shape types, area preservation,
      clipping, boundary modes, Brownian determinism, schema validation.
 
-2. 🔲 **`MovingLine` generator** (`src/DataSynthesizer/Generators/Line/MovingLineGenerator.cpp`):
+2. ✅ **`MovingLine` generator** (`src/DataSynthesizer/Generators/Line/MovingLineGenerator.cpp`):
    - Parameters: `start_x`, `start_y`, `end_x`, `end_y`, `num_points_per_line`, `num_frames`,
-     plus `MotionModelVariant` and `BoundaryParams` from `MotionParams.hpp`.
+     `trajectory_start_x`, `trajectory_start_y`, plus `MotionModelVariant` and `BoundaryMode`
+     from `MotionParams.hpp`.
    - Line shape defined once as offsets from centroid. At each frame, all vertices translated
-     by trajectory offset. No clipping.
-
-3. **Tests**:
-   - `MovingMaskGenerator.test.cpp`: each shape type moves correctly, pixel count preserved
-     when interior, decreases near edges (clipping), area matches static generator when
-     fully interior, deterministic Brownian.
-   - `MovingLineGenerator.test.cpp`: centroid follows trajectory, relative vertex distances
-     constant across frames, vertices may extend beyond bounds.
+     by trajectory offset. No clipping — vertices are float-valued.
+   - Tests: `MovingLineGenerator.test.cpp` — centroid follows trajectory, relative vertex
+     distances constant across frames, vertices may extend beyond bounds, boundary modes,
+     Brownian determinism, schema validation, parameter rejection.
 
 **Exit criteria**: Both generators registered. Mask clipping works at all edges. Line
-translates rigidly. Tests pass.
+translates rigidly. Tests pass. ✅
 
 ---
 
