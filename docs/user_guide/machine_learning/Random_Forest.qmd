@@ -3,3 +3,33 @@ title: "Random Forest Classifier"
 format: html
 ---
 
+## Overview
+
+Random Forest is an ensemble classifier that builds many decision trees during training and outputs the most common class prediction across all trees. It is a good general-purpose classifier that handles many features well and is resistant to overfitting.
+
+## Parameters
+
+| Parameter | Default | Description |
+|---|---|---|
+| Number of Trees | 10 | More trees = better accuracy but slower training |
+| Minimum Leaf Size | 1 | Minimum samples required in a leaf node. Larger values prevent overfitting. |
+| Maximum Depth | 0 (unlimited) | Limits tree depth. Set to prevent overfitting on noisy data. |
+| Minimum Gain Split | 1e-7 | Minimum information gain required to split a node |
+
+## When to Use
+
+- You have many features and are unsure which are important
+- You want a reliable baseline classifier
+- You need probability estimates (vote fractions across trees)
+- Your data may have non-linear decision boundaries
+
+## Probability Output
+
+Random Forest provides probability estimates based on the fraction of trees voting for each class. For example, if 73 out of 100 trees predict "Contact", the probability output for that frame is 0.73.
+
+## Tips
+
+- Start with the default parameters and increase `num_trees` if accuracy is insufficient
+- If the model overfits (high training accuracy, low prediction accuracy), increase `minimum_leaf_size` or set a `maximum_depth`
+- Training time scales linearly with `num_trees`
+

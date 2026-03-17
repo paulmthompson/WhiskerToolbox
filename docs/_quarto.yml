@@ -86,6 +86,15 @@ website:
               contents:
                 - developer/DataSynthesizer/GeneratorRegistry.qmd
                 - developer/DataSynthesizer/Widget.qmd
+            - section: "MLCore"
+              href: developer/MLCore/index.qmd
+              contents:
+                - developer/MLCore/models.qmd
+                - developer/MLCore/features.qmd
+                - developer/MLCore/label_assembly.qmd
+                - developer/MLCore/pipelines.qmd
+                - developer/MLCore/output.qmd
+                - developer/MLCore/widget.qmd
             - developer/MediaProcessingPipeline/index.qmd
                 - section: "Generators"
                   contents:
@@ -298,8 +307,16 @@ website:
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd
-            - user_guide/machine_learning/Naive_Bayes.qmd
-            - user_guide/machine_learning/Random_Forest.qmd
+            - text: "Classification"
+              contents:
+                - user_guide/machine_learning/Random_Forest.qmd
+                - user_guide/machine_learning/Naive_Bayes.qmd
+                - user_guide/machine_learning/Logistic_Regression.qmd
+            - text: "Clustering"
+              contents:
+                - user_guide/machine_learning/KMeans.qmd
+                - user_guide/machine_learning/DBSCAN.qmd
+                - user_guide/machine_learning/GMM.qmd
         - section: "Export"
           contents:
             - user_guide/export/video_export.qmd

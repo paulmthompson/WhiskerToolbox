@@ -1,0 +1,86 @@
+---
+title: "Feature Processing"
+description: "Feature validation, conversion, and label assembly"
+---
+
+## Overview
+
+The `features/` module handles the bridge between WhiskerToolbox data types and the armadillo matrices that mlpack algorithms consume. It provides three key components:
+
+1. **FeatureValidator** — checks that a TensorData feature matrix is valid for ML
+2. **FeatureConverter** — converts `TensorData` to `arma::mat` with NaN handling and normalization
+3. **LabelAssembler** — assembles label vectors from various data sources
+
+## Feature Validator
+
+`FeatureValidator` (`features/FeatureValidator.hpp`) validates `TensorData` feature matrices before they enter the ML pipeline.
+
+### Checks Performed
+
+- Tensor is 2D and non-empty
+- Row type is compatible with the selected label source
+- NaN/Inf values are detected and reported
+
+### Label Source Descriptors
+
+The validator accepts a descriptor specifying what kind of labels will be used, to validate compatibility:
+
+| Descriptor | Row Type Required | Use Case |
+|---|---|---|
+| `TimeGroupsDescriptor` | `TimeFrameIndex` | Time entity group labels |
+| `IntervalsDescriptor` | `TimeFrameIndex` | Interval-based binary labels |
+| `EntityGroupsDescriptor` | Any | Data-entity group labels |
+
+```cpp
+auto result = validateFeatures(tensor, TimeGroupsDescriptor{"camera"});
+if (!result.valid) {
+    // result.error_message describes the problem
+}
+```
+
+## Feature Converter
+
+`FeatureConverter` (`features/FeatureConverter.hpp`) transforms `TensorData` into the `arma::mat` format that mlpack algorithms expect.
+
+### Conversion Steps
+
+1. **Float → double**: TensorData uses `float`; mlpack requires `double`
+2. **NaN/Inf dropping**: Rows with NaN or Inf values are removed, with row index tracking
+3. **Z-score normalization** (optional): `(x - mean) / std` per column
+4. **Transpose**: WhiskerToolbox stores `(observations × features)`; mlpack expects `(features × observations)`
+
+### Result Type
+
+```cpp
+struct ConvertedFeatures {
+    arma::mat data;                       // (features × observations)
+    std::vector<std::size_t> valid_row_indices; // maps output columns → original rows
+    std::size_t rows_dropped = 0;         // count of NaN/Inf rows dropped
+};
+```
+
+The `valid_row_indices` vector is critical for mapping predictions back to the original time indices.
+
+### Configuration
+
+```cpp
+struct ConversionConfig {
+    bool drop_nan_rows = true;   // Remove rows with NaN/Inf
+    bool zscore_normalize = false; // Apply z-score normalization
+};
+```
+
+### Usage
+
+```cpp
+ConversionConfig config;
+config.zscore_normalize = true;
+
+auto converted = convertFeatures(tensor, config);
+// converted.data is ready for mlpack
+// converted.valid_row_indices maps output columns back to input rows
+```
+
+## Label Assembler
+
+See [Label Assembly](label_assembly.qmd) for detailed documentation of the three labeling modes.
