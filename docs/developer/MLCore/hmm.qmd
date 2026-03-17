@@ -1,0 +1,161 @@
+---
+title: "Hidden Markov Model (Gaussian)"
+description: "2-state Gaussian HMM for temporal sequence classification via mlpack"
+---
+
+## Overview
+
+`HiddenMarkovModelOperation` wraps `mlpack::HMM<mlpack::GaussianDistribution<>>` to provide
+sequence-aware classification within the MLCore framework. Unlike frame-based classifiers
+(Random Forest, Logistic Regression) that treat each observation independently, the HMM
+exploits **temporal continuity** — the probability of being in state $s_t$ depends on $s_{t-1}$.
+
+**Files:**
+
+- Header: `src/MLCore/models/supervised/HiddenMarkovModelOperation.hpp`
+- Implementation: `src/MLCore/models/supervised/HiddenMarkovModelOperation.cpp`
+- Tests: `tests/MLCore/HiddenMarkovModel.test.cpp`
+
+## Architecture
+
+### Sequence API on MLModelOperation
+
+The base `MLModelOperation` class provides optional virtual methods for sequence-aware models:
+
+| Method | Default Behavior | HMM Override |
+|---|---|---|
+| `trainSequences(featureSeqs, labelSeqs, params)` | Concatenates sequences, calls `train()` | Passes sequences directly to `mlpack::HMM::Train()` |
+| `predictSequences(featureSeqs, predSeqs)` | Concatenates, calls `predict()`, splits back | Viterbi decodes each sequence independently |
+| `isSequenceModel()` | Returns `false` | Returns `true` |
+
+Non-sequence models (Random Forest, etc.) inherit the default concatenation behavior, so existing code is unaffected.
+
+### Pimpl Pattern
+
+The implementation follows the project-standard Pimpl pattern to keep `mlpack.hpp` out of the header:
+
+```cpp
+struct HiddenMarkovModelOperation::Impl {
+    std::unique_ptr<GaussianHMM> model;
+    std::size_t num_states = 0;
+    std::size_t num_features = 0;
+    bool trained = false;
+};
+```
+
+## Training
+
+### Sequence-Based (Preferred)
+
+The `trainSequences()` method receives pre-segmented temporal sequences (typically from `SequenceAssembler`) and calls `mlpack::HMM::Train()` directly:
+
+```cpp
+HiddenMarkovModelOperation hmm;
+HMMParameters params;
+params.num_states = 2;
+
+// featureSeqs: vector of (features × seq_length) matrices
+// labelSeqs: vector of (1 × seq_length) row vectors (state indices)
+hmm.trainSequences(featureSeqs, labelSeqs, &params);
+```
+
+Validation checks:
+
+- Non-empty sequence vectors
+- Feature/label sequence count match
+- Column/label count match within each sequence
+- Consistent feature dimensionality across sequences
+
+### Frame-Based Fallback
+
+The `train()` method wraps the input as a single sequence and delegates to `trainSequences()`:
+
+```cpp
+hmm.train(features, labels, &params);  // Equivalent to single-sequence training
+```
+
+## Prediction
+
+### Viterbi Decoding
+
+`predict()` and `predictSequences()` use mlpack's Viterbi algorithm to find the most
+probable hidden state sequence:
+
+```cpp
+arma::Row<std::size_t> predictions;
+hmm.predict(features, predictions);
+
+// Or per-sequence:
+std::vector<arma::Row<std::size_t>> predSeqs;
+hmm.predictSequences(featureSeqs, predSeqs);
+```
+
+### Forward-Backward Probabilities
+
+`predictProbabilities()` returns per-frame state probabilities via the Forward-Backward algorithm:
+
+```cpp
+arma::mat probs;  // (num_states × observations)
+hmm.predictProbabilities(features, probs);
+// probs(state, time) = P(state at time t | all observations)
+```
+
+Each column sums to 1.0.
+
+## Introspection
+
+### Transition Matrix
+
+```cpp
+arma::mat trans = hmm.getTransitionMatrix();
+// trans(i, j) = P(state j at t+1 | state i at t)
+// Columns sum to 1.0
+```
+
+### Log-Likelihood
+
+```cpp
+double ll = hmm.logLikelihood(features);
+// Returns -infinity if not trained or dimensions mismatch
+```
+
+## Parameters
+
+`HMMParameters` (`models/MLModelParameters.hpp`):
+
+| Parameter | Default | Description |
+|---|---|---|
+| `num_states` | 2 | Number of hidden states (minimum 2) |
+| `tolerance` | 1e-5 | Convergence tolerance for training |
+
+## Serialization
+
+Save/load uses cereal binary archives, matching the pattern of other MLCore models:
+
+```cpp
+std::stringstream ss;
+hmm.save(ss);
+
+HiddenMarkovModelOperation loaded;
+loaded.load(ss);
+```
+
+## Test Coverage
+
+13 test cases with 513 assertions in `tests/MLCore/HiddenMarkovModel.test.cpp`:
+
+| Category | Tests |
+|---|---|
+| Metadata | Name, task type, default parameters, initial state, isSequenceModel |
+| Sequence training | Single sequence, multiple sequences, explicit parameters |
+| Training errors | Empty sequences, count mismatches, dimension mismatches |
+| Frame-based fallback | train() delegation, prediction accuracy |
+| Viterbi decoding | State recovery accuracy, multi-sequence prediction |
+| Prediction errors | Untrained model, empty features, dimension mismatch |
+| Forward-Backward | Output dimensions, probability normalization, state region probabilities |
+| Transition matrix | Dimensions, column normalization, diagonal dominance |
+| Log-likelihood | Finite output, untrained/empty/mismatch edge cases |
+| Multi-dimensional | 2D emission training, prediction accuracy, probability shape |
+| Save/load | Round-trip prediction preservation |
+| Registry | Registration, task type filtering, factory creation |
+| Base class API | Default trainSequences/predictSequences concatenation behavior |

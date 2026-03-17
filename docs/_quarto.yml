@@ -90,6 +90,7 @@ website:
               href: developer/MLCore/index.qmd
               contents:
                 - developer/MLCore/models.qmd
+                - developer/MLCore/hmm.qmd
                 - developer/MLCore/features.qmd
                 - developer/MLCore/label_assembly.qmd
                 - developer/MLCore/pipelines.qmd

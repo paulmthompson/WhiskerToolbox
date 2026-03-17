@@ -31,6 +31,8 @@ set(MLCore_SOURCES
     models/supervised/LogisticRegressionOperation.hpp
     models/supervised/NaiveBayesOperation.cpp
     models/supervised/NaiveBayesOperation.hpp
+    models/supervised/HiddenMarkovModelOperation.cpp
+    models/supervised/HiddenMarkovModelOperation.hpp
     models/supervised/RandomForestOperation.cpp
     models/supervised/RandomForestOperation.hpp
 

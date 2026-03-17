@@ -21,6 +21,7 @@ add_executable(test_MLCore
     FeatureValidator.test.cpp
     DBSCANOperation.test.cpp
     GaussianMixtureOperation.test.cpp
+    HiddenMarkovModel.test.cpp
     KMeansOperation.test.cpp
     LabelAssembler.test.cpp
     LogisticRegressionOperation.test.cpp

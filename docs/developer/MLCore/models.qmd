@@ -47,6 +47,9 @@ All methods operate on armadillo matrices in **mlpack convention**:
 | **Supervised** | `train(features, labels, params)` | Train on labeled data |
 | | `predict(features, predictions)` | Predict class labels |
 | | `predictProbabilities(features, probs)` | Per-class probability matrix |
+| **Sequences** | `trainSequences(featureSeqs, labelSeqs, params)` | Train on pre-segmented temporal sequences (default: concatenates and calls `train()`) |
+| | `predictSequences(featureSeqs, predSeqs)` | Predict per sequence (default: concatenates, predicts, splits back) |
+| | `isSequenceModel()` | Whether model natively handles temporal sequences (default: `false`) |
 | **Unsupervised** | `fit(features, params)` | Fit to unlabeled data |
 | | `assignClusters(features, assignments)` | Assign cluster labels |
 | **Persistence** | `save(ostream)` / `load(istream)` | Model serialization |
@@ -80,6 +83,7 @@ The registry uses this to filter models when the UI selects a task type.
 | `RandomForestParameters` | `num_trees` (10), `minimum_leaf_size` (1), `minimum_gain_split` (1e-7), `maximum_depth` (0 = unlimited) |
 | `NaiveBayesParameters` | `epsilon` (1e-9) — variance smoothing |
 | `LogisticRegressionParameters` | `lambda` (0.0), `step_size` (0.01), `max_iterations` (10000) |
+| `HMMParameters` | `num_states` (2), `tolerance` (1e-5) |
 
 ### Unsupervised Parameters
 

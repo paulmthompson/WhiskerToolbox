@@ -23,6 +23,7 @@
 #include "models/MLModelOperation.hpp"
 #include "models/MLModelRegistry.hpp"
 #include "output/PredictionWriter.hpp"
+#include "pipelines/SequenceAssembler.hpp"
 #include "preprocessing/ClassBalancing.hpp"
 
 #include <cstddef>
@@ -49,6 +50,8 @@ std::string toString(ClassificationStage stage) {
             return "Assembling labels";
         case ClassificationStage::BalancingClasses:
             return "Balancing classes";
+        case ClassificationStage::SegmentingSequences:
+            return "Segmenting sequences";
         case ClassificationStage::Training:
             return "Training model";
         case ClassificationStage::Predicting:
@@ -153,7 +156,7 @@ ClassificationPipelineResult runClassificationPipeline(
         DataManager & dm,
         MLModelRegistry const & registry,
         ClassificationPipelineConfig const & config,
-        const PipelineProgressCallback& progress) {
+        PipelineProgressCallback const & progress) {
     // ========================================================================
     // Stage 1: Validate features
     // ========================================================================
@@ -363,20 +366,102 @@ ClassificationPipelineResult runClassificationPipeline(
     }
 
     // ========================================================================
-    // Stage 5: Train model
+    // Stage 5: Create model & optional sequence segmentation
     // ========================================================================
-    reportProgress(progress, ClassificationStage::Training,
-                   "Training '" + config.model_name + "' on " +
-                           std::to_string(train_features.n_cols) + " observations × " +
-                           std::to_string(train_features.n_rows) + " features");
-
     auto model = registry.create(config.model_name);
     if (!model) {
         return makeFailure(ClassificationStage::Training,
                            "Failed to create model '" + config.model_name + "'");
     }
 
-    bool const train_ok = model->train(train_features, train_labels, config.model_params);
+    bool const is_sequence_model = model->isSequenceModel();
+    std::vector<SequenceSegment> train_segments;
+
+    if (is_sequence_model) {
+        reportProgress(progress, ClassificationStage::SegmentingSequences,
+                       "Segmenting " + std::to_string(train_row_times.size()) +
+                               " observations into contiguous sequences");
+
+        // Sequence models require time-aligned training data (no balancing),
+        // because balancing destroys temporal ordering.
+        // Use the pre-balance features/labels/times for segmentation.
+        auto const & seg_features = (was_balanced) ? converted.matrix : train_features;
+        auto const & seg_labels = (was_balanced) ? labels.labels : train_labels;
+        auto const & seg_times = (was_balanced) ? valid_row_times : train_row_times;
+
+        // Filter out unlabeled observations for segmentation if needed
+        arma::mat labeled_features;
+        arma::Row<std::size_t> labeled_labels;
+        std::vector<TimeFrameIndex> labeled_times;
+
+        if (labels.unlabeled_count > 0 && was_balanced) {
+            // Pre-balance data still has unlabeled rows — filter them
+            labeled_features = seg_features;
+            labeled_labels = seg_labels;
+            labeled_times = seg_times;
+
+            std::vector<arma::uword> labeled_cols;
+            for (arma::uword i = 0; i < labeled_labels.n_elem; ++i) {
+                if (labeled_labels[i] < labels.num_classes) {
+                    labeled_cols.push_back(i);
+                }
+            }
+            arma::uvec col_indices(labeled_cols.size());
+            for (std::size_t i = 0; i < labeled_cols.size(); ++i) {
+                col_indices[i] = labeled_cols[i];
+            }
+            labeled_features = labeled_features.cols(col_indices);
+
+            arma::Row<std::size_t> filtered_lb(labeled_cols.size());
+            std::vector<TimeFrameIndex> filtered_tm;
+            filtered_tm.reserve(labeled_cols.size());
+            for (std::size_t i = 0; i < labeled_cols.size(); ++i) {
+                filtered_lb[i] = labeled_labels[labeled_cols[i]];
+                filtered_tm.push_back(labeled_times[labeled_cols[i]]);
+            }
+            labeled_features = labeled_features;
+            labeled_labels = filtered_lb;
+            labeled_times = filtered_tm;
+        } else {
+            labeled_features = seg_features;
+            labeled_labels = seg_labels;
+            labeled_times = seg_times;
+        }
+
+        train_segments = SequenceAssembler::segment(
+                labeled_features, labeled_labels, labeled_times);
+
+        if (train_segments.empty()) {
+            return makeFailure(ClassificationStage::SegmentingSequences,
+                               "No contiguous sequences found meeting the minimum "
+                               "length requirement");
+        }
+    }
+
+    // ========================================================================
+    // Stage 5b: Train model
+    // ========================================================================
+    reportProgress(progress, ClassificationStage::Training,
+                   "Training '" + config.model_name + "' on " +
+                           std::to_string(train_features.n_cols) + " observations × " +
+                           std::to_string(train_features.n_rows) + " features");
+
+    bool train_ok = false;
+    if (is_sequence_model) {
+        // Extract feature/label vectors from segments
+        std::vector<arma::mat> feature_seqs;
+        std::vector<arma::Row<std::size_t>> label_seqs;
+        feature_seqs.reserve(train_segments.size());
+        label_seqs.reserve(train_segments.size());
+        for (auto const & seg: train_segments) {
+            feature_seqs.push_back(seg.features);
+            label_seqs.push_back(seg.labels);
+        }
+        train_ok = model->trainSequences(feature_seqs, label_seqs, config.model_params);
+    } else {
+        train_ok = model->train(train_features, train_labels, config.model_params);
+    }
+
     if (!train_ok || !model->isTrained()) {
         return makeFailure(ClassificationStage::Training,
                            "Model training failed for '" + config.model_name + "'");
@@ -418,7 +503,7 @@ ClassificationPipelineResult runClassificationPipeline(
             } else {
                 // Ordinal rows — generate synthetic sequential times
                 predict_row_times.reserve(pred_converted.valid_row_indices.size());
-                for (unsigned long valid_row_indice : pred_converted.valid_row_indices) {
+                for (unsigned long const valid_row_indice: pred_converted.valid_row_indices) {
                     predict_row_times.emplace_back(
                             static_cast<std::int64_t>(valid_row_indice));
                 }
@@ -466,7 +551,54 @@ ClassificationPipelineResult runClassificationPipeline(
             }
         }
 
-        bool const pred_ok = model->predict(predict_features, predictions);
+        bool pred_ok = false;
+        if (is_sequence_model) {
+            // Segment prediction data into contiguous sequences
+            auto pred_segments = SequenceAssembler::segment(
+                    predict_features, predict_row_times);
+
+            if (pred_segments.empty()) {
+                return makeFailure(ClassificationStage::Predicting,
+                                   "No contiguous prediction sequences found "
+                                   "meeting the minimum length requirement");
+            }
+
+            // Build feature sequence vectors for predictSequences
+            std::vector<arma::mat> pred_feature_seqs;
+            pred_feature_seqs.reserve(pred_segments.size());
+            for (auto const & seg: pred_segments) {
+                pred_feature_seqs.push_back(seg.features);
+            }
+
+            std::vector<arma::Row<std::size_t>> pred_sequences;
+            pred_ok = model->predictSequences(pred_feature_seqs, pred_sequences);
+
+            if (pred_ok) {
+                // Reassemble predictions and times in segment order
+                std::size_t total_preds = 0;
+                for (auto const & seq: pred_sequences) {
+                    total_preds += seq.n_elem;
+                }
+                predictions.set_size(total_preds);
+                std::vector<TimeFrameIndex> reassembled_times;
+                reassembled_times.reserve(total_preds);
+
+                std::size_t offset = 0;
+                for (std::size_t s = 0; s < pred_sequences.size(); ++s) {
+                    auto const & seq_preds = pred_sequences[s];
+                    auto const & seg_times = pred_segments[s].times;
+                    for (std::size_t j = 0; j < seq_preds.n_elem; ++j) {
+                        predictions[offset + j] = seq_preds[j];
+                        reassembled_times.push_back(seg_times[j]);
+                    }
+                    offset += seq_preds.n_elem;
+                }
+                predict_row_times = std::move(reassembled_times);
+            }
+        } else {
+            pred_ok = model->predict(predict_features, predictions);
+        }
+
         if (!pred_ok) {
             return makeFailure(ClassificationStage::Predicting,
                                "Model prediction failed");

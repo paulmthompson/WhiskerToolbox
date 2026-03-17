@@ -13,10 +13,22 @@ MLCore provides two pipeline entry points that compose all lower-level component
 
 ### Pipeline Stages
 
+For frame-based models (Random Forest, Naive Bayes, Logistic Regression):
+
 ```
 ValidatingFeatures → ConvertingFeatures → AssemblingLabels →
 BalancingClasses → Training → Predicting → ComputingMetrics → WritingOutput → Complete
 ```
+
+For sequence models (HMM):
+
+```
+ValidatingFeatures → ConvertingFeatures → AssemblingLabels →
+BalancingClasses → SegmentingSequences → Training → Predicting →
+ComputingMetrics → WritingOutput → Complete
+```
+
+The `SegmentingSequences` stage uses `SequenceAssembler::segment()` to split the feature matrix and labels into contiguous temporal segments (based on gaps in `TimeFrameIndex`). Training then routes through `trainSequences()` and prediction through `predictSequences()`, preserving temporal structure for models like HMMs.
 
 ### Configuration
 
@@ -162,5 +174,6 @@ Both pipelines use early-return on failure. The `failed_stage` field indicates w
 - **ValidatingFeatures**: Feature tensor not found, not 2D, or empty
 - **ConvertingFeatures**: All rows dropped due to NaN/Inf
 - **AssemblingLabels**: No labels found, incompatible row types
+- **SegmentingSequences**: No contiguous sequences meeting minimum length
 - **Training/Fitting**: Model failed internally (rare with valid data)
 - **WritingOutput**: DataManager write failure
