@@ -172,6 +172,7 @@ DeepLearningPropertiesWidget::DeepLearningPropertiesWidget(
                 auto * point_combo = _dynamic_container->findChild<QComboBox *>(
                         QStringLiteral("post_encoder_point_key_combo"));
                 if (point_combo) {
+                    QSignalBlocker const blocker(point_combo);
                     _populateDataSourceCombo(point_combo, "PointData");
                     auto const & key = _state->postEncoderPointKey();
                     if (!key.empty()) {
