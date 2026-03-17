@@ -252,7 +252,11 @@ void TriageSessionProperties_Widget::_onGuidedEditorChanged() {
     auto const json_str = rfl::json::write(seq);
 
     if (_state) {
+        // Guard: prevent _syncPipelineFromState from rebuilding the guided
+        // editor in response to the state change we are about to trigger.
+        _syncing_from_editor = true;
         _state->setPipelineJson(json_str);
+        _syncing_from_editor = false;
     }
 
     // Sync to JSON editor (without re-triggering)
@@ -336,7 +340,7 @@ void TriageSessionProperties_Widget::_updateTrackedRegionsSummary() {
 }
 
 void TriageSessionProperties_Widget::_syncPipelineFromState() {
-    if (!_state) {
+    if (!_state || _syncing_from_editor) {
         return;
     }
 

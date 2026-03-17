@@ -100,6 +100,8 @@ private:
     QLabel * _tracked_summary_label = nullptr;
 
     commands::CommandRecorder * _command_recorder{nullptr};
+
+    bool _syncing_from_editor = false;///< Guard against re-entrant pipeline sync
 };
 
 #endif// TRIAGE_SESSION_PROPERTIES_WIDGET_HPP
