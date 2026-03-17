@@ -49,6 +49,12 @@
 #include <string>
 #include <vector>
 
+namespace arma {
+template<typename eT>
+class Mat;
+using mat = Mat<double>;
+}// namespace arma
+
 namespace MLCore {
 struct BinaryClassificationMetrics;
 struct MultiClassMetrics;
@@ -142,6 +148,15 @@ public:
     void clearResults();
 
     /**
+     * @brief Display a transition matrix (for HMM or other sequence models)
+     *
+     * @param transition_matrix Square matrix where entry (i,j) is P(state j | state i)
+     * @param class_names Optional class names for row/column headers
+     */
+    void showTransitionMatrix(arma::mat const & transition_matrix,
+                              std::vector<std::string> const & class_names = {});
+
+    /**
      * @brief Whether valid results are currently displayed
      */
     [[nodiscard]] bool hasResults() const;
@@ -194,6 +209,10 @@ private:
 
     [[nodiscard]] static QString _formatMultiClassConfusionMatrix(
             MLCore::MultiClassMetrics const & metrics,
+            std::vector<std::string> const & class_names);
+
+    [[nodiscard]] static QString _formatTransitionMatrix(
+            arma::mat const & transition_matrix,
             std::vector<std::string> const & class_names);
 
     Ui::ResultsPanel * ui;

@@ -80,7 +80,7 @@ public:
     /**
      * @brief Get the current label source type
      *
-     * @return "intervals", "groups", or "entity_groups"
+     * @return "intervals", "groups", "entity_groups", or "events"
      */
     [[nodiscard]] std::string labelSourceType() const;
 
@@ -90,6 +90,13 @@ public:
      * @return Vector of GroupId values in class order (group[0] = class 0, etc.)
      */
     [[nodiscard]] std::vector<uint64_t> selectedGroupIds() const;
+
+    /**
+     * @brief Get the currently selected event series key
+     *
+     * @return DataManager key for the DigitalEventSeries, or empty if not in events mode
+     */
+    [[nodiscard]] std::string selectedEventKey() const;
 
 public slots:
     /**
@@ -115,10 +122,18 @@ signals:
      */
     void validityChanged(bool valid);
 
+    /**
+     * @brief Emitted when the selected event series key changes
+     *
+     * @param key The new DigitalEventSeries key
+     */
+    void eventKeyChanged(QString const & key);
+
 private slots:
     void _onIntervalRadioToggled(bool checked);
     void _onGroupsRadioToggled(bool checked);
     void _onDataGroupsRadioToggled(bool checked);
+    void _onEventsRadioToggled(bool checked);
 
     void _onIntervalComboChanged(int index);
     void _onPositiveClassNameEdited(QString const & text);
@@ -131,6 +146,8 @@ private slots:
     void _onAddDataGroupClicked();
     void _onRemoveDataGroupClicked();
 
+    void _onEventComboChanged(int index);
+
 private:
     void _setupConnections();
     void _setupStateConnections();
@@ -140,11 +157,13 @@ private:
     void _refreshGroupCombo();
     void _refreshDataKeyCombo();
     void _refreshDataGroupCombo();
+    void _refreshEventCombo();
 
     void _rebuildClassList();
     void _rebuildDataClassList();
 
     void _updateIntervalInfo(std::string const & key);
+    void _updateEventInfo(std::string const & key);
     void _updateValidation();
 
     void _restoreFromState();

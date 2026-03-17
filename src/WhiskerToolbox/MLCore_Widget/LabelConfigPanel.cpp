@@ -4,6 +4,7 @@
 #include "ui_LabelConfigPanel.h"
 
 #include "DataManager/DataManager.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityGroupManager.hpp"
 
@@ -32,6 +33,7 @@ LabelConfigPanel::LabelConfigPanel(
     _refreshGroupCombo();
     _refreshDataKeyCombo();
     _refreshDataGroupCombo();
+    _refreshEventCombo();
 
     // Restore from saved state
     _restoreFromState();
@@ -66,6 +68,9 @@ std::string LabelConfigPanel::labelSourceType() const {
     if (ui->groupsRadio->isChecked()) {
         return "groups";
     }
+    if (ui->eventsRadio->isChecked()) {
+        return "events";
+    }
     return "entity_groups";
 }
 
@@ -79,11 +84,24 @@ std::vector<uint64_t> LabelConfigPanel::selectedGroupIds() const {
     return {};
 }
 
+std::string LabelConfigPanel::selectedEventKey() const {
+    int const idx = ui->eventComboBox->currentIndex();
+    if (idx < 0) {
+        return {};
+    }
+    QVariant const data = ui->eventComboBox->itemData(idx);
+    if (!data.isValid() || data.toString().isEmpty()) {
+        return {};
+    }
+    return data.toString().toStdString();
+}
+
 void LabelConfigPanel::refreshAll() {
     _refreshIntervalCombo();
     _refreshGroupCombo();
     _refreshDataKeyCombo();
     _refreshDataGroupCombo();
+    _refreshEventCombo();
     _rebuildClassList();
     _rebuildDataClassList();
     _updateValidation();
@@ -123,6 +141,16 @@ void LabelConfigPanel::_onDataGroupsRadioToggled(bool checked) {
     emit labelSourceChanged(QStringLiteral("entity_groups"));
 }
 
+void LabelConfigPanel::_onEventsRadioToggled(bool checked) {
+    if (!checked) {
+        return;
+    }
+    ui->contentStack->setCurrentIndex(3);
+    _syncSourceTypeToState();
+    _updateValidation();
+    emit labelSourceChanged(QStringLiteral("events"));
+}
+
 // =============================================================================
 // Interval mode slots
 // =============================================================================
@@ -130,7 +158,7 @@ void LabelConfigPanel::_onDataGroupsRadioToggled(bool checked) {
 void LabelConfigPanel::_onIntervalComboChanged(int index) {
     QString key_str;
     if (index >= 0) {
-        QVariant data = ui->intervalComboBox->itemData(index);
+        QVariant const data = ui->intervalComboBox->itemData(index);
         if (data.isValid()) {
             key_str = data.toString();
         } else {
@@ -164,12 +192,12 @@ void LabelConfigPanel::_onNegativeClassNameEdited(QString const & text) {
 // =============================================================================
 
 void LabelConfigPanel::_onAddGroupClicked() {
-    int idx = ui->groupComboBox->currentIndex();
+    int const idx = ui->groupComboBox->currentIndex();
     if (idx < 0) {
         return;
     }
 
-    QVariant data = ui->groupComboBox->itemData(idx);
+    QVariant const data = ui->groupComboBox->itemData(idx);
     if (!data.isValid()) {
         return;
     }
@@ -188,7 +216,7 @@ void LabelConfigPanel::_onAddGroupClicked() {
 }
 
 void LabelConfigPanel::_onRemoveGroupClicked() {
-    int row = ui->classListWidget->currentRow();
+    int const row = ui->classListWidget->currentRow();
     if (row < 0 || row >= static_cast<int>(_selected_group_ids.size())) {
         return;
     }
@@ -206,7 +234,7 @@ void LabelConfigPanel::_onRemoveGroupClicked() {
 void LabelConfigPanel::_onDataKeyComboChanged(int index) {
     QString key_str;
     if (index >= 0) {
-        QVariant data = ui->dataKeyComboBox->itemData(index);
+        QVariant const data = ui->dataKeyComboBox->itemData(index);
         if (data.isValid()) {
             key_str = data.toString();
         } else {
@@ -221,12 +249,12 @@ void LabelConfigPanel::_onDataKeyComboChanged(int index) {
 }
 
 void LabelConfigPanel::_onAddDataGroupClicked() {
-    int idx = ui->dataGroupComboBox->currentIndex();
+    int const idx = ui->dataGroupComboBox->currentIndex();
     if (idx < 0) {
         return;
     }
 
-    QVariant data = ui->dataGroupComboBox->itemData(idx);
+    QVariant const data = ui->dataGroupComboBox->itemData(idx);
     if (!data.isValid()) {
         return;
     }
@@ -246,7 +274,7 @@ void LabelConfigPanel::_onAddDataGroupClicked() {
 }
 
 void LabelConfigPanel::_onRemoveDataGroupClicked() {
-    int row = ui->dataClassListWidget->currentRow();
+    int const row = ui->dataClassListWidget->currentRow();
     if (row < 0 || row >= static_cast<int>(_selected_data_group_ids.size())) {
         return;
     }
@@ -255,6 +283,30 @@ void LabelConfigPanel::_onRemoveDataGroupClicked() {
     _syncGroupIdsToState();
     _rebuildDataClassList();
     _updateValidation();
+}
+
+// =============================================================================
+// Event Series mode slots
+// =============================================================================
+
+void LabelConfigPanel::_onEventComboChanged(int index) {
+    QString key_str;
+    if (index >= 0) {
+        QVariant const data = ui->eventComboBox->itemData(index);
+        if (data.isValid()) {
+            key_str = data.toString();
+        } else {
+            key_str = ui->eventComboBox->itemText(index);
+        }
+    }
+
+    if (_state) {
+        _state->setLabelEventKey(key_str.toStdString());
+    }
+
+    _updateEventInfo(key_str.toStdString());
+    _updateValidation();
+    emit eventKeyChanged(key_str);
 }
 
 // =============================================================================
@@ -269,6 +321,8 @@ void LabelConfigPanel::_setupConnections() {
             this, &LabelConfigPanel::_onGroupsRadioToggled);
     connect(ui->dataGroupsRadio, &QRadioButton::toggled,
             this, &LabelConfigPanel::_onDataGroupsRadioToggled);
+    connect(ui->eventsRadio, &QRadioButton::toggled,
+            this, &LabelConfigPanel::_onEventsRadioToggled);
 
     // Interval mode
     connect(ui->intervalComboBox, &QComboBox::currentIndexChanged,
@@ -302,6 +356,15 @@ void LabelConfigPanel::_setupConnections() {
     connect(ui->removeDataGroupButton, &QPushButton::clicked,
             this, &LabelConfigPanel::_onRemoveDataGroupClicked);
 
+    // Event Series mode
+    connect(ui->eventComboBox, &QComboBox::currentIndexChanged,
+            this, &LabelConfigPanel::_onEventComboChanged);
+    connect(ui->eventRefreshButton, &QPushButton::clicked,
+            this, [this]() {
+                _refreshEventCombo();
+                _updateValidation();
+            });
+
     // State-driven connections (for external state changes / JSON restore)
     _setupStateConnections();
 }
@@ -313,20 +376,23 @@ void LabelConfigPanel::_setupStateConnections() {
 
     connect(_state.get(), &MLCoreWidgetState::labelSourceTypeChanged,
             this, [this](QString const & type) {
-                int page = _sourceTypeToPageIndex(type.toStdString());
+                int const page = _sourceTypeToPageIndex(type.toStdString());
                 ui->contentStack->setCurrentIndex(page);
 
                 ui->intervalRadio->blockSignals(true);
                 ui->groupsRadio->blockSignals(true);
                 ui->dataGroupsRadio->blockSignals(true);
+                ui->eventsRadio->blockSignals(true);
 
                 ui->intervalRadio->setChecked(page == 0);
                 ui->groupsRadio->setChecked(page == 1);
                 ui->dataGroupsRadio->setChecked(page == 2);
+                ui->eventsRadio->setChecked(page == 3);
 
                 ui->intervalRadio->blockSignals(false);
                 ui->groupsRadio->blockSignals(false);
                 ui->dataGroupsRadio->blockSignals(false);
+                ui->eventsRadio->blockSignals(false);
 
                 _updateValidation();
             });
@@ -334,7 +400,7 @@ void LabelConfigPanel::_setupStateConnections() {
     connect(_state.get(), &MLCoreWidgetState::labelIntervalKeyChanged,
             this, [this](QString const & key) {
                 for (int i = 0; i < ui->intervalComboBox->count(); ++i) {
-                    QVariant data = ui->intervalComboBox->itemData(i);
+                    QVariant const data = ui->intervalComboBox->itemData(i);
                     if (data.isValid() && data.toString() == key) {
                         ui->intervalComboBox->blockSignals(true);
                         ui->intervalComboBox->setCurrentIndex(i);
@@ -386,7 +452,7 @@ void LabelConfigPanel::_setupStateConnections() {
     connect(_state.get(), &MLCoreWidgetState::labelDataKeyChanged,
             this, [this](QString const & key) {
                 for (int i = 0; i < ui->dataKeyComboBox->count(); ++i) {
-                    QVariant data = ui->dataKeyComboBox->itemData(i);
+                    QVariant const data = ui->dataKeyComboBox->itemData(i);
                     if (data.isValid() && data.toString() == key) {
                         ui->dataKeyComboBox->blockSignals(true);
                         ui->dataKeyComboBox->setCurrentIndex(i);
@@ -396,6 +462,22 @@ void LabelConfigPanel::_setupStateConnections() {
                     }
                 }
                 _refreshDataKeyCombo();
+            });
+
+    connect(_state.get(), &MLCoreWidgetState::labelEventKeyChanged,
+            this, [this](QString const & key) {
+                for (int i = 0; i < ui->eventComboBox->count(); ++i) {
+                    QVariant const data = ui->eventComboBox->itemData(i);
+                    if (data.isValid() && data.toString() == key) {
+                        ui->eventComboBox->blockSignals(true);
+                        ui->eventComboBox->setCurrentIndex(i);
+                        ui->eventComboBox->blockSignals(false);
+                        _updateEventInfo(key.toStdString());
+                        _updateValidation();
+                        return;
+                    }
+                }
+                _refreshEventCombo();
             });
 }
 
@@ -436,9 +518,9 @@ void LabelConfigPanel::_refreshIntervalCombo() {
     }
 
     QString current_key;
-    int cur_idx = ui->intervalComboBox->currentIndex();
+    int const cur_idx = ui->intervalComboBox->currentIndex();
     if (cur_idx >= 0) {
-        QVariant data = ui->intervalComboBox->itemData(cur_idx);
+        QVariant const data = ui->intervalComboBox->itemData(cur_idx);
         current_key = data.isValid() ? data.toString() : ui->intervalComboBox->itemText(cur_idx);
     }
 
@@ -451,7 +533,7 @@ void LabelConfigPanel::_refreshIntervalCombo() {
 
     for (auto const & key: keys) {
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);
-        QString display = series
+        QString const display = series
                                   ? QStringLiteral("%1 (%2 intervals)")
                                             .arg(QString::fromStdString(key))
                                             .arg(series->size())
@@ -463,7 +545,7 @@ void LabelConfigPanel::_refreshIntervalCombo() {
     int restore_idx = 0;
     if (!current_key.isEmpty()) {
         for (int i = 0; i < ui->intervalComboBox->count(); ++i) {
-            QVariant data = ui->intervalComboBox->itemData(i);
+            QVariant const data = ui->intervalComboBox->itemData(i);
             if (data.isValid() && data.toString() == current_key) {
                 restore_idx = i;
                 break;
@@ -496,7 +578,7 @@ void LabelConfigPanel::_refreshGroupCombo() {
               [](auto const & a, auto const & b) { return a.name < b.name; });
 
     for (auto const & desc: descriptors) {
-        QString display = QStringLiteral("%1 (%2 entities)")
+        QString const display = QStringLiteral("%1 (%2 entities)")
                                   .arg(QString::fromStdString(desc.name))
                                   .arg(desc.entity_count);
         ui->groupComboBox->addItem(display, QVariant::fromValue(desc.id));
@@ -511,9 +593,9 @@ void LabelConfigPanel::_refreshDataKeyCombo() {
     }
 
     QString current_key;
-    int cur_idx = ui->dataKeyComboBox->currentIndex();
+    int const cur_idx = ui->dataKeyComboBox->currentIndex();
     if (cur_idx >= 0) {
-        QVariant data = ui->dataKeyComboBox->itemData(cur_idx);
+        QVariant const data = ui->dataKeyComboBox->itemData(cur_idx);
         current_key = data.isValid() ? data.toString() : ui->dataKeyComboBox->itemText(cur_idx);
     }
 
@@ -533,7 +615,7 @@ void LabelConfigPanel::_refreshDataKeyCombo() {
     int restore_idx = 0;
     if (!current_key.isEmpty()) {
         for (int i = 0; i < ui->dataKeyComboBox->count(); ++i) {
-            QVariant data = ui->dataKeyComboBox->itemData(i);
+            QVariant const data = ui->dataKeyComboBox->itemData(i);
             if (data.isValid() && data.toString() == current_key) {
                 restore_idx = i;
                 break;
@@ -560,13 +642,62 @@ void LabelConfigPanel::_refreshDataGroupCombo() {
               [](auto const & a, auto const & b) { return a.name < b.name; });
 
     for (auto const & desc: descriptors) {
-        QString display = QStringLiteral("%1 (%2 entities)")
+        QString const display = QStringLiteral("%1 (%2 entities)")
                                   .arg(QString::fromStdString(desc.name))
                                   .arg(desc.entity_count);
         ui->dataGroupComboBox->addItem(display, QVariant::fromValue(desc.id));
     }
 
     ui->dataGroupComboBox->blockSignals(false);
+}
+
+void LabelConfigPanel::_refreshEventCombo() {
+    if (!_data_manager) {
+        return;
+    }
+
+    QString current_key;
+    int const cur_idx = ui->eventComboBox->currentIndex();
+    if (cur_idx >= 0) {
+        QVariant const data = ui->eventComboBox->itemData(cur_idx);
+        current_key = data.isValid() ? data.toString() : ui->eventComboBox->itemText(cur_idx);
+    }
+
+    ui->eventComboBox->blockSignals(true);
+    ui->eventComboBox->clear();
+    ui->eventComboBox->addItem(QString{});// empty sentinel
+
+    auto keys = _data_manager->getKeys<DigitalEventSeries>();
+    std::sort(keys.begin(), keys.end());
+
+    for (auto const & key: keys) {
+        auto series = _data_manager->getData<DigitalEventSeries>(key);
+        QString const display = series
+                                  ? QStringLiteral("%1 (%2 events)")
+                                            .arg(QString::fromStdString(key))
+                                            .arg(series->size())
+                                  : QString::fromStdString(key);
+        ui->eventComboBox->addItem(display, QString::fromStdString(key));
+    }
+
+    // Restore selection
+    int restore_idx = 0;
+    if (!current_key.isEmpty()) {
+        for (int i = 0; i < ui->eventComboBox->count(); ++i) {
+            QVariant const data = ui->eventComboBox->itemData(i);
+            if (data.isValid() && data.toString() == current_key) {
+                restore_idx = i;
+                break;
+            }
+        }
+    }
+    ui->eventComboBox->setCurrentIndex(restore_idx);
+    ui->eventComboBox->blockSignals(false);
+
+    _updateEventInfo(
+            restore_idx > 0
+                    ? ui->eventComboBox->itemData(restore_idx).toString().toStdString()
+                    : std::string{});
 }
 
 // =============================================================================
@@ -641,11 +772,11 @@ void LabelConfigPanel::_updateIntervalInfo(std::string const & key) {
         return;
     }
 
-    std::size_t interval_count = series->size();
+    std::size_t const interval_count = series->size();
 
     int64_t total_frames = 0;
     for (auto const & iwid: series->view()) {
-        int64_t span = iwid.interval.end - iwid.interval.start + 1;
+        int64_t const span = iwid.interval.end - iwid.interval.start + 1;
         if (span > 0) {
             total_frames += span;
         }
@@ -658,6 +789,29 @@ void LabelConfigPanel::_updateIntervalInfo(std::string const & key) {
 }
 
 // =============================================================================
+// Event info display
+// =============================================================================
+
+void LabelConfigPanel::_updateEventInfo(std::string const & key) {
+    if (key.empty() || !_data_manager) {
+        ui->eventInfoLabel->setText(QString{});
+        return;
+    }
+
+    auto series = _data_manager->getData<DigitalEventSeries>(key);
+    if (!series) {
+        ui->eventInfoLabel->setText(
+                QStringLiteral("<span style='color: red;'>Event series \"%1\" not found</span>")
+                        .arg(QString::fromStdString(key)));
+        return;
+    }
+
+    ui->eventInfoLabel->setText(
+            QStringLiteral("<b>%1</b> events")
+                    .arg(series->size()));
+}
+
+// =============================================================================
 // Validation
 // =============================================================================
 
@@ -665,13 +819,13 @@ void LabelConfigPanel::_updateValidation() {
     bool new_valid = false;
     QString msg;
 
-    std::string source = labelSourceType();
+    std::string const source = labelSourceType();
 
     if (source == "intervals") {
         // Valid if an interval series is selected
-        int idx = ui->intervalComboBox->currentIndex();
-        QVariant data = (idx >= 0) ? ui->intervalComboBox->itemData(idx) : QVariant{};
-        bool has_key = data.isValid() && !data.toString().isEmpty();
+        int const idx = ui->intervalComboBox->currentIndex();
+        QVariant const data = (idx >= 0) ? ui->intervalComboBox->itemData(idx) : QVariant{};
+        bool const has_key = data.isValid() && !data.toString().isEmpty();
 
         if (!has_key) {
             msg = QStringLiteral(
@@ -689,9 +843,9 @@ void LabelConfigPanel::_updateValidation() {
         }
     } else if (source == "entity_groups") {
         // Valid if data key selected and at least 2 groups
-        int idx = ui->dataKeyComboBox->currentIndex();
-        QVariant data = (idx >= 0) ? ui->dataKeyComboBox->itemData(idx) : QVariant{};
-        bool has_data_key = data.isValid() && !data.toString().isEmpty();
+        int const idx = ui->dataKeyComboBox->currentIndex();
+        QVariant const data = (idx >= 0) ? ui->dataKeyComboBox->itemData(idx) : QVariant{};
+        bool const has_data_key = data.isValid() && !data.toString().isEmpty();
 
         if (!has_data_key) {
             msg = QStringLiteral(
@@ -699,6 +853,18 @@ void LabelConfigPanel::_updateValidation() {
         } else if (_selected_data_group_ids.size() < 2) {
             msg = QStringLiteral(
                     "<span style='color: orange;'>Select at least 2 groups for multi-class labeling</span>");
+        } else {
+            new_valid = true;
+        }
+    } else if (source == "events") {
+        // Valid if an event series is selected
+        int const idx = ui->eventComboBox->currentIndex();
+        QVariant const data = (idx >= 0) ? ui->eventComboBox->itemData(idx) : QVariant{};
+        bool const has_key = data.isValid() && !data.toString().isEmpty();
+
+        if (!has_key) {
+            msg = QStringLiteral(
+                    "<span style='color: orange;'>Select an event series for binary labeling</span>");
         } else {
             new_valid = true;
         }
@@ -723,27 +889,30 @@ void LabelConfigPanel::_restoreFromState() {
 
     // Restore source type → radio button + stacked page
     std::string const & source = _state->labelSourceType();
-    int page = _sourceTypeToPageIndex(source);
+    int const page = _sourceTypeToPageIndex(source);
 
     ui->intervalRadio->blockSignals(true);
     ui->groupsRadio->blockSignals(true);
     ui->dataGroupsRadio->blockSignals(true);
+    ui->eventsRadio->blockSignals(true);
 
     ui->intervalRadio->setChecked(page == 0);
     ui->groupsRadio->setChecked(page == 1);
     ui->dataGroupsRadio->setChecked(page == 2);
+    ui->eventsRadio->setChecked(page == 3);
 
     ui->intervalRadio->blockSignals(false);
     ui->groupsRadio->blockSignals(false);
     ui->dataGroupsRadio->blockSignals(false);
+    ui->eventsRadio->blockSignals(false);
 
     ui->contentStack->setCurrentIndex(page);
 
     // Restore interval selection
     if (!_state->labelIntervalKey().empty()) {
-        QString saved_key = QString::fromStdString(_state->labelIntervalKey());
+        QString const saved_key = QString::fromStdString(_state->labelIntervalKey());
         for (int i = 0; i < ui->intervalComboBox->count(); ++i) {
-            QVariant data = ui->intervalComboBox->itemData(i);
+            QVariant const data = ui->intervalComboBox->itemData(i);
             if (data.isValid() && data.toString() == saved_key) {
                 ui->intervalComboBox->blockSignals(true);
                 ui->intervalComboBox->setCurrentIndex(i);
@@ -772,13 +941,28 @@ void LabelConfigPanel::_restoreFromState() {
 
     // Restore data key
     if (!_state->labelDataKey().empty()) {
-        QString saved_key = QString::fromStdString(_state->labelDataKey());
+        QString const saved_key = QString::fromStdString(_state->labelDataKey());
         for (int i = 0; i < ui->dataKeyComboBox->count(); ++i) {
-            QVariant data = ui->dataKeyComboBox->itemData(i);
+            QVariant const data = ui->dataKeyComboBox->itemData(i);
             if (data.isValid() && data.toString() == saved_key) {
                 ui->dataKeyComboBox->blockSignals(true);
                 ui->dataKeyComboBox->setCurrentIndex(i);
                 ui->dataKeyComboBox->blockSignals(false);
+                break;
+            }
+        }
+    }
+
+    // Restore event key
+    if (!_state->labelEventKey().empty()) {
+        QString const saved_key = QString::fromStdString(_state->labelEventKey());
+        for (int i = 0; i < ui->eventComboBox->count(); ++i) {
+            QVariant const data = ui->eventComboBox->itemData(i);
+            if (data.isValid() && data.toString() == saved_key) {
+                ui->eventComboBox->blockSignals(true);
+                ui->eventComboBox->setCurrentIndex(i);
+                ui->eventComboBox->blockSignals(false);
+                _updateEventInfo(saved_key.toStdString());
                 break;
             }
         }
@@ -798,7 +982,7 @@ void LabelConfigPanel::_syncGroupIdsToState() {
     }
 
     // Sync whichever group ID list is active based on current source type
-    std::string source = labelSourceType();
+    std::string const source = labelSourceType();
     if (source == "groups") {
         _state->setLabelGroupIds(_selected_group_ids);
     } else if (source == "entity_groups") {
@@ -816,6 +1000,9 @@ int LabelConfigPanel::_sourceTypeToPageIndex(std::string const & type) {
     }
     if (type == "entity_groups") {
         return 2;
+    }
+    if (type == "events") {
+        return 3;
     }
     return 1;// "groups" or default
 }

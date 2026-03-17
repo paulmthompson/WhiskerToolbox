@@ -46,6 +46,7 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit labelNegativeClassNameChanged(QString::fromStdString(_data.label_negative_class_name));
         emit labelGroupIdsChanged();
         emit labelDataKeyChanged(QString::fromStdString(_data.label_data_key));
+        emit labelEventKeyChanged(QString::fromStdString(_data.label_event_key));
         emit selectedModelNameChanged(QString::fromStdString(_data.selected_model_name));
         emit modelParametersJsonChanged();
         emit balancingEnabledChanged(_data.balancing_enabled);
@@ -179,6 +180,18 @@ void MLCoreWidgetState::setLabelDataKey(std::string const & key) {
 
 std::string const & MLCoreWidgetState::labelDataKey() const {
     return _data.label_data_key;
+}
+
+void MLCoreWidgetState::setLabelEventKey(std::string const & key) {
+    if (_data.label_event_key != key) {
+        _data.label_event_key = key;
+        markDirty();
+        emit labelEventKeyChanged(QString::fromStdString(key));
+    }
+}
+
+std::string const & MLCoreWidgetState::labelEventKey() const {
+    return _data.label_event_key;
 }
 
 // === Model configuration ===
