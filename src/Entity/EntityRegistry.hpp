@@ -27,7 +27,14 @@ class EntityRegistry {
 public:
     /**
      * @brief Get or create an EntityId for the tuple.
-     * @pre local_index >= 0
+     *
+     * @param data_key Logical key for the data object (opaque; empty allowed)
+     * @param kind Entity kind (Point, Line, Event, Interval, Mask, TimeEntity)
+     * @param time TimeFrameIndex for the entity
+     * @param local_index Stable 0-based index within that time
+     * @return EntityId for the tuple; same tuple always returns the same id
+     *
+     * @pre local_index >= 0 (enforcement: assert)
      * @note Thread-safe
      */
     [[nodiscard]] EntityId ensureId(std::string const & data_key,
@@ -37,6 +44,10 @@ public:
 
     /**
      * @brief Lookup descriptor for an EntityId.
+     *
+     * @param id EntityId to look up (e.g. from ensureId or from group/lineage).
+     * @return EntityDescriptor if the id was ever produced by ensureId on this registry,
+     *         otherwise std::nullopt. No preconditions on id; unknown ids return nullopt.
      * @note Thread-safe
      */
     [[nodiscard]] std::optional<EntityDescriptor> get(EntityId id) const;
@@ -48,12 +59,10 @@ public:
     void clear();
 
 private:
-    mutable std::mutex m_mutex;  // Protects all member variables
+    mutable std::mutex m_mutex;// Protects all member variables
     std::unordered_map<EntityTupleKey, EntityId, EntityTupleKeyHash> m_tuple_to_id;
     std::unordered_map<EntityId, EntityDescriptor> m_id_to_descriptor;
-    EntityId m_next_id {1};  // Start from 1 since 0 is used as sentinel "no entity" value
+    EntityId m_next_id{1};// Start from 1 since 0 is used as sentinel "no entity" value
 };
 
-#endif // ENTITYREGISTRY_HPP
-
-
+#endif// ENTITYREGISTRY_HPP
