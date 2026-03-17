@@ -314,6 +314,7 @@ website:
                 - user_guide/machine_learning/Random_Forest.qmd
                 - user_guide/machine_learning/Naive_Bayes.qmd
                 - user_guide/machine_learning/Logistic_Regression.qmd
+                - user_guide/machine_learning/HMM.qmd
             - text: "Clustering"
               contents:
                 - user_guide/machine_learning/KMeans.qmd

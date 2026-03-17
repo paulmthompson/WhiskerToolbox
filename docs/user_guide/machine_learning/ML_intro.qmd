@@ -48,6 +48,7 @@ Predictions and cluster assignments never overwrite your original labels. All ou
 | [Random Forest](Random_Forest.qmd) | General-purpose classification with many features |
 | [Naive Bayes](Naive_Bayes.qmd) | Fast training, works well with independent features |
 | [Logistic Regression](Logistic_Regression.qmd) | Binary classification with well-calibrated probabilities |
+| [Hidden Markov Model](HMM.qmd) | Sequence-aware classification exploiting temporal continuity |
 
 ### Unsupervised (Clustering Tab)
 

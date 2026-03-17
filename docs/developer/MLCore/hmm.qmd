@@ -140,6 +140,111 @@ HiddenMarkovModelOperation loaded;
 loaded.load(ss);
 ```
 
+## Pipeline Integration
+
+The `ClassificationPipeline` detects sequence models via `isSequenceModel()` and automatically
+activates the **SegmentingSequences** stage. The modified pipeline flow for HMM:
+
+```
+ValidatingFeatures → ConvertingFeatures → AssemblingLabels →
+BalancingClasses → SegmentingSequences → Training → Predicting →
+ComputingMetrics → WritingOutput → Complete
+```
+
+### Sequence Mode Behavior
+
+1. After label assembly, `SequenceAssembler::segment()` splits the feature matrix and labels
+   into contiguous temporal segments based on gaps in `TimeFrameIndex`.
+2. Training routes through `trainSequences()` instead of `train()`.
+3. Prediction routes through `predictSequences()`, then reassembles flat predictions and
+   time indices from the per-sequence results.
+4. Metrics and output writing operate on the reassembled flat vectors, identical to
+   frame-based models.
+
+### Label Sources
+
+The HMM works with all four label assembly modes. The most natural pairing is
+`LabelFromEvents` (point-event data → binary state labels), but `LabelFromIntervals`,
+`LabelFromGroups`, and `LabelFromEntityGroups` are equally supported.
+
+```cpp
+// Event-based labels (ideal for HMM)
+config.label_config = LabelFromEvents{"Contact", "NoContact"};
+config.label_event_key = "contact_events";
+
+// Interval-based labels (also works)
+config.label_config = LabelFromIntervals{"Contact", "NoContact"};
+config.label_interval_key = "contact_intervals";
+```
+
+### End-to-End Example
+
+```cpp
+ClassificationPipelineConfig config;
+config.model_name = "Hidden Markov Model (Gaussian)";
+
+HMMParameters hmm_params;
+hmm_params.num_states = 2;
+config.model_params = &hmm_params;
+
+config.feature_tensor_key = "whisker_features";
+config.label_config = LabelFromEvents{"Contact", "NoContact"};
+config.label_event_key = "contact_events";
+config.conversion_config.zscore_normalize = true;
+config.prediction_region.predict_all_rows = true;
+config.output_config.output_prefix = "HMM:";
+config.time_key_str = "camera";
+
+auto result = runClassificationPipeline(dm, registry, config, progress_cb);
+
+if (result.success) {
+    // result.trained_model is HiddenMarkovModelOperation
+    auto * hmm = dynamic_cast<HiddenMarkovModelOperation *>(result.trained_model.get());
+    arma::mat trans = hmm->getTransitionMatrix();
+    // trans(0,0) ≈ P(stay in state 0), trans(0,1) ≈ P(transition 0→1)
+}
+```
+
+## Widget Integration
+
+The `MLCore_Widget` provides HMM-specific UI elements across three panels:
+
+### Model Configuration (ModelConfigPanel)
+
+When "Hidden Markov Model (Gaussian)" is selected in the model combo box, the stacked widget
+switches to the HMM parameter page. Controls:
+
+| Widget | Parameter | Range |
+|---|---|---|
+| `QSpinBox` | Number of states | 2–100 |
+| `QDoubleSpinBox` | Tolerance | 1e-10 – 1.0 |
+
+### Label Configuration (LabelConfigPanel)
+
+A fourth radio button, **"From Events (ideal for HMM)"**, enables selection of a
+`DigitalEventSeries` from the DataManager. This maps point events to binary state labels
+(event present → state 1, absent → state 0). State is persisted as `label_event_key`
+in `MLCoreWidgetStateData`.
+
+### Results (ResultsPanel)
+
+After training, the results panel detects if the trained model is an HMM via `dynamic_cast`
+and displays the learned transition matrix in a monospaced formatted text block. The matrix
+shows $P(\text{next state} \mid \text{current state})$ with columns summing to 1.0.
+
+## Limitations
+
+- **Supervised only:** The current implementation requires labeled sequences. Unsupervised
+  Baum-Welch training (EM) is not exposed, though mlpack supports it.
+- **Gaussian emissions:** Only `GaussianDistribution<>` emissions are supported. Discrete
+  or mixture emissions would require a different template specialization.
+- **Fixed state count:** The number of states must be specified before training. Model
+  selection (choosing the optimal state count) must be done manually.
+- **No warm-starting:** Each `train()` / `trainSequences()` call initializes a fresh HMM.
+  Incremental refinement of an existing model is not supported.
+- **Memory:** The Forward-Backward algorithm allocates a `(num_states × observations)`
+  probability matrix. Very long sequences with many states may consume significant memory.
+
 ## Test Coverage
 
 13 test cases with 513 assertions in `tests/MLCore/HiddenMarkovModel.test.cpp`:
@@ -159,3 +264,7 @@ loaded.load(ss);
 | Save/load | Round-trip prediction preservation |
 | Registry | Registration, task type filtering, factory creation |
 | Base class API | Default trainSequences/predictSequences concatenation behavior |
+
+Pipeline integration is covered by 4 additional test cases in `tests/MLCore/ClassificationPipeline.test.cpp`:
+sequence mode with interval labels, sequence mode with event labels, SegmentingSequences stage
+verification, and prediction reassembly correctness.
