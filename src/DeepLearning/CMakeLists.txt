@@ -69,6 +69,9 @@ set(DEEP_LEARNING_SOURCES
 
     models_v2/neurosam/NeuroSAMModel.hpp
     models_v2/neurosam/NeuroSAMModel.cpp
+
+    models_v2/general_encoder/GeneralEncoderModel.hpp
+    models_v2/general_encoder/GeneralEncoderModel.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})

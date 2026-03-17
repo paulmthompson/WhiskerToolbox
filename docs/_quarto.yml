@@ -70,6 +70,7 @@ website:
                 - developer/DeepLearning/batch_inference.qmd
                 - developer/DeepLearning/background_inference_roadmap.qmd
                 - developer/DeepLearning/background_inference.qmd
+                - developer/DeepLearning/general_encoder.qmd
                 - developer/DeepLearning/roadmap.qmd
             - section: "Transforms V2"
               href: developer/transforms_v2/index.qmd
@@ -291,6 +292,7 @@ website:
         - section: "Deep Learning"
           contents:
             - user_guide/deep_learning/deep_learning_widget.qmd
+            - user_guide/deep_learning/export_encoder_models.qmd
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd

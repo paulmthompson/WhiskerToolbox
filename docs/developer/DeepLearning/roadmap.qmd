@@ -92,20 +92,20 @@ Therefore the recommended approach is:
 
 #### Tasks
 
-- [ ] **`GeneralEncoderModel` C++ wrapper** — A `ModelBase` subclass with configurable 
+- [x] **`GeneralEncoderModel` C++ wrapper** — A `ModelBase` subclass with configurable 
   input resolution, input channels, and output feature shape. Single input slot 
   (`"image"`) and single output slot (`"features"`). Batch mode: `DynamicBatch{1, max}`. 
   Register via `DL_REGISTER_MODEL`.
-- [ ] **Example `RuntimeModelSpec` JSON for encoder** — A documented JSON template for 
-  a generic encoder (e.g. ViT-Small producing `[384, 16, 16]` from `[3, 224, 224]`). 
-  Commit to `examples/`.
-- [ ] **Export script for generic encoders** — Python script that takes a 
-  `torchvision`/`timm` encoder, wraps it, and exports as `.pt` and `.pt2` with dynamic 
-  batch support. Commit to `examples/` or `scripts/`.
-- [ ] **Unit tests** — Verify `GeneralEncoderModel` slot metadata, construction with 
-  various resolutions, and forward pass with a trivial identity `.pt` model.
-- [ ] **Documentation** — Add a user-guide article and a developer doc entry for the 
-  general encoder workflow.
+- [x] **Example `RuntimeModelSpec` JSON for encoder** — A documented JSON template for 
+  a generic encoder (e.g. ConvNeXt-Tiny producing `[768, 7, 7]` from `[3, 224, 224]`). 
+  Committed to `examples/convnext_encoder_spec.json`.
+- [x] **Export script for generic encoders** — Python script that takes a 
+  `torchvision` ConvNeXt encoder, wraps it, and exports as `.pt` and `.pt2` with dynamic 
+  batch support. Committed to `examples/export_convnext_encoder.py`.
+- [x] **Unit tests** — Verify `GeneralEncoderModel` slot metadata, construction with 
+  various resolutions, registry integration, move semantics, and error handling.
+- [x] **Documentation** — Developer doc at `docs/developer/DeepLearning/general_encoder.qmd` 
+  and user guide at `docs/user_guide/deep_learning/export_encoder_models.qmd`.
 
 ### Post-Encoder Feature Extraction Modules
 
@@ -119,6 +119,26 @@ These modules operate on the output tensor before it reaches the decoder stage. 
 transform a `[B, C, H, W]` feature map into a `[B, C]` (or `[B, C, 1, 1]`) feature 
 vector suitable for downstream use such as writing to `TensorData` or feeding into a 
 classification head.
+
+#### Integration with `GeneralEncoderModel`
+
+Post-encoder modules are exposed as an **optional extension of `GeneralEncoderModel`**
+in the widget UI. The user configures the encoder normally (image input binding, weights
+file), then optionally selects a post-encoder module from a combo box. By default
+(`None`) the raw spatial feature tensor is passed through unchanged.
+
+When a module is selected, `GeneralEncoderModel` holds an optional
+`std::unique_ptr<PostEncoderModule>` and applies it inside `forward()` before returning
+output. The output slot shape advertised by `outputSlots()` updates to reflect the
+post-processed shape (e.g. `[C]` after global average pooling).
+
+Widget behaviour per module:
+
+| Selection | Extra UI shown | Output shape |
+|---|---|---|
+| **None** (default) | — | `[B, C_out, H_out, W_out]` (raw encoder output) |
+| **Global Average Pooling** | — | `[B, C_out]` |
+| **Spatial Point Extraction** | Combo box: select a `PointData` key from DataManager | `[B, C_out]` |
 
 #### Architecture — `PostEncoderModule` Interface
 
@@ -144,7 +164,9 @@ standard approach for converting a spatial feature map into a global feature des
 Implementation: `torch::adaptive_avg_pool2d(features, {1, 1}).squeeze(-1).squeeze(-1)`.
 
 - [ ] **`GlobalAvgPoolModule`** — Implement `PostEncoderModule` subclass using 
-  `torch::adaptive_avg_pool2d`. Input: `[B, C, H, W]`. Output: `[B, C]`.
+  `torch::adaptive_avg_pool2d`. Input: `[B, C, H, W]`. Output: `[B, C]`. When selected 
+  in the `GeneralEncoderModel` widget, no extra configuration is needed — the module 
+  applies automatically after the encoder forward pass.
 - [ ] **Unit test** — Verify output shape and values (average of spatial elements) for 
   known input tensors.
 
@@ -163,7 +185,9 @@ integer index, and extracts `features[:, :, y_feat, x_feat]` → `[B, C]`.
 - [ ] **`SpatialPointExtractModule`** — Implement `PostEncoderModule` subclass. 
   Constructor takes `ImageSize source_image_size` for coordinate scaling. Provide a 
   `setPoint(Point2D<float>)` method to update the query location per frame. 
-  Input: `[B, C, H, W]`. Output: `[B, C]`.
+  Input: `[B, C, H, W]`. Output: `[B, C]`. When selected in the `GeneralEncoderModel`
+  widget, a combo box appears listing all `PointData` keys from DataManager; the
+  selected key provides the per-frame query point.
 - [ ] **Bilinear interpolation variant** — Instead of nearest-neighbor, use 
   `torch::nn::functional::grid_sample` for sub-pixel accuracy. Expose as a constructor 
   option (`InterpolationMode::Nearest` vs `InterpolationMode::Bilinear`).
@@ -184,10 +208,13 @@ integer index, and extracts `features[:, :, y_feat, x_feat]` → `[B, C]`.
   `{"module": "spatial_point", "interpolation": "bilinear"}`).
 - [ ] **Factory registration** — Register modules in a `PostEncoderModuleFactory` 
   (string key → factory function) so JSON specs can instantiate them by name.
-- [ ] **Widget UI integration** — Add a "Post-Processing" section to the Deep Learning 
-  Properties widget. Allow users to add/remove/reorder post-encoder modules and 
-  configure their parameters. For `SpatialPointExtractModule`, provide a DataManager 
-  key selector for the point source.
+- [ ] **Widget UI integration** — Add an optional **"Post-Encoder Module"** combo box
+  to the `GeneralEncoderModel` section of the Deep Learning Properties widget. Options:
+  `None` (default), `Global Average Pooling`, `Spatial Point Extraction`. Selecting
+  `Global Average Pooling` requires no further input. Selecting `Spatial Point
+  Extraction` reveals a second combo box listing all `PointData` keys currently
+  registered in DataManager, allowing the user to choose the point source. The output
+  slot shape shown in the UI updates dynamically to reflect the active module's output.
 - [ ] **`TensorToFeatureVector` decoder** — A new decoder that writes a `[B, C]` 
   output (after post-encoder processing) to a `TensorData` object in DataManager, 
   storing one feature vector per frame.
