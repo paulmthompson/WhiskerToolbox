@@ -266,6 +266,12 @@ public:
     [[nodiscard]] static std::optional<ModelDisplayInfo> getModelDisplayInfo(
             std::string const & model_id);
 
+    /// Get display metadata from the currently loaded model instance.
+    ///
+    /// Unlike the static `getModelDisplayInfo()`, this reflects any runtime
+    /// reconfiguration (e.g. changed input resolution or output shape).
+    [[nodiscard]] std::optional<ModelDisplayInfo> currentModelDisplayInfo() const;
+
     // ── Static: encoder / decoder queries ──────────────────────────────────
 
     /// Available encoder names (e.g. "ImageEncoder", "Point2DEncoder", …).
@@ -310,6 +316,22 @@ public:
     void updateSpatialPoint(DataManager & dm,
                             std::string const & point_key,
                             int frame);
+
+    // ── Model shape configuration ──────────────────────────────────────────
+
+    /// Reconfigure input resolution and output shape on the current model.
+    ///
+    /// Only applies when the current model is a `GeneralEncoderModel`.
+    /// Must be called before `loadWeights()` or inference.
+    ///
+    /// @param input_height  Input image height in pixels (> 0).
+    /// @param input_width   Input image width in pixels (> 0).
+    /// @param output_shape  Raw encoder output shape (excluding batch dim).
+    ///                      If empty, only input resolution is changed.
+    void configureModelShape(
+            int input_height,
+            int input_width,
+            std::vector<int64_t> const & output_shape = {});
 
 private:
     struct Impl;

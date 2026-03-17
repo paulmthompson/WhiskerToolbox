@@ -104,6 +104,24 @@ public:
     /// Effective output shape reported by `outputSlots()`, accounting for any
     /// configured post-encoder module.
     [[nodiscard]] std::vector<int64_t> effectiveOutputShape() const;
+
+    /// Reconfigure the input resolution at runtime.
+    ///
+    /// This allows the same model instance to adapt to different encoder
+    /// backbones that expect different spatial resolutions.  Must be called
+    /// before `loadWeights()` or `forward()`.
+    ///
+    /// @pre height > 0
+    /// @pre width > 0
+    void setInputResolution(int height, int width);
+
+    /// Reconfigure the raw encoder output shape at runtime.
+    ///
+    /// This allows the same model instance to describe the output of
+    /// different encoder backbones. Must be called before `forward()`.
+    ///
+    /// @pre output_shape must not be empty and all dimensions must be > 0
+    void setOutputShape(std::vector<int64_t> output_shape);
     /// @}
 
     /// @name Post-encoder module

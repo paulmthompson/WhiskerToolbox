@@ -7,11 +7,10 @@
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "Media/Media_Data.hpp"
-#include "Media/Video_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
+#include "Media/Video_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "Tensors/TensorData.hpp"
 
@@ -30,6 +29,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSpinBox>
+#include <QStandardItemModel>
 #include <QThread>
 #include <QTimer>
 #include <QVBoxLayout>
@@ -40,6 +40,7 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <sstream>
 #include <variant>
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -396,6 +397,11 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
             }
         }
         _assembler->loadModel(model_id);
+
+        // Apply saved encoder shape if configured
+        if (_current_info && model_id == "general_encoder") {
+            _applyEncoderShape();
+        }
     }
 
     _rebuildSlotPanels();
@@ -503,6 +509,11 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
 
     auto const & inputs = _current_info->inputs;
     auto const & outputs = _current_info->outputs;
+
+    // ── Encoder shape configuration (GeneralEncoderModel only) ──
+    if (_current_info->model_id == "general_encoder") {
+        _buildEncoderShapeSection();
+    }
 
     // ── Dynamic (per-frame) inputs ──
     bool has_dynamic = false;
@@ -661,9 +672,10 @@ void DeepLearningPropertiesWidget::_buildPostEncoderSection() {
     };
 
     connect(module_combo, &QComboBox::currentIndexChanged, this,
-            [updateVisibility, applyToAssembler](int) {
+            [this, updateVisibility, applyToAssembler](int) {
                 updateVisibility();
                 applyToAssembler();
+                _enforcePostEncoderDecoderConsistency();
             });
 
     connect(point_combo, &QComboBox::currentIndexChanged, this,
@@ -673,6 +685,180 @@ void DeepLearningPropertiesWidget::_buildPostEncoderSection() {
             [applyToAssembler](int) { applyToAssembler(); });
 
     _dynamic_layout->addWidget(group);
+
+    // Apply initial consistency (honours saved post-encoder state)
+    _enforcePostEncoderDecoderConsistency();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Post-Encoder / Decoder consistency
+// ────────────────────────────────────────────────────────────────────────────
+
+void DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency() {
+    if (!_dynamic_container || !_current_info) return;
+
+    auto * module_combo = _dynamic_container->findChild<QComboBox *>(
+            QStringLiteral("post_encoder_module_combo"));
+    if (!module_combo) return;
+
+    auto const module_type = module_combo->currentData().toString();
+
+    // Both global_avg_pool and spatial_point collapse spatial dims:
+    //   [B, C, H, W] -> [B, C]
+    // Only TensorToFeatureVector can decode a 2D tensor.
+    bool const spatial_dims_removed =
+            (module_type == QStringLiteral("global_avg_pool") ||
+             module_type == QStringLiteral("spatial_point"));
+
+    for (auto const & slot: _current_info->outputs) {
+        auto * decoder_combo = _dynamic_container->findChild<QComboBox *>(
+                QString::fromStdString("decoder_" + slot.name));
+        auto * target_combo = _dynamic_container->findChild<QComboBox *>(
+                QString::fromStdString("target_" + slot.name));
+        if (!decoder_combo) continue;
+
+        if (spatial_dims_removed) {
+            // Force decoder to TensorToFeatureVector
+            int const fv_idx = decoder_combo->findText(
+                    QStringLiteral("TensorToFeatureVector"));
+            if (fv_idx >= 0) decoder_combo->setCurrentIndex(fv_idx);
+
+            // Disable incompatible items
+            auto * model = qobject_cast<QStandardItemModel *>(decoder_combo->model());
+            if (model) {
+                for (int i = 0; i < model->rowCount(); ++i) {
+                    bool const is_fv = (decoder_combo->itemText(i) ==
+                                        QStringLiteral("TensorToFeatureVector"));
+                    auto * item = model->item(i);
+                    if (is_fv) {
+                        item->setFlags(item->flags() | Qt::ItemIsEnabled);
+                    } else {
+                        item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+                    }
+                }
+            }
+
+            // Update target combo to show TensorData keys
+            if (target_combo) {
+                _populateDataSourceCombo(target_combo, "TensorData");
+            }
+        } else {
+            // Re-enable all decoder items
+            auto * model = qobject_cast<QStandardItemModel *>(decoder_combo->model());
+            if (model) {
+                for (int i = 0; i < model->rowCount(); ++i) {
+                    model->item(i)->setFlags(
+                            model->item(i)->flags() | Qt::ItemIsEnabled);
+                }
+            }
+
+            // Refresh target combo based on current decoder selection
+            if (target_combo) {
+                _populateDataSourceCombo(
+                        target_combo,
+                        SlotAssembler::dataTypeForDecoder(
+                                decoder_combo->currentText().toStdString()));
+            }
+        }
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Encoder Shape Configuration Section
+// ────────────────────────────────────────────────────────────────────────────
+
+void DeepLearningPropertiesWidget::_buildEncoderShapeSection() {
+    auto * group = new QGroupBox(tr("Encoder Shape"), _dynamic_container);
+    auto * form = new QFormLayout(group);
+    group->setToolTip(
+            tr("Configure the input resolution and output shape to match your\n"
+               "compiled model. The defaults (224\u00D7224 input, 384\u00D77\u00D77 output)\n"
+               "only apply to the default ConvNeXt-Tiny backbone.\n\n"
+               "Set these BEFORE loading weights."));
+
+    // ── Input Height ──
+    auto * height_spin = new QSpinBox(group);
+    height_spin->setRange(1, 4096);
+    height_spin->setSuffix(QStringLiteral(" px"));
+    int const saved_h = _state->encoderInputHeight();
+    height_spin->setValue(saved_h > 0 ? saved_h : 224);
+    form->addRow(tr("Input Height:"), height_spin);
+
+    // ── Input Width ──
+    auto * width_spin = new QSpinBox(group);
+    width_spin->setRange(1, 4096);
+    width_spin->setSuffix(QStringLiteral(" px"));
+    int const saved_w = _state->encoderInputWidth();
+    width_spin->setValue(saved_w > 0 ? saved_w : 224);
+    form->addRow(tr("Input Width:"), width_spin);
+
+    // ── Output Shape ──
+    auto * shape_edit = new QLineEdit(group);
+    shape_edit->setPlaceholderText(QStringLiteral("384,7,7"));
+    shape_edit->setToolTip(
+            tr("Comma-separated output dimensions (excluding batch), e.g.:\n"
+               "  384,7,7   — spatial feature map\n"
+               "  768,16,16 — larger backbone\n"
+               "  512       — 1D feature vector"));
+    auto const & saved_shape = _state->encoderOutputShape();
+    if (!saved_shape.empty()) {
+        shape_edit->setText(QString::fromStdString(saved_shape));
+    }
+    form->addRow(tr("Output Shape:"), shape_edit);
+
+    // ── Apply button ──
+    auto * apply_btn = new QPushButton(tr("Apply Shape"), group);
+    apply_btn->setToolTip(
+            tr("Apply the configured shape to the model.\n"
+               "You must re-load weights after changing the shape."));
+    form->addRow(apply_btn);
+
+    // Connections
+    connect(height_spin, &QSpinBox::valueChanged, this,
+            [this](int val) { _state->setEncoderInputHeight(val); });
+    connect(width_spin, &QSpinBox::valueChanged, this,
+            [this](int val) { _state->setEncoderInputWidth(val); });
+    connect(shape_edit, &QLineEdit::textChanged, this,
+            [this](QString const & text) {
+                _state->setEncoderOutputShape(text.toStdString());
+            });
+    connect(apply_btn, &QPushButton::clicked, this, [this] {
+        _applyEncoderShape();
+        _rebuildSlotPanels();
+    });
+
+    _dynamic_layout->addWidget(group);
+}
+
+void DeepLearningPropertiesWidget::_applyEncoderShape() {
+    int const h = _state->encoderInputHeight();
+    int const w = _state->encoderInputWidth();
+
+    // Parse output shape string
+    std::vector<int64_t> out_shape;
+    auto const & shape_str = _state->encoderOutputShape();
+    if (!shape_str.empty()) {
+        std::istringstream iss(shape_str);
+        std::string token;
+        while (std::getline(iss, token, ',')) {
+            try {
+                auto val = std::stoll(token);
+                if (val > 0) {
+                    out_shape.push_back(val);
+                }
+            } catch (std::exception const &) {
+                // Non-numeric token in comma-separated shape string — skip it
+            }
+        }
+    }
+
+    int const effective_h = (h > 0) ? h : 224;
+    int const effective_w = (w > 0) ? w : 224;
+
+    _assembler->configureModelShape(effective_h, effective_w, out_shape);
+
+    // Refresh the display info from the live model to show updated shapes
+    _current_info = _assembler->currentModelDisplayInfo();
 }
 
 // ────────────────────────────────────────────────────────────────────────────

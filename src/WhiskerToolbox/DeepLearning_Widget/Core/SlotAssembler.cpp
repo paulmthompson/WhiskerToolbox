@@ -4,7 +4,6 @@
 #include "DeepLearningBindingData.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "Media/Media_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
@@ -1368,6 +1367,22 @@ std::optional<ModelDisplayInfo> SlotAssembler::getModelDisplayInfo(
     return display;
 }
 
+std::optional<ModelDisplayInfo> SlotAssembler::currentModelDisplayInfo() const {
+    if (!_impl || !_impl->model) return std::nullopt;
+
+    auto const & model = *_impl->model;
+    ModelDisplayInfo display;
+    display.model_id = model.modelId();
+    display.display_name = model.displayName();
+    display.description = model.description();
+    display.inputs = model.inputSlots();
+    display.outputs = model.outputSlots();
+    display.preferred_batch_size = model.preferredBatchSize();
+    display.max_batch_size = model.maxBatchSize();
+    display.batch_mode = model.batchMode();
+    return display;
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // Static: encoder / decoder queries
 // ════════════════════════════════════════════════════════════════════════════
@@ -1444,5 +1459,25 @@ void SlotAssembler::updateSpatialPoint(
     auto points = point_data->getAtTime(TimeFrameIndex(frame));
     if (!points.empty()) {
         sp->setPoint(*points.begin());
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Model shape configuration
+// ════════════════════════════════════════════════════════════════════════════
+
+void SlotAssembler::configureModelShape(
+        int input_height,
+        int input_width,
+        std::vector<int64_t> const & output_shape) {
+    if (!_impl || !_impl->model) return;
+
+    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
+    if (!enc) return;
+
+    enc->setInputResolution(input_height, input_width);
+
+    if (!output_shape.empty()) {
+        enc->setOutputShape(output_shape);
     }
 }

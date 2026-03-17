@@ -42,6 +42,13 @@ struct DeepLearningStateData {
     /// DataManager key of the PointData object supplying the per-frame query
     /// point for the "spatial_point" post-encoder module.
     std::string post_encoder_point_key;
+    /// Custom input height for GeneralEncoderModel (0 = use default 224).
+    int encoder_input_height = 0;
+    /// Custom input width for GeneralEncoderModel (0 = use default 224).
+    int encoder_input_width = 0;
+    /// Custom raw output shape string for GeneralEncoderModel.
+    /// Comma-separated dimensions, e.g. "768,16,16" (empty = use default).
+    std::string encoder_output_shape;
 };
 
 /**
@@ -104,6 +111,16 @@ public:
     [[nodiscard]] std::string const & postEncoderPointKey() const;
     void setPostEncoderPointKey(std::string const & key);
 
+    // ── Encoder Shape Configuration ──
+    [[nodiscard]] int encoderInputHeight() const;
+    void setEncoderInputHeight(int height);
+
+    [[nodiscard]] int encoderInputWidth() const;
+    void setEncoderInputWidth(int width);
+
+    [[nodiscard]] std::string const & encoderOutputShape() const;
+    void setEncoderOutputShape(std::string const & shape);
+
 signals:
     void modelChanged();
     void weightsPathChanged();
@@ -114,6 +131,7 @@ signals:
     void staticInputsChanged();
     void recurrentBindingsChanged();
     void postEncoderModuleChanged();
+    void encoderShapeChanged();
 
 private:
     DeepLearningStateData _data;

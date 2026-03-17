@@ -104,6 +104,7 @@ private:
     void _rebuildSlotPanels();
     void _clearDynamicContent();
     void _buildPostEncoderSection();
+    void _buildEncoderShapeSection();
 
     QGroupBox * _buildDynamicInputGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildStaticInputGroup(dl::TensorSlotDescriptor const & slot);
@@ -130,6 +131,8 @@ private:
     void _loadModelIfReady();
     void _updateCaptureButtonState(std::string const & slot_name);
     void _updateBatchSizeConstraint();
+    void _applyEncoderShape();
+    void _enforcePostEncoderDecoderConsistency();
 
     std::shared_ptr<DeepLearningState> _state;
     std::shared_ptr<DataManager> _data_manager;

@@ -160,3 +160,41 @@ void DeepLearningState::setPostEncoderPointKey(std::string const & key) {
     markDirty();
     emit postEncoderModuleChanged();
 }
+
+// ── Encoder Shape Configuration ──
+
+int DeepLearningState::encoderInputHeight() const {
+    return _data.encoder_input_height;
+}
+
+void DeepLearningState::setEncoderInputHeight(int height) {
+    if (_data.encoder_input_height != height) {
+        _data.encoder_input_height = height;
+        markDirty();
+        emit encoderShapeChanged();
+    }
+}
+
+int DeepLearningState::encoderInputWidth() const {
+    return _data.encoder_input_width;
+}
+
+void DeepLearningState::setEncoderInputWidth(int width) {
+    if (_data.encoder_input_width != width) {
+        _data.encoder_input_width = width;
+        markDirty();
+        emit encoderShapeChanged();
+    }
+}
+
+std::string const & DeepLearningState::encoderOutputShape() const {
+    return _data.encoder_output_shape;
+}
+
+void DeepLearningState::setEncoderOutputShape(std::string const & shape) {
+    if (_data.encoder_output_shape != shape) {
+        _data.encoder_output_shape = shape;
+        markDirty();
+        emit encoderShapeChanged();
+    }
+}
