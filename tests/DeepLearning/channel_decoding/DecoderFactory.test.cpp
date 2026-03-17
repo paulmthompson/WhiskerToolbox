@@ -32,10 +32,11 @@ TEST_CASE("DecoderFactory - availableDecoders lists all", "[channel_decoding][De
 {
     auto const names = dl::DecoderFactory::availableDecoders();
 
-    CHECK(names.size() == 3);
+    CHECK(names.size() == 4);
     CHECK(std::find(names.begin(), names.end(), "TensorToPoint2D") != names.end());
     CHECK(std::find(names.begin(), names.end(), "TensorToMask2D") != names.end());
     CHECK(std::find(names.begin(), names.end(), "TensorToLine2D") != names.end());
+    CHECK(std::find(names.begin(), names.end(), "TensorToFeatureVector") != names.end());
 }
 
 TEST_CASE("DecoderFactory - each decoder reports correct output type", "[channel_decoding][DecoderFactory]")

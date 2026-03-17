@@ -163,11 +163,11 @@ standard approach for converting a spatial feature map into a global feature des
 
 Implementation: `torch::adaptive_avg_pool2d(features, {1, 1}).squeeze(-1).squeeze(-1)`.
 
-- [ ] **`GlobalAvgPoolModule`** — Implement `PostEncoderModule` subclass using 
+- [x] **`GlobalAvgPoolModule`** — Implement `PostEncoderModule` subclass using 
   `torch::adaptive_avg_pool2d`. Input: `[B, C, H, W]`. Output: `[B, C]`. When selected 
   in the `GeneralEncoderModel` widget, no extra configuration is needed — the module 
   applies automatically after the encoder forward pass.
-- [ ] **Unit test** — Verify output shape and values (average of spatial elements) for 
+- [x] **Unit test** — Verify output shape and values (average of spatial elements) for 
   known input tensors.
 
 #### Module: Spatial Point Feature Extraction
@@ -182,48 +182,48 @@ image coordinates, scales the point to feature map coordinates
 (`x_feat = x_src * W / src_W`, `y_feat = y_src * H / src_H`), rounds to the nearest 
 integer index, and extracts `features[:, :, y_feat, x_feat]` → `[B, C]`.
 
-- [ ] **`SpatialPointExtractModule`** — Implement `PostEncoderModule` subclass. 
+- [x] **`SpatialPointExtractModule`** — Implement `PostEncoderModule` subclass. 
   Constructor takes `ImageSize source_image_size` for coordinate scaling. Provide a 
   `setPoint(Point2D<float>)` method to update the query location per frame. 
   Input: `[B, C, H, W]`. Output: `[B, C]`. When selected in the `GeneralEncoderModel`
   widget, a combo box appears listing all `PointData` keys from DataManager; the
   selected key provides the per-frame query point.
-- [ ] **Bilinear interpolation variant** — Instead of nearest-neighbor, use 
+- [x] **Bilinear interpolation variant** — Instead of nearest-neighbor, use 
   `torch::nn::functional::grid_sample` for sub-pixel accuracy. Expose as a constructor 
   option (`InterpolationMode::Nearest` vs `InterpolationMode::Bilinear`).
-- [ ] **Integration with `SlotAssembler`** — Wire the point source so that 
+- [x] **Integration with `SlotAssembler`** — Wire the point source so that 
   `SlotAssembler` reads the current `PointData` value from DataManager each frame and 
   passes it to the module before `apply()`.
-- [ ] **Unit tests** — Verify coordinate scaling and extraction for known feature maps 
+- [x] **Unit tests** — Verify coordinate scaling and extraction for known feature maps 
   and point positions. Test edge cases (point at image boundary, feature map 1×1).
 
 #### Pipeline and Configuration
 
-- [ ] **`PostEncoderPipeline`** — A container that holds an ordered list of 
+- [x] **`PostEncoderPipeline`** — A container that holds an ordered list of 
   `PostEncoderModule` instances, chains `apply()` calls sequentially, and validates 
   shape compatibility between steps.
-- [ ] **JSON configuration** — Extend `RuntimeModelSpec` with an optional 
+- [x] **JSON configuration** — Extend `RuntimeModelSpec` with an optional 
   `"post_encoder"` array field. Each entry specifies a module by name and parameters 
   (e.g. `{"module": "global_avg_pool"}` or 
   `{"module": "spatial_point", "interpolation": "bilinear"}`).
-- [ ] **Factory registration** — Register modules in a `PostEncoderModuleFactory` 
+- [x] **Factory registration** — Register modules in a `PostEncoderModuleFactory` 
   (string key → factory function) so JSON specs can instantiate them by name.
-- [ ] **Widget UI integration** — Add an optional **"Post-Encoder Module"** combo box
+- [x] **Widget UI integration** — Add an optional **"Post-Encoder Module"** combo box
   to the `GeneralEncoderModel` section of the Deep Learning Properties widget. Options:
   `None` (default), `Global Average Pooling`, `Spatial Point Extraction`. Selecting
   `Global Average Pooling` requires no further input. Selecting `Spatial Point
   Extraction` reveals a second combo box listing all `PointData` keys currently
   registered in DataManager, allowing the user to choose the point source. The output
   slot shape shown in the UI updates dynamically to reflect the active module's output.
-- [ ] **`TensorToFeatureVector` decoder** — A new decoder that writes a `[B, C]` 
+- [x] **`TensorToFeatureVector` decoder** — A new decoder that writes a `[B, C]` 
   output (after post-encoder processing) to a `TensorData` object in DataManager, 
   storing one feature vector per frame.
 
 #### Documentation
 
-- [ ] **Developer doc** — Architecture overview for `PostEncoderModule`, the pipeline, 
+- [x] **Developer doc** — Architecture overview for `PostEncoderModule`, the pipeline, 
   and the factory. Place at `docs/developer/DeepLearning/post_encoder_modules.qmd`.
-- [ ] **User guide** — Practical walkthrough: load an encoder, add global average 
+- [x] **User guide** — Practical walkthrough: load an encoder, add global average 
   pooling, extract per-frame features, visualize in DataViewer.
 
 ### Performance

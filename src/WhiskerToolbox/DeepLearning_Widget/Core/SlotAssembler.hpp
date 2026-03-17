@@ -283,6 +283,34 @@ public:
     [[nodiscard]] static std::string dataTypeForDecoder(
             std::string const & decoder_id);
 
+    // ── Post-encoder configuration ─────────────────────────────────────────
+
+    /// Configure a post-encoder module on the currently loaded model.
+    ///
+    /// Only applies when the current model is a `GeneralEncoderModel`.
+    /// Calling this when the model changes will reset the configuration.
+    ///
+    /// @param module_type  Module key: "" / "none", "global_avg_pool",
+    ///                     or "spatial_point".
+    /// @param source_image_size  Source image size used for "spatial_point"
+    ///        coordinate scaling.
+    /// @param interpolation  "nearest" or "bilinear" (spatial_point only).
+    void configurePostEncoderModule(
+            std::string const & module_type,
+            ImageSize source_image_size = {},
+            std::string const & interpolation = "nearest");
+
+    /// Update the spatial-point query for the current frame.
+    ///
+    /// For the "spatial_point" post-encoder, reads the point at
+    /// `frame` from `point_key` in DataManager and forwards it to the module.
+    ///
+    /// No-op if the current module is not "spatial_point" or if `point_key`
+    /// is empty.
+    void updateSpatialPoint(DataManager & dm,
+                            std::string const & point_key,
+                            int frame);
+
 private:
     struct Impl;
     std::unique_ptr<Impl> _impl;

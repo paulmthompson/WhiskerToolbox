@@ -356,6 +356,56 @@ endif()
 
 enable_whiskertoolbox_shared_test_pch(test_runtime_model)
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Post-Encoder Module Tests
+# ─────────────────────────────────────────────────────────────────────────────
+
+add_executable(test_post_encoder_modules
+    post_encoder/PostEncoderModules.test.cpp
+)
+
+target_link_libraries(test_post_encoder_modules PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::DeepLearning
+    NEURALYZER_GEOMETRY
+    "${TORCH_LIBRARIES}"
+)
+
+target_include_directories(test_post_encoder_modules PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_post_encoder_modules PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_post_encoder_modules PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_post_encoder_modules PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_post_encoder_modules
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_post_encoder_modules)
+    endif()
+else()
+    add_test(NAME test_post_encoder_modules_all
+        COMMAND test_post_encoder_modules
+    )
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_post_encoder_modules)
+
 # ────────────────────────────────────────────────────────────────────────────
 # Standalone test driver for NeuroSAM debugging
 # ────────────────────────────────────────────────────────────────────────────

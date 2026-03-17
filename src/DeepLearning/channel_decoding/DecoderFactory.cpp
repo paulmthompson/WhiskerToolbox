@@ -1,5 +1,6 @@
 #include "DecoderFactory.hpp"
 
+#include "TensorToFeatureVector.hpp"
 #include "TensorToLine2D.hpp"
 #include "TensorToMask2D.hpp"
 #include "TensorToPoint2D.hpp"
@@ -17,12 +18,15 @@ std::unique_ptr<ChannelDecoder> DecoderFactory::create(std::string const & decod
     if (decoder_name == "TensorToLine2D") {
         return std::make_unique<TensorToLine2D>();
     }
+    if (decoder_name == "TensorToFeatureVector") {
+        return std::make_unique<TensorToFeatureVector>();
+    }
     return nullptr;
 }
 
 std::vector<std::string> DecoderFactory::availableDecoders()
 {
-    return {"TensorToPoint2D", "TensorToMask2D", "TensorToLine2D"};
+    return {"TensorToPoint2D", "TensorToMask2D", "TensorToLine2D", "TensorToFeatureVector"};
 }
 
 } // namespace dl

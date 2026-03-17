@@ -1,0 +1,44 @@
+---
+title: "Post-Encoder Feature Extraction"
+---
+
+## Overview
+
+After a deep learning encoder processes each video frame into a feature map `[B, C, H, W]`, a **post-encoder module** optionally collapses or focuses the spatial dimensions before the result is written to DataManager. This is useful for:
+
+- Extracting a single compact feature vector per frame (Global Average Pooling)
+- Watching features at a tracked anatomical landmark (Spatial Point Extraction)
+
+## Selecting a Post-Encoder Module
+
+The **Post-Encoder Module** section appears at the bottom of the Deep Learning widget's **Dynamic Slots** panel, below the Outputs section.
+
+Use the **Module** combo to choose one of:
+
+| Option | What it does |
+|--------|-------------|
+| **None** | Passes the encoder output directly to the decoder (default). |
+| **Global Average Pooling** | Averages across all spatial pixels → `[B, C]` feature vector per batch. |
+| **Spatial Point Extraction** | Reads features at a user-tracked 2-D point → `[B, C]` feature vector per frame. |
+
+## Global Average Pooling
+
+1. Set **Module** to *Global Average Pooling*.
+2. Set the output decoder to `TensorToFeatureVector` (or a compatible target key).
+3. Run batch inference. A `TensorData` matrix is written to DataManager when the batch completes. Rows correspond to frames; columns correspond to encoder channels.
+
+## Spatial Point Extraction
+
+1. Ensure you have a `PointData` object loaded that tracks the anatomical location of interest frame by frame (e.g. a whisker base, eye corner).
+2. Set **Module** to *Spatial Point Extraction*.
+3. Choose **Interpolation**: *Bilinear* (recommended for sub-pixel accuracy) or *Nearest* (faster).
+4. Select the **Point Key** from the combo — this should be the `PointData` key containing the per-frame 2-D coordinates.
+5. Run inference. Before each frame the widget reads the first point from the chosen `PointData` at that frame index and passes it to the module.
+
+## Output: TensorData
+
+When `TensorToFeatureVector` is used as the decoder, results are accumulated across all batch frames and written as a single **TensorData** object. Each row is one frame and each column is one feature channel. The object can be viewed with the Tensor Inspector or used as input to ML pipelines.
+
+::: {.callout-note}
+For **single-frame** inference (Run Frame / Current), a 1-row `TensorData` is written immediately to DataManager after inference completes.
+:::

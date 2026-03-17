@@ -9,7 +9,6 @@
 #include <cassert>
 #include <stdexcept>
 #include <utility>
-
 namespace dl {
 
 // ---------------------------------------------------------------------------
@@ -75,7 +74,7 @@ std::vector<TensorSlotDescriptor> GeneralEncoderModel::inputSlots() const {
 std::vector<TensorSlotDescriptor> GeneralEncoderModel::outputSlots() const {
     return {
             {.name = kFeaturesSlot,
-             .shape = _output_shape,
+             .shape = effectiveOutputShape(),
              .description = "Extracted feature tensor",
              .recommended_encoder = {},
              .recommended_decoder = {},
@@ -117,6 +116,25 @@ BatchMode GeneralEncoderModel::batchMode() const {
 }
 
 // ---------------------------------------------------------------------------
+// Post-encoder module
+// ---------------------------------------------------------------------------
+std::vector<int64_t> GeneralEncoderModel::effectiveOutputShape() const {
+    if (_post_encoder_module) {
+        return _post_encoder_module->outputShape(_output_shape);
+    }
+    return _output_shape;
+}
+
+void GeneralEncoderModel::setPostEncoderModule(
+        std::unique_ptr<PostEncoderModule> module) {
+    _post_encoder_module = std::move(module);
+}
+
+PostEncoderModule * GeneralEncoderModel::postEncoderModule() const {
+    return _post_encoder_module.get();
+}
+
+// ---------------------------------------------------------------------------
 // Forward pass
 // ---------------------------------------------------------------------------
 std::unordered_map<std::string, torch::Tensor>
@@ -152,7 +170,14 @@ GeneralEncoderModel::forward(
 
     // Map the first output to the "features" slot
     std::unordered_map<std::string, torch::Tensor> result;
-    result[kFeaturesSlot] = output_tensors[0].to(torch::kCPU);
+    torch::Tensor features = output_tensors[0].to(torch::kCPU);
+
+    // Apply post-encoder module if configured
+    if (_post_encoder_module) {
+        features = _post_encoder_module->apply(features);
+    }
+
+    result[kFeaturesSlot] = std::move(features);
 
     return result;
 }

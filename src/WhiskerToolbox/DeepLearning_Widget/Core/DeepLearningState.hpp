@@ -35,6 +35,13 @@ struct DeepLearningStateData {
     std::vector<RecurrentBindingData> recurrent_bindings;
     std::string instance_id;
     std::string display_name = "Deep Learning";
+    /// Post-encoder module type for GeneralEncoderModel.
+    /// Accepted values: "" / "none" (pass-through), "global_avg_pool",
+    /// "spatial_point".
+    std::string post_encoder_module_type;
+    /// DataManager key of the PointData object supplying the per-frame query
+    /// point for the "spatial_point" post-encoder module.
+    std::string post_encoder_point_key;
 };
 
 /**
@@ -90,6 +97,13 @@ public:
     /// Whether any recurrent bindings are active (forces batch_size=1).
     [[nodiscard]] bool hasRecurrentBindings() const;
 
+    // ── Post-Encoder Module ──
+    [[nodiscard]] std::string const & postEncoderModuleType() const;
+    void setPostEncoderModuleType(std::string const & type);
+
+    [[nodiscard]] std::string const & postEncoderPointKey() const;
+    void setPostEncoderPointKey(std::string const & key);
+
 signals:
     void modelChanged();
     void weightsPathChanged();
@@ -99,6 +113,7 @@ signals:
     void outputBindingsChanged();
     void staticInputsChanged();
     void recurrentBindingsChanged();
+    void postEncoderModuleChanged();
 
 private:
     DeepLearningStateData _data;

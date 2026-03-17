@@ -9,6 +9,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "Tensors/TensorData.hpp"
 
 #include "channel_encoding/ChannelEncoder.hpp"
 #include "channel_encoding/EncoderFactory.hpp"
@@ -19,6 +20,7 @@
 
 #include "channel_decoding/ChannelDecoder.hpp"
 #include "channel_decoding/DecoderFactory.hpp"
+#include "channel_decoding/TensorToFeatureVector.hpp"
 #include "channel_decoding/TensorToLine2D.hpp"
 #include "channel_decoding/TensorToMask2D.hpp"
 #include "channel_decoding/TensorToPoint2D.hpp"
@@ -26,6 +28,9 @@
 #include "models_v2/ModelBase.hpp"
 #include "models_v2/TensorDTypeUtils.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
+#include "models_v2/general_encoder/GeneralEncoderModel.hpp"
+#include "post_encoder/PostEncoderModuleFactory.hpp"
+#include "post_encoder/SpatialPointExtractModule.hpp"
 #include "registry/ModelRegistry.hpp"
 
 #include <torch/torch.h>
@@ -57,6 +62,10 @@ struct SlotAssembler::Impl {
     /// Stores the output tensor from the previous frame that will be
     /// injected into the input slot on the next frame.
     std::unordered_map<std::string, torch::Tensor> recurrent_cache;
+
+    /// DataManager key for the PointData source of the spatial_point module.
+    /// Empty if no spatial_point module is active.
+    std::string spatial_point_key;
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -647,6 +656,27 @@ void decodeOutputs(
                 line_data->addAtTime(frame_idx, std::move(line), NotifyObservers::Yes);
             }
 
+        } else if (binding.decoder_id == "TensorToFeatureVector") {
+            dl::TensorToFeatureVector const decoder;
+            auto vec = decoder.decode(tensor, params);
+
+            // Create a new 1-row TensorData for the current frame.
+            // For single-frame inference this replaces the previous row;
+            // for batch inference the widget accumulates rows separately.
+            if (!vec.empty()) {
+                auto td = dm.getData<TensorData>(binding.data_key);
+                if (!td) {
+                    // First write: create a 1-row 2D TensorData
+                    auto new_td = std::make_shared<TensorData>(
+                            TensorData::createOrdinal2D(
+                                    vec, 1, vec.size()));
+                    dm.setData<TensorData>(
+                            binding.data_key, std::move(new_td), TimeKey("media"));
+                }
+                // Note: incremental append is not supported; batch accumulation
+                // is handled at the widget level via the FrameResult path.
+            }
+
         } else {
             std::cerr << "SlotAssembler: unknown decoder '"
                       << binding.decoder_id << "'\n";
@@ -718,6 +748,16 @@ std::vector<FrameResult> decodeOutputsToBuffer(
                 frame_results.push_back(FrameResult{
                         current_frame,
                         std::move(line),
+                        binding.data_key,
+                        binding.decoder_id});
+            }
+        } else if (binding.decoder_id == "TensorToFeatureVector") {
+            dl::TensorToFeatureVector const decoder;
+            auto vec = decoder.decode(tensor, params);
+            if (!vec.empty()) {
+                frame_results.push_back(FrameResult{
+                        current_frame,
+                        std::move(vec),
                         binding.data_key,
                         binding.decoder_id});
             }
@@ -944,6 +984,11 @@ void SlotAssembler::runBatchRange(
             progress(i, total_frames);
         }
 
+        // Update spatial-point query for the current frame if applicable
+        if (!_impl->spatial_point_key.empty()) {
+            updateSpatialPoint(dm, _impl->spatial_point_key, frame);
+        }
+
         auto inputs = assembleInputs(
                 dm, *_impl->model,
                 input_bindings, static_inputs,
@@ -1011,6 +1056,11 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
         }
 
         try {
+            // Update spatial-point query for the current frame if applicable
+            if (!_impl->spatial_point_key.empty()) {
+                updateSpatialPoint(dm, _impl->spatial_point_key, frame);
+            }
+
             auto inputs = assembleInputs(
                     dm, *_impl->model,
                     input_bindings, static_inputs,
@@ -1342,5 +1392,57 @@ std::string SlotAssembler::dataTypeForDecoder(std::string const & decoder_id) {
     if (decoder_id == "TensorToPoint2D") return "PointData";
     if (decoder_id == "TensorToMask2D") return "MaskData";
     if (decoder_id == "TensorToLine2D") return "LineData";
+    if (decoder_id == "TensorToFeatureVector") return "TensorData";
     return {};
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Post-encoder configuration
+// ════════════════════════════════════════════════════════════════════════════
+
+void SlotAssembler::configurePostEncoderModule(
+        std::string const & module_type,
+        ImageSize source_image_size,
+        std::string const & interpolation) {
+    if (!_impl || !_impl->model) return;
+
+    // Only GeneralEncoderModel supports post-encoder modules
+    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
+    if (!enc) return;
+
+    dl::PostEncoderModuleParams params;
+    params.source_image_size = source_image_size;
+    params.interpolation = interpolation;
+
+    auto module = dl::PostEncoderModuleFactory::create(module_type, params);
+    enc->setPostEncoderModule(std::move(module));
+
+    // Clear the spatial point key unless spatial_point is configured
+    if (module_type != "spatial_point") {
+        _impl->spatial_point_key.clear();
+    }
+}
+
+void SlotAssembler::updateSpatialPoint(
+        DataManager & dm,
+        std::string const & point_key,
+        int frame) {
+    if (!_impl || !_impl->model || point_key.empty()) return;
+
+    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
+    if (!enc) return;
+
+    auto * module = enc->postEncoderModule();
+    if (!module || module->name() != "spatial_point") return;
+
+    auto * sp = dynamic_cast<dl::SpatialPointExtractModule *>(module);
+    if (!sp) return;
+
+    auto point_data = dm.getData<PointData>(point_key);
+    if (!point_data) return;
+
+    auto points = point_data->getAtTime(TimeFrameIndex(frame));
+    if (!points.empty()) {
+        sp->setPoint(*points.begin());
+    }
 }

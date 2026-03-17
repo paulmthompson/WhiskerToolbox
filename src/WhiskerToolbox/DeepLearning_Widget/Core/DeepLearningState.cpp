@@ -140,3 +140,23 @@ void DeepLearningState::setRecurrentBindings(std::vector<RecurrentBindingData> b
 bool DeepLearningState::hasRecurrentBindings() const {
     return !_data.recurrent_bindings.empty();
 }
+
+std::string const & DeepLearningState::postEncoderModuleType() const {
+    return _data.post_encoder_module_type;
+}
+
+void DeepLearningState::setPostEncoderModuleType(std::string const & type) {
+    _data.post_encoder_module_type = type;
+    markDirty();
+    emit postEncoderModuleChanged();
+}
+
+std::string const & DeepLearningState::postEncoderPointKey() const {
+    return _data.post_encoder_point_key;
+}
+
+void DeepLearningState::setPostEncoderPointKey(std::string const & key) {
+    _data.post_encoder_point_key = key;
+    markDirty();
+    emit postEncoderModuleChanged();
+}

@@ -21,9 +21,11 @@
 
 #include <QWidget>
 
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 class QComboBox;
@@ -101,6 +103,7 @@ private:
     void _populateModelCombo();
     void _rebuildSlotPanels();
     void _clearDynamicContent();
+    void _buildPostEncoderSection();
 
     QGroupBox * _buildDynamicInputGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildStaticInputGroup(dl::TensorSlotDescriptor const & slot);
@@ -169,6 +172,12 @@ private:
     QThread * _batch_worker = nullptr;
     QTimer * _merge_timer = nullptr;
     std::shared_ptr<WriteReservation> _write_reservation;
+
+    // ── Batch feature-vector accumulation ─────────────────────────────────
+    // Keyed by data_key → sorted list of (frame_index, feature_vector).
+    // Populated by _mergeResults() and flushed to TensorData on batch finish.
+    std::map<std::string, std::vector<std::pair<int, std::vector<float>>>>
+            _pending_feature_rows;
 };
 
 #endif// DEEP_LEARNING_PROPERTIES_WIDGET_HPP

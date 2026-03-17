@@ -6,9 +6,11 @@
 
 #include "models_v2/ModelBase.hpp"
 #include "models_v2/ModelExecution.hpp"
+#include "post_encoder/PostEncoderModule.hpp"
 
 #include <cstdint>
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -95,7 +97,30 @@ public:
     [[nodiscard]] int inputChannels() const { return _input_channels; }
     [[nodiscard]] int inputHeight() const { return _input_height; }
     [[nodiscard]] int inputWidth() const { return _input_width; }
+
+    /// Raw encoder output shape (before any post-encoder module is applied).
     [[nodiscard]] std::vector<int64_t> const & outputShape() const { return _output_shape; }
+
+    /// Effective output shape reported by `outputSlots()`, accounting for any
+    /// configured post-encoder module.
+    [[nodiscard]] std::vector<int64_t> effectiveOutputShape() const;
+    /// @}
+
+    /// @name Post-encoder module
+    /// @{
+
+    /// Replace the current post-encoder module.
+    ///
+    /// If `module` is `nullptr`, the raw encoder output is returned unchanged.
+    /// Calling this method immediately changes the shape reported by
+    /// `outputSlots()`.
+    ///
+    /// @note Not thread-safe; must be called before concurrent `forward()` use.
+    void setPostEncoderModule(std::unique_ptr<PostEncoderModule> module);
+
+    /// Non-owning access to the current post-encoder module.
+    /// Returns `nullptr` if none is configured.
+    [[nodiscard]] PostEncoderModule * postEncoderModule() const;
     /// @}
 
 private:
@@ -105,6 +130,7 @@ private:
     std::vector<int64_t> _output_shape;
     ModelExecution _execution;
     std::vector<std::string> _input_order;
+    std::unique_ptr<PostEncoderModule> _post_encoder_module;
 };
 
 }// namespace dl
