@@ -50,6 +50,9 @@ set(MLCore_SOURCES
     pipelines/ClusteringPipeline.cpp
     pipelines/ClusteringPipeline.hpp
 
+    pipelines/SequenceAssembler.cpp
+    pipelines/SequenceAssembler.hpp
+
     preprocessing/ClassBalancing.cpp
     preprocessing/ClassBalancing.hpp
 

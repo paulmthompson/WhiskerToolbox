@@ -28,6 +28,7 @@ add_executable(test_MLCore
     NaiveBayesOperation.test.cpp
     PredictionWriter.test.cpp
     RandomForestOperation.test.cpp
+    SequenceAssembler.test.cpp
     TimeEntityUtils.test.cpp
 )
 
