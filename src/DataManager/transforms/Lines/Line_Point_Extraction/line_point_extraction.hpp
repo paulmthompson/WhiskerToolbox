@@ -33,9 +33,8 @@ struct LinePointExtractionParameters : public TransformParametersBase {
 
 /**
  * @brief Extract a point from LineData at specified position
- * @param line_data The LineData to extract from
- * @param params The extraction parameters
- * @return A new PointData containing the extracted points
+ *
+ * @pre When method is Parametric, params.polynomial_order >= 0 (enforcement: none)
  */
 std::shared_ptr<PointData> extract_line_point(
         LineData const * line_data,
@@ -43,10 +42,8 @@ std::shared_ptr<PointData> extract_line_point(
 
 /**
  * @brief Extract a point from LineData with progress reporting
- * @param line_data The LineData to extract from
- * @param params The extraction parameters
- * @param progressCallback Progress reporting callback
- * @return A new PointData containing the extracted points
+ *
+ * @pre When method is Parametric, params.polynomial_order >= 0 (enforcement: none)
  */
 std::shared_ptr<PointData> extract_line_point(
         LineData const * line_data,

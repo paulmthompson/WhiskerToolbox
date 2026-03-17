@@ -25,9 +25,17 @@ struct LineCurvatureParameters : public TransformParametersBase {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @brief Compute curvature at a position along each line in the dataset
+ *
+ * @pre When method is PolynomialFit, params->polynomial_order >= 0 and params->fitting_window_percentage in (0, 1] (enforcement: none)
+ */
 std::shared_ptr<AnalogTimeSeries> line_curvature(LineData const * line_data,
                                                  LineCurvatureParameters const * params);
 
+/**
+ * @pre When method is PolynomialFit, params->polynomial_order >= 0 and params->fitting_window_percentage in (0, 1] (enforcement: none)
+ */
 std::shared_ptr<AnalogTimeSeries> line_curvature(LineData const * line_data,
                                                  LineCurvatureParameters const * params,
                                                  ProgressCallback progressCallback);
