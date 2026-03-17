@@ -1,11 +1,11 @@
 ---
 title: "Label Assembly"
-description: "Three modes for assembling training labels from WhiskerToolbox data"
+description: "Four modes for assembling training labels from WhiskerToolbox data"
 ---
 
 ## Overview
 
-`LabelAssembler` (`features/LabelAssembler.hpp`) converts WhiskerToolbox data sources into the `arma::Row<size_t>` label vectors that supervised ML algorithms require. It supports three labeling modes, each suited to different annotation workflows.
+`LabelAssembler` (`features/LabelAssembler.hpp`) converts WhiskerToolbox data sources into the `arma::Row<size_t>` label vectors that supervised ML algorithms require. It supports four labeling modes, each suited to different annotation workflows.
 
 ## Label Modes
 
@@ -26,7 +26,26 @@ auto labels = assembleLabels(dm, label_config, interval_key, valid_row_indices, 
 
 **Use case**: Binary annotation tasks where the user has defined intervals marking an event (e.g., whisker contact periods).
 
-### 2. From TimeEntity Groups (Multi-class)
+### 2. From Events (Binary)
+
+Labels frames as positive (event present) or negative (no event) using a `DigitalEventSeries`. This is similar to interval-based labeling but uses discrete point events instead of time ranges.
+
+```cpp
+LabelFromEvents config;
+config.positive_class_name = "Contact";
+config.negative_class_name = "NoContact";
+
+LabelAssemblyConfig label_config = config;
+// In pipeline config: set label_event_key to the DataManager key
+auto labels = assembleLabelsFromEvents(events, time_frame, row_times, config);
+// labels.labels: 0 = no event at frame, 1 = event present at frame
+// labels.class_names: ["NoContact", "Contact"]
+// labels.unlabeled_count: always 0 (every frame gets a label)
+```
+
+**Use case**: Binary annotation from discrete event data (e.g., spike times, contact onset markers). Particularly useful for HMM sequence classification where events mark state transitions.
+
+### 3. From TimeEntity Groups (Multi-class)
 
 Uses the `EntityGroupManager` to assign per-frame labels based on `TimeEntity` group membership. Each group becomes a class.
 
@@ -43,7 +62,7 @@ auto labels = assembleLabels(dm, label_config, "", valid_row_indices, time_key);
 
 **Use case**: Multi-class annotation where the user has labeled frames into named categories using the entity/group system.
 
-### 3. From Data-Entity Groups (Multi-class)
+### 4. From Data-Entity Groups (Multi-class)
 
 Labels based on which entity groups a data object's entities belong to. This mode works with any data type that has entities, not just TimeEntities.
 

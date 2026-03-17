@@ -3,6 +3,7 @@
 
 #include "features/LabelAssembler.hpp"
 
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
@@ -37,12 +38,11 @@ std::shared_ptr<TimeFrame> makeTimeFrame(int count) {
  * The series is assigned the given TimeFrame.
  */
 std::shared_ptr<DigitalIntervalSeries> makeIntervalSeries(
-    std::vector<std::pair<int64_t, int64_t>> const & intervals_vec,
-    std::shared_ptr<TimeFrame> tf)
-{
+        std::vector<std::pair<int64_t, int64_t>> const & intervals_vec,
+        std::shared_ptr<TimeFrame> tf) {
     auto series = std::make_shared<DigitalIntervalSeries>();
     series->setTimeFrame(tf);
-    for (auto const & [s, e] : intervals_vec) {
+    for (auto const & [s, e]: intervals_vec) {
         series->addEvent(TimeFrameIndex(s), TimeFrameIndex(e));
     }
     return series;
@@ -54,7 +54,7 @@ std::shared_ptr<DigitalIntervalSeries> makeIntervalSeries(
 std::vector<TimeFrameIndex> makeRowTimes(std::vector<int64_t> const & values) {
     std::vector<TimeFrameIndex> times;
     times.reserve(values.size());
-    for (auto v : values) {
+    for (auto v: values) {
         times.emplace_back(v);
     }
     return times;
@@ -66,15 +66,14 @@ std::vector<TimeFrameIndex> makeRowTimes(std::vector<int64_t> const & values) {
  * @return Vector of registered EntityIds
  */
 std::vector<EntityId> registerTimeEntitiesInGroup(
-    EntityRegistry & registry,
-    EntityGroupManager & groups,
-    GroupId group_id,
-    std::string const & time_key,
-    std::vector<int64_t> const & time_values)
-{
+        EntityRegistry & registry,
+        EntityGroupManager & groups,
+        GroupId group_id,
+        std::string const & time_key,
+        std::vector<int64_t> const & time_values) {
     std::vector<EntityId> ids;
     ids.reserve(time_values.size());
-    for (auto tv : time_values) {
+    for (auto tv: time_values) {
         auto eid = registry.ensureId(time_key, EntityKind::TimeEntity, TimeFrameIndex(tv), 0);
         ids.push_back(eid);
         groups.addEntityToGroup(group_id, eid);
@@ -86,16 +85,15 @@ std::vector<EntityId> registerTimeEntitiesInGroup(
  * @brief Register data entities and add them to a group
  */
 std::vector<EntityId> registerDataEntitiesInGroup(
-    EntityRegistry & registry,
-    EntityGroupManager & groups,
-    GroupId group_id,
-    std::string const & data_key,
-    EntityKind kind,
-    std::vector<int64_t> const & time_values)
-{
+        EntityRegistry & registry,
+        EntityGroupManager & groups,
+        GroupId group_id,
+        std::string const & data_key,
+        EntityKind kind,
+        std::vector<int64_t> const & time_values) {
     std::vector<EntityId> ids;
     ids.reserve(time_values.size());
-    for (auto tv : time_values) {
+    for (auto tv: time_values) {
         auto eid = registry.ensureId(data_key, kind, TimeFrameIndex(tv), 0);
         ids.push_back(eid);
         groups.addEntityToGroup(group_id, eid);
@@ -103,7 +101,7 @@ std::vector<EntityId> registerDataEntitiesInGroup(
     return ids;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // assembleLabelsFromIntervals — binary labeling
@@ -123,15 +121,15 @@ TEST_CASE("LabelAssembler: binary labels from intervals basic", "[LabelAssembler
     CHECK(result.unlabeled_count == 0);
 
     // Expected: outside, inside×3, outside, inside×3, outside
-    CHECK(result.labels(0) == 0);  // 5  → outside
-    CHECK(result.labels(1) == 1);  // 10 → inside (interval start)
-    CHECK(result.labels(2) == 1);  // 15 → inside
-    CHECK(result.labels(3) == 1);  // 20 → inside (interval end)
-    CHECK(result.labels(4) == 0);  // 25 → outside (gap)
-    CHECK(result.labels(5) == 1);  // 30 → inside (second interval start)
-    CHECK(result.labels(6) == 1);  // 35 → inside
-    CHECK(result.labels(7) == 1);  // 40 → inside (second interval end)
-    CHECK(result.labels(8) == 0);  // 45 → outside
+    CHECK(result.labels(0) == 0);// 5  → outside
+    CHECK(result.labels(1) == 1);// 10 → inside (interval start)
+    CHECK(result.labels(2) == 1);// 15 → inside
+    CHECK(result.labels(3) == 1);// 20 → inside (interval end)
+    CHECK(result.labels(4) == 0);// 25 → outside (gap)
+    CHECK(result.labels(5) == 1);// 30 → inside (second interval start)
+    CHECK(result.labels(6) == 1);// 35 → inside
+    CHECK(result.labels(7) == 1);// 40 → inside (second interval end)
+    CHECK(result.labels(8) == 0);// 45 → outside
 }
 
 TEST_CASE("LabelAssembler: binary labels class names default", "[LabelAssembler]") {
@@ -204,8 +202,8 @@ TEST_CASE("LabelAssembler: binary throws on empty row_times", "[LabelAssembler]"
     std::vector<TimeFrameIndex> empty_times;
 
     CHECK_THROWS_AS(
-        MLCore::assembleLabelsFromIntervals(*intervals, *tf, empty_times),
-        std::invalid_argument);
+            MLCore::assembleLabelsFromIntervals(*intervals, *tf, empty_times),
+            std::invalid_argument);
 }
 
 // ============================================================================
@@ -240,12 +238,12 @@ TEST_CASE("LabelAssembler: time entity groups binary", "[LabelAssembler]") {
     REQUIRE(result.labels.n_elem == 6);
     CHECK(result.unlabeled_count == 0);
 
-    CHECK(result.labels(0) == 1);  // frame 5  → No Contact (class 1)
-    CHECK(result.labels(1) == 0);  // frame 10 → Contact (class 0)
-    CHECK(result.labels(2) == 0);  // frame 15 → Contact (class 0)
-    CHECK(result.labels(3) == 0);  // frame 20 → Contact (class 0)
-    CHECK(result.labels(4) == 1);  // frame 25 → No Contact (class 1)
-    CHECK(result.labels(5) == 1);  // frame 30 → No Contact (class 1)
+    CHECK(result.labels(0) == 1);// frame 5  → No Contact (class 1)
+    CHECK(result.labels(1) == 0);// frame 10 → Contact (class 0)
+    CHECK(result.labels(2) == 0);// frame 15 → Contact (class 0)
+    CHECK(result.labels(3) == 0);// frame 20 → Contact (class 0)
+    CHECK(result.labels(4) == 1);// frame 25 → No Contact (class 1)
+    CHECK(result.labels(5) == 1);// frame 30 → No Contact (class 1)
 
     // Check class names come from group names
     REQUIRE(result.class_names.size() == 2);
@@ -273,13 +271,13 @@ TEST_CASE("LabelAssembler: time entity groups with unlabeled rows", "[LabelAssem
     auto result = MLCore::assembleLabelsFromTimeEntityGroups(groups, registry, row_times, config);
 
     REQUIRE(result.num_classes == 1);
-    CHECK(result.unlabeled_count == 3);  // frames 5, 15, 25 unlabeled
+    CHECK(result.unlabeled_count == 3);// frames 5, 15, 25 unlabeled
 
-    CHECK(result.labels(0) == 1);  // frame 5  → unlabeled (sentinel = num_classes = 1)
-    CHECK(result.labels(1) == 0);  // frame 10 → ClassA (class 0)
-    CHECK(result.labels(2) == 1);  // frame 15 → unlabeled
-    CHECK(result.labels(3) == 0);  // frame 20 → ClassA (class 0)
-    CHECK(result.labels(4) == 1);  // frame 25 → unlabeled
+    CHECK(result.labels(0) == 1);// frame 5  → unlabeled (sentinel = num_classes = 1)
+    CHECK(result.labels(1) == 0);// frame 10 → ClassA (class 0)
+    CHECK(result.labels(2) == 1);// frame 15 → unlabeled
+    CHECK(result.labels(3) == 0);// frame 20 → ClassA (class 0)
+    CHECK(result.labels(4) == 1);// frame 25 → unlabeled
 }
 
 TEST_CASE("LabelAssembler: time entity groups three classes", "[LabelAssembler]") {
@@ -372,7 +370,7 @@ TEST_CASE("LabelAssembler: time entity groups ignores non-TimeEntity kinds", "[L
 
     // frame 10 matched via TimeEntity, frame 20 unlabeled
     CHECK(result.labels(0) == 0);
-    CHECK(result.labels(1) == 1);  // sentinel = num_classes
+    CHECK(result.labels(1) == 1);// sentinel = num_classes
     CHECK(result.unlabeled_count == 1);
 }
 
@@ -413,8 +411,8 @@ TEST_CASE("LabelAssembler: time entity groups throws on empty class_groups", "[L
     config.time_key = "camera";
 
     CHECK_THROWS_AS(
-        MLCore::assembleLabelsFromTimeEntityGroups(groups, registry, row_times, config),
-        std::invalid_argument);
+            MLCore::assembleLabelsFromTimeEntityGroups(groups, registry, row_times, config),
+            std::invalid_argument);
 }
 
 TEST_CASE("LabelAssembler: time entity groups throws on empty row_times", "[LabelAssembler]") {
@@ -429,8 +427,8 @@ TEST_CASE("LabelAssembler: time entity groups throws on empty row_times", "[Labe
     config.time_key = "camera";
 
     CHECK_THROWS_AS(
-        MLCore::assembleLabelsFromTimeEntityGroups(groups, registry, empty_times, config),
-        std::invalid_argument);
+            MLCore::assembleLabelsFromTimeEntityGroups(groups, registry, empty_times, config),
+            std::invalid_argument);
 }
 
 // ============================================================================
@@ -461,12 +459,12 @@ TEST_CASE("LabelAssembler: data entity groups basic", "[LabelAssembler]") {
     REQUIRE(result.labels.n_elem == 6);
     CHECK(result.unlabeled_count == 0);
 
-    CHECK(result.labels(0) == 0);  // 10 → Protraction
-    CHECK(result.labels(1) == 0);  // 20 → Protraction
-    CHECK(result.labels(2) == 0);  // 30 → Protraction
-    CHECK(result.labels(3) == 1);  // 40 → Retraction
-    CHECK(result.labels(4) == 1);  // 50 → Retraction
-    CHECK(result.labels(5) == 1);  // 60 → Retraction
+    CHECK(result.labels(0) == 0);// 10 → Protraction
+    CHECK(result.labels(1) == 0);// 20 → Protraction
+    CHECK(result.labels(2) == 0);// 30 → Protraction
+    CHECK(result.labels(3) == 1);// 40 → Retraction
+    CHECK(result.labels(4) == 1);// 50 → Retraction
+    CHECK(result.labels(5) == 1);// 60 → Retraction
 
     REQUIRE(result.class_names.size() == 2);
     CHECK(result.class_names[0] == "Protraction");
@@ -511,12 +509,12 @@ TEST_CASE("LabelAssembler: data entity groups with unlabeled rows", "[LabelAssem
 
     auto result = MLCore::assembleLabelsFromDataEntityGroups(groups, registry, row_times, config);
 
-    CHECK(result.unlabeled_count == 3);  // frames 5, 15, 25
-    CHECK(result.labels(0) == 1);  // sentinel = num_classes = 1
-    CHECK(result.labels(1) == 0);  // labeled
-    CHECK(result.labels(2) == 1);  // sentinel
-    CHECK(result.labels(3) == 0);  // labeled
-    CHECK(result.labels(4) == 1);  // sentinel
+    CHECK(result.unlabeled_count == 3);// frames 5, 15, 25
+    CHECK(result.labels(0) == 1);      // sentinel = num_classes = 1
+    CHECK(result.labels(1) == 0);      // labeled
+    CHECK(result.labels(2) == 1);      // sentinel
+    CHECK(result.labels(3) == 0);      // labeled
+    CHECK(result.labels(4) == 1);      // sentinel
 }
 
 TEST_CASE("LabelAssembler: data entity groups accepts mixed entity kinds", "[LabelAssembler]") {
@@ -559,8 +557,8 @@ TEST_CASE("LabelAssembler: data entity groups throws on empty class_groups", "[L
     config.class_groups = {};
 
     CHECK_THROWS_AS(
-        MLCore::assembleLabelsFromDataEntityGroups(groups, registry, row_times, config),
-        std::invalid_argument);
+            MLCore::assembleLabelsFromDataEntityGroups(groups, registry, row_times, config),
+            std::invalid_argument);
 }
 
 // ============================================================================
@@ -660,10 +658,10 @@ TEST_CASE("LabelAssembler: interval boundary inclusivity", "[LabelAssembler]") {
 
     auto result = MLCore::assembleLabelsFromIntervals(*intervals, *tf, row_times);
 
-    CHECK(result.labels(0) == 0);  // 9  → outside (just before)
-    CHECK(result.labels(1) == 1);  // 10 → inside (start boundary)
-    CHECK(result.labels(2) == 1);  // 20 → inside (end boundary)
-    CHECK(result.labels(3) == 0);  // 21 → outside (just after)
+    CHECK(result.labels(0) == 0);// 9  → outside (just before)
+    CHECK(result.labels(1) == 1);// 10 → inside (start boundary)
+    CHECK(result.labels(2) == 1);// 20 → inside (end boundary)
+    CHECK(result.labels(3) == 0);// 21 → outside (just after)
 }
 
 TEST_CASE("LabelAssembler: adjacent intervals", "[LabelAssembler]") {
@@ -675,12 +673,12 @@ TEST_CASE("LabelAssembler: adjacent intervals", "[LabelAssembler]") {
 
     auto result = MLCore::assembleLabelsFromIntervals(*intervals, *tf, row_times);
 
-    CHECK(result.labels(0) == 0);  // 9  → outside
-    CHECK(result.labels(1) == 1);  // 10 → inside first
-    CHECK(result.labels(2) == 1);  // 19 → inside first (end)
-    CHECK(result.labels(3) == 1);  // 20 → inside second (start)
-    CHECK(result.labels(4) == 1);  // 29 → inside second (end)
-    CHECK(result.labels(5) == 0);  // 30 → outside
+    CHECK(result.labels(0) == 0);// 9  → outside
+    CHECK(result.labels(1) == 1);// 10 → inside first
+    CHECK(result.labels(2) == 1);// 19 → inside first (end)
+    CHECK(result.labels(3) == 1);// 20 → inside second (start)
+    CHECK(result.labels(4) == 1);// 29 → inside second (end)
+    CHECK(result.labels(5) == 0);// 30 → outside
 }
 
 TEST_CASE("LabelAssembler: time entity groups with empty groups", "[LabelAssembler]") {
@@ -704,4 +702,159 @@ TEST_CASE("LabelAssembler: time entity groups with empty groups", "[LabelAssembl
     CHECK(result.labels(0) == 1);
     CHECK(result.labels(1) == 1);
     CHECK(result.unlabeled_count == 0);
+}
+
+// ============================================================================
+// assembleLabelsFromEvents tests
+// ============================================================================
+
+TEST_CASE("LabelAssembler: binary labels from events basic", "[LabelAssembler]") {
+    auto tf = makeTimeFrame(100);
+
+    DigitalEventSeries events;
+    events.setTimeFrame(tf);
+    events.addEvent(TimeFrameIndex(10));
+    events.addEvent(TimeFrameIndex(20));
+    events.addEvent(TimeFrameIndex(30));
+
+    auto row_times = makeRowTimes({5, 10, 15, 20, 25, 30, 35});
+
+    auto result = MLCore::assembleLabelsFromEvents(events, *tf, row_times);
+
+    REQUIRE(result.num_classes == 2);
+    REQUIRE(result.labels.n_elem == 7);
+    CHECK(result.unlabeled_count == 0);
+    CHECK(result.class_names[0] == "NoEvent");
+    CHECK(result.class_names[1] == "Event");
+
+    CHECK(result.labels(0) == 0);// 5  → no event
+    CHECK(result.labels(1) == 1);// 10 → event
+    CHECK(result.labels(2) == 0);// 15 → no event
+    CHECK(result.labels(3) == 1);// 20 → event
+    CHECK(result.labels(4) == 0);// 25 → no event
+    CHECK(result.labels(5) == 1);// 30 → event
+    CHECK(result.labels(6) == 0);// 35 → no event
+}
+
+TEST_CASE("LabelAssembler: events with custom class names", "[LabelAssembler]") {
+    auto tf = makeTimeFrame(50);
+
+    DigitalEventSeries events;
+    events.setTimeFrame(tf);
+    events.addEvent(TimeFrameIndex(10));
+
+    auto row_times = makeRowTimes({5, 10});
+
+    MLCore::LabelFromEvents config;
+    config.positive_class_name = "Contact";
+    config.negative_class_name = "NoContact";
+
+    auto result = MLCore::assembleLabelsFromEvents(events, *tf, row_times, config);
+
+    REQUIRE(result.num_classes == 2);
+    CHECK(result.class_names[0] == "NoContact");
+    CHECK(result.class_names[1] == "Contact");
+    CHECK(result.labels(0) == 0);
+    CHECK(result.labels(1) == 1);
+}
+
+TEST_CASE("LabelAssembler: events all positive", "[LabelAssembler]") {
+    auto tf = makeTimeFrame(50);
+
+    DigitalEventSeries events;
+    events.setTimeFrame(tf);
+    events.addEvent(TimeFrameIndex(10));
+    events.addEvent(TimeFrameIndex(20));
+    events.addEvent(TimeFrameIndex(30));
+
+    auto row_times = makeRowTimes({10, 20, 30});
+
+    auto result = MLCore::assembleLabelsFromEvents(events, *tf, row_times);
+
+    REQUIRE(result.num_classes == 2);
+    CHECK(result.unlabeled_count == 0);
+    for (std::size_t i = 0; i < result.labels.n_elem; ++i) {
+        CHECK(result.labels(i) == 1);
+    }
+}
+
+TEST_CASE("LabelAssembler: events all negative", "[LabelAssembler]") {
+    auto tf = makeTimeFrame(50);
+
+    DigitalEventSeries events;
+    events.setTimeFrame(tf);
+    // No events added
+
+    auto row_times = makeRowTimes({5, 10, 15});
+
+    auto result = MLCore::assembleLabelsFromEvents(events, *tf, row_times);
+
+    REQUIRE(result.num_classes == 2);
+    CHECK(result.unlabeled_count == 0);
+    for (std::size_t i = 0; i < result.labels.n_elem; ++i) {
+        CHECK(result.labels(i) == 0);
+    }
+}
+
+TEST_CASE("LabelAssembler: events single row", "[LabelAssembler]") {
+    auto tf = makeTimeFrame(50);
+
+    DigitalEventSeries events;
+    events.setTimeFrame(tf);
+    events.addEvent(TimeFrameIndex(10));
+
+    SECTION("row matches event") {
+        auto row_times = makeRowTimes({10});
+        auto result = MLCore::assembleLabelsFromEvents(events, *tf, row_times);
+        REQUIRE(result.labels.n_elem == 1);
+        CHECK(result.labels(0) == 1);
+    }
+
+    SECTION("row does not match event") {
+        auto row_times = makeRowTimes({11});
+        auto result = MLCore::assembleLabelsFromEvents(events, *tf, row_times);
+        REQUIRE(result.labels.n_elem == 1);
+        CHECK(result.labels(0) == 0);
+    }
+}
+
+TEST_CASE("LabelAssembler: events empty row_times throws", "[LabelAssembler]") {
+    auto tf = makeTimeFrame(50);
+
+    DigitalEventSeries events;
+    events.setTimeFrame(tf);
+
+    std::vector<TimeFrameIndex> empty_times;
+    CHECK_THROWS_AS(
+            MLCore::assembleLabelsFromEvents(events, *tf, empty_times),
+            std::invalid_argument);
+}
+
+TEST_CASE("LabelAssembler: events dense", "[LabelAssembler]") {
+    auto tf = makeTimeFrame(20);
+
+    DigitalEventSeries events;
+    events.setTimeFrame(tf);
+    // Events at even indices
+    for (int i = 0; i < 20; i += 2) {
+        events.addEvent(TimeFrameIndex(i));
+    }
+
+    // Query all indices 0..19
+    std::vector<int64_t> all_indices;
+    for (int i = 0; i < 20; ++i) {
+        all_indices.push_back(i);
+    }
+    auto row_times = makeRowTimes(all_indices);
+
+    auto result = MLCore::assembleLabelsFromEvents(events, *tf, row_times);
+
+    REQUIRE(result.labels.n_elem == 20);
+    for (std::size_t i = 0; i < 20; ++i) {
+        if (i % 2 == 0) {
+            CHECK(result.labels(i) == 1);
+        } else {
+            CHECK(result.labels(i) == 0);
+        }
+    }
 }

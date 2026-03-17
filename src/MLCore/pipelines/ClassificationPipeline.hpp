@@ -119,9 +119,17 @@ struct ClassificationPipelineConfig {
      * @brief DataManager key of the DigitalIntervalSeries for interval-based labels
      *
      * Required when label_config holds LabelFromIntervals.
-     * Ignored for group-based labeling modes.
+     * Ignored for other labeling modes.
      */
     std::string label_interval_key;
+
+    /**
+     * @brief DataManager key of the DigitalEventSeries for event-based labels
+     *
+     * Required when label_config holds LabelFromEvents.
+     * Ignored for other labeling modes.
+     */
+    std::string label_event_key;
 
     // -- Feature conversion --
 
@@ -322,7 +330,7 @@ struct ClassificationPipelineResult {
         DataManager & dm,
         MLModelRegistry const & registry,
         ClassificationPipelineConfig const & config,
-        PipelineProgressCallback progress = nullptr);
+        const PipelineProgressCallback& progress = nullptr);
 
 }// namespace MLCore
 

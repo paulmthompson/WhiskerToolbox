@@ -6,11 +6,12 @@
 #include "ClassificationPipeline.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "Tensors/RowDescriptor.hpp"
-#include "Tensors/TensorData.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
+#include "Tensors/RowDescriptor.hpp"
+#include "Tensors/TensorData.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
@@ -152,7 +153,7 @@ ClassificationPipelineResult runClassificationPipeline(
         DataManager & dm,
         MLModelRegistry const & registry,
         ClassificationPipelineConfig const & config,
-        PipelineProgressCallback progress) {
+        const PipelineProgressCallback& progress) {
     // ========================================================================
     // Stage 1: Validate features
     // ========================================================================
@@ -263,6 +264,21 @@ ClassificationPipelineResult runClassificationPipeline(
                 return assembleLabelsFromDataEntityGroups(
                         *groups, *reg, valid_row_times, label_cfg);
 
+            } else if constexpr (std::is_same_v<T, LabelFromEvents>) {
+                auto event_series = dm.getData<DigitalEventSeries>(config.label_event_key);
+                if (!event_series) {
+                    throw std::runtime_error(
+                            "Label event series '" + config.label_event_key +
+                            "' not found in DataManager");
+                }
+                auto time_frame = dm.getTime(TimeKey(config.time_key_str));
+                if (!time_frame) {
+                    throw std::runtime_error(
+                            "TimeFrame '" + config.time_key_str + "' not found");
+                }
+                return assembleLabelsFromEvents(
+                        *event_series, *time_frame, valid_row_times, label_cfg);
+
             } else {
                 static_assert(sizeof(T) == 0, "Unhandled label config variant");
             }
@@ -360,7 +376,7 @@ ClassificationPipelineResult runClassificationPipeline(
                            "Failed to create model '" + config.model_name + "'");
     }
 
-    bool train_ok = model->train(train_features, train_labels, config.model_params);
+    bool const train_ok = model->train(train_features, train_labels, config.model_params);
     if (!train_ok || !model->isTrained()) {
         return makeFailure(ClassificationStage::Training,
                            "Model training failed for '" + config.model_name + "'");
@@ -402,9 +418,9 @@ ClassificationPipelineResult runClassificationPipeline(
             } else {
                 // Ordinal rows — generate synthetic sequential times
                 predict_row_times.reserve(pred_converted.valid_row_indices.size());
-                for (std::size_t i = 0; i < pred_converted.valid_row_indices.size(); ++i) {
+                for (unsigned long valid_row_indice : pred_converted.valid_row_indices) {
                     predict_row_times.emplace_back(
-                            static_cast<std::int64_t>(pred_converted.valid_row_indices[i]));
+                            static_cast<std::int64_t>(valid_row_indice));
                 }
             }
         } catch (std::exception const & e) {
@@ -450,7 +466,7 @@ ClassificationPipelineResult runClassificationPipeline(
             }
         }
 
-        bool pred_ok = model->predict(predict_features, predictions);
+        bool const pred_ok = model->predict(predict_features, predictions);
         if (!pred_ok) {
             return makeFailure(ClassificationStage::Predicting,
                                "Model prediction failed");
@@ -487,7 +503,7 @@ ClassificationPipelineResult runClassificationPipeline(
         if (config.prediction_region.predict_all_rows) {
             // Assemble ground-truth labels on the valid rows for comparison
             try {
-                AssembledLabels pred_labels = std::visit(
+                AssembledLabels const pred_labels = std::visit(
                         [&](auto const & label_cfg) -> AssembledLabels {
                             using T = std::decay_t<decltype(label_cfg)>;
 
@@ -509,6 +525,13 @@ ClassificationPipelineResult runClassificationPipeline(
                                         *dm.getEntityGroupManager(),
                                         *dm.getEntityRegistry(),
                                         predict_row_times, label_cfg);
+
+                            } else if constexpr (std::is_same_v<T, LabelFromEvents>) {
+                                auto event_series = dm.getData<DigitalEventSeries>(
+                                        config.label_event_key);
+                                auto time_frame = dm.getTime(TimeKey(config.time_key_str));
+                                return assembleLabelsFromEvents(
+                                        *event_series, *time_frame, predict_row_times, label_cfg);
 
                             } else {
                                 static_assert(sizeof(T) == 0, "Unhandled label config variant");
