@@ -218,3 +218,64 @@ TEST_CASE("GeneralEncoderModel - registry metadata matches", "[GeneralEncoderMod
     CHECK(info->inputs[0].name == "image");
     CHECK(info->outputs[0].name == "features");
 }
+
+// ─── Runtime Shape Configuration Tests ──────────────────────────
+
+TEST_CASE("GeneralEncoderModel - setInputResolution updates height and width", "[GeneralEncoderModel]") {
+    dl::GeneralEncoderModel model;
+    CHECK(model.inputHeight() == 224);
+    CHECK(model.inputWidth() == 224);
+
+    model.setInputResolution(256, 256);
+    CHECK(model.inputHeight() == 256);
+    CHECK(model.inputWidth() == 256);
+
+    auto inputs = model.inputSlots();
+    REQUIRE(inputs.size() == 1);
+    auto const expected_shape = std::vector<int64_t>{3, 256, 256};
+    CHECK(inputs[0].shape == expected_shape);
+}
+
+TEST_CASE("GeneralEncoderModel - setInputResolution with non-square", "[GeneralEncoderModel]") {
+    dl::GeneralEncoderModel model;
+    model.setInputResolution(480, 640);
+    CHECK(model.inputHeight() == 480);
+    CHECK(model.inputWidth() == 640);
+
+    auto inputs = model.inputSlots();
+    auto const expected_shape = std::vector<int64_t>{3, 480, 640};
+    CHECK(inputs[0].shape == expected_shape);
+}
+
+TEST_CASE("GeneralEncoderModel - setOutputShape updates raw output", "[GeneralEncoderModel]") {
+    dl::GeneralEncoderModel model;
+    auto const original = std::vector<int64_t>{384, 7, 7};
+    CHECK(model.outputShape() == original);
+
+    auto const new_shape = std::vector<int64_t>{192, 16, 16};
+    model.setOutputShape(new_shape);
+    CHECK(model.outputShape() == new_shape);
+
+    auto outputs = model.outputSlots();
+    REQUIRE(outputs.size() == 1);
+    CHECK(outputs[0].shape == new_shape);
+}
+
+TEST_CASE("GeneralEncoderModel - setOutputShape affects effectiveOutputShape with post-encoder", "[GeneralEncoderModel]") {
+    dl::GeneralEncoderModel model;
+    model.setOutputShape({192, 16, 16});
+
+    // Without post-encoder, effective = raw
+    auto const expected_raw = std::vector<int64_t>{192, 16, 16};
+    CHECK(model.effectiveOutputShape() == expected_raw);
+}
+
+TEST_CASE("GeneralEncoderModel - setInputResolution preserves channels", "[GeneralEncoderModel]") {
+    dl::GeneralEncoderModel model(1, 224, 224, {256});
+    CHECK(model.inputChannels() == 1);
+
+    model.setInputResolution(512, 512);
+    CHECK(model.inputChannels() == 1);
+    CHECK(model.inputHeight() == 512);
+    CHECK(model.inputWidth() == 512);
+}

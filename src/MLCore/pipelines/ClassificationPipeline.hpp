@@ -119,9 +119,17 @@ struct ClassificationPipelineConfig {
      * @brief DataManager key of the DigitalIntervalSeries for interval-based labels
      *
      * Required when label_config holds LabelFromIntervals.
-     * Ignored for group-based labeling modes.
+     * Ignored for other labeling modes.
      */
     std::string label_interval_key;
+
+    /**
+     * @brief DataManager key of the DigitalEventSeries for event-based labels
+     *
+     * Required when label_config holds LabelFromEvents.
+     * Ignored for other labeling modes.
+     */
+    std::string label_event_key;
 
     // -- Feature conversion --
 
@@ -179,6 +187,7 @@ enum class ClassificationStage {
     ConvertingFeatures,
     AssemblingLabels,
     BalancingClasses,
+    SegmentingSequences,
     Training,
     Predicting,
     ComputingMetrics,
@@ -307,9 +316,10 @@ struct ClassificationPipelineResult {
  * 2. **Convert** — TensorData → arma::mat (NaN dropping, optional z-score)
  * 3. **Assemble labels** — from intervals, time-entity groups, or data-entity groups
  * 4. **Balance** — optional class balancing (subsample/oversample)
- * 5. **Train** — trains the selected model
- * 6. **Predict** — on training data or a separate prediction tensor
- * 7. **Metrics** — computes classification metrics on predictions
+ * 5. **Segment** — (sequence models only) split into contiguous temporal sequences
+ * 6. **Train** — trains the selected model
+ * 7. **Predict** — on training data or a separate prediction tensor
+ * 8. **Metrics** — computes classification metrics on predictions
  * 8. **Write output** — writes predictions as intervals, probabilities, and/or groups
  *
  * @param dm DataManager containing the feature tensor, label sources, and output targets
@@ -322,7 +332,7 @@ struct ClassificationPipelineResult {
         DataManager & dm,
         MLModelRegistry const & registry,
         ClassificationPipelineConfig const & config,
-        PipelineProgressCallback progress = nullptr);
+        PipelineProgressCallback const & progress = nullptr);
 
 }// namespace MLCore
 

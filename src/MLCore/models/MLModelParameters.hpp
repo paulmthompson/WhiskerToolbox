@@ -107,6 +107,22 @@ struct GMMParameters : public MLModelParametersBase {
     std::optional<std::size_t> seed; ///< Random seed for reproducibility
 };
 
+// ============================================================================
+// Sequence model parameters
+// ============================================================================
+
+/**
+ * @brief Parameters for Hidden Markov Model (Gaussian emissions)
+ *
+ * Maps to mlpack::HMM<mlpack::GaussianDistribution<>> hyperparameters.
+ * Supervised training uses labeled sequences to estimate transition and
+ * emission parameters directly.
+ */
+struct HMMParameters : public MLModelParametersBase {
+    std::size_t num_states = 2;///< Number of hidden states
+    double tolerance = 1e-5;   ///< Convergence tolerance for training
+};
+
 }// namespace MLCore
 
 #endif// MLCORE_MLMODELPARAMETERS_HPP

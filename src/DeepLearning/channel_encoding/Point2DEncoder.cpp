@@ -8,13 +8,11 @@
 
 namespace dl {
 
-std::string Point2DEncoder::name() const
-{
+std::string Point2DEncoder::name() const {
     return "Point2DEncoder";
 }
 
-std::string Point2DEncoder::inputTypeName() const
-{
+std::string Point2DEncoder::inputTypeName() const {
     return "Point2D<float>";
 }
 
@@ -24,8 +22,7 @@ namespace {
 Point2D<float> scale_point(Point2D<float> const point,
                            ImageSize const source_size,
                            int const target_h,
-                           int const target_w)
-{
+                           int const target_w) {
     float const sx = static_cast<float>(target_w) / static_cast<float>(source_size.width);
     float const sy = static_cast<float>(target_h) / static_cast<float>(source_size.height);
     return {point.x * sx, point.y * sy};
@@ -35,8 +32,7 @@ Point2D<float> scale_point(Point2D<float> const point,
 void encode_binary(Point2D<float> const scaled_point,
                    torch::Tensor & channel,
                    int const h,
-                   int const w)
-{
+                   int const w) {
     int const px = std::clamp(static_cast<int>(std::round(scaled_point.x)), 0, w - 1);
     int const py = std::clamp(static_cast<int>(std::round(scaled_point.y)), 0, h - 1);
     channel[py][px] = 1.0f;
@@ -47,8 +43,7 @@ void encode_heatmap(Point2D<float> const scaled_point,
                     torch::Tensor & channel,
                     int const h,
                     int const w,
-                    float const sigma)
-{
+                    float const sigma) {
     // Compute extent: 3*sigma is enough to capture >99% of the Gaussian
     float const extent = 3.0f * sigma;
     int const y_min = std::max(0, static_cast<int>(std::floor(scaled_point.y - extent)));
@@ -70,47 +65,47 @@ void encode_heatmap(Point2D<float> const scaled_point,
     }
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 void Point2DEncoder::encode(Point2D<float> const point,
                             ImageSize const source_size,
                             at::Tensor & tensor,
-                            EncoderParams const & params) const
-{
+                            EncoderContext const & ctx,
+                            Point2DEncoderParams const & params) {
     if (params.mode != RasterMode::Binary && params.mode != RasterMode::Heatmap) {
         throw std::invalid_argument("Point2DEncoder: only Binary and Heatmap modes are supported");
     }
 
-    auto channel = tensor[params.batch_index][params.target_channel];
-    auto const scaled = scale_point(point, source_size, params.height, params.width);
+    auto channel = tensor[ctx.batch_index][ctx.target_channel];
+    auto const scaled = scale_point(point, source_size, ctx.height, ctx.width);
 
     if (params.mode == RasterMode::Binary) {
-        encode_binary(scaled, channel, params.height, params.width);
+        encode_binary(scaled, channel, ctx.height, ctx.width);
     } else {
-        encode_heatmap(scaled, channel, params.height, params.width, params.gaussian_sigma);
+        encode_heatmap(scaled, channel, ctx.height, ctx.width, params.gaussian_sigma);
     }
 }
 
 void Point2DEncoder::encode(std::vector<Point2D<float>> const & points,
                             ImageSize const source_size,
                             at::Tensor & tensor,
-                            EncoderParams const & params) const
-{
+                            EncoderContext const & ctx,
+                            Point2DEncoderParams const & params) {
     if (params.mode != RasterMode::Binary && params.mode != RasterMode::Heatmap) {
         throw std::invalid_argument("Point2DEncoder: only Binary and Heatmap modes are supported");
     }
 
-    auto channel = tensor[params.batch_index][params.target_channel];
+    auto channel = tensor[ctx.batch_index][ctx.target_channel];
 
-    for (auto const & pt : points) {
-        auto const scaled = scale_point(pt, source_size, params.height, params.width);
+    for (auto const & pt: points) {
+        auto const scaled = scale_point(pt, source_size, ctx.height, ctx.width);
 
         if (params.mode == RasterMode::Binary) {
-            encode_binary(scaled, channel, params.height, params.width);
+            encode_binary(scaled, channel, ctx.height, ctx.width);
         } else {
-            encode_heatmap(scaled, channel, params.height, params.width, params.gaussian_sigma);
+            encode_heatmap(scaled, channel, ctx.height, ctx.width, params.gaussian_sigma);
         }
     }
 }
 
-} // namespace dl
+}// namespace dl

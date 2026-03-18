@@ -104,6 +104,43 @@ The `GeneralEncoderModel` appears in the Deep Learning widget's model selector a
 "General Encoder". Select it, configure the image binding, load weights, and run 
 inference through the standard widget workflow.
 
+#### Runtime Shape Configuration
+
+Different encoder backbones produce different output shapes and may require different 
+input resolutions. For example:
+
+- ConvNeXt-Tiny: 224×224 input → 384×7×7 output
+- EfficientViT: 256×256 input → 192×16×16 output
+- ViT-Base: 224×224 input → 768×14×14 output
+
+The widget provides an **Encoder Shape** section (visible when "General Encoder" is 
+selected) with spinboxes for Input Height, Input Width, and a text field for Output 
+Shape. Set these to match your compiled model *before* loading weights.
+
+::: {.callout-important}
+**AOT Inductor models compiled with fixed spatial dimensions will produce NaN output 
+if fed the wrong input size.** Always match the input resolution to what was used 
+during `torch.export.export()`. When using `torch.export.Dim()` for dynamic shapes, 
+only the batch dimension is typically dynamic — spatial dimensions remain fixed.
+:::
+
+#### Programmatic Shape Configuration
+
+From C++, use the setter methods after construction:
+
+```cpp
+auto model = std::make_unique<dl::GeneralEncoderModel>();
+model->setInputResolution(256, 256);
+model->setOutputShape({192, 16, 16});
+model->loadWeights("/path/to/efficientvit_encoder.pt2");
+```
+
+The `SlotAssembler` also exposes `configureModelShape()` for widget-level access:
+
+```cpp
+assembler->configureModelShape(256, 256, {192, 16, 16});
+```
+
 ## Exporting Models
 
 Use the provided Python export script to convert a torchvision ConvNeXt to 

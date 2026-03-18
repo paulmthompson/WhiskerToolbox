@@ -5,7 +5,9 @@
 
 #include "CoreGeometry/masks.hpp"
 
-namespace at { class Tensor; }
+namespace at {
+class Tensor;
+}
 
 namespace dl {
 
@@ -20,10 +22,11 @@ public:
     [[nodiscard]] std::string outputTypeName() const override;
 
     /// Decode tensor channel to mask by thresholding
-    [[nodiscard]] Mask2D decode(at::Tensor const & tensor,
-                                DecoderParams const & params) const;
+    [[nodiscard]] static Mask2D decode(at::Tensor const & tensor,
+                                DecoderContext const & ctx,
+                                MaskDecoderParams const & params) ;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_TENSOR_TO_MASK2D_HPP
+#endif// WHISKERTOOLBOX_TENSOR_TO_MASK2D_HPP

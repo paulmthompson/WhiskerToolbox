@@ -5,6 +5,7 @@
 
 #include "MLModelRegistry.hpp"
 
+#include "supervised/HiddenMarkovModelOperation.hpp"
 #include "supervised/LogisticRegressionOperation.hpp"
 #include "supervised/NaiveBayesOperation.hpp"
 #include "supervised/RandomForestOperation.hpp"
@@ -25,6 +26,7 @@ MLModelRegistry::MLModelRegistry() {
     registerModel<RandomForestOperation>();
     registerModel<NaiveBayesOperation>();
     registerModel<LogisticRegressionOperation>();
+    registerModel<HiddenMarkovModelOperation>();
     registerModel<KMeansOperation>();
     registerModel<DBSCANOperation>();
     registerModel<GaussianMixtureOperation>();

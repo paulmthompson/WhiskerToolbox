@@ -479,3 +479,57 @@ else()
 endif()
 
 enable_whiskertoolbox_shared_test_pch(test_binding_data)
+
+# --- Widget-Level Param Schema Tests (no libtorch needed) ---
+find_package(reflectcpp CONFIG REQUIRED)
+
+add_executable(test_dl_param_schemas
+    param_schemas/DeepLearningParamSchemas.test.cpp
+)
+
+target_link_libraries(test_dl_param_schemas PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::ParameterSchema
+    WhiskerToolbox::DeepLearning
+    reflectcpp::reflectcpp
+)
+
+target_include_directories(test_dl_param_schemas PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
+)
+
+target_sources(test_dl_param_schemas PRIVATE
+    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_dl_param_schemas PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_dl_param_schemas PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_dl_param_schemas PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_dl_param_schemas
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_dl_param_schemas)
+    endif()
+else()
+    add_test(NAME test_dl_param_schemas_all
+        COMMAND test_dl_param_schemas
+        )
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_dl_param_schemas)

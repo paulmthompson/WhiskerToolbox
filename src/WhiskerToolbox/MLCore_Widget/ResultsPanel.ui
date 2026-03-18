@@ -251,6 +251,45 @@ Train a model and run predictions to see results here.</string>
             </property>
            </widget>
           </item>
+          <!-- Transition matrix (HMM only) -->
+          <item>
+           <widget class="QLabel" name="transitionMatrixHeaderLabel">
+            <property name="text">
+             <string>Transition Matrix:</string>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { font-weight: bold; }</string>
+            </property>
+            <property name="visible">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="transitionMatrixLabel">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel {
+    font-family: 'Courier New', monospace;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    padding: 8px;
+    border-radius: 4px;
+}</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="visible">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="Line" name="outputsSeparator">
             <property name="orientation">

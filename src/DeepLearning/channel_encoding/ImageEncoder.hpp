@@ -9,7 +9,7 @@
 #include <vector>
 
 namespace at {
-    class Tensor;
+class Tensor;
 }
 
 namespace dl {
@@ -32,22 +32,25 @@ public:
     /// @param source_size Dimensions of the source image
     /// @param num_channels Number of channels in source (1=grayscale, 3=RGB)
     /// @param tensor      Pre-allocated [B, C, H, W] tensor to write into
-    /// @param params      Encoding parameters (target_channel, batch_index, height, width, normalize)
-    void encode(std::vector<uint8_t> const & image_data,
+    /// @param ctx         Encoder context (target_channel, batch_index, height, width)
+    /// @param params      User-configurable encoding parameters (normalize)
+    static void encode(std::vector<uint8_t> const & image_data,
                 ImageSize source_size,
                 int num_channels,
                 at::Tensor & tensor,
-                EncoderParams const & params) const;
+                EncoderContext const & ctx,
+                ImageEncoderParams const & params) ;
 
     /// Encode 32-bit float image data into tensor channels.
     /// Float data is assumed to already be in [0,1] range if normalize=false.
-    void encode(std::vector<float> const & image_data,
+    static void encode(std::vector<float> const & image_data,
                 ImageSize source_size,
                 int num_channels,
                 at::Tensor & tensor,
-                EncoderParams const & params) const;
+                EncoderContext const & ctx,
+                ImageEncoderParams const & params) ;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_IMAGE_ENCODER_HPP
+#endif// WHISKERTOOLBOX_IMAGE_ENCODER_HPP

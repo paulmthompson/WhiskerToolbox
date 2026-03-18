@@ -88,6 +88,9 @@ public:
     void setLabelDataKey(std::string const & key);
     [[nodiscard]] std::string const & labelDataKey() const;
 
+    void setLabelEventKey(std::string const & key);
+    [[nodiscard]] std::string const & labelEventKey() const;
+
     // === Model configuration ===
 
     void setSelectedModelName(std::string const & name);
@@ -156,6 +159,7 @@ signals:
     void labelNegativeClassNameChanged(QString const & name);
     void labelGroupIdsChanged();
     void labelDataKeyChanged(QString const & key);
+    void labelEventKeyChanged(QString const & key);
     void selectedModelNameChanged(QString const & name);
     void modelParametersJsonChanged();
     void balancingEnabledChanged(bool enabled);

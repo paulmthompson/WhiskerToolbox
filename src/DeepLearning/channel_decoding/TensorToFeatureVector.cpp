@@ -20,7 +20,8 @@ std::string TensorToFeatureVector::outputTypeName() const {
 
 std::vector<float> TensorToFeatureVector::decode(
         at::Tensor const & tensor,
-        DecoderParams const & params) const {
+        DecoderContext const & ctx,
+        FeatureVectorDecoderParams const & /*params*/) {
     assert(tensor.defined() && "TensorToFeatureVector: tensor must be defined");
 
     if (tensor.dim() == 0) {
@@ -38,18 +39,19 @@ std::vector<float> TensorToFeatureVector::decode(
     } else if (cpu_tensor.dim() == 2) {
         // Batched [B, C] — select the requested batch index
         auto const B = cpu_tensor.size(0);
-        auto const idx = static_cast<int64_t>(params.batch_index);
+        auto const idx = static_cast<int64_t>(ctx.batch_index);
         if (idx < 0 || idx >= B) {
             throw std::out_of_range(
                     "TensorToFeatureVector: batch_index " +
-                    std::to_string(params.batch_index) +
+                    std::to_string(ctx.batch_index) +
                     " out of range [0, " + std::to_string(B) + ")");
         }
         row = cpu_tensor[idx];
     } else {
         throw std::invalid_argument(
                 "TensorToFeatureVector: expected 1D [C] or 2D [B, C] tensor, "
-                "got dim=" + std::to_string(cpu_tensor.dim()));
+                "got dim=" +
+                std::to_string(cpu_tensor.dim()));
     }
 
     // Copy data pointer to std::vector

@@ -91,21 +91,28 @@ auto out = pipeline.apply(features);
 
 ## Factory
 
-`PostEncoderModuleFactory::create(name, params)` maps string keys to concrete modules:
+`PostEncoderModuleFactory::create(name, source_image_size, params)` maps string keys to concrete modules:
 
 | Key | Result |
 |-----|--------|
 | `"none"` / `""` | `nullptr` (no post-processing) |
 | `"global_avg_pool"` | `GlobalAvgPoolModule` |
-| `"spatial_point"` | `SpatialPointExtractModule` using `params.source_image_size` and `params.interpolation` |
+| `"spatial_point"` | `SpatialPointExtractModule` using `source_image_size` and `params.interpolation` |
 | anything else | `nullptr` (unknown key) |
 
-`PostEncoderModuleParams` carries:
+The factory takes two parameter structs:
+
+1. **`ImageSize source_image_size`** — Runtime context for coordinate scaling (not user-configurable).
+2. **Per-module params** — User-configurable parameters specific to each module type
+   (`GlobalAvgPoolModuleParams`, `SpatialPointModuleParams`).
 
 ```cpp
-struct PostEncoderModuleParams {
-    ImageSize source_image_size;
-    std::string interpolation; // "nearest" | "bilinear"
+/// No user-configurable params.
+struct GlobalAvgPoolModuleParams {};
+
+/// User-configurable params for SpatialPointExtractModule.
+struct SpatialPointModuleParams {
+    InterpolationMode interpolation = InterpolationMode::Nearest;
 };
 ```
 

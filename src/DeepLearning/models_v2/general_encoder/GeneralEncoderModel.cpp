@@ -135,6 +135,21 @@ PostEncoderModule * GeneralEncoderModel::postEncoderModule() const {
 }
 
 // ---------------------------------------------------------------------------
+// Runtime shape configuration
+// ---------------------------------------------------------------------------
+void GeneralEncoderModel::setInputResolution(int height, int width) {
+    assert(height > 0 && "GeneralEncoderModel::setInputResolution: height must be > 0");
+    assert(width > 0 && "GeneralEncoderModel::setInputResolution: width must be > 0");
+    _input_height = height;
+    _input_width = width;
+}
+
+void GeneralEncoderModel::setOutputShape(std::vector<int64_t> output_shape) {
+    assert(!output_shape.empty() && "GeneralEncoderModel::setOutputShape: output_shape must not be empty");
+    _output_shape = std::move(output_shape);
+}
+
+// ---------------------------------------------------------------------------
 // Forward pass
 // ---------------------------------------------------------------------------
 std::unordered_map<std::string, torch::Tensor>

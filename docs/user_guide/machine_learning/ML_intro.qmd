@@ -1,6 +1,59 @@
 ---
-title: "Overview"
+title: "ML Workflow Overview"
 format: html
 ---
 
-The Machine Learning Widget allows us to fit models of relationships between multiple features of our data and then make predictions. This can be useful for semi-automated annotation of datasets, where the user labels some training data, and then predicts the remaining unlabeled frames. Then annotations can then be easily compared with the video data.
+The **ML Workflow** widget provides interactive machine learning directly in WhiskerToolbox. It supports two workflows:
+
+- **Classification** — train a supervised model to predict frame labels from features, then apply predictions to unlabeled data
+- **Clustering** — group frames by similarity without labels using unsupervised algorithms
+
+## Opening the Widget
+
+Open the ML Workflow widget from the menu: **View → Analysis → ML Workflow**.
+
+The widget appears as a tabbed panel in the right dock area. The **Classification** tab is shown by default; switch to the **Clustering** tab for unsupervised workflows.
+
+## General Workflow
+
+### Classification
+
+1. **Prepare features**: Build a feature tensor using the TensorDesigner widget. Features are columns of numerical values (e.g., curvature, distance, angle) computed from your data.
+2. **Select features**: Choose the feature tensor in the ML Workflow's Feature panel.
+3. **Define training region** (optional): Select a `DigitalIntervalSeries` that marks which frames to use for training.
+4. **Configure labels**: Choose how frames are labeled — from interval annotations, entity groups, or data-entity groups.
+5. **Select model**: Choose a classification algorithm (Random Forest, Naive Bayes, or Logistic Regression) and configure its parameters.
+6. **Train**: Click "Train Model" to run the full pipeline. Training runs in the background and progress is shown in the status bar.
+7. **Review results**: Accuracy, sensitivity, specificity, and a confusion matrix are displayed in the Results panel.
+8. **Predict**: Predictions are written as `DigitalIntervalSeries` and optional probability `AnalogTimeSeries`. Output appears in the DataManager and can be viewed in the DataViewer.
+
+### Clustering
+
+1. **Prepare features**: Build a feature tensor as above.
+2. **Select data**: Choose the tensor and optionally enable z-score normalization.
+3. **Select algorithm**: Choose K-Means, DBSCAN, or Gaussian Mixture and set parameters.
+4. **Fit & Assign**: Click "Fit & Assign" to run clustering. Results appear as putative entity groups with auto-assigned colors.
+5. **Review output**: Cluster sizes, interval series, and optional probability series are created in the DataManager.
+
+## Putative Group Output
+
+Predictions and cluster assignments never overwrite your original labels. All outputs are written to new data keys and entity groups with a configurable prefix (e.g., `"Predicted:Contact"`, `"Cluster:0"`). This lets you compare ML results against your manual annotations.
+
+## Available Models
+
+### Supervised (Classification Tab)
+
+| Model | Best For |
+|---|---|
+| [Random Forest](Random_Forest.qmd) | General-purpose classification with many features |
+| [Naive Bayes](Naive_Bayes.qmd) | Fast training, works well with independent features |
+| [Logistic Regression](Logistic_Regression.qmd) | Binary classification with well-calibrated probabilities |
+| [Hidden Markov Model](HMM.qmd) | Sequence-aware classification exploiting temporal continuity |
+
+### Unsupervised (Clustering Tab)
+
+| Model | Best For |
+|---|---|
+| [K-Means](KMeans.qmd) | Known number of clusters, spherical groups |
+| [DBSCAN](DBSCAN.qmd) | Unknown number of clusters, arbitrary shapes, noise detection |
+| [Gaussian Mixture](GMM.qmd) | Soft cluster assignments, overlapping groups |

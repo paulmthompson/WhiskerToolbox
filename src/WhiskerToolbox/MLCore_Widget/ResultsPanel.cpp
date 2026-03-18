@@ -10,6 +10,7 @@
 #include <QListWidgetItem>
 #include <QPixmap>
 #include <QString>
+#include <armadillo>
 
 #include <algorithm>
 #include <iomanip>
@@ -138,18 +139,16 @@ void ResultsPanel::setOutputKeys(
     }
 
     // Add interval series keys
-    for (std::size_t i = 0; i < interval_keys.size(); ++i) {
-        auto const & key = interval_keys[i];
-        QString label = QStringLiteral("Intervals: %1").arg(QString::fromStdString(key));
+    for (const auto & key : interval_keys) {
+        QString const label = QStringLiteral("Intervals: %1").arg(QString::fromStdString(key));
         auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
         item->setData(Qt::UserRole, QString::fromStdString(key));
         item->setToolTip(QStringLiteral("DigitalIntervalSeries — click to focus in DataViewer"));
     }
 
     // Add probability series keys
-    for (std::size_t i = 0; i < probability_keys.size(); ++i) {
-        auto const & key = probability_keys[i];
-        QString label = QStringLiteral("Probabilities: %1").arg(QString::fromStdString(key));
+    for (const auto & key : probability_keys) {
+        QString const label = QStringLiteral("Probabilities: %1").arg(QString::fromStdString(key));
         auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
         item->setData(Qt::UserRole, QString::fromStdString(key));
         item->setToolTip(QStringLiteral("AnalogTimeSeries — click to focus in DataViewer"));
@@ -160,11 +159,26 @@ void ResultsPanel::clearResults() {
     _showNoResultsState();
     _last_putative_group_ids.clear();
     _has_results = false;
+    ui->transitionMatrixHeaderLabel->setVisible(false);
+    ui->transitionMatrixLabel->setVisible(false);
     emit resultsCleared();
 }
 
 bool ResultsPanel::hasResults() const {
     return _has_results;
+}
+
+void ResultsPanel::showTransitionMatrix(arma::mat const & transition_matrix,
+                                        std::vector<std::string> const & class_names) {
+    if (transition_matrix.empty()) {
+        ui->transitionMatrixHeaderLabel->setVisible(false);
+        ui->transitionMatrixLabel->setVisible(false);
+        return;
+    }
+
+    ui->transitionMatrixHeaderLabel->setVisible(true);
+    ui->transitionMatrixLabel->setVisible(true);
+    ui->transitionMatrixLabel->setText(_formatTransitionMatrix(transition_matrix, class_names));
 }
 
 // =============================================================================
@@ -381,13 +395,59 @@ QString ResultsPanel::_formatMultiClassConfusionMatrix(
     // Per-class metrics summary
     oss << "\n";
     for (std::size_t i = 0; i < n; ++i) {
-        std::string name = (i < class_names.size()) ? class_names[i] : std::to_string(i);
-        double prec = (i < metrics.per_class_precision.size()) ? metrics.per_class_precision[i] : 0.0;
-        double rec = (i < metrics.per_class_recall.size()) ? metrics.per_class_recall[i] : 0.0;
-        double f1 = (i < metrics.per_class_f1.size()) ? metrics.per_class_f1[i] : 0.0;
+        std::string const name = (i < class_names.size()) ? class_names[i] : std::to_string(i);
+        double const prec = (i < metrics.per_class_precision.size()) ? metrics.per_class_precision[i] : 0.0;
+        double const rec = (i < metrics.per_class_recall.size()) ? metrics.per_class_recall[i] : 0.0;
+        double const f1 = (i < metrics.per_class_f1.size()) ? metrics.per_class_f1[i] : 0.0;
         oss << name << ": P=" << std::fixed << std::setprecision(2) << (prec * 100.0) << "%"
             << " R=" << (rec * 100.0) << "%"
             << " F1=" << (f1 * 100.0) << "%\n";
+    }
+
+    return QString::fromStdString(oss.str());
+}
+
+QString ResultsPanel::_formatTransitionMatrix(
+        arma::mat const & transition_matrix,
+        std::vector<std::string> const & class_names) {
+
+    std::size_t const n = transition_matrix.n_rows;
+    std::ostringstream oss;
+
+    int constexpr fw = 7;// field width for probability values
+
+    oss << "P(next state | current state)\n\n";
+
+    // Header row
+    oss << "     ";
+    for (std::size_t c = 0; c < n; ++c) {
+        std::string name = (c < class_names.size()) ? class_names[c] : "S" + std::to_string(c);
+        if (name.length() > 5) {
+            name = name.substr(0, 5);
+        }
+        oss << " |" << std::setw(fw) << name;
+    }
+    oss << " |\n";
+
+    // Separator
+    oss << "-----";
+    for (std::size_t c = 0; c < n; ++c) {
+        oss << "-+" << std::string(static_cast<std::size_t>(fw), '-');
+    }
+    oss << "-+\n";
+
+    // Rows
+    for (std::size_t r = 0; r < n; ++r) {
+        std::string row_label = (r < class_names.size()) ? class_names[r] : "S" + std::to_string(r);
+        if (row_label.length() > 4) {
+            row_label = row_label.substr(0, 4);
+        }
+        oss << std::setw(4) << row_label << " ";
+        for (std::size_t c = 0; c < n; ++c) {
+            oss << " |" << std::setw(fw) << std::fixed << std::setprecision(4)
+                << transition_matrix(r, c);
+        }
+        oss << " |\n";
     }
 
     return QString::fromStdString(oss.str());

@@ -1,0 +1,134 @@
+---
+title: "Sequence Assembler"
+description: "Contiguous temporal sequence segmentation for sequence models"
+---
+
+## Overview
+
+The `SequenceAssembler` (`pipelines/SequenceAssembler.hpp`) segments a flat
+feature matrix and associated time indices into contiguous temporal sequences.
+This is essential for sequence models like HMMs that require observations
+grouped into runs of consecutive time steps.
+
+TensorData may have gaps in its `TimeFrameIndex` rows (e.g., frames 100–200
+then 500–600). The SequenceAssembler detects these gaps and splits the flat
+matrix into separate `SequenceSegment` objects, one per contiguous run.
+
+## Gap Detection
+
+A **gap** occurs when consecutive TimeFrameIndex values differ by more than 1:
+
+```
+times[i+1] - times[i] > 1  →  new sequence starts at i+1
+```
+
+For example, given times `{0, 1, 2, 10, 11, 12}`:
+
+- Run 1: indices 0–2 (times 0, 1, 2)
+- Run 2: indices 3–5 (times 10, 11, 12)
+
+## Data Structures
+
+### SequenceSegment
+
+```cpp
+struct SequenceSegment {
+    arma::mat features;               // features × segment_length (mlpack layout)
+    arma::Row<std::size_t> labels;    // 1 × segment_length (empty if unlabeled)
+    std::vector<TimeFrameIndex> times; // Original time index per column
+};
+```
+
+### SequenceAssemblerConfig
+
+```cpp
+struct SequenceAssemblerConfig {
+    std::size_t min_sequence_length = 2;  // Discard shorter sequences
+};
+```
+
+The default `min_sequence_length = 2` filters out single-frame sequences, which
+carry no temporal transition information for HMMs.
+
+## API
+
+Two overloads are provided — one with labels (for training) and one without
+(for prediction):
+
+```cpp
+// Labeled segmentation (training)
+std::vector<SequenceSegment> SequenceAssembler::segment(
+    arma::mat const & features,
+    arma::Row<std::size_t> const & labels,
+    std::vector<TimeFrameIndex> const & times,
+    SequenceAssemblerConfig const & config = {});
+
+// Unlabeled segmentation (prediction)
+std::vector<SequenceSegment> SequenceAssembler::segment(
+    arma::mat const & features,
+    std::vector<TimeFrameIndex> const & times,
+    SequenceAssemblerConfig const & config = {});
+```
+
+### Preconditions
+
+- `features.n_cols == times.size()`
+- `labels.n_elem == times.size()` (labeled overload)
+- `times` must be sorted in ascending order
+
+## Usage Example
+
+```cpp
+// After FeatureConverter produces a flat matrix:
+auto converted = convertTensorToArma(tensor, config);
+
+// Build TimeFrameIndex vector from valid row indices
+std::vector<TimeFrameIndex> times;
+for (auto idx : converted.valid_row_indices) {
+    times.emplace_back(static_cast<int64_t>(idx));
+}
+
+// Segment for HMM training
+auto segments = SequenceAssembler::segment(
+    converted.matrix, labels, times,
+    {.min_sequence_length = 2});
+
+// Each segment is a contiguous temporal run
+for (auto const & seg : segments) {
+    // seg.features: features × segment_length
+    // seg.labels:   1 × segment_length
+    // seg.times:    original time indices
+}
+```
+
+## Pipeline Integration
+
+The SequenceAssembler slots into the ClassificationPipeline between label
+assembly and training when the selected model supports sequence-based training.
+The pipeline flow becomes:
+
+```
+ValidatingFeatures → ConvertingFeatures → AssemblingLabels →
+SegmentingSequences → Training → Predicting → ComputingMetrics → WritingOutput
+```
+
+Models that implement `trainSequences()` / `predictSequences()` (e.g., HMM)
+receive the segmented sequences directly. Frame-based models skip the
+segmentation stage entirely.
+
+## Test Coverage
+
+18 test cases covering:
+
+- Empty input
+- Single-frame sequences (filtered/kept by config)
+- No gaps (single contiguous run)
+- All gaps (every frame isolated)
+- Multiple segments with varying gap sizes
+- `min_sequence_length` filtering at various thresholds
+- Unlabeled segmentation (empty labels)
+- Multi-row feature preservation
+- Boundary condition: gap of exactly 2
+- Large contiguous blocks (1000 frames)
+- Negative TimeFrameIndex values
+- Two-frame sequences (minimum viable HMM input)

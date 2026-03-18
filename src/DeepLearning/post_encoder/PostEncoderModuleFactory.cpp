@@ -11,7 +11,8 @@ namespace dl {
 std::unique_ptr<PostEncoderModule>
 PostEncoderModuleFactory::create(
         std::string const & module_name,
-        PostEncoderModuleParams const & params) {
+        ImageSize source_image_size,
+        SpatialPointModuleParams const & params) {
 
     if (module_name == "none" || module_name.empty()) {
         return nullptr;
@@ -22,11 +23,8 @@ PostEncoderModuleFactory::create(
     }
 
     if (module_name == "spatial_point") {
-        auto const mode = (params.interpolation == "bilinear")
-                                  ? InterpolationMode::Bilinear
-                                  : InterpolationMode::Nearest;
         return std::make_unique<SpatialPointExtractModule>(
-                params.source_image_size, mode);
+                source_image_size, params.interpolation);
     }
 
     return nullptr;

@@ -1,0 +1,42 @@
+---
+title: "Gaussian Mixture Model"
+format: html
+---
+
+## Overview
+
+Gaussian Mixture Model (GMM) is a probabilistic clustering algorithm that models data as a mixture of K Gaussian distributions. Each observation gets a **soft assignment** — a probability of belonging to each cluster — rather than a hard label.
+
+## Parameters
+
+| Parameter | Default | Description |
+|---|---|---|
+| K | 3 | Number of Gaussian components (clusters) |
+| Max Iterations | 300 | Maximum EM (Expectation-Maximization) iterations |
+| Seed | (random) | Optional random seed for reproducible results |
+
+## When to Use
+
+- Clusters overlap and hard assignments would lose information
+- You want probability estimates for cluster membership
+- Clusters have elliptical shapes (different variances per axis)
+- You want a more flexible model than K-Means
+
+## Soft Assignments
+
+Unlike K-Means and DBSCAN, GMM produces a probability for each cluster for every frame. For example, a frame might have 60% probability of belonging to Cluster 0 and 40% to Cluster 1.
+
+## Output
+
+GMM produces both hard assignments (highest probability) and soft probabilities:
+
+- **Entity groups**: One putative group per cluster (hard assignment)
+- **Interval series**: Contiguous runs of each cluster assignment
+- **Probability series**: One `AnalogTimeSeries` per cluster containing per-frame membership probabilities (enable "Write probabilities" in the clustering panel)
+
+## Tips
+
+- GMM often gives better results than K-Means when clusters are not spherical
+- The probability output is useful for identifying frames near cluster boundaries
+- Enable z-score normalization if features have different scales
+- Set a seed when comparing different K values

@@ -74,6 +74,9 @@ struct MLCoreWidgetStateData {
     /// DataManager key for data-entity group labeling (entity_groups mode)
     std::string label_data_key;
 
+    /// DataManager key for event series labeling (events mode)
+    std::string label_event_key;
+
     // === Model configuration ===
 
     /// Registry name of the selected MLModelOperation (e.g. "Random Forest")

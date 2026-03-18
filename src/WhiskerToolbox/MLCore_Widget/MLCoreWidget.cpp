@@ -16,6 +16,7 @@
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "MLCore/models/MLModelParameters.hpp"
 #include "MLCore/models/MLModelRegistry.hpp"
+#include "MLCore/models/supervised/HiddenMarkovModelOperation.hpp"
 #include "MLCore/pipelines/ClassificationPipeline.hpp"
 #include "MLCore/pipelines/ClusteringPipeline.hpp"
 #include "MLCore/preprocessing/ClassBalancing.hpp"
@@ -61,7 +62,7 @@ public:
     }
 
 signals:
-    void progressUpdate(int stage_index, QString message);
+    void progressUpdate(int _t1, QString _t2);
 
 protected:
     void run() override {
@@ -104,7 +105,7 @@ public:
     }
 
 signals:
-    void progressUpdate(int stage_index, QString message);
+    void progressUpdate(int _t1, QString _t2);
 
 protected:
     void run() override {
@@ -164,7 +165,7 @@ void MLCoreWidget::onDataFocusChanged(EditorLib::SelectedDataKey const & data_ke
         return;
     }
 
-    QString const key_str = data_key.toString();
+    QString const& key_str = data_key.toString();
     if (key_str.isEmpty()) {
         return;
     }
@@ -476,6 +477,16 @@ void MLCoreWidget::_onPipelineComplete() {
 
     std::string const model_name = _model_config_panel->selectedModelName();
     _results_panel->showClassificationResult(*_last_result, model_name);
+
+    // Show transition matrix for HMM models
+    if (_last_result->trained_model) {
+        auto const * hmm = dynamic_cast<MLCore::HiddenMarkovModelOperation const *>(
+                _last_result->trained_model.get());
+        if (hmm != nullptr) {
+            arma::mat const trans = hmm->getTransitionMatrix();
+            _results_panel->showTransitionMatrix(trans, _last_result->class_names);
+        }
+    }
 }
 
 // =============================================================================
@@ -565,6 +576,10 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
             label_cfg.data_key = _state->labelDataKey();
         }
         config.label_config = label_cfg;
+    } else if (source_type == "events") {
+        MLCore::LabelFromEvents const label_cfg;
+        config.label_config = label_cfg;
+        config.label_event_key = _label_panel->selectedEventKey();
     }
 
     // -- Feature conversion (use sensible defaults) --

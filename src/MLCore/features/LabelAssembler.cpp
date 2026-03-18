@@ -5,6 +5,7 @@
 
 #include "LabelAssembler.hpp"
 
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
@@ -12,6 +13,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <optional>
+#include <ranges>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -133,7 +135,7 @@ AssembledLabels assembleLabelsFromIntervals(
     result.unlabeled_count = 0;// binary mode: every row gets a label
 
     for (std::size_t i = 0; i < row_times.size(); ++i) {
-        bool inside = intervals.hasIntervalAtTime(row_times[i], source_time_frame);
+        bool const inside = intervals.hasIntervalAtTime(row_times[i], source_time_frame);
         result.labels(i) = inside ? 1 : 0;
     }
 
@@ -199,6 +201,35 @@ AssembledLabels assembleLabelsFromDataEntityGroups(
     return labelsFromTimeLabelMap(
             time_to_label, std::move(class_names),
             config.class_groups.size(), row_times);
+}
+
+// ============================================================================
+// assembleLabelsFromEvents
+// ============================================================================
+
+AssembledLabels assembleLabelsFromEvents(
+        DigitalEventSeries const & events,
+        TimeFrame const & source_time_frame,
+        std::span<TimeFrameIndex const> row_times,
+        LabelFromEvents const & config) {
+    if (row_times.empty()) {
+        throw std::invalid_argument(
+                "row_times must not be empty for label assembly");
+    }
+
+    AssembledLabels result;
+    result.num_classes = 2;
+    result.class_names = {config.negative_class_name, config.positive_class_name};
+    result.labels.set_size(row_times.size());
+    result.unlabeled_count = 0;// binary mode: every row gets a label
+
+    for (std::size_t i = 0; i < row_times.size(); ++i) {
+        // viewInRange handles time frame conversion internally
+        auto range = events.viewInRange(row_times[i], row_times[i], source_time_frame);
+        result.labels(i) = std::ranges::distance(range) > 0 ? 1 : 0;
+    }
+
+    return result;
 }
 
 // ============================================================================

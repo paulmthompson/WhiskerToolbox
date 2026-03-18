@@ -1,0 +1,116 @@
+---
+title: "Output & Entity Utils"
+description: "PredictionWriter putative group output and TimeEntity utilities"
+---
+
+## PredictionWriter
+
+`PredictionWriter` (`output/PredictionWriter.hpp`) writes ML outputs to `DataManager` and the entity system. It implements the **putative group pattern**: predictions never overwrite user-created labels — they are written to separate groups and data keys with a configurable prefix.
+
+### Output Formats
+
+| Output | Format | Description |
+|---|---|---|
+| **Intervals** | `DigitalIntervalSeries` | Contiguous runs of each predicted class, keyed as `"{prefix}{class_name}"` |
+| **Probabilities** | `AnalogTimeSeries` | Per-class probability values (one series per class), keyed as `"{prefix}prob_{class_name}"` |
+| **Entity groups** | `EntityGroupManager` | TimeEntities grouped by predicted class, following putative group naming |
+
+### Configuration
+
+```cpp
+struct PredictionWriterConfig {
+    std::string output_prefix = "Predicted:";
+    bool write_intervals = true;
+    bool write_probabilities = true;
+    bool write_to_putative_groups = true;
+    std::string time_key_str = "time";
+};
+```
+
+### Result
+
+```cpp
+struct PredictionWriterResult {
+    std::vector<std::string> interval_keys;   // Created interval series keys
+    std::vector<std::string> probability_keys; // Created probability series keys
+    std::vector<GroupId> putative_group_ids;    // Created entity group IDs
+};
+```
+
+### Usage
+
+The pipelines call `PredictionWriter` as their final step. It can also be used directly:
+
+```cpp
+PredictionWriterConfig config;
+config.output_prefix = "Predicted:";
+
+auto result = writePredictions(
+    dm, predictions, probabilities, class_names,
+    valid_row_indices, config);
+```
+
+## Classification Metrics
+
+`ClassificationMetrics` (`metrics/ClassificationMetrics.hpp`) computes standard metrics after prediction.
+
+### Binary Metrics
+
+```cpp
+struct BinaryClassificationMetrics {
+    double accuracy;
+    double sensitivity;   // true positive rate
+    double specificity;   // true negative rate
+    double dice;          // F1 score
+    ConfusionMatrix confusion_matrix;
+};
+```
+
+### Multi-Class Metrics
+
+```cpp
+struct MultiClassMetrics {
+    double overall_accuracy;
+    std::vector<PerClassMetrics> per_class; // precision, recall, F1 per class
+    ConfusionMatrix confusion_matrix;
+};
+```
+
+Both include `toString()` formatting utilities for human-readable output.
+
+## Class Balancing
+
+`ClassBalancing` (`preprocessing/ClassBalancing.hpp`) addresses class imbalance before training.
+
+### Strategies
+
+| Strategy | Behavior |
+|---|---|
+| `Subsample` | Down-sample majority class to `minority_count × max_ratio` |
+| `Oversample` | Up-sample minority class to match majority |
+
+### Configuration
+
+```cpp
+struct BalancingConfig {
+    BalancingStrategy strategy = BalancingStrategy::Subsample;
+    double max_ratio = 1.0;   // majority-to-minority ratio
+    std::optional<std::size_t> seed; // for reproducibility
+};
+```
+
+The `BalancedData` result includes `original_indices` for traceability back to the unbalanced dataset.
+
+## TimeEntity Utilities
+
+`TimeEntityUtils` (`entity_utils/TimeEntityUtils.hpp`) provides bulk operations for the `TimeEntity` kind in the entity system.
+
+### Functions
+
+| Function | Description |
+|---|---|
+| `registerTimeEntities(registry, frames, time_key)` | Bulk-register frames as TimeEntity IDs |
+| `intervalsToTimeEntities(registry, intervals, time_key)` | Expand interval series to per-frame entities |
+| `timeEntitiesToIntervals(group_manager, group_id, time_key)` | Convert entity groups back to interval series |
+
+These utilities bridge the entity system with the ML pipeline's need to create per-frame entity groups for prediction output.

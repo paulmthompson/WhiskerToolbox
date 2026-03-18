@@ -26,6 +26,7 @@ constexpr int kPageLogisticRegression = 3;
 constexpr int kPageKMeans = 4;
 constexpr int kPageDBSCAN = 5;
 constexpr int kPageGMM = 6;
+constexpr int kPageHMM = 7;
 
 }// namespace
 
@@ -114,6 +115,12 @@ std::unique_ptr<MLCore::MLModelParametersBase> ModelConfigPanel::currentParamete
             if (seed_val >= 0) {
                 params->seed = static_cast<std::size_t>(seed_val);
             }
+            return params;
+        }
+        case kPageHMM: {
+            auto params = std::make_unique<MLCore::HMMParameters>();
+            params->num_states = static_cast<std::size_t>(ui->hmmNumStatesSpinBox->value());
+            params->tolerance = ui->hmmToleranceSpinBox->value();
             return params;
         }
         default:
@@ -272,6 +279,12 @@ void ModelConfigPanel::_setupConnections() {
     connect(ui->gmmMaxIterSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &ModelConfigPanel::_onParameterValueChanged);
     connect(ui->gmmSeedSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &ModelConfigPanel::_onParameterValueChanged);
+
+    // HMM parameter changes
+    connect(ui->hmmNumStatesSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &ModelConfigPanel::_onParameterValueChanged);
+    connect(ui->hmmToleranceSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &ModelConfigPanel::_onParameterValueChanged);
 }
 
@@ -447,6 +460,9 @@ int ModelConfigPanel::_pageIndexForModel(std::string const & name) const {
     }
     if (name == "Gaussian Mixture") {
         return kPageGMM;
+    }
+    if (name == "Hidden Markov Model (Gaussian)") {
+        return kPageHMM;
     }
     return kPageEmpty;
 }

@@ -72,6 +72,8 @@ website:
                 - developer/DeepLearning/background_inference.qmd
                 - developer/DeepLearning/general_encoder.qmd
                 - developer/DeepLearning/post_encoder_modules.qmd
+                - developer/DeepLearning/param_schemas.qmd
+                - developer/DeepLearning/widget_param_schemas.qmd
                 - developer/DeepLearning/roadmap.qmd
             - section: "Transforms V2"
               href: developer/transforms_v2/index.qmd
@@ -86,6 +88,17 @@ website:
               contents:
                 - developer/DataSynthesizer/GeneratorRegistry.qmd
                 - developer/DataSynthesizer/Widget.qmd
+            - section: "MLCore"
+              href: developer/MLCore/index.qmd
+              contents:
+                - developer/MLCore/models.qmd
+                - developer/MLCore/hmm.qmd
+                - developer/MLCore/features.qmd
+                - developer/MLCore/label_assembly.qmd
+                - developer/MLCore/pipelines.qmd
+                - developer/MLCore/sequence_assembler.qmd
+                - developer/MLCore/output.qmd
+                - developer/MLCore/widget.qmd
                 - section: "Generators"
                   contents:
                     - developer/DataSynthesizer/Generators/Analog.qmd
@@ -150,6 +163,9 @@ website:
                   - developer/ui/Features/Collapsible_Widget.qmd
             - text: "AutoParam System"
               href: developer/ui/autoparam.qmd
+            - section: "Deep Learning Widget"
+              contents:
+                  - developer/DeepLearning_Widget/helpers.qmd
             - section: "Plot Widgets"
               href: developer/ui/Plots/plot_widget_guide.md
               contents:
@@ -299,8 +315,17 @@ website:
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd
-            - user_guide/machine_learning/Naive_Bayes.qmd
-            - user_guide/machine_learning/Random_Forest.qmd
+            - text: "Classification"
+              contents:
+                - user_guide/machine_learning/Random_Forest.qmd
+                - user_guide/machine_learning/Naive_Bayes.qmd
+                - user_guide/machine_learning/Logistic_Regression.qmd
+                - user_guide/machine_learning/HMM.qmd
+            - text: "Clustering"
+              contents:
+                - user_guide/machine_learning/KMeans.qmd
+                - user_guide/machine_learning/DBSCAN.qmd
+                - user_guide/machine_learning/GMM.qmd
         - section: "Export"
           contents:
             - user_guide/export/video_export.qmd

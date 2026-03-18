@@ -1,0 +1,103 @@
+---
+title: "Label Assembly"
+description: "Four modes for assembling training labels from WhiskerToolbox data"
+---
+
+## Overview
+
+`LabelAssembler` (`features/LabelAssembler.hpp`) converts WhiskerToolbox data sources into the `arma::Row<size_t>` label vectors that supervised ML algorithms require. It supports four labeling modes, each suited to different annotation workflows.
+
+## Label Modes
+
+### 1. From Intervals (Binary)
+
+Labels frames as positive (inside interval) or negative (outside interval) using a `DigitalIntervalSeries`.
+
+```cpp
+LabelFromIntervals config;
+config.positive_class_name = "Contact";
+config.negative_class_name = "No Contact";
+
+LabelAssemblyConfig label_config = config;
+auto labels = assembleLabels(dm, label_config, interval_key, valid_row_indices, time_key);
+// labels.labels: 0 = outside interval, 1 = inside interval
+// labels.class_names: ["No Contact", "Contact"]
+```
+
+**Use case**: Binary annotation tasks where the user has defined intervals marking an event (e.g., whisker contact periods).
+
+### 2. From Events (Binary)
+
+Labels frames as positive (event present) or negative (no event) using a `DigitalEventSeries`. This is similar to interval-based labeling but uses discrete point events instead of time ranges.
+
+```cpp
+LabelFromEvents config;
+config.positive_class_name = "Contact";
+config.negative_class_name = "NoContact";
+
+LabelAssemblyConfig label_config = config;
+// In pipeline config: set label_event_key to the DataManager key
+auto labels = assembleLabelsFromEvents(events, time_frame, row_times, config);
+// labels.labels: 0 = no event at frame, 1 = event present at frame
+// labels.class_names: ["NoContact", "Contact"]
+// labels.unlabeled_count: always 0 (every frame gets a label)
+```
+
+**Use case**: Binary annotation from discrete event data (e.g., spike times, contact onset markers). Particularly useful for HMM sequence classification where events mark state transitions.
+
+### 3. From TimeEntity Groups (Multi-class)
+
+Uses the `EntityGroupManager` to assign per-frame labels based on `TimeEntity` group membership. Each group becomes a class.
+
+```cpp
+LabelFromTimeEntityGroups config;
+config.group_ids = {group_id_1, group_id_2, group_id_3};
+
+LabelAssemblyConfig label_config = config;
+auto labels = assembleLabels(dm, label_config, "", valid_row_indices, time_key);
+// labels.labels: 0, 1, or 2 based on group membership
+// labels.class_names: names from EntityGroupManager
+// labels.unlabeled_count: frames not in any specified group
+```
+
+**Use case**: Multi-class annotation where the user has labeled frames into named categories using the entity/group system.
+
+### 4. From Data-Entity Groups (Multi-class)
+
+Labels based on which entity groups a data object's entities belong to. This mode works with any data type that has entities, not just TimeEntities.
+
+```cpp
+LabelFromDataEntityGroups config;
+config.group_ids = {group_id_1, group_id_2};
+config.data_key = "whisker_angles";
+
+LabelAssemblyConfig label_config = config;
+auto labels = assembleLabels(dm, label_config, "", valid_row_indices, time_key);
+```
+
+**Use case**: Labeling based on data object grouping (e.g., whiskers grouped by identity).
+
+## Result Type
+
+```cpp
+struct AssembledLabels {
+    arma::Row<std::size_t> labels;   // (1 × observations), class indices
+    std::vector<std::string> class_names; // human-readable class names
+    std::size_t unlabeled_count = 0;  // frames with no label (excluded)
+};
+```
+
+## Integration with Pipelines
+
+The `ClassificationPipeline` uses `LabelAssembler` as step 3 in its orchestration:
+
+1. Validate features
+2. Convert features (produces `valid_row_indices`)
+3. **Assemble labels** using `valid_row_indices` to match converted features
+4. Balance classes
+5. Train model
+6. Predict
+7. Compute metrics
+8. Write output
+
+The `valid_row_indices` from `FeatureConverter` ensures that labels align with the feature matrix after NaN rows are dropped.

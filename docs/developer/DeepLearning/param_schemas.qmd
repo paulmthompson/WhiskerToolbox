@@ -1,0 +1,92 @@
+---
+title: "Per-Component Parameter Schemas"
+---
+
+## Overview
+
+Phase 0.0 of the DeepLearning_Widget refactoring replaced the monolithic `DecoderParams`, `EncoderParams`, and `PostEncoderModuleParams` structs with per-component parameter structs. Each struct is a plain reflect-cpp struct containing only the user-configurable fields for its specific component.
+
+These structs are complemented by companion `*ParamSchemas.hpp` headers that provide `ParameterUIHints` specializations for richer auto-generated UI forms.
+
+## Architecture
+
+```
+DeepLearning library (src/DeepLearning/)
+├── channel_decoding/
+│   ├── ChannelDecoder.hpp         ← DecoderContext + per-decoder param structs
+│   └── DecoderParamSchemas.hpp    ← ParameterUIHints for decoder params
+├── channel_encoding/
+│   ├── ChannelEncoder.hpp         ← EncoderContext + per-encoder param structs
+│   └── EncoderParamSchemas.hpp    ← ParameterUIHints for encoder params
+└── post_encoder/
+    ├── PostEncoderModuleFactory.hpp  ← GlobalAvgPoolModuleParams + SpatialPointModuleParams
+    └── PostEncoderParamSchemas.hpp   ← ParameterUIHints for post-encoder params
+```
+
+## Context vs. Parameter Structs
+
+Each component separates **runtime context** (set by SlotAssembler, not user-configurable) from **user parameters** (exposed via ParameterSchema for auto-generated UI forms):
+
+| Component | Context Struct | User Param Struct(s) |
+|---|---|---|
+| Decoders | `DecoderContext` | `MaskDecoderParams`, `PointDecoderParams`, `LineDecoderParams`, `FeatureVectorDecoderParams` |
+| Encoders | `EncoderContext` | `ImageEncoderParams`, `Point2DEncoderParams`, `Mask2DEncoderParams`, `Line2DEncoderParams` |
+| Post-Encoder | `ImageSize` (passed separately) | `GlobalAvgPoolModuleParams`, `SpatialPointModuleParams` |
+
+## Using extractParameterSchema
+
+The `ParameterSchema` dependency enables `extractParameterSchema<T>()` on all per-component param structs:
+
+```cpp
+#include "channel_decoding/DecoderParamSchemas.hpp"
+
+auto schema = WhiskerToolbox::Transforms::V2::extractParameterSchema<dl::MaskDecoderParams>();
+// schema.fields[0].name == "threshold"
+// schema.fields[0].type_name == "float"
+// schema.fields[0].tooltip == "Binary threshold for mask generation"
+```
+
+For encoder params, `RasterMode` is automatically detected as an `enum` type:
+
+```cpp
+#include "channel_encoding/EncoderParamSchemas.hpp"
+
+auto schema = WhiskerToolbox::Transforms::V2::extractParameterSchema<dl::Point2DEncoderParams>();
+// schema.fields[0].name == "mode"
+// schema.fields[0].type_name == "enum"
+// schema.fields[0].allowed_values == {"Binary", "Heatmap"}  (restricted by ParameterUIHints)
+```
+
+## ParameterUIHints Pattern
+
+Following the `ProcessingOptionsSchema.hpp` pattern used by `MediaProcessingPipeline`, UI annotations are kept in companion headers:
+
+```cpp
+// channel_decoding/DecoderParamSchemas.hpp
+template<>
+struct ParameterUIHints<dl::MaskDecoderParams> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("threshold")) {
+            f->tooltip = "Binary threshold for mask generation";
+            f->min_value = 0.01;
+            f->max_value = 1.0;
+            f->is_exclusive_min = true;
+        }
+    }
+};
+```
+
+These hints are automatically applied when `extractParameterSchema<T>()` is called,
+since the template function invokes `ParameterUIHints<T>::annotate(schema)` as its
+final step. Include the appropriate `*ParamSchemas.hpp` header to ensure the
+specialization is visible at the point of schema extraction.
+
+## SlotAssembler Integration
+
+`SlotAssembler` bridges the widget-level flat binding data (`DeepLearningBindingData.hpp`) with the per-component param structs:
+
+- `encodeDynamicSlot()` constructs `EncoderContext` + the appropriate per-encoder params from `SlotBindingData` flat fields.
+- `decodeOutputs()` / `decodeOutputsToBuffer()` construct `DecoderContext` + per-decoder params from `OutputBindingData` flat fields.
+- `configurePostEncoderModule()` converts the string-based `interpolation` parameter to `InterpolationMode` and constructs `SpatialPointModuleParams` internally.
+
+The PIMPL firewall is preserved — `SlotAssembler.hpp` does not expose any torch-adjacent types.

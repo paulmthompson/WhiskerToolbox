@@ -1,0 +1,203 @@
+---
+title: "MLCore Widget"
+description: "Qt widget for interactive supervised and unsupervised ML workflows"
+---
+
+## Overview
+
+`MLCore_Widget` (`src/WhiskerToolbox/MLCore_Widget/`) is a Qt6 widget providing an interactive GUI for machine learning workflows. It exposes the `MLCore` library's classification and clustering pipelines through a tab-based interface with panel-per-step layout.
+
+## Architecture
+
+The widget follows the **self-contained tool widget** pattern:
+
+- Single widget (no view/properties split)
+- Zone::Right placement as a tabbed panel
+- EditorState-backed serializable configuration
+- Background pipeline execution via `QThread`
+
+```
+MLCore_Widget/
+├── MLCoreWidget.hpp/.cpp                    # Top-level tab widget
+├── MLCoreWidgetState.hpp/.cpp               # EditorState subclass
+├── MLCoreWidgetStateData.hpp                # reflect-cpp POD state
+├── MLCoreWidgetRegistration.hpp/.cpp        # EditorRegistry registration
+├── FeatureSelectionPanel.hpp/.cpp/.ui       # Feature tensor selection
+├── RegionSelectionPanel.hpp/.cpp/.ui        # Training/prediction region
+├── LabelConfigPanel.hpp/.cpp/.ui            # Label source configuration
+├── ModelConfigPanel.hpp/.cpp/.ui            # Algorithm & parameter selection
+├── PredictionPanel.hpp/.cpp/.ui             # Prediction region & output config
+├── ResultsPanel.hpp/.cpp/.ui               # Classification results display
+├── ClusteringPanel.hpp/.cpp/.ui             # Clustering data & algorithm config
+└── ClusterOutputPanel.hpp/.cpp/.ui          # Clustering results display
+```
+
+### Dependencies
+
+```
+MLCore_Widget
+├── Qt6::Widgets, Qt6::Core, Qt6::Gui
+├── EditorState (public)
+├── MLCore (private)
+├── DataManager (private)
+├── GroupManagementWidget (private — for GroupManager color integration)
+└── reflectcpp (state serialization)
+```
+
+## Widget State
+
+`MLCoreWidgetStateData` holds all persistent configuration as a reflect-cpp POD struct:
+
+### Classification State
+
+| Field | Type | Description |
+|---|---|---|
+| `feature_tensor_key` | `string` | DataManager key for TensorData features |
+| `training_region_key` | `string` | DigitalIntervalSeries key for training region |
+| `prediction_region_key` | `string` | DigitalIntervalSeries key for prediction region |
+| `label_source_type` | `string` | `"intervals"`, `"groups"`, or `"entity_groups"` |
+| `label_interval_key` | `string` | Interval series key (interval mode) |
+| `label_positive_class_name` | `string` | Positive class name (interval mode) |
+| `label_negative_class_name` | `string` | Negative class name (interval mode) |
+| `label_group_ids` | `vector<uint64_t>` | Group IDs (group modes) |
+| `label_data_key` | `string` | Data key (entity_groups mode) |
+| `selected_model_name` | `string` | Registry model name |
+| `model_parameters_json` | `string` | Serialized model parameters |
+| `balancing_enabled` | `bool` | Class balancing toggle |
+| `balancing_strategy` | `string` | `"subsample"` or `"oversample"` |
+| `balancing_max_ratio` | `double` | Majority-to-minority ratio |
+| `output_prefix` | `string` | Prefix for output data keys |
+| `probability_threshold` | `double` | Binary classification threshold |
+| `output_probabilities` | `bool` | Write probability AnalogTimeSeries |
+| `output_predictions` | `bool` | Write prediction DigitalIntervalSeries |
+
+### Clustering State
+
+| Field | Type | Description |
+|---|---|---|
+| `clustering_tensor_key` | `string` | TensorData key for clustering features |
+| `clustering_model_name` | `string` | Clustering algorithm name |
+| `clustering_output_prefix` | `string` | Output prefix (e.g., `"Cluster:"`) |
+| `clustering_write_intervals` | `bool` | Write cluster intervals |
+| `clustering_write_probabilities` | `bool` | Write soft probabilities (GMM) |
+| `clustering_zscore_normalize` | `bool` | Z-score normalize before clustering |
+
+### UI State
+
+| Field | Type | Description |
+|---|---|---|
+| `active_tab` | `int` | Active workflow tab (0=classification, 1=clustering) |
+
+## Classification Tab
+
+### Panel Layout
+
+```
+┌─── Features ──────────────────────────────────┐
+│ Feature Tensor: [combo ▼]  shape, columns     │
+└───────────────────────────────────────────────┘
+┌─── Training Region ──────────────────────────┐
+│ Interval Series: [combo ▼]  frame count       │
+└───────────────────────────────────────────────┘
+┌─── Labels ───────────────────────────────────┐
+│ Source: ○ Intervals  ● Groups  ○ Entity Groups│
+│ (dynamic form based on selection)             │
+└───────────────────────────────────────────────┘
+┌─── Model ────────────────────────────────────┐
+│ Task: [combo ▼]  Algorithm: [combo ▼]         │
+│ Parameters: (stacked per-model widgets)       │
+│ Balancing: ☐ Enabled  Strategy  Ratio         │
+│ [Train Model]                                 │
+└───────────────────────────────────────────────┘
+┌─── Prediction ───────────────────────────────┐
+│ Region: [combo ▼]  ☐ All frames               │
+│ Threshold: [slider/spinbox]                   │
+│ ☐ Probabilities  ☐ Predictions                │
+│ [Predict]                                     │
+└───────────────────────────────────────────────┘
+┌─── Results ──────────────────────────────────┐
+│ Metrics display, confusion matrix,            │
+│ clickable output data keys                    │
+└───────────────────────────────────────────────┘
+```
+
+### Sub-Panels
+
+| Panel | Purpose |
+|---|---|
+| `FeatureSelectionPanel` | Combo box listing `TensorData` keys. Shows column names, row count, row type, time frame info. |
+| `RegionSelectionPanel` | Combo box for `DigitalIntervalSeries` keys. Shows frame count. "All frames" checkbox. |
+| `LabelConfigPanel` | Radio buttons for label source. Dynamic stacked form per mode. Class name editing. |
+| `ModelConfigPanel` | Task type → model filter. Stacked parameter widgets per model. Class balancing config. Train button. |
+| `PredictionPanel` | Prediction region selection. Threshold slider + spinbox. Output type checkboxes. Predict button. |
+| `ResultsPanel` | Displays `ClassificationPipelineResult`. Metrics, confusion matrix, clickable output keys. |
+
+## Clustering Tab
+
+### Panel Layout
+
+```
+┌─── Data Source ──────────────────────────────┐
+│ TensorData: [combo ▼]  shape, columns, type   │
+│ ☐ Z-score normalize                          │
+└───────────────────────────────────────────────┘
+┌─── Algorithm ────────────────────────────────┐
+│ [combo ▼]  (per-algorithm parameters)         │
+│ Output prefix: [text]                         │
+│ ☐ Write intervals  ☐ Write probabilities      │
+│ [Fit & Assign]                                │
+└───────────────────────────────────────────────┘
+┌─── Output ───────────────────────────────────┐
+│ Cluster table, noise info, created keys       │
+│ Color swatches from GroupManager              │
+└───────────────────────────────────────────────┘
+```
+
+### Sub-Panels
+
+| Panel | Purpose |
+|---|---|
+| `ClusteringPanel` | TensorData selection, algorithm combo filtered to `MLTaskType::Clustering`, per-algorithm parameter stack, normalization option, output config. |
+| `ClusterOutputPanel` | Algorithm summary, cluster assignment table with counts and fractions, noise point info, clickable output keys with color swatches. |
+
+## Pipeline Execution
+
+Both pipelines run asynchronously in a `QThread` background worker:
+
+1. UI panels are disabled during execution
+2. Progress callback updates a status label and indeterminate progress bar
+3. On completion, results are displayed in the output panel
+4. On failure, an error message is shown
+
+The `_runPipelineAsync()` / `_runClusteringPipelineAsync()` methods assemble the config from panel state, spawn a worker thread, and connect completion signals.
+
+## SelectionContext Integration
+
+`MLCoreWidget` inherits the `DataFocusAware` mixin for bidirectional awareness:
+
+### Incoming
+
+When another widget focuses a `TensorData` key via `SelectionContext`, the `FeatureSelectionPanel` auto-selects it. This lets users click a tensor in DataInspector and have it appear in ML Workflow.
+
+### Outgoing
+
+- Clicking an output data key in `ResultsPanel` or `ClusterOutputPanel` calls `SelectionContext::setDataFocus` so other widgets (DataViewer, DataInspector) navigate to that output.
+- Clicking a putative group entry calls `SelectionContext::setSelectedEntities()` to highlight the group's entities across all widgets.
+
+## GroupManager Integration
+
+`GroupManager*` is passed from `MainWindow` through registration:
+
+- **Auto-assigned colors**: GroupManager's observer callback detects groups created by `PredictionWriter` and assigns palette colors. `GroupManagementWidget` automatically adds rows.
+- **Color swatches**: `ClusterOutputPanel` and `ResultsPanel` display group color icons via QPixmap swatches from GroupManager.
+- **Entity selection**: Clicking a putative group entry retrieves its entities and broadcasts selection.
+
+## Registration
+
+Registered via `MLCoreWidgetRegistration` with:
+
+- **Type ID**: `"MLCoreWidget"`
+- **Menu path**: View/Analysis
+- **Zone**: Right
+- **Single instance**: `allow_multiple = false`
+- Receives `GroupManager*` from `MainWindow`

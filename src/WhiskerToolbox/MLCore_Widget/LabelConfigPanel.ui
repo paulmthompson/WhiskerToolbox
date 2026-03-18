@@ -65,6 +65,16 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QRadioButton" name="eventsRadio">
+          <property name="text">
+           <string>Event Series</string>
+          </property>
+          <property name="toolTip">
+           <string>Binary labeling: frames with events vs. without (ideal for HMM)</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <!-- Stacked widget with per-mode content -->
@@ -329,6 +339,64 @@
             </property>
             <property name="toolTip">
              <string>Remove the selected class from the label configuration</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 3: Event Series mode -->
+        <widget class="QWidget" name="eventsPage">
+         <layout class="QVBoxLayout" name="eventsLayout">
+          <item>
+           <layout class="QHBoxLayout" name="eventSelectorLayout">
+            <item>
+             <widget class="QLabel" name="eventLabel">
+              <property name="text">
+               <string>Event Series:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="eventComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select a DigitalEventSeries for binary labeling (event present = state 1)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="eventRefreshButton">
+              <property name="text">
+               <string>↻</string>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>30</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Refresh the list of available event series</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="eventInfoLabel">
+            <property name="text">
+             <string></string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::RichText</enum>
             </property>
            </widget>
           </item>

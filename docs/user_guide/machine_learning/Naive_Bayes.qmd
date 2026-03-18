@@ -3,3 +3,30 @@ title: "Naive Bayes Classifier"
 format: html
 ---
 
+## Overview
+
+Naive Bayes is a probabilistic classifier based on Bayes' theorem with an independence assumption between features. Despite this simplifying assumption, it often performs well in practice, trains very quickly, and produces well-calibrated probability estimates.
+
+## Parameters
+
+| Parameter | Default | Description |
+|---|---|---|
+| Epsilon | 1e-9 | Variance smoothing — added to feature variances to prevent division by zero |
+
+## When to Use
+
+- You need fast training (near-instant, even with many features)
+- Your features are roughly independent of each other
+- You want probability estimates for each class
+- You have a multi-class problem with many classes
+
+## Probability Output
+
+Naive Bayes produces probability estimates derived directly from Bayes' theorem. The probabilities across all classes sum to 1.0 for each frame.
+
+## Tips
+
+- Naive Bayes works best when features are not strongly correlated
+- If accuracy is poor, consider whether features are redundant (correlated) — try reducing to independent features
+- The epsilon parameter rarely needs adjustment unless you have features with extremely low variance
+
