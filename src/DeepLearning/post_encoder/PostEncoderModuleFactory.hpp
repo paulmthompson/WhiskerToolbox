@@ -18,15 +18,12 @@
 
 namespace dl {
 
-/// Optional parameters for modules that require configuration beyond a
-/// simple string key.
-struct PostEncoderModuleParams {
-    /// Source image dimensions (required for SpatialPointExtractModule).
-    ImageSize source_image_size{};
+/// User-configurable params for GlobalAvgPoolModule (none).
+struct GlobalAvgPoolModuleParams {};
 
-    /// Interpolation mode for SpatialPointExtractModule.
-    /// Accepted strings: "nearest" (default), "bilinear".
-    std::string interpolation = "nearest";
+/// User-configurable params for SpatialPointExtractModule.
+struct SpatialPointModuleParams {
+    InterpolationMode interpolation = InterpolationMode::Nearest;
 };
 
 /// Factory for creating `PostEncoderModule` instances by name.
@@ -45,13 +42,16 @@ class PostEncoderModuleFactory {
 public:
     /// Create a module instance by name.
     ///
-    /// @param module_name  Registered key (e.g. "global_avg_pool").
-    /// @param params       Optional configuration (required for spatial_point).
+    /// @param module_name       Registered key (e.g. "global_avg_pool").
+    /// @param source_image_size Source image dimensions (for spatial_point
+    ///                          coordinate scaling).
+    /// @param params            User-configurable params for spatial_point.
     /// @return `unique_ptr<PostEncoderModule>`, or `nullptr` for "none" or
     ///         unknown keys.
     [[nodiscard]] static std::unique_ptr<PostEncoderModule>
     create(std::string const & module_name,
-           PostEncoderModuleParams const & params = {});
+           ImageSize source_image_size = {},
+           SpatialPointModuleParams const & params = {});
 
     /// Names of all registered non-null module keys.
     [[nodiscard]] static std::vector<std::string> availableModules();

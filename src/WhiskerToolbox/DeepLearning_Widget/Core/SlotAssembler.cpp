@@ -194,10 +194,10 @@ void encodeDynamicSlot(
         dl::ImageEncoderParams const params{.normalize = true};
         if (media->is8Bit()) {
             auto const & data = media->getRawData8(frame);
-            encoder.encode(data, image_size, channels, tensor, ctx, params);
+            dl::ImageEncoder::encode(data, image_size, channels, tensor, ctx, params);
         } else {
             auto const & data = media->getRawData32(frame);
-            encoder.encode(data, image_size, channels, tensor, ctx, params);
+            dl::ImageEncoder::encode(data, image_size, channels, tensor, ctx, params);
         }
 
     } else if (binding.encoder_id == "Point2DEncoder") {
@@ -218,7 +218,7 @@ void encodeDynamicSlot(
         for (auto const & pt: points_at_frame) {
             points_vec.push_back(pt);
         }
-        encoder.encode(points_vec, actual_source, tensor, ctx, params);
+        dl::Point2DEncoder::encode(points_vec, actual_source, tensor, ctx, params);
 
     } else if (binding.encoder_id == "Mask2DEncoder") {
         auto mask_data = dm.getData<MaskData>(binding.data_key);
@@ -238,7 +238,7 @@ void encodeDynamicSlot(
             mask_to_encode = m;// Use the first mask found
             break;
         }
-        encoder.encode(mask_to_encode, actual_source, tensor, ctx, params);
+        dl::Mask2DEncoder::encode(mask_to_encode, actual_source, tensor, ctx, params);
 
     } else if (binding.encoder_id == "Line2DEncoder") {
         auto line_data = dm.getData<LineData>(binding.data_key);
@@ -259,7 +259,7 @@ void encodeDynamicSlot(
             line_to_encode = l;// Use the first line found
             break;
         }
-        encoder.encode(line_to_encode, actual_source, tensor, ctx, params);
+        dl::Line2DEncoder::encode(line_to_encode, actual_source, tensor, ctx, params);
 
     } else {
         std::cerr << "SlotAssembler: unknown encoder '" << binding.encoder_id
@@ -1441,11 +1441,13 @@ void SlotAssembler::configurePostEncoderModule(
     auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
     if (!enc) return;
 
-    dl::PostEncoderModuleParams params;
-    params.source_image_size = source_image_size;
-    params.interpolation = interpolation;
+    auto const mode = (interpolation == "bilinear")
+                              ? dl::InterpolationMode::Bilinear
+                              : dl::InterpolationMode::Nearest;
+    dl::SpatialPointModuleParams const params{.interpolation = mode};
 
-    auto module = dl::PostEncoderModuleFactory::create(module_type, params);
+    auto module = dl::PostEncoderModuleFactory::create(
+            module_type, source_image_size, params);
     enc->setPostEncoderModule(std::move(module));
 
     // Clear the spatial point key unless spatial_point is configured

@@ -24,15 +24,13 @@ using Catch::Matchers::WithinAbs;
 // GlobalAvgPoolModule
 // ─────────────────────────────────────────────────────────────────────────────
 
-TEST_CASE("GlobalAvgPoolModule - name", "[post_encoder][GlobalAvgPoolModule]")
-{
+TEST_CASE("GlobalAvgPoolModule - name", "[post_encoder][GlobalAvgPoolModule]") {
     dl::GlobalAvgPoolModule mod;
     CHECK(mod.name() == "global_avg_pool");
 }
 
 TEST_CASE("GlobalAvgPoolModule - output shape [B,C,H,W] -> [B,C]",
-          "[post_encoder][GlobalAvgPoolModule]")
-{
+          "[post_encoder][GlobalAvgPoolModule]") {
     dl::GlobalAvgPoolModule mod;
 
     // outputShape on raw shape vector
@@ -42,8 +40,7 @@ TEST_CASE("GlobalAvgPoolModule - output shape [B,C,H,W] -> [B,C]",
 }
 
 TEST_CASE("GlobalAvgPoolModule - apply reduces spatial dimensions",
-          "[post_encoder][GlobalAvgPoolModule]")
-{
+          "[post_encoder][GlobalAvgPoolModule]") {
     dl::GlobalAvgPoolModule mod;
 
     // [B=2, C=3, H=4, W=4] — constant value 2.0 per channel
@@ -65,8 +62,7 @@ TEST_CASE("GlobalAvgPoolModule - apply reduces spatial dimensions",
 }
 
 TEST_CASE("GlobalAvgPoolModule - channels averaged correctly",
-          "[post_encoder][GlobalAvgPoolModule]")
-{
+          "[post_encoder][GlobalAvgPoolModule]") {
     dl::GlobalAvgPoolModule mod;
 
     // [B=1, C=2, H=2, W=2]
@@ -88,8 +84,7 @@ TEST_CASE("GlobalAvgPoolModule - channels averaged correctly",
 }
 
 TEST_CASE("GlobalAvgPoolModule - single spatial pixel passthrough",
-          "[post_encoder][GlobalAvgPoolModule]")
-{
+          "[post_encoder][GlobalAvgPoolModule]") {
     dl::GlobalAvgPoolModule mod;
 
     // [B=1, C=4, H=1, W=1]
@@ -109,16 +104,14 @@ TEST_CASE("GlobalAvgPoolModule - single spatial pixel passthrough",
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST_CASE("SpatialPointExtractModule - name",
-          "[post_encoder][SpatialPointExtractModule]")
-{
+          "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{10, 10};
     dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
     CHECK(mod.name() == "spatial_point");
 }
 
 TEST_CASE("SpatialPointExtractModule - output shape [B,C,H,W] -> [B,C]",
-          "[post_encoder][SpatialPointExtractModule]")
-{
+          "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{64, 64};
     dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
 
@@ -128,8 +121,7 @@ TEST_CASE("SpatialPointExtractModule - output shape [B,C,H,W] -> [B,C]",
 }
 
 TEST_CASE("SpatialPointExtractModule - nearest: center point extracts correct channel",
-          "[post_encoder][SpatialPointExtractModule]")
-{
+          "[post_encoder][SpatialPointExtractModule]") {
     // Source image 10×10, feature map 10×10 (identity scale)
     ImageSize const src{10, 10};
     dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
@@ -155,8 +147,7 @@ TEST_CASE("SpatialPointExtractModule - nearest: center point extracts correct ch
 }
 
 TEST_CASE("SpatialPointExtractModule - nearest: top-left corner",
-          "[post_encoder][SpatialPointExtractModule]")
-{
+          "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{4, 4};
     dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
 
@@ -173,8 +164,7 @@ TEST_CASE("SpatialPointExtractModule - nearest: top-left corner",
 }
 
 TEST_CASE("SpatialPointExtractModule - nearest: clamping beyond boundary",
-          "[post_encoder][SpatialPointExtractModule]")
-{
+          "[post_encoder][SpatialPointExtractModule]") {
     ImageSize const src{4, 4};
     dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Nearest};
 
@@ -192,8 +182,7 @@ TEST_CASE("SpatialPointExtractModule - nearest: clamping beyond boundary",
 }
 
 TEST_CASE("SpatialPointExtractModule - bilinear interpolation: midpoint",
-          "[post_encoder][SpatialPointExtractModule]")
-{
+          "[post_encoder][SpatialPointExtractModule]") {
     // 4×4 source, 4×4 feature map
     ImageSize const src{4, 4};
     dl::SpatialPointExtractModule mod{src, dl::InterpolationMode::Bilinear};
@@ -220,8 +209,7 @@ TEST_CASE("SpatialPointExtractModule - bilinear interpolation: midpoint",
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST_CASE("PostEncoderPipeline - empty pipeline is pass-through",
-          "[post_encoder][PostEncoderPipeline]")
-{
+          "[post_encoder][PostEncoderPipeline]") {
     dl::PostEncoderPipeline pipeline;
 
     auto feat = torch::ones({1, 4, 8, 8});
@@ -231,8 +219,7 @@ TEST_CASE("PostEncoderPipeline - empty pipeline is pass-through",
 }
 
 TEST_CASE("PostEncoderPipeline - single module delegated correctly",
-          "[post_encoder][PostEncoderPipeline]")
-{
+          "[post_encoder][PostEncoderPipeline]") {
     dl::PostEncoderPipeline pipeline;
     pipeline.add(std::make_unique<dl::GlobalAvgPoolModule>());
 
@@ -249,8 +236,7 @@ TEST_CASE("PostEncoderPipeline - single module delegated correctly",
 }
 
 TEST_CASE("PostEncoderPipeline - outputShape chains sequentially",
-          "[post_encoder][PostEncoderPipeline]")
-{
+          "[post_encoder][PostEncoderPipeline]") {
     dl::PostEncoderPipeline pipeline;
     pipeline.add(std::make_unique<dl::GlobalAvgPoolModule>());
 
@@ -261,8 +247,7 @@ TEST_CASE("PostEncoderPipeline - outputShape chains sequentially",
 }
 
 TEST_CASE("PostEncoderPipeline - empty pipeline name",
-          "[post_encoder][PostEncoderPipeline]")
-{
+          "[post_encoder][PostEncoderPipeline]") {
     dl::PostEncoderPipeline pipeline;
     CHECK(pipeline.name() == "pipeline");
 }
@@ -272,47 +257,32 @@ TEST_CASE("PostEncoderPipeline - empty pipeline name",
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST_CASE("PostEncoderModuleFactory - none returns nullptr",
-          "[post_encoder][PostEncoderModuleFactory]")
-{
-    dl::PostEncoderModuleParams params;
-    params.source_image_size = {64, 64};
-
-    auto mod = dl::PostEncoderModuleFactory::create("none", params);
+          "[post_encoder][PostEncoderModuleFactory]") {
+    auto mod = dl::PostEncoderModuleFactory::create("none", {64, 64});
     CHECK(mod == nullptr);
 
-    auto mod2 = dl::PostEncoderModuleFactory::create("", params);
+    auto mod2 = dl::PostEncoderModuleFactory::create("", {64, 64});
     CHECK(mod2 == nullptr);
 }
 
 TEST_CASE("PostEncoderModuleFactory - global_avg_pool creates GlobalAvgPoolModule",
-          "[post_encoder][PostEncoderModuleFactory]")
-{
-    dl::PostEncoderModuleParams params;
-    params.source_image_size = {64, 64};
-
-    auto mod = dl::PostEncoderModuleFactory::create("global_avg_pool", params);
+          "[post_encoder][PostEncoderModuleFactory]") {
+    auto mod = dl::PostEncoderModuleFactory::create("global_avg_pool", {64, 64});
     REQUIRE(mod != nullptr);
     CHECK(mod->name() == "global_avg_pool");
 }
 
 TEST_CASE("PostEncoderModuleFactory - spatial_point creates SpatialPointExtractModule",
-          "[post_encoder][PostEncoderModuleFactory]")
-{
-    dl::PostEncoderModuleParams params;
-    params.source_image_size = {32, 32};
-    params.interpolation = "nearest";
+          "[post_encoder][PostEncoderModuleFactory]") {
+    dl::SpatialPointModuleParams params{.interpolation = dl::InterpolationMode::Nearest};
 
-    auto mod = dl::PostEncoderModuleFactory::create("spatial_point", params);
+    auto mod = dl::PostEncoderModuleFactory::create("spatial_point", {32, 32}, params);
     REQUIRE(mod != nullptr);
     CHECK(mod->name() == "spatial_point");
 }
 
 TEST_CASE("PostEncoderModuleFactory - unknown key returns nullptr",
-          "[post_encoder][PostEncoderModuleFactory]")
-{
-    dl::PostEncoderModuleParams params;
-    params.source_image_size = {64, 64};
-
-    auto mod = dl::PostEncoderModuleFactory::create("does_not_exist", params);
+          "[post_encoder][PostEncoderModuleFactory]") {
+    auto mod = dl::PostEncoderModuleFactory::create("does_not_exist", {64, 64});
     CHECK(mod == nullptr);
 }
