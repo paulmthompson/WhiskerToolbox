@@ -18,6 +18,8 @@ set(DEEP_LEARNING_WIDGET_SOURCES
 
     UI/DeepLearningPropertiesWidget.hpp
     UI/DeepLearningPropertiesWidget.cpp
+    UI/InferenceController.hpp
+    UI/InferenceController.cpp
 
     UI/Helpers/DataSourceComboHelper.hpp
     UI/Helpers/DataSourceComboHelper.cpp

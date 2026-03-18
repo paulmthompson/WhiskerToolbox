@@ -412,7 +412,11 @@ TEST_CASE("EncoderShapeParams schema extraction",
         auto * f = schema.field("output_shape");
         REQUIRE(f != nullptr);
         CHECK(f->type_name == "std::string");
-        CHECK(f->tooltip == "Encoder output shape, e.g. \"768,16,16\"");
+        CHECK(f->tooltip ==
+              "Comma-separated output dimensions (excluding batch), e.g.:\n"
+              "  384,7,7   — spatial feature map\n"
+              "  768,16,16 — larger backbone\n"
+              "  512       — 1D feature vector");
     }
 }
 

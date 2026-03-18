@@ -1,11 +1,10 @@
 #include "DeepLearningPropertiesWidget.hpp"
 
-#include "DeepLearning_Widget/Core/BatchInferenceResult.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
-#include "DeepLearning_Widget/Core/WriteReservation.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/InferenceController.hpp"
 #include "DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp"
@@ -37,110 +36,15 @@
 #include <QScrollArea>
 #include <QSpinBox>
 #include <QStandardItemModel>
-#include <QThread>
-#include <QTimer>
 #include <QVBoxLayout>
 
 #include <algorithm>
-#include <atomic>
 #include <filesystem>
 #include <iostream>
 #include <map>
 #include <set>
 #include <sstream>
 #include <variant>
-
-// ════════════════════════════════════════════════════════════════════════════
-// BatchInferenceWorker — runs SlotAssembler::runBatchRangeOffline on a
-// background QThread.  Follows the PipelineWorker pattern from MLCoreWidget.
-// ════════════════════════════════════════════════════════════════════════════
-
-namespace {
-
-class BatchInferenceWorker : public QThread {
-    Q_OBJECT
-
-public:
-    BatchInferenceWorker(
-            SlotAssembler * assembler,
-            DataManager * dm,
-            SlotAssembler::MediaOverrides media_overrides,
-            std::vector<SlotBindingData> input_bindings,
-            std::vector<StaticInputData> static_inputs,
-            std::vector<OutputBindingData> output_bindings,
-            int start_frame,
-            int end_frame,
-            ImageSize source_image_size,
-            std::shared_ptr<WriteReservation> reservation,
-            QObject * parent = nullptr)
-        : QThread(parent),
-          _assembler(assembler),
-          _dm(dm),
-          _media_overrides(std::move(media_overrides)),
-          _input_bindings(std::move(input_bindings)),
-          _static_inputs(std::move(static_inputs)),
-          _output_bindings(std::move(output_bindings)),
-          _start_frame(start_frame),
-          _end_frame(end_frame),
-          _source_image_size(source_image_size),
-          _reservation(std::move(reservation)) {}
-
-    /// Request cancellation from the main thread.
-    void requestCancel() { _cancel_requested.store(true, std::memory_order_relaxed); }
-
-    /// Whether an error occurred during inference.
-    [[nodiscard]] bool success() const { return _success; }
-
-    /// Error message (non-empty when success() is false).
-    [[nodiscard]] std::string const & errorMessage() const { return _error_message; }
-
-signals:
-    /// Emitted from the worker thread; Qt queued connection delivers on main.
-    void progressChanged(int _t1, int _t2);
-
-protected:
-    void run() override {
-        auto result = _assembler->runBatchRangeOffline(
-                *_dm,
-                _media_overrides,
-                _input_bindings,
-                _static_inputs,
-                _output_bindings,
-                _start_frame,
-                _end_frame,
-                _source_image_size,
-                _cancel_requested,
-                [this](int current, int total) {
-                    emit progressChanged(current, total);
-                },
-                [this](std::vector<FrameResult> frame_results) {
-                    _reservation->push(std::move(frame_results));
-                });
-        _success = result.success;
-        _error_message = std::move(result.error_message);
-    }
-
-private:
-    SlotAssembler * _assembler;
-    DataManager * _dm;
-    SlotAssembler::MediaOverrides _media_overrides;
-    std::vector<SlotBindingData> _input_bindings;
-    std::vector<StaticInputData> _static_inputs;
-    std::vector<OutputBindingData> _output_bindings;
-    int _start_frame;
-    int _end_frame;
-    ImageSize _source_image_size;
-    std::shared_ptr<WriteReservation> _reservation;
-    std::atomic<bool> _cancel_requested{false};
-    bool _success = true;
-    std::string _error_message;
-};
-
-}// namespace
-
-// Pull in the MOC for the anonymous-namespace Q_OBJECT.
-// The MOC file is generated from this .cpp, not the header.
-#include "DeepLearningPropertiesWidget.moc"
 
 // ────────────────────────────────────────────────────────────────────────────
 // Construction
@@ -153,12 +57,30 @@ DeepLearningPropertiesWidget::DeepLearningPropertiesWidget(
     : QWidget(parent),
       _state(std::move(state)),
       _data_manager(std::move(data_manager)),
-      _assembler(std::make_unique<SlotAssembler>()) {
+      _assembler(std::make_unique<SlotAssembler>()),
+      _inference_controller(std::make_unique<InferenceController>(
+              _assembler.get(), _data_manager, _state, this)) {
 
     _buildUi();
     _populateModelCombo();
 
-    // Register for DataManager data add/delete notifications
+    connect(_inference_controller.get(),
+            &InferenceController::batchProgressChanged,
+            this,
+            &DeepLearningPropertiesWidget::batchProgressChanged);
+    connect(_inference_controller.get(),
+            &InferenceController::recurrentProgressChanged,
+            this,
+            &DeepLearningPropertiesWidget::recurrentProgressChanged);
+    connect(_inference_controller.get(),
+            &InferenceController::batchFinished,
+            this,
+            &DeepLearningPropertiesWidget::_onInferenceBatchFinished);
+    connect(_inference_controller.get(),
+            &InferenceController::runningChanged,
+            this,
+            &DeepLearningPropertiesWidget::_onInferenceRunningChanged);
+
     if (_data_manager) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _refreshDataSourceCombos();
@@ -182,23 +104,6 @@ DeepLearningPropertiesWidget::DeepLearningPropertiesWidget(
 }
 
 DeepLearningPropertiesWidget::~DeepLearningPropertiesWidget() {
-    // Stop the merge timer
-    if (_merge_timer) {
-        _merge_timer->stop();
-        delete _merge_timer;
-        _merge_timer = nullptr;
-    }
-
-    // Stop any running batch inference worker
-    if (_batch_worker) {
-        dynamic_cast<BatchInferenceWorker *>(_batch_worker)->requestCancel();
-        _batch_worker->wait();
-        delete _batch_worker;
-        _batch_worker = nullptr;
-    }
-
-    _write_reservation.reset();
-
     if (_data_manager && _dm_observer_id >= 0) {
         _data_manager->removeObserver(_dm_observer_id);
         _dm_observer_id = -1;
@@ -931,45 +836,13 @@ void DeepLearningPropertiesWidget::_onRunSingleFrame() {
                              tr("Model weights not loaded."));
         return;
     }
-
     _syncBindingsFromUi();
-
-    try {
-        int const frame = _state->currentFrame();
-
-        // Determine source image size from primary media binding
-        ImageSize source_size{256, 256};
-        for (auto const & binding: _state->inputBindings()) {
-            auto media = _data_manager->getData<MediaData>(binding.data_key);
-            if (media) {
-                source_size = media->getImageSize();
-                break;
-            }
-        }
-
-        _assembler->runSingleFrame(
-                *_data_manager,
-                _state->inputBindings(),
-                _state->staticInputs(),
-                _state->outputBindings(),
-                frame,
-                source_size);
-
-        _weights_status_label->setText(
-                tr("\u2713 Inference complete (frame %1)").arg(frame));
-        _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
-
-    } catch (std::exception const & e) {
-        QMessageBox::critical(
-                this, tr("Inference Error"),
-                tr("Forward pass failed:\n%1").arg(QString::fromUtf8(e.what())));
-    }
+    _inference_controller->runSingleFrame(_state->currentFrame());
 }
 
 void DeepLearningPropertiesWidget::_onRunBatch() {
-    if (_batch_worker) {
-        // Already running — treat as cancel
-        _onCancelBatch();
+    if (_inference_controller->isRunning()) {
+        _inference_controller->cancel();
         return;
     }
 
@@ -979,11 +852,8 @@ void DeepLearningPropertiesWidget::_onRunBatch() {
         return;
     }
 
-    _syncBindingsFromUi();
-
     int const current = _state->currentFrame();
 
-    // Ask user for frame range
     auto * start_spin = new QSpinBox(this);
     start_spin->setRange(0, 999999);
     start_spin->setValue(current);
@@ -1016,202 +886,28 @@ void DeepLearningPropertiesWidget::_onRunBatch() {
         return;
     }
 
-    // Clear any pending feature rows from a previous batch
-    _pending_feature_rows.clear();
-
-    // Determine source image size
-    ImageSize source_size{256, 256};
-    for (auto const & binding: _state->inputBindings()) {
-        auto media = _data_manager->getData<MediaData>(binding.data_key);
-        if (media) {
-            source_size = media->getImageSize();
-            break;
-        }
-    }
-
-    // Clone MediaData for the worker thread — each VideoData needs its own
-    // FFmpeg decoder to avoid seek contention with the UI.
-    SlotAssembler::MediaOverrides media_overrides;
-    for (auto const & binding: _state->inputBindings()) {
-        if (binding.encoder_id != "ImageEncoder" || binding.data_key.empty())
-            continue;
-        auto media = _data_manager->getData<MediaData>(binding.data_key);
-        if (!media) continue;
-        if (media->getMediaType() == MediaData::MediaType::Video) {
-            auto clone = std::make_shared<VideoData>();
-            clone->LoadMedia(media->getFilename());
-            media_overrides[binding.data_key] = std::move(clone);
-        } else {
-            // Non-video media can be shared (images are stateless reads)
-            media_overrides[binding.data_key] = media;
-        }
-    }
-
-    auto reservation = std::make_shared<WriteReservation>();
-
-    auto * worker = new BatchInferenceWorker(
-            _assembler.get(),
-            _data_manager.get(),
-            std::move(media_overrides),
-            _state->inputBindings(),
-            _state->staticInputs(),
-            _state->outputBindings(),
-            start_frame,
-            end_frame,
-            source_size,
-            reservation,
-            this);
-
-    connect(worker, &BatchInferenceWorker::progressChanged,
-            this, &DeepLearningPropertiesWidget::batchProgressChanged);
-
-    connect(worker, &QThread::finished,
-            this, &DeepLearningPropertiesWidget::_onBatchFinished);
-
-    _write_reservation = std::move(reservation);
-    _batch_worker = worker;
-    _setBatchRunning(true);
-
-    // Start a merge timer for progressive visibility (200ms interval)
-    _merge_timer = new QTimer(this);
-    connect(_merge_timer, &QTimer::timeout,
-            this, &DeepLearningPropertiesWidget::_mergeResults);
-    _merge_timer->start(200);
-
-    worker->start();
+    _syncBindingsFromUi();
+    _inference_controller->runBatch(start_frame, end_frame, _state->batchSize());
 }
 
-void DeepLearningPropertiesWidget::_setBatchRunning(bool running) {
+void DeepLearningPropertiesWidget::_onInferenceBatchFinished(bool success,
+                                                           QString const & error_message) {
+    if (success) {
+        _weights_status_label->setText(tr("\u2713 Inference complete"));
+        _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
+    } else {
+        if (!error_message.isEmpty()) {
+            QMessageBox::critical(this, tr("Inference Error"),
+                                 tr("Inference failed:\n%1").arg(error_message));
+        }
+    }
+}
+
+void DeepLearningPropertiesWidget::_onInferenceRunningChanged(bool running) {
     if (_run_single_btn) _run_single_btn->setEnabled(!running);
     if (_run_recurrent_btn) _run_recurrent_btn->setEnabled(!running);
     if (_run_batch_btn) {
         _run_batch_btn->setText(running ? tr("Cancel Batch") : tr("Run Batch"));
-    }
-}
-
-void DeepLearningPropertiesWidget::_onCancelBatch() {
-    if (!_batch_worker) return;
-    dynamic_cast<BatchInferenceWorker *>(_batch_worker)->requestCancel();
-}
-
-void DeepLearningPropertiesWidget::_onBatchFinished() {
-    // Stop the merge timer
-    if (_merge_timer) {
-        _merge_timer->stop();
-        _merge_timer->deleteLater();
-        _merge_timer = nullptr;
-    }
-
-    // Final merge to pick up any results since the last timer tick
-    _mergeResults();
-
-    // ── Flush accumulated feature vectors to TensorData ──
-    // TensorData has no per-frame append; build the whole matrix at once.
-    for (auto & [key, rows]: _pending_feature_rows) {
-        if (rows.empty()) continue;
-
-        // Sort by frame index so rows are ordered chronologically
-        std::sort(rows.begin(), rows.end(),
-                  [](auto const & a, auto const & b) {
-                      return a.first < b.first;
-                  });
-
-        std::size_t const n_rows = rows.size();
-        std::size_t const n_cols = rows.front().second.size();
-
-        std::vector<float> flat_data;
-        flat_data.reserve(n_rows * n_cols);
-        for (auto const & [frame, vec]: rows) {
-            flat_data.insert(flat_data.end(), vec.begin(), vec.end());
-        }
-
-        auto tensor = std::make_shared<TensorData>(
-                TensorData::createOrdinal2D(flat_data, n_rows, n_cols));
-        _data_manager->setData<TensorData>(key, tensor, TimeKey("time"));
-    }
-    _pending_feature_rows.clear();
-
-    auto * worker = dynamic_cast<BatchInferenceWorker *>(_batch_worker);
-
-    // Update UI status
-    if (!worker->success()) {
-        QMessageBox::critical(
-                this, tr("Inference Error"),
-                tr("Batch inference failed:\n%1")
-                        .arg(QString::fromStdString(worker->errorMessage())));
-    } else {
-        _weights_status_label->setText(
-                tr("\u2713 Batch inference complete"));
-        _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
-    }
-
-    worker->deleteLater();
-    _batch_worker = nullptr;
-    _write_reservation.reset();
-    _setBatchRunning(false);
-}
-
-void DeepLearningPropertiesWidget::_mergeResults() {
-    if (!_write_reservation) return;
-
-    auto pending = _write_reservation->drain();
-    if (pending.empty()) return;
-
-    // Write drained results to DataManager on the main thread
-    for (auto & fr: pending) {
-        TimeFrameIndex const frame_idx(fr.frame_index);
-
-        std::visit([&](auto && decoded) {
-            using T = std::decay_t<decltype(decoded)>;
-            if constexpr (std::is_same_v<T, Mask2D>) {
-                auto mask_data = _data_manager->getData<MaskData>(fr.data_key);
-                if (!mask_data) {
-                    _data_manager->setData<MaskData>(fr.data_key, TimeKey("media"));
-                    mask_data = _data_manager->getData<MaskData>(fr.data_key);
-                }
-                if (mask_data) {
-                    mask_data->addAtTime(frame_idx, std::forward<decltype(decoded)>(decoded), NotifyObservers::No);
-                }
-            } else if constexpr (std::is_same_v<T, Point2D<float>>) {
-                auto point_data = _data_manager->getData<PointData>(fr.data_key);
-                if (!point_data) {
-                    _data_manager->setData<PointData>(fr.data_key, TimeKey("media"));
-                    point_data = _data_manager->getData<PointData>(fr.data_key);
-                }
-                if (point_data) {
-                    point_data->addAtTime(frame_idx, std::forward<decltype(decoded)>(decoded), NotifyObservers::No);
-                }
-            } else if constexpr (std::is_same_v<T, Line2D>) {
-                auto line_data = _data_manager->getData<LineData>(fr.data_key);
-                if (!line_data) {
-                    _data_manager->setData<LineData>(fr.data_key, TimeKey("media"));
-                    line_data = _data_manager->getData<LineData>(fr.data_key);
-                }
-                if (line_data) {
-                    line_data->addAtTime(frame_idx, std::forward<decltype(decoded)>(decoded), NotifyObservers::No);
-                }
-            } else if constexpr (std::is_same_v<T, std::vector<float>>) {
-                // Accumulate feature vectors — TensorData is written in bulk
-                // by _onBatchFinished() after all frames are processed.
-                _pending_feature_rows[fr.data_key].emplace_back(
-                        fr.frame_index, std::forward<decltype(decoded)>(decoded));
-            }
-        },
-                   fr.data);
-    }
-
-    // Notify observers once for each affected data key (not TensorData —
-    // those are notified in bulk at batch finish)
-    std::set<std::string> affected_keys;
-    for (auto const & fr: pending) {
-        if (!std::holds_alternative<std::vector<float>>(fr.data)) {
-            affected_keys.insert(fr.data_key);
-        }
-    }
-    for (auto const & key: affected_keys) {
-        if (auto d = _data_manager->getData<MaskData>(key)) d->notifyObservers();
-        if (auto d = _data_manager->getData<PointData>(key)) d->notifyObservers();
-        if (auto d = _data_manager->getData<LineData>(key)) d->notifyObservers();
     }
 }
 
@@ -1462,8 +1158,6 @@ void DeepLearningPropertiesWidget::_onRunRecurrentSequence() {
         return;
     }
 
-    _syncBindingsFromUi();
-
     auto const & recurrent = _state->recurrentBindings();
     if (recurrent.empty()) {
         QMessageBox::warning(this, tr("No Recurrent Bindings"),
@@ -1473,12 +1167,13 @@ void DeepLearningPropertiesWidget::_onRunRecurrentSequence() {
     }
 
     int const start_frame = _state->currentFrame();
-    int const frame_count = _state->batchSize() > 1 ? _state->batchSize() : _batch_size_spin->maximum();
+    int const default_count =
+            _state->batchSize() > 1 ? _state->batchSize()
+                                   : _batch_size_spin->maximum();
 
-    // Ask user for frame count
     auto * frame_count_spin = new QSpinBox(this);
     frame_count_spin->setRange(1, 999999);
-    frame_count_spin->setValue(std::min(100, frame_count));
+    frame_count_spin->setValue(std::min(100, default_count));
 
     QMessageBox dialog(this);
     dialog.setWindowTitle(tr("Recurrent Inference"));
@@ -1495,47 +1190,9 @@ void DeepLearningPropertiesWidget::_onRunRecurrentSequence() {
 
     if (dialog.exec() != QMessageBox::Ok) return;
 
-    int const count = frame_count_spin->value();
-
-    // Determine source image size
-    ImageSize source_size{256, 256};
-    for (auto const & binding: _state->inputBindings()) {
-        auto media = _data_manager->getData<MediaData>(binding.data_key);
-        if (media) {
-            source_size = media->getImageSize();
-            break;
-        }
-    }
-
-    try {
-        // Clear previous recurrent state
-        _assembler->clearRecurrentCache();
-
-        _assembler->runRecurrentSequence(
-                *_data_manager,
-                _state->inputBindings(),
-                _state->staticInputs(),
-                _state->outputBindings(),
-                recurrent,
-                start_frame,
-                count,
-                source_size,
-                [this](int current, int total) {
-                    emit recurrentProgressChanged(current, total);
-                });
-
-        _weights_status_label->setText(
-                tr("\u2713 Recurrent inference complete (%1 frames from %2)")
-                        .arg(count)
-                        .arg(start_frame));
-        _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
-
-    } catch (std::exception const & e) {
-        QMessageBox::critical(
-                this, tr("Inference Error"),
-                tr("Recurrent inference failed:\n%1")
-                        .arg(QString::fromUtf8(e.what())));
-    }
+    _syncBindingsFromUi();
+    _inference_controller->runRecurrentSequence(start_frame,
+                                                frame_count_spin->value());
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -1567,37 +1224,7 @@ void DeepLearningPropertiesWidget::_onPredictCurrentFrame() {
     }
 
     _syncBindingsFromUi();
-
-    try {
-        // Get the frame index from the current time position
-        // The time position already has the index in the TimeFrame
-        int const frame = static_cast<int>(_current_time_position->index.getValue());
-
-        // Determine source image size from primary media binding
-        ImageSize source_size{256, 256};
-        for (auto const & binding: _state->inputBindings()) {
-            auto media = _data_manager->getData<MediaData>(binding.data_key);
-            if (media) {
-                source_size = media->getImageSize();
-                break;
-            }
-        }
-
-        _assembler->runSingleFrame(
-                *_data_manager,
-                _state->inputBindings(),
-                _state->staticInputs(),
-                _state->outputBindings(),
-                frame,
-                source_size);
-
-        _weights_status_label->setText(
-                tr("\u2713 Inference complete (current frame %1)").arg(frame));
-        _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
-
-    } catch (std::exception const & e) {
-        QMessageBox::critical(
-                this, tr("Inference Error"),
-                tr("Forward pass failed:\n%1").arg(QString::fromUtf8(e.what())));
-    }
+    int const frame =
+            static_cast<int>(_current_time_position->index.getValue());
+    _inference_controller->runSingleFrame(frame);
 }

@@ -21,7 +21,6 @@
 
 #include <QWidget>
 
-#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -35,13 +34,11 @@ class QLabel;
 class QLineEdit;
 class QPushButton;
 class QSpinBox;
-class QThread;
-class QTimer;
 class QVBoxLayout;
 
 class DataManager;
 class DeepLearningState;
-class WriteReservation;
+class InferenceController;
 
 namespace dl::widget {
 class DynamicInputSlotWidget;
@@ -102,6 +99,8 @@ private slots:
     void _onCaptureStaticInput(std::string const & slot_name);
     void _onCaptureSequenceEntry(std::string const & slot_name,
                                  int memory_index);
+    void _onInferenceBatchFinished(bool success, QString const & error_message);
+    void _onInferenceRunningChanged(bool running);
 
 private:
     void _buildUi();
@@ -174,21 +173,8 @@ private:
     // DataManager observer for data add/delete notifications
     int _dm_observer_id = -1;
 
-    // ── Background batch inference ─────────────────────────────────────────
-    void _setBatchRunning(bool running);
-    void _onCancelBatch();
-    void _onBatchFinished();
-    void _mergeResults();
-
-    QThread * _batch_worker = nullptr;
-    QTimer * _merge_timer = nullptr;
-    std::shared_ptr<WriteReservation> _write_reservation;
-
-    // ── Batch feature-vector accumulation ─────────────────────────────────
-    // Keyed by data_key → sorted list of (frame_index, feature_vector).
-    // Populated by _mergeResults() and flushed to TensorData on batch finish.
-    std::map<std::string, std::vector<std::pair<int, std::vector<float>>>>
-            _pending_feature_rows;
+    // Inference orchestration (owns worker thread, result merging).
+    std::unique_ptr<InferenceController> _inference_controller;
 };
 
 #endif// DEEP_LEARNING_PROPERTIES_WIDGET_HPP
