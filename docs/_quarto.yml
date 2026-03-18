@@ -72,6 +72,7 @@ website:
                 - developer/DeepLearning/background_inference.qmd
                 - developer/DeepLearning/general_encoder.qmd
                 - developer/DeepLearning/post_encoder_modules.qmd
+                - developer/DeepLearning/param_schemas.qmd
                 - developer/DeepLearning/roadmap.qmd
             - section: "Transforms V2"
               href: developer/transforms_v2/index.qmd
