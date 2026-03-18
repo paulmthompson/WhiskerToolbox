@@ -6,6 +6,7 @@
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp"
 
@@ -504,6 +505,7 @@ void DeepLearningPropertiesWidget::_clearDynamicContent() {
     _dynamic_input_widgets.clear();
     _static_input_widgets.clear();
     _sequence_slot_widgets.clear();
+    _output_slot_widgets.clear();
     QLayoutItem * child = nullptr;
     while ((child = _dynamic_layout->takeAt(0)) != nullptr) {
         if (child->widget()) {
@@ -645,7 +647,21 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                 new QLabel(tr("<b>Outputs</b>"), _dynamic_container));
     }
     for (auto const & slot: outputs) {
-        _dynamic_layout->addWidget(_buildOutputGroup(slot));
+        auto * slot_widget = new dl::widget::OutputSlotWidget(
+                slot, _data_manager, _dynamic_container);
+        auto const & saved = _state->outputBindings();
+        auto it = std::find_if(saved.begin(), saved.end(),
+                               [&slot](OutputBindingData const & b) {
+                                   return b.slot_name == slot.name;
+                               });
+        if (it != saved.end()) {
+            slot_widget->setParams(
+                    dl::widget::OutputSlotWidget::paramsFromBinding(*it));
+        }
+        connect(slot_widget, &dl::widget::OutputSlotWidget::bindingChanged,
+                this, &DeepLearningPropertiesWidget::_syncBindingsFromUi);
+        _output_slot_widgets.push_back(slot_widget);
+        _dynamic_layout->addWidget(slot_widget);
     }
 
     // ── Post-Encoder Module ──
@@ -781,56 +797,15 @@ void DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency() {
             (module_type == QStringLiteral("global_avg_pool") ||
              module_type == QStringLiteral("spatial_point"));
 
-    for (auto const & slot: _current_info->outputs) {
-        auto * decoder_combo = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("decoder_" + slot.name));
-        auto * target_combo = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("target_" + slot.name));
-        if (!decoder_combo) continue;
+    std::vector<std::string> const all_decoders = {
+            "MaskDecoderParams", "PointDecoderParams", "LineDecoderParams",
+            "FeatureVectorDecoderParams"};
+    std::vector<std::string> const fv_only = {"FeatureVectorDecoderParams"};
 
-        if (spatial_dims_removed) {
-            // Force decoder to TensorToFeatureVector
-            int const fv_idx = decoder_combo->findText(
-                    QStringLiteral("TensorToFeatureVector"));
-            if (fv_idx >= 0) decoder_combo->setCurrentIndex(fv_idx);
-
-            // Disable incompatible items
-            auto * model = qobject_cast<QStandardItemModel *>(decoder_combo->model());
-            if (model) {
-                for (int i = 0; i < model->rowCount(); ++i) {
-                    bool const is_fv = (decoder_combo->itemText(i) ==
-                                        QStringLiteral("TensorToFeatureVector"));
-                    auto * item = model->item(i);
-                    if (is_fv) {
-                        item->setFlags(item->flags() | Qt::ItemIsEnabled);
-                    } else {
-                        item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
-                    }
-                }
-            }
-
-            // Update target combo to show TensorData keys
-            if (target_combo) {
-                _populateDataSourceCombo(target_combo, "TensorData");
-            }
-        } else {
-            // Re-enable all decoder items
-            auto * model = qobject_cast<QStandardItemModel *>(decoder_combo->model());
-            if (model) {
-                for (int i = 0; i < model->rowCount(); ++i) {
-                    model->item(i)->setFlags(
-                            model->item(i)->flags() | Qt::ItemIsEnabled);
-                }
-            }
-
-            // Refresh target combo based on current decoder selection
-            if (target_combo) {
-                _populateDataSourceCombo(
-                        target_combo,
-                        SlotAssembler::dataTypeForDecoder(
-                                decoder_combo->currentText().toStdString()));
-            }
-        }
+    for (auto * slot_widget: _output_slot_widgets) {
+        slot_widget->updateDecoderAlternatives(
+                spatial_dims_removed ? fv_only : all_decoders);
+        slot_widget->refreshDataSources();
     }
 }
 
@@ -953,56 +928,6 @@ QGroupBox * DeepLearningPropertiesWidget::_buildBooleanMaskGroup(
     return group;
 }
 
-QGroupBox * DeepLearningPropertiesWidget::_buildOutputGroup(
-        dl::TensorSlotDescriptor const & slot) {
-
-    auto * group = new QGroupBox(
-            QString::fromStdString(slot.name), _dynamic_container);
-    auto * form = new QFormLayout(group);
-
-    if (!slot.description.empty()) {
-        group->setToolTip(QString::fromStdString(slot.description));
-    }
-
-    QString shape_str;
-    for (std::size_t i = 0; i < slot.shape.size(); ++i) {
-        if (i > 0) shape_str += QStringLiteral(" \u00D7 ");
-        shape_str += QString::number(slot.shape[i]);
-    }
-    form->addRow(tr("Shape:"), new QLabel(shape_str, group));
-
-    auto * target_combo = new QComboBox(group);
-    target_combo->setObjectName(
-            QString::fromStdString("target_" + slot.name));
-    _populateDataSourceCombo(
-            target_combo,
-            SlotAssembler::dataTypeForDecoder(slot.recommended_decoder));
-    form->addRow(tr("Target:"), target_combo);
-
-    auto * decoder_combo = new QComboBox(group);
-    decoder_combo->setObjectName(
-            QString::fromStdString("decoder_" + slot.name));
-    for (auto const & dec: SlotAssembler::availableDecoders()) {
-        decoder_combo->addItem(QString::fromStdString(dec));
-    }
-    if (!slot.recommended_decoder.empty()) {
-        int const idx = decoder_combo->findText(
-                QString::fromStdString(slot.recommended_decoder));
-        if (idx >= 0) decoder_combo->setCurrentIndex(idx);
-    }
-    form->addRow(tr("Decoder:"), decoder_combo);
-
-    auto * threshold_spin = new QDoubleSpinBox(group);
-    threshold_spin->setObjectName(
-            QString::fromStdString("threshold_" + slot.name));
-    threshold_spin->setRange(0.01, 1.0);
-    threshold_spin->setValue(0.5);
-    threshold_spin->setSingleStep(0.05);
-    form->addRow(tr("Threshold:"), threshold_spin);
-
-    return group;
-}
-
 // ────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────────────────────────────────────
@@ -1067,15 +992,8 @@ void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
     }
 
     // Refresh output target combos
-    for (auto const & slot: _current_info->outputs) {
-        auto * target = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("target_" + slot.name));
-        if (target) {
-            _populateDataSourceCombo(
-                    target,
-                    SlotAssembler::dataTypeForDecoder(
-                            slot.recommended_decoder));
-        }
+    for (auto * slot_widget: _output_slot_widgets) {
+        slot_widget->refreshDataSources();
     }
 
     // Refresh post-encoder point key combo (if visible)
@@ -1105,22 +1023,8 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
 
     // ── Output bindings ──
     std::vector<OutputBindingData> output_bindings;
-    for (auto const & slot: _current_info->outputs) {
-        OutputBindingData binding;
-        binding.slot_name = slot.name;
-
-        auto * target = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("target_" + slot.name));
-        auto * decoder = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("decoder_" + slot.name));
-        auto * threshold = _dynamic_container->findChild<QDoubleSpinBox *>(
-                QString::fromStdString("threshold_" + slot.name));
-
-        if (target) binding.data_key = target->currentText().toStdString();
-        if (decoder) binding.decoder_id = decoder->currentText().toStdString();
-        if (threshold)
-            binding.threshold = static_cast<float>(threshold->value());
-
+    for (auto const * slot_widget: _output_slot_widgets) {
+        auto binding = slot_widget->toOutputBindingData();
         if (!binding.data_key.empty() && binding.data_key != "(None)") {
             output_bindings.push_back(std::move(binding));
         }
@@ -1683,7 +1587,7 @@ void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
 
     bool const ok =
             _assembler->captureStaticInput(*_data_manager, entry, frame,
-                                          source_size);
+                                           source_size);
 
     if (ok) {
         auto const key = staticCacheKey(slot_name, memory_index);

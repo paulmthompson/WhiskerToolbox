@@ -99,7 +99,10 @@ void ParameterUIHints<dl::widget::DynamicInputSlotParams>::annotate(
 void ParameterUIHints<dl::widget::OutputSlotParams>::annotate(
         ParameterSchema & schema) {
     if (auto * f = schema.field("data_key")) {
+        f->display_name = "Target";
         f->tooltip = "DataManager key where decoded results are written";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
     }
     if (auto * f = schema.field("decoder")) {
         f->tooltip = "Decoder type and configuration for this output";

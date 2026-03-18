@@ -111,6 +111,56 @@ endif()
 
 enable_whiskertoolbox_shared_test_pch(test_dl_dynamic_input_slot)
 
+# ── OutputSlotWidget tests ───────────────────────────────────────────────────
+
+add_executable(test_dl_output_slot
+    OutputSlotWidget.test.cpp
+)
+
+target_link_libraries(test_dl_output_slot PRIVATE
+    Catch2::Catch2WithMain
+    DeepLearning_Widget
+    DataManager
+    WhiskerToolbox::PointData
+    WhiskerToolbox::LineData
+    WhiskerToolbox::MaskData
+    WhiskerToolbox::MediaData
+    Qt6::Widgets
+    Qt6::Core
+    Qt6::Test
+)
+
+target_include_directories(test_dl_output_slot PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DataManager>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_dl_output_slot PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_dl_output_slot PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_dl_output_slot PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_dl_output_slot
+        PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_dl_output_slot_all
+        COMMAND test_dl_output_slot
+    )
+    set_property(TEST test_dl_output_slot_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_dl_output_slot)
+
 # ── StaticInputSlotWidget tests ─────────────────────────────────────────────
 
 add_executable(test_dl_static_input_slot

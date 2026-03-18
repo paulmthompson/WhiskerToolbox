@@ -466,26 +466,55 @@ struct SequenceEntryParams {
 - `captureRequested(slot_name, memory_index)` signal — Emitted when user clicks capture.
 - `captureInvalidated(slot_name, memory_index)` signal — Emitted when source changes.
 
-### 1.4 — `OutputSlotWidget`
+### 1.4 — `OutputSlotWidget` ✅ COMPLETED
 
-Handles one output slot panel (currently `_buildOutputGroup`).
+Handles one output slot panel (replaces `_buildOutputGroup`).
 
-**Integration into DeepLearningPropertiesWidget:** Replace `_buildOutputGroup()` calls in `_rebuildSlotPanels()`. Update `_syncBindingsFromUi()` output binding section and `_refreshDataSourceCombos()` output target combo refresh. Delete `_buildOutputGroup()`.
+**Integration into DeepLearningPropertiesWidget:**
+- `_rebuildSlotPanels()` creates `OutputSlotWidget` instances for each output slot instead of calling `_buildOutputGroup()`.
+- `_syncBindingsFromUi()` calls `toOutputBindingData()` on each widget.
+- `_refreshDataSourceCombos()` delegates to `widget->refreshDataSources()`.
+- `_enforcePostEncoderDecoderConsistency()` calls `updateDecoderAlternatives()` and `refreshDataSources()` on each output widget.
+- `_buildOutputGroup()` was deleted.
+- State restored from `_state->outputBindings()` when rebuilding panels via `paramsFromBinding()`.
+- Widget pointers stored in `std::vector<OutputSlotWidget*> _output_slot_widgets` (non-owning; owned by Qt widget tree).
 
-**Param struct (unified, already defined in Phase 0.1):**
+**Param struct (unified):**
 ```cpp
 struct OutputSlotParams {
-    std::string data_key;                         ///< DataManager key for results
+    std::string data_key;                         ///< DataManager key for results (dynamic combo)
     DecoderVariant decoder = MaskDecoderParams{}; ///< Decoder configuration
 };
 ```
 
 **AutoParamWidget renders:**
-- `data_key` → QLineEdit (or dynamic combo if we want to show existing DM keys as suggestions)
+- `data_key` → QComboBox (dynamic, populated via `updateAllowedValues` from DM; filtered by decoder output type)
 - `decoder` variant → QComboBox (Mask/Point/Line/FeatureVector) + QStackedWidget with per-decoder sub-params (threshold, subpixel, etc.)
 
 **Cross-field constraint:**
-- Post-encoder module type restricts valid decoders — the coordinator calls `updateVariantAlternatives("decoder", validDecoders)` when the post-encoder module changes.
+- Post-encoder module type restricts valid decoders — coordinator calls `updateDecoderAlternatives()` when post-encoder changes (spatial_dims_removed → FeatureVector only).
+
+**Files created:**
+- `DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp` — Public API header.
+- `DeepLearning_Widget/UI/Helpers/OutputSlotWidget.cpp` — Implementation: schema setup, decoder→target constraint, state restore.
+- `tests/WhiskerToolbox/DeepLearning_Widget/OutputSlotWidget.test.cpp` — Catch2 tests (construction, params round-trip, toOutputBindingData, paramsFromBinding).
+
+**Files modified:**
+- `DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp` — Added `dynamic_combo` and `include_none_sentinel` for `data_key` in OutputSlotParams.
+- `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.hpp` — Added `OutputSlotWidget` forward declaration, `_output_slot_widgets` member; removed `_buildOutputGroup` declaration.
+- `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.cpp` — All integration changes; deleted `_buildOutputGroup()`.
+- `DeepLearning_Widget/CMakeLists.txt` — Added OutputSlotWidget source files.
+- `tests/WhiskerToolbox/DeepLearning_Widget/CMakeLists.txt` — Added `test_dl_output_slot` test target.
+
+**Public API:**
+- `params()` — Returns the current `OutputSlotParams`.
+- `setParams(OutputSlotParams)` — Sets parameters and updates the UI.
+- `refreshDataSources()` — Re-populates target combo from DataManager.
+- `updateDecoderAlternatives(allowed_tags)` — Restricts visible decoder options (e.g. when post-encoder changes).
+- `slotName()` — Returns the bound slot name.
+- `toOutputBindingData()` — Converts current params to `OutputBindingData` for SlotAssembler.
+- `paramsFromBinding(binding)` — Static helper to build `OutputSlotParams` from saved state.
+- `bindingChanged()` signal — Emitted on any parameter change.
 
 ### 1.5 — `RecurrentBindingWidget`
 
@@ -824,7 +853,7 @@ std::vector<OutputBindingData> enforceDecoderConsistency(
                 │                       ├── Phase 1.1 (DynamicInputSlotWidget)
                 │       ├── Phase 1.2 (StaticInputSlotWidget)
                 │       ├── ✅ Phase 1.3 (SequenceSlotWidget)
-                │       ├── Phase 1.4 (OutputSlotWidget)
+                │       ├── ✅ Phase 1.4 (OutputSlotWidget)
                 │       ├── Phase 1.5 (RecurrentBindingWidget)
                 │       ├── Phase 1.6 (PostEncoderWidget)
                 │       └── Phase 1.7 (EncoderShapeWidget)
@@ -848,7 +877,7 @@ Phase 5 (Polish)     ← after all phases complete
 3. **Phase 2.1** — `InferenceController` (large isolated chunk, biggest maintainability gain)
 4. **Phase 2.2** — `ResultProcessor` (pairs with InferenceController)
 5. **Phase 1.7** — `EncoderShapeWidget` (simplest sub-widget, good pilot for the unified struct pattern)
-6. **Phase 1.4** — `OutputSlotWidget` (medium complexity, exercises `updateVariantAlternatives` for decoder)
+6. ~~**Phase 1.4** — `OutputSlotWidget`~~ ✅ **DONE**
 7. **Phase 1.6** — `PostEncoderWidget` (medium complexity, exercises variant + dynamic `point_key` combo)
 8. **Phase 1.1** — `DynamicInputSlotWidget` (exercises full pattern: dynamic source combo + encoder variant + cross-field constraints)
 9. **Phase 1.5** — `RecurrentBindingWidget`

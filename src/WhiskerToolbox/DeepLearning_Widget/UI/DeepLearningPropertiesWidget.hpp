@@ -45,6 +45,7 @@ class WriteReservation;
 
 namespace dl::widget {
 class DynamicInputSlotWidget;
+class OutputSlotWidget;
 class SequenceSlotWidget;
 class StaticInputSlotWidget;
 }// namespace dl::widget
@@ -97,7 +98,7 @@ private slots:
     void _onPredictCurrentFrame();
     void _onCaptureStaticInput(std::string const & slot_name);
     void _onCaptureSequenceEntry(std::string const & slot_name,
-                                int memory_index);
+                                 int memory_index);
 
 private:
     void _buildUi();
@@ -108,7 +109,6 @@ private:
     void _buildEncoderShapeSection();
 
     QGroupBox * _buildBooleanMaskGroup(dl::TensorSlotDescriptor const & slot);
-    QGroupBox * _buildOutputGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildRecurrentInputGroup(
             dl::TensorSlotDescriptor const & input_slot,
             std::vector<dl::TensorSlotDescriptor> const & output_slots);
@@ -155,6 +155,9 @@ private:
 
     // Sequence slot widgets (non-owning; owned by _dynamic_container)
     std::vector<dl::widget::SequenceSlotWidget *> _sequence_slot_widgets;
+
+    // Output slot widgets (non-owning; owned by _dynamic_container)
+    std::vector<dl::widget::OutputSlotWidget *> _output_slot_widgets;
 
     // Cached model display info (clean — no torch types).
     std::optional<ModelDisplayInfo> _current_info;
