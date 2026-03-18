@@ -27,6 +27,8 @@ void ParameterUIHints<dl::widget::StaticSequenceEntryParams>::annotate(
         ParameterSchema & schema) {
     if (auto * f = schema.field("data_key")) {
         f->tooltip = "DataManager key for this sequence entry";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
     }
     if (auto * f = schema.field("capture_mode_str")) {
         f->display_name = "Capture Mode";
@@ -43,11 +45,20 @@ void ParameterUIHints<dl::widget::RecurrentSequenceEntryParams>::annotate(
     if (auto * f = schema.field("output_slot_name")) {
         f->display_name = "Output Slot";
         f->tooltip = "Which model output feeds back into this sequence entry";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
     }
     if (auto * f = schema.field("init_mode_str")) {
         f->display_name = "Init Mode";
         f->tooltip = "How to initialize recurrent state at t=0";
         f->allowed_values = {"Zeros", "StaticCapture", "FirstOutput"};
+    }
+}
+
+void ParameterUIHints<dl::widget::SequenceEntryParams>::annotate(
+        ParameterSchema & schema) {
+    if (auto * f = schema.field("entry")) {
+        f->tooltip = "Static data source or recurrent feedback for this position";
     }
 }
 

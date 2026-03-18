@@ -335,7 +335,7 @@ struct DynamicInputSlotParams {
 
 Handles one non-sequence static input slot (currently the non-sequence branch of `_buildStaticInputGroup`).
 
-**Integration into DeepLearningPropertiesWidget:** Replace the non-sequence branch of `_buildStaticInputGroup()` in `_rebuildSlotPanels()`. Update `_syncBindingsFromUi()` static input section and `_refreshDataSourceCombos()` static source combo refresh to delegate to the new widget. Once all static input handling is extracted (1.2 + 1.3), delete `_buildStaticInputGroup()`.
+**Integration into DeepLearningPropertiesWidget:** Replace the non-sequence branch of `_buildStaticInputGroup()` in `_rebuildSlotPanels()`. Update `_syncBindingsFromUi()` static input section and `_refreshDataSourceCombos()` static source combo refresh to delegate to the new widget. Phase 1.3 completed the extraction and deleted `_buildStaticInputGroup()`.
 
 **Param struct (unified):**
 ```cpp
@@ -365,7 +365,7 @@ struct StaticInputSlotParams {
 - `_refreshDataSourceCombos()` delegates to `widget->refreshDataSources()` for non-sequence static slots.
 - `_loadModelIfReady()` calls `widget->setModelReady(ready)` on all static input widgets to enable/disable the capture button.
 - `_onCaptureStaticInput()` now calls `widget->setCapturedStatus(frame, range)` / `widget->clearCapturedStatus()` to update the status display, replacing the old `_updateCaptureButtonState()` method which was deleted.
-- The non-sequence branch of `_buildStaticInputGroup()` was removed; only the sequence branch remains (Phase 1.3 will remove the whole method).
+- The non-sequence branch of `_buildStaticInputGroup()` was removed; only the sequence branch remained until Phase 1.3 removed the whole method.
 - Widget pointers stored in `std::vector<StaticInputSlotWidget*> _static_input_widgets` (non-owning; owned by Qt widget tree).
 
 **Files created:**
@@ -394,21 +394,21 @@ struct StaticInputSlotParams {
 - `captureRequested(slot_name)` signal — Emitted when user clicks the capture button.
 - `captureInvalidated(slot_name)` signal — Emitted when source changes (parent should clear assembler cache).
 
-### 1.3 — `SequenceSlotWidget`
+### 1.3 — `SequenceSlotWidget` ✅ COMPLETED
 
-Handles one sequence input slot (currently `_buildStaticInputGroup` sequence branch + `_addSequenceEntryRow`).
+Handles one sequence input slot (replaces `_buildStaticInputGroup` sequence branch + `_addSequenceEntryRow`).
 
-**Integration into DeepLearningPropertiesWidget:** Replace the sequence branch of `_buildStaticInputGroup()` in `_rebuildSlotPanels()`. Update `_syncBindingsFromUi()` sequence entry and hybrid recurrent binding sections. Delete `_addSequenceEntryRow()` and the sequence branches from `_refreshDataSourceCombos()`. After this + 1.2, `_buildStaticInputGroup()` can be fully deleted.
-
-This is the most complex sub-widget (~500 lines of the current implementation).
-
-**Contents:**
-- "Add Entry" / "Remove Entry" buttons
-- Per-entry rows, each with a `SequenceEntryVariant` driving an AutoParamWidget
+**Integration into DeepLearningPropertiesWidget:**
+- `_rebuildSlotPanels()` creates `SequenceSlotWidget` instances for sequence slots instead of calling `_buildStaticInputGroup()`.
+- `_syncBindingsFromUi()` calls `getStaticInputs()` and `getRecurrentBindings()` on each widget.
+- `_refreshDataSourceCombos()` and output slot refresh delegate to `widget->refreshDataSources()` and `widget->refreshOutputSlots()`.
+- `_buildStaticInputGroup()` and `_addSequenceEntryRow()` were deleted.
+- `_loadModelIfReady()` calls `widget->setModelReady(ready)` on sequence widgets.
+- `_onCaptureSequenceEntry()` calls `widget->setCapturedStatus()` / `widget->clearCapturedStatus()`.
+- Widget pointers stored in `std::vector<SequenceSlotWidget*> _sequence_slot_widgets` (non-owning; owned by Qt widget tree).
 
 **Param struct (unified, per-entry):**
 ```cpp
-// Already defined in Phase 0.1:
 struct StaticSequenceEntryParams {
     std::string data_key;                      ///< DataManager key — dynamic combo
     std::string capture_mode_str = "Relative"; ///< "Relative" or "Absolute"
@@ -420,18 +420,51 @@ struct RecurrentSequenceEntryParams {
 };
 using SequenceEntryVariant = rfl::TaggedUnion<
     "source_type", StaticSequenceEntryParams, RecurrentSequenceEntryParams>;
+
+/// Wrapper for AutoParamWidget: variant must be a struct field (like encoder in
+/// DynamicInputSlotParams), not the root type, so fromJson/toJson nesting works.
+struct SequenceEntryParams {
+    SequenceEntryVariant entry = StaticSequenceEntryParams{};
+};
 ```
 
 **AutoParamWidget renders (per entry row):**
-- `source_type` variant → QComboBox (Static/Recurrent) + QStackedWidget:
+- `entry` variant → QComboBox (Static/Recurrent) + QStackedWidget:
   - **Static** page: `data_key` (dynamic combo via `updateAllowedValues`), `capture_mode_str` (combo), `time_offset` (spin)
   - **Recurrent** page: `output_slot_name` (dynamic combo), `init_mode_str` (combo)
 
 **Dynamic field population:**
-- `data_key` populated from DM observer via `updateAllowedValues`
-- `output_slot_name` populated from model output slot names
+- `data_key` populated from DM observer via `updateAllowedValues`; combos refreshed before `fromJson` in `setEntriesFromState` so values can be set.
+- `output_slot_name` populated from model output slot names via `refreshOutputSlots`.
 
-**Widget structure:** Each entry row is a separate AutoParamWidget with `SequenceEntryVariant` schema. The SequenceSlotWidget manages a list of these, with add/remove buttons controlling the list size.
+**Widget structure:** Each entry row is a separate AutoParamWidget with `SequenceEntryParams` schema. The SequenceSlotWidget manages a list of these, with add/remove buttons controlling the list size.
+
+**Files created:**
+- `DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp` — Public API header.
+- `DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.cpp` — Implementation: schema setup, add/remove rows, capture row show/hide, state sync.
+- `tests/WhiskerToolbox/DeepLearning_Widget/SequenceSlotWidget.test.cpp` — Catch2 tests (construction, getStaticInputs/getRecurrentBindings, setEntriesFromState round-trip, capture signals).
+
+**Files modified:**
+- `DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp` — Added `SequenceEntryParams` wrapper, `ParameterUIHints<SequenceEntryParams>` declaration; `data_key` and `output_slot_name` marked `dynamic_combo` and `include_none_sentinel`.
+- `DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp` — Added `ParameterUIHints<SequenceEntryParams>::annotate()` implementation.
+- `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.hpp` — Added `SequenceSlotWidget` forward declaration, `_sequence_slot_widgets` member.
+- `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.cpp` — All integration changes; deleted `_buildStaticInputGroup()`, `_addSequenceEntryRow()`.
+- `DeepLearning_Widget/CMakeLists.txt` — Added SequenceSlotWidget source files.
+- `tests/WhiskerToolbox/DeepLearning_Widget/CMakeLists.txt` — Added `test_dl_sequence_slot` test target.
+
+**Public API:**
+- `slotName()` — Returns the bound slot name.
+- `getStaticInputs()` — Returns `StaticInputData` for each static entry.
+- `getRecurrentBindings()` — Returns `RecurrentBindingData` for each recurrent entry.
+- `setEntriesFromState(static_inputs, recurrent_bindings)` — Restores UI from saved state.
+- `refreshDataSources()` — Re-populates data_key combos from DataManager.
+- `refreshOutputSlots(names)` — Re-populates output_slot_name combos.
+- `setModelReady(bool)` — Enables/disables capture buttons.
+- `setCapturedStatus(memory_index, frame, range)` — Updates status after capture.
+- `clearCapturedStatus(memory_index)` — Resets status.
+- `bindingChanged()` signal — Emitted on any parameter change.
+- `captureRequested(slot_name, memory_index)` signal — Emitted when user clicks capture.
+- `captureInvalidated(slot_name, memory_index)` signal — Emitted when source changes.
 
 ### 1.4 — `OutputSlotWidget`
 
@@ -788,9 +821,9 @@ std::vector<OutputBindingData> enforceDecoderConsistency(
                 │
                 ├── ✅ Phase 0.2 (AutoParamWidget dynamic field extensions — COMPLETE)
                 │       │
-                │       ├── Phase 1.1 (DynamicInputSlotWidget)
+                │                       ├── Phase 1.1 (DynamicInputSlotWidget)
                 │       ├── Phase 1.2 (StaticInputSlotWidget)
-                │       ├── Phase 1.3 (SequenceSlotWidget)
+                │       ├── ✅ Phase 1.3 (SequenceSlotWidget)
                 │       ├── Phase 1.4 (OutputSlotWidget)
                 │       ├── Phase 1.5 (RecurrentBindingWidget)
                 │       ├── Phase 1.6 (PostEncoderWidget)
@@ -820,7 +853,7 @@ Phase 5 (Polish)     ← after all phases complete
 8. **Phase 1.1** — `DynamicInputSlotWidget` (exercises full pattern: dynamic source combo + encoder variant + cross-field constraints)
 9. **Phase 1.5** — `RecurrentBindingWidget`
 10. **Phase 1.2** — `StaticInputSlotWidget`
-11. **Phase 1.3** — `SequenceSlotWidget` (most complex, benefits from patterns established above)
+11. ~~**Phase 1.3** — `SequenceSlotWidget`~~ ✅ **DONE**
 12. **Phase 3.1** — `BindingConversion` pure functions
 13. **Phase 4** — Fill in test gaps
 14. **Phase 5** — Documentation, cleanup, delete deprecated `SlotBindingWidget`

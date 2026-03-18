@@ -45,6 +45,7 @@ class WriteReservation;
 
 namespace dl::widget {
 class DynamicInputSlotWidget;
+class SequenceSlotWidget;
 class StaticInputSlotWidget;
 }// namespace dl::widget
 
@@ -95,13 +96,8 @@ private slots:
     void _onRunRecurrentSequence();
     void _onPredictCurrentFrame();
     void _onCaptureStaticInput(std::string const & slot_name);
-    void _onCaptureSequenceEntry(
-            std::string const & slot_name,
-            int memory_index,
-            QComboBox * source_combo,
-            QComboBox * mode_combo,
-            QSpinBox * offset_spin,
-            QLabel * capture_status);
+    void _onCaptureSequenceEntry(std::string const & slot_name,
+                                int memory_index);
 
 private:
     void _buildUi();
@@ -111,18 +107,11 @@ private:
     void _buildPostEncoderSection();
     void _buildEncoderShapeSection();
 
-    QGroupBox * _buildStaticInputGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildBooleanMaskGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildOutputGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildRecurrentInputGroup(
             dl::TensorSlotDescriptor const & input_slot,
             std::vector<dl::TensorSlotDescriptor> const & output_slots);
-
-    /// Add one sequence entry row (index, source, mode, capture button)
-    /// inside a sequence slot's entry container.
-    void _addSequenceEntryRow(QWidget * container,
-                              dl::TensorSlotDescriptor const & slot,
-                              int memory_index);
 
     void _populateDataSourceCombo(QComboBox * combo,
                                   std::string const & type_hint);
@@ -163,6 +152,9 @@ private:
 
     // Static input slot widgets (non-owning; owned by _dynamic_container)
     std::vector<dl::widget::StaticInputSlotWidget *> _static_input_widgets;
+
+    // Sequence slot widgets (non-owning; owned by _dynamic_container)
+    std::vector<dl::widget::SequenceSlotWidget *> _sequence_slot_widgets;
 
     // Cached model display info (clean — no torch types).
     std::optional<ModelDisplayInfo> _current_info;

@@ -6,6 +6,7 @@
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
@@ -465,6 +466,9 @@ void DeepLearningPropertiesWidget::_loadModelIfReady() {
     for (auto * slot_widget: _static_input_widgets) {
         slot_widget->setModelReady(ready);
     }
+    for (auto * seq_widget: _sequence_slot_widgets) {
+        seq_widget->setModelReady(ready);
+    }
 }
 
 void DeepLearningPropertiesWidget::_updateWeightsStatus() {
@@ -499,6 +503,7 @@ void DeepLearningPropertiesWidget::_clearDynamicContent() {
     if (!_dynamic_layout) return;
     _dynamic_input_widgets.clear();
     _static_input_widgets.clear();
+    _sequence_slot_widgets.clear();
     QLayoutItem * child = nullptr;
     while ((child = _dynamic_layout->takeAt(0)) != nullptr) {
         if (child->widget()) {
@@ -554,8 +559,35 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                 has_static = true;
             }
             if (slot.hasSequenceDim()) {
-                // Sequence slots still use the old builder (Phase 1.3 will migrate these)
-                _dynamic_layout->addWidget(_buildStaticInputGroup(slot));
+                std::vector<std::string> output_names;
+                if (_current_info) {
+                    for (auto const & out: _current_info->outputs) {
+                        output_names.push_back(out.name);
+                    }
+                }
+                auto * seq_widget = new dl::widget::SequenceSlotWidget(
+                        slot, _data_manager, output_names, _dynamic_container);
+                seq_widget->setEntriesFromState(_state->staticInputs(),
+                                                _state->recurrentBindings());
+                connect(seq_widget,
+                        &dl::widget::SequenceSlotWidget::bindingChanged,
+                        this,
+                        &DeepLearningPropertiesWidget::_syncBindingsFromUi);
+                connect(seq_widget,
+                        &dl::widget::SequenceSlotWidget::captureRequested,
+                        this,
+                        &DeepLearningPropertiesWidget::_onCaptureSequenceEntry);
+                connect(seq_widget,
+                        &dl::widget::SequenceSlotWidget::captureInvalidated,
+                        this,
+                        [this](std::string const & slot_name, int memory_index) {
+                            auto const key =
+                                    staticCacheKey(slot_name, memory_index);
+                            _assembler->clearStaticCacheEntry(key);
+                            emit staticCacheChanged();
+                        });
+                _sequence_slot_widgets.push_back(seq_widget);
+                _dynamic_layout->addWidget(seq_widget);
             } else {
                 // Non-sequence static slot: use the new StaticInputSlotWidget
                 auto * slot_widget = new dl::widget::StaticInputSlotWidget(
@@ -900,433 +932,6 @@ void DeepLearningPropertiesWidget::_applyEncoderShape() {
     _current_info = _assembler->currentModelDisplayInfo();
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Slot Panel Builders
-// ────────────────────────────────────────────────────────────────────────────
-
-QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
-        dl::TensorSlotDescriptor const & slot) {
-
-    auto * group = new QGroupBox(
-            QString::fromStdString(slot.name) + tr(" (memory)"),
-            _dynamic_container);
-    auto * layout = new QVBoxLayout(group);
-
-    if (!slot.description.empty()) {
-        group->setToolTip(QString::fromStdString(slot.description));
-    }
-
-    // Info label
-    auto * info = new QLabel(
-            tr("Relative: re-encodes each run at current_frame + offset.\n"
-               "Absolute: capture once at a chosen frame and reuse."),
-            group);
-    info->setWordWrap(true);
-    info->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
-    layout->addWidget(info);
-
-    QString shape_str;
-    for (std::size_t i = 0; i < slot.shape.size(); ++i) {
-        if (i > 0) shape_str += QStringLiteral(" \u00D7 ");
-        shape_str += QString::number(slot.shape[i]);
-    }
-    layout->addWidget(new QLabel(tr("Shape: ") + shape_str, group));
-
-    if (slot.hasSequenceDim()) {
-        // ── Sequence slot: multi-entry manager ──
-        int64_t const seq_len = slot.shape[static_cast<std::size_t>(slot.sequence_dim)];
-        layout->addWidget(new QLabel(
-                tr("Sequence length: %1 (dim %2)")
-                        .arg(seq_len)
-                        .arg(slot.sequence_dim),
-                group));
-
-        // Container for sequence entries
-        auto * entries_container = new QWidget(group);
-        entries_container->setObjectName(
-                QString::fromStdString("seq_entries_" + slot.name));
-        auto * entries_layout = new QVBoxLayout(entries_container);
-        entries_layout->setContentsMargins(0, 0, 0, 0);
-        entries_layout->setSpacing(4);
-        layout->addWidget(entries_container);
-
-        // Determine how many entries to show initially from state
-        int initial_count = 0;
-        for (auto const & si: _state->staticInputs()) {
-            if (si.slot_name == slot.name) {
-                initial_count = std::max(initial_count, si.memory_index + 1);
-            }
-        }
-        // Show at least 1 entry for user convenience
-        if (initial_count == 0) initial_count = 1;
-
-        auto slot_name = slot.name;
-
-        // Add entry rows
-        for (int idx = 0; idx < initial_count; ++idx) {
-            _addSequenceEntryRow(entries_container, slot, idx);
-        }
-
-        // Add / Remove buttons
-        auto * btn_row = new QHBoxLayout();
-        auto * add_btn = new QPushButton(tr("+ Add Entry"), group);
-        add_btn->setToolTip(
-                tr("Add another sequence position (up to %1)").arg(seq_len));
-        auto * remove_btn = new QPushButton(tr("- Remove Last"), group);
-        remove_btn->setToolTip(tr("Remove the last sequence entry"));
-        btn_row->addWidget(add_btn);
-        btn_row->addWidget(remove_btn);
-        btn_row->addStretch();
-        layout->addLayout(btn_row);
-
-        // Wire add button
-        connect(add_btn, &QPushButton::clicked, this,
-                [this, entries_container, slot, seq_len] {
-                    int const current_count = static_cast<int>(
-                            entries_container->findChildren<QGroupBox *>(
-                                                     Qt::FindDirectChildrenOnly)
-                                    .size());
-                    if (current_count >= static_cast<int>(seq_len)) {
-                        return;// Already at max
-                    }
-                    _addSequenceEntryRow(entries_container, slot, current_count);
-                });
-
-        // Wire remove button
-        connect(remove_btn, &QPushButton::clicked, this,
-                [this, entries_container, slot_name] {
-                    auto children = entries_container->findChildren<QGroupBox *>(
-                            Qt::FindDirectChildrenOnly);
-                    if (children.size() <= 1) return;// Keep at least one
-
-                    auto * last = children.back();
-                    // Get the memory_index from the last entry
-                    QLabel * idx_label = nullptr;
-                    for (auto * lbl: last->findChildren<QLabel *>()) {
-                        if (lbl->objectName().startsWith(QStringLiteral("seq_idx_"))) {
-                            idx_label = lbl;
-                            break;
-                        }
-                    }
-                    if (idx_label) {
-                        int const mem_idx = idx_label->property("memory_index").toInt();
-                        auto const key = staticCacheKey(slot_name, mem_idx);
-                        _assembler->clearStaticCacheEntry(key);
-                        emit staticCacheChanged();
-                    }
-                    last->deleteLater();
-                });
-    }
-
-    return group;
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// Sequence Entry Row
-// ────────────────────────────────────────────────────────────────────────────
-
-void DeepLearningPropertiesWidget::_addSequenceEntryRow(
-        QWidget * container,
-        dl::TensorSlotDescriptor const & slot,
-        int memory_index) {
-
-    auto * entry_group = new QGroupBox(
-            tr("Position %1").arg(memory_index), container);
-    auto * form = new QFormLayout(entry_group);
-
-    auto const slot_name = slot.name;
-
-    // Hidden label to store the memory_index for retrieval
-    auto * idx_label = new QLabel(QString::number(memory_index), entry_group);
-    idx_label->setObjectName(
-            QString::fromStdString("seq_idx_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    idx_label->setProperty("memory_index", memory_index);
-    idx_label->setVisible(false);
-    form->addRow(idx_label);
-
-    // ── Source type selector (Static / Recurrent) ──
-    auto * source_type_combo = new QComboBox(entry_group);
-    source_type_combo->setObjectName(
-            QString::fromStdString("seq_srctype_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    source_type_combo->addItem(tr("Static"), QStringLiteral("Static"));
-    source_type_combo->addItem(tr("Recurrent"), QStringLiteral("Recurrent"));
-    source_type_combo->setToolTip(
-            tr("Static: capture or encode data from DataManager.\n"
-               "Recurrent: fill from model output at previous frame."));
-    form->addRow(tr("Source Type:"), source_type_combo);
-
-    // ═══════════════════════════════════════════════════════════════
-    // Static controls container
-    // ═══════════════════════════════════════════════════════════════
-    auto * static_container = new QWidget(entry_group);
-    static_container->setObjectName(
-            QString::fromStdString("seq_static_ctr_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    auto * static_form = new QFormLayout(static_container);
-    static_form->setContentsMargins(0, 0, 0, 0);
-
-    // Source combo
-    auto * source_combo = new QComboBox(static_container);
-    source_combo->setObjectName(
-            QString::fromStdString("seq_source_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    _populateDataSourceCombo(
-            source_combo,
-            SlotAssembler::dataTypeForEncoder(slot.recommended_encoder));
-
-    // Restore saved data_key from state
-    for (auto const & si: _state->staticInputs()) {
-        if (si.slot_name == slot_name && si.memory_index == memory_index) {
-            int const idx = source_combo->findText(
-                    QString::fromStdString(si.data_key));
-            if (idx >= 0) source_combo->setCurrentIndex(idx);
-            break;
-        }
-    }
-    static_form->addRow(tr("Source:"), source_combo);
-
-    // Capture mode combo
-    auto * mode_combo = new QComboBox(static_container);
-    mode_combo->setObjectName(
-            QString::fromStdString("seq_mode_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    mode_combo->addItem(tr("Relative"), QStringLiteral("Relative"));
-    mode_combo->addItem(tr("Absolute"), QStringLiteral("Absolute"));
-
-    // Restore saved mode
-    for (auto const & si: _state->staticInputs()) {
-        if (si.slot_name == slot_name && si.memory_index == memory_index) {
-            int const idx = mode_combo->findData(
-                    QString::fromStdString(si.capture_mode_str));
-            if (idx >= 0) mode_combo->setCurrentIndex(idx);
-            break;
-        }
-    }
-    static_form->addRow(tr("Mode:"), mode_combo);
-
-    // Time offset
-    auto * offset_spin = new QSpinBox(static_container);
-    offset_spin->setObjectName(
-            QString::fromStdString("seq_offset_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    offset_spin->setRange(-99999, 0);
-    offset_spin->setPrefix(QStringLiteral("t"));
-    offset_spin->setToolTip(
-            tr("Time offset for Relative mode."));
-
-    // Restore saved offset
-    for (auto const & si: _state->staticInputs()) {
-        if (si.slot_name == slot_name && si.memory_index == memory_index) {
-            offset_spin->setValue(si.time_offset);
-            break;
-        }
-    }
-    static_form->addRow(tr("Offset:"), offset_spin);
-
-    // Capture button + status
-    auto * capture_row = new QHBoxLayout();
-    auto * capture_btn = new QPushButton(
-            tr("\u2B07 Capture"), static_container);
-    capture_btn->setObjectName(
-            QString::fromStdString("seq_capture_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    capture_btn->setEnabled(false);
-    capture_row->addWidget(capture_btn);
-
-    auto * capture_status = new QLabel(tr("Not captured"), static_container);
-    capture_status->setObjectName(
-            QString::fromStdString("seq_status_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    capture_status->setStyleSheet(
-            QStringLiteral("color: gray; font-size: 10px;"));
-
-    // Restore captured state
-    for (auto const & si: _state->staticInputs()) {
-        if (si.slot_name == slot_name && si.memory_index == memory_index) {
-            auto const key = staticCacheKey(slot_name, memory_index);
-            if (_assembler->hasStaticCacheEntry(key) && si.captured_frame >= 0) {
-                capture_status->setText(
-                        tr("\u2713 Frame %1").arg(si.captured_frame));
-                capture_status->setStyleSheet(
-                        QStringLiteral("color: green; font-size: 10px;"));
-            }
-            break;
-        }
-    }
-    capture_row->addWidget(capture_status);
-    static_form->addRow(capture_row);
-
-    form->addRow(static_container);
-
-    // ═══════════════════════════════════════════════════════════════
-    // Recurrent controls container
-    // ═══════════════════════════════════════════════════════════════
-    auto * recurrent_container = new QWidget(entry_group);
-    recurrent_container->setObjectName(
-            QString::fromStdString("seq_recur_ctr_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    auto * recur_form = new QFormLayout(recurrent_container);
-    recur_form->setContentsMargins(0, 0, 0, 0);
-
-    // Output slot combo
-    auto * output_combo = new QComboBox(recurrent_container);
-    output_combo->setObjectName(
-            QString::fromStdString("seq_recur_output_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    output_combo->addItem(tr("(None)"), QString{});
-    if (_current_info) {
-        for (auto const & out: _current_info->outputs) {
-            output_combo->addItem(
-                    QString::fromStdString(out.name),
-                    QString::fromStdString(out.name));
-        }
-    }
-
-    // Restore from state
-    for (auto const & rb: _state->recurrentBindings()) {
-        if (rb.input_slot_name == slot_name &&
-            rb.target_memory_index == memory_index) {
-            int const idx = output_combo->findData(
-                    QString::fromStdString(rb.output_slot_name));
-            if (idx >= 0) output_combo->setCurrentIndex(idx);
-            break;
-        }
-    }
-    recur_form->addRow(tr("Output slot:"), output_combo);
-
-    // Init mode combo
-    auto * init_combo = new QComboBox(recurrent_container);
-    init_combo->setObjectName(
-            QString::fromStdString("seq_recur_init_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    init_combo->addItem(tr("Zeros"), QStringLiteral("Zeros"));
-    init_combo->addItem(tr("Static Capture"), QStringLiteral("StaticCapture"));
-    init_combo->addItem(tr("First Output"), QStringLiteral("FirstOutput"));
-    init_combo->setToolTip(
-            tr("How to initialize this position at t=0:\n"
-               "• Zeros: all-zeros tensor\n"
-               "• Static Capture: use a previously captured tensor\n"
-               "• First Output: run model once with zeros, use output"));
-
-    // Restore from state
-    for (auto const & rb: _state->recurrentBindings()) {
-        if (rb.input_slot_name == slot_name &&
-            rb.target_memory_index == memory_index) {
-            int const idx = init_combo->findData(
-                    QString::fromStdString(rb.init_mode_str));
-            if (idx >= 0) init_combo->setCurrentIndex(idx);
-            break;
-        }
-    }
-    recur_form->addRow(tr("Init mode:"), init_combo);
-
-    // Recurrent status label
-    auto * recur_status = new QLabel(recurrent_container);
-    recur_status->setObjectName(
-            QString::fromStdString("seq_recur_status_" + slot_name + "_" +
-                                   std::to_string(memory_index)));
-    recur_status->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
-    recur_form->addRow(recur_status);
-
-    form->addRow(recurrent_container);
-
-    // ═══════════════════════════════════════════════════════════════
-    // Source type switching logic
-    // ═══════════════════════════════════════════════════════════════
-
-    // Determine initial source type from state
-    bool is_recurrent = false;
-    for (auto const & rb: _state->recurrentBindings()) {
-        if (rb.input_slot_name == slot_name &&
-            rb.target_memory_index == memory_index) {
-            is_recurrent = true;
-            break;
-        }
-    }
-    if (is_recurrent) {
-        source_type_combo->setCurrentIndex(
-                source_type_combo->findData(QStringLiteral("Recurrent")));
-    }
-
-    auto updateVisibility = [static_container, recurrent_container,
-                             source_type_combo] {
-        bool const is_static =
-                source_type_combo->currentData().toString() == QStringLiteral("Static");
-        static_container->setVisible(is_static);
-        recurrent_container->setVisible(!is_static);
-    };
-    updateVisibility();
-
-    connect(source_type_combo, &QComboBox::currentIndexChanged, this,
-            [updateVisibility, this](int) {
-                updateVisibility();
-                _updateBatchSizeConstraint();
-            });
-
-    // Update recurrent status when output changes
-    auto updateRecurStatus = [output_combo, recur_status, slot_name,
-                              memory_index] {
-        auto const out_name = output_combo->currentData().toString().toStdString();
-        if (out_name.empty()) {
-            recur_status->setText(tr("No feedback configured"));
-        } else {
-            recur_status->setText(
-                    tr("Feedback: %1 \u2192 %2[%3]")
-                            .arg(QString::fromStdString(out_name))
-                            .arg(QString::fromStdString(slot_name))
-                            .arg(memory_index));
-        }
-    };
-    updateRecurStatus();
-    connect(output_combo, &QComboBox::currentIndexChanged, this,
-            [updateRecurStatus](int) { updateRecurStatus(); });
-
-    // ═══════════════════════════════════════════════════════════════
-    // Wire static controls (same as before)
-    // ═══════════════════════════════════════════════════════════════
-
-    // Wire mode switching
-    connect(mode_combo, &QComboBox::currentTextChanged, this,
-            [offset_spin, capture_btn, capture_status, this](
-                    QString const & text) {
-                bool const is_absolute = (text == tr("Absolute"));
-                offset_spin->setEnabled(!is_absolute);
-                capture_btn->setEnabled(is_absolute && _assembler->isModelReady());
-                if (!is_absolute) {
-                    capture_status->setText(tr("Not captured"));
-                    capture_status->setStyleSheet(
-                            QStringLiteral("color: gray; font-size: 10px;"));
-                }
-            });
-
-    // Wire capture button — captures this specific sequence entry
-    connect(capture_btn, &QPushButton::clicked, this,
-            [this, slot_name, memory_index, source_combo, mode_combo,
-             offset_spin, capture_status] {
-                _onCaptureSequenceEntry(
-                        slot_name, memory_index, source_combo, mode_combo,
-                        offset_spin, capture_status);
-            });
-
-    // Invalidate cache on source change
-    connect(source_combo, &QComboBox::currentTextChanged, this,
-            [this, slot_name, memory_index, capture_status](QString const &) {
-                auto const key = staticCacheKey(slot_name, memory_index);
-                _assembler->clearStaticCacheEntry(key);
-                capture_status->setText(tr("Not captured"));
-                capture_status->setStyleSheet(
-                        QStringLiteral("color: gray; font-size: 10px;"));
-                emit staticCacheChanged();
-            });
-
-    auto * container_layout = qobject_cast<QVBoxLayout *>(container->layout());
-    if (container_layout) {
-        container_layout->addWidget(entry_group);
-    }
-}
-
 QGroupBox * DeepLearningPropertiesWidget::_buildBooleanMaskGroup(
         dl::TensorSlotDescriptor const & slot) {
 
@@ -1444,19 +1049,13 @@ void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
     for (auto const & slot: _current_info->inputs) {
         if (slot.is_static && !slot.is_boolean_mask) {
             if (slot.hasSequenceDim()) {
-                // Refresh all sequence entry source combos
-                auto const prefix = QString::fromStdString(
-                        "seq_source_" + slot.name + "_");
-                for (auto * combo: _dynamic_container->findChildren<QComboBox *>()) {
-                    if (combo->objectName().startsWith(prefix)) {
-                        _populateDataSourceCombo(
-                                combo,
-                                SlotAssembler::dataTypeForEncoder(
-                                        slot.recommended_encoder));
+                for (auto * seq_widget: _sequence_slot_widgets) {
+                    if (seq_widget->slotName() == slot.name) {
+                        seq_widget->refreshDataSources();
+                        break;
                     }
                 }
             } else {
-                // Delegate to the StaticInputSlotWidget
                 for (auto * slot_widget: _static_input_widgets) {
                     if (slot_widget->slotName() == slot.name) {
                         slot_widget->refreshDataSources();
@@ -1537,85 +1136,24 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
         if (!slot.is_static || slot.is_boolean_mask) continue;
 
         if (slot.hasSequenceDim()) {
-            // Sequence slot: collect entries from all sequence rows
-            auto * entries_container = _dynamic_container->findChild<QWidget *>(
-                    QString::fromStdString("seq_entries_" + slot.name));
-            if (!entries_container) continue;
-
-            auto entry_groups = entries_container->findChildren<QGroupBox *>(
-                    Qt::FindDirectChildrenOnly);
-
-            for (auto * entry_group: entry_groups) {
-                // Find the memory_index from the hidden label
-                QLabel * idx_lbl = nullptr;
-                for (auto * lbl: entry_group->findChildren<QLabel *>()) {
-                    if (lbl->objectName().startsWith(QStringLiteral("seq_idx_"))) {
-                        idx_lbl = lbl;
-                        break;
-                    }
-                }
-                if (!idx_lbl) continue;
-                int const mem_idx = idx_lbl->property("memory_index").toInt();
-
-                auto const suffix = slot.name + "_" + std::to_string(mem_idx);
-
-                // Check source type
-                auto * srctype = entry_group->findChild<QComboBox *>(
-                        QString::fromStdString("seq_srctype_" + suffix));
-                bool const is_recurrent = srctype &&
-                                          srctype->currentData().toString() == QStringLiteral("Recurrent");
-
-                if (is_recurrent) {
-                    // Collect as a hybrid recurrent binding
-                    auto * output = entry_group->findChild<QComboBox *>(
-                            QString::fromStdString("seq_recur_output_" + suffix));
-                    auto * init = entry_group->findChild<QComboBox *>(
-                            QString::fromStdString("seq_recur_init_" + suffix));
-
-                    if (!output || !init) continue;
-                    auto const out_name = output->currentData().toString().toStdString();
-                    if (out_name.empty()) continue;
-
-                    RecurrentBindingData rb;
-                    rb.input_slot_name = slot.name;
-                    rb.output_slot_name = out_name;
-                    rb.target_memory_index = mem_idx;
-                    rb.init_mode_str = init->currentData().toString().toStdString();
-                    hybrid_recurrent_bindings.push_back(std::move(rb));
-                } else {
-                    // Collect as a static input (existing behavior)
-                    auto * source = entry_group->findChild<QComboBox *>(
-                            QString::fromStdString("seq_source_" + suffix));
-                    auto * mode = entry_group->findChild<QComboBox *>(
-                            QString::fromStdString("seq_mode_" + suffix));
-                    auto * offset = entry_group->findChild<QSpinBox *>(
-                            QString::fromStdString("seq_offset_" + suffix));
-
-                    StaticInputData si;
-                    si.slot_name = slot.name;
-                    si.memory_index = mem_idx;
-                    si.active = true;
-
-                    if (source) si.data_key = source->currentText().toStdString();
-                    if (offset) si.time_offset = offset->value();
-                    if (mode) {
-                        si.capture_mode_str =
-                                mode->currentData().toString().toStdString();
-                    }
-
-                    // Preserve captured_frame from existing state
-                    for (auto const & prev: _state->staticInputs()) {
-                        if (prev.slot_name == slot.name &&
-                            prev.memory_index == mem_idx) {
-                            si.captured_frame = prev.captured_frame;
-                            break;
+            for (auto const * seq_widget: _sequence_slot_widgets) {
+                if (seq_widget->slotName() != slot.name) continue;
+                for (auto si: seq_widget->getStaticInputs()) {
+                    if (si.captured_frame < 0) {
+                        for (auto const & prev: _state->staticInputs()) {
+                            if (prev.slot_name == slot.name &&
+                                prev.memory_index == si.memory_index) {
+                                si.captured_frame = prev.captured_frame;
+                                break;
+                            }
                         }
                     }
-
-                    if (!si.data_key.empty() && si.data_key != "(None)") {
-                        static_inputs.push_back(std::move(si));
-                    }
+                    static_inputs.push_back(std::move(si));
                 }
+                for (auto const & rb: seq_widget->getRecurrentBindings()) {
+                    hybrid_recurrent_bindings.push_back(rb);
+                }
+                break;
             }
         } else {
             // Non-sequence slot: delegate to the StaticInputSlotWidget
@@ -1721,6 +1259,8 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
             _assembler->configurePostEncoderModule(type, source_size, interp);
         }
     }
+
+    _updateBatchSizeConstraint();
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -2095,12 +1635,7 @@ void DeepLearningPropertiesWidget::_onCaptureStaticInput(
 }
 
 void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
-        std::string const & slot_name,
-        int memory_index,
-        QComboBox * source_combo,
-        QComboBox * mode_combo,
-        QSpinBox * offset_spin,
-        QLabel * capture_status) {
+        std::string const & slot_name, int memory_index) {
 
     if (!_assembler->isModelReady()) {
         QMessageBox::warning(this, tr("Not Ready"),
@@ -2108,29 +1643,35 @@ void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
         return;
     }
 
-    auto const data_key = source_combo->currentText().toStdString();
-    if (data_key.empty() || data_key == "(None)") {
+    dl::widget::SequenceSlotWidget * seq_widget = nullptr;
+    for (auto * w: _sequence_slot_widgets) {
+        if (w->slotName() == slot_name) {
+            seq_widget = w;
+            break;
+        }
+    }
+    if (!seq_widget) return;
+
+    StaticInputData entry;
+    bool found = false;
+    for (auto const & si: seq_widget->getStaticInputs()) {
+        if (si.memory_index == memory_index) {
+            entry = si;
+            found = true;
+            break;
+        }
+    }
+    if (!found || entry.data_key.empty() || entry.data_key == "(None)") {
         QMessageBox::warning(this, tr("No Source"),
                              tr("Select a data source for this entry first."));
         return;
     }
 
-    // Build a StaticInputData for this entry
-    StaticInputData entry;
-    entry.slot_name = slot_name;
-    entry.memory_index = memory_index;
-    entry.data_key = data_key;
-    entry.time_offset = offset_spin->value();
-    entry.capture_mode_str = mode_combo->currentData().toString().toStdString();
-    entry.active = true;
-
-    // Determine which frame to capture
     int frame = _state->currentFrame();
     if (_current_time_position.has_value()) {
         frame = static_cast<int>(_current_time_position->index.getValue());
     }
 
-    // Determine source image size
     ImageSize source_size{256, 256};
     for (auto const & binding: _state->inputBindings()) {
         auto media = _data_manager->getData<MediaData>(binding.data_key);
@@ -2140,16 +1681,16 @@ void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
         }
     }
 
-    bool const ok = _assembler->captureStaticInput(
-            *_data_manager, entry, frame, source_size);
+    bool const ok =
+            _assembler->captureStaticInput(*_data_manager, entry, frame,
+                                          source_size);
 
     if (ok) {
-        capture_status->setText(
-                tr("\u2713 Frame %1").arg(frame));
-        capture_status->setStyleSheet(
-                QStringLiteral("color: green; font-size: 10px;"));
-
-        // Update captured_frame in state
+        auto const key = staticCacheKey(slot_name, memory_index);
+        auto const range = _assembler->hasStaticCacheEntry(key)
+                                   ? _assembler->staticCacheTensorRange(key)
+                                   : std::pair<float, float>{0.0f, 1.0f};
+        seq_widget->setCapturedStatus(memory_index, frame, range);
         _syncBindingsFromUi();
         auto inputs = _state->staticInputs();
         for (auto & si: inputs) {
@@ -2160,9 +1701,7 @@ void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
         }
         _state->setStaticInputs(std::move(inputs));
     } else {
-        capture_status->setText(tr("\u2717 Capture failed"));
-        capture_status->setStyleSheet(
-                QStringLiteral("color: red; font-size: 10px;"));
+        seq_widget->clearCapturedStatus(memory_index);
     }
 
     emit staticCacheChanged();
@@ -2284,14 +1823,11 @@ void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
         if (!slot.is_static || slot.is_boolean_mask) continue;
 
         if (slot.hasSequenceDim()) {
-            auto const prefix = QString::fromStdString(
-                    "seq_srctype_" + slot.name + "_");
-            for (auto * combo: _dynamic_container->findChildren<QComboBox *>()) {
-                if (combo->objectName().startsWith(prefix)) {
-                    if (combo->currentData().toString() == QStringLiteral("Recurrent")) {
-                        has_recurrent = true;
-                        break;
-                    }
+            for (auto const * seq_widget: _sequence_slot_widgets) {
+                if (seq_widget->slotName() == slot.name &&
+                    !seq_widget->getRecurrentBindings().empty()) {
+                    has_recurrent = true;
+                    break;
                 }
             }
         } else {

@@ -87,6 +87,12 @@ using SequenceEntryVariant = rfl::TaggedUnion<
         StaticSequenceEntryParams,
         RecurrentSequenceEntryParams>;
 
+/// Wrapper for AutoParamWidget: variant must be a struct field (like encoder in
+/// DynamicInputSlotParams), not the root type, so fromJson/toJson nesting works.
+struct SequenceEntryParams {
+    SequenceEntryVariant entry = StaticSequenceEntryParams{};
+};
+
 // ============================================================================
 // Post-Encoder Module — which post-encoder module to apply
 // ============================================================================
@@ -185,6 +191,11 @@ struct ParameterUIHints<dl::widget::StaticSequenceEntryParams> {
 
 template<>
 struct ParameterUIHints<dl::widget::RecurrentSequenceEntryParams> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
+struct ParameterUIHints<dl::widget::SequenceEntryParams> {
     static void annotate(ParameterSchema & schema);
 };
 
