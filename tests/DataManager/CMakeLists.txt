@@ -209,6 +209,10 @@ if(TENSOR_BACKEND_LIBTORCH)
     find_package(Torch REQUIRED)
     target_compile_definitions(test_data_manager PRIVATE TENSOR_BACKEND_LIBTORCH)
     target_link_libraries(test_data_manager PRIVATE torch ${TORCH_LIBRARIES})
+    if (CUDA)
+        target_link_libraries(test_data_manager PRIVATE CUDA::cupti)
+    endif()
+
     target_include_directories(test_data_manager PRIVATE ${TORCH_INCLUDE_DIRS})
 endif()
 
