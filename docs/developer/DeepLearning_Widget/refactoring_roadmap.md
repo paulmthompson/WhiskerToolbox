@@ -117,27 +117,121 @@ With the DeepLearning library owning per-component param structs (Phase 0.0), th
 
 **Outcome:** `extractParameterSchema<OutputSlotParams>()` produces a schema with `data_key` string field + `decoder` variant field. The variant alternatives re-use the DeepLearning library's per-decoder param structs. All types round-trip through JSON correctly.
 
-### 0.2 — Extend AutoParamWidget with data-source combo support ✅ COMPLETED
+**Additional composite structs (to be added as Phase 1 sub-widgets are implemented):**
 
-Chose **Option (C) — Composite widget pattern**. Created `SlotBindingWidget`, a reusable composite that pairs a DataManager-aware data-source combo with an `AutoParamWidget` for the remaining config fields.
+The following types compose library-level encoder params into a widget-level variant, and define per-slot-type composite structs. They will be added to `DeepLearningParamSchemas.hpp` incrementally as each Phase 1 sub-widget is built:
 
-**Files created:**
-- `DeepLearning_Widget/UI/Helpers/SlotBindingWidget.hpp` — Header declaring the composite widget.
-- `DeepLearning_Widget/UI/Helpers/SlotBindingWidget.cpp` — Implementation.
+- `EncoderVariant` — `rfl::TaggedUnion<"encoder", dl::ImageEncoderParams, dl::Point2DEncoderParams, dl::Mask2DEncoderParams, dl::Line2DEncoderParams>` — which encoder to use for a dynamic input.
+- `DynamicInputSlotParams` — `{ source, EncoderVariant, time_offset }` — full config for one dynamic input slot.
+- `StaticInputSlotParams` — `{ source, CaptureModeVariant }` — full config for one non-sequence static input slot.
+- `RecurrentBindingSlotParams` — `{ output_slot_name, RecurrentInitVariant }` — full config for one recurrent binding.
+- `PostEncoderSlotParams` — `{ PostEncoderVariant, point_key }` — post-encoder module + SpatialPoint data key.
 
-**Public API:**
-- `setDataSourceLabel(text)` — Customise the label for the data source combo.
-- `setDataSourceTypes(type_hint)` — Set the DM_DataType filter via a string hint (delegates to `DataSourceComboHelper::typesFromHint`).
-- `selectedDataSource()` — Returns the currently selected DataManager key.
-- `setParameterSchema(schema)` — Forwards a `ParameterSchema` to the embedded `AutoParamWidget`.
-- `parametersJson()` — Returns the current parameter JSON from the embedded `AutoParamWidget`.
-- `setPostEditHook(hook)` — Forwards a `PostEditHook` to the embedded `AutoParamWidget`.
+Each struct's `source`, `point_key`, or `output_slot_name` field is a `std::string` annotated with `dynamic_combo = true` in `ParameterUIHints`, enabling runtime combo population via the revised Phase 0.2 AutoParamWidget extensions.
 
-**Signals:** `dataSourceChanged(key)`, `parametersChanged()`, `bindingChanged()` (unified).
+### 0.2 — Extend AutoParamWidget with dynamic field support ✅ COMPLETED
 
-**Outcome:** A reusable pattern for combining DataManager-aware combos with auto-generated forms. AutoParamWidget remains generic.
+**Design revision:** The original Phase 0.2 created `SlotBindingWidget` (composite QComboBox + AutoParamWidget). This is **superseded by a unified struct approach** where data source keys are regular `std::string` fields in the param struct, and AutoParamWidget gains minimal extensions for dynamic combo population and cross-field constraint enforcement.
 
-### 0.3 — Create a `DataSourceComboHelper` utility ✅ COMPLETED
+**Rationale for change:**
+- The composite pattern keeps the data source outside the serializable struct, fragmenting serialization and requiring manual wiring between two independent widgets.
+- The DataSynthesizer pattern proves that a single struct → single AutoParamWidget works cleanly with variants (combo + stacked widget auto-generated from `rfl::TaggedUnion`).
+- With the data source inside the struct, the entire slot config round-trips through JSON transparently — no separate marshaling needed.
+- Cross-field constraints (e.g., encoder type restricts valid data sources, or data source type restricts valid encoders) can be handled via `parametersChanged` signal + targeted update calls, in the same spirit as the existing `PostEditHook`.
+
+**`SlotBindingWidget` is deprecated.** It remains in the codebase temporarily but Phase 1 sub-widgets will not use it.
+
+#### Task 0.2.1 — Add `dynamic_combo` flag to `ParameterFieldDescriptor`
+
+Add two fields to `ParameterFieldDescriptor`:
+```cpp
+bool dynamic_combo = false;       ///< If true, create QComboBox even with empty allowed_values
+bool include_none_sentinel = false; ///< If true, prepend "(None)" sentinel to combo
+```
+
+In `ParameterUIHints`, annotators set these flags for fields that will be populated at runtime:
+```cpp
+template<> struct ParameterUIHints<DynamicInputSlotParams> {
+    static void annotate(ParameterSchema& schema) {
+        if (auto* f = schema.field("source")) {
+            f->display_name = "Data Source";
+            f->dynamic_combo = true;
+            f->include_none_sentinel = true;
+        }
+    }
+};
+```
+
+AutoParamWidget's `buildFieldRow` checks `dynamic_combo` and creates a QComboBox (initially empty or with just the sentinel) instead of QLineEdit.
+
+#### Task 0.2.2 — Add `updateAllowedValues()` to AutoParamWidget
+
+```cpp
+/// @brief Dynamically update the combo items for a string/enum field.
+///
+/// Finds the FieldRow matching field_name. If the field has a combo_box,
+/// repopulates it with values while preserving the current selection.
+/// If include_none_sentinel was set, "(None)" is prepended.
+/// If the field is a QLineEdit (non-dynamic), this is a no-op.
+///
+/// Does not emit parametersChanged unless the selection actually changes.
+void updateAllowedValues(std::string const& field_name,
+                         std::vector<std::string> const& values);
+```
+
+Typical usage by a slot widget:
+```cpp
+// DM observer fires → refresh the "source" combo
+auto keys = getKeysForTypes(*_dm, allInputTypes());
+_auto_param_widget->updateAllowedValues("source", keys);
+```
+
+#### Task 0.2.3 — Add `updateVariantAlternatives()` to AutoParamWidget
+
+```cpp
+/// @brief Show or hide variant alternatives by tag name.
+///
+/// Finds the variant FieldRow matching field_name. Hides alternatives
+/// whose tags are not in allowed_tags. If the currently selected
+/// alternative is hidden, switches to the first visible one.
+///
+/// Use case: restrict encoder options based on selected data source type,
+/// or restrict decoder options based on post-encoder module.
+void updateVariantAlternatives(std::string const& field_name,
+                               std::vector<std::string> const& allowed_tags);
+```
+
+Typical usage by a slot widget:
+```cpp
+// User changes source → restrict encoder to compatible types
+connect(_auto_param_widget, &AutoParamWidget::parametersChanged, this, [this]() {
+    auto json = _auto_param_widget->toJson();
+    auto params = rfl::json::read<DynamicInputSlotParams>(json);
+    if (!params) return;
+    auto source_type = _dm->getDataType(params->source);
+    auto valid_encoders = validEncodersForType(source_type);
+    _auto_param_widget->updateVariantAlternatives("encoder", valid_encoders);
+});
+```
+
+**Design alternative — direction of constraint:**
+Two valid approaches for encoder ↔ source coupling:
+1. **Source → Encoder** (shown above): User picks data source first, valid encoders are restricted automatically. Simple, but user must pick source before seeing encoder options.
+2. **Encoder → Source**: User picks encoder type first, source combo is filtered to only show compatible DM keys. Equally valid — use `updateAllowedValues("source", filteredKeys)` instead.
+
+The choice between (1) and (2) is a UX decision to be made during Phase 1.1 implementation. Both are supported by the same `updateAllowedValues` / `updateVariantAlternatives` infrastructure.
+
+**Outcome:** AutoParamWidget supports DataManager-driven combos and cross-field constraints with three minimal, non-breaking additions. No AutoParamWidget consumers outside DeepLearning_Widget are affected.
+
+**Files created/modified:**
+- `src/ParameterSchema/ParameterSchema.hpp` — Added `dynamic_combo` and `include_none_sentinel` fields to `ParameterFieldDescriptor`.
+- `src/WhiskerToolbox/AutoParamWidget/AutoParamWidget.hpp` — Added `updateAllowedValues()` and `updateVariantAlternatives()` public methods; extended `FieldRow` with `include_none_sentinel` and `variant_all_tags`.
+- `src/WhiskerToolbox/AutoParamWidget/AutoParamWidget.cpp` — Implementation of dynamic combo creation, sentinel mapping in JSON round-trips, and the two new update methods. Variant combo items now store original stack index as item data (`Qt::UserRole`) to support filtered alternatives.
+- `tests/WhiskerToolbox/AutoParamWidget/AutoParamWidget.test.cpp` — 15 test cases (31 assertions) covering dynamic combos, sentinel mapping, `updateAllowedValues`, `updateVariantAlternatives`, nested variant sub-rows, JSON round-trips, and descriptor defaults.
+- `tests/WhiskerToolbox/AutoParamWidget/CMakeLists.txt` — Test target definition.
+- `tests/WhiskerToolbox/CMakeLists.txt` — Added `AutoParamWidget` test subdirectory.
+
+### 0.3 — Create a `DataSourceComboHelper` utility ✅ COMPLETED (scope narrowed)
 
 Extracted the combo population and refresh logic from `_populateDataSourceCombo` / `_refreshDataSourceCombos` into a standalone utility class.
 
@@ -156,7 +250,13 @@ Extracted the combo population and refresh logic from `_populateDataSourceCombo`
 
 Auto-untracking on `QObject::destroyed` prevents dangling pointers.
 
-**Outcome:** Data source combo management is centralized and testable.
+**Scope narrowing (Phase 0.2 revision):** With the unified struct approach (revised Phase 0.2), AutoParamWidget now owns the combo lifecycle via `updateAllowedValues()`. The combo tracking/population methods (`populateCombo`, `track`, `refreshAll`) become less central. The key remaining utilities are:
+- `keysForTypes()` — fetching filtered key lists from DataManager (used by slot widgets to feed `updateAllowedValues`)
+- `typesFromHint()` — converting type-hint strings to `DM_DataType` vectors
+
+The class may be simplified to a set of free functions in a later cleanup pass. The `SlotBindingWidget` composite that depended on it is deprecated (see Phase 0.2 revision).
+
+**Outcome:** Data source key-fetching and type-mapping logic is centralized and testable.
 
 ---
 
@@ -168,44 +268,62 @@ Break the monolithic properties widget into focused sub-widgets, each handling o
 
 Handles one dynamic input slot panel (currently `_buildDynamicInputGroup`).
 
-**Contents:**
-- Data source combo (via `DataSourceComboHelper`)
-- Encoder selection combo
-- Mode combo (populated based on selected encoder)
-- Gaussian sigma spin box (visible only in Heatmap mode)
-- Time offset spin box
+**Param struct (unified):**
+```cpp
+using EncoderVariant = rfl::TaggedUnion<
+    "encoder",
+    dl::ImageEncoderParams,
+    dl::Point2DEncoderParams,
+    dl::Mask2DEncoderParams,
+    dl::Line2DEncoderParams>;
 
-**Integration with AutoParamWidget:**
-- The per-encoder param struct (e.g. `dl::Point2DEncoderParams`) is defined in the DeepLearning library (Phase 0.0.2). The widget uses `extractParameterSchema<dl::Point2DEncoderParams>()` directly.
-- `ParameterUIHints` live in `channel_encoding/EncoderParamSchemas.hpp` (DeepLearning library).
-- The widget wraps a data source combo + `AutoParamWidget` for the encoder-specific fields.
-- `AutoParamWidget::parametersChanged` → emit `bindingChanged(SlotBindingData)`.
+struct DynamicInputSlotParams {
+    std::string source;       ///< DataManager key — dynamic combo
+    EncoderVariant encoder = dl::ImageEncoderParams{};
+    int time_offset = 0;
+};
+```
 
-**Challenge:** The encoder param struct type varies by selected encoder (e.g., `Point2DEncoderParams` vs `ImageEncoderParams`). When the user switches encoder, the AutoParamWidget must be rebuilt with a different schema. Options:
-  - Rebuild the `AutoParamWidget` with the new encoder's schema on encoder change.
-  - Or use a single `DynamicInputParams` wrapper at the widget level that selects the appropriate encoder schema dynamically.
+**AutoParamWidget renders:**
+- `source` → QComboBox (dynamic, populated via `updateAllowedValues` from DM observer)
+- `encoder` → QComboBox (Image/Point2D/Mask2D/Line2D) + QStackedWidget with per-encoder sub-params (mode, gaussian_sigma, normalize — auto-generated from the library-level param structs)
+- `time_offset` → QSpinBox
+
+**Cross-field constraints (two options, UX decision at implementation time):**
+1. **Source → Encoder:** User picks data source, valid encoder variants are restricted via `updateVariantAlternatives("encoder", validEncoders)`.
+2. **Encoder → Source:** User picks encoder type, source combo is filtered to only show compatible DM keys via `updateAllowedValues("source", filteredKeys)`.
+
+**Wiring:**
+- DM observer callback → `_auto_param_widget->updateAllowedValues("source", keys)`
+- `parametersChanged` signal → constraint enforcement + emit `bindingChanged(DynamicInputSlotParams)`
+
+**Key advantage over old design:** The encoder variant's sub-params (mode, gaussian_sigma, etc.) are auto-generated from the DeepLearning library's per-encoder param structs. Switching encoder in the combo auto-rebuilds the stacked form — no manual `findChild` or schema-swapping needed.
 
 ### 1.2 — `StaticInputSlotWidget`
 
 Handles one non-sequence static input slot (currently the non-sequence branch of `_buildStaticInputGroup`).
 
-**Contents:**
-- Data source combo
-- Capture mode combo (Relative/Absolute)
-- Time offset spin box (Relative mode)
-- Capture button + status label (Absolute mode)
+**Param struct (unified):**
+```cpp
+struct StaticInputSlotParams {
+    std::string source;          ///< DataManager key — dynamic combo
+    CaptureModeVariant capture_mode = RelativeCaptureParams{};
+};
+```
 
-**Integration with AutoParamWidget:**
-- `CaptureMode` as `rfl::TaggedUnion<"capture_mode", RelativeModeParams, AbsoluteModeParams>`:
-  ```cpp
-  struct RelativeModeParams {
-      int time_offset = 0;
-  };
-  struct AbsoluteModeParams {
-      // captured_frame shown as read-only label, not a spin box
-  };
-  ```
-- AutoParamWidget handles the variant switching; the capture button is added outside the form.
+**AutoParamWidget renders:**
+- `source` → QComboBox (dynamic, populated via `updateAllowedValues`)
+- `capture_mode` → QComboBox (Relative/Absolute) + QStackedWidget:
+  - **Relative** page: `time_offset` QSpinBox
+  - **Absolute** page: `captured_frame` display (read-only or hidden)
+
+**Additional UI (outside AutoParamWidget):**
+- Capture button + status label for Absolute mode (imperative action, not a parameter)
+- Button visibility toggled based on active variant via `parametersChanged` signal
+
+**Wiring:**
+- DM observer callback → `updateAllowedValues("source", keys)`
+- `parametersChanged` → show/hide capture button based on active variant
 
 ### 1.3 — `SequenceSlotWidget`
 
@@ -215,79 +333,97 @@ This is the most complex sub-widget (~500 lines of the current implementation).
 
 **Contents:**
 - "Add Entry" / "Remove Entry" buttons
-- Per-entry rows, each with:
-  - Source type combo: "Static" vs. "Recurrent"
-  - **Static path:** data source, mode, offset, capture
-  - **Recurrent path:** output slot combo, init mode combo
+- Per-entry rows, each with a `SequenceEntryVariant` driving an AutoParamWidget
 
-**Integration with AutoParamWidget:**
-- Each entry row uses `rfl::TaggedUnion<"source_type", StaticEntryParams, RecurrentEntryParams>`:
-  ```cpp
-  struct StaticEntryParams {
-      std::string data_key;
-      std::string capture_mode_str = "Relative";
-      int time_offset = 0;
-  };
-  struct RecurrentEntryParams {
-      std::string output_slot_name;
-      std::string init_mode_str = "Zeros";
-  };
-  ```
-- Each entry row is a small composite widget with AutoParamWidget + data source combo.
-- When the variant switches (Static ↔ Recurrent), AutoParamWidget rebuilds the stacked form automatically.
+**Param struct (unified, per-entry):**
+```cpp
+// Already defined in Phase 0.1:
+struct StaticSequenceEntryParams {
+    std::string data_key;                      ///< DataManager key — dynamic combo
+    std::string capture_mode_str = "Relative"; ///< "Relative" or "Absolute"
+    int time_offset = 0;
+};
+struct RecurrentSequenceEntryParams {
+    std::string output_slot_name;        ///< dynamic combo (model output slots)
+    std::string init_mode_str = "Zeros";
+};
+using SequenceEntryVariant = rfl::TaggedUnion<
+    "source_type", StaticSequenceEntryParams, RecurrentSequenceEntryParams>;
+```
+
+**AutoParamWidget renders (per entry row):**
+- `source_type` variant → QComboBox (Static/Recurrent) + QStackedWidget:
+  - **Static** page: `data_key` (dynamic combo via `updateAllowedValues`), `capture_mode_str` (combo), `time_offset` (spin)
+  - **Recurrent** page: `output_slot_name` (dynamic combo), `init_mode_str` (combo)
+
+**Dynamic field population:**
+- `data_key` populated from DM observer via `updateAllowedValues`
+- `output_slot_name` populated from model output slot names
+
+**Widget structure:** Each entry row is a separate AutoParamWidget with `SequenceEntryVariant` schema. The SequenceSlotWidget manages a list of these, with add/remove buttons controlling the list size.
 
 ### 1.4 — `OutputSlotWidget`
 
 Handles one output slot panel (currently `_buildOutputGroup`).
 
-**Contents:**
-- Target DataManager key combo (editable)
-- Decoder selection combo
-- Threshold spin box
-- Subpixel checkbox
+**Param struct (unified, already defined in Phase 0.1):**
+```cpp
+struct OutputSlotParams {
+    std::string data_key;                         ///< DataManager key for results
+    DecoderVariant decoder = MaskDecoderParams{}; ///< Decoder configuration
+};
+```
 
-**Integration with AutoParamWidget:**
-- `OutputSlotParams` (widget-level, Phase 0.1) contains `data_key` + `DecoderVariant`.
-- `DecoderVariant` is `rfl::TaggedUnion<"decoder", dl::MaskDecoderParams, dl::PointDecoderParams, dl::LineDecoderParams, dl::FeatureVectorDecoderParams>` — the alternatives are DeepLearning library types (Phase 0.0.1).
-- Switching decoder in the combo auto-rebuilds the relevant parameter fields via AutoParamWidget's variant support.
+**AutoParamWidget renders:**
+- `data_key` → QLineEdit (or dynamic combo if we want to show existing DM keys as suggestions)
+- `decoder` variant → QComboBox (Mask/Point/Line/FeatureVector) + QStackedWidget with per-decoder sub-params (threshold, subpixel, etc.)
+
+**Cross-field constraint:**
+- Post-encoder module type restricts valid decoders — the coordinator calls `updateVariantAlternatives("decoder", validDecoders)` when the post-encoder module changes.
 
 ### 1.5 — `RecurrentBindingWidget`
 
 Handles one non-sequence recurrent binding panel (currently `_buildRecurrentInputGroup`).
 
-**Contents:**
-- Output slot combo (which output feeds back)
-- Init mode combo
-- Init mode-dependent fields (StaticCapture shows data_key + frame)
+**Param struct (unified):**
+```cpp
+struct RecurrentBindingSlotParams {
+    std::string output_slot_name;                   ///< dynamic combo (model output slots)
+    RecurrentInitVariant init = ZerosInitParams{};  ///< Init mode variant
+};
+```
 
-**Integration with AutoParamWidget:**
-- `RecurrentInitMode` as variant:
-  ```cpp
-  struct ZerosInit {};
-  struct StaticCaptureInit { std::string data_key; int frame = 0; };
-  struct FirstOutputInit {};
-  
-  using InitVariant = rfl::TaggedUnion<"init_mode", ZerosInit, StaticCaptureInit, FirstOutputInit>;
-  
-  struct RecurrentBindingParams {
-      std::string output_slot_name;
-      InitVariant init = ZerosInit{};
-  };
-  ```
+**AutoParamWidget renders:**
+- `output_slot_name` → QComboBox (dynamic, populated from model output slot names via `updateAllowedValues`)
+- `init` variant → QComboBox (Zeros/StaticCapture/FirstOutput) + QStackedWidget:
+  - **StaticCapture** page: `data_key` (dynamic combo via `updateAllowedValues`) + `frame` (spin box)
+  - Other pages: empty (no sub-params)
+
+**Dynamic field population:**
+- `output_slot_name` from model info via `updateAllowedValues`
+- `data_key` inside StaticCapture variant from DM observer
 
 ### 1.6 — `PostEncoderWidget`
 
 Handles the post-encoder module section (currently `_buildPostEncoderSection` + `_enforcePostEncoderDecoderConsistency`).
 
-**Contents:**
-- Module type combo (None / GlobalAvgPool / SpatialPoint)
-- Interpolation combo (SpatialPoint only)
-- Point key combo (SpatialPoint only)
+**Param struct (unified):**
+```cpp
+struct PostEncoderSlotParams {
+    PostEncoderVariant module = NoPostEncoderParams{};
+    std::string point_key;  ///< DataManager key for SpatialPoint — dynamic combo
+};
+```
 
-**Integration with AutoParamWidget:**
-- `PostEncoderVariant` (widget-level, Phase 0.1) is `rfl::TaggedUnion<"module", NoPostEncoderParams, dl::GlobalAvgPoolModuleParams, dl::SpatialPointModuleParams>`.
-- `dl::SpatialPointModuleParams` contains `InterpolationMode` enum (auto-detected by ParameterSchema). The `point_key` field (DataManager key) is widget-level and stays outside the auto-param form (composite widget pattern).
-- Decoder consistency enforcement moves into a pure function called on module change.
+**AutoParamWidget renders:**
+- `module` variant → QComboBox (None/GlobalAvgPool/SpatialPoint) + QStackedWidget:
+  - **SpatialPoint** page: `interpolation` enum combo (auto-generated from `dl::SpatialPointModuleParams`)
+  - Other pages: empty or minimal
+- `point_key` → QComboBox (dynamic, populated with Point-type DM keys via `updateAllowedValues`)
+
+**Cross-field constraints:**
+- `point_key` visibility/relevance depends on active variant (only needed for SpatialPoint) — handled via `PostEditHook` or `parametersChanged` signal
+- Decoder consistency enforcement (restrict output decoders based on module type) moves into a pure function in `ConstraintEnforcer` (Phase 3.2), called by the coordinator when `PostEncoderSlotParams` changes
 
 ### 1.7 — `EncoderShapeWidget`
 
@@ -345,7 +481,7 @@ DeepLearning_Widget/                       ← Widget (Qt)
 ├── Core/
 │   ├── BatchInferenceResult.hpp
 │   ├── DeepLearningBindingData.hpp
-│   ├── DeepLearningParamSchemas.hpp       ← Widget-level variants (compose library types)
+│   ├── DeepLearningParamSchemas.hpp       ← Widget-level variants + composite slot structs
 │   ├── DeepLearningParamSchemas.cpp
 │   ├── DeepLearningState.hpp
 │   ├── DeepLearningState.cpp
@@ -366,7 +502,8 @@ DeepLearning_Widget/                       ← Widget (Qt)
 │   │   ├── PostEncoderWidget.hpp/cpp
 │   │   └── EncoderShapeWidget.hpp/cpp
 │   └── Helpers/                           ← NEW subdirectory
-│       ├── DataSourceComboHelper.hpp/cpp
+│       ├── DataSourceComboHelper.hpp/cpp  ← Key-fetching utility (scope narrowed)
+│       ├── SlotBindingWidget.hpp/cpp      ← DEPRECATED (kept temporarily)
 │       └── BindingConversion.hpp/cpp      (param struct ↔ binding data conversion)
 ├── DeepLearningWidgetRegistration.hpp
 ├── DeepLearningWidgetRegistration.cpp
@@ -460,10 +597,9 @@ namespace dl::conversion {
 
 SlotBindingData fromDynamicInputParams(
     std::string const& slot_name,
-    std::string const& data_key,
-    DynamicInputParams const& params);
+    DynamicInputSlotParams const& params);
 
-DynamicInputParams toDynamicInputParams(SlotBindingData const& binding);
+DynamicInputSlotParams toDynamicInputParams(SlotBindingData const& binding);
 
 OutputBindingData fromOutputParams(
     std::string const& slot_name,
@@ -476,7 +612,7 @@ OutputSlotParams toOutputParams(OutputBindingData const& binding);
 } // namespace dl::conversion
 ```
 
-**Benefit:** The `_syncBindingsFromUi` function (currently 270 lines of fragile `findChild` lookups) is eliminated entirely. Each sub-widget emits its typed params struct; the coordinator converts it to binding data and sets state.
+**Benefit:** The `_syncBindingsFromUi` function (currently 270 lines of fragile `findChild` lookups) is eliminated entirely. Each sub-widget emits its typed params struct (which includes `source` as a regular field); the coordinator converts it to binding data and sets state. No separate data-source marshaling needed.
 
 ### 3.2 — `ConstraintEnforcer` (pure functions)
 
@@ -571,17 +707,17 @@ std::vector<OutputBindingData> enforceDecoderConsistency(
         │
         └── ✅ Phase 0.1 (widget-level binding param structs — COMPLETE)
                 │
-                ├── Phase 0.2 (AutoParamWidget extension)  
+                ├── ✅ Phase 0.2 (AutoParamWidget dynamic field extensions — COMPLETE)
                 │       │
-                │       └── Phase 0.3 (DataSourceComboHelper)
-                │               │
-                │               ├── Phase 1.1 (DynamicInputSlotWidget)
-                │               ├── Phase 1.2 (StaticInputSlotWidget)
-                │               ├── Phase 1.3 (SequenceSlotWidget)
-                │               ├── Phase 1.4 (OutputSlotWidget)
-                │               ├── Phase 1.5 (RecurrentBindingWidget)
-                │               ├── Phase 1.6 (PostEncoderWidget)
-                │               └── Phase 1.7 (EncoderShapeWidget)
+                │       ├── Phase 1.1 (DynamicInputSlotWidget)
+                │       ├── Phase 1.2 (StaticInputSlotWidget)
+                │       ├── Phase 1.3 (SequenceSlotWidget)
+                │       ├── Phase 1.4 (OutputSlotWidget)
+                │       ├── Phase 1.5 (RecurrentBindingWidget)
+                │       ├── Phase 1.6 (PostEncoderWidget)
+                │       └── Phase 1.7 (EncoderShapeWidget)
+                │
+                ├── ✅ Phase 0.3 (DataSourceComboHelper — COMPLETE, scope narrowed)
                 │
                 ├── Phase 2.1 (InferenceController)     ← can start after Phase 0.0
                 ├── Phase 2.2 (ResultProcessor)
@@ -595,22 +731,20 @@ Phase 5 (Polish)     ← after all phases complete
 
 ### Recommended implementation order (next steps):
 
-1. **Phase 0.1** — Widget-level binding param structs (compose library types into variants)
-2. **Phase 0.3** — `DataSourceComboHelper` (quick win, no AutoParamWidget dependency)
-3. **Phase 3.2** — `ConstraintEnforcer` pure functions (quick win, immediately testable)
-4. **Phase 2.1** — `InferenceController` (large isolated chunk, biggest maintainability gain)
-5. **Phase 2.2** — `ResultProcessor` (pairs with InferenceController)
-6. **Phase 0.2** — Evaluate AutoParamWidget extension needs
-7. **Phase 1.7** — `EncoderShapeWidget` (simplest sub-widget, good pilot)
-8. **Phase 1.4** — `OutputSlotWidget` (medium complexity, exercises variant support)
-9. **Phase 1.6** — `PostEncoderWidget` (medium complexity, exercises variant support)
-10. **Phase 1.1** — `DynamicInputSlotWidget` (exercises dependent-field pattern)
-11. **Phase 1.5** — `RecurrentBindingWidget`
-12. **Phase 1.2** — `StaticInputSlotWidget`
-13. **Phase 1.3** — `SequenceSlotWidget` (most complex, benefits from patterns established above)
-14. **Phase 3.1** — `BindingConversion` pure functions
-15. **Phase 4** — Fill in test gaps
-16. **Phase 5** — Documentation and cleanup
+1. ~~**Phase 0.2** — AutoParamWidget dynamic field extensions~~ ✅ **DONE**
+2. **Phase 3.2** — `ConstraintEnforcer` pure functions (quick win, immediately testable, no UI dependency)
+3. **Phase 2.1** — `InferenceController` (large isolated chunk, biggest maintainability gain)
+4. **Phase 2.2** — `ResultProcessor` (pairs with InferenceController)
+5. **Phase 1.7** — `EncoderShapeWidget` (simplest sub-widget, good pilot for the unified struct pattern)
+6. **Phase 1.4** — `OutputSlotWidget` (medium complexity, exercises `updateVariantAlternatives` for decoder)
+7. **Phase 1.6** — `PostEncoderWidget` (medium complexity, exercises variant + dynamic `point_key` combo)
+8. **Phase 1.1** — `DynamicInputSlotWidget` (exercises full pattern: dynamic source combo + encoder variant + cross-field constraints)
+9. **Phase 1.5** — `RecurrentBindingWidget`
+10. **Phase 1.2** — `StaticInputSlotWidget`
+11. **Phase 1.3** — `SequenceSlotWidget` (most complex, benefits from patterns established above)
+12. **Phase 3.1** — `BindingConversion` pure functions
+13. **Phase 4** — Fill in test gaps
+14. **Phase 5** — Documentation, cleanup, delete deprecated `SlotBindingWidget`
 
 ---
 
@@ -618,11 +752,14 @@ Phase 5 (Polish)     ← after all phases complete
 
 | Risk | Mitigation |
 |---|---|
-| **Dependent combo fields** (encoder → mode) | Each encoder has its own param struct with correct mode subset. Switching encoder rebuilds AutoParamWidget with the new schema. Pilot in Phase 1.1. |
+| **Dependent combo fields** (encoder → mode) | Each encoder has its own param struct with correct mode subset. Variant auto-generates stacked form — no manual schema swap needed. |
 | **Dynamic `allowed_values`** from registries | Populate at schema construction time. Registry contents are fixed after startup. |
-| **DataManager key combos** need runtime refresh | `DataSourceComboHelper` stays outside AutoParamWidget. Composite widget pattern (Phase 0.2, Option C). |
+| **DataManager key combos** need runtime refresh | `updateAllowedValues()` on AutoParamWidget, driven by DM observer callbacks. `DataSourceComboHelper::keysForTypes()` provides the key lists. |
+| **Cross-field constraints** (source type ↔ encoder, post-encoder ↔ decoder) | `updateVariantAlternatives()` restricts visible options. Direction of constraint (source→encoder vs encoder→source) is a UX decision per widget. |
+| **Nested dynamic combos** (e.g., `data_key` inside a variant alternative like `StaticCaptureInitParams`) | `updateAllowedValues` works by field name; for nested variant fields, the slot widget may need to call update after variant switch. Pilot in Phase 1.5. |
 | **State serialization breakage** | `DeepLearningBindingData` flat fields are preserved. Per-component param structs are transient. State format is unchanged. |
 | **Variant JSON format mismatch** | `BindingConversion` functions handle the mapping. Tests in Phase 4.2 verify round-trips. |
+| **`SlotBindingWidget` deprecation** | Already committed but unused by Phase 1 sub-widgets. Removed in Phase 5 cleanup. No breaking changes. |
 | **Large diff size** | Each phase ships independently. Feature branches per phase. |
 
 ---
