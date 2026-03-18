@@ -51,6 +51,25 @@ void ParameterUIHints<dl::widget::RecurrentSequenceEntryParams>::annotate(
     }
 }
 
+void ParameterUIHints<dl::widget::DynamicInputSlotParams>::annotate(
+        ParameterSchema & schema) {
+    if (auto * f = schema.field("source")) {
+        f->display_name = "Data Source";
+        f->tooltip = "DataManager key for the input data";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
+    }
+    if (auto * f = schema.field("encoder")) {
+        f->tooltip = "Encoder type and configuration for this input";
+    }
+    if (auto * f = schema.field("time_offset")) {
+        f->display_name = "Time Offset";
+        f->tooltip =
+                "Temporal offset applied to each frame during encoding.\n"
+                "E.g. -1 reads one frame behind, +1 reads one frame ahead.";
+    }
+}
+
 void ParameterUIHints<dl::widget::OutputSlotParams>::annotate(
         ParameterSchema & schema) {
     if (auto * f = schema.field("data_key")) {

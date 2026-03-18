@@ -264,9 +264,26 @@ The class may be simplified to a set of free functions in a later cleanup pass. 
 
 Break the monolithic properties widget into focused sub-widgets, each handling one slot type. The properties widget becomes a **thin coordinator** that creates sub-widgets and wires signals.
 
-### 1.1 — `DynamicInputSlotWidget`
+**Each sub-phase MUST:**
+1. Create the new sub-widget class with its own param struct and AutoParamWidget form.
+2. **Replace** the corresponding `_build*()` method call in `DeepLearningPropertiesWidget::_rebuildSlotPanels()` with instantiation of the new sub-widget.
+3. **Update** `_syncBindingsFromUi()` to read binding data from the new sub-widget (via `params()` or `toSlotBindingData()`) instead of `findChild<>` searches.
+4. **Update** `_refreshDataSourceCombos()` to delegate to the new sub-widget's `refreshDataSources()` instead of manually repopulating combos.
+5. **Remove** the old `_build*()` method and any private helper methods that are now dead code.
+6. Add tests for the new sub-widget.
 
-Handles one dynamic input slot panel (currently `_buildDynamicInputGroup`).
+### 1.1 — `DynamicInputSlotWidget` ✅ COMPLETED
+
+Handles one dynamic input slot panel (replaces `_buildDynamicInputGroup`).
+
+**UX decision (Phase 1.1):** Implemented the **Encoder → Source** constraint direction. When the user selects an encoder type, the source combo is filtered to only show DataManager keys matching the encoder's expected input type (e.g. selecting `Point2DEncoder` filters source to `PointData` keys). This was chosen because it gives immediate feedback about compatible data sources.
+
+**Integration into DeepLearningPropertiesWidget:**
+- `_rebuildSlotPanels()` now creates `DynamicInputSlotWidget` instances instead of calling `_buildDynamicInputGroup()`.
+- `_syncBindingsFromUi()` calls `toSlotBindingData()` on each widget to produce `SlotBindingData` for state, replacing the old `findChild<QComboBox*>` code.
+- `_refreshDataSourceCombos()` delegates to `widget->refreshDataSources()` for dynamic inputs.
+- `_buildDynamicInputGroup()` and `_modesForEncoder()` were deleted as dead code.
+- Widget pointers stored in `std::vector<DynamicInputSlotWidget*> _dynamic_input_widgets` (non-owning; owned by Qt widget tree).
 
 **Param struct (unified):**
 ```cpp
@@ -289,19 +306,36 @@ struct DynamicInputSlotParams {
 - `encoder` → QComboBox (Image/Point2D/Mask2D/Line2D) + QStackedWidget with per-encoder sub-params (mode, gaussian_sigma, normalize — auto-generated from the library-level param structs)
 - `time_offset` → QSpinBox
 
-**Cross-field constraints (two options, UX decision at implementation time):**
-1. **Source → Encoder:** User picks data source, valid encoder variants are restricted via `updateVariantAlternatives("encoder", validEncoders)`.
-2. **Encoder → Source:** User picks encoder type, source combo is filtered to only show compatible DM keys via `updateAllowedValues("source", filteredKeys)`.
-
 **Wiring:**
-- DM observer callback → `_auto_param_widget->updateAllowedValues("source", keys)`
-- `parametersChanged` signal → constraint enforcement + emit `bindingChanged(DynamicInputSlotParams)`
+- DM observer callback → `widget->refreshDataSources()` → `_auto_param->updateAllowedValues("source", keys)`
+- `parametersChanged` signal → encoder→source constraint enforcement + emit `bindingChanged()`
+
+**Files created:**
+- `DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp` — Public API header.
+- `DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.cpp` — Implementation: schema setup, encoder→source constraint, DM refresh.
+- `tests/WhiskerToolbox/DeepLearning_Widget/DynamicInputSlotWidget.test.cpp` — Catch2 tests (construction, params round-trip, data source refresh, signal emission).
+
+**Files modified:**
+- `DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp` — Added `EncoderVariant`, `DynamicInputSlotParams`, and `ParameterUIHints<DynamicInputSlotParams>`.
+- `DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp` — Added `ParameterUIHints<DynamicInputSlotParams>::annotate()` implementation.
+- `DeepLearning_Widget/CMakeLists.txt` — Added the two new files to the source list.
+- `tests/WhiskerToolbox/DeepLearning_Widget/CMakeLists.txt` — Added `test_dl_dynamic_input_slot` test target.
+- `tests/DeepLearning/param_schemas/DeepLearningParamSchemas.test.cpp` — Added `EncoderVariant` and `DynamicInputSlotParams` schema extraction, JSON round-trip, and UIHints tests.
+
+**Public API:**
+- `params()` — Returns the current `DynamicInputSlotParams`.
+- `setParams(DynamicInputSlotParams)` — Sets parameters and updates the UI.
+- `refreshDataSources()` — Re-populates the source combo from DataManager.
+- `slotName()` — Returns the bound slot name.
+- `bindingChanged()` signal — Emitted on any parameter change.
 
 **Key advantage over old design:** The encoder variant's sub-params (mode, gaussian_sigma, etc.) are auto-generated from the DeepLearning library's per-encoder param structs. Switching encoder in the combo auto-rebuilds the stacked form — no manual `findChild` or schema-swapping needed.
 
 ### 1.2 — `StaticInputSlotWidget`
 
 Handles one non-sequence static input slot (currently the non-sequence branch of `_buildStaticInputGroup`).
+
+**Integration into DeepLearningPropertiesWidget:** Replace the non-sequence branch of `_buildStaticInputGroup()` in `_rebuildSlotPanels()`. Update `_syncBindingsFromUi()` static input section and `_refreshDataSourceCombos()` static source combo refresh to delegate to the new widget. Once all static input handling is extracted (1.2 + 1.3), delete `_buildStaticInputGroup()`.
 
 **Param struct (unified):**
 ```cpp
@@ -328,6 +362,8 @@ struct StaticInputSlotParams {
 ### 1.3 — `SequenceSlotWidget`
 
 Handles one sequence input slot (currently `_buildStaticInputGroup` sequence branch + `_addSequenceEntryRow`).
+
+**Integration into DeepLearningPropertiesWidget:** Replace the sequence branch of `_buildStaticInputGroup()` in `_rebuildSlotPanels()`. Update `_syncBindingsFromUi()` sequence entry and hybrid recurrent binding sections. Delete `_addSequenceEntryRow()` and the sequence branches from `_refreshDataSourceCombos()`. After this + 1.2, `_buildStaticInputGroup()` can be fully deleted.
 
 This is the most complex sub-widget (~500 lines of the current implementation).
 
@@ -366,6 +402,8 @@ using SequenceEntryVariant = rfl::TaggedUnion<
 
 Handles one output slot panel (currently `_buildOutputGroup`).
 
+**Integration into DeepLearningPropertiesWidget:** Replace `_buildOutputGroup()` calls in `_rebuildSlotPanels()`. Update `_syncBindingsFromUi()` output binding section and `_refreshDataSourceCombos()` output target combo refresh. Delete `_buildOutputGroup()`.
+
 **Param struct (unified, already defined in Phase 0.1):**
 ```cpp
 struct OutputSlotParams {
@@ -384,6 +422,8 @@ struct OutputSlotParams {
 ### 1.5 — `RecurrentBindingWidget`
 
 Handles one non-sequence recurrent binding panel (currently `_buildRecurrentInputGroup`).
+
+**Integration into DeepLearningPropertiesWidget:** Replace `_buildRecurrentInputGroup()` calls in `_rebuildSlotPanels()`. Update `_syncBindingsFromUi()` recurrent binding section. Delete `_buildRecurrentInputGroup()`.
 
 **Param struct (unified):**
 ```cpp
@@ -407,6 +447,8 @@ struct RecurrentBindingSlotParams {
 
 Handles the post-encoder module section (currently `_buildPostEncoderSection` + `_enforcePostEncoderDecoderConsistency`).
 
+**Integration into DeepLearningPropertiesWidget:** Replace `_buildPostEncoderSection()` call in `_rebuildSlotPanels()`. Move `_enforcePostEncoderDecoderConsistency()` logic into the widget or a shared constraint enforcer. Delete `_buildPostEncoderSection()` and the post-encoder combo refresh from `_refreshDataSourceCombos()`.
+
 **Param struct (unified):**
 ```cpp
 struct PostEncoderSlotParams {
@@ -428,6 +470,8 @@ struct PostEncoderSlotParams {
 ### 1.7 — `EncoderShapeWidget`
 
 Handles the encoder shape configuration section (currently `_buildEncoderShapeSection` + `_applyEncoderShape`).
+
+**Integration into DeepLearningPropertiesWidget:** Replace `_buildEncoderShapeSection()` call in `_rebuildSlotPanels()`. Move `_applyEncoderShape()` logic into the widget. Delete both methods.
 
 **Contents:**
 - Input height/width spin boxes

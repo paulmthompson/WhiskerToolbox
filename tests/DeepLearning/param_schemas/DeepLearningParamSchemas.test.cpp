@@ -459,3 +459,165 @@ TEST_CASE("RecurrentSequenceEntryParams UIHints annotate allowed_values",
     CHECK(f->allowed_values[1] == "StaticCapture");
     CHECK(f->allowed_values[2] == "FirstOutput");
 }
+
+// ============================================================================
+// EncoderVariant
+// ============================================================================
+
+TEST_CASE("EncoderVariant schema extraction",
+          "[dl_widget][param_schema][encoder_variant]") {
+    struct Wrapper {
+        dl::widget::EncoderVariant encoder = dl::ImageEncoderParams{};
+    };
+
+    auto schema = extractParameterSchema<Wrapper>();
+    auto * f = schema.field("encoder");
+    REQUIRE(f != nullptr);
+    CHECK(f->is_variant);
+    CHECK(f->variant_discriminator == "encoder");
+    REQUIRE(f->variant_alternatives.size() == 4);
+
+    CHECK(f->variant_alternatives[0].tag == "ImageEncoderParams");
+    CHECK(f->variant_alternatives[1].tag == "Point2DEncoderParams");
+    CHECK(f->variant_alternatives[2].tag == "Mask2DEncoderParams");
+    CHECK(f->variant_alternatives[3].tag == "Line2DEncoderParams");
+
+    SECTION("ImageEncoderParams has normalize field") {
+        auto const & s = *f->variant_alternatives[0].schema;
+        CHECK(s.fields.size() == 1);
+        CHECK(s.field("normalize") != nullptr);
+    }
+
+    SECTION("Point2DEncoderParams has mode, gaussian_sigma, normalize") {
+        auto const & s = *f->variant_alternatives[1].schema;
+        CHECK(s.fields.size() == 3);
+        CHECK(s.field("mode") != nullptr);
+        CHECK(s.field("gaussian_sigma") != nullptr);
+        CHECK(s.field("normalize") != nullptr);
+    }
+
+    SECTION("Mask2DEncoderParams has mode and normalize") {
+        auto const & s = *f->variant_alternatives[2].schema;
+        CHECK(s.fields.size() == 2);
+        CHECK(s.field("mode") != nullptr);
+        CHECK(s.field("normalize") != nullptr);
+    }
+
+    SECTION("Line2DEncoderParams has mode, gaussian_sigma, normalize") {
+        auto const & s = *f->variant_alternatives[3].schema;
+        CHECK(s.fields.size() == 3);
+        CHECK(s.field("mode") != nullptr);
+        CHECK(s.field("gaussian_sigma") != nullptr);
+        CHECK(s.field("normalize") != nullptr);
+    }
+}
+
+TEST_CASE("EncoderVariant JSON round-trip",
+          "[dl_widget][param_schema][encoder_variant][roundtrip]") {
+    SECTION("ImageEncoder") {
+        dl::widget::EncoderVariant var{dl::ImageEncoderParams{.normalize = false}};
+        auto json = rfl::json::write(var);
+        auto result = rfl::json::read<dl::widget::EncoderVariant>(json);
+        REQUIRE(result);
+    }
+
+    SECTION("Point2DEncoder with Heatmap mode") {
+        dl::Point2DEncoderParams params{
+                .mode = dl::RasterMode::Heatmap,
+                .gaussian_sigma = 5.0f,
+                .normalize = true};
+        dl::widget::EncoderVariant var{params};
+        auto json = rfl::json::write(var);
+        auto result = rfl::json::read<dl::widget::EncoderVariant>(json);
+        REQUIRE(result);
+    }
+
+    SECTION("Mask2DEncoder") {
+        dl::widget::EncoderVariant var{dl::Mask2DEncoderParams{}};
+        auto json = rfl::json::write(var);
+        auto result = rfl::json::read<dl::widget::EncoderVariant>(json);
+        REQUIRE(result);
+    }
+
+    SECTION("Line2DEncoder") {
+        dl::widget::EncoderVariant var{dl::Line2DEncoderParams{}};
+        auto json = rfl::json::write(var);
+        auto result = rfl::json::read<dl::widget::EncoderVariant>(json);
+        REQUIRE(result);
+    }
+}
+
+// ============================================================================
+// DynamicInputSlotParams
+// ============================================================================
+
+TEST_CASE("DynamicInputSlotParams schema extraction",
+          "[dl_widget][param_schema][dynamic_input]") {
+    auto schema = extractParameterSchema<dl::widget::DynamicInputSlotParams>();
+    REQUIRE(schema.fields.size() == 3);
+
+    SECTION("source field is a dynamic combo string") {
+        auto * f = schema.field("source");
+        REQUIRE(f != nullptr);
+        CHECK(f->type_name == "std::string");
+        CHECK(f->dynamic_combo);
+        CHECK(f->include_none_sentinel);
+        CHECK(f->display_name == "Data Source");
+    }
+
+    SECTION("encoder field is a variant") {
+        auto * f = schema.field("encoder");
+        REQUIRE(f != nullptr);
+        CHECK(f->is_variant);
+        CHECK(f->variant_discriminator == "encoder");
+        CHECK(f->variant_alternatives.size() == 4);
+    }
+
+    SECTION("time_offset is an int field") {
+        auto * f = schema.field("time_offset");
+        REQUIRE(f != nullptr);
+        CHECK(f->type_name == "int");
+    }
+}
+
+TEST_CASE("DynamicInputSlotParams JSON round-trip",
+          "[dl_widget][param_schema][dynamic_input][roundtrip]") {
+    SECTION("Default params") {
+        dl::widget::DynamicInputSlotParams params;
+        auto json = rfl::json::write(params);
+        auto result = rfl::json::read<dl::widget::DynamicInputSlotParams>(json);
+        REQUIRE(result);
+        CHECK(result.value().source.empty());
+        CHECK(result.value().time_offset == 0);
+    }
+
+    SECTION("Fully specified params") {
+        dl::widget::DynamicInputSlotParams params{
+                .source = "media/video_1",
+                .encoder = dl::Point2DEncoderParams{
+                        .mode = dl::RasterMode::Heatmap,
+                        .gaussian_sigma = 3.5f,
+                        .normalize = false},
+                .time_offset = -2};
+        auto json = rfl::json::write(params);
+        auto result = rfl::json::read<dl::widget::DynamicInputSlotParams>(json);
+        REQUIRE(result);
+        CHECK(result.value().source == "media/video_1");
+        CHECK(result.value().time_offset == -2);
+    }
+}
+
+TEST_CASE("DynamicInputSlotParams UIHints annotation",
+          "[dl_widget][param_schema][dynamic_input][uihints]") {
+    auto schema = extractParameterSchema<dl::widget::DynamicInputSlotParams>();
+
+    auto * source = schema.field("source");
+    REQUIRE(source != nullptr);
+    CHECK(source->display_name == "Data Source");
+    CHECK(source->dynamic_combo);
+    CHECK(source->include_none_sentinel);
+
+    auto * time_off = schema.field("time_offset");
+    REQUIRE(time_off != nullptr);
+    CHECK(time_off->display_name == "Time Offset");
+}

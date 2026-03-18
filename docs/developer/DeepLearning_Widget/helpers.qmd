@@ -83,3 +83,80 @@ connect(slot, &SlotBindingWidget::bindingChanged, this, &MyWidget::onChanged);
 QString key = slot->selectedDataSource();
 nlohmann::json params = slot->parametersJson();
 ```
+
+::: {.callout-warning}
+`SlotBindingWidget` is **deprecated** as of Phase 0.2 revision.
+Phase 1 sub-widgets use the unified struct approach via `DynamicInputSlotWidget`
+and `AutoParamWidget::updateAllowedValues()` instead.
+:::
+
+## DynamicInputSlotWidget
+
+**Header:** `DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp`
+
+A self-contained widget for configuring one dynamic (per-frame) input slot.
+Introduced in Phase 1.1 of the refactoring roadmap, it replaces the hand-built
+`_buildDynamicInputGroup()` panel with a schema-driven form powered by
+`AutoParamWidget`.
+
+### Architecture
+
+The widget is driven by the `DynamicInputSlotParams` reflect-cpp struct:
+
+```cpp
+using EncoderVariant = rfl::TaggedUnion<
+    "encoder",
+    dl::ImageEncoderParams,
+    dl::Point2DEncoderParams,
+    dl::Mask2DEncoderParams,
+    dl::Line2DEncoderParams>;
+
+struct DynamicInputSlotParams {
+    std::string source;       ///< DataManager key (dynamic combo)
+    EncoderVariant encoder;   ///< Encoder type + per-encoder params
+    int time_offset = 0;      ///< Temporal offset from current frame
+};
+```
+
+AutoParamWidget automatically generates:
+
+- **`source`** → QComboBox (dynamic, populated from DataManager via `updateAllowedValues`)
+- **`encoder`** → QComboBox (Image/Point2D/Mask2D/Line2D) + QStackedWidget with
+  per-encoder sub-parameter forms (mode, gaussian_sigma, normalize)
+- **`time_offset`** → QSpinBox
+
+### Cross-field constraints
+
+When the encoder selection changes, the widget uses
+`SlotAssembler::dataTypeForEncoder()` and `DataSourceComboHelper::typesFromHint()`
+to filter the source combo to only show compatible DataManager keys. This is
+the **Encoder → Source** constraint direction.
+
+### Typical usage
+
+```cpp
+// In the coordinator widget (DeepLearningPropertiesWidget or its replacement)
+auto* slot_widget = new DynamicInputSlotWidget(slot_descriptor, data_manager, this);
+layout->addWidget(slot_widget);
+
+// Respond to binding changes
+connect(slot_widget, &DynamicInputSlotWidget::bindingChanged, this, [&]() {
+    auto params = slot_widget->params();
+    // Update state...
+});
+
+// Refresh data sources when DataManager changes
+dm_observer_callback = [slot_widget]() {
+    slot_widget->refreshDataSources();
+};
+```
+
+### Advantages over the old design
+
+| Aspect | Old (`_buildDynamicInputGroup`) | New (`DynamicInputSlotWidget`) |
+|---|---|---|
+| Form construction | ~90 lines of manual widget creation | Auto-generated from `ParameterSchema` |
+| State marshaling | `findChild<QComboBox*>("source_" + name)` | `params()` returns typed struct |
+| Encoder sub-params | Flat mode + sigma fields for all encoders | Per-encoder stacked forms |
+| JSON round-trip | Manual field-by-field extraction | `rfl::json::write/read` on the struct |
+| Testing | Requires full widget + DM integration | Struct tests are Qt-free |

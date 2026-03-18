@@ -43,6 +43,10 @@ class DataManager;
 class DeepLearningState;
 class WriteReservation;
 
+namespace dl::widget {
+class DynamicInputSlotWidget;
+}
+
 class DeepLearningPropertiesWidget : public QWidget {
     Q_OBJECT
 
@@ -106,7 +110,6 @@ private:
     void _buildPostEncoderSection();
     void _buildEncoderShapeSection();
 
-    QGroupBox * _buildDynamicInputGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildStaticInputGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildBooleanMaskGroup(dl::TensorSlotDescriptor const & slot);
     QGroupBox * _buildOutputGroup(dl::TensorSlotDescriptor const & slot);
@@ -123,8 +126,6 @@ private:
     void _populateDataSourceCombo(QComboBox * combo,
                                   std::string const & type_hint);
     void _refreshDataSourceCombos();
-    [[nodiscard]] static std::vector<std::string> _modesForEncoder(
-            std::string const & encoder_id);
 
     void _syncBindingsFromUi();
     void _updateWeightsStatus();
@@ -156,6 +157,9 @@ private:
 
     // SlotAssembler owns the model behind a PIMPL firewall.
     std::unique_ptr<SlotAssembler> _assembler;
+
+    // Dynamic input slot widgets (non-owning; owned by _dynamic_container)
+    std::vector<dl::widget::DynamicInputSlotWidget *> _dynamic_input_widgets;
 
     // Cached model display info (clean — no torch types).
     std::optional<ModelDisplayInfo> _current_info;

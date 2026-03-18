@@ -5,6 +5,7 @@
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
+#include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"
@@ -490,6 +491,7 @@ void DeepLearningPropertiesWidget::_updateWeightsStatus() {
 
 void DeepLearningPropertiesWidget::_clearDynamicContent() {
     if (!_dynamic_layout) return;
+    _dynamic_input_widgets.clear();
     QLayoutItem * child = nullptr;
     while ((child = _dynamic_layout->takeAt(0)) != nullptr) {
         if (child->widget()) {
@@ -525,7 +527,12 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                                    _dynamic_container));
                 has_dynamic = true;
             }
-            _dynamic_layout->addWidget(_buildDynamicInputGroup(slot));
+            auto * slot_widget = new dl::widget::DynamicInputSlotWidget(
+                    slot, _data_manager, _dynamic_container);
+            connect(slot_widget, &dl::widget::DynamicInputSlotWidget::bindingChanged,
+                    this, &DeepLearningPropertiesWidget::_syncBindingsFromUi);
+            _dynamic_input_widgets.push_back(slot_widget);
+            _dynamic_layout->addWidget(slot_widget);
         }
     }
 
@@ -864,95 +871,6 @@ void DeepLearningPropertiesWidget::_applyEncoderShape() {
 // ────────────────────────────────────────────────────────────────────────────
 // Slot Panel Builders
 // ────────────────────────────────────────────────────────────────────────────
-
-QGroupBox * DeepLearningPropertiesWidget::_buildDynamicInputGroup(
-        dl::TensorSlotDescriptor const & slot) {
-
-    auto * group =
-            new QGroupBox(QString::fromStdString(slot.name), _dynamic_container);
-    auto * form = new QFormLayout(group);
-
-    if (!slot.description.empty()) {
-        group->setToolTip(QString::fromStdString(slot.description));
-    }
-
-    // Shape label
-    QString shape_str;
-    for (std::size_t i = 0; i < slot.shape.size(); ++i) {
-        if (i > 0) shape_str += QStringLiteral(" \u00D7 ");
-        shape_str += QString::number(slot.shape[i]);
-    }
-    form->addRow(tr("Shape:"), new QLabel(shape_str, group));
-
-    // Source data combo
-    auto * source_combo = new QComboBox(group);
-    source_combo->setObjectName(
-            QString::fromStdString("source_" + slot.name));
-    _populateDataSourceCombo(
-            source_combo,
-            SlotAssembler::dataTypeForEncoder(slot.recommended_encoder));
-    form->addRow(tr("Source:"), source_combo);
-
-    // Encoder combo
-    auto * encoder_combo = new QComboBox(group);
-    encoder_combo->setObjectName(
-            QString::fromStdString("encoder_" + slot.name));
-    for (auto const & enc: SlotAssembler::availableEncoders()) {
-        encoder_combo->addItem(QString::fromStdString(enc));
-    }
-    if (!slot.recommended_encoder.empty()) {
-        int const idx = encoder_combo->findText(
-                QString::fromStdString(slot.recommended_encoder));
-        if (idx >= 0) encoder_combo->setCurrentIndex(idx);
-    }
-    form->addRow(tr("Encoder:"), encoder_combo);
-
-    // Mode combo
-    auto * mode_combo = new QComboBox(group);
-    mode_combo->setObjectName(
-            QString::fromStdString("mode_" + slot.name));
-    for (auto const & m: _modesForEncoder(slot.recommended_encoder)) {
-        mode_combo->addItem(QString::fromStdString(m));
-    }
-    form->addRow(tr("Mode:"), mode_combo);
-
-    // Sigma
-    auto * sigma_spin = new QDoubleSpinBox(group);
-    sigma_spin->setObjectName(
-            QString::fromStdString("sigma_" + slot.name));
-    sigma_spin->setRange(0.1, 50.0);
-    sigma_spin->setValue(2.0);
-    sigma_spin->setSingleStep(0.5);
-    form->addRow(tr("Sigma:"), sigma_spin);
-
-    // Time offset
-    auto * time_offset_spin = new QSpinBox(group);
-    time_offset_spin->setObjectName(
-            QString::fromStdString("time_offset_" + slot.name));
-    time_offset_spin->setRange(-99999, 99999);
-    time_offset_spin->setValue(0);
-    time_offset_spin->setPrefix(QStringLiteral("t"));
-    time_offset_spin->setToolTip(
-            tr("Temporal offset applied to each frame during encoding.\n"
-               "E.g. -1 reads one frame behind, +1 reads one frame ahead.\n"
-               "Values are clamped to [0, max_frame]."));
-    form->addRow(tr("Time Offset:"), time_offset_spin);
-
-    // Re-filter when encoder changes
-    connect(encoder_combo, &QComboBox::currentTextChanged, this,
-            [this, source_combo, mode_combo](QString const & enc_text) {
-                auto const enc_id = enc_text.toStdString();
-                _populateDataSourceCombo(
-                        source_combo,
-                        SlotAssembler::dataTypeForEncoder(enc_id));
-                mode_combo->clear();
-                for (auto const & m: _modesForEncoder(enc_id)) {
-                    mode_combo->addItem(QString::fromStdString(m));
-                }
-            });
-
-    return group;
-}
 
 QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
         dl::TensorSlotDescriptor const & slot) {
@@ -1571,21 +1489,14 @@ void DeepLearningPropertiesWidget::_populateDataSourceCombo(
 void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
     if (!_current_info || !_dynamic_container) return;
 
-    // Refresh dynamic input source combos
+    // Refresh dynamic input source combos via DynamicInputSlotWidget
+    for (auto * slot_widget: _dynamic_input_widgets) {
+        slot_widget->refreshDataSources();
+    }
+
+    // Refresh static input source combos
     for (auto const & slot: _current_info->inputs) {
-        if (!slot.is_static && !slot.is_boolean_mask) {
-            auto * source = _dynamic_container->findChild<QComboBox *>(
-                    QString::fromStdString("source_" + slot.name));
-            auto * encoder = _dynamic_container->findChild<QComboBox *>(
-                    QString::fromStdString("encoder_" + slot.name));
-            if (source) {
-                std::string const enc_id = encoder
-                                                   ? encoder->currentText().toStdString()
-                                                   : slot.recommended_encoder;
-                _populateDataSourceCombo(
-                        source, SlotAssembler::dataTypeForEncoder(enc_id));
-            }
-        } else if (slot.is_static && !slot.is_boolean_mask) {
+        if (slot.is_static && !slot.is_boolean_mask) {
             if (slot.hasSequenceDim()) {
                 // Refresh all sequence entry source combos
                 auto const prefix = QString::fromStdString(
@@ -1631,16 +1542,6 @@ void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
     }
 }
 
-std::vector<std::string> DeepLearningPropertiesWidget::_modesForEncoder(
-        std::string const & encoder_id) {
-
-    if (encoder_id == "ImageEncoder") return {"Raw"};
-    if (encoder_id == "Point2DEncoder") return {"Binary", "Heatmap"};
-    if (encoder_id == "Mask2DEncoder") return {"Binary"};
-    if (encoder_id == "Line2DEncoder") return {"Binary", "Heatmap"};
-    return {"Raw", "Binary", "Heatmap"};
-}
-
 // ────────────────────────────────────────────────────────────────────────────
 // State Sync
 // ────────────────────────────────────────────────────────────────────────────
@@ -1648,31 +1549,10 @@ std::vector<std::string> DeepLearningPropertiesWidget::_modesForEncoder(
 void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
     if (!_current_info) return;
 
-    // ── Input bindings ──
+    // ── Input bindings (from DynamicInputSlotWidgets) ──
     std::vector<SlotBindingData> input_bindings;
-    for (auto const & slot: _current_info->inputs) {
-        if (slot.is_static || slot.is_boolean_mask) continue;
-
-        SlotBindingData binding;
-        binding.slot_name = slot.name;
-
-        auto * source = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("source_" + slot.name));
-        auto * encoder = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("encoder_" + slot.name));
-        auto * mode = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("mode_" + slot.name));
-        auto * sigma = _dynamic_container->findChild<QDoubleSpinBox *>(
-                QString::fromStdString("sigma_" + slot.name));
-        auto * time_offset = _dynamic_container->findChild<QSpinBox *>(
-                QString::fromStdString("time_offset_" + slot.name));
-
-        if (source) binding.data_key = source->currentText().toStdString();
-        if (encoder) binding.encoder_id = encoder->currentText().toStdString();
-        if (mode) binding.mode = mode->currentText().toStdString();
-        if (sigma) binding.gaussian_sigma = static_cast<float>(sigma->value());
-        if (time_offset) binding.time_offset = time_offset->value();
-
+    for (auto const * slot_widget: _dynamic_input_widgets) {
+        auto binding = slot_widget->toSlotBindingData();
         if (!binding.data_key.empty() && binding.data_key != "(None)") {
             input_bindings.push_back(std::move(binding));
         }

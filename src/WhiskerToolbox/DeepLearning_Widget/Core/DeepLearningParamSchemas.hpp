@@ -117,8 +117,28 @@ using DecoderVariant = rfl::TaggedUnion<
         dl::FeatureVectorDecoderParams>;
 
 // ============================================================================
+// Encoder — which encoder to use for a dynamic input slot
+// ============================================================================
+
+/// Tagged union discriminated by "encoder".
+/// All alternative structs are re-used from the DeepLearning library.
+using EncoderVariant = rfl::TaggedUnion<
+        "encoder",
+        dl::ImageEncoderParams,
+        dl::Point2DEncoderParams,
+        dl::Mask2DEncoderParams,
+        dl::Line2DEncoderParams>;
+
+// ============================================================================
 // Composite Slot Parameter Structs
 // ============================================================================
+
+/// Full configuration for one dynamic (per-frame) input slot.
+struct DynamicInputSlotParams {
+    std::string source;                               ///< DataManager key (dynamic combo)
+    EncoderVariant encoder = dl::ImageEncoderParams{};///< Encoder type + params
+    int time_offset = 0;                              ///< Temporal offset from current frame
+};
 
 /// Parameters for an output slot binding (target key + decoder configuration).
 struct OutputSlotParams {
@@ -159,6 +179,11 @@ struct ParameterUIHints<dl::widget::StaticSequenceEntryParams> {
 
 template<>
 struct ParameterUIHints<dl::widget::RecurrentSequenceEntryParams> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
+struct ParameterUIHints<dl::widget::DynamicInputSlotParams> {
     static void annotate(ParameterSchema & schema);
 };
 
