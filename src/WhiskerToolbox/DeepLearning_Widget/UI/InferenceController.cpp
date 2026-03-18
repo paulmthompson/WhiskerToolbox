@@ -5,31 +5,20 @@
 
 #include "InferenceController.hpp"
 
-#include "DeepLearning_Widget/Core/BatchInferenceResult.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
+#include "DeepLearning_Widget/Core/ResultProcessor.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "Lines/Line_Data.hpp"
-#include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
-#include "Observer/Observer_Data.hpp"
-#include "Points/Point_Data.hpp"
-#include "Tensors/TensorData.hpp"
-#include "TimeFrame/StrongTimeTypes.hpp"
-#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <QThread>
-#include <QTimer>
 
-#include <algorithm>
 #include <atomic>
-#include <map>
-#include <set>
-#include <variant>
+#include <memory>
 
 // ════════════════════════════════════════════════════════════════════════════
 // BatchInferenceWorker — runs SlotAssembler::runBatchRangeOffline on a
@@ -75,7 +64,7 @@ public:
     [[nodiscard]] std::string const & errorMessage() const { return _error_message; }
 
 signals:
-    void progressChanged(int current, int total);
+    void progressChanged(int _t1, int _t2);
 
 protected:
     void run() override {
@@ -125,13 +114,9 @@ struct InferenceController::Impl {
     SlotAssembler * _assembler = nullptr;
     std::shared_ptr<DataManager> _dm;
     std::shared_ptr<DeepLearningState> _state;
+    std::unique_ptr<ResultProcessor> _result_processor;
 
     QThread * _batch_worker = nullptr;
-    QTimer * _merge_timer = nullptr;
-    std::shared_ptr<WriteReservation> _write_reservation;
-
-    std::map<std::string, std::vector<std::pair<int, std::vector<float>>>>
-            _pending_feature_rows;
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -147,21 +132,18 @@ InferenceController::InferenceController(SlotAssembler * assembler,
     _impl->_assembler = assembler;
     _impl->_dm = std::move(dm);
     _impl->_state = std::move(state);
+    _impl->_result_processor = std::make_unique<ResultProcessor>(
+            _impl->_dm, _impl->_state, this);
 }
 
 InferenceController::~InferenceController() {
-    if (_impl->_merge_timer) {
-        _impl->_merge_timer->stop();
-        _impl->_merge_timer->deleteLater();
-        _impl->_merge_timer = nullptr;
-    }
     if (_impl->_batch_worker) {
-        dynamic_cast<BatchInferenceWorker *>(_impl->_batch_worker)->requestCancel();
+        dynamic_cast<BatchInferenceWorker *>(_impl->_batch_worker)
+                ->requestCancel();
         _impl->_batch_worker->wait();
         delete _impl->_batch_worker;
         _impl->_batch_worker = nullptr;
     }
-    _impl->_write_reservation.reset();
 }
 
 bool InferenceController::isRunning() const {
@@ -214,7 +196,7 @@ void InferenceController::runBatch(int start, int end, int /*batch_size*/) {
         return;
     }
 
-    _impl->_pending_feature_rows.clear();
+    _impl->_result_processor->clear();
 
     ImageSize source_size{256, 256};
     for (auto const & binding: _impl->_state->inputBindings()) {
@@ -259,94 +241,8 @@ void InferenceController::runBatch(int start, int end, int /*batch_size*/) {
             this, &InferenceController::batchProgressChanged);
 
     connect(worker, &QThread::finished, this, [this, worker]() {
-        if (_impl->_merge_timer) {
-            _impl->_merge_timer->stop();
-            _impl->_merge_timer->deleteLater();
-            _impl->_merge_timer = nullptr;
-        }
-
-        // Final merge
-        if (_impl->_write_reservation) {
-            auto pending = _impl->_write_reservation->drain();
-            for (auto & fr: pending) {
-                TimeFrameIndex const frame_idx(fr.frame_index);
-                std::visit(
-                        [&](auto && decoded) {
-                            using T = std::decay_t<decltype(decoded)>;
-                            if constexpr (std::is_same_v<T, Mask2D>) {
-                                auto mask_data =
-                                        _impl->_dm->getData<MaskData>(fr.data_key);
-                                if (!mask_data) {
-                                    _impl->_dm->setData<MaskData>(fr.data_key,
-                                                                  TimeKey("media"));
-                                    mask_data =
-                                            _impl->_dm->getData<MaskData>(fr.data_key);
-                                }
-                                if (mask_data) {
-                                    mask_data->addAtTime(
-                                            frame_idx,
-                                            std::forward<decltype(decoded)>(decoded),
-                                            NotifyObservers::No);
-                                }
-                            } else if constexpr (std::is_same_v<T, Point2D<float>>) {
-                                auto point_data =
-                                        _impl->_dm->getData<PointData>(fr.data_key);
-                                if (!point_data) {
-                                    _impl->_dm->setData<PointData>(fr.data_key,
-                                                                   TimeKey("media"));
-                                    point_data =
-                                            _impl->_dm->getData<PointData>(fr.data_key);
-                                }
-                                if (point_data) {
-                                    point_data->addAtTime(
-                                            frame_idx,
-                                            std::forward<decltype(decoded)>(decoded),
-                                            NotifyObservers::No);
-                                }
-                            } else if constexpr (std::is_same_v<T, Line2D>) {
-                                auto line_data =
-                                        _impl->_dm->getData<LineData>(fr.data_key);
-                                if (!line_data) {
-                                    _impl->_dm->setData<LineData>(fr.data_key,
-                                                                  TimeKey("media"));
-                                    line_data =
-                                            _impl->_dm->getData<LineData>(fr.data_key);
-                                }
-                                if (line_data) {
-                                    line_data->addAtTime(
-                                            frame_idx,
-                                            std::forward<decltype(decoded)>(decoded),
-                                            NotifyObservers::No);
-                                }
-                            } else if constexpr (std::is_same_v<T, std::vector<float>>) {
-                                _impl->_pending_feature_rows[fr.data_key].emplace_back(
-                                        fr.frame_index,
-                                        std::forward<decltype(decoded)>(decoded));
-                            }
-                        },
-                        fr.data);
-            }
-        }
-
-        for (auto & [key, rows]: _impl->_pending_feature_rows) {
-            if (rows.empty()) continue;
-            std::sort(rows.begin(), rows.end(),
-                     [](auto const & a, auto const & b) { return a.first < b.first; });
-
-            std::size_t const n_rows = rows.size();
-            std::size_t const n_cols = rows.front().second.size();
-
-            std::vector<float> flat_data;
-            flat_data.reserve(n_rows * n_cols);
-            for (auto const & [frame, vec]: rows) {
-                flat_data.insert(flat_data.end(), vec.begin(), vec.end());
-            }
-
-            auto tensor = std::make_shared<TensorData>(
-                    TensorData::createOrdinal2D(flat_data, n_rows, n_cols));
-            _impl->_dm->setData<TensorData>(key, tensor, TimeKey("time"));
-        }
-        _impl->_pending_feature_rows.clear();
+        _impl->_result_processor->stopMergeTimer();
+        _impl->_result_processor->flushFeatureVectors();
 
         bool const success = worker->success();
         QString const error_msg =
@@ -354,95 +250,15 @@ void InferenceController::runBatch(int start, int end, int /*batch_size*/) {
 
         worker->deleteLater();
         _impl->_batch_worker = nullptr;
-        _impl->_write_reservation.reset();
 
         emit batchFinished(success, error_msg);
         emit runningChanged(false);
     });
 
-    _impl->_write_reservation = std::move(reservation);
+    _impl->_result_processor->setReservation(reservation);
+    _impl->_result_processor->startMergeTimer();
     _impl->_batch_worker = worker;
     emit runningChanged(true);
-
-    _impl->_merge_timer = new QTimer(this);
-    connect(_impl->_merge_timer, &QTimer::timeout, this, [this]() {
-        if (!_impl->_write_reservation) return;
-
-        auto pending = _impl->_write_reservation->drain();
-        if (pending.empty()) return;
-
-        for (auto & fr: pending) {
-            TimeFrameIndex const frame_idx(fr.frame_index);
-            std::visit(
-                    [&](auto && decoded) {
-                        using T = std::decay_t<decltype(decoded)>;
-                        if constexpr (std::is_same_v<T, Mask2D>) {
-                            auto mask_data =
-                                    _impl->_dm->getData<MaskData>(fr.data_key);
-                            if (!mask_data) {
-                                _impl->_dm->setData<MaskData>(fr.data_key,
-                                                             TimeKey("media"));
-                                mask_data =
-                                        _impl->_dm->getData<MaskData>(fr.data_key);
-                            }
-                            if (mask_data) {
-                                mask_data->addAtTime(
-                                        frame_idx,
-                                        std::forward<decltype(decoded)>(decoded),
-                                        NotifyObservers::No);
-                            }
-                        } else if constexpr (std::is_same_v<T, Point2D<float>>) {
-                            auto point_data =
-                                    _impl->_dm->getData<PointData>(fr.data_key);
-                            if (!point_data) {
-                                _impl->_dm->setData<PointData>(fr.data_key,
-                                                              TimeKey("media"));
-                                point_data =
-                                        _impl->_dm->getData<PointData>(fr.data_key);
-                            }
-                            if (point_data) {
-                                point_data->addAtTime(
-                                        frame_idx,
-                                        std::forward<decltype(decoded)>(decoded),
-                                        NotifyObservers::No);
-                            }
-                        } else if constexpr (std::is_same_v<T, Line2D>) {
-                            auto line_data =
-                                    _impl->_dm->getData<LineData>(fr.data_key);
-                            if (!line_data) {
-                                _impl->_dm->setData<LineData>(fr.data_key,
-                                                              TimeKey("media"));
-                                line_data =
-                                        _impl->_dm->getData<LineData>(fr.data_key);
-                            }
-                            if (line_data) {
-                                line_data->addAtTime(
-                                        frame_idx,
-                                        std::forward<decltype(decoded)>(decoded),
-                                        NotifyObservers::No);
-                            }
-                        } else if constexpr (std::is_same_v<T, std::vector<float>>) {
-                            _impl->_pending_feature_rows[fr.data_key].emplace_back(
-                                    fr.frame_index,
-                                    std::forward<decltype(decoded)>(decoded));
-                        }
-                    },
-                    fr.data);
-        }
-
-        std::set<std::string> affected_keys;
-        for (auto const & fr: pending) {
-            if (!std::holds_alternative<std::vector<float>>(fr.data)) {
-                affected_keys.insert(fr.data_key);
-            }
-        }
-        for (auto const & key: affected_keys) {
-            if (auto d = _impl->_dm->getData<MaskData>(key)) d->notifyObservers();
-            if (auto d = _impl->_dm->getData<PointData>(key)) d->notifyObservers();
-            if (auto d = _impl->_dm->getData<LineData>(key)) d->notifyObservers();
-        }
-    });
-    _impl->_merge_timer->start(200);
 
     worker->start();
 }

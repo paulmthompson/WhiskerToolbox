@@ -12,7 +12,7 @@ All seven slot-type sub-widgets are in `UI/Helpers/`. Inference orchestration is
 | State sync (UI → State) | `_syncBindingsFromUi` (now uses `dl::conversion`) |
 | Model selection + weights | `_populateModelCombo`, `_onModelComboChanged`, `_loadModelIfReady`, `_updateWeightsStatus` |
 | Run button handlers | `_onRunSingleFrame`, `_onRunBatch`, `_onRunRecurrentSequence`, `_onPredictCurrentFrame` — thin wrappers that show dialogs, call `_syncBindingsFromUi`, then delegate to `InferenceController` |
-| Result merging | In `InferenceController` (merge timer + `_pending_feature_rows`; Phase 2.2 will extract to `ResultProcessor`) |
+| Result merging | In `ResultProcessor` (merge timer + `_pending_feature_rows`) |
 | Constraints | `_updateBatchSizeConstraint`, `_enforcePostEncoderDecoderConsistency` |
 | Static capture coordination | `_onCaptureStaticInput`, `_onCaptureSequenceEntry` |
 
@@ -29,11 +29,12 @@ DeepLearning_Widget/
 │   ├── DeepLearningParamSchemas.hpp/cpp   ← widget-level variant + slot param structs
 │   ├── DeepLearningState.hpp/cpp
 │   ├── SlotAssembler.hpp/cpp              ← PIMPL firewall; all libtorch usage here
+│   ├── ResultProcessor.hpp/cpp
 │   └── WriteReservation.hpp
 └── UI/
     ├── DeepLearningPropertiesWidget.hpp/cpp  ← coordinator; delegates inference to InferenceController
     ├── DeepLearningViewWidget.hpp/cpp
-    ├── InferenceController.hpp/cpp        ← Phase 2.1: owns BatchInferenceWorker, merge timer, result merging
+    ├── InferenceController.hpp/cpp        ← Phase 2.1: owns BatchInferenceWorker and delegates result processing
     └── Helpers/
         ├── DataSourceComboHelper.hpp/cpp   ← keysForTypes(), typesFromHint() utilities
         ├── DynamicInputSlotWidget.hpp/cpp
@@ -98,13 +99,13 @@ All seven slot-type sub-widgets extracted into `UI/Helpers/`. Each owns its Auto
 
 ### 2.1 — `InferenceController` ✅ COMPLETED
 
-All inference orchestration has been extracted into `InferenceController` (`UI/InferenceController.hpp/cpp`), which owns the worker thread lifecycle, merge timer, and result merging (including `_pending_feature_rows`). Phase 2.2 will extract the latter into `ResultProcessor`.
+All inference orchestration has been extracted into `InferenceController` (`UI/InferenceController.hpp/cpp`), which owns the worker thread lifecycle and delegates incremental/final result processing to `ResultProcessor`.
 
 **Extracted from `DeepLearningPropertiesWidget`:**
 - `_onRunSingleFrame`, `_onRunBatch`, `_onRunRecurrentSequence`, `_onPredictCurrentFrame` logic
 - `_setBatchRunning`, `_onCancelBatch`, `_onBatchFinished`
-- `_batch_worker` (`QThread*`), `_write_reservation`, `_merge_timer`
-- `_mergeResults()` and `_pending_feature_rows` (to move to `ResultProcessor` in Phase 2.2)
+- `_batch_worker` (`QThread*`) and cancellation
+- Delegation wiring to `ResultProcessor` for progressive geometry writes and feature-vector accumulation
 
 **API (as implemented):**
 ```cpp
@@ -133,14 +134,14 @@ signals:
 
 The properties widget holds an `InferenceController*`, connects button clicks (after dialogs) to controller slots, and forwards progress signals to `DeepLearningViewWidget`. Pre-run sync: widget calls `_syncBindingsFromUi()` before delegating (Option 1).
 
-### 2.2 — `ResultProcessor`
+### 2.2 — `ResultProcessor` ✅ COMPLETED
 
 Extract result merging and feature-vector accumulation into a dedicated class.
 
 **Absorbs from `DeepLearningPropertiesWidget`:**
-- `_mergeResults()`
-- `_pending_feature_rows` accumulation (`std::map<std::string, std::vector<...>>`)
+- `_pending_feature_rows` accumulation (`std::map<std::string, std::vector<std::pair<int, std::vector<float>>>>` for `std::vector<float>` feature outputs)
 - `_merge_timer` (`QTimer*`) lifecycle
+- Drains `WriteReservation` results, writing geometry immediately (Mask/Point/Line) and deferring TensorData feature-vector flush
 
 ```cpp
 class ResultProcessor : public QObject {
@@ -149,15 +150,20 @@ public:
     ResultProcessor(std::shared_ptr<DataManager> dm,
                     std::shared_ptr<DeepLearningState> state,
                     QObject* parent = nullptr);
-    void acceptResult(BatchInferenceResult const& result);
+    void acceptResults(std::vector<FrameResult> results);
     void flushFeatureVectors();
+    void clear();
+
+    void setReservation(std::shared_ptr<WriteReservation> reservation);
+    void startMergeTimer();
+    void stopMergeTimer();
 
 signals:
     void resultsWritten(int count);
 };
 ```
 
-`InferenceController` holds a `ResultProcessor*` and calls `acceptResult()` / `flushFeatureVectors()` — no widget dependency.
+`InferenceController` owns a `std::unique_ptr<ResultProcessor>` and uses it to start/stop the merge timer; `ResultProcessor` remains Qt-free regarding libtorch usage and writes decoded outputs into DataManager.
 
 ### Open question for Phase 2
 
@@ -234,7 +240,7 @@ Sub-widget tests are in place (8 test binaries, ~1,700 lines of tests total). Re
 
 ```
 Phase 2.1  InferenceController      ✅ DONE
-Phase 2.2  ResultProcessor          — extract from InferenceController
+Phase 2.2  ResultProcessor          ✅ DONE
 Phase 3.1  BindingConversion        ✅ DONE
 Phase 3.2  ConstraintEnforcer       — small, immediately testable
 Phase 4    Fill test gaps           — after each phase above

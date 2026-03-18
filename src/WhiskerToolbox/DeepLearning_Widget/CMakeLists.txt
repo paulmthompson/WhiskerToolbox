@@ -8,6 +8,8 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     Core/BindingConversion.hpp
     Core/BindingConversion.cpp
     Core/DeepLearningBindingData.hpp
+    Core/ResultProcessor.hpp
+    Core/ResultProcessor.cpp
     Core/DeepLearningParamSchemas.hpp
     Core/DeepLearningParamSchemas.cpp
     Core/DeepLearningState.hpp
