@@ -41,8 +41,6 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     UI/Helpers/SequenceSlotWidget.cpp
     UI/Helpers/StaticInputSlotWidget.hpp
     UI/Helpers/StaticInputSlotWidget.cpp
-    UI/Helpers/SlotBindingWidget.hpp
-    UI/Helpers/SlotBindingWidget.cpp
 )
 
 add_library(DeepLearning_Widget STATIC ${DEEP_LEARNING_WIDGET_SOURCES})
