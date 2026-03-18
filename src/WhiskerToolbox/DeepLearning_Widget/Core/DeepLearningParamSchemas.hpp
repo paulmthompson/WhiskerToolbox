@@ -140,6 +140,12 @@ struct DynamicInputSlotParams {
     int time_offset = 0;                              ///< Temporal offset from current frame
 };
 
+/// Full configuration for one non-sequence static (memory) input slot.
+struct StaticInputSlotParams {
+    std::string source;                                       ///< DataManager key (dynamic combo)
+    CaptureModeVariant capture_mode = RelativeCaptureParams{};///< Relative or Absolute capture mode
+};
+
 /// Parameters for an output slot binding (target key + decoder configuration).
 struct OutputSlotParams {
     std::string data_key;                        ///< DataManager key for results
@@ -179,6 +185,11 @@ struct ParameterUIHints<dl::widget::StaticSequenceEntryParams> {
 
 template<>
 struct ParameterUIHints<dl::widget::RecurrentSequenceEntryParams> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
+struct ParameterUIHints<dl::widget::StaticInputSlotParams> {
     static void annotate(ParameterSchema & schema);
 };
 

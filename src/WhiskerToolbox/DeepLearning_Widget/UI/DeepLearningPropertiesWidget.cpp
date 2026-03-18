@@ -6,6 +6,7 @@
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"
@@ -459,6 +460,11 @@ void DeepLearningPropertiesWidget::_loadModelIfReady() {
     _run_batch_btn->setEnabled(ready);
     _run_recurrent_btn->setEnabled(ready);
     _predict_current_frame_btn->setEnabled(ready && _current_time_position.has_value());
+
+    // Notify all static input slot widgets of model readiness (enables capture button)
+    for (auto * slot_widget: _static_input_widgets) {
+        slot_widget->setModelReady(ready);
+    }
 }
 
 void DeepLearningPropertiesWidget::_updateWeightsStatus() {
@@ -492,6 +498,7 @@ void DeepLearningPropertiesWidget::_updateWeightsStatus() {
 void DeepLearningPropertiesWidget::_clearDynamicContent() {
     if (!_dynamic_layout) return;
     _dynamic_input_widgets.clear();
+    _static_input_widgets.clear();
     QLayoutItem * child = nullptr;
     while ((child = _dynamic_layout->takeAt(0)) != nullptr) {
         if (child->widget()) {
@@ -546,7 +553,32 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                                    _dynamic_container));
                 has_static = true;
             }
-            _dynamic_layout->addWidget(_buildStaticInputGroup(slot));
+            if (slot.hasSequenceDim()) {
+                // Sequence slots still use the old builder (Phase 1.3 will migrate these)
+                _dynamic_layout->addWidget(_buildStaticInputGroup(slot));
+            } else {
+                // Non-sequence static slot: use the new StaticInputSlotWidget
+                auto * slot_widget = new dl::widget::StaticInputSlotWidget(
+                        slot, _data_manager, _dynamic_container);
+                connect(slot_widget,
+                        &dl::widget::StaticInputSlotWidget::bindingChanged,
+                        this,
+                        &DeepLearningPropertiesWidget::_syncBindingsFromUi);
+                connect(slot_widget,
+                        &dl::widget::StaticInputSlotWidget::captureRequested,
+                        this,
+                        &DeepLearningPropertiesWidget::_onCaptureStaticInput);
+                connect(slot_widget,
+                        &dl::widget::StaticInputSlotWidget::captureInvalidated,
+                        this,
+                        [this](std::string const & slot_name) {
+                            auto const key = staticCacheKey(slot_name, 0);
+                            _assembler->clearStaticCacheEntry(key);
+                            emit staticCacheChanged();
+                        });
+                _static_input_widgets.push_back(slot_widget);
+                _dynamic_layout->addWidget(slot_widget);
+            }
         }
     }
 
@@ -983,92 +1015,6 @@ QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
                         emit staticCacheChanged();
                     }
                     last->deleteLater();
-                });
-    } else {
-        // ── Non-sequence static slot (original single-entry UI) ──
-        auto * form = new QFormLayout();
-
-        // Source data combo
-        auto * source_combo = new QComboBox(group);
-        source_combo->setObjectName(
-                QString::fromStdString("static_source_" + slot.name));
-        _populateDataSourceCombo(
-                source_combo,
-                SlotAssembler::dataTypeForEncoder(slot.recommended_encoder));
-        form->addRow(tr("Source:"), source_combo);
-
-        // Capture mode combo
-        auto * mode_combo = new QComboBox(group);
-        mode_combo->setObjectName(
-                QString::fromStdString("static_mode_" + slot.name));
-        mode_combo->addItem(tr("Relative"), QStringLiteral("Relative"));
-        mode_combo->addItem(tr("Absolute"), QStringLiteral("Absolute"));
-        form->addRow(tr("Mode:"), mode_combo);
-
-        // Time offset (used in Relative mode)
-        auto * offset_spin = new QSpinBox(group);
-        offset_spin->setObjectName(
-                QString::fromStdString("static_offset_" + slot.name));
-        offset_spin->setRange(-99999, 0);
-        offset_spin->setValue(0);
-        offset_spin->setPrefix(QStringLiteral("t"));
-        offset_spin->setToolTip(
-                tr("Time offset for Relative mode (e.g. -1 = previous frame).\n"
-                   "Ignored in Absolute mode (uses the captured frame)."));
-        form->addRow(tr("Time Offset:"), offset_spin);
-
-        layout->addLayout(form);
-
-        // Capture button + status (for Absolute mode)
-        auto * capture_row = new QHBoxLayout();
-        auto * capture_btn = new QPushButton(
-                tr("\u2B07 Capture Current Frame"), group);
-        capture_btn->setObjectName(
-                QString::fromStdString("static_capture_" + slot.name));
-        capture_btn->setToolTip(
-                tr("Encode data from the current frame and freeze it.\n"
-                   "The cached tensor will be reused for all subsequent runs."));
-        capture_btn->setEnabled(false);
-        capture_row->addWidget(capture_btn);
-
-        auto * capture_status = new QLabel(tr("Not captured"), group);
-        capture_status->setObjectName(
-                QString::fromStdString("static_capture_status_" + slot.name));
-        capture_status->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
-        capture_row->addWidget(capture_status);
-
-        layout->addLayout(capture_row);
-
-        // Wire capture mode switching
-        auto slot_name = slot.name;
-        connect(mode_combo, &QComboBox::currentTextChanged, this,
-                [this, offset_spin, capture_btn, capture_status, slot_name](
-                        QString const & text) {
-                    bool const is_absolute = (text == tr("Absolute"));
-                    offset_spin->setEnabled(!is_absolute);
-                    capture_btn->setEnabled(is_absolute && _assembler->isModelReady());
-                    if (!is_absolute) {
-                        capture_status->setText(tr("Not captured"));
-                        capture_status->setStyleSheet(
-                                QStringLiteral("color: gray; font-size: 10px;"));
-                    } else {
-                        _updateCaptureButtonState(slot_name);
-                    }
-                });
-
-        // Wire capture button
-        connect(capture_btn, &QPushButton::clicked, this,
-                [this, slot_name] { _onCaptureStaticInput(slot_name); });
-
-        // Invalidate cache when data source changes
-        connect(source_combo, &QComboBox::currentTextChanged, this,
-                [this, slot_name, capture_status](QString const &) {
-                    auto const key = staticCacheKey(slot_name, 0);
-                    _assembler->clearStaticCacheEntry(key);
-                    capture_status->setText(tr("Not captured"));
-                    capture_status->setStyleSheet(
-                            QStringLiteral("color: gray; font-size: 10px;"));
-                    emit staticCacheChanged();
                 });
     }
 
@@ -1510,13 +1456,12 @@ void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
                     }
                 }
             } else {
-                auto * source = _dynamic_container->findChild<QComboBox *>(
-                        QString::fromStdString("static_source_" + slot.name));
-                if (source) {
-                    _populateDataSourceCombo(
-                            source,
-                            SlotAssembler::dataTypeForEncoder(
-                                    slot.recommended_encoder));
+                // Delegate to the StaticInputSlotWidget
+                for (auto * slot_widget: _static_input_widgets) {
+                    if (slot_widget->slotName() == slot.name) {
+                        slot_widget->refreshDataSources();
+                        break;
+                    }
                 }
             }
         }
@@ -1673,35 +1618,25 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
                 }
             }
         } else {
-            // Non-sequence slot: single entry (original behavior)
-            StaticInputData si;
-            si.slot_name = slot.name;
-            si.memory_index = 0;
-
-            auto * source = _dynamic_container->findChild<QComboBox *>(
-                    QString::fromStdString("static_source_" + slot.name));
-            auto * offset = _dynamic_container->findChild<QSpinBox *>(
-                    QString::fromStdString("static_offset_" + slot.name));
-            auto * mode = _dynamic_container->findChild<QComboBox *>(
-                    QString::fromStdString("static_mode_" + slot.name));
-
-            if (source) si.data_key = source->currentText().toStdString();
-            if (offset) si.time_offset = offset->value();
-            if (mode) {
-                si.capture_mode_str =
-                        mode->currentData().toString().toStdString();
-            }
-
-            // Preserve captured_frame from existing state
-            for (auto const & prev: _state->staticInputs()) {
-                if (prev.slot_name == slot.name) {
-                    si.captured_frame = prev.captured_frame;
+            // Non-sequence slot: delegate to the StaticInputSlotWidget
+            for (auto const * slot_widget: _static_input_widgets) {
+                if (slot_widget->slotName() == slot.name) {
+                    auto si = slot_widget->toStaticInputData();
+                    // Preserve captured_frame from existing state if widget
+                    // value is -1 (panel was rebuilt without a recapture)
+                    if (si.captured_frame < 0) {
+                        for (auto const & prev: _state->staticInputs()) {
+                            if (prev.slot_name == slot.name) {
+                                si.captured_frame = prev.captured_frame;
+                                break;
+                            }
+                        }
+                    }
+                    if (!si.data_key.empty() && si.data_key != "(None)") {
+                        static_inputs.push_back(std::move(si));
+                    }
                     break;
                 }
-            }
-
-            if (!si.data_key.empty() && si.data_key != "(None)") {
-                static_inputs.push_back(std::move(si));
             }
         }
     }
@@ -2143,7 +2078,19 @@ void DeepLearningPropertiesWidget::_onCaptureStaticInput(
         _state->setStaticInputs(std::move(inputs));
     }
 
-    _updateCaptureButtonState(slot_name);
+    // Update the StaticInputSlotWidget capture status display
+    auto const key = staticCacheKey(slot_name, 0);
+    for (auto * slot_widget: _static_input_widgets) {
+        if (slot_widget->slotName() == slot_name) {
+            if (ok && _assembler->hasStaticCacheEntry(key)) {
+                auto const range = _assembler->staticCacheTensorRange(key);
+                slot_widget->setCapturedStatus(frame, range);
+            } else {
+                slot_widget->clearCapturedStatus();
+            }
+            break;
+        }
+    }
     emit staticCacheChanged();
 }
 
@@ -2219,44 +2166,6 @@ void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
     }
 
     emit staticCacheChanged();
-}
-
-void DeepLearningPropertiesWidget::_updateCaptureButtonState(
-        std::string const & slot_name) {
-
-    auto * status = _dynamic_container->findChild<QLabel *>(
-            QString::fromStdString("static_capture_status_" + slot_name));
-    if (!status) return;
-
-    auto const key = staticCacheKey(slot_name, 0);
-    if (_assembler->hasStaticCacheEntry(key)) {
-        auto range = _assembler->staticCacheTensorRange(key);
-        auto shape = _assembler->staticCacheTensorShape(key);
-
-        // Find which frame was captured
-        int captured_frame = -1;
-        for (auto const & si: _state->staticInputs()) {
-            if (si.slot_name == slot_name) {
-                captured_frame = si.captured_frame;
-                break;
-            }
-        }
-
-        QString info = tr("\u2713 Captured");
-        if (captured_frame >= 0) {
-            info += tr(" (frame %1)").arg(captured_frame);
-        }
-        info += tr(" range [%1, %2]")
-                        .arg(static_cast<double>(range.first), 0, 'f', 2)
-                        .arg(static_cast<double>(range.second), 0, 'f', 2);
-        status->setText(info);
-        status->setStyleSheet(
-                QStringLiteral("color: green; font-size: 10px;"));
-    } else {
-        status->setText(tr("Not captured"));
-        status->setStyleSheet(
-                QStringLiteral("color: gray; font-size: 10px;"));
-    }
 }
 
 // ────────────────────────────────────────────────────────────────────────────

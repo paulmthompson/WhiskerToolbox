@@ -23,6 +23,8 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     UI/Helpers/DataSourceComboHelper.cpp
     UI/Helpers/DynamicInputSlotWidget.hpp
     UI/Helpers/DynamicInputSlotWidget.cpp
+    UI/Helpers/StaticInputSlotWidget.hpp
+    UI/Helpers/StaticInputSlotWidget.cpp
     UI/Helpers/SlotBindingWidget.hpp
     UI/Helpers/SlotBindingWidget.cpp
 )

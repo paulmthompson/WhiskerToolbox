@@ -51,6 +51,21 @@ void ParameterUIHints<dl::widget::RecurrentSequenceEntryParams>::annotate(
     }
 }
 
+void ParameterUIHints<dl::widget::StaticInputSlotParams>::annotate(
+        ParameterSchema & schema) {
+    if (auto * f = schema.field("source")) {
+        f->display_name = "Data Source";
+        f->tooltip = "DataManager key for the static input data";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
+    }
+    if (auto * f = schema.field("capture_mode")) {
+        f->tooltip =
+                "Relative: re-encode each run at current_frame + offset.\n"
+                "Absolute: capture once at a chosen frame and reuse.";
+    }
+}
+
 void ParameterUIHints<dl::widget::DynamicInputSlotParams>::annotate(
         ParameterSchema & schema) {
     if (auto * f = schema.field("source")) {

@@ -331,7 +331,7 @@ struct DynamicInputSlotParams {
 
 **Key advantage over old design:** The encoder variant's sub-params (mode, gaussian_sigma, etc.) are auto-generated from the DeepLearning library's per-encoder param structs. Switching encoder in the combo auto-rebuilds the stacked form — no manual `findChild` or schema-swapping needed.
 
-### 1.2 — `StaticInputSlotWidget`
+### 1.2 — `StaticInputSlotWidget` ✅ COMPLETED
 
 Handles one non-sequence static input slot (currently the non-sequence branch of `_buildStaticInputGroup`).
 
@@ -358,6 +358,41 @@ struct StaticInputSlotParams {
 **Wiring:**
 - DM observer callback → `updateAllowedValues("source", keys)`
 - `parametersChanged` → show/hide capture button based on active variant
+
+**Integration into DeepLearningPropertiesWidget:**
+- `_rebuildSlotPanels()` creates `StaticInputSlotWidget` instances for non-sequence static slots instead of calling the old branch of `_buildStaticInputGroup()`.
+- `_syncBindingsFromUi()` calls `toStaticInputData()` on each widget, with a state fallback for `captured_frame` on freshly-rebuilt panels.
+- `_refreshDataSourceCombos()` delegates to `widget->refreshDataSources()` for non-sequence static slots.
+- `_loadModelIfReady()` calls `widget->setModelReady(ready)` on all static input widgets to enable/disable the capture button.
+- `_onCaptureStaticInput()` now calls `widget->setCapturedStatus(frame, range)` / `widget->clearCapturedStatus()` to update the status display, replacing the old `_updateCaptureButtonState()` method which was deleted.
+- The non-sequence branch of `_buildStaticInputGroup()` was removed; only the sequence branch remains (Phase 1.3 will remove the whole method).
+- Widget pointers stored in `std::vector<StaticInputSlotWidget*> _static_input_widgets` (non-owning; owned by Qt widget tree).
+
+**Files created:**
+- `DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp` — Public API header.
+- `DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.cpp` — Implementation: schema setup, capture row show/hide, capture status management, source invalidation.
+- `tests/WhiskerToolbox/DeepLearning_Widget/StaticInputSlotWidget.test.cpp` — Catch2 tests (construction, params round-trip, data source refresh, capture status, signal validity).
+
+**Files modified:**
+- `DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp` — Added `StaticInputSlotParams` struct and `ParameterUIHints<StaticInputSlotParams>` declaration.
+- `DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp` — Added `ParameterUIHints<StaticInputSlotParams>::annotate()` implementation.
+- `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.hpp` — Added `StaticInputSlotWidget` forward declaration, `_static_input_widgets` member; removed `_updateCaptureButtonState` declaration.
+- `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.cpp` — All integration changes above; deleted `_updateCaptureButtonState` method body.
+- `DeepLearning_Widget/CMakeLists.txt` — Added the two new source files.
+- `tests/WhiskerToolbox/DeepLearning_Widget/CMakeLists.txt` — Added `test_dl_static_input_slot` test target.
+
+**Public API:**
+- `params()` — Returns the current `StaticInputSlotParams`.
+- `setParams(StaticInputSlotParams)` — Sets parameters and updates the UI.
+- `refreshDataSources()` — Re-populates the source combo from DataManager.
+- `slotName()` — Returns the bound slot name.
+- `toStaticInputData()` — Converts current params to `StaticInputData` for state sync.
+- `setCapturedStatus(frame, range)` — Updates the status label after successful capture.
+- `clearCapturedStatus()` — Resets status label to "Not captured".
+- `setModelReady(bool)` — Enables/disables the capture button.
+- `bindingChanged()` signal — Emitted on any parameter change.
+- `captureRequested(slot_name)` signal — Emitted when user clicks the capture button.
+- `captureInvalidated(slot_name)` signal — Emitted when source changes (parent should clear assembler cache).
 
 ### 1.3 — `SequenceSlotWidget`
 

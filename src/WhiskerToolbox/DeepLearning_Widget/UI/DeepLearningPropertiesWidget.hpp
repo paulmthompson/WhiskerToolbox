@@ -45,7 +45,8 @@ class WriteReservation;
 
 namespace dl::widget {
 class DynamicInputSlotWidget;
-}
+class StaticInputSlotWidget;
+}// namespace dl::widget
 
 class DeepLearningPropertiesWidget : public QWidget {
     Q_OBJECT
@@ -130,7 +131,6 @@ private:
     void _syncBindingsFromUi();
     void _updateWeightsStatus();
     void _loadModelIfReady();
-    void _updateCaptureButtonState(std::string const & slot_name);
     void _updateBatchSizeConstraint();
     void _applyEncoderShape();
     void _enforcePostEncoderDecoderConsistency();
@@ -160,6 +160,9 @@ private:
 
     // Dynamic input slot widgets (non-owning; owned by _dynamic_container)
     std::vector<dl::widget::DynamicInputSlotWidget *> _dynamic_input_widgets;
+
+    // Static input slot widgets (non-owning; owned by _dynamic_container)
+    std::vector<dl::widget::StaticInputSlotWidget *> _static_input_widgets;
 
     // Cached model display info (clean — no torch types).
     std::optional<ModelDisplayInfo> _current_info;
