@@ -18,6 +18,11 @@ set(DEEP_LEARNING_WIDGET_SOURCES
 
     UI/DeepLearningPropertiesWidget.hpp
     UI/DeepLearningPropertiesWidget.cpp
+
+    UI/Helpers/DataSourceComboHelper.hpp
+    UI/Helpers/DataSourceComboHelper.cpp
+    UI/Helpers/SlotBindingWidget.hpp
+    UI/Helpers/SlotBindingWidget.cpp
 )
 
 add_library(DeepLearning_Widget STATIC ${DEEP_LEARNING_WIDGET_SOURCES})
@@ -30,10 +35,14 @@ target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::PointData)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::LineData)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MaskData)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MediaData)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::TensorData)
 
 target_link_libraries(DeepLearning_Widget PRIVATE DeepLearning)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::ParameterSchema)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::StateManagement)
+target_link_libraries(DeepLearning_Widget PRIVATE AutoParamWidget)
 
 target_include_directories(DeepLearning_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"

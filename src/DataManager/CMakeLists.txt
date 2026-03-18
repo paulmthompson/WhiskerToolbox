@@ -27,6 +27,8 @@ set(DATAMANAGER_SOURCES
 
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
+        utils/DataManagerKeys.hpp
+        utils/DataManagerKeys.cpp
         utils/TimeIndexExtractor.hpp
         utils/TimeIndexExtractor.cpp
         utils/DerivedTimeFrame.hpp

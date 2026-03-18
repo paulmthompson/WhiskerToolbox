@@ -1,0 +1,85 @@
+---
+title: "DeepLearning Widget Helpers"
+---
+
+## Overview
+
+The `DeepLearning_Widget/UI/Helpers/` directory contains reusable utility classes
+extracted from the monolithic `DeepLearningPropertiesWidget` as part of the
+[refactoring roadmap](refactoring_roadmap.md) (Phases 0.2 and 0.3).
+
+## DataSourceComboHelper
+
+**Header:** `DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp`
+
+Centralises QComboBox population and auto-refresh for DataManager-aware combo
+boxes. Replaces the hand-written `_populateDataSourceCombo` /
+`_refreshDataSourceCombos` methods that were previously inlined in the properties
+widget.
+
+### Key features
+
+- **One-shot population** via `populateCombo(combo, types)` — clears the combo,
+  adds a `(None)` sentinel, then appends all DataManager keys matching the
+  requested `DM_DataType` filter. Preserves the user's current selection if it
+  is still valid after repopulation.
+- **Tracking** via `track(combo, types)` / `untrack(combo)` — registers a combo
+  for batch refresh when `refreshAll()` is called (typically from a DataManager
+  observer callback). Tracked combos auto-untrack on `QObject::destroyed` to
+  avoid dangling pointers.
+- **Type hint conversion** via the static `typesFromHint(string)` — translates
+  `SlotAssembler` type-hint strings (e.g. `"PointData"`, `"MediaData"`) to a
+  `std::vector<DM_DataType>` suitable for the filter parameter.
+
+### Typical usage
+
+```cpp
+auto helper = std::make_unique<DataSourceComboHelper>(data_manager, this);
+
+// One-shot
+helper->populateCombo(my_combo, DM_DataType::Points);
+
+// Track for auto-refresh
+helper->track(my_combo, "PointData");
+dm->addObserver([&]{ helper->refreshAll(); });
+```
+
+## SlotBindingWidget
+
+**Header:** `DeepLearning_Widget/UI/Helpers/SlotBindingWidget.hpp`
+
+A composite widget that pairs a DataManager-aware data-source combo (driven by
+`DataSourceComboHelper`) with an `AutoParamWidget` for the remaining parameter
+fields. This implements **Option C** from the refactoring roadmap (Phase 0.2).
+
+### Layout
+
+```
+┌──────────────────────────────┐
+│  [Data Source label] [combo] │  ← DataSourceComboHelper-managed
+├──────────────────────────────┤
+│  AutoParamWidget form        │  ← schema-driven from ParameterSchema
+└──────────────────────────────┘
+```
+
+### Signals
+
+| Signal | Emitted when |
+|---|---|
+| `dataSourceChanged(QString)` | User selects a different data source key |
+| `parametersChanged()` | Any AutoParamWidget field changes |
+| `bindingChanged()` | Either of the above (unified convenience signal) |
+
+### Typical usage
+
+```cpp
+auto* slot = new SlotBindingWidget(combo_helper, this);
+slot->setDataSourceTypes("PointData");
+slot->setParameterSchema(extractParameterSchema<Point2DEncoderParams>());
+
+connect(slot, &SlotBindingWidget::bindingChanged, this, &MyWidget::onChanged);
+
+// Read back
+QString key = slot->selectedDataSource();
+nlohmann::json params = slot->parametersJson();
+```

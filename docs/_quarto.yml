@@ -162,6 +162,9 @@ website:
                   - developer/ui/Features/Collapsible_Widget.qmd
             - text: "AutoParam System"
               href: developer/ui/autoparam.qmd
+            - section: "Deep Learning Widget"
+              contents:
+                  - developer/DeepLearning_Widget/helpers.qmd
             - section: "Plot Widgets"
               href: developer/ui/Plots/plot_widget_guide.md
               contents:

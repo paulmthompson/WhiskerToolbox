@@ -25,6 +25,7 @@ add_subdirectory(DataManager_Widget)
 add_subdirectory(DataImport_Widget)
 add_subdirectory(TransformsV2_Widget)
 add_subdirectory(FileExplorer_Widgets)
+add_subdirectory(DeepLearning_Widget)
 
 add_subdirectory(LayoutTesting)
 
