@@ -8,13 +8,11 @@
 
 namespace dl {
 
-std::string Line2DEncoder::name() const
-{
+std::string Line2DEncoder::name() const {
     return "Line2DEncoder";
 }
 
-std::string Line2DEncoder::inputTypeName() const
-{
+std::string Line2DEncoder::inputTypeName() const {
     return "Line2D";
 }
 
@@ -24,8 +22,7 @@ namespace {
 Point2D<float> scale_point(Point2D<float> const point,
                            ImageSize const source_size,
                            int const target_h,
-                           int const target_w)
-{
+                           int const target_w) {
     float const sx = static_cast<float>(target_w) / static_cast<float>(source_size.width);
     float const sy = static_cast<float>(target_h) / static_cast<float>(source_size.height);
     return {point.x * sx, point.y * sy};
@@ -35,18 +32,17 @@ Point2D<float> scale_point(Point2D<float> const point,
 /// Sets all visited pixels to 1.0 in the channel.
 void rasterize_segment_binary(int x0, int y0, int x1, int y1,
                               torch::TensorAccessor<float, 2> & accessor,
-                              int const h, int const w)
-{
+                              int const h, int const w) {
     // Clamp endpoints
     x0 = std::clamp(x0, 0, w - 1);
     y0 = std::clamp(y0, 0, h - 1);
     x1 = std::clamp(x1, 0, w - 1);
     y1 = std::clamp(y1, 0, h - 1);
 
-    int dx = std::abs(x1 - x0);
-    int dy = -std::abs(y1 - y0);
-    int sx = (x0 < x1) ? 1 : -1;
-    int sy = (y0 < y1) ? 1 : -1;
+    int const dx = std::abs(x1 - x0);
+    int const dy = -std::abs(y1 - y0);
+    int const sx = (x0 < x1) ? 1 : -1;
+    int const sy = (y0 < y1) ? 1 : -1;
     int err = dx + dy;
 
     while (true) {
@@ -70,8 +66,7 @@ void rasterize_segment_binary(int x0, int y0, int x1, int y1,
 void rasterize_segment_heatmap(Point2D<float> const p0, Point2D<float> const p1,
                                torch::TensorAccessor<float, 2> & accessor,
                                int const h, int const w,
-                               float const sigma)
-{
+                               float const sigma) {
     float const extent = 3.0f * sigma;
     float const inv_2sigma2 = 1.0f / (2.0f * sigma * sigma);
 
@@ -102,9 +97,10 @@ void rasterize_segment_heatmap(Point2D<float> const p0, Point2D<float> const p1,
                 dist_sq = px * px + py * py;
             } else {
                 float const t = std::clamp(
-                    ((static_cast<float>(x) - p0.x) * dx +
-                     (static_cast<float>(y) - p0.y) * dy) / seg_len_sq,
-                    0.0f, 1.0f);
+                        ((static_cast<float>(x) - p0.x) * dx +
+                         (static_cast<float>(y) - p0.y) * dy) /
+                                seg_len_sq,
+                        0.0f, 1.0f);
                 float const proj_x = p0.x + t * dx;
                 float const proj_y = p0.y + t * dy;
                 float const px = static_cast<float>(x) - proj_x;
@@ -118,13 +114,13 @@ void rasterize_segment_heatmap(Point2D<float> const p0, Point2D<float> const p1,
     }
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 void Line2DEncoder::encode(Line2D const & line,
                            ImageSize const source_size,
                            at::Tensor & tensor,
-                           EncoderParams const & params) const
-{
+                           EncoderContext const & ctx,
+                           Line2DEncoderParams const & params) {
     if (params.mode != RasterMode::Binary && params.mode != RasterMode::Heatmap) {
         throw std::invalid_argument("Line2DEncoder: only Binary and Heatmap modes are supported");
     }
@@ -134,26 +130,26 @@ void Line2DEncoder::encode(Line2D const & line,
         return;
     }
 
-    auto channel = tensor[params.batch_index][params.target_channel];
+    auto channel = tensor[ctx.batch_index][ctx.target_channel];
     auto accessor = channel.accessor<float, 2>();
 
     for (size_t i = 0; i + 1 < line.size(); ++i) {
-        auto const p0 = scale_point(line[i], source_size, params.height, params.width);
-        auto const p1 = scale_point(line[i + 1], source_size, params.height, params.width);
+        auto const p0 = scale_point(line[i], source_size, ctx.height, ctx.width);
+        auto const p1 = scale_point(line[i + 1], source_size, ctx.height, ctx.width);
 
         if (params.mode == RasterMode::Binary) {
             rasterize_segment_binary(
-                static_cast<int>(std::round(p0.x)),
-                static_cast<int>(std::round(p0.y)),
-                static_cast<int>(std::round(p1.x)),
-                static_cast<int>(std::round(p1.y)),
-                accessor, params.height, params.width);
+                    static_cast<int>(std::round(p0.x)),
+                    static_cast<int>(std::round(p0.y)),
+                    static_cast<int>(std::round(p1.x)),
+                    static_cast<int>(std::round(p1.y)),
+                    accessor, ctx.height, ctx.width);
         } else {
             rasterize_segment_heatmap(p0, p1, accessor,
-                                      params.height, params.width,
+                                      ctx.height, ctx.width,
                                       params.gaussian_sigma);
         }
     }
 }
 
-} // namespace dl
+}// namespace dl

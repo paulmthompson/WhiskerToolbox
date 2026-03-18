@@ -8,7 +8,9 @@
 
 #include <vector>
 
-namespace at { class Tensor; }
+namespace at {
+class Tensor;
+}
 
 namespace dl {
 
@@ -25,18 +27,20 @@ public:
     [[nodiscard]] std::string inputTypeName() const override;
 
     /// Encode a single point
-    void encode(Point2D<float> point,
+    static void encode(Point2D<float> point,
                 ImageSize source_size,
                 at::Tensor & tensor,
-                EncoderParams const & params) const;
+                EncoderContext const & ctx,
+                Point2DEncoderParams const & params) ;
 
     /// Encode multiple points
-    void encode(std::vector<Point2D<float>> const & points,
+    static void encode(std::vector<Point2D<float>> const & points,
                 ImageSize source_size,
                 at::Tensor & tensor,
-                EncoderParams const & params) const;
+                EncoderContext const & ctx,
+                Point2DEncoderParams const & params) ;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_POINT2D_ENCODER_HPP
+#endif// WHISKERTOOLBOX_POINT2D_ENCODER_HPP

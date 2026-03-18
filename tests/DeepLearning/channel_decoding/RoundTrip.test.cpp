@@ -26,14 +26,16 @@ TEST_CASE("Round-trip: Point2D encode→decode (binary)", "[channel_decoding][ro
     Point2D<float> const original{32.0f, 20.0f};
 
     auto tensor = torch::zeros({1, 1, 64, 64});
-    dl::EncoderParams enc_params;
-    enc_params.target_channel = 0;
-    enc_params.batch_index = 0;
-    enc_params.height = 64;
-    enc_params.width = 64;
+    dl::EncoderContext enc_ctx;
+    enc_ctx.target_channel = 0;
+    enc_ctx.batch_index = 0;
+    enc_ctx.height = 64;
+    enc_ctx.width = 64;
+
+    dl::Point2DEncoderParams enc_params;
     enc_params.mode = dl::RasterMode::Binary;
 
-    encoder.encode(original, img_size, tensor, enc_params);
+    encoder.encode(original, img_size, tensor, enc_ctx, enc_params);
 
     dl::DecoderContext dec_ctx;
     dec_ctx.source_channel = 0;
@@ -58,15 +60,17 @@ TEST_CASE("Round-trip: Point2D encode→decode (heatmap, subpixel)", "[channel_d
     Point2D<float> const original{25.3f, 40.7f};
 
     auto tensor = torch::zeros({1, 1, 64, 64});
-    dl::EncoderParams enc_params;
-    enc_params.target_channel = 0;
-    enc_params.batch_index = 0;
-    enc_params.height = 64;
-    enc_params.width = 64;
+    dl::EncoderContext enc_ctx;
+    enc_ctx.target_channel = 0;
+    enc_ctx.batch_index = 0;
+    enc_ctx.height = 64;
+    enc_ctx.width = 64;
+
+    dl::Point2DEncoderParams enc_params;
     enc_params.mode = dl::RasterMode::Heatmap;
     enc_params.gaussian_sigma = 2.0f;
 
-    encoder.encode(original, img_size, tensor, enc_params);
+    encoder.encode(original, img_size, tensor, enc_ctx, enc_params);
 
     dl::DecoderContext dec_ctx;
     dec_ctx.source_channel = 0;
@@ -96,14 +100,16 @@ TEST_CASE("Round-trip: Mask2D encode→decode", "[channel_decoding][roundtrip]")
 
     // Encode
     auto tensor = torch::zeros({1, 1, 10, 10});
-    dl::EncoderParams enc_params;
-    enc_params.target_channel = 0;
-    enc_params.batch_index = 0;
-    enc_params.height = 10;
-    enc_params.width = 10;
+    dl::EncoderContext enc_ctx;
+    enc_ctx.target_channel = 0;
+    enc_ctx.batch_index = 0;
+    enc_ctx.height = 10;
+    enc_ctx.width = 10;
+
+    dl::Mask2DEncoderParams enc_params;
     enc_params.mode = dl::RasterMode::Binary;
 
-    encoder.encode(original, img_size, tensor, enc_params);
+    encoder.encode(original, img_size, tensor, enc_ctx, enc_params);
 
     // Decode
     dl::DecoderContext dec_ctx;
@@ -143,14 +149,16 @@ TEST_CASE("Round-trip: Line2D encode→decode (binary)", "[channel_decoding][rou
 
     // Encode
     auto tensor = torch::zeros({1, 1, 30, 30});
-    dl::EncoderParams enc_params;
-    enc_params.target_channel = 0;
-    enc_params.batch_index = 0;
-    enc_params.height = 30;
-    enc_params.width = 30;
+    dl::EncoderContext enc_ctx;
+    enc_ctx.target_channel = 0;
+    enc_ctx.batch_index = 0;
+    enc_ctx.height = 30;
+    enc_ctx.width = 30;
+
+    dl::Line2DEncoderParams enc_params;
     enc_params.mode = dl::RasterMode::Binary;
 
-    encoder.encode(original, img_size, tensor, enc_params);
+    encoder.encode(original, img_size, tensor, enc_ctx, enc_params);
 
     // Decode
     dl::DecoderContext dec_ctx;
@@ -192,14 +200,16 @@ TEST_CASE("Round-trip: Point2D with scaling", "[channel_decoding][roundtrip]") {
     Point2D<float> const original{60.0f, 40.0f};
 
     auto tensor = torch::zeros({1, 1, 32, 32});
-    dl::EncoderParams enc_params;
-    enc_params.target_channel = 0;
-    enc_params.batch_index = 0;
-    enc_params.height = 32;
-    enc_params.width = 32;
+    dl::EncoderContext enc_ctx;
+    enc_ctx.target_channel = 0;
+    enc_ctx.batch_index = 0;
+    enc_ctx.height = 32;
+    enc_ctx.width = 32;
+
+    dl::Point2DEncoderParams enc_params;
     enc_params.mode = dl::RasterMode::Binary;
 
-    encoder.encode(original, img_size, tensor, enc_params);
+    encoder.encode(original, img_size, tensor, enc_ctx, enc_params);
 
     // Decode back to 100x100 space
     dl::DecoderContext dec_ctx;

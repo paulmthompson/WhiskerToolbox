@@ -61,12 +61,21 @@ Encoders write geometry data into a pre-allocated `[B, C, H, W]` float tensor at
 batch index and channel. They are pure functions on geometry primitives with no DataManager 
 dependency, making them independently testable.
 
-| Encoder | Input Type | Modes | Description |
-|---------|-----------|-------|-------------|
-| `ImageEncoder` | raw pixel data + `ImageSize` | Raw | Resizes to `(H, W)`, normalizes to `[0,1]`. Supports grayscale (replicates to 3 channels) and RGB. |
-| `Point2DEncoder` | `Point2D<float>` | Binary, Heatmap | Scales coordinates to tensor resolution. Heatmap places 2D Gaussians; overlapping peaks use max operator. |
-| `Mask2DEncoder` | `Mask2D` | Binary | Scales pixel coordinates to tensor resolution. Sets 1.0 at each mask pixel location. |
-| `Line2DEncoder` | `Line2D` | Binary, Heatmap | Rasterizes polyline onto tensor. Binary uses Bresenham line drawing. Heatmap uses distance-to-line Gaussian. |
+Each encoder's `encode()` method takes two parameter structs:
+
+1. **`EncoderContext`** — Runtime context set by `SlotAssembler` (target channel, batch index,
+   tensor dimensions). Not user-configurable.
+2. **Per-encoder params** — User-configurable parameters specific to each encoder type
+   (`ImageEncoderParams`, `Point2DEncoderParams`, `Mask2DEncoderParams`, `Line2DEncoderParams`).
+
+All structs are defined in `ChannelEncoder.hpp`.
+
+| Encoder | Input Type | Params Struct | Modes | Description |
+|---------|-----------|---------------|-------|-------------|
+| `ImageEncoder` | raw pixel data + `ImageSize` | `ImageEncoderParams` | Raw | Resizes to `(H, W)`, normalizes to `[0,1]`. Supports grayscale (replicates to 3 channels) and RGB. |
+| `Point2DEncoder` | `Point2D<float>` | `Point2DEncoderParams` | Binary, Heatmap | Scales coordinates to tensor resolution. Heatmap places 2D Gaussians; overlapping peaks use max operator. |
+| `Mask2DEncoder` | `Mask2D` | `Mask2DEncoderParams` | Binary | Scales pixel coordinates to tensor resolution. Sets 1.0 at each mask pixel location. |
+| `Line2DEncoder` | `Line2D` | `Line2DEncoderParams` | Binary, Heatmap | Rasterizes polyline onto tensor. Binary uses Bresenham line drawing. Heatmap uses distance-to-line Gaussian. |
 
 All encoders are registered in `EncoderFactory` by string key (e.g. `"ImageEncoder"`) so that 
 JSON model specs and the widget UI can reference them by name.

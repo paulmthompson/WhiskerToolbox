@@ -6,7 +6,9 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 
-namespace at { class Tensor; }
+namespace at {
+class Tensor;
+}
 
 namespace dl {
 
@@ -22,12 +24,13 @@ public:
     [[nodiscard]] std::string inputTypeName() const override;
 
     /// Encode mask pixel set into tensor[batch_index, target_channel, :, :]
-    void encode(Mask2D const & mask,
+    static void encode(Mask2D const & mask,
                 ImageSize source_size,
                 at::Tensor & tensor,
-                EncoderParams const & params) const;
+                EncoderContext const & ctx,
+                Mask2DEncoderParams const & params) ;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_MASK2D_ENCODER_HPP
+#endif// WHISKERTOOLBOX_MASK2D_ENCODER_HPP

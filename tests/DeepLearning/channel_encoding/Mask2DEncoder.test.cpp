@@ -11,36 +11,34 @@
 
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE("Mask2DEncoder - name and input type", "[channel_encoding][Mask2DEncoder]")
-{
+TEST_CASE("Mask2DEncoder - name and input type", "[channel_encoding][Mask2DEncoder]") {
     dl::Mask2DEncoder encoder;
     CHECK(encoder.name() == "Mask2DEncoder");
     CHECK(encoder.inputTypeName() == "Mask2D");
 }
 
-TEST_CASE("Mask2DEncoder - basic binary encoding", "[channel_encoding][Mask2DEncoder]")
-{
+TEST_CASE("Mask2DEncoder - basic binary encoding", "[channel_encoding][Mask2DEncoder]") {
     dl::Mask2DEncoder encoder;
 
     // Source image is 10x10, tensor is 10x10 (no scaling)
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Mask2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     // Create a mask with a few pixels
-    Mask2D mask({
-        Point2D<uint32_t>{2, 3},
-        Point2D<uint32_t>{5, 5},
-        Point2D<uint32_t>{8, 1}
-    });
+    Mask2D mask({Point2D<uint32_t>{2, 3},
+                 Point2D<uint32_t>{5, 5},
+                 Point2D<uint32_t>{8, 1}});
 
-    encoder.encode(mask, src_size, tensor, params);
+    encoder.encode(mask, src_size, tensor, ctx, params);
 
     auto accessor = tensor.accessor<float, 4>();
 
@@ -54,63 +52,66 @@ TEST_CASE("Mask2DEncoder - basic binary encoding", "[channel_encoding][Mask2DEnc
     CHECK_THAT(accessor[0][0][9][9], WithinAbs(0.0f, 1e-5f));
 }
 
-TEST_CASE("Mask2DEncoder - empty mask", "[channel_encoding][Mask2DEncoder]")
-{
+TEST_CASE("Mask2DEncoder - empty mask", "[channel_encoding][Mask2DEncoder]") {
     dl::Mask2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Mask2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     Mask2D mask;
-    encoder.encode(mask, src_size, tensor, params);
+    encoder.encode(mask, src_size, tensor, ctx, params);
 
     // Tensor should remain all zeros
     auto const sum = tensor.sum().item<float>();
     CHECK_THAT(sum, WithinAbs(0.0f, 1e-5f));
 }
 
-TEST_CASE("Mask2DEncoder - scaling from larger source", "[channel_encoding][Mask2DEncoder]")
-{
+TEST_CASE("Mask2DEncoder - scaling from larger source", "[channel_encoding][Mask2DEncoder]") {
     dl::Mask2DEncoder encoder;
 
     // Source is 100x100, tensor is 10x10
     ImageSize const src_size{100, 100};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Mask2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     // Point at (50, 50) in source → (5, 5) in tensor
     Mask2D mask({Point2D<uint32_t>{50, 50}});
-    encoder.encode(mask, src_size, tensor, params);
+    encoder.encode(mask, src_size, tensor, ctx, params);
 
     auto accessor = tensor.accessor<float, 4>();
     CHECK_THAT(accessor[0][0][5][5], WithinAbs(1.0f, 1e-5f));
 }
 
-TEST_CASE("Mask2DEncoder - large mask coverage", "[channel_encoding][Mask2DEncoder]")
-{
+TEST_CASE("Mask2DEncoder - large mask coverage", "[channel_encoding][Mask2DEncoder]") {
     dl::Mask2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Mask2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     // Fill entire image with mask pixels
@@ -121,7 +122,7 @@ TEST_CASE("Mask2DEncoder - large mask coverage", "[channel_encoding][Mask2DEncod
         }
     }
 
-    encoder.encode(mask, src_size, tensor, params);
+    encoder.encode(mask, src_size, tensor, ctx, params);
 
     // All pixels should be 1.0
     auto accessor = tensor.accessor<float, 4>();
@@ -132,38 +133,40 @@ TEST_CASE("Mask2DEncoder - large mask coverage", "[channel_encoding][Mask2DEncod
     }
 }
 
-TEST_CASE("Mask2DEncoder - invalid mode throws", "[channel_encoding][Mask2DEncoder]")
-{
+TEST_CASE("Mask2DEncoder - invalid mode throws", "[channel_encoding][Mask2DEncoder]") {
     dl::Mask2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Mask2DEncoderParams params;
     params.mode = dl::RasterMode::Heatmap;
 
     Mask2D mask({Point2D<uint32_t>{5, 5}});
-    CHECK_THROWS_AS(encoder.encode(mask, src_size, tensor, params), std::invalid_argument);
+    CHECK_THROWS_AS(encoder.encode(mask, src_size, tensor, ctx, params), std::invalid_argument);
 }
 
-TEST_CASE("Mask2DEncoder - batch index", "[channel_encoding][Mask2DEncoder]")
-{
+TEST_CASE("Mask2DEncoder - batch index", "[channel_encoding][Mask2DEncoder]") {
     dl::Mask2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({2, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 1;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 1;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Mask2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     Mask2D mask({Point2D<uint32_t>{5, 5}});
-    encoder.encode(mask, src_size, tensor, params);
+    encoder.encode(mask, src_size, tensor, ctx, params);
 
     auto accessor = tensor.accessor<float, 4>();
     // Batch 0 undisturbed
@@ -172,22 +175,23 @@ TEST_CASE("Mask2DEncoder - batch index", "[channel_encoding][Mask2DEncoder]")
     CHECK_THAT(accessor[1][0][5][5], WithinAbs(1.0f, 1e-5f));
 }
 
-TEST_CASE("Mask2DEncoder - target channel selection", "[channel_encoding][Mask2DEncoder]")
-{
+TEST_CASE("Mask2DEncoder - target channel selection", "[channel_encoding][Mask2DEncoder]") {
     dl::Mask2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({1, 3, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 2; // write to channel 2
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 2;// write to channel 2
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Mask2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     Mask2D mask({Point2D<uint32_t>{5, 5}});
-    encoder.encode(mask, src_size, tensor, params);
+    encoder.encode(mask, src_size, tensor, ctx, params);
 
     auto accessor = tensor.accessor<float, 4>();
     // Channels 0 and 1 should be untouched
