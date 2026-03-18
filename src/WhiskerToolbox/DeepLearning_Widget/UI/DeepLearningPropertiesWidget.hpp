@@ -46,6 +46,7 @@ class WriteReservation;
 namespace dl::widget {
 class DynamicInputSlotWidget;
 class OutputSlotWidget;
+class PostEncoderWidget;
 class RecurrentBindingWidget;
 class SequenceSlotWidget;
 class StaticInputSlotWidget;
@@ -106,7 +107,6 @@ private:
     void _populateModelCombo();
     void _rebuildSlotPanels();
     void _clearDynamicContent();
-    void _buildPostEncoderSection();
     void _buildEncoderShapeSection();
 
     QGroupBox * _buildBooleanMaskGroup(dl::TensorSlotDescriptor const & slot);
@@ -156,6 +156,9 @@ private:
 
     // Output slot widgets (non-owning; owned by _dynamic_container)
     std::vector<dl::widget::OutputSlotWidget *> _output_slot_widgets;
+
+    // Post-encoder widget (non-owning; owned by _dynamic_container)
+    dl::widget::PostEncoderWidget * _post_encoder_widget = nullptr;
 
     // Recurrent binding widgets (non-owning; owned by _dynamic_container)
     std::vector<dl::widget::RecurrentBindingWidget *> _recurrent_binding_widgets;

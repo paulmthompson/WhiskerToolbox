@@ -161,6 +161,56 @@ endif()
 
 enable_whiskertoolbox_shared_test_pch(test_dl_output_slot)
 
+# ── PostEncoderWidget tests ──────────────────────────────────────────────
+
+add_executable(test_dl_post_encoder
+    PostEncoderWidget.test.cpp
+)
+
+target_link_libraries(test_dl_post_encoder PRIVATE
+    Catch2::Catch2WithMain
+    DeepLearning_Widget
+    DataManager
+    WhiskerToolbox::PointData
+    WhiskerToolbox::LineData
+    WhiskerToolbox::MaskData
+    WhiskerToolbox::MediaData
+    Qt6::Widgets
+    Qt6::Core
+    Qt6::Test
+)
+
+target_include_directories(test_dl_post_encoder PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DataManager>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_dl_post_encoder PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_dl_post_encoder PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_dl_post_encoder PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_dl_post_encoder
+        PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_dl_post_encoder_all
+        COMMAND test_dl_post_encoder
+    )
+    set_property(TEST test_dl_post_encoder_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_dl_post_encoder)
+
 # ── RecurrentBindingWidget tests ───────────────────────────────────────────
 
 add_executable(test_dl_recurrent_binding

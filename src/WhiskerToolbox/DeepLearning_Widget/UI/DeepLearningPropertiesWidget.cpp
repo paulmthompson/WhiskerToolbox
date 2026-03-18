@@ -7,6 +7,7 @@
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/RecurrentBindingWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp"
@@ -173,19 +174,8 @@ DeepLearningPropertiesWidget::DeepLearningPropertiesWidget(
 
     connect(_state.get(), &DeepLearningState::postEncoderModuleChanged, this,
             [this] {
-                // Refresh the point-key combo if it exists in the dynamic section
-                if (!_dynamic_container) return;
-                auto * point_combo = _dynamic_container->findChild<QComboBox *>(
-                        QStringLiteral("post_encoder_point_key_combo"));
-                if (point_combo) {
-                    QSignalBlocker const blocker(point_combo);
-                    _populateDataSourceCombo(point_combo, "PointData");
-                    auto const & key = _state->postEncoderPointKey();
-                    if (!key.empty()) {
-                        int const idx = point_combo->findText(
-                                QString::fromStdString(key));
-                        if (idx >= 0) point_combo->setCurrentIndex(idx);
-                    }
+                if (_post_encoder_widget) {
+                    _post_encoder_widget->refreshDataSources();
                 }
             });
 }
@@ -507,6 +497,7 @@ void DeepLearningPropertiesWidget::_clearDynamicContent() {
     _static_input_widgets.clear();
     _sequence_slot_widgets.clear();
     _output_slot_widgets.clear();
+    _post_encoder_widget = nullptr;
     _recurrent_binding_widgets.clear();
     QLayoutItem * child = nullptr;
     while ((child = _dynamic_layout->takeAt(0)) != nullptr) {
@@ -679,116 +670,17 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
     }
 
     // ── Post-Encoder Module ──
-    _buildPostEncoderSection();
-
-    _dynamic_layout->addStretch();
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// Post-Encoder Section
-// ────────────────────────────────────────────────────────────────────────────
-
-void DeepLearningPropertiesWidget::_buildPostEncoderSection() {
-    auto * group = new QGroupBox(tr("Post-Encoder Module"), _dynamic_container);
-    auto * form = new QFormLayout(group);
-    group->setObjectName(QStringLiteral("post_encoder_group"));
-
-    // ── Module type combo ──
-    auto * module_combo = new QComboBox(group);
-    module_combo->setObjectName(QStringLiteral("post_encoder_module_combo"));
-    module_combo->addItem(tr("None"), QStringLiteral("none"));
-    module_combo->addItem(tr("Global Average Pooling"), QStringLiteral("global_avg_pool"));
-    module_combo->addItem(tr("Spatial Point Extraction"), QStringLiteral("spatial_point"));
-    module_combo->setToolTip(
-            tr("Optional post-processing applied to the encoder output tensor:\n"
-               "• None: pass encoder output directly to the decoder\n"
-               "• Global Average Pooling: [B,C,H,W] \u2192 [B,C] via adaptive avg pool\n"
-               "• Spatial Point Extraction: extract features at a 2D point location"));
-    form->addRow(tr("Module:"), module_combo);
-
-    // Restore saved module type
-    auto const & saved_type = _state->postEncoderModuleType();
-    if (!saved_type.empty()) {
-        int const idx = module_combo->findData(QString::fromStdString(saved_type));
-        if (idx >= 0) module_combo->setCurrentIndex(idx);
-    }
-
-    // ── Interpolation mode combo (visible for spatial_point only) ──
-    auto * interp_combo = new QComboBox(group);
-    interp_combo->setObjectName(QStringLiteral("post_encoder_interp_combo"));
-    interp_combo->addItem(tr("Bilinear"), QStringLiteral("bilinear"));
-    interp_combo->addItem(tr("Nearest"), QStringLiteral("nearest"));
-    form->addRow(tr("Interpolation:"), interp_combo);
-
-    // ── Point key combo (visible for spatial_point only) ──
-    auto * point_combo = new QComboBox(group);
-    point_combo->setObjectName(QStringLiteral("post_encoder_point_key_combo"));
-    _populateDataSourceCombo(point_combo, "PointData");
-    auto const & saved_key = _state->postEncoderPointKey();
-    if (!saved_key.empty()) {
-        int const idx = point_combo->findText(QString::fromStdString(saved_key));
-        if (idx >= 0) point_combo->setCurrentIndex(idx);
-    }
-    form->addRow(tr("Point Key:"), point_combo);
-
-    // Helper to update visibility
-    auto updateVisibility = [form, interp_combo, point_combo,
-                             module_combo]() {
-        bool const is_spatial =
-                module_combo->currentData().toString() == QStringLiteral("spatial_point");
-        form->labelForField(interp_combo)->setVisible(is_spatial);
-        interp_combo->setVisible(is_spatial);
-        form->labelForField(point_combo)->setVisible(is_spatial);
-        point_combo->setVisible(is_spatial);
-    };
-    updateVisibility();
-
-    // Apply to assembler helper
-    auto applyToAssembler = [this, module_combo, interp_combo, point_combo]() {
-        auto const type = module_combo->currentData().toString().toStdString();
-        auto const interp = interp_combo->currentData().toString().toStdString();
-        auto const pt_key = point_combo->currentText().toStdString();
-
-        // Store in state
-        _state->setPostEncoderModuleType(type);
-        if (type == "spatial_point" && pt_key != tr("(None)").toStdString()) {
-            _state->setPostEncoderPointKey(pt_key);
-        } else {
-            _state->setPostEncoderPointKey({});
-        }
-
-        // Determine source image size from primary media binding
-        ImageSize source_size{256, 256};
-        for (auto const & binding: _state->inputBindings()) {
-            auto media = _data_manager->getData<MediaData>(binding.data_key);
-            if (media) {
-                source_size = media->getImageSize();
-                break;
-            }
-        }
-
-        if (_assembler->isModelReady()) {
-            _assembler->configurePostEncoderModule(type, source_size, interp);
-        }
-    };
-
-    connect(module_combo, &QComboBox::currentIndexChanged, this,
-            [this, updateVisibility, applyToAssembler](int) {
-                updateVisibility();
-                applyToAssembler();
-                _enforcePostEncoderDecoderConsistency();
-            });
-
-    connect(point_combo, &QComboBox::currentIndexChanged, this,
-            [applyToAssembler](int) { applyToAssembler(); });
-
-    connect(interp_combo, &QComboBox::currentIndexChanged, this,
-            [applyToAssembler](int) { applyToAssembler(); });
-
-    _dynamic_layout->addWidget(group);
+    auto * post_encoder_widget = new dl::widget::PostEncoderWidget(
+            _state, _data_manager, _assembler.get(), _dynamic_container);
+    connect(post_encoder_widget, &dl::widget::PostEncoderWidget::bindingChanged,
+            this, &DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency);
+    _post_encoder_widget = post_encoder_widget;
+    _dynamic_layout->addWidget(post_encoder_widget);
 
     // Apply initial consistency (honours saved post-encoder state)
     _enforcePostEncoderDecoderConsistency();
+
+    _dynamic_layout->addStretch();
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -796,20 +688,15 @@ void DeepLearningPropertiesWidget::_buildPostEncoderSection() {
 // ────────────────────────────────────────────────────────────────────────────
 
 void DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency() {
-    if (!_dynamic_container || !_current_info) return;
+    if (!_post_encoder_widget || !_current_info) return;
 
-    auto * module_combo = _dynamic_container->findChild<QComboBox *>(
-            QStringLiteral("post_encoder_module_combo"));
-    if (!module_combo) return;
-
-    auto const module_type = module_combo->currentData().toString();
+    auto const module_type = _post_encoder_widget->moduleTypeForState();
 
     // Both global_avg_pool and spatial_point collapse spatial dims:
     //   [B, C, H, W] -> [B, C]
     // Only TensorToFeatureVector can decode a 2D tensor.
     bool const spatial_dims_removed =
-            (module_type == QStringLiteral("global_avg_pool") ||
-             module_type == QStringLiteral("spatial_point"));
+            (module_type == "global_avg_pool" || module_type == "spatial_point");
 
     std::vector<std::string> const all_decoders = {
             "MaskDecoderParams", "PointDecoderParams", "LineDecoderParams",
@@ -1015,11 +902,9 @@ void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
         rb_widget->refreshDataSources();
     }
 
-    // Refresh post-encoder point key combo (if visible)
-    auto * point_combo = _dynamic_container->findChild<QComboBox *>(
-            QStringLiteral("post_encoder_point_key_combo"));
-    if (point_combo) {
-        _populateDataSourceCombo(point_combo, "PointData");
+    // Refresh post-encoder point_key combo
+    if (_post_encoder_widget) {
+        _post_encoder_widget->refreshDataSources();
     }
 }
 
@@ -1116,43 +1001,7 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
     }
     _state->setRecurrentBindings(std::move(recurrent_bindings));
 
-    // ── Post-Encoder Module ──
-    if (!_dynamic_container) return;
-    auto * module_combo = _dynamic_container->findChild<QComboBox *>(
-            QStringLiteral("post_encoder_module_combo"));
-    auto * interp_combo = _dynamic_container->findChild<QComboBox *>(
-            QStringLiteral("post_encoder_interp_combo"));
-    auto * point_combo = _dynamic_container->findChild<QComboBox *>(
-            QStringLiteral("post_encoder_point_key_combo"));
-
-    if (module_combo) {
-        auto const type = module_combo->currentData().toString().toStdString();
-        auto const interp = interp_combo
-                                    ? interp_combo->currentData().toString().toStdString()
-                                    : std::string("bilinear");
-        auto const pt_key = point_combo ? point_combo->currentText().toStdString() : std::string{};
-
-        _state->setPostEncoderModuleType(type);
-        if (type == "spatial_point" && !pt_key.empty() && pt_key != tr("(None)").toStdString()) {
-            _state->setPostEncoderPointKey(pt_key);
-        } else {
-            _state->setPostEncoderPointKey({});
-        }
-
-        // Determine source image size from primary media binding
-        ImageSize source_size{256, 256};
-        for (auto const & binding: _state->inputBindings()) {
-            auto media = _data_manager->getData<MediaData>(binding.data_key);
-            if (media) {
-                source_size = media->getImageSize();
-                break;
-            }
-        }
-
-        if (_assembler->isModelReady()) {
-            _assembler->configurePostEncoderModule(type, source_size, interp);
-        }
-    }
+    // Post-encoder state is managed by PostEncoderWidget (applies on parametersChanged).
 
     _updateBatchSizeConstraint();
 }

@@ -540,9 +540,9 @@ struct RecurrentBindingSlotParams {
 - `output_slot_name` from model info via `updateAllowedValues`
 - `data_key` inside StaticCapture variant from DM observer
 
-### 1.6 — `PostEncoderWidget`
+### 1.6 — `PostEncoderWidget` ✅ COMPLETED
 
-Handles the post-encoder module section (currently `_buildPostEncoderSection` + `_enforcePostEncoderDecoderConsistency`).
+Handles the post-encoder module section (replaces `_buildPostEncoderSection` + `_enforcePostEncoderDecoderConsistency`).
 
 **Integration into DeepLearningPropertiesWidget:** Replace `_buildPostEncoderSection()` call in `_rebuildSlotPanels()`. Move `_enforcePostEncoderDecoderConsistency()` logic into the widget or a shared constraint enforcer. Delete `_buildPostEncoderSection()` and the post-encoder combo refresh from `_refreshDataSourceCombos()`.
 
@@ -563,6 +563,36 @@ struct PostEncoderSlotParams {
 **Cross-field constraints:**
 - `point_key` visibility/relevance depends on active variant (only needed for SpatialPoint) — handled via `PostEditHook` or `parametersChanged` signal
 - Decoder consistency enforcement (restrict output decoders based on module type) moves into a pure function in `ConstraintEnforcer` (Phase 3.2), called by the coordinator when `PostEncoderSlotParams` changes
+
+**Integration into DeepLearningPropertiesWidget:**
+- `_rebuildSlotPanels()` creates `PostEncoderWidget` instead of calling `_buildPostEncoderSection()`.
+- `_enforcePostEncoderDecoderConsistency()` reads module type from `_post_encoder_widget->moduleTypeForState()` instead of `findChild<QComboBox>`.
+- `_refreshDataSourceCombos()` delegates to `_post_encoder_widget->refreshDataSources()`.
+- `postEncoderModuleChanged` handler delegates to `_post_encoder_widget->refreshDataSources()`.
+- Post-encoder block removed from `_syncBindingsFromUi()` (widget applies to state on `parametersChanged`).
+- `_buildPostEncoderSection()` was deleted.
+- Widget pointer stored in `_post_encoder_widget` (non-owning; owned by Qt widget tree).
+
+**Files created:**
+- `DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp` — Public API header.
+- `DeepLearning_Widget/UI/Helpers/PostEncoderWidget.cpp` — Implementation: schema setup, state/assembler apply, point_key combo refresh.
+- `tests/WhiskerToolbox/DeepLearning_Widget/PostEncoderWidget.test.cpp` — Catch2 tests (construction, params round-trip, paramsFromState, refreshDataSources, signal emission).
+
+**Files modified:**
+- `DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp` — Added `PostEncoderSlotParams` struct and `ParameterUIHints<PostEncoderSlotParams>` declaration.
+- `DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp` — Added `ParameterUIHints<PostEncoderSlotParams>::annotate()` implementation.
+- `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.hpp` — Added `PostEncoderWidget` forward declaration, `_post_encoder_widget` member; removed `_buildPostEncoderSection` declaration.
+- `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.cpp` — All integration changes; deleted `_buildPostEncoderSection()`.
+- `DeepLearning_Widget/CMakeLists.txt` — Added PostEncoderWidget source files.
+- `tests/WhiskerToolbox/DeepLearning_Widget/CMakeLists.txt` — Added `test_dl_post_encoder` test target.
+
+**Public API:**
+- `params()` — Returns the current `PostEncoderSlotParams`.
+- `setParams(PostEncoderSlotParams)` — Sets parameters and updates the UI.
+- `refreshDataSources()` — Re-populates the point_key combo from DataManager.
+- `moduleTypeForState()` — Returns "none", "global_avg_pool", or "spatial_point" for decoder consistency.
+- `paramsFromState(module_type, point_key)` — Static helper to build `PostEncoderSlotParams` from saved state.
+- `bindingChanged()` signal — Emitted on any parameter change.
 
 ### 1.7 — `EncoderShapeWidget`
 
@@ -855,7 +885,7 @@ std::vector<OutputBindingData> enforceDecoderConsistency(
                 │       ├── ✅ Phase 1.3 (SequenceSlotWidget)
                 │       ├── ✅ Phase 1.4 (OutputSlotWidget)
                 │       ├── Phase 1.5 (RecurrentBindingWidget)
-                │       ├── Phase 1.6 (PostEncoderWidget)
+                │       ├── ✅ Phase 1.6 (PostEncoderWidget)
                 │       └── Phase 1.7 (EncoderShapeWidget)
                 │
                 ├── ✅ Phase 0.3 (DataSourceComboHelper — COMPLETE, scope narrowed)

@@ -143,4 +143,24 @@ void ParameterUIHints<dl::widget::RecurrentBindingSlotParams>::annotate(
     }
 }
 
+void ParameterUIHints<dl::widget::PostEncoderSlotParams>::annotate(
+        ParameterSchema & schema) {
+    if (auto * f = schema.field("module")) {
+        f->display_name = "Module";
+        f->tooltip =
+                "Optional post-processing applied to the encoder output tensor:\n"
+                "• None: pass encoder output directly to the decoder\n"
+                "• Global Average Pooling: [B,C,H,W] → [B,C] via adaptive avg pool\n"
+                "• Spatial Point Extraction: extract features at a 2D point location";
+    }
+    if (auto * f = schema.field("point_key")) {
+        f->display_name = "Point Key";
+        f->tooltip =
+                "DataManager key for PointData supplying the per-frame query point\n"
+                "(only used when Spatial Point Extraction is selected)";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
+    }
+}
+
 }// namespace WhiskerToolbox::Transforms::V2

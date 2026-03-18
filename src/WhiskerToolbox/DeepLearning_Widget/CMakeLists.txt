@@ -25,6 +25,8 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     UI/Helpers/DynamicInputSlotWidget.cpp
     UI/Helpers/OutputSlotWidget.hpp
     UI/Helpers/OutputSlotWidget.cpp
+    UI/Helpers/PostEncoderWidget.hpp
+    UI/Helpers/PostEncoderWidget.cpp
     UI/Helpers/RecurrentBindingWidget.hpp
     UI/Helpers/RecurrentBindingWidget.cpp
     UI/Helpers/SequenceSlotWidget.hpp
