@@ -13,7 +13,7 @@
 | Output panel building | ~55 | `_buildOutputGroup` |
 | Recurrent binding panel building | ~100 | `_buildRecurrentInputGroup` |
 | Post-encoder section | ~170 | `_buildPostEncoderSection`, `_enforcePostEncoderDecoderConsistency` |
-| Encoder shape section | ~100 | `_buildEncoderShapeSection`, `_applyEncoderShape` |
+| Encoder shape section | ~100 | Extracted to `EncoderShapeWidget` (Phase 1.7 ✅) |
 | State sync (UI → State) | ~270 | `_syncBindingsFromUi` |
 | Data source combo management | ~100 | `_populateDataSourceCombo`, `_refreshDataSourceCombos` |
 | Model selection + weights loading | ~150 | `_populateModelCombo`, `_onModelComboChanged`, `_loadModelIfReady`, `_updateWeightsStatus` |
@@ -594,27 +594,54 @@ struct PostEncoderSlotParams {
 - `paramsFromState(module_type, point_key)` — Static helper to build `PostEncoderSlotParams` from saved state.
 - `bindingChanged()` signal — Emitted on any parameter change.
 
-### 1.7 — `EncoderShapeWidget`
+### 1.7 — `EncoderShapeWidget` ✅ COMPLETED
 
-Handles the encoder shape configuration section (currently `_buildEncoderShapeSection` + `_applyEncoderShape`).
+Handles the encoder shape configuration section (replaces `_buildEncoderShapeSection` + `_applyEncoderShape`).
 
 **Integration into DeepLearningPropertiesWidget:** Replace `_buildEncoderShapeSection()` call in `_rebuildSlotPanels()`. Move `_applyEncoderShape()` logic into the widget. Delete both methods.
 
-**Contents:**
-- Input height/width spin boxes
-- Output shape text field
-- Apply button
+**Param struct (unified):**
+```cpp
+struct EncoderShapeParams {
+    rfl::Validator<int, rfl::Minimum<1>> input_height = 224;
+    rfl::Validator<int, rfl::Minimum<1>> input_width = 224;
+    std::string output_shape;  ///< Raw output shape string, e.g. "768,16,16"
+};
+```
 
-**Integration with AutoParamWidget:**
-- Straightforward struct:
-  ```cpp
-  struct EncoderShapeParams {
-      rfl::Validator<int, rfl::Minimum<1>> input_height = 224;
-      rfl::Validator<int, rfl::Minimum<1>> input_width = 224;
-      std::string output_shape;
-  };
-  ```
-- AutoParamWidget generates the form; an external "Apply" button triggers `_applyEncoderShape`.
+**AutoParamWidget renders:**
+- `input_height` → QSpinBox (1–4096)
+- `input_width` → QSpinBox (1–4096)
+- `output_shape` → QLineEdit (comma-separated dimensions)
+- External Apply button triggers `configureModelShape` on SlotAssembler
+
+**Integration into DeepLearningPropertiesWidget:**
+- `_rebuildSlotPanels()` creates `EncoderShapeWidget` for general_encoder instead of calling `_buildEncoderShapeSection()`.
+- `shapeApplied` signal connected to refresh `_current_info` and `_rebuildSlotPanels()`.
+- `_onModelComboChanged` calls `EncoderShapeWidget::applyEncoderShapeToAssembler()` when loading general_encoder (before widget exists).
+- `_buildEncoderShapeSection()` and `_applyEncoderShape()` were deleted.
+- Widget pointer stored in `_encoder_shape_widget` (non-owning; owned by Qt widget tree).
+
+**Files created:**
+- `DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp` — Public API header.
+- `DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.cpp` — Implementation: schema setup, state sync, Apply → assembler.
+- `tests/WhiskerToolbox/DeepLearning_Widget/EncoderShapeWidget.test.cpp` — Catch2 tests (construction, params round-trip, paramsFromState, applyEncoderShapeToAssembler, signal emission).
+
+**Files modified:**
+- `DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp` — Enhanced `ParameterUIHints<EncoderShapeParams>` (display_name, max_value, tooltip).
+- `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.hpp` — Added `EncoderShapeWidget` forward declaration, `_encoder_shape_widget` member; removed `_buildEncoderShapeSection`, `_applyEncoderShape` declarations.
+- `DeepLearning_Widget/UI/DeepLearningPropertiesWidget.cpp` — All integration changes; deleted `_buildEncoderShapeSection()`, `_applyEncoderShape()`.
+- `DeepLearning_Widget/CMakeLists.txt` — Added EncoderShapeWidget source files.
+- `tests/WhiskerToolbox/DeepLearning_Widget/CMakeLists.txt` — Added `test_dl_encoder_shape` test target.
+
+**Public API:**
+- `params()` — Returns the current `EncoderShapeParams`.
+- `setParams(EncoderShapeParams)` — Sets parameters and updates the UI.
+- `applyFromState()` — Applies current state to SlotAssembler (for model load restore).
+- `applyEncoderShapeToAssembler(state, assembler)` — Static helper for applying from state when widget does not exist.
+- `paramsFromState(input_height, input_width, output_shape)` — Static helper to build `EncoderShapeParams` from saved state.
+- `bindingChanged()` signal — Emitted on any parameter change.
+- `shapeApplied()` signal — Emitted after Apply button applies shape to assembler.
 
 ### Phase 1 Summary
 
@@ -886,7 +913,7 @@ std::vector<OutputBindingData> enforceDecoderConsistency(
                 │       ├── ✅ Phase 1.4 (OutputSlotWidget)
                 │       ├── Phase 1.5 (RecurrentBindingWidget)
                 │       ├── ✅ Phase 1.6 (PostEncoderWidget)
-                │       └── Phase 1.7 (EncoderShapeWidget)
+                │       └── ✅ Phase 1.7 (EncoderShapeWidget)
                 │
                 ├── ✅ Phase 0.3 (DataSourceComboHelper — COMPLETE, scope narrowed)
                 │
@@ -906,9 +933,9 @@ Phase 5 (Polish)     ← after all phases complete
 2. **Phase 3.2** — `ConstraintEnforcer` pure functions (quick win, immediately testable, no UI dependency)
 3. **Phase 2.1** — `InferenceController` (large isolated chunk, biggest maintainability gain)
 4. **Phase 2.2** — `ResultProcessor` (pairs with InferenceController)
-5. **Phase 1.7** — `EncoderShapeWidget` (simplest sub-widget, good pilot for the unified struct pattern)
+5. ~~**Phase 1.7** — `EncoderShapeWidget`~~ ✅ **DONE**
 6. ~~**Phase 1.4** — `OutputSlotWidget`~~ ✅ **DONE**
-7. **Phase 1.6** — `PostEncoderWidget` (medium complexity, exercises variant + dynamic `point_key` combo)
+7. ~~**Phase 1.6** — `PostEncoderWidget`~~ ✅ **DONE**
 8. **Phase 1.1** — `DynamicInputSlotWidget` (exercises full pattern: dynamic source combo + encoder variant + cross-field constraints)
 9. **Phase 1.5** — `RecurrentBindingWidget`
 10. **Phase 1.2** — `StaticInputSlotWidget`

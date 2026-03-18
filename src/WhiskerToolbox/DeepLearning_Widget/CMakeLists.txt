@@ -23,6 +23,8 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     UI/Helpers/DataSourceComboHelper.cpp
     UI/Helpers/DynamicInputSlotWidget.hpp
     UI/Helpers/DynamicInputSlotWidget.cpp
+    UI/Helpers/EncoderShapeWidget.hpp
+    UI/Helpers/EncoderShapeWidget.cpp
     UI/Helpers/OutputSlotWidget.hpp
     UI/Helpers/OutputSlotWidget.cpp
     UI/Helpers/PostEncoderWidget.hpp

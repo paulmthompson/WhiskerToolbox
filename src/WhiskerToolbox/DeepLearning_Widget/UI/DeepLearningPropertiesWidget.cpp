@@ -6,6 +6,7 @@
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/RecurrentBindingWidget.hpp"
@@ -395,7 +396,9 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
 
         // Apply saved encoder shape if configured
         if (_current_info && model_id == "general_encoder") {
-            _applyEncoderShape();
+            dl::widget::EncoderShapeWidget::applyEncoderShapeToAssembler(
+                    _state.get(), _assembler.get());
+            _current_info = _assembler->currentModelDisplayInfo();
         }
     }
 
@@ -498,6 +501,7 @@ void DeepLearningPropertiesWidget::_clearDynamicContent() {
     _sequence_slot_widgets.clear();
     _output_slot_widgets.clear();
     _post_encoder_widget = nullptr;
+    _encoder_shape_widget = nullptr;
     _recurrent_binding_widgets.clear();
     QLayoutItem * child = nullptr;
     while ((child = _dynamic_layout->takeAt(0)) != nullptr) {
@@ -521,7 +525,16 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
 
     // ── Encoder shape configuration (GeneralEncoderModel only) ──
     if (_current_info->model_id == "general_encoder") {
-        _buildEncoderShapeSection();
+        _encoder_shape_widget = new dl::widget::EncoderShapeWidget(
+                _state, _assembler.get(), _dynamic_container);
+        connect(_encoder_shape_widget,
+                &dl::widget::EncoderShapeWidget::shapeApplied,
+                this,
+                [this]() {
+                    _current_info = _assembler->currentModelDisplayInfo();
+                    _rebuildSlotPanels();
+                });
+        _dynamic_layout->addWidget(_encoder_shape_widget);
     }
 
     // ── Dynamic (per-frame) inputs ──
@@ -708,104 +721,6 @@ void DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency() {
                 spatial_dims_removed ? fv_only : all_decoders);
         slot_widget->refreshDataSources();
     }
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// Encoder Shape Configuration Section
-// ────────────────────────────────────────────────────────────────────────────
-
-void DeepLearningPropertiesWidget::_buildEncoderShapeSection() {
-    auto * group = new QGroupBox(tr("Encoder Shape"), _dynamic_container);
-    auto * form = new QFormLayout(group);
-    group->setToolTip(
-            tr("Configure the input resolution and output shape to match your\n"
-               "compiled model. The defaults (224\u00D7224 input, 384\u00D77\u00D77 output)\n"
-               "only apply to the default ConvNeXt-Tiny backbone.\n\n"
-               "Set these BEFORE loading weights."));
-
-    // ── Input Height ──
-    auto * height_spin = new QSpinBox(group);
-    height_spin->setRange(1, 4096);
-    height_spin->setSuffix(QStringLiteral(" px"));
-    int const saved_h = _state->encoderInputHeight();
-    height_spin->setValue(saved_h > 0 ? saved_h : 224);
-    form->addRow(tr("Input Height:"), height_spin);
-
-    // ── Input Width ──
-    auto * width_spin = new QSpinBox(group);
-    width_spin->setRange(1, 4096);
-    width_spin->setSuffix(QStringLiteral(" px"));
-    int const saved_w = _state->encoderInputWidth();
-    width_spin->setValue(saved_w > 0 ? saved_w : 224);
-    form->addRow(tr("Input Width:"), width_spin);
-
-    // ── Output Shape ──
-    auto * shape_edit = new QLineEdit(group);
-    shape_edit->setPlaceholderText(QStringLiteral("384,7,7"));
-    shape_edit->setToolTip(
-            tr("Comma-separated output dimensions (excluding batch), e.g.:\n"
-               "  384,7,7   — spatial feature map\n"
-               "  768,16,16 — larger backbone\n"
-               "  512       — 1D feature vector"));
-    auto const & saved_shape = _state->encoderOutputShape();
-    if (!saved_shape.empty()) {
-        shape_edit->setText(QString::fromStdString(saved_shape));
-    }
-    form->addRow(tr("Output Shape:"), shape_edit);
-
-    // ── Apply button ──
-    auto * apply_btn = new QPushButton(tr("Apply Shape"), group);
-    apply_btn->setToolTip(
-            tr("Apply the configured shape to the model.\n"
-               "You must re-load weights after changing the shape."));
-    form->addRow(apply_btn);
-
-    // Connections
-    connect(height_spin, &QSpinBox::valueChanged, this,
-            [this](int val) { _state->setEncoderInputHeight(val); });
-    connect(width_spin, &QSpinBox::valueChanged, this,
-            [this](int val) { _state->setEncoderInputWidth(val); });
-    connect(shape_edit, &QLineEdit::textChanged, this,
-            [this](QString const & text) {
-                _state->setEncoderOutputShape(text.toStdString());
-            });
-    connect(apply_btn, &QPushButton::clicked, this, [this] {
-        _applyEncoderShape();
-        _rebuildSlotPanels();
-    });
-
-    _dynamic_layout->addWidget(group);
-}
-
-void DeepLearningPropertiesWidget::_applyEncoderShape() {
-    int const h = _state->encoderInputHeight();
-    int const w = _state->encoderInputWidth();
-
-    // Parse output shape string
-    std::vector<int64_t> out_shape;
-    auto const & shape_str = _state->encoderOutputShape();
-    if (!shape_str.empty()) {
-        std::istringstream iss(shape_str);
-        std::string token;
-        while (std::getline(iss, token, ',')) {
-            try {
-                auto val = std::stoll(token);
-                if (val > 0) {
-                    out_shape.push_back(val);
-                }
-            } catch (std::exception const &) {
-                // Non-numeric token in comma-separated shape string — skip it
-            }
-        }
-    }
-
-    int const effective_h = (h > 0) ? h : 224;
-    int const effective_w = (w > 0) ? w : 224;
-
-    _assembler->configureModelShape(effective_h, effective_w, out_shape);
-
-    // Refresh the display info from the live model to show updated shapes
-    _current_info = _assembler->currentModelDisplayInfo();
 }
 
 QGroupBox * DeepLearningPropertiesWidget::_buildBooleanMaskGroup(
