@@ -132,7 +132,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">Getting Started</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../learning-resources.html"> 
+    <a class="nav-link" href="../../learning-resources/index.html"> 
 <span class="menu-text">Learning Resources</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -460,7 +460,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MyImportWidget<span class="op">::</span>_loadFile<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> filepath<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> loader_result <span class="op">=</span> LoaderRegistry<span class="op">::</span>tryLoad<span class="op">(</span></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        filepath<span class="op">.</span>toStdString<span class="op">(),</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        IODataType<span class="op">::</span>LineData<span class="op">,</span>      <span class="co">// Target data type</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        DM_DataType<span class="op">::</span>LineData<span class="op">,</span>      <span class="co">// Target data type</span></span>
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"my_data_key"</span><span class="op">,</span>             <span class="co">// Key in DataManager</span></span>
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        _loader_config<span class="op">,</span>            <span class="co">// nlohmann::json config</span></span>
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        _data_manager<span class="op">.</span>get<span class="op">()</span></span>

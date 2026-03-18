@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>mediaprocessing_refactoring_roadmap – Neuralyzer</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_reference.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#mediaprocessing-parameterschema-autoparamwidget-refactoring-roadmap" id="toc-mediaprocessing-parameterschema-autoparamwidget-refactoring-roadmap" class="nav-link active" data-scroll-target="#mediaprocessing-parameterschema-autoparamwidget-refactoring-roadmap">MediaProcessing → ParameterSchema + AutoParamWidget Refactoring Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#progress-summary" id="toc-progress-summary" class="nav-link" data-scroll-target="#progress-summary">Progress Summary</a></li>
+  <li><a href="#problem-summary" id="toc-problem-summary" class="nav-link" data-scroll-target="#problem-summary">Problem Summary</a>
+  <ul class="collapse">
+  <li><a href="#goals" id="toc-goals" class="nav-link" data-scroll-target="#goals">Goals</a></li>
+  </ul></li>
+  <li><a href="#phase-1-make-processingoptions-structs-reflect-cpp-compatible-complete" id="toc-phase-1-make-processingoptions-structs-reflect-cpp-compatible-complete" class="nav-link" data-scroll-target="#phase-1-make-processingoptions-structs-reflect-cpp-compatible-complete">Phase 1: Make ProcessingOptions structs reflect-cpp compatible ✅ COMPLETE</a>
+  <ul class="collapse">
+  <li><a href="#key-decision-where-does-the-rfl-dependency-live" id="toc-key-decision-where-does-the-rfl-dependency-live" class="nav-link" data-scroll-target="#key-decision-where-does-the-rfl-dependency-live">Key Decision: Where does the <code>rfl</code> dependency live?</a></li>
+  </ul></li>
+  <li><a href="#phase-2-separate-ui-editable-parameters-from-runtime-state-complete" id="toc-phase-2-separate-ui-editable-parameters-from-runtime-state-complete" class="nav-link" data-scroll-target="#phase-2-separate-ui-editable-parameters-from-runtime-state-complete">Phase 2: Separate UI-editable parameters from runtime state ✅ COMPLETE</a>
+  <ul class="collapse">
+  <li><a href="#tasks" id="toc-tasks" class="nav-link" data-scroll-target="#tasks">Tasks</a></li>
+  </ul></li>
+  <li><a href="#phase-3-create-a-new-mediaprocessingpipeline-library-complete" id="toc-phase-3-create-a-new-mediaprocessingpipeline-library-complete" class="nav-link" data-scroll-target="#phase-3-create-a-new-mediaprocessingpipeline-library-complete">Phase 3: Create a new <code>MediaProcessingPipeline</code> library ✅ COMPLETE</a>
+  <ul class="collapse">
+  <li><a href="#registration-pattern" id="toc-registration-pattern" class="nav-link" data-scroll-target="#registration-pattern">Registration Pattern</a></li>
+  <li><a href="#dependencies" id="toc-dependencies" class="nav-link" data-scroll-target="#dependencies">Dependencies</a></li>
+  </ul></li>
+  <li><a href="#phase-4-replace-processingoptions-widgets-with-autoparamwidget-complete" id="toc-phase-4-replace-processingoptions-widgets-with-autoparamwidget-complete" class="nav-link" data-scroll-target="#phase-4-replace-processingoptions-widgets-with-autoparamwidget-complete">Phase 4: Replace ProcessingOptions widgets with AutoParamWidget ✅ COMPLETE</a>
+  <ul class="collapse">
+  <li><a href="#new-mediaprocessing_widget-flow" id="toc-new-mediaprocessing_widget-flow" class="nav-link" data-scroll-target="#new-mediaprocessing_widget-flow">New <code>MediaProcessing_Widget</code> Flow</a></li>
+  <li><a href="#estimated-code-reduction" id="toc-estimated-code-reduction" class="nav-link" data-scroll-target="#estimated-code-reduction">Estimated Code Reduction</a></li>
+  </ul></li>
+  <li><a href="#phase-5-handle-special-cases-complete" id="toc-phase-5-handle-special-cases-complete" class="nav-link" data-scroll-target="#phase-5-handle-special-cases-complete">Phase 5: Handle special cases ✅ COMPLETE</a></li>
+  <li><a href="#phase-6-update-mediadisplayoptions-serialization" id="toc-phase-6-update-mediadisplayoptions-serialization" class="nav-link" data-scroll-target="#phase-6-update-mediadisplayoptions-serialization">Phase 6: Update MediaDisplayOptions serialization</a></li>
+  <li><a href="#execution-order" id="toc-execution-order" class="nav-link" data-scroll-target="#execution-order">Execution Order</a></li>
+  <li><a href="#what-stays-what-goes" id="toc-what-stays-what-goes" class="nav-link" data-scroll-target="#what-stays-what-goes">What Stays, What Goes</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="mediaprocessing-parameterschema-autoparamwidget-refactoring-roadmap" class="level1">
+<h1>MediaProcessing → ParameterSchema + AutoParamWidget Refactoring Roadmap</h1>
+<section id="progress-summary" class="level2">
+<h2 class="anchored" data-anchor-id="progress-summary">Progress Summary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 36%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>✅ Complete</td>
+<td>Option B implemented — <code>ProcessingOptionsSchema.hpp</code> in <code>MediaProcessingPipeline</code></td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>✅ Complete</td>
+<td><code>active</code> removed from all option structs; <code>MagicEraserOptions</code> split</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>✅ Complete</td>
+<td><code>MediaProcessingPipeline</code> library created and wired into build</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>✅ Complete</td>
+<td>22 widget files deleted; <code>MediaProcessing_Widget</code> rewritten with generic registry loop</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>✅ Complete</td>
+<td>All special cases handled: contrast hook, median constraints, colormap gating, magic eraser composition, auto-enable</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>⏳ Not started</td>
+<td>Optional polish</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="problem-summary" class="level2">
+<h2 class="anchored" data-anchor-id="problem-summary">Problem Summary</h2>
+<p>The <code>ProcessingOptions/</code> folder under <code>Media_Widget/UI/SubWidgets/MediaProcessing_Widget/</code> contains <strong>8 hand-written Qt widgets</strong> (24 files: <code>.hpp</code>, <code>.cpp</code>, <code>.ui</code> each) that follow an identical boilerplate pattern:</p>
+<ul>
+<li>Wrap a plain C++ options struct (e.g., <code>GammaOptions</code>) with a Qt form</li>
+<li>Manual signal-blocking <code>getOptions()</code>/<code>setOptions()</code> round-trips</li>
+<li>Hand-maintained <code>.ui</code> files defining spinboxes, checkboxes, combos</li>
+<li>Emit <code>optionsChanged(OptionsStruct)</code> signal</li>
+</ul>
+<p>These widgets are <strong>only consumed</strong> by <code>MediaProcessing_Widget</code>, which itself contains ~800 lines of repetitive slot wiring and <code>_applyXxxFilter()</code> methods. The entire system could be replaced by reflect-cpp structs + <code>AutoParamWidget</code>.</p>
+<section id="goals" class="level3">
+<h3 class="anchored" data-anchor-id="goals">Goals</h3>
+<ol type="1">
+<li>Use <code>ParameterSchema</code> / <code>AutoParamWidget</code> to auto-generate the processing option GUIs instead of maintaining hand-written widgets.</li>
+<li>Move the processing wrappers out of <code>Media_Widget</code> into a standalone library that other widgets can reuse.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="phase-1-make-processingoptions-structs-reflect-cpp-compatible-complete" class="level2">
+<h2 class="anchored" data-anchor-id="phase-1-make-processingoptions-structs-reflect-cpp-compatible-complete">Phase 1: Make ProcessingOptions structs reflect-cpp compatible ✅ COMPLETE</h2>
+<p><strong>Decision taken: Option B.</strong></p>
+<p><strong>What was done:</strong> - <code>ProcessingOptions.hpp</code> kept as plain structs with no rfl dependency. - <code>ParameterUIHints</code> specializations for all 8 structs created in <code>src/MediaProcessingPipeline/ProcessingOptionsSchema.hpp</code> (part of the Phase 3 library). - <code>ColormapType</code> enum handled automatically by reflect-cpp’s enumerator array support. - Non-UI fields excluded via Phase 2 struct split (see below).</p>
+<p><strong>Original tasks (for reference):</strong></p>
+<ol type="1">
+<li><p><strong>Add <code>rfl::Validator</code> constraints</strong> to struct fields to encode UI ranges. For example:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> GammaOptions <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> active<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Validator<span class="op">&lt;</span><span class="dt">double</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span><span class="dv">0</span><span class="op">&gt;,</span> rfl<span class="op">::</span>Maximum<span class="op">&lt;</span><span class="dv">10</span><span class="op">&gt;&gt;</span> gamma<span class="op">{</span><span class="fl">1.0</span><span class="op">};</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div></li>
+<li><p><strong>Add <code>ParameterUIHints</code> specializations</strong> for each struct to provide display names, tooltips, and field grouping. These live in a separate header so <code>ImageProcessing</code> doesn’t need an <code>rfl</code> dependency — the hints can live in a new bridge header.</p></li>
+<li><p><strong>Handle <code>ColormapType</code> enum</strong> — this already works with reflect-cpp’s <code>rfl::get_enumerator_array&lt;T&gt;()</code> since it’s a plain <code>enum class</code>. AutoParamWidget will generate a <code>QComboBox</code> automatically.</p></li>
+<li><p><strong>Exclude non-UI fields</strong> — <code>MagicEraserOptions::mask</code>, <code>MagicEraserOptions::image_size</code>, and <code>MagicEraserOptions::drawing_mode</code> are runtime-only state, not user-editable parameters. These need to be split out (see Phase 2).</p></li>
+</ol>
+<section id="key-decision-where-does-the-rfl-dependency-live" class="level3">
+<h3 class="anchored" data-anchor-id="key-decision-where-does-the-rfl-dependency-live">Key Decision: Where does the <code>rfl</code> dependency live?</h3>
+<ul>
+<li>The <code>ProcessingOptions.hpp</code> structs currently live in <code>ImageProcessing</code>, which has <strong>no rfl dependency</strong>.</li>
+<li><strong>Option A:</strong> Add <code>rfl</code> dependency to <code>ImageProcessing</code> (simplest, but heavier).</li>
+<li><strong>Option B (recommended):</strong> Keep the plain structs in <code>ImageProcessing</code> as-is. Create a companion header (e.g., <code>ProcessingOptionsSchema.hpp</code>) in the new library (Phase 3) that provides <code>extractParameterSchema</code> specializations and <code>ParameterUIHints</code> for each struct. This requires the structs to be simple aggregates, which they already are (except <code>ContrastOptions</code> with its methods — those can remain since reflect-cpp handles method-bearing structs fine as long as the fields are public).</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-2-separate-ui-editable-parameters-from-runtime-state-complete" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2-separate-ui-editable-parameters-from-runtime-state-complete">Phase 2: Separate UI-editable parameters from runtime state ✅ COMPLETE</h2>
+<p><strong>What was done:</strong> - <code>active</code> field removed from <code>ContrastOptions</code>, <code>GammaOptions</code>, <code>SharpenOptions</code>, <code>ClaheOptions</code>, <code>BilateralOptions</code>, <code>MedianOptions</code>, <code>ColormapOptions</code>. - <code>MagicEraserOptions</code> split into: - <code>MagicEraserParams</code> — UI-editable: <code>brush_size</code>, <code>median_filter_size</code> - <code>MagicEraserState</code> — runtime: <code>drawing_mode</code>, <code>mask</code>, <code>image_size</code> - <code>MagicEraserOptions</code> retained as a combined struct with <code>fromParamsAndState()</code> factory for backward-compatibility with <code>ImageProcessing</code> functions. - <code>MediaDisplayOptions</code> updated with 8 <code>bool XXX_active</code> fields at the struct level. - All 8 processing option widgets updated with <code>isActive()</code>/<code>setActive()</code>/<code>activeChanged()</code> signal. - <code>MediaProcessing_Widget</code> updated: <code>_applyXxxFilter(options, active)</code> signatures, <code>_onXxxActiveChanged()</code> slots, <code>_setupProcessingWidgets()</code> signal connections, <code>_loadProcessingChainFromMedia()</code> using <code>XXX_active</code>. - <code>Media_Window.cpp</code> updated: <code>colormap_options.active</code> → <code>colormap_active</code>. - <code>MaskDilationOptions</code> left unchanged (out of scope).</p>
+<p><strong>Original tasks (for reference):</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 45%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Struct</th>
+<th>UI-Editable Fields</th>
+<th>Runtime State</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ContrastOptions</code></td>
+<td><code>alpha</code>, <code>beta</code>, <code>display_min</code>, <code>display_max</code></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><code>GammaOptions</code></td>
+<td><code>gamma</code></td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><code>SharpenOptions</code></td>
+<td><code>sigma</code></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><code>ClaheOptions</code></td>
+<td><code>grid_size</code>, <code>clip_limit</code></td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><code>BilateralOptions</code></td>
+<td><code>diameter</code>, <code>sigma_color</code>, <code>sigma_spatial</code></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><code>MedianOptions</code></td>
+<td><code>kernel_size</code></td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><code>ColormapOptions</code></td>
+<td><code>colormap</code>, <code>alpha</code>, <code>normalize</code></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><code>MagicEraserOptions</code></td>
+<td><code>brush_size</code>, <code>median_filter_size</code></td>
+<td><code>drawing_mode</code>, <code>mask</code>, <code>image_size</code></td>
+</tr>
+</tbody>
+</table>
+<section id="tasks" class="level3">
+<h3 class="anchored" data-anchor-id="tasks">Tasks</h3>
+<ol type="1">
+<li>Split <code>MagicEraserOptions</code> into <code>MagicEraserParams</code> (UI-editable: <code>brush_size</code>, <code>median_filter_size</code>) and <code>MagicEraserState</code> (runtime: <code>active</code>, <code>drawing_mode</code>, <code>mask</code>, <code>image_size</code>).</li>
+<li>Consider whether the <code>active</code> field belongs in the schema or is managed externally (it’s more of a “processing chain toggle” than a parameter). <strong>Recommendation:</strong> Remove <code>active</code> from all option structs and manage it at the processing chain level via a wrapper. AutoParamWidget doesn’t generate “active” toggles — that’s the collapsible section’s job.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="phase-3-create-a-new-mediaprocessingpipeline-library-complete" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-create-a-new-mediaprocessingpipeline-library-complete">Phase 3: Create a new <code>MediaProcessingPipeline</code> library ✅ COMPLETE</h2>
+<p><strong>What was done:</strong> - Created <code>src/MediaProcessingPipeline/</code> with: - <code>ProcessingOptionsSchema.hpp</code> — <code>ParameterUIHints</code> specializations for all 8 option structs. - <code>ProcessingStep.hpp</code> — descriptor struct (<code>display_name</code>, <code>chain_key</code>, <code>schema</code>, <code>apply</code>). - <code>ProcessingStepRegistry.hpp/.cpp</code> — singleton registry with <code>RegisterStep&lt;T&gt;</code> RAII helper. - <code>CMakeLists.txt</code> — static library aliased as <code>WhiskerToolbox::MediaProcessingPipeline</code>. - 6 steps statically registered: Linear Transform, Gamma Correction, Image Sharpening, CLAHE, Bilateral Filter, Median Filter. Magic Eraser and Colormap are handled separately (state/rendering requirements). - Wired into <code>src/CMakeLists.txt</code> after <code>DataSynthesizer</code>. - Developer docs created at <code>docs/developer/MediaProcessingPipeline/index.qmd</code>.</p>
+<p><strong>Original design (for reference):</strong></p>
+<ul>
+<li><code>ProcessingStep.hpp</code> — Descriptor for a named processing step: display name, execution order, function pointer <code>void(cv::Mat&amp;, nlohmann::json const&amp;)</code>, and its <code>ParameterSchema</code>.</li>
+<li><code>ProcessingStepRegistry.hpp</code> — Static registry (like <code>DataSynthesizer</code>/<code>TransformsV2</code> pattern) mapping step names → <code>ProcessingStep</code> descriptors.</li>
+<li><code>ProcessingOptionsSchema.hpp</code> — The <code>ParameterUIHints</code> specializations and <code>extractParameterSchema</code> wrappers for each <code>*Options</code> struct.</li>
+<li>No Qt dependency; depends on <code>ImageProcessing</code>, <code>ParameterSchema</code>, and <code>rfl</code>.</li>
+</ul>
+<section id="registration-pattern" class="level3">
+<h3 class="anchored" data-anchor-id="registration-pattern">Registration Pattern</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In ProcessingStepRegistry.cpp</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> RegisterStep<span class="op">&lt;</span>ContrastOptions<span class="op">&gt;</span> reg_contrast<span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Linear Transform"</span><span class="op">,</span>           <span class="co">// display name</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"1__lineartransform"</span><span class="op">,</span>         <span class="co">// chain key</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">[](</span>cv<span class="op">::</span>Mat<span class="op">&amp;</span> m<span class="op">,</span> ContrastOptions <span class="at">const</span><span class="op">&amp;</span> o<span class="op">)</span> <span class="op">{</span> ImageProcessing<span class="op">::</span>linear_transform<span class="op">(</span>m<span class="op">,</span> o<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This eliminates the per-filter <code>_applyXxxFilter()</code> methods in <code>MediaProcessing_Widget</code> — the widget can iterate the registry and apply steps generically.</p>
+</section>
+<section id="dependencies" class="level3">
+<h3 class="anchored" data-anchor-id="dependencies">Dependencies</h3>
+<pre><code>MediaProcessingPipeline → ImageProcessing, ParameterSchema, reflectcpp</code></pre>
+<hr>
+</section>
+</section>
+<section id="phase-4-replace-processingoptions-widgets-with-autoparamwidget-complete" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-replace-processingoptions-widgets-with-autoparamwidget-complete">Phase 4: Replace ProcessingOptions widgets with AutoParamWidget ✅ COMPLETE</h2>
+<p><strong>What was done:</strong> - Deleted 22 files from <code>ProcessingOptions/</code> (7 widgets × 3 files each + <code>MagicEraserWidget.ui</code>). Only <code>MagicEraserWidget.hpp/.cpp</code> retained (slimmed to drawing controls only). - Rewrote <code>MediaProcessing_Widget.hpp/.cpp</code> from ~902 lines of per-filter boilerplate to ~650 lines of generic registry-driven code. - New <code>ProcessingSection</code> struct vector replaces 8 per-filter widget pointers, 8 Section pointers, and 8 per-filter slots. - <code>_setupRegistrySections()</code> iterates <code>ProcessingStepRegistry::instance().steps()</code> and creates <code>AutoParamWidget</code> + <code>QCheckBox</code> + <code>Section</code> for each step. - <code>_applyRegistryStep()</code> uses <code>ProcessingStepRegistry::findByKey()</code> to get the step’s apply function. - Updated <code>CMakeLists.txt</code>: removed 21 file references, added <code>AutoParamWidget</code> and <code>WhiskerToolbox::MediaProcessingPipeline</code> dependencies.</p>
+<p><strong>Original goal:</strong> Delete all 24 files in <code>ProcessingOptions/</code> and replace them with <code>AutoParamWidget</code> instances driven by the registry.</p>
+<section id="new-mediaprocessing_widget-flow" class="level3">
+<h3 class="anchored" data-anchor-id="new-mediaprocessing_widget-flow">New <code>MediaProcessing_Widget</code> Flow</h3>
+<pre><code>For each step in ProcessingStepRegistry:
+    1. Create a Section (collapsible) with the step's display name
+    2. Add a QCheckBox for "active" toggle (replaces the per-struct `active` field)
+    3. Create an AutoParamWidget, call setSchema(step.schema)
+    4. Connect AutoParamWidget::parametersChanged → generic handler:
+       - Serialize toJson() → rfl::json::read&lt;OptionsType&gt;() → apply to processing chain
+    5. Connect the active checkbox → add/remove step from MediaData</code></pre>
+</section>
+<section id="estimated-code-reduction" class="level3">
+<h3 class="anchored" data-anchor-id="estimated-code-reduction">Estimated Code Reduction</h3>
+<ul>
+<li><strong>Delete:</strong> 8 × <code>.hpp</code> + 8 × <code>.cpp</code> + 8 × <code>.ui</code> = <strong>24 files</strong> (~1500 lines)</li>
+<li><strong>Delete:</strong> ~400 lines of per-filter slot handlers and apply methods in <code>MediaProcessing_Widget.cpp</code></li>
+<li><strong>Add:</strong> ~100 lines of generic loop in <code>MediaProcessing_Widget.cpp</code></li>
+<li><strong>Add:</strong> ~150 lines for <code>MediaProcessingPipeline</code> library (registry + schemas)</li>
+<li><strong>Net reduction: ~1650 lines, consolidated into ~250 lines of generic code.</strong></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-5-handle-special-cases-complete" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-handle-special-cases-complete">Phase 5: Handle special cases ✅ COMPLETE</h2>
+<p><strong>What was done:</strong> - <strong>Contrast bidirectional</strong>: Installed <code>PostEditHook</code> on the Linear Transform <code>AutoParamWidget</code> that calls <code>ContrastOptions::calculateAlphaBetaFromMinMax()</code> after any field change. - <strong>Median kernel constraints</strong>: <code>_updateMedianKernelConstraints()</code> rebuilds the schema with adjusted <code>max_value</code> (21 for 8-bit grayscale, 5 otherwise) when media changes. - <strong>Colormap availability</strong>: Section enabled/disabled based on <code>MediaData::DisplayFormat::Gray</code>; auto-unchecks active when non-grayscale. - <strong>Magic Eraser composition</strong>: Separate section with <code>AutoParamWidget</code> for <code>MagicEraserParams</code> (brush_size, filter_size) + slimmed <code>MagicEraserWidget</code> for drawing mode toggle and mask clearing. - <strong>Auto-enable checkbox</strong>: All sections auto-check their active checkbox when <code>parametersChanged</code> fires.</p>
+<p><strong>Original description:</strong> Some widgets have behavior that <code>AutoParamWidget</code> doesn’t natively support. These need targeted solutions:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 48%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Widget</th>
+<th>Special Behavior</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ContrastWidget</code></td>
+<td>Bidirectional alpha/beta ↔︎ min/max calculation</td>
+<td>Use the <code>postEditHook</code> on <code>AutoParamWidget</code>. When <code>parametersChanged</code> fires, the hook recomputes derived fields and calls <code>fromJson()</code> to update the UI. Alternatively, keep <code>ContrastOptions::calculateAlphaBetaFromMinMax()</code> and apply it as a post-deserialization hook.</td>
+</tr>
+<tr class="even">
+<td><code>MedianWidget</code></td>
+<td><code>setKernelConstraints(bool is_8bit_grayscale)</code> — changes max range at runtime</td>
+<td>Use <code>ParameterUIHints</code> to set default range; provide a <code>reconfigure</code> hook on the step that accepts media metadata and rebuilds the schema with updated constraints. <code>AutoParamWidget::setSchema()</code> already supports being called multiple times.</td>
+</tr>
+<tr class="odd">
+<td><code>ColormapWidget</code></td>
+<td><code>setColormapEnabled(bool)</code> — disables entire section for non-grayscale</td>
+<td>Handle at the Section level: hide/disable the section based on media format. This is orchestration logic, not widget logic.</td>
+</tr>
+<tr class="even">
+<td><code>MagicEraserWidget</code></td>
+<td>Drawing mode toggle, mask accumulation, clear button</td>
+<td>This widget has significant canvas interaction that <code>AutoParamWidget</code> cannot replace. <strong>Keep a thin custom widget</strong> for the drawing/mask management, but use <code>AutoParamWidget</code> for the parameter portion (brush size, filter size). Compose: <code>MagicEraserSection = AutoParamWidget(params) + DrawingControls(custom)</code>.</td>
+</tr>
+<tr class="odd">
+<td>All widgets</td>
+<td>Auto-enable checkbox when value changes</td>
+<td>Implement at the Section level: connect <code>AutoParamWidget::parametersChanged</code> → auto-check active checkbox.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="phase-6-update-mediadisplayoptions-serialization" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-update-mediadisplayoptions-serialization">Phase 6: Update MediaDisplayOptions serialization</h2>
+<p><strong>Current:</strong> <code>MediaDisplayOptions</code> stores each <code>*Options</code> struct with its <code>active</code> and <code>bool</code> fields.</p>
+<p><strong>After refactoring:</strong> - Each options struct no longer contains <code>active</code> — that’s managed by the processing chain presence. - <code>MediaDisplayOptions</code> stores a <code>std::map&lt;std::string, nlohmann::json&gt;</code> (or equivalent) mapping step keys to their JSON-serialized parameters, plus a <code>std::set&lt;std::string&gt;</code> of active step keys. - This makes the options future-proof: adding a new processing step to the registry automatically makes it available without modifying <code>MediaDisplayOptions</code>.</p>
+<p><strong>Alternative (simpler, less invasive):</strong> Keep the current struct-per-filter layout in <code>MediaDisplayOptions</code> for now. The structs still work — we’re just generating UI from them differently. Defer the generic map approach to a future phase.</p>
+<hr>
+</section>
+<section id="execution-order" class="level2">
+<h2 class="anchored" data-anchor-id="execution-order">Execution Order</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 29%">
+<col style="width: 14%">
+<col style="width: 19%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Dependency</th>
+<th>Risk</th>
+<th>Effort</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>None</td>
+<td>Low — additive changes to existing structs</td>
+<td>Small</td>
+<td>✅ Complete</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Phase 1</td>
+<td>Low — struct split, find-and-replace</td>
+<td>Small</td>
+<td>✅ Complete</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Phase 1</td>
+<td>Medium — new library, CMake wiring</td>
+<td>Medium</td>
+<td>✅ Complete</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Phase 3</td>
+<td>Medium — main widget rewrite, large diff</td>
+<td>Large</td>
+<td>✅ Complete</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Phase 4</td>
+<td>Medium — special-case handling</td>
+<td>Medium</td>
+<td>✅ Complete</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>Phase 4</td>
+<td>Low — optional, can defer</td>
+<td>Small</td>
+<td>⏳ Not started</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Current status:</strong> Phases 1–5 are complete. Phase 6 (generic <code>MediaDisplayOptions</code> serialization) is optional polish and deferred.</p>
+<hr>
+</section>
+<section id="what-stays-what-goes" class="level2">
+<h2 class="anchored" data-anchor-id="what-stays-what-goes">What Stays, What Goes</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 64%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Fate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>BilateralWidget.*</code> (3 files)</td>
+<td><strong>Deleted</strong> ✅</td>
+</tr>
+<tr class="even">
+<td><code>ClaheWidget.*</code> (3 files)</td>
+<td><strong>Deleted</strong> ✅</td>
+</tr>
+<tr class="odd">
+<td><code>ContrastWidget.*</code> (3 files)</td>
+<td><strong>Deleted</strong> ✅ (replaced by AutoParamWidget + post-edit hook)</td>
+</tr>
+<tr class="even">
+<td><code>GammaWidget.*</code> (3 files)</td>
+<td><strong>Deleted</strong> ✅</td>
+</tr>
+<tr class="odd">
+<td><code>MedianWidget.*</code> (3 files)</td>
+<td><strong>Deleted</strong> ✅</td>
+</tr>
+<tr class="even">
+<td><code>SharpenWidget.*</code> (3 files)</td>
+<td><strong>Deleted</strong> ✅</td>
+</tr>
+<tr class="odd">
+<td><code>ColormapWidget.*</code> (3 files)</td>
+<td><strong>Deleted</strong> ✅</td>
+</tr>
+<tr class="even">
+<td><code>MagicEraserWidget.ui</code></td>
+<td><strong>Deleted</strong> ✅</td>
+</tr>
+<tr class="odd">
+<td><code>MagicEraserWidget.hpp/.cpp</code></td>
+<td><strong>Slimmed</strong> ✅ — drawing controls only; params via AutoParamWidget</td>
+</tr>
+<tr class="even">
+<td><code>MediaProcessing_Widget.*</code></td>
+<td><strong>Rewritten</strong> ✅ — generic loop replaces per-filter boilerplate</td>
+</tr>
+<tr class="odd">
+<td><code>ProcessingOptions.hpp</code></td>
+<td><strong>Kept</strong> in <code>ImageProcessing</code> (no rfl dependency added)</td>
+</tr>
+<tr class="even">
+<td><code>ProcessingOptionsSchema.hpp</code></td>
+<td><strong>Created</strong> in <code>MediaProcessingPipeline</code> lib</td>
+</tr>
+<tr class="odd">
+<td><code>ProcessingStepRegistry.*</code></td>
+<td><strong>Created</strong> in <code>MediaProcessingPipeline</code> lib</td>
+</tr>
+</tbody>
+</table>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

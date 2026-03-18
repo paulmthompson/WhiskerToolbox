@@ -36,4 +36,4 @@ Please make sure to run clang-tidy on all of your submitted files with the style
 
 <https://clang.llvm.org/extra/clang-tidy/>
 
-## 
+##

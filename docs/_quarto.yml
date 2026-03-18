@@ -86,7 +86,6 @@ website:
               contents:
                 - developer/DataSynthesizer/GeneratorRegistry.qmd
                 - developer/DataSynthesizer/Widget.qmd
-            - developer/MediaProcessingPipeline/index.qmd
                 - section: "Generators"
                   contents:
                     - developer/DataSynthesizer/Generators/Analog.qmd
@@ -94,6 +93,8 @@ website:
                     - developer/DataSynthesizer/Generators/DigitalInterval.qmd
                     - developer/DataSynthesizer/Generators/Spatial.qmd
                     - developer/DataSynthesizer/Generators/MotionModels.qmd
+        - section: "Media Processing Pipeline"
+          href: developer/MediaProcessingPipeline/index.qmd
         - section: "Data Inspectors"
           contents:
             - developer/ui/data_inspectors/tensor_inspector.qmd
@@ -176,7 +177,7 @@ website:
             - text: "Keypoint Labeling"
               href: examples/keypoint_labeling.qmd
             - text: "HMM Behavioral Epoch Prediction"
-              href: learning-resources/how-to/hmm_behavioral_epochs.qmd
+              href: learning-resources/tutorials/hmm_behavioral_epochs.qmd
         - section: "Concepts"
           contents: 
             - concepts/timeframe.qmd

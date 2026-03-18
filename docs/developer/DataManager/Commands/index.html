@@ -1,0 +1,2579 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Command Architecture – Neuralyzer</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../api_reference.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../developer/DataManager/data_manager.html">Data Management</a></li><li class="breadcrumb-item"><a href="../../../developer/DataManager/Commands/index.html">Command Architecture</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Developer Documentation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/python_bindings/python_integration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Python Integration</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Profiling and Performance</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/building.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Building</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/copilot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C++ Development Tools Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contributing Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fuzz Testing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to C++</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/analysis/precondition_protocol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Precondition Documentation Protocol</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/testing/layout_sanity_checker_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Layout Sanity Checker — Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../api_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">API Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core Libraries</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/CoreGeometry/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Core Geometry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CorePlotting Library</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/Entity/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Entity Library</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../developer/DeepLearning/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Learning</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/model_wrapper_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Creating a C++ Model Wrapper</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/aot_inductor_tutorial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AOT Inductor Export Tutorial</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/static_input_capture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Static Input Capture &amp; Preview (Phase 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/recurrent_inputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recurrent (Feedback) Inputs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/hybrid_sequence_inputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hybrid Sequence Inputs (Phase 5)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/batch_mode_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Batch Mode &amp; Multi-Variant Model Loading</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/batch_inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Batch Range Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/background_inference_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Background Inference Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/background_inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Background Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/general_encoder.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">General Encoder Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/post_encoder_modules.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Post-Encoder Feature Extraction Modules</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DeepLearning/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Learning Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../developer/transforms_v2/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Transforms V2</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/transforms_v2/architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/transforms_v2/adding_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Adding New Transforms</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../developer/ParameterSchema/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ParameterSchema</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ParameterSchema/enum_variant_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Enum &amp; Variant Support — Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+ <span class="menu-text">Data Synthesizer</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataSynthesizer/GeneratorRegistry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generator Registry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataSynthesizer/Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DataSynthesizer Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text">Generators</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataSynthesizer/Generators/Analog.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Analog Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataSynthesizer/Generators/DigitalEvent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Digital Event Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataSynthesizer/Generators/DigitalInterval.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Digital Interval Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataSynthesizer/Generators/Spatial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataSynthesizer/Generators/MotionModels.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Motion Models</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <span class="sidebar-item-text sidebar-link text-start">
+ <span class="menu-text">Media Processing Pipeline</span></span>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Inspectors</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/data_inspectors/tensor_inspector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tensor Inspector (Dev)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/data_inspectors/digital_event_series_inspector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DigitalEventSeries Inspector</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Management</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/data_manager.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">File IO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/IO/mask_csv_rle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mask Data CSV (RLE) Loader</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/IO/csv_line_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CSV Line Data I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/IO/capnproto_line_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CapnProto Binary Line Data I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/IO/opencv_mask_image.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">OpenCV Binary Image Mask I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/IO/saver_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SaverInfo &amp; AtomicWrite</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/data_structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Structure Performance</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/binary_loading_performance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Binary Multi-Channel Loading Performance Analysis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/generic_time_series.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generic Time Series Programming</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/storage_architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/storage_testing_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Testing Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/storage_benchmarking_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Benchmarking Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/concurrency_architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concurrency Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/threaded_loading_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Threaded Loading Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../developer/DataManager/Commands/index.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Command Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Architecture Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/core_types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Core Types &amp; Factory</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/sequence_execution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Variable Substitution &amp; Sequence Execution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/get_entity_ids_in_range.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">getEntityIdsInRange Helpers</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/commands.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concrete Commands</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/save_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SaveData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/load_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">LoadData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/synthesize_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SynthesizeData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/command_introspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Introspection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/gui_verb_audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GUI Verb Audit (Step 1.10)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/widget_save_refactoring_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refactoring Guide: Widget Export to SaveData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/data_manager_snapshot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DataManagerSnapshot</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/Commands/command_log_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Log Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">Triage Session</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/TriageSession/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TriageSession</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true">
+ <span class="menu-text">User Interface</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/data_manager/data_manager_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/data_transform/data_transform_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Transform Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/media_widget/media_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/ui/media_widget/media_point_widget.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/ui/media_widget/media_line_widget.qmd</span>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/TriageSession_Widget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TriageSession Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../developer/ui/Features/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Features</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Collapsible Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/autoparam.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AutoParam System</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../developer/ui/Plots/plot_widget_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Plot Widgets</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-15" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false">
+ <span class="menu-text">Common</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-16" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/Common/ColormapControls/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ColormapControls</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/Common/TooltipManager/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TooltipManager</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/3DPlot/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/ACFWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ACF Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/DataViewerWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Viewer Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/EventPlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Event Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/HeatmapWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Heatmap Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/LinePlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Line Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/OnionSkinViewWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Onion Skin View Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/PSTHWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PSTH Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/ScatterPlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Scatter Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/SpectrogramWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spectrogram Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Temporal Projection View Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#source-location" id="toc-source-location" class="nav-link" data-scroll-target="#source-location">Source Location</a></li>
+  <li><a href="#problem-statement" id="toc-problem-statement" class="nav-link" data-scroll-target="#problem-statement">Problem Statement</a>
+  <ul class="collapse">
+  <li><a href="#motivating-scenarios" id="toc-motivating-scenarios" class="nav-link" data-scroll-target="#motivating-scenarios">Motivating Scenarios</a></li>
+  </ul></li>
+  <li><a href="#architecture-overview" id="toc-architecture-overview" class="nav-link" data-scroll-target="#architecture-overview">Architecture Overview</a>
+  <ul class="collapse">
+  <li><a href="#relationship-to-existing-systems" id="toc-relationship-to-existing-systems" class="nav-link" data-scroll-target="#relationship-to-existing-systems">Relationship to Existing Systems</a></li>
+  <li><a href="#scope-boundary-data-state-vs.-view-state" id="toc-scope-boundary-data-state-vs.-view-state" class="nav-link" data-scroll-target="#scope-boundary-data-state-vs.-view-state">Scope Boundary: Data State vs.&nbsp;View State</a></li>
+  <li><a href="#where-this-lives" id="toc-where-this-lives" class="nav-link" data-scroll-target="#where-this-lives">Where This Lives</a></li>
+  </ul></li>
+  <li><a href="#core-types" id="toc-core-types" class="nav-link" data-scroll-target="#core-types">Core Types</a></li>
+  <li><a href="#icommand-interface-factory" id="toc-icommand-interface-factory" class="nav-link" data-scroll-target="#icommand-interface-factory">ICommand Interface &amp; Factory</a>
+  <ul class="collapse">
+  <li><a href="#icommand-base-class" id="toc-icommand-base-class" class="nav-link" data-scroll-target="#icommand-base-class">ICommand Base Class</a></li>
+  <li><a href="#command-factory" id="toc-command-factory" class="nav-link" data-scroll-target="#command-factory">Command Factory</a></li>
+  <li><a href="#why-not-a-static-registry" id="toc-why-not-a-static-registry" class="nav-link" data-scroll-target="#why-not-a-static-registry">Why Not a Static Registry?</a></li>
+  <li><a href="#sequence-execution" id="toc-sequence-execution" class="nav-link" data-scroll-target="#sequence-execution">Sequence Execution</a></li>
+  <li><a href="#variable-substitution" id="toc-variable-substitution" class="nav-link" data-scroll-target="#variable-substitution">Variable Substitution</a></li>
+  <li><a href="#validation" id="toc-validation" class="nav-link" data-scroll-target="#validation">Validation</a></li>
+  </ul></li>
+  <li><a href="#command-introspection" id="toc-command-introspection" class="nav-link" data-scroll-target="#command-introspection">Command Introspection</a>
+  <ul class="collapse">
+  <li><a href="#the-problem" id="toc-the-problem" class="nav-link" data-scroll-target="#the-problem">The Problem</a></li>
+  <li><a href="#commandinfo" id="toc-commandinfo" class="nav-link" data-scroll-target="#commandinfo">CommandInfo</a></li>
+  <li><a href="#factory-query-functions" id="toc-factory-query-functions" class="nav-link" data-scroll-target="#factory-query-functions">Factory Query Functions</a></li>
+  <li><a href="#shared-parameterschema-library" id="toc-shared-parameterschema-library" class="nav-link" data-scroll-target="#shared-parameterschema-library">Shared ParameterSchema Library</a></li>
+  <li><a href="#shared-autoparamwidget-library" id="toc-shared-autoparamwidget-library" class="nav-link" data-scroll-target="#shared-autoparamwidget-library">Shared AutoParamWidget Library</a></li>
+  <li><a href="#triage-widget-guided-pipeline-editor" id="toc-triage-widget-guided-pipeline-editor" class="nav-link" data-scroll-target="#triage-widget-guided-pipeline-editor">Triage Widget: Guided Pipeline Editor</a></li>
+  <li><a href="#design-rationale" id="toc-design-rationale" class="nav-link" data-scroll-target="#design-rationale">Design Rationale</a></li>
+  </ul></li>
+  <li><a href="#commands" id="toc-commands" class="nav-link" data-scroll-target="#commands">Commands</a>
+  <ul class="collapse">
+  <li><a href="#movebytimerange" id="toc-movebytimerange" class="nav-link" data-scroll-target="#movebytimerange">MoveByTimeRange</a></li>
+  <li><a href="#copybytimerange" id="toc-copybytimerange" class="nav-link" data-scroll-target="#copybytimerange">CopyByTimeRange</a></li>
+  <li><a href="#savedata-phase-3-planned" id="toc-savedata-phase-3-planned" class="nav-link" data-scroll-target="#savedata-phase-3-planned">SaveData <em>(Phase 3 — planned)</em></a></li>
+  <li><a href="#addinterval" id="toc-addinterval" class="nav-link" data-scroll-target="#addinterval">AddInterval</a></li>
+  <li><a href="#loaddata-phase-3-planned" id="toc-loaddata-phase-3-planned" class="nav-link" data-scroll-target="#loaddata-phase-3-planned">LoadData <em>(Phase 3 — planned)</em></a></li>
+  <li><a href="#runtransformpipeline-future" id="toc-runtransformpipeline-future" class="nav-link" data-scroll-target="#runtransformpipeline-future">RunTransformPipeline <em>(future)</em></a></li>
+  <li><a href="#foreachkey-meta-command" id="toc-foreachkey-meta-command" class="nav-link" data-scroll-target="#foreachkey-meta-command">ForEachKey (Meta-Command)</a></li>
+  </ul></li>
+  <li><a href="#triage-session" id="toc-triage-session" class="nav-link" data-scroll-target="#triage-session">Triage Session</a>
+  <ul class="collapse">
+  <li><a href="#state-machine" id="toc-state-machine" class="nav-link" data-scroll-target="#state-machine">State Machine</a></li>
+  <li><a href="#core-class" id="toc-core-class" class="nav-link" data-scroll-target="#core-class">Core Class</a></li>
+  <li><a href="#commit-implementation" id="toc-commit-implementation" class="nav-link" data-scroll-target="#commit-implementation">Commit Implementation</a></li>
+  <li><a href="#tracked-regions" id="toc-tracked-regions" class="nav-link" data-scroll-target="#tracked-regions">Tracked Regions</a></li>
+  <li><a href="#example-triage-pipeline" id="toc-example-triage-pipeline" class="nav-link" data-scroll-target="#example-triage-pipeline">Example Triage Pipeline</a></li>
+  <li><a href="#ui-sketch" id="toc-ui-sketch" class="nav-link" data-scroll-target="#ui-sketch">UI Sketch</a></li>
+  <li><a href="#triagesessionstate-editorstate-subclass" id="toc-triagesessionstate-editorstate-subclass" class="nav-link" data-scroll-target="#triagesessionstate-editorstate-subclass">TriageSessionState (EditorState subclass)</a></li>
+  </ul></li>
+  <li><a href="#tracked-regions-for-machine-learning" id="toc-tracked-regions-for-machine-learning" class="nav-link" data-scroll-target="#tracked-regions-for-machine-learning">Tracked Regions for Machine Learning</a>
+  <ul class="collapse">
+  <li><a href="#implicit-negative-labeling" id="toc-implicit-negative-labeling" class="nav-link" data-scroll-target="#implicit-negative-labeling">Implicit Negative Labeling</a></li>
+  <li><a href="#prediction-scope" id="toc-prediction-scope" class="nav-link" data-scroll-target="#prediction-scope">Prediction Scope</a></li>
+  <li><a href="#incremental-training" id="toc-incremental-training" class="nav-link" data-scroll-target="#incremental-training">Incremental Training</a></li>
+  </ul></li>
+  <li><a href="#persistence-safety" id="toc-persistence-safety" class="nav-link" data-scroll-target="#persistence-safety">Persistence Safety</a>
+  <ul class="collapse">
+  <li><a href="#write-ahead-pattern" id="toc-write-ahead-pattern" class="nav-link" data-scroll-target="#write-ahead-pattern">Write-Ahead Pattern</a></li>
+  <li><a href="#when-to-save" id="toc-when-to-save" class="nav-link" data-scroll-target="#when-to-save">When to Save</a></li>
+  <li><a href="#relationship-to-workspace-save" id="toc-relationship-to-workspace-save" class="nav-link" data-scroll-target="#relationship-to-workspace-save">Relationship to Workspace Save</a></li>
+  </ul></li>
+  <li><a href="#integration-with-action-journal" id="toc-integration-with-action-journal" class="nav-link" data-scroll-target="#integration-with-action-journal">Integration with Action Journal</a></li>
+  <li><a href="#integration-with-undoredo" id="toc-integration-with-undoredo" class="nav-link" data-scroll-target="#integration-with-undoredo">Integration with Undo/Redo</a>
+  <ul class="collapse">
+  <li><a href="#commandstack" id="toc-commandstack" class="nav-link" data-scroll-target="#commandstack">CommandStack</a></li>
+  <li><a href="#undo-strategies" id="toc-undo-strategies" class="nav-link" data-scroll-target="#undo-strategies">Undo Strategies</a></li>
+  <li><a href="#widgetstatechangecommand" id="toc-widgetstatechangecommand" class="nav-link" data-scroll-target="#widgetstatechangecommand">WidgetStateChangeCommand</a></li>
+  <li><a href="#commandsequencecommand-triage-undo" id="toc-commandsequencecommand-triage-undo" class="nav-link" data-scroll-target="#commandsequencecommand-triage-undo">CommandSequenceCommand (Triage Undo)</a></li>
+  </ul></li>
+  <li><a href="#json-console-integration" id="toc-json-console-integration" class="nav-link" data-scroll-target="#json-console-integration">JSON Console Integration</a>
+  <ul class="collapse">
+  <li><a href="#unified-json-dispatch" id="toc-unified-json-dispatch" class="nav-link" data-scroll-target="#unified-json-dispatch">Unified JSON Dispatch</a></li>
+  </ul></li>
+  <li><a href="#design-principles" id="toc-design-principles" class="nav-link" data-scroll-target="#design-principles">Design Principles</a></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../developer/DataManager/data_manager.html">Data Management</a></li><li class="breadcrumb-item"><a href="../../../developer/DataManager/Commands/index.html">Command Architecture</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Command Architecture</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>The Command Architecture provides a unified system for representing all <code>DataManager</code>-level operations as serializable, composable, and optionally undoable command objects. It enables multi-step workflows (such as triage pipelines) to be defined as JSON documents and executed atomically.</p>
+<p>For the phased implementation plan, see the <a href="../../../developer/DataManager/Commands/roadmap.html">Command Architecture Roadmap</a>.</p>
+</section>
+<section id="source-location" class="level2">
+<h2 class="anchored" data-anchor-id="source-location">Source Location</h2>
+<ul>
+<li>Core command library: <code>src/Commands/</code> (standalone static library)
+<ul>
+<li><code>src/Commands/Core/</code> — framework: <code>ICommand</code>, <code>CommandFactory</code>, <code>CommandRecorder</code>, <code>SequenceExecution</code>, <code>Validation</code>, <code>VariableSubstitution</code></li>
+<li><code>src/Commands/IO/</code> — persistence commands: <code>SaveData</code>, <code>LoadData</code></li>
+<li><code>src/Commands/</code> (root) — data mutation commands: <code>MoveByTimeRange</code>, <code>CopyByTimeRange</code>, <code>AddInterval</code>, <code>ForEachKey</code></li>
+</ul></li>
+<li>Triage session (non-Qt): <code>src/TriageSession/</code></li>
+<li>Triage widget (Qt): <code>src/WhiskerToolbox/TriageSession_Widget/</code></li>
+<li>Command sequence widget (Qt): <code>src/WhiskerToolbox/Commands/</code></li>
+</ul>
+</section>
+<section id="problem-statement" class="level2">
+<h2 class="anchored" data-anchor-id="problem-statement">Problem Statement</h2>
+<p>Neuralyzer has several independent “verb systems” that each handle a category of operations:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 24%">
+<col style="width: 35%">
+<col style="width: 24%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>System</th>
+<th>What it does</th>
+<th>JSON-serializable?</th>
+<th>Composable?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>LoaderRegistry</code> + <code>IFormatLoader</code></td>
+<td>Create data objects from files</td>
+<td>Yes (<code>nlohmann::json</code> config)</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td><code>TransformsV2</code> + <code>PipelineDescriptor</code></td>
+<td>Transform data element-by-element</td>
+<td>Yes (<code>rfl::json</code>)</td>
+<td>Yes (pipelines)</td>
+</tr>
+<tr class="odd">
+<td><code>CSVSingleFileLineSaverOptions</code>, etc.</td>
+<td>Save data objects to disk</td>
+<td>Structurally yes (reflect-cpp structs)</td>
+<td>No unified dispatch</td>
+</tr>
+<tr class="even">
+<td><code>moveByEntityIds</code> / <code>copyByEntityIds</code></td>
+<td>Move/copy entries between data objects</td>
+<td>No — imperative C++ only</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td><code>DigitalIntervalSeries</code> creation</td>
+<td>Track inspected regions</td>
+<td>No — widget-driven</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td><code>EditorState::fromJson()</code> / <code>toJson()</code></td>
+<td>Widget state changes</td>
+<td>Yes (reflect-cpp)</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>These systems cannot be combined into multi-step workflows. A user who wants to “move 5 line objects from predicted to ground truth, save all 10 CSVs, and record the inspected frame range” must perform each step manually through different widgets. There is no way to define this workflow as a reusable, serializable unit.</p>
+<section id="motivating-scenarios" class="level3">
+<h3 class="anchored" data-anchor-id="motivating-scenarios">Motivating Scenarios</h3>
+<p><strong>Scenario 1 — Line triage:</strong> A deep learning algorithm produces 5 <code>LineData</code> objects across 200,000 video frames. The user visually inspects the video, identifies stretches of correct output, and wants to batch-move those lines to “ground truth” objects, save the CSVs, and record which frames have been triaged — all in one atomic operation they can repeat hundreds of times.</p>
+<p><strong>Scenario 2 — Contact labeling:</strong> The user jumps to scattered regions of a video (frames 75000–76000, 150000–151000) to label “contact” events. Frames within those manually-inspected regions that lack a contact label are implicitly “not contact.” The program must track which regions have been inspected so that unlabeled frames outside those regions are correctly treated as “unknown” rather than “negative.”</p>
+<p><strong>Scenario 3 — Multi-object persistence:</strong> As data moves between “predicted” and “ground truth” states, the source and destination CSVs must both be updated. Forgetting to save, or saving only one side, creates data loss risk. Serialization should be part of the same operation that moves data, not a separate manual step.</p>
+</section>
+</section>
+<section id="architecture-overview" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-overview">Architecture Overview</h2>
+<p>The solution is a <strong>Command Architecture</strong> — any operation on <code>DataManager</code> is represented as an <code>ICommand</code> subclass with typed parameters. Commands can be composed into sequences, resolved with runtime variables, and dispatched through a single virtual <code>execute()</code> call. A simple factory function maps JSON descriptors to concrete command objects.</p>
+<p><strong>Completeness criterion:</strong> A command exists for every user-facing action in the GUI that modifies <code>DataManager</code> state. The underlying systems may be arbitrarily complex (a transform pipeline chains dozens of element transforms; a data load involves format detection, parsing, and TimeFrame setup), but the <em>command</em> is whatever the user sees as a single action: “run this pipeline,” “load this file,” “move these frames.” Command coverage is audited by walking every widget and enumerating its buttons, menu items, keyboard shortcuts, and drag-and-drop actions.</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    ICommand (virtual base)                    │
+│  (JSON-serializable via reflect-cpp, optional undo)          │
+│                                                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐  │
+│  │ MoveByTime   │  │ SaveData     │  │ RunPipeline       │  │
+│  │ CopyByTime   │  │ LoadData     │  │ (wraps            │  │
+│  │              │  │              │  │  TransformsV2)    │  │
+│  └──────────────┘  └──────────────┘  └───────────────────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐  │
+│  │ AddInterval  │  │ DeleteData   │  │ CreateData        │  │
+│  │ ClearAtTime  │  │              │  │ (wraps Loaders)   │  │
+│  └──────────────┘  └──────────────┘  └───────────────────┘  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ used by
+         ┌─────────────────┼─────────────────┐
+         ▼                 ▼                 ▼
+   TriageSession     ActionJournal     Future consumers
+   (mark/commit)     (record/replay)   (CLI batch, macros,
+                                        Python bridge)</code></pre>
+<section id="relationship-to-existing-systems" class="level3">
+<h3 class="anchored" data-anchor-id="relationship-to-existing-systems">Relationship to Existing Systems</h3>
+<ul>
+<li><strong>TransformsV2 operates at the element level</strong> — transform individual data points within a single data object. The Command Architecture operates at the <strong>DataManager level</strong> — move entire objects, save files, create intervals, manage state.</li>
+<li><strong><code>RunTransformPipeline</code></strong> is a command that bridges the two: it takes an input key, output key, and pipeline descriptor, and delegates to TransformsV2 for execution.</li>
+<li><strong>EditorState</strong> is not replaced and is not part of the command architecture. EditorState manages view/UI concerns (display options, zoom, active selections) which already have their own persistence via <code>toJson()</code>/<code>fromJson()</code> and workspace save.</li>
+</ul>
+</section>
+<section id="scope-boundary-data-state-vs.-view-state" class="level3">
+<h3 class="anchored" data-anchor-id="scope-boundary-data-state-vs.-view-state">Scope Boundary: Data State vs.&nbsp;View State</h3>
+<p>User actions fall into two categories with different infrastructure:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>DataManager operations</th>
+<th>EditorState operations</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Examples</strong></td>
+<td>Move data, save CSV, run pipeline, add interval, delete object</td>
+<td>Change line color, toggle grid, set zoom, pick active data key</td>
+</tr>
+<tr class="even">
+<td><strong>Scope</strong></td>
+<td>Shared state — affects all consumers of that data</td>
+<td>Local state — affects one widget instance</td>
+</tr>
+<tr class="odd">
+<td><strong>Frequency</strong></td>
+<td>Occasional (button clicks, triage commits)</td>
+<td>Constant (every slider drag, color pick, checkbox)</td>
+</tr>
+<tr class="even">
+<td><strong>Mechanism</strong></td>
+<td><code>ICommand</code> with <code>execute()</code> / <code>undo()</code></td>
+<td>EditorState signals + <code>markDirty()</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Persistence</strong></td>
+<td>Explicit (<code>SaveData</code> command, workspace save)</td>
+<td>Automatic (EditorState workspace serialization)</td>
+</tr>
+<tr class="even">
+<td><strong>Undo</strong></td>
+<td>Via <code>CommandStack</code> (per-command inverse or memento)</td>
+<td>Not needed — user just changes it back</td>
+</tr>
+<tr class="odd">
+<td><strong>Composable</strong></td>
+<td>Yes (command sequences, triage pipelines)</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td><strong>Journal</strong></td>
+<td>Yes (every command recorded)</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>ICommand</code> is for data mutations only.</strong> This follows the same boundary Blender draws between its Operator system (scene data → global undo) and viewport/UI state (no undo). The rationale:</p>
+<ul>
+<li>Data mutations can be <strong>destructive</strong> (moving 10,000 entities between objects). Undo matters.</li>
+<li>View state changes are <strong>trivially reversible</strong> by the user (drag the slider back, re-pick the color). Undo is noise.</li>
+<li>Data mutations are <strong>composable</strong> (“move 5 objects, save, add interval” is a meaningful workflow). View state changes are not.</li>
+<li>Data mutations are <strong>worth journaling</strong> for reproducibility. View state changes are not.</li>
+</ul>
+<p>If a specific widget state change is destructive enough to warrant undo (e.g., “reset all display options to defaults”), it can use the opt-in <code>WidgetStateChangeCommand</code> adapter. But routine interactions — the vast majority of EditorState changes — stay outside the command system entirely.</p>
+<p><strong>Future option:</strong> If fine-grained view-state undo becomes valuable, the natural fit is a per-EditorState memento stack — a lightweight, widget-local undo that doesn’t interact with the global <code>CommandStack</code>. This would be an EditorState feature, not a command architecture feature.</p>
+</section>
+<section id="where-this-lives" class="level3">
+<h3 class="anchored" data-anchor-id="where-this-lives">Where This Lives</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 27%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Location</th>
+<th>Qt dependency?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ICommand</code>, <code>CommandResult</code>, <code>CommandContext</code></td>
+<td><code>src/Commands/Core/</code></td>
+<td><strong>No</strong></td>
+</tr>
+<tr class="even">
+<td><code>CommandDescriptor</code>, <code>CommandSequenceDescriptor</code></td>
+<td><code>src/Commands/Core/</code></td>
+<td><strong>No</strong></td>
+</tr>
+<tr class="odd">
+<td>Concrete commands (<code>MoveByTimeRange</code>, <code>AddInterval</code>, etc.)</td>
+<td><code>src/Commands/</code></td>
+<td><strong>No</strong></td>
+</tr>
+<tr class="even">
+<td>IO commands (<code>SaveData</code>, <code>LoadData</code>)</td>
+<td><code>src/Commands/IO/</code></td>
+<td><strong>No</strong></td>
+</tr>
+<tr class="odd">
+<td><code>CommandFactory</code>, <code>CommandInfo</code> + <code>getAvailableCommands()</code></td>
+<td><code>src/Commands/Core/</code></td>
+<td><strong>No</strong></td>
+</tr>
+<tr class="even">
+<td><code>ParameterSchema</code> (shared library)</td>
+<td><code>src/ParameterSchema/</code></td>
+<td><strong>No</strong></td>
+</tr>
+<tr class="odd">
+<td><code>AutoParamWidget</code> (shared UI library)</td>
+<td><code>src/WhiskerToolbox/AutoParamWidget/</code></td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td><code>TriageSession</code></td>
+<td><code>src/TriageSession/</code></td>
+<td><strong>No</strong></td>
+</tr>
+<tr class="odd">
+<td><code>TriageSessionWidget</code></td>
+<td><code>src/WhiskerToolbox/TriageSession_Widget/</code></td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td><code>CommandSequenceWidget</code></td>
+<td><code>src/WhiskerToolbox/Commands/</code> <em>(planned)</em></td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The command library lives in <code>src/Commands/</code> as a standalone static library above <code>DataManager</code>. This keeps it free from Qt, available to unit tests, Python bindings, and future CLI tools, and — crucially — allows commands to wrap libraries that sit <em>above</em> <code>DataManager</code> (such as <code>TransformsV2</code> and <code>DeepLearning</code>) without creating circular dependencies.</p>
+</section>
+</section>
+<section id="core-types" class="level2">
+<h2 class="anchored" data-anchor-id="core-types">Core Types</h2>
+<p>The four foundational types are defined in <code>src/Commands/Core/</code>:</p>
+<ul>
+<li><strong><code>CommandResult</code></strong> — <code>{success, error_message, affected_keys}</code> with static <code>ok()</code> and <code>error()</code> factory methods.</li>
+<li><strong><code>CommandContext</code></strong> — Not serialized. Holds the live <code>shared_ptr&lt;DataManager&gt;</code>, a <code>runtime_variables</code> map for <code>${variable}</code> substitution, and an optional progress callback.</li>
+<li><strong><code>CommandDescriptor</code></strong> — Serializable single-command invocation: <code>command_name</code>, optional <code>rfl::Generic</code> <code>parameters</code>, and an optional human-readable <code>description</code>.</li>
+<li><strong><code>CommandSequenceDescriptor</code></strong> — Serializable command list with optional <code>name</code>, <code>version</code>, and static <code>variables</code> map for template substitution.</li>
+</ul>
+<p>Full signatures and serialization examples: <a href="../../../developer/DataManager/Commands/core_types.html">Core Types &amp; Factory</a>.</p>
+</section>
+<section id="icommand-interface-factory" class="level2">
+<h2 class="anchored" data-anchor-id="icommand-interface-factory">ICommand Interface &amp; Factory</h2>
+<p>Commands use a virtual base class. Each command holds its own parameters, knows how to execute and (optionally) undo itself, and can serialize to JSON via reflect-cpp. No registry or static registration is needed.</p>
+<section id="icommand-base-class" class="level3">
+<h3 class="anchored" data-anchor-id="icommand-base-class">ICommand Base Class</h3>
+<p><code>ICommand</code> provides pure virtual <code>execute()</code>, <code>commandName()</code>, and <code>toJson()</code> methods, plus opt-in <code>isUndoable()</code> / <code>undo()</code> / <code>mergeId()</code> / <code>mergeWith()</code> (all defaulting to “not undoable” / “not mergeable”). There is <strong>one interface</strong> for both execution and undo — no separate <code>IUndoableCommand</code> hierarchy.</p>
+</section>
+<section id="command-factory" class="level3">
+<h3 class="anchored" data-anchor-id="command-factory">Command Factory</h3>
+<p><code>createCommand(name, params)</code> is the only place that needs to know about all command types. It maps a <code>command_name</code> string + <code>rfl::Generic</code> parameters to a concrete <code>ICommand</code> instance via a simple <code>if</code>-chain in <code>CommandFactory.cpp</code>. Returns <code>nullptr</code> for unknown names or deserialization failures. For a set of ~10–15 commands that grows slowly, a centralized factory is a feature, not a limitation — you can see every command the system supports in one place.</p>
+<p>See <a href="../../../developer/DataManager/Commands/core_types.html">Core Types &amp; Factory</a> for the interface definition and current implementation.</p>
+</section>
+<section id="why-not-a-static-registry" class="level3">
+<h3 class="anchored" data-anchor-id="why-not-a-static-registry">Why Not a Static Registry?</h3>
+<p>The TransformsV2 <code>ElementRegistry</code> uses static registration because the pipeline builder must <strong>introspect transform metadata at assembly time</strong>: input/output types, chaining compatibility, reduction vs.&nbsp;element transform, parameter schemas. The registry answers questions the orchestrator needs before it can wire the pipeline together.</p>
+<p>Commands have none of this complexity. A command takes a <code>DataManager</code>, does something, returns <code>CommandResult</code>. The sequence executor doesn’t need to know what a command does internally — it just calls <code>execute()</code> in order and stops on error.</p>
+<p>This means:</p>
+<ul>
+<li><strong>No <code>--whole-archive</code> linker flags.</strong> Static registration requires RAII objects in anonymous namespaces that the linker may strip. A factory in a <code>.cpp</code> file has no such issue.</li>
+<li><strong>No type-erased storage.</strong> The virtual interface provides dispatch directly.</li>
+<li><strong>Undo is unified.</strong> The same <code>ICommand</code> object implements both <code>execute()</code> and <code>undo()</code>, holding any state needed between the two calls.</li>
+<li><strong>Trivial to add commands.</strong> Write a params struct, write a class, add one <code>if</code> branch to the factory.</li>
+</ul>
+</section>
+<section id="sequence-execution" class="level3">
+<h3 class="anchored" data-anchor-id="sequence-execution">Sequence Execution</h3>
+<p><code>executeSequence()</code> iterates a <code>CommandSequenceDescriptor</code>, performs two-pass <code>${variable}</code> substitution on each descriptor, creates commands via the factory, calls <code>execute()</code> in order, and collects executed commands into a <code>SequenceResult</code> for undo support. Stop-on-first-error behavior is configurable. Failed sequences report partial state and <code>failed_index</code>.</p>
+<p>Details, <code>SequenceResult</code> definition, and error policy: <a href="../../../developer/DataManager/Commands/sequence_execution.html">Variable Substitution &amp; Sequence Execution</a>.</p>
+</section>
+<section id="variable-substitution" class="level3">
+<h3 class="anchored" data-anchor-id="variable-substitution">Variable Substitution</h3>
+<p>Two-pass <code>${variable}</code> substitution reusing the pattern from TransformsV2 pipelines:</p>
+<ol type="1">
+<li><strong>Static pass</strong>: Template variables from <code>CommandSequenceDescriptor::variables</code> are substituted into the JSON before deserialization. These are known at authoring time.</li>
+<li><strong>Runtime pass</strong>: <code>CommandContext::runtime_variables</code> (e.g., <code>mark_frame</code>, <code>current_frame</code>) are substituted after the static pass.</li>
+</ol>
+<p>Both passes use the same string replacement logic. For parameters that are numeric (like frame indices), the substituted string is parsed to the expected type during reflect-cpp deserialization.</p>
+</section>
+<section id="validation" class="level3">
+<h3 class="anchored" data-anchor-id="validation">Validation</h3>
+<p><code>validateSequence()</code> checks a command sequence <em>before</em> any commands execute, returning a <code>ValidationResult</code> with <code>valid</code>, <code>warnings</code>, and <code>errors</code> fields. Checks run in order:</p>
+<ol type="1">
+<li><strong>Structural:</strong> All <code>command_name</code> values map to known commands in the factory.</li>
+<li><strong>Deserialization:</strong> Parameters deserialize into the expected params struct without error.</li>
+<li><strong>Variable resolution:</strong> All <code>${variable}</code> references resolve.</li>
+<li><strong>Data key existence (optional):</strong> Referenced keys exist in <code>DataManager</code>.</li>
+<li><strong>Type compatibility (optional):</strong> Source and destination have the same <code>DataTypeVariant</code>.</li>
+</ol>
+<p>Checks 1–3 run without a <code>DataManager</code>; checks 4–5 require a live one. Full API and <code>ForEachKey</code> special handling: <a href="../../../developer/DataManager/Commands/validation.html">Validation</a>.</p>
+</section>
+</section>
+<section id="command-introspection" class="level2">
+<h2 class="anchored" data-anchor-id="command-introspection">Command Introspection</h2>
+<p>The command architecture provides <strong>introspection</strong> — any consumer (UI, CLI, Python bridge) can query what commands are available and what parameters each one requires. This enables guided pipeline editors, autocompletion, and schema-aware validation.</p>
+<section id="the-problem" class="level3">
+<h3 class="anchored" data-anchor-id="the-problem">The Problem</h3>
+<p>Without introspection, the only way to build a command sequence is to hand-write JSON with knowledge of every command name and parameter field. The centralized factory can <em>execute</em> commands, but cannot answer:</p>
+<ul>
+<li>“What commands exist?” (no listing function)</li>
+<li>“What parameters does <code>MoveByTimeRange</code> need?” (no schema)</li>
+<li>“Is this command undoable? What types does it support?” (no metadata)</li>
+</ul>
+</section>
+<section id="commandinfo" class="level3">
+<h3 class="anchored" data-anchor-id="commandinfo">CommandInfo</h3>
+<p><code>CommandInfo</code> provides static metadata for each command:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> CommandInfo <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string name<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string description<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string category<span class="op">;</span>         <span class="co">// "data_mutation", "meta", "persistence", etc.</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> supports_undo <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> supported_data_types<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    ParameterSchema parameter_schema<span class="op">;</span>  <span class="co">// From shared ParameterSchema library</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="factory-query-functions" class="level3">
+<h3 class="anchored" data-anchor-id="factory-query-functions">Factory Query Functions</h3>
+<p>Two functions are added to <code>CommandFactory.hpp</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Return metadata for all registered commands</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>CommandInfo<span class="op">&gt;</span> getAvailableCommands<span class="op">();</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// Return metadata for a single command, or std::nullopt if unknown</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span>CommandInfo<span class="op">&gt;</span> getCommandInfo<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name<span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>These are implemented alongside the existing <code>createCommand()</code> if-chain in <code>CommandFactory.cpp</code>. Adding a new command means adding one <code>if</code>-branch to <code>createCommand()</code> and one entry to <code>getAvailableCommands()</code> — both in the same file.</p>
+</section>
+<section id="shared-parameterschema-library" class="level3">
+<h3 class="anchored" data-anchor-id="shared-parameterschema-library">Shared ParameterSchema Library</h3>
+<p><code>ParameterSchema</code> is factored out of TransformsV2 into its own library (<code>src/ParameterSchema/</code>) so that both TransformsV2 and the Command Architecture can depend on it without coupling to each other. <code>ParameterSchema</code> depends only on reflect-cpp and the standard library.</p>
+<p>The <code>extractParameterSchema&lt;T&gt;()</code> function template uses <code>rfl::fields&lt;T&gt;()</code> to enumerate struct fields at compile time, producing <code>ParameterFieldDescriptor</code> objects with:</p>
+<ul>
+<li>Field name, type, display name</li>
+<li>Min/max constraints (from <code>rfl::Validator</code>)</li>
+<li>Allowed values (for enum-like strings)</li>
+<li>Default value, tooltip, group</li>
+<li>Optional/advanced flags</li>
+</ul>
+<p>Customization is provided by <code>ParameterUIHints&lt;T&gt;</code> template specializations, which annotate schemas with tooltips, allowed values, display order, and grouping.</p>
+</section>
+<section id="shared-autoparamwidget-library" class="level3">
+<h3 class="anchored" data-anchor-id="shared-autoparamwidget-library">Shared AutoParamWidget Library</h3>
+<p><code>AutoParamWidget</code> is factored out of <code>TransformsV2_Widget</code> into its own shared library (<code>src/WhiskerToolbox/AutoParamWidget/</code>) so that any widget can generate parameter forms from a <code>ParameterSchema</code>. It maps field types to Qt widgets:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Field Type</th>
+<th>Qt Widget</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>float</code> / <code>double</code></td>
+<td><code>QDoubleSpinBox</code> (with min/max from validators)</td>
+</tr>
+<tr class="even">
+<td><code>int</code></td>
+<td><code>QSpinBox</code></td>
+</tr>
+<tr class="odd">
+<td><code>bool</code></td>
+<td><code>QCheckBox</code></td>
+</tr>
+<tr class="even">
+<td><code>std::string</code> (with <code>allowed_values</code>)</td>
+<td><code>QComboBox</code></td>
+</tr>
+<tr class="odd">
+<td><code>std::string</code> (free-form)</td>
+<td><code>QLineEdit</code></td>
+</tr>
+<tr class="even">
+<td><code>std::optional&lt;T&gt;</code></td>
+<td>Checkbox-gated inner widget</td>
+</tr>
+</tbody>
+</table>
+<p>Both TransformsV2_Widget and the Triage/Command widgets depend on this shared library.</p>
+</section>
+<section id="triage-widget-guided-pipeline-editor" class="level3">
+<h3 class="anchored" data-anchor-id="triage-widget-guided-pipeline-editor">Triage Widget: Guided Pipeline Editor</h3>
+<p>With introspection, the triage widget’s pipeline section evolves from a raw JSON text box to a guided editor. The raw JSON editor remains available for power users.</p>
+<p><strong>Command picker:</strong> An “Add Command…” button opens a picker populated by <code>getAvailableCommands()</code>, showing command name + description, grouped by category.</p>
+<p><strong>Parameter form:</strong> Selecting a command generates an <code>AutoParamWidget</code> from its <code>ParameterSchema</code>. The user fills in fields with typed widgets (spin boxes for frame numbers, line edits for data keys) with tooltips and constraints, instead of hand-typing JSON.</p>
+<p><strong>Editable command list:</strong> Each command in the sequence is shown as an expandable row with an <code>AutoParamWidget</code> pre-populated from the current parameter values. Edits update the underlying <code>CommandSequenceDescriptor</code> and the raw JSON view.</p>
+<pre><code>┌─────────────────────────────────────────┐
+│ Pipeline: "Triage 5 Whiskers"           │
+│ [Load JSON...] [Add Command...]         │
+│                                         │
+│ ┌─ 1. MoveByTimeRange ─────────── [x] ┐│
+│ │  Source Key:      [pred_w0        ]  ││
+│ │  Destination Key: [gt_w0          ]  ││
+│ │  Start Frame:     [${mark_frame}  ]  ││
+│ │  End Frame:       [${current_frame}] ││
+│ └──────────────────────────────────────┘│
+│ ┌─ 2. AddInterval ─────────────── [x] ┐│
+│ │  Interval Key:    [tracked_regions]  ││
+│ │  Start Frame:     [${mark_frame}  ]  ││
+│ │  End Frame:       [${current_frame}] ││
+│ │  Create if Missing: [✓]             ││
+│ └──────────────────────────────────────┘│
+│                                         │
+│ [▼ Show raw JSON]                       │
+└─────────────────────────────────────────┘</code></pre>
+</section>
+<section id="design-rationale" class="level3">
+<h3 class="anchored" data-anchor-id="design-rationale">Design Rationale</h3>
+<p>This approach reuses the centralized factory without introducing a static registry:</p>
+<ul>
+<li><strong>No <code>--whole-archive</code> linker flags.</strong> The factory file is the single source of truth for both command creation and metadata. No RAII registration objects.</li>
+<li><strong>Reuse proven infrastructure.</strong> <code>ParameterSchema</code> and <code>AutoParamWidget</code> are battle-tested in TransformsV2. Extracting them is a clean refactor with no new template machinery.</li>
+<li><strong>Incremental.</strong> Commands work without introspection. The factory query functions and <code>CommandInfo</code> are additive — existing code is unaffected.</li>
+<li><strong>UI-agnostic.</strong> <code>CommandInfo</code> and <code>ParameterSchema</code> are non-Qt. Only <code>AutoParamWidget</code> requires Qt, and it’s a separate library. CLI tools and the Python bridge can use <code>getAvailableCommands()</code> directly.</li>
+</ul>
+</section>
+</section>
+<section id="commands" class="level2">
+<h2 class="anchored" data-anchor-id="commands">Commands</h2>
+<p>The command library currently has four implemented commands (Phase 1) and three planned for future phases:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 18%">
+<col style="width: 21%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Phase</th>
+<th>Status</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>MoveByTimeRange</code></td>
+<td>1</td>
+<td>Done</td>
+<td>Move entities in <code>[start, end]</code> between same-type data objects; undoable</td>
+</tr>
+<tr class="even">
+<td><code>CopyByTimeRange</code></td>
+<td>1</td>
+<td>Done</td>
+<td>Copy entities without modifying source; wider type support</td>
+</tr>
+<tr class="odd">
+<td><code>AddInterval</code></td>
+<td>1</td>
+<td>Done</td>
+<td>Append interval to <code>DigitalIntervalSeries</code>, create if missing</td>
+</tr>
+<tr class="even">
+<td><code>ForEachKey</code></td>
+<td>1</td>
+<td>Done</td>
+<td>Meta-command: iterate a list, bind each to <code>${variable}</code>, run sub-commands</td>
+</tr>
+<tr class="odd">
+<td><code>SaveData</code></td>
+<td>3</td>
+<td>Planned</td>
+<td>Uniform save via <code>SaverRegistry</code>; atomic write-ahead pattern</td>
+</tr>
+<tr class="even">
+<td><code>LoadData</code></td>
+<td>3</td>
+<td>Planned</td>
+<td>Wraps <code>LoaderRegistry</code> for uniform dispatch</td>
+</tr>
+<tr class="odd">
+<td><code>RunTransformPipeline</code></td>
+<td>future</td>
+<td>Planned</td>
+<td>Bridges to TransformsV2 for element-level transforms</td>
+</tr>
+</tbody>
+</table>
+<section id="movebytimerange" class="level3">
+<h3 class="anchored" data-anchor-id="movebytimerange">MoveByTimeRange</h3>
+<p>Moves all entries in <code>[start_frame, end_frame]</code> from source to destination via <code>moveByEntityIds()</code>. Captures moved entity IDs during <code>execute()</code> for symmetric <code>undo()</code> — the command object <em>is</em> the undo state. Supported types: <code>LineData</code>, <code>PointData</code>, <code>MaskData</code>, <code>DigitalEventSeries</code>.</p>
+<section id="getentityidsinrange-free-functions" class="level4">
+<h4 class="anchored" data-anchor-id="getentityidsinrange-free-functions"><code>getEntityIdsInRange</code> Free Functions</h4>
+<p>Pure query helpers that collect <code>EntityId</code>s in a time range. Template for <code>RaggedTimeSeries&lt;T&gt;</code> plus overloads for <code>DigitalEventSeries</code> and <code>DigitalIntervalSeries</code>. See <a href="../../../developer/DataManager/Commands/get_entity_ids_in_range.html">getEntityIdsInRange Helpers</a>.</p>
+</section>
+</section>
+<section id="copybytimerange" class="level3">
+<h3 class="anchored" data-anchor-id="copybytimerange">CopyByTimeRange</h3>
+<p>Same shape as <code>MoveByTimeRange</code> but uses <code>copyByEntityIds()</code>. Source is unmodified. Wider type support: <code>DigitalIntervalSeries</code> supports copy but not move.</p>
+</section>
+<section id="savedata-phase-3-planned" class="level3">
+<h3 class="anchored" data-anchor-id="savedata-phase-3-planned">SaveData <em>(Phase 3 — planned)</em></h3>
+<p>Will wrap existing savers behind a <code>SaverRegistry</code> with an atomic write-ahead pattern. Parameters: <code>data_key</code>, <code>format</code>, <code>path</code>, optional <code>format_options</code>.</p>
+</section>
+<section id="addinterval" class="level3">
+<h3 class="anchored" data-anchor-id="addinterval">AddInterval</h3>
+<p>Appends an interval to a <code>DigitalIntervalSeries</code>. When <code>create_if_missing = true</code> and the key does not exist, creates an empty series with the default <code>TimeKey("time")</code>.</p>
+</section>
+<section id="loaddata-phase-3-planned" class="level3">
+<h3 class="anchored" data-anchor-id="loaddata-phase-3-planned">LoadData <em>(Phase 3 — planned)</em></h3>
+<p>Will wrap <code>LoaderRegistry</code> for uniform dispatch. Parameters: <code>data_key</code>, <code>data_type</code>, <code>filepath</code>, <code>format</code>, optional <code>format_options</code>.</p>
+</section>
+<section id="runtransformpipeline-future" class="level3">
+<h3 class="anchored" data-anchor-id="runtransformpipeline-future">RunTransformPipeline <em>(future)</em></h3>
+<p>Will bridge the command system to TransformsV2. Parameters: <code>input_key</code>, <code>output_key</code>, and either an inline <code>PipelineDescriptor</code> or a <code>pipeline_file</code> path.</p>
+</section>
+<section id="foreachkey-meta-command" class="level3">
+<h3 class="anchored" data-anchor-id="foreachkey-meta-command">ForEachKey (Meta-Command)</h3>
+<p>Iterates a list of string values, binds each to <code>${variable}</code>, and executes sub-commands per item. Undo reverses all undoable sub-commands in reverse order. See <a href="../../../developer/DataManager/Commands/commands.html">Concrete Commands</a> for the full parameter struct and JSON example.</p>
+</section>
+</section>
+<section id="triage-session" class="level2">
+<h2 class="anchored" data-anchor-id="triage-session">Triage Session</h2>
+<p>The triage session is a <strong>consumer</strong> of the command architecture, not a bespoke system. It manages a simple state machine and, on commit, executes a user-configured <code>CommandSequenceDescriptor</code>.</p>
+<section id="state-machine" class="level3">
+<h3 class="anchored" data-anchor-id="state-machine">State Machine</h3>
+<pre><code>IDLE  ──[Mark]──►  MARKING  ──[Commit]──►  IDLE
+                      │
+                      └──[Recall]──►  IDLE (jump back to mark frame)</code></pre>
+</section>
+<section id="core-class" class="level3">
+<h3 class="anchored" data-anchor-id="core-class">Core Class</h3>
+<p><code>TriageSession</code> provides <code>setPipeline()</code>, <code>mark()</code>, <code>recall()</code>, and <code>commit()</code> along with state/mark-frame accessors and <code>lastCommitCommands()</code> / <code>takeLastCommitCommands()</code> for undo support. Full API: <a href="../../../developer/TriageSession/index.html">TriageSession Core Library</a>.</p>
+</section>
+<section id="commit-implementation" class="level3">
+<h3 class="anchored" data-anchor-id="commit-implementation">Commit Implementation</h3>
+<p>On <code>commit()</code>, the session populates <code>CommandContext::runtime_variables</code> with <code>mark_frame</code> and <code>current_frame</code>, then delegates to <code>executeSequence()</code>. The triage session has no knowledge of what commands are in its pipeline.</p>
+</section>
+<section id="tracked-regions" class="level3">
+<h3 class="anchored" data-anchor-id="tracked-regions">Tracked Regions</h3>
+<p>The triage session doesn’t manage tracked regions directly. Instead, the user includes an <code>AddInterval</code> command in their triage pipeline:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"AddInterval"</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"interval_key"</span><span class="fu">:</span> <span class="st">"tracked_regions"</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"start_frame"</span><span class="fu">:</span> <span class="st">"${mark_frame}"</span><span class="fu">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"end_frame"</span><span class="fu">:</span> <span class="st">"${current_frame}"</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The resulting <code>DigitalIntervalSeries</code> in <code>DataManager</code> is a first-class data object. It can be:</p>
+<ul>
+<li>Visualized on the timeline as a shaded overlay.</li>
+<li>Queried by MLCore to know which frames have been manually triaged.</li>
+<li>Used to compute complement regions (frames that haven’t been inspected yet).</li>
+<li>Saved/loaded like any other data object.</li>
+</ul>
+</section>
+<section id="example-triage-pipeline" class="level3">
+<h3 class="anchored" data-anchor-id="example-triage-pipeline">Example Triage Pipeline</h3>
+<p>A complete pipeline for triaging 5 whisker line objects:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"Triage 5 Whiskers"</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"variables"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"gt_prefix"</span><span class="fu">:</span> <span class="st">"gt_"</span><span class="fu">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"pred_prefix"</span><span class="fu">:</span> <span class="st">"predicted_"</span><span class="fu">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"output_dir"</span><span class="fu">:</span> <span class="st">"/data/experiment_01/ground_truth"</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"commands"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"MoveByTimeRange"</span><span class="fu">,</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"${pred_prefix}whisker_0"</span><span class="fu">,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"destination_key"</span><span class="fu">:</span> <span class="st">"${gt_prefix}whisker_0"</span><span class="fu">,</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"start_frame"</span><span class="fu">:</span> <span class="st">"${mark_frame}"</span><span class="fu">,</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"end_frame"</span><span class="fu">:</span> <span class="st">"${current_frame}"</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"MoveByTimeRange"</span><span class="fu">,</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"${pred_prefix}whisker_1"</span><span class="fu">,</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"destination_key"</span><span class="fu">:</span> <span class="st">"${gt_prefix}whisker_1"</span><span class="fu">,</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"start_frame"</span><span class="fu">:</span> <span class="st">"${mark_frame}"</span><span class="fu">,</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"end_frame"</span><span class="fu">:</span> <span class="st">"${current_frame}"</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"MoveByTimeRange"</span><span class="fu">,</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"${pred_prefix}whisker_2"</span><span class="fu">,</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"destination_key"</span><span class="fu">:</span> <span class="st">"${gt_prefix}whisker_2"</span><span class="fu">,</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"start_frame"</span><span class="fu">:</span> <span class="st">"${mark_frame}"</span><span class="fu">,</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"end_frame"</span><span class="fu">:</span> <span class="st">"${current_frame}"</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"MoveByTimeRange"</span><span class="fu">,</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"${pred_prefix}whisker_3"</span><span class="fu">,</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"destination_key"</span><span class="fu">:</span> <span class="st">"${gt_prefix}whisker_3"</span><span class="fu">,</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"start_frame"</span><span class="fu">:</span> <span class="st">"${mark_frame}"</span><span class="fu">,</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"end_frame"</span><span class="fu">:</span> <span class="st">"${current_frame}"</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"MoveByTimeRange"</span><span class="fu">,</span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"${pred_prefix}whisker_4"</span><span class="fu">,</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"destination_key"</span><span class="fu">:</span> <span class="st">"${gt_prefix}whisker_4"</span><span class="fu">,</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"start_frame"</span><span class="fu">:</span> <span class="st">"${mark_frame}"</span><span class="fu">,</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"end_frame"</span><span class="fu">:</span> <span class="st">"${current_frame}"</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"SaveData"</span><span class="fu">,</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"data_key"</span><span class="fu">:</span> <span class="st">"${gt_prefix}whisker_0"</span><span class="fu">,</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv_single"</span><span class="fu">,</span></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"${output_dir}/${gt_prefix}whisker_0.csv"</span></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"SaveData"</span><span class="fu">,</span></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"data_key"</span><span class="fu">:</span> <span class="st">"${gt_prefix}whisker_1"</span><span class="fu">,</span></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv_single"</span><span class="fu">,</span></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"${output_dir}/${gt_prefix}whisker_1.csv"</span></span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"SaveData"</span><span class="fu">,</span></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"data_key"</span><span class="fu">:</span> <span class="st">"${gt_prefix}whisker_2"</span><span class="fu">,</span></span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv_single"</span><span class="fu">,</span></span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"${output_dir}/${gt_prefix}whisker_2.csv"</span></span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"SaveData"</span><span class="fu">,</span></span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"data_key"</span><span class="fu">:</span> <span class="st">"${gt_prefix}whisker_3"</span><span class="fu">,</span></span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv_single"</span><span class="fu">,</span></span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"${output_dir}/${gt_prefix}whisker_3.csv"</span></span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"SaveData"</span><span class="fu">,</span></span>
+<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"data_key"</span><span class="fu">:</span> <span class="st">"${gt_prefix}whisker_4"</span><span class="fu">,</span></span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv_single"</span><span class="fu">,</span></span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"${output_dir}/${gt_prefix}whisker_4.csv"</span></span>
+<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"AddInterval"</span><span class="fu">,</span></span>
+<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"interval_key"</span><span class="fu">:</span> <span class="st">"tracked_regions"</span><span class="fu">,</span></span>
+<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"start_frame"</span><span class="fu">:</span> <span class="st">"${mark_frame}"</span><span class="fu">,</span></span>
+<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"end_frame"</span><span class="fu">:</span> <span class="st">"${current_frame}"</span></span>
+<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"SaveData"</span><span class="fu">,</span></span>
+<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"data_key"</span><span class="fu">:</span> <span class="st">"tracked_regions"</span><span class="fu">,</span></span>
+<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv_single"</span><span class="fu">,</span></span>
+<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"${output_dir}/tracked_regions.csv"</span></span>
+<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
+<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="ui-sketch" class="level3">
+<h3 class="anchored" data-anchor-id="ui-sketch">UI Sketch</h3>
+<pre><code>┌─────────────────────────────────────────┐
+│ Triage Session                          │
+├─────────────────────────────────────────┤
+│ Status: IDLE / MARKING (from 42000)     │
+│                                         │
+│ [Mark]  [Commit]  [Recall]              │
+│                                         │
+│ Pipeline: "Triage 5 Whiskers"           │
+│ [Load...] [Edit JSON...]               │
+│                                         │
+│ Commands (12):                          │
+│  1. MoveByTimeRange: pred_w0 → gt_w0   │
+│  2. MoveByTimeRange: pred_w1 → gt_w1   │
+│  ...                                    │
+│  11. AddInterval: tracked_regions       │
+│  12. SaveData: tracked_regions          │
+│                                         │
+│ Tracked: 3 intervals, 5,200 frames      │
+│ Remaining: 194,800 frames               │
+└─────────────────────────────────────────┘</code></pre>
+<p><strong>Keyboard shortcuts</strong> (essential for the scrubbing workflow):</p>
+<ul>
+<li><strong>M</strong> — Mark (start a triage range)</li>
+<li><strong>C</strong> — Commit (execute pipeline for <code>[mark_frame, current_frame]</code>)</li>
+<li><strong>R</strong> — Recall (abort, jump back to mark frame)</li>
+</ul>
+</section>
+<section id="triagesessionstate-editorstate-subclass" class="level3">
+<h3 class="anchored" data-anchor-id="triagesessionstate-editorstate-subclass">TriageSessionState (EditorState subclass)</h3>
+<p>Follows the standard EditorState pattern. <code>TriageSessionStateData</code> serializes the pipeline JSON and tracked-regions key; the state machine always resets to <code>Idle</code> on workspace load. Full EditorState class, registration, and Qt UI details: <a href="../../../developer/ui/TriageSession_Widget/index.html">TriageSession Widget</a>.</p>
+</section>
+</section>
+<section id="tracked-regions-for-machine-learning" class="level2">
+<h2 class="anchored" data-anchor-id="tracked-regions-for-machine-learning">Tracked Regions for Machine Learning</h2>
+<p>The tracked-regions <code>DigitalIntervalSeries</code> created by <code>AddInterval</code> commands during triage has direct utility for machine learning workflows.</p>
+<section id="implicit-negative-labeling" class="level3">
+<h3 class="anchored" data-anchor-id="implicit-negative-labeling">Implicit Negative Labeling</h3>
+<pre><code>Tracked: [75000, 76000] ∪ [150000, 151000]
+
+Frame 75500 + has "contact" label  →  ground truth POSITIVE
+Frame 75700 + no "contact" label   →  ground truth NEGATIVE  (within tracked region)
+Frame 80000 + no "contact" label   →  UNKNOWN                (outside tracked region)</code></pre>
+</section>
+<section id="prediction-scope" class="level3">
+<h3 class="anchored" data-anchor-id="prediction-scope">Prediction Scope</h3>
+<p>When running predictions with MLCore, restrict to untracked regions:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tracked <span class="op">=</span> dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span><span class="st">"tracked_regions"</span><span class="op">);</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> complement <span class="op">=</span> tracked<span class="op">-&gt;</span>complement<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span>total_frames<span class="op">));</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Predict only within complement intervals</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="incremental-training" class="level3">
+<h3 class="anchored" data-anchor-id="incremental-training">Incremental Training</h3>
+<p>As the user triages more data:</p>
+<ol type="1">
+<li>Tracked regions grow.</li>
+<li>More ground truth positives and negatives become available.</li>
+<li>The model can be retrained on the expanded ground truth.</li>
+<li>Predictions are made on the shrinking untracked region.</li>
+<li>The user focuses triage on frames where the model is uncertain.</li>
+</ol>
+<p>This creates a human-in-the-loop active learning pipeline, all driven by the same triage session mechanism.</p>
+</section>
+</section>
+<section id="persistence-safety" class="level2">
+<h2 class="anchored" data-anchor-id="persistence-safety">Persistence Safety</h2>
+<section id="write-ahead-pattern" class="level3">
+<h3 class="anchored" data-anchor-id="write-ahead-pattern">Write-Ahead Pattern</h3>
+<p>For expensive data (LineData CSVs with millions of entries), the <code>SaveData</code> command should use atomic writes:</p>
+<ol type="1">
+<li>Write to <code>path.tmp</code> (same filesystem).</li>
+<li><code>fsync()</code> the temporary file.</li>
+<li><code>rename()</code> atomically over the target path (atomic on POSIX).</li>
+</ol>
+<p>This prevents corruption if the application crashes mid-save.</p>
+</section>
+<section id="when-to-save" class="level3">
+<h3 class="anchored" data-anchor-id="when-to-save">When to Save</h3>
+<p>Saving is just another command in the sequence. The user explicitly decides what gets saved by including <code>SaveData</code> commands in their pipeline. Options:</p>
+<ul>
+<li><strong>Save ground truth only</strong> — Most common. Source (predicted) CSVs are not modified.</li>
+<li><strong>Save both sides</strong> — Include <code>SaveData</code> commands for source and destination.</li>
+<li><strong>Save nothing</strong> — Omit <code>SaveData</code> commands. Changes exist only in-memory.</li>
+</ul>
+</section>
+<section id="relationship-to-workspace-save" class="level3">
+<h3 class="anchored" data-anchor-id="relationship-to-workspace-save">Relationship to Workspace Save</h3>
+<p><code>SaveData</code> commands save individual data objects to standalone files. This is distinct from workspace save (<code>WorkspaceManager::save()</code>), which captures the complete session state.</p>
+<p>Both can happen independently:</p>
+<ul>
+<li><code>SaveData</code> during triage commits: saves ground truth data incrementally.</li>
+<li>Workspace save: captures the full session state for later resumption.</li>
+<li>Workspace auto-save (crash recovery): happens on a timer, independent of triage.</li>
+</ul>
+</section>
+</section>
+<section id="integration-with-action-journal" class="level2">
+<h2 class="anchored" data-anchor-id="integration-with-action-journal">Integration with Action Journal</h2>
+<p>Every command execution is automatically recorded to the Action Journal. The <code>executeSequence()</code> function accepts an optional journal pointer:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>SequenceResult executeSequence<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    CommandSequenceDescriptor <span class="at">const</span><span class="op">&amp;</span> seq<span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span><span class="op">&amp;</span> ctx<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    ActionJournal<span class="op">*</span> journal <span class="op">=</span> <span class="kw">nullptr</span><span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> stop_on_error <span class="op">=</span> <span class="kw">true</span><span class="op">)</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... for each command ...</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> cmd <span class="op">=</span> createCommand<span class="op">(</span>desc<span class="op">.</span>command_name<span class="op">,</span> resolved_json<span class="op">);</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">-&gt;</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>result<span class="op">.</span>success <span class="op">&amp;&amp;</span> journal<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>        journal<span class="op">-&gt;</span>record<span class="op">(</span>ActionEntry<span class="op">{</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>timestamp <span class="op">=</span> now_iso8601<span class="op">(),</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="dt">action_type</span> <span class="op">=</span> <span class="st">"command"</span><span class="op">,</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>description <span class="op">=</span> desc<span class="op">.</span>description<span class="op">.</span>value_or<span class="op">(</span>cmd<span class="op">-&gt;</span>commandName<span class="op">()),</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>payload_json <span class="op">=</span> cmd<span class="op">-&gt;</span>toJson<span class="op">(),</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>source_widget <span class="op">=</span> <span class="st">"executeSequence"</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This means:</p>
+<ul>
+<li>Triage commit operations are automatically logged.</li>
+<li>The journal is a complete record of all commands executed.</li>
+<li>Journal entries can be replayed by feeding them back through <code>createCommand()</code> + <code>execute()</code>.</li>
+<li>The journal can be exported as a script for batch processing.</li>
+</ul>
+</section>
+<section id="integration-with-undoredo" class="level2">
+<h2 class="anchored" data-anchor-id="integration-with-undoredo">Integration with Undo/Redo</h2>
+<p>Undo is built directly into the <code>ICommand</code> interface. There is no separate <code>IUndoableCommand</code> hierarchy — every command has <code>isUndoable()</code> and <code>undo()</code> methods, defaulting to “not undoable.” Commands opt in by overriding these two methods.</p>
+<section id="commandstack" class="level3">
+<h3 class="anchored" data-anchor-id="commandstack">CommandStack</h3>
+<p>The <code>CommandStack</code> manages the undo/redo history:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CommandStack <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> push<span class="op">(</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>ICommand<span class="op">&gt;</span> cmd<span class="op">);</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    CommandResult undo<span class="op">(</span>CommandContext <span class="at">const</span><span class="op">&amp;</span> ctx<span class="op">);</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    CommandResult redo<span class="op">(</span>CommandContext <span class="at">const</span><span class="op">&amp;</span> ctx<span class="op">);</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> canUndo<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> canRedo<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> markClean<span class="op">();</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isClean<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>ICommand<span class="op">&gt;&gt;</span> _undo_stack<span class="op">;</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>ICommand<span class="op">&gt;&gt;</span> _redo_stack<span class="op">;</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> _clean_index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="undo-strategies" class="level3">
+<h3 class="anchored" data-anchor-id="undo-strategies">Undo Strategies</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 32%">
+<col style="width: 41%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Strategy</th>
+<th>When to Use</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Inverse command</strong></td>
+<td>Data mutations with clear inverses</td>
+<td><code>MoveByTimeRange</code>: <code>execute()</code> records moved IDs, <code>undo()</code> moves them back</td>
+</tr>
+<tr class="even">
+<td><strong>Non-undoable</strong></td>
+<td>Destructive or external operations</td>
+<td>File save (can’t un-save a file)</td>
+</tr>
+<tr class="odd">
+<td><strong>Memento adapter (opt-in)</strong></td>
+<td>Destructive widget state changes only</td>
+<td>“Reset all display options to defaults”</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="widgetstatechangecommand" class="level3">
+<h3 class="anchored" data-anchor-id="widgetstatechangecommand">WidgetStateChangeCommand</h3>
+<p>An opt-in adapter for the rare cases where a widget action is destructive enough to warrant undo:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WidgetStateChangeCommand <span class="op">:</span> <span class="kw">public</span> ICommand <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>EditorState<span class="op">&gt;</span> _state<span class="op">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string _before_json<span class="op">;</span>  <span class="co">// Captured before execution</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string _after_json<span class="op">;</span>   <span class="co">// Captured after execution</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string commandName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="st">"WidgetStateChange"</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string toJson<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> _after_json<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isUndoable<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    CommandResult execute<span class="op">(</span>CommandContext <span class="at">const</span><span class="op">&amp;)</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>fromJson<span class="op">(</span>_after_json<span class="op">);</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> CommandResult<span class="op">::</span>ok<span class="op">();</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    CommandResult undo<span class="op">(</span>CommandContext <span class="at">const</span><span class="op">&amp;)</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>fromJson<span class="op">(</span>_before_json<span class="op">);</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> CommandResult<span class="op">::</span>ok<span class="op">();</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> mergeId<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span><span class="bu">std::</span>hash<span class="op">&lt;</span>EditorState<span class="op">*&gt;{}(</span>_state<span class="op">.</span>get<span class="op">())</span> <span class="op">&amp;</span> <span class="bn">0x7FFFFFFF</span><span class="op">);</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> mergeWith<span class="op">(</span>ICommand <span class="at">const</span><span class="op">&amp;</span> other<span class="op">)</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span><span class="op">*</span> o <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>WidgetStateChangeCommand <span class="at">const</span><span class="op">*&gt;(&amp;</span>other<span class="op">);</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>o <span class="op">||</span> o<span class="op">-&gt;</span>_state <span class="op">!=</span> _state<span class="op">)</span> <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>        _after_json <span class="op">=</span> o<span class="op">-&gt;</span>_after_json<span class="op">;</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="commandsequencecommand-triage-undo" class="level3">
+<h3 class="anchored" data-anchor-id="commandsequencecommand-triage-undo">CommandSequenceCommand (Triage Undo)</h3>
+<p>A triage commit executes multiple commands. For undo purposes, the entire sequence is wrapped as a single undoable group:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CommandSequenceCommand <span class="op">:</span> <span class="kw">public</span> ICommand <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>ICommand<span class="op">&gt;&gt;</span> _commands<span class="op">;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string _name<span class="op">;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string commandName<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span> <span class="cf">return</span> _name<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isUndoable<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>any_of<span class="op">(</span>_commands<span class="op">.</span>begin<span class="op">(),</span> _commands<span class="op">.</span>end<span class="op">(),</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>            <span class="op">[](</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> c<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> c<span class="op">-&gt;</span>isUndoable<span class="op">();</span> <span class="op">});</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    CommandResult execute<span class="op">(</span>CommandContext <span class="at">const</span><span class="op">&amp;</span> ctx<span class="op">)</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span><span class="op">&amp;</span> cmd <span class="op">:</span> _commands<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> r <span class="op">=</span> cmd<span class="op">-&gt;</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!</span>r<span class="op">.</span>success<span class="op">)</span> <span class="cf">return</span> r<span class="op">;</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> CommandResult<span class="op">::</span>ok<span class="op">();</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    CommandResult undo<span class="op">(</span>CommandContext <span class="at">const</span><span class="op">&amp;</span> ctx<span class="op">)</span> <span class="kw">override</span> <span class="op">{</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> it <span class="op">=</span> _commands<span class="op">.</span>rbegin<span class="op">();</span> it <span class="op">!=</span> _commands<span class="op">.</span>rend<span class="op">();</span> <span class="op">++</span>it<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!(*</span>it<span class="op">)-&gt;</span>isUndoable<span class="op">())</span> <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> r <span class="op">=</span> <span class="op">(*</span>it<span class="op">)-&gt;</span>undo<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!</span>r<span class="op">.</span>success<span class="op">)</span> <span class="cf">return</span> r<span class="op">;</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> CommandResult<span class="op">::</span>ok<span class="op">();</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Non-undoable children (<code>SaveData</code>) are skipped during undo.</p>
+</section>
+</section>
+<section id="json-console-integration" class="level2">
+<h2 class="anchored" data-anchor-id="json-console-integration">JSON Console Integration</h2>
+<p>The command architecture naturally integrates with the planned JSON Console:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"command_sequence"</span><span class="fu">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"version"</span><span class="fu">:</span> <span class="st">"1.0"</span><span class="fu">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"payload"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"My Triage Pipeline"</span><span class="fu">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"commands"</span><span class="fu">:</span> <span class="ot">[</span><span class="er">...</span><span class="ot">]</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="unified-json-dispatch" class="level3">
+<h3 class="anchored" data-anchor-id="unified-json-dispatch">Unified JSON Dispatch</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Executor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>"transform_pipeline"</code></td>
+<td>TransformsV2 pipeline loader</td>
+</tr>
+<tr class="even">
+<td><code>"table_definition"</code></td>
+<td>TableView system</td>
+</tr>
+<tr class="odd">
+<td><code>"command_sequence"</code></td>
+<td><code>executeSequence()</code></td>
+</tr>
+<tr class="even">
+<td><code>"data_load"</code></td>
+<td>LoaderRegistry (or wrapped as <code>LoadData</code> command)</td>
+</tr>
+</tbody>
+</table>
+<p>Eventually, <code>"transform_pipeline"</code> and <code>"data_load"</code> could be subsumed by their command wrappers, making the command system the single execution path for all operations.</p>
+</section>
+</section>
+<section id="design-principles" class="level2">
+<h2 class="anchored" data-anchor-id="design-principles">Design Principles</h2>
+<ol type="1">
+<li><p><strong>Commands are DataManager-level operations.</strong> Transforms are element-level (TransformsV2). Commands are whole-object operations: move, copy, save, load, create intervals. They compose, not compete. Widget/view state changes (<code>EditorState</code>) are explicitly <strong>not</strong> commands.</p></li>
+<li><p><strong>JSON-serializable everything.</strong> Every command descriptor, every parameter struct, every sequence is a plain C++ struct that reflect-cpp can round-trip. No manual JSON construction.</p></li>
+<li><p><strong>Virtual base class, not a static registry.</strong> A plain factory function maps command names to concrete types. No RAII registration, no <code>--whole-archive</code> linker flags.</p></li>
+<li><p><strong>Two-tier variable substitution.</strong> Static template variables (known at authoring time) and runtime variables (resolved at execution time) use the same <code>${variable}</code> syntax.</p></li>
+<li><p><strong>Triage is just a consumer.</strong> The triage session is not special — it’s a state machine that builds a <code>CommandContext</code> and calls <code>executeSequence()</code>. Any other consumer (CLI, Python, macro recorder) uses the same API.</p></li>
+<li><p><strong>Persistence is a command, not a side effect.</strong> Saving data is an explicit <code>SaveData</code> command in the sequence. The user decides what gets saved and when. Atomic writes prevent corruption.</p></li>
+<li><p><strong>Undo is opt-in and layered.</strong> Commands work without undo. Undo support is added per-command when valuable, using inverse operations.</p></li>
+<li><p><strong>Incremental adoption.</strong> Not every operation needs to become a command on day one. Start with the operations needed for triage, then expand as other workflows demand it.</p></li>
+<li><p><strong>Commands mirror GUI verbs, not internal APIs.</strong> A command’s name and parameters should match what the user sees (“MoveByTimeRange” with <code>source_key</code> / <code>destination_key</code>), not the internal function it calls. Parameter names should be self-explanatory without knowledge of the source code.</p></li>
+</ol>
+</section>
+<section id="see-also" class="level2">
+<h2 class="anchored" data-anchor-id="see-also">See Also</h2>
+<ul>
+<li><a href="../../../developer/DataManager/Commands/roadmap.html">Command Architecture Roadmap</a> — phased implementation plan</li>
+<li><a href="../../../developer/DataManager/data_manager.html">Data Manager</a> — core data management documentation</li>
+<li><a href="../../../developer/STATE_MANAGEMENT_ROADMAP.md">State Management Roadmap</a> — related state management plans (Phases 4–6 superseded by this architecture)</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

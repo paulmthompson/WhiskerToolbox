@@ -34,12 +34,12 @@ The following features are complete and documented in [index.qmd](index.qmd):
 
 **Not yet implemented**: SVG export.
 
----
+
 ## Phase 4: SVG Export
 
-**Status**: Not started. No export infrastructure exists in the current widget.
+Status: Not started. No export infrastructure exists in the current widget.
 
-**Goal**: Allow the user to export the current onion skin view as an SVG file, preserving
+Goal: Allow the user to export the current onion skin view as an SVG file, preserving
 vector quality for publication.
 
 ### 4.1 Export Approach
