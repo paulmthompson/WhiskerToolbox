@@ -3,6 +3,8 @@
 
 #include "OutputSlotWidget.hpp"
 
+#include "DeepLearning_Widget/Core/BindingConversion.hpp"
+
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
@@ -171,29 +173,7 @@ std::string const & OutputSlotWidget::slotName() const {
 }
 
 OutputBindingData OutputSlotWidget::toOutputBindingData() const {
-    auto const p = params();
-    OutputBindingData binding;
-    binding.slot_name = _slot_name;
-    binding.data_key = (p.data_key == "(None)") ? "" : p.data_key;
-
-    p.decoder.visit([&](auto const & dec) {
-        using T = std::decay_t<decltype(dec)>;
-        if constexpr (std::is_same_v<T, dl::MaskDecoderParams>) {
-            binding.decoder_id = "TensorToMask2D";
-            binding.threshold = dec.threshold;
-        } else if constexpr (std::is_same_v<T, dl::PointDecoderParams>) {
-            binding.decoder_id = "TensorToPoint2D";
-            binding.threshold = dec.threshold;
-            binding.subpixel = dec.subpixel;
-        } else if constexpr (std::is_same_v<T, dl::LineDecoderParams>) {
-            binding.decoder_id = "TensorToLine2D";
-            binding.threshold = dec.threshold;
-        } else if constexpr (std::is_same_v<T, dl::FeatureVectorDecoderParams>) {
-            binding.decoder_id = "TensorToFeatureVector";
-        }
-    });
-
-    return binding;
+    return dl::conversion::fromOutputParams(_slot_name, params());
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -229,22 +209,7 @@ std::string OutputSlotWidget::_decoderIdFromTag(std::string const & json) {
 
 OutputSlotParams OutputSlotWidget::paramsFromBinding(
         OutputBindingData const & binding) {
-    OutputSlotParams p;
-    p.data_key = binding.data_key;
-    if (binding.decoder_id == "TensorToMask2D") {
-        p.decoder = dl::MaskDecoderParams{.threshold = binding.threshold};
-    } else if (binding.decoder_id == "TensorToPoint2D") {
-        p.decoder = dl::PointDecoderParams{
-                .subpixel = binding.subpixel,
-                .threshold = binding.threshold};
-    } else if (binding.decoder_id == "TensorToLine2D") {
-        p.decoder = dl::LineDecoderParams{.threshold = binding.threshold};
-    } else if (binding.decoder_id == "TensorToFeatureVector") {
-        p.decoder = dl::FeatureVectorDecoderParams{};
-    } else {
-        p.decoder = dl::MaskDecoderParams{.threshold = binding.threshold};
-    }
-    return p;
+    return dl::conversion::toOutputParams(binding);
 }
 
 }// namespace dl::widget

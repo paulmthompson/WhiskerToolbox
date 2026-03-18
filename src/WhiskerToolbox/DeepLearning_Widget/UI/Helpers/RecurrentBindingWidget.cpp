@@ -3,6 +3,8 @@
 
 #include "RecurrentBindingWidget.hpp"
 
+#include "DeepLearning_Widget/Core/BindingConversion.hpp"
+
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
@@ -113,45 +115,12 @@ std::string const & RecurrentBindingWidget::slotName() const {
 }
 
 RecurrentBindingData RecurrentBindingWidget::toRecurrentBindingData() const {
-    auto const p = params();
-    RecurrentBindingData binding;
-    binding.input_slot_name = _input_slot_name;
-    binding.output_slot_name =
-            (p.output_slot_name == "(None)") ? "" : p.output_slot_name;
-    binding.target_memory_index = -1;
-
-    p.init.visit([&](auto const & init) {
-        using T = std::decay_t<decltype(init)>;
-        if constexpr (std::is_same_v<T, ZerosInitParams>) {
-            binding.init_mode_str = "Zeros";
-        } else if constexpr (std::is_same_v<T, StaticCaptureInitParams>) {
-            binding.init_mode_str = "StaticCapture";
-            binding.init_data_key =
-                    (init.data_key == "(None)") ? "" : init.data_key;
-            binding.init_frame = init.frame;
-        } else if constexpr (std::is_same_v<T, FirstOutputInitParams>) {
-            binding.init_mode_str = "FirstOutput";
-        }
-    });
-
-    return binding;
+    return dl::conversion::fromRecurrentParams(_input_slot_name, params());
 }
 
 RecurrentBindingSlotParams RecurrentBindingWidget::paramsFromBinding(
         RecurrentBindingData const & binding) {
-    RecurrentBindingSlotParams p;
-    p.output_slot_name = binding.output_slot_name;
-
-    if (binding.init_mode_str == "StaticCapture") {
-        p.init = StaticCaptureInitParams{
-                .data_key = binding.init_data_key,
-                .frame = binding.init_frame};
-    } else if (binding.init_mode_str == "FirstOutput") {
-        p.init = FirstOutputInitParams{};
-    } else {
-        p.init = ZerosInitParams{};
-    }
-    return p;
+    return dl::conversion::toRecurrentParams(binding);
 }
 
 // ════════════════════════════════════════════════════════════════════════════

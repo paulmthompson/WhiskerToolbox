@@ -75,6 +75,9 @@ public:
     /// @brief Return the slot name this widget is bound to.
     [[nodiscard]] std::string const & slotName() const;
 
+    /// @brief Return the captured frame index (-1 if never captured).
+    [[nodiscard]] int capturedFrame() const;
+
     /// @brief Convert current parameters to a StaticInputData for state sync.
     ///
     /// The returned `captured_frame` equals the value set by the last

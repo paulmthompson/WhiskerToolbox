@@ -3,6 +3,8 @@
 
 #include "SequenceSlotWidget.hpp"
 
+#include "DeepLearning_Widget/Core/BindingConversion.hpp"
+
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
@@ -244,15 +246,8 @@ std::vector<StaticInputData> SequenceSlotWidget::getStaticInputs() const {
             if constexpr (std::is_same_v<T, StaticSequenceEntryParams>) {
                 if (v.data_key.empty() || v.data_key == "(None)") return;
 
-                StaticInputData si;
-                si.slot_name = _slot_name;
-                si.memory_index = row.memory_index;
-                si.data_key = v.data_key;
-                si.capture_mode_str = v.capture_mode_str;
-                si.time_offset = v.time_offset;
-                si.captured_frame = row.captured_frame;
-                si.active = true;
-                result.push_back(std::move(si));
+                result.push_back(dl::conversion::fromStaticSequenceEntryParams(
+                        _slot_name, row.memory_index, v, row.captured_frame));
             }
         });
     }
@@ -276,12 +271,9 @@ SequenceSlotWidget::getRecurrentBindings() const {
                     return;
                 }
 
-                RecurrentBindingData rb;
-                rb.input_slot_name = _slot_name;
-                rb.output_slot_name = v.output_slot_name;
-                rb.target_memory_index = row.memory_index;
-                rb.init_mode_str = v.init_mode_str;
-                result.push_back(std::move(rb));
+                result.push_back(
+                        dl::conversion::fromRecurrentSequenceEntryParams(
+                                _slot_name, row.memory_index, v));
             }
         });
     }

@@ -3,6 +3,8 @@
 
 #include "DynamicInputSlotWidget.hpp"
 
+#include "DeepLearning_Widget/Core/BindingConversion.hpp"
+
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
@@ -172,34 +174,7 @@ std::string const & DynamicInputSlotWidget::slotName() const {
 }
 
 SlotBindingData DynamicInputSlotWidget::toSlotBindingData() const {
-    auto const p = params();
-    SlotBindingData binding;
-    binding.slot_name = _slot_name;
-    binding.data_key = p.source;
-    binding.time_offset = p.time_offset;
-
-    // Visit the encoder variant to extract encoder_id, mode, gaussian_sigma
-    p.encoder.visit(
-            [&](auto const & enc) {
-                using T = std::decay_t<decltype(enc)>;
-                if constexpr (std::is_same_v<T, dl::ImageEncoderParams>) {
-                    binding.encoder_id = "ImageEncoder";
-                    binding.mode = "Raw";
-                } else if constexpr (std::is_same_v<T, dl::Point2DEncoderParams>) {
-                    binding.encoder_id = "Point2DEncoder";
-                    binding.mode = (enc.mode == dl::RasterMode::Heatmap) ? "Heatmap" : "Binary";
-                    binding.gaussian_sigma = enc.gaussian_sigma;
-                } else if constexpr (std::is_same_v<T, dl::Mask2DEncoderParams>) {
-                    binding.encoder_id = "Mask2DEncoder";
-                    binding.mode = "Binary";
-                } else if constexpr (std::is_same_v<T, dl::Line2DEncoderParams>) {
-                    binding.encoder_id = "Line2DEncoder";
-                    binding.mode = (enc.mode == dl::RasterMode::Heatmap) ? "Heatmap" : "Binary";
-                    binding.gaussian_sigma = enc.gaussian_sigma;
-                }
-            });
-
-    return binding;
+    return dl::conversion::fromDynamicInputParams(_slot_name, params());
 }
 
 // ════════════════════════════════════════════════════════════════════════════

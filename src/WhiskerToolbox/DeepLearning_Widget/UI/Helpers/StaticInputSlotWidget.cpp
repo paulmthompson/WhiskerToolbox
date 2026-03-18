@@ -3,6 +3,8 @@
 
 #include "StaticInputSlotWidget.hpp"
 
+#include "DeepLearning_Widget/Core/BindingConversion.hpp"
+
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
@@ -161,27 +163,13 @@ std::string const & StaticInputSlotWidget::slotName() const {
     return _slot_name;
 }
 
+int StaticInputSlotWidget::capturedFrame() const {
+    return _captured_frame;
+}
+
 StaticInputData StaticInputSlotWidget::toStaticInputData() const {
-    auto const p = params();
-    StaticInputData si;
-    si.slot_name = _slot_name;
-    si.memory_index = 0;
-    si.data_key = p.source;
-    si.captured_frame = _captured_frame;
-
-    // Visit the capture mode variant to extract time_offset and mode string
-    p.capture_mode.visit([&](auto const & cm) {
-        using T = std::decay_t<decltype(cm)>;
-        if constexpr (std::is_same_v<T, RelativeCaptureParams>) {
-            si.capture_mode_str = "Relative";
-            si.time_offset = cm.time_offset;
-        } else if constexpr (std::is_same_v<T, AbsoluteCaptureParams>) {
-            si.capture_mode_str = "Absolute";
-            si.time_offset = 0;
-        }
-    });
-
-    return si;
+    return dl::conversion::fromStaticInputParams(
+            _slot_name, params(), _captured_frame);
 }
 
 void StaticInputSlotWidget::setCapturedStatus(

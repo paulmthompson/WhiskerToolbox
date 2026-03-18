@@ -1,5 +1,6 @@
 #include "DeepLearningPropertiesWidget.hpp"
 
+#include "DeepLearning_Widget/Core/BindingConversion.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
@@ -737,8 +738,9 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
 
     // ── Input bindings (from DynamicInputSlotWidgets) ──
     std::vector<SlotBindingData> input_bindings;
-    for (auto const * slot_widget: _dynamic_input_widgets) {
-        auto binding = slot_widget->toSlotBindingData();
+    for (auto const * w: _dynamic_input_widgets) {
+        auto binding =
+                dl::conversion::fromDynamicInputParams(w->slotName(), w->params());
         if (!binding.data_key.empty() && binding.data_key != "(None)") {
             input_bindings.push_back(std::move(binding));
         }
@@ -747,8 +749,9 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
 
     // ── Output bindings ──
     std::vector<OutputBindingData> output_bindings;
-    for (auto const * slot_widget: _output_slot_widgets) {
-        auto binding = slot_widget->toOutputBindingData();
+    for (auto const * w: _output_slot_widgets) {
+        auto binding =
+                dl::conversion::fromOutputParams(w->slotName(), w->params());
         if (!binding.data_key.empty() && binding.data_key != "(None)") {
             output_bindings.push_back(std::move(binding));
         }
@@ -757,7 +760,6 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
 
     // ── Static inputs ──
     std::vector<StaticInputData> static_inputs;
-    // Hybrid recurrent bindings collected from sequence entries
     std::vector<RecurrentBindingData> hybrid_recurrent_bindings;
 
     for (auto const & slot: _current_info->inputs) {
@@ -784,44 +786,36 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
                 break;
             }
         } else {
-            // Non-sequence slot: delegate to the StaticInputSlotWidget
-            for (auto const * slot_widget: _static_input_widgets) {
-                if (slot_widget->slotName() == slot.name) {
-                    auto si = slot_widget->toStaticInputData();
-                    // Preserve captured_frame from existing state if widget
-                    // value is -1 (panel was rebuilt without a recapture)
-                    if (si.captured_frame < 0) {
-                        for (auto const & prev: _state->staticInputs()) {
-                            if (prev.slot_name == slot.name) {
-                                si.captured_frame = prev.captured_frame;
-                                break;
-                            }
+            for (auto const * w: _static_input_widgets) {
+                if (w->slotName() != slot.name) continue;
+                auto si = dl::conversion::fromStaticInputParams(
+                        w->slotName(), w->params(), w->capturedFrame());
+                if (si.captured_frame < 0) {
+                    for (auto const & prev: _state->staticInputs()) {
+                        if (prev.slot_name == slot.name) {
+                            si.captured_frame = prev.captured_frame;
+                            break;
                         }
                     }
-                    if (!si.data_key.empty() && si.data_key != "(None)") {
-                        static_inputs.push_back(std::move(si));
-                    }
-                    break;
                 }
+                if (!si.data_key.empty() && si.data_key != "(None)") {
+                    static_inputs.push_back(std::move(si));
+                }
+                break;
             }
         }
     }
     _state->setStaticInputs(std::move(static_inputs));
 
     // ── Recurrent bindings ──
-    // Start with hybrid recurrent bindings collected from sequence entries
     std::vector<RecurrentBindingData> recurrent_bindings =
             std::move(hybrid_recurrent_bindings);
-
-    // Add whole-slot recurrent bindings from RecurrentBindingWidgets
-    for (auto const * rb_widget: _recurrent_binding_widgets) {
-        auto rb = rb_widget->toRecurrentBindingData();
+    for (auto const * w: _recurrent_binding_widgets) {
+        auto rb = dl::conversion::fromRecurrentParams(w->slotName(), w->params());
         if (rb.output_slot_name.empty()) continue;
         recurrent_bindings.push_back(std::move(rb));
     }
     _state->setRecurrentBindings(std::move(recurrent_bindings));
-
-    // Post-encoder state is managed by PostEncoderWidget (applies on parametersChanged).
 
     _updateBatchSizeConstraint();
 }

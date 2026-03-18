@@ -1,6 +1,6 @@
 # DeepLearning_Widget Refactoring Roadmap
 
-## Current State (after Phase 2.1)
+## Current State (after Phase 3.1)
 
 `DeepLearningPropertiesWidget` has been reduced from **2716 lines to ~1603 lines** (Phase 1) and further by Phase 2.1.
 All seven slot-type sub-widgets are in `UI/Helpers/`. Inference orchestration is now in `InferenceController`.
@@ -9,7 +9,7 @@ All seven slot-type sub-widgets are in `UI/Helpers/`. Inference orchestration is
 |---|---|
 | UI construction (fixed) | `_buildUi`, `_rebuildSlotPanels`, `_clearDynamicContent` |
 | Boolean mask panel | `_buildBooleanMaskGroup`, `_populateDataSourceCombo` |
-| State sync (UI → State) | `_syncBindingsFromUi` |
+| State sync (UI → State) | `_syncBindingsFromUi` (now uses `dl::conversion`) |
 | Model selection + weights | `_populateModelCombo`, `_onModelComboChanged`, `_loadModelIfReady`, `_updateWeightsStatus` |
 | Run button handlers | `_onRunSingleFrame`, `_onRunBatch`, `_onRunRecurrentSequence`, `_onPredictCurrentFrame` — thin wrappers that show dialogs, call `_syncBindingsFromUi`, then delegate to `InferenceController` |
 | Result merging | In `InferenceController` (merge timer + `_pending_feature_rows`; Phase 2.2 will extract to `ResultProcessor`) |
@@ -25,6 +25,7 @@ DeepLearning_Widget/
 ├── Core/
 │   ├── BatchInferenceResult.hpp
 │   ├── DeepLearningBindingData.hpp        ← flat fields for state serialization
+│   ├── BindingConversion.hpp/cpp          ← pure params<->binding mapping
 │   ├── DeepLearningParamSchemas.hpp/cpp   ← widget-level variant + slot param structs
 │   ├── DeepLearningState.hpp/cpp
 │   ├── SlotAssembler.hpp/cpp              ← PIMPL firewall; all libtorch usage here
@@ -162,37 +163,35 @@ signals:
 
 `_syncBindingsFromUi()` is currently called at the start of every inference run to push the current UI state into `DeepLearningState` before the assembler reads it. After Phase 2, `InferenceController` will call the assembler directly. Two options:
 1. **Keep the pre-run sync**: Properties widget still calls `_syncBindingsFromUi()` before delegating to the controller.
-2. **Live state**: Phase 3.1 converts `_syncBindingsFromUi` into live updates on `bindingChanged`, eliminating the "flush before run" pattern entirely.
+2. **Live state**: Phase 3.1 extracts conversion logic and keeps state live via `bindingChanged` updates; removing the redundant pre-run call can be done later.
 
-Option 2 is cleaner but depends on Phase 3.1. Implementing Phase 2 with option 1 first is safe.
+Option 2 is cleaner but depends on Phase 3.1. Implementing Phase 2 with option 1 first is still safe because the pre-run sync is now a short conversion loop.
 
 ---
 
 ## Phase 3 — Extract State Synchronization
 
-### 3.1 — `BindingConversion` (pure functions)
+### 3.1 — `BindingConversion` ✅ COMPLETED
 
-`_syncBindingsFromUi()` is ~270 lines that reads typed structs from each sub-widget and converts them into `DeepLearningState` binding data. Although the `findChild<>` lookups are gone, the conversion logic is still inlined in the widget and untested.
+`_syncBindingsFromUi()` now delegates all params<->binding mapping to a
+new pure conversion module:
 
-Extract to a pure function namespace:
+* Added `Core/BindingConversion.hpp/.cpp` (`dl::conversion`) with pure
+  conversion functions.
+* Refactored these sub-widgets to delegate their `to*BindingData()` and
+  `paramsFromBinding()` logic to `dl::conversion`:
+  * `DynamicInputSlotWidget`
+  * `StaticInputSlotWidget`
+  * `OutputSlotWidget`
+  * `SequenceSlotWidget` (both `getStaticInputs()` and `getRecurrentBindings()`)
+  * `RecurrentBindingWidget`
+* `_syncBindingsFromUi()` is now a short loop over sub-widgets calling
+  conversion functions.
 
-```cpp
-namespace dl::conversion {
-    SlotBindingData fromDynamicInputParams(std::string const& slot_name, DynamicInputSlotParams const&);
-    StaticInputData fromStaticInputParams(std::string const& slot_name, StaticInputSlotParams const&);
-    OutputBindingData fromOutputParams(std::string const& slot_name, OutputSlotParams const&);
-    RecurrentBindingData fromRecurrentParams(std::string const& slot_name, RecurrentBindingSlotParams const&);
-    // ...and inverses for state → params restore
-} // namespace dl::conversion
-```
-
-Once these exist, `_syncBindingsFromUi` becomes a short loop:
-```cpp
-for (auto* w : _dynamic_input_widgets)
-    _state->setDynamicInput(dl::conversion::fromDynamicInputParams(w->slotName(), w->params()));
-```
-
-This also unlocks **live state updates**: connect sub-widget `bindingChanged` signals directly to conversion+state-set, removing the "flush before run" pattern.
+Live state updates remain enabled because `_rebuildSlotPanels()` already
+connects each sub-widget’s `bindingChanged()` to `_syncBindingsFromUi()`.
+Run handlers still call `_syncBindingsFromUi()` before delegating; the next
+phase can remove this redundancy once Phase 2/2.2/3.2 changes stabilize.
 
 ### 3.2 — `ConstraintEnforcer` (pure functions)
 
@@ -214,7 +213,7 @@ namespace dl::constraints {
 
 Sub-widget tests are in place (8 test binaries, ~1,700 lines of tests total). Remaining gaps:
 
-- **Phase 3.1 tests** — `BindingConversion` round-trips: `DynamicInputParams ↔ SlotBindingData`, `OutputSlotParams ↔ OutputBindingData`, edge cases (empty keys, default values).
+- **Phase 3.1 tests** — `BindingConversion` round-trips: `DynamicInputSlotParams ↔ SlotBindingData`, `OutputSlotParams ↔ OutputBindingData`, edge cases (empty keys, default values).
 - **Phase 3.2 tests** — `ConstraintEnforcer`: batch size with/without recurrent bindings, decoder validity per module type.
 - **Phase 2 tests** — `InferenceController` and `ResultProcessor` can be tested with a mock `SlotAssembler` or minimal DataManager.
 - **DeepLearningParamSchemas** — schema extraction and JSON round-trips for all widget-level variant types (`EncoderVariant`, `DecoderVariant`, etc.).
@@ -236,7 +235,7 @@ Sub-widget tests are in place (8 test binaries, ~1,700 lines of tests total). Re
 ```
 Phase 2.1  InferenceController      ✅ DONE
 Phase 2.2  ResultProcessor          — extract from InferenceController
-Phase 3.1  BindingConversion        — eliminates _syncBindingsFromUi, enables live state
+Phase 3.1  BindingConversion        ✅ DONE
 Phase 3.2  ConstraintEnforcer       — small, immediately testable
 Phase 4    Fill test gaps           — after each phase above
 Phase 5    Cleanup / docs           — final pass
