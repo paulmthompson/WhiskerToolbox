@@ -5,7 +5,9 @@
 
 #include "CoreGeometry/lines.hpp"
 
-namespace at { class Tensor; }
+namespace at {
+class Tensor;
+}
 
 namespace dl {
 
@@ -24,10 +26,11 @@ public:
     [[nodiscard]] std::string outputTypeName() const override;
 
     /// Decode tensor channel to ordered polyline
-    [[nodiscard]] Line2D decode(at::Tensor const & tensor,
-                                DecoderParams const & params) const;
+    [[nodiscard]] static Line2D decode(at::Tensor const & tensor,
+                                DecoderContext const & ctx,
+                                LineDecoderParams const & params) ;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_TENSOR_TO_LINE2D_HPP
+#endif// WHISKERTOOLBOX_TENSOR_TO_LINE2D_HPP

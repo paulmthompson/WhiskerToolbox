@@ -8,7 +8,9 @@
 
 #include <vector>
 
-namespace at { class Tensor; }
+namespace at {
+class Tensor;
+}
 
 namespace dl {
 
@@ -26,9 +28,10 @@ namespace dl {
 /// Example:
 /// @code
 ///     dl::TensorToFeatureVector dec;
-///     dl::DecoderParams params;
-///     params.batch_index = 0;
-///     auto vec = dec.decode(features, params);  // std::vector<float> of size C
+///     dl::DecoderContext ctx;
+///     ctx.batch_index = 0;
+///     dl::FeatureVectorDecoderParams params;
+///     auto vec = dec.decode(features, ctx, params);  // std::vector<float> of size C
 /// @endcode
 class TensorToFeatureVector : public ChannelDecoder {
 public:
@@ -38,12 +41,14 @@ public:
     /// Extract a flat feature vector from the tensor.
     ///
     /// @param tensor  Input tensor, shape `[C]` or `[B, C]`.
-    /// @param params  `params.batch_index` selects the batch element for `[B, C]`.
+    /// @param ctx     `ctx.batch_index` selects the batch element for `[B, C]`.
+    /// @param params  Feature vector decoder params (currently empty).
     /// @return Feature values as a flat `std::vector<float>`.
     ///
     /// @pre tensor must not be undefined.
-    [[nodiscard]] std::vector<float> decode(at::Tensor const & tensor,
-                                            DecoderParams const & params) const;
+    [[nodiscard]] static std::vector<float> decode(at::Tensor const & tensor,
+                                            DecoderContext const & ctx,
+                                            FeatureVectorDecoderParams const & params) ;
 };
 
 }// namespace dl

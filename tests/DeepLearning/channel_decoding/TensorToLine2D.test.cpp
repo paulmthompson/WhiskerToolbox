@@ -11,15 +11,13 @@
 
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE("TensorToLine2D - name and output type", "[channel_decoding][TensorToLine2D]")
-{
+TEST_CASE("TensorToLine2D - name and output type", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
     CHECK(decoder.name() == "TensorToLine2D");
     CHECK(decoder.outputTypeName() == "Line2D");
 }
 
-TEST_CASE("TensorToLine2D - horizontal line", "[channel_decoding][TensorToLine2D]")
-{
+TEST_CASE("TensorToLine2D - horizontal line", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
     auto tensor = torch::zeros({1, 1, 10, 10});
@@ -28,18 +26,20 @@ TEST_CASE("TensorToLine2D - horizontal line", "[channel_decoding][TensorToLine2D
         tensor[0][0][5][x] = 1.0f;
     }
 
-    dl::DecoderParams params;
-    params.source_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::LineDecoderParams params;
     params.threshold = 0.5f;
 
-    auto const line = decoder.decode(tensor, params);
+    auto const line = decoder.decode(tensor, ctx, params);
 
     // Should have 6 points along the line
-    REQUIRE(line.size() >= 4); // skeleton might be slightly shorter
-    CHECK(line.size() <= 8);   // shouldn't be much longer
+    REQUIRE(line.size() >= 4);// skeleton might be slightly shorter
+    CHECK(line.size() <= 8);  // shouldn't be much longer
 
     // All points should be near y=5
     for (size_t i = 0; i < line.size(); ++i) {
@@ -47,8 +47,7 @@ TEST_CASE("TensorToLine2D - horizontal line", "[channel_decoding][TensorToLine2D
     }
 }
 
-TEST_CASE("TensorToLine2D - vertical line", "[channel_decoding][TensorToLine2D]")
-{
+TEST_CASE("TensorToLine2D - vertical line", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
     auto tensor = torch::zeros({1, 1, 10, 10});
@@ -57,14 +56,16 @@ TEST_CASE("TensorToLine2D - vertical line", "[channel_decoding][TensorToLine2D]"
         tensor[0][0][y][4] = 1.0f;
     }
 
-    dl::DecoderParams params;
-    params.source_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::LineDecoderParams params;
     params.threshold = 0.5f;
 
-    auto const line = decoder.decode(tensor, params);
+    auto const line = decoder.decode(tensor, ctx, params);
 
     REQUIRE(line.size() >= 4);
 
@@ -74,42 +75,43 @@ TEST_CASE("TensorToLine2D - vertical line", "[channel_decoding][TensorToLine2D]"
     }
 }
 
-TEST_CASE("TensorToLine2D - empty tensor produces empty line", "[channel_decoding][TensorToLine2D]")
-{
+TEST_CASE("TensorToLine2D - empty tensor produces empty line", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::DecoderParams params;
-    params.source_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::LineDecoderParams params;
     params.threshold = 0.5f;
 
-    auto const line = decoder.decode(tensor, params);
+    auto const line = decoder.decode(tensor, ctx, params);
     CHECK(line.empty());
 }
 
-TEST_CASE("TensorToLine2D - all below threshold produces empty line", "[channel_decoding][TensorToLine2D]")
-{
+TEST_CASE("TensorToLine2D - all below threshold produces empty line", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
     auto tensor = torch::full({1, 1, 10, 10}, 0.3f);
 
-    dl::DecoderParams params;
-    params.source_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::LineDecoderParams params;
     params.threshold = 0.5f;
 
-    auto const line = decoder.decode(tensor, params);
+    auto const line = decoder.decode(tensor, ctx, params);
     CHECK(line.empty());
 }
 
-TEST_CASE("TensorToLine2D - thick line gets thinned", "[channel_decoding][TensorToLine2D]")
-{
+TEST_CASE("TensorToLine2D - thick line gets thinned", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
     auto tensor = torch::zeros({1, 1, 20, 20});
@@ -120,14 +122,16 @@ TEST_CASE("TensorToLine2D - thick line gets thinned", "[channel_decoding][Tensor
         }
     }
 
-    dl::DecoderParams params;
-    params.source_channel = 0;
-    params.batch_index = 0;
-    params.height = 20;
-    params.width = 20;
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 20;
+    ctx.width = 20;
+
+    dl::LineDecoderParams params;
     params.threshold = 0.5f;
 
-    auto const line = decoder.decode(tensor, params);
+    auto const line = decoder.decode(tensor, ctx, params);
 
     // After thinning, the line should be roughly 1 pixel wide
     // and have a reasonable number of points
@@ -143,8 +147,7 @@ TEST_CASE("TensorToLine2D - thick line gets thinned", "[channel_decoding][Tensor
     }
 }
 
-TEST_CASE("TensorToLine2D - scaling to target image size", "[channel_decoding][TensorToLine2D]")
-{
+TEST_CASE("TensorToLine2D - scaling to target image size", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
     // Single-pixel-wide horizontal line at y=5, x=[2..7] in 10x10
@@ -153,15 +156,17 @@ TEST_CASE("TensorToLine2D - scaling to target image size", "[channel_decoding][T
         tensor[0][0][5][x] = 1.0f;
     }
 
-    dl::DecoderParams params;
-    params.source_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
-    params.threshold = 0.5f;
-    params.target_image_size = ImageSize{100, 100};
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+    ctx.target_image_size = ImageSize{100, 100};
 
-    auto const line = decoder.decode(tensor, params);
+    dl::LineDecoderParams params;
+    params.threshold = 0.5f;
+
+    auto const line = decoder.decode(tensor, ctx, params);
     REQUIRE(!line.empty());
 
     // All y coords should be around 50.0 (5 * 10)
@@ -176,8 +181,7 @@ TEST_CASE("TensorToLine2D - scaling to target image size", "[channel_decoding][T
     }
 }
 
-TEST_CASE("TensorToLine2D - batch index", "[channel_decoding][TensorToLine2D]")
-{
+TEST_CASE("TensorToLine2D - batch index", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
     auto tensor = torch::zeros({2, 1, 10, 10});
@@ -190,42 +194,45 @@ TEST_CASE("TensorToLine2D - batch index", "[channel_decoding][TensorToLine2D]")
         tensor[1][0][7][x] = 1.0f;
     }
 
-    dl::DecoderParams params;
-    params.source_channel = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::LineDecoderParams params;
     params.threshold = 0.5f;
 
-    params.batch_index = 0;
-    auto const line0 = decoder.decode(tensor, params);
+    ctx.batch_index = 0;
+    auto const line0 = decoder.decode(tensor, ctx, params);
     REQUIRE(!line0.empty());
     for (size_t i = 0; i < line0.size(); ++i) {
         CHECK_THAT(line0[i].y, WithinAbs(3.0f, 1.5f));
     }
 
-    params.batch_index = 1;
-    auto const line1 = decoder.decode(tensor, params);
+    ctx.batch_index = 1;
+    auto const line1 = decoder.decode(tensor, ctx, params);
     REQUIRE(!line1.empty());
     for (size_t i = 0; i < line1.size(); ++i) {
         CHECK_THAT(line1[i].y, WithinAbs(7.0f, 1.5f));
     }
 }
 
-TEST_CASE("TensorToLine2D - single pixel", "[channel_decoding][TensorToLine2D]")
-{
+TEST_CASE("TensorToLine2D - single pixel", "[channel_decoding][TensorToLine2D]") {
     dl::TensorToLine2D decoder;
 
     auto tensor = torch::zeros({1, 1, 10, 10});
     tensor[0][0][5][5] = 1.0f;
 
-    dl::DecoderParams params;
-    params.source_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::LineDecoderParams params;
     params.threshold = 0.5f;
 
-    auto const line = decoder.decode(tensor, params);
+    auto const line = decoder.decode(tensor, ctx, params);
 
     // A single pixel produces a line with 1 point
     CHECK(line.size() == 1);

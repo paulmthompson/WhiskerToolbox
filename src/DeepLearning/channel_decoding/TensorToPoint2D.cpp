@@ -7,13 +7,11 @@
 
 namespace dl {
 
-std::string TensorToPoint2D::name() const
-{
+std::string TensorToPoint2D::name() const {
     return "TensorToPoint2D";
 }
 
-std::string TensorToPoint2D::outputTypeName() const
-{
+std::string TensorToPoint2D::outputTypeName() const {
     return "Point2D<float>";
 }
 
@@ -24,8 +22,7 @@ namespace {
 Point2D<float> scale_to_target(Point2D<float> const point,
                                int const tensor_h,
                                int const tensor_w,
-                               ImageSize const target)
-{
+                               ImageSize const target) {
     if (target.width <= 0 || target.height <= 0) {
         return point;
     }
@@ -39,10 +36,9 @@ Point2D<float> scale_to_target(Point2D<float> const point,
 /// Returns the refined floating-point coordinate.
 Point2D<float> refine_subpixel(torch::TensorAccessor<float, 2> const & accessor,
                                int const px, int const py,
-                               int const h, int const w)
-{
-    float refined_x = static_cast<float>(px);
-    float refined_y = static_cast<float>(py);
+                               int const h, int const w) {
+    auto refined_x = static_cast<float>(px);
+    auto refined_y = static_cast<float>(py);
 
     // Refine x: fit parabola through (px-1, px, px+1)
     if (px > 0 && px < w - 1) {
@@ -72,8 +68,7 @@ Point2D<float> refine_subpixel(torch::TensorAccessor<float, 2> const & accessor,
 /// Check if pixel (px, py) is a local maximum (greater than all 8 neighbors)
 bool is_local_maximum(torch::TensorAccessor<float, 2> const & accessor,
                       int const px, int const py,
-                      int const h, int const w)
-{
+                      int const h, int const w) {
     float const val = accessor[py][px];
 
     for (int dy = -1; dy <= 1; ++dy) {
@@ -91,14 +86,14 @@ bool is_local_maximum(torch::TensorAccessor<float, 2> const & accessor,
     return true;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 Point2D<float> TensorToPoint2D::decode(at::Tensor const & tensor,
-                                       DecoderParams const & params) const
-{
-    auto channel = tensor[params.batch_index][params.source_channel];
-    auto const h = params.height;
-    auto const w = params.width;
+                                       DecoderContext const & ctx,
+                                       PointDecoderParams const & params) {
+    auto channel = tensor[ctx.batch_index][ctx.source_channel];
+    auto const h = ctx.height;
+    auto const w = ctx.width;
 
     // Find global argmax
     auto const flat_idx = channel.argmax().item<int64_t>();
@@ -108,7 +103,7 @@ Point2D<float> TensorToPoint2D::decode(at::Tensor const & tensor,
     // Check if the channel is all zeros (no detection)
     auto accessor = channel.accessor<float, 2>();
     if (accessor[py][px] <= 0.0f) {
-        return scale_to_target({0.0f, 0.0f}, h, w, params.target_image_size);
+        return scale_to_target({0.0f, 0.0f}, h, w, ctx.target_image_size);
     }
 
     Point2D<float> result;
@@ -118,16 +113,16 @@ Point2D<float> TensorToPoint2D::decode(at::Tensor const & tensor,
         result = {static_cast<float>(px), static_cast<float>(py)};
     }
 
-    return scale_to_target(result, h, w, params.target_image_size);
+    return scale_to_target(result, h, w, ctx.target_image_size);
 }
 
 std::vector<Point2D<float>> TensorToPoint2D::decodeMultiple(
-    at::Tensor const & tensor,
-    DecoderParams const & params) const
-{
-    auto channel = tensor[params.batch_index][params.source_channel];
-    auto const h = params.height;
-    auto const w = params.width;
+        at::Tensor const & tensor,
+        DecoderContext const & ctx,
+        PointDecoderParams const & params) {
+    auto channel = tensor[ctx.batch_index][ctx.source_channel];
+    auto const h = ctx.height;
+    auto const w = ctx.width;
     auto accessor = channel.accessor<float, 2>();
 
     std::vector<Point2D<float>> points;
@@ -141,7 +136,7 @@ std::vector<Point2D<float>> TensorToPoint2D::decodeMultiple(
                 } else {
                     pt = {static_cast<float>(x), static_cast<float>(y)};
                 }
-                points.push_back(scale_to_target(pt, h, w, params.target_image_size));
+                points.push_back(scale_to_target(pt, h, w, ctx.target_image_size));
             }
         }
     }
@@ -149,4 +144,4 @@ std::vector<Point2D<float>> TensorToPoint2D::decodeMultiple(
     return points;
 }
 
-} // namespace dl
+}// namespace dl

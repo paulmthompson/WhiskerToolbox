@@ -7,7 +7,9 @@
 
 #include <vector>
 
-namespace at { class Tensor; }
+namespace at {
+class Tensor;
+}
 
 namespace dl {
 
@@ -26,16 +28,18 @@ public:
 
     /// Decode the channel with the highest activation into a single point.
     /// Returns {0, 0} if the tensor channel is entirely zero.
-    [[nodiscard]] Point2D<float> decode(at::Tensor const & tensor,
-                                        DecoderParams const & params) const;
+    [[nodiscard]] static Point2D<float> decode(at::Tensor const & tensor,
+                                        DecoderContext const & ctx,
+                                        PointDecoderParams const & params) ;
 
     /// Decode all local maxima above threshold into multiple points.
     /// A local maximum is a pixel whose value is greater than all 8 neighbors.
-    [[nodiscard]] std::vector<Point2D<float>> decodeMultiple(
-        at::Tensor const & tensor,
-        DecoderParams const & params) const;
+    [[nodiscard]] static std::vector<Point2D<float>> decodeMultiple(
+            at::Tensor const & tensor,
+            DecoderContext const & ctx,
+            PointDecoderParams const & params) ;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_TENSOR_TO_POINT2D_HPP
+#endif// WHISKERTOOLBOX_TENSOR_TO_POINT2D_HPP

@@ -75,13 +75,23 @@ JSON model specs and the widget UI can reference them by name.
 
 Decoders read from a specified batch index and channel of an output tensor, converting the 
 activation pattern back into a geometry type. Coordinates are scaled back to the original 
-image dimensions via `target_image_size`.
+image dimensions via `DecoderContext::target_image_size`.
 
-| Decoder | Output Type | Strategy |
-|---------|-----------|----------|
-| `TensorToPoint2D` | `Point2D<float>` | Argmax with optional parabolic subpixel refinement. Also supports multi-peak detection via local maxima. |
-| `TensorToMask2D` | `Mask2D` | Thresholding — collects all pixels above a configurable threshold. |
-| `TensorToLine2D` | `Line2D` | Threshold → Zhang-Suen skeletonization (thin to 1px) → endpoint detection → connectivity tracing. |
+Each decoder's `decode()` method takes two parameter structs:
+
+1. **`DecoderContext`** — Runtime context set by `SlotAssembler` (source channel, batch index,
+   tensor dimensions, target image size). Not user-configurable.
+2. **Per-decoder params** — User-configurable parameters specific to each decoder type
+   (`MaskDecoderParams`, `PointDecoderParams`, `LineDecoderParams`, `FeatureVectorDecoderParams`).
+
+All structs are defined in `ChannelDecoder.hpp`.
+
+| Decoder | Output Type | Params Struct | Strategy |
+|---------|-----------|---------------|----------|
+| `TensorToPoint2D` | `Point2D<float>` | `PointDecoderParams` | Argmax with optional parabolic subpixel refinement. Also supports multi-peak detection via local maxima. |
+| `TensorToMask2D` | `Mask2D` | `MaskDecoderParams` | Thresholding — collects all pixels above a configurable threshold. |
+| `TensorToLine2D` | `Line2D` | `LineDecoderParams` | Threshold → Zhang-Suen skeletonization (thin to 1px) → endpoint detection → connectivity tracing. |
+| `TensorToFeatureVector` | `std::vector<float>` | `FeatureVectorDecoderParams` | Direct extraction of feature values from the tensor. |
 
 All decoders are registered in `DecoderFactory` by string key.
 

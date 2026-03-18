@@ -598,17 +598,15 @@ void decodeOutputs(
         auto const * slot = findSlot(output_slot_vec, binding.slot_name);
         if (!slot) continue;
 
-        dl::DecoderParams params;
-        params.source_channel = 0;
-        params.batch_index = 0;
-        params.threshold = binding.threshold;
-        params.subpixel = binding.subpixel;
-        params.target_image_size = source_image_size;
+        dl::DecoderContext ctx;
+        ctx.source_channel = 0;
+        ctx.batch_index = 0;
+        ctx.target_image_size = source_image_size;
 
         if (slot->shape.size() >= 2) {
-            params.height =
+            ctx.height =
                     static_cast<int>(slot->shape[slot->shape.size() - 2]);
-            params.width =
+            ctx.width =
                     static_cast<int>(slot->shape[slot->shape.size() - 1]);
         }
 
@@ -616,7 +614,9 @@ void decodeOutputs(
 
         if (binding.decoder_id == "TensorToMask2D") {
             dl::TensorToMask2D const decoder;
-            auto mask = decoder.decode(tensor, params);
+            dl::MaskDecoderParams params;
+            params.threshold = binding.threshold;
+            auto mask = decoder.decode(tensor, ctx, params);
 
             // Get or create MaskData and add the decoded mask
             auto mask_data = dm.getData<MaskData>(binding.data_key);
@@ -631,7 +631,9 @@ void decodeOutputs(
 
         } else if (binding.decoder_id == "TensorToPoint2D") {
             dl::TensorToPoint2D const decoder;
-            auto point = decoder.decode(tensor, params);
+            dl::PointDecoderParams pt_params;
+            pt_params.subpixel = binding.subpixel;
+            auto point = decoder.decode(tensor, ctx, pt_params);
 
             auto point_data = dm.getData<PointData>(binding.data_key);
             if (!point_data) {
@@ -644,7 +646,9 @@ void decodeOutputs(
 
         } else if (binding.decoder_id == "TensorToLine2D") {
             dl::TensorToLine2D const decoder;
-            auto line = decoder.decode(tensor, params);
+            dl::LineDecoderParams ln_params;
+            ln_params.threshold = binding.threshold;
+            auto line = decoder.decode(tensor, ctx, ln_params);
 
             auto line_data = dm.getData<LineData>(binding.data_key);
             if (!line_data) {
@@ -657,7 +661,8 @@ void decodeOutputs(
 
         } else if (binding.decoder_id == "TensorToFeatureVector") {
             dl::TensorToFeatureVector const decoder;
-            auto vec = decoder.decode(tensor, params);
+            dl::FeatureVectorDecoderParams const fv_params;
+            auto vec = decoder.decode(tensor, ctx, fv_params);
 
             // Create a new 1-row TensorData for the current frame.
             // For single-frame inference this replaces the previous row;
@@ -708,23 +713,23 @@ std::vector<FrameResult> decodeOutputsToBuffer(
         auto const * slot = findSlot(output_slot_vec, binding.slot_name);
         if (!slot) continue;
 
-        dl::DecoderParams params;
-        params.source_channel = 0;
-        params.batch_index = 0;
-        params.threshold = binding.threshold;
-        params.subpixel = binding.subpixel;
-        params.target_image_size = source_image_size;
+        dl::DecoderContext ctx;
+        ctx.source_channel = 0;
+        ctx.batch_index = 0;
+        ctx.target_image_size = source_image_size;
 
         if (slot->shape.size() >= 2) {
-            params.height =
+            ctx.height =
                     static_cast<int>(slot->shape[slot->shape.size() - 2]);
-            params.width =
+            ctx.width =
                     static_cast<int>(slot->shape[slot->shape.size() - 1]);
         }
 
         if (binding.decoder_id == "TensorToMask2D") {
             dl::TensorToMask2D const decoder;
-            auto mask = decoder.decode(tensor, params);
+            dl::MaskDecoderParams params;
+            params.threshold = binding.threshold;
+            auto mask = decoder.decode(tensor, ctx, params);
             if (!mask.empty()) {
                 frame_results.push_back(FrameResult{
                         current_frame,
@@ -734,7 +739,9 @@ std::vector<FrameResult> decodeOutputsToBuffer(
             }
         } else if (binding.decoder_id == "TensorToPoint2D") {
             dl::TensorToPoint2D const decoder;
-            auto point = decoder.decode(tensor, params);
+            dl::PointDecoderParams params;
+            params.subpixel = binding.subpixel;
+            auto point = decoder.decode(tensor, ctx, params);
             frame_results.push_back(FrameResult{
                     current_frame,
                     point,
@@ -742,7 +749,9 @@ std::vector<FrameResult> decodeOutputsToBuffer(
                     binding.decoder_id});
         } else if (binding.decoder_id == "TensorToLine2D") {
             dl::TensorToLine2D const decoder;
-            auto line = decoder.decode(tensor, params);
+            dl::LineDecoderParams params;
+            params.threshold = binding.threshold;
+            auto line = decoder.decode(tensor, ctx, params);
             if (!line.empty()) {
                 frame_results.push_back(FrameResult{
                         current_frame,
@@ -752,7 +761,8 @@ std::vector<FrameResult> decodeOutputsToBuffer(
             }
         } else if (binding.decoder_id == "TensorToFeatureVector") {
             dl::TensorToFeatureVector const decoder;
-            auto vec = decoder.decode(tensor, params);
+            dl::FeatureVectorDecoderParams const params;
+            auto vec = decoder.decode(tensor, ctx, params);
             if (!vec.empty()) {
                 frame_results.push_back(FrameResult{
                         current_frame,
