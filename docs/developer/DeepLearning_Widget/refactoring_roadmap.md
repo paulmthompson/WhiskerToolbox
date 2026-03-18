@@ -516,9 +516,9 @@ struct OutputSlotParams {
 - `paramsFromBinding(binding)` — Static helper to build `OutputSlotParams` from saved state.
 - `bindingChanged()` signal — Emitted on any parameter change.
 
-### 1.5 — `RecurrentBindingWidget`
+### 1.5 — `RecurrentBindingWidget` ✅ COMPLETED
 
-Handles one non-sequence recurrent binding panel (currently `_buildRecurrentInputGroup`).
+Handles one non-sequence recurrent binding panel (replaces `_buildRecurrentInputGroup`).
 
 **Integration into DeepLearningPropertiesWidget:** Replace `_buildRecurrentInputGroup()` calls in `_rebuildSlotPanels()`. Update `_syncBindingsFromUi()` recurrent binding section. Delete `_buildRecurrentInputGroup()`.
 

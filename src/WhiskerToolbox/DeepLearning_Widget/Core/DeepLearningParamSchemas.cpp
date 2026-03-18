@@ -17,6 +17,8 @@ void ParameterUIHints<dl::widget::StaticCaptureInitParams>::annotate(
         ParameterSchema & schema) {
     if (auto * f = schema.field("data_key")) {
         f->tooltip = "DataManager key for the static data source to encode";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
     }
     if (auto * f = schema.field("frame")) {
         f->tooltip = "Frame index to capture for initialization";
@@ -119,6 +121,25 @@ void ParameterUIHints<dl::widget::EncoderShapeParams>::annotate(
     }
     if (auto * f = schema.field("output_shape")) {
         f->tooltip = "Encoder output shape, e.g. \"768,16,16\"";
+    }
+}
+
+void ParameterUIHints<dl::widget::RecurrentBindingSlotParams>::annotate(
+        ParameterSchema & schema) {
+    if (auto * f = schema.field("output_slot_name")) {
+        f->display_name = "Output Slot";
+        f->tooltip =
+                "Model output slot to feed back into this input at t+1";
+        f->dynamic_combo = true;
+        f->include_none_sentinel = true;
+    }
+    if (auto * f = schema.field("init")) {
+        f->display_name = "Init Mode";
+        f->tooltip =
+                "How to initialize this input at t=0:\n"
+                "• Zeros: all-zeros tensor\n"
+                "• Static Capture: use a data source at a specific frame\n"
+                "• First Output: run model once with zeros, use output as init";
     }
 }
 

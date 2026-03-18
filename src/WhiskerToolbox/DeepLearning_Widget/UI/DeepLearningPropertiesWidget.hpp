@@ -46,6 +46,7 @@ class WriteReservation;
 namespace dl::widget {
 class DynamicInputSlotWidget;
 class OutputSlotWidget;
+class RecurrentBindingWidget;
 class SequenceSlotWidget;
 class StaticInputSlotWidget;
 }// namespace dl::widget
@@ -109,9 +110,6 @@ private:
     void _buildEncoderShapeSection();
 
     QGroupBox * _buildBooleanMaskGroup(dl::TensorSlotDescriptor const & slot);
-    QGroupBox * _buildRecurrentInputGroup(
-            dl::TensorSlotDescriptor const & input_slot,
-            std::vector<dl::TensorSlotDescriptor> const & output_slots);
 
     void _populateDataSourceCombo(QComboBox * combo,
                                   std::string const & type_hint);
@@ -158,6 +156,9 @@ private:
 
     // Output slot widgets (non-owning; owned by _dynamic_container)
     std::vector<dl::widget::OutputSlotWidget *> _output_slot_widgets;
+
+    // Recurrent binding widgets (non-owning; owned by _dynamic_container)
+    std::vector<dl::widget::RecurrentBindingWidget *> _recurrent_binding_widgets;
 
     // Cached model display info (clean — no torch types).
     std::optional<ModelDisplayInfo> _current_info;

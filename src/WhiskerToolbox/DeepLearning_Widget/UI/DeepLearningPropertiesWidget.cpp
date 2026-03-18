@@ -7,6 +7,7 @@
 #include "DeepLearning_Widget/Core/WriteReservation.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/Helpers/RecurrentBindingWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp"
 
@@ -506,6 +507,7 @@ void DeepLearningPropertiesWidget::_clearDynamicContent() {
     _static_input_widgets.clear();
     _sequence_slot_widgets.clear();
     _output_slot_widgets.clear();
+    _recurrent_binding_widgets.clear();
     QLayoutItem * child = nullptr;
     while ((child = _dynamic_layout->takeAt(0)) != nullptr) {
         if (child->widget()) {
@@ -636,8 +638,20 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                                    _dynamic_container));
                 has_recurrent = true;
             }
-            _dynamic_layout->addWidget(
-                    _buildRecurrentInputGroup(slot, outputs));
+            auto * rb_widget = new dl::widget::RecurrentBindingWidget(
+                    slot, outputs, _data_manager, _dynamic_container);
+            for (auto const & rb: _state->recurrentBindings()) {
+                if (rb.input_slot_name == slot.name) {
+                    rb_widget->setParams(
+                            dl::widget::RecurrentBindingWidget::paramsFromBinding(
+                                    rb));
+                    break;
+                }
+            }
+            connect(rb_widget, &dl::widget::RecurrentBindingWidget::bindingChanged,
+                    this, &DeepLearningPropertiesWidget::_syncBindingsFromUi);
+            _recurrent_binding_widgets.push_back(rb_widget);
+            _dynamic_layout->addWidget(rb_widget);
         }
     }
 
@@ -996,6 +1010,11 @@ void DeepLearningPropertiesWidget::_refreshDataSourceCombos() {
         slot_widget->refreshDataSources();
     }
 
+    // Refresh recurrent binding data_key combos (StaticCapture init)
+    for (auto * rb_widget: _recurrent_binding_widgets) {
+        rb_widget->refreshDataSources();
+    }
+
     // Refresh post-encoder point key combo (if visible)
     auto * point_combo = _dynamic_container->findChild<QComboBox *>(
             QStringLiteral("post_encoder_point_key_combo"));
@@ -1089,39 +1108,10 @@ void DeepLearningPropertiesWidget::_syncBindingsFromUi() {
     std::vector<RecurrentBindingData> recurrent_bindings =
             std::move(hybrid_recurrent_bindings);
 
-    // Add whole-slot recurrent bindings from non-sequence static inputs
-    for (auto const & slot: _current_info->inputs) {
-        if (!slot.is_static || slot.is_boolean_mask) continue;
-        // Sequence slots use per-position hybrid bindings (collected above)
-        if (slot.hasSequenceDim()) continue;
-
-        auto * output_combo = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("recurrent_output_" + slot.name));
-        auto * init_combo = _dynamic_container->findChild<QComboBox *>(
-                QString::fromStdString("recurrent_init_" + slot.name));
-
-        if (!output_combo || !init_combo) continue;
-
-        auto const output_name = output_combo->currentData().toString().toStdString();
-        if (output_name.empty()) continue;// "(None)" or empty
-
-        RecurrentBindingData rb;
-        rb.input_slot_name = slot.name;
-        rb.output_slot_name = output_name;
-        rb.init_mode_str = init_combo->currentData().toString().toStdString();
-
-        // If StaticCapture, pick up init_data_key and init_frame from
-        // any existing static input for this slot
-        if (rb.initMode() == RecurrentInitMode::StaticCapture) {
-            for (auto const & si: _state->staticInputs()) {
-                if (si.slot_name == slot.name) {
-                    rb.init_data_key = si.data_key;
-                    rb.init_frame = si.captured_frame;
-                    break;
-                }
-            }
-        }
-
+    // Add whole-slot recurrent bindings from RecurrentBindingWidgets
+    for (auto const * rb_widget: _recurrent_binding_widgets) {
+        auto rb = rb_widget->toRecurrentBindingData();
+        if (rb.output_slot_name.empty()) continue;
         recurrent_bindings.push_back(std::move(rb));
     }
     _state->setRecurrentBindings(std::move(recurrent_bindings));
@@ -1612,103 +1602,6 @@ void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Recurrent Input Panel
-// ────────────────────────────────────────────────────────────────────────────
-
-QGroupBox * DeepLearningPropertiesWidget::_buildRecurrentInputGroup(
-        dl::TensorSlotDescriptor const & input_slot,
-        std::vector<dl::TensorSlotDescriptor> const & output_slots) {
-
-    auto * group = new QGroupBox(
-            QString::fromStdString(input_slot.name) + tr(" (recurrent)"),
-            _dynamic_container);
-    auto * form = new QFormLayout(group);
-
-    auto * info = new QLabel(
-            tr("Map a model output to this input slot.\n"
-               "The output at frame t becomes the input at frame t+1."),
-            group);
-    info->setWordWrap(true);
-    info->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
-    form->addRow(info);
-
-    // Output slot selector
-    auto * output_combo = new QComboBox(group);
-    output_combo->setObjectName(
-            QString::fromStdString("recurrent_output_" + input_slot.name));
-    output_combo->addItem(tr("(None)"), QString{});
-    for (auto const & out: output_slots) {
-        output_combo->addItem(
-                QString::fromStdString(out.name),
-                QString::fromStdString(out.name));
-    }
-
-    // Restore from state
-    for (auto const & rb: _state->recurrentBindings()) {
-        if (rb.input_slot_name == input_slot.name) {
-            int const idx = output_combo->findData(
-                    QString::fromStdString(rb.output_slot_name));
-            if (idx >= 0) output_combo->setCurrentIndex(idx);
-            break;
-        }
-    }
-    form->addRow(tr("Output slot:"), output_combo);
-
-    // Initialization mode
-    auto * init_combo = new QComboBox(group);
-    init_combo->setObjectName(
-            QString::fromStdString("recurrent_init_" + input_slot.name));
-    init_combo->addItem(tr("Zeros"), QStringLiteral("Zeros"));
-    init_combo->addItem(tr("Static Capture"), QStringLiteral("StaticCapture"));
-    init_combo->addItem(tr("First Output"), QStringLiteral("FirstOutput"));
-    init_combo->setToolTip(
-            tr("How to initialize this input at t=0:\n"
-               "• Zeros: all-zeros tensor\n"
-               "• Static Capture: use a previously captured tensor\n"
-               "• First Output: run model once with zeros, use output as init"));
-
-    // Restore from state
-    for (auto const & rb: _state->recurrentBindings()) {
-        if (rb.input_slot_name == input_slot.name) {
-            int const idx = init_combo->findData(
-                    QString::fromStdString(rb.init_mode_str));
-            if (idx >= 0) init_combo->setCurrentIndex(idx);
-            break;
-        }
-    }
-    form->addRow(tr("Init mode:"), init_combo);
-
-    // Status label
-    auto * status = new QLabel(group);
-    status->setObjectName(
-            QString::fromStdString("recurrent_status_" + input_slot.name));
-    status->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
-
-    auto const slot_name = input_slot.name;
-    auto updateStatus = [this, output_combo, status, slot_name] {
-        auto const out_name = output_combo->currentData().toString().toStdString();
-        if (out_name.empty()) {
-            status->setText(tr("No feedback configured"));
-        } else {
-            status->setText(
-                    tr("Feedback: %1 \u2192 %2")
-                            .arg(QString::fromStdString(out_name))
-                            .arg(QString::fromStdString(slot_name)));
-        }
-        _updateBatchSizeConstraint();
-    };
-    updateStatus();
-    form->addRow(status);
-
-    connect(output_combo, &QComboBox::currentIndexChanged, this,
-            [updateStatus](int) { updateStatus(); });
-    connect(init_combo, &QComboBox::currentIndexChanged, this,
-            [updateStatus](int) { updateStatus(); });
-
-    return group;
-}
-
-// ────────────────────────────────────────────────────────────────────────────
 // Batch Size Constraint
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -1735,12 +1628,13 @@ void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
                 }
             }
         } else {
-            auto * output_combo = _dynamic_container->findChild<QComboBox *>(
-                    QString::fromStdString("recurrent_output_" + slot.name));
-            if (output_combo) {
-                auto const out_name = output_combo->currentData().toString().toStdString();
-                if (!out_name.empty()) {
-                    has_recurrent = true;
+            for (auto const * rb_widget: _recurrent_binding_widgets) {
+                if (rb_widget->slotName() == slot.name) {
+                    auto rb = rb_widget->toRecurrentBindingData();
+                    if (!rb.output_slot_name.empty()) {
+                        has_recurrent = true;
+                    }
+                    break;
                 }
             }
         }

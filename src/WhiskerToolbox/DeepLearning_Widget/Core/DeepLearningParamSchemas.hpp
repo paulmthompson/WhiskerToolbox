@@ -158,6 +158,12 @@ struct OutputSlotParams {
     DecoderVariant decoder = MaskDecoderParams{};///< Decoder configuration
 };
 
+/// Full configuration for one non-sequence recurrent (feedback) binding.
+struct RecurrentBindingSlotParams {
+    std::string output_slot_name;                 ///< Model output slot (dynamic combo)
+    RecurrentInitVariant init = ZerosInitParams{};///< Init mode variant
+};
+
 /// Custom encoder input/output dimensions (UI-only, passed to
 /// SlotAssembler::configureModelShape()).
 struct EncoderShapeParams {
@@ -216,6 +222,11 @@ struct ParameterUIHints<dl::widget::OutputSlotParams> {
 
 template<>
 struct ParameterUIHints<dl::widget::EncoderShapeParams> {
+    static void annotate(ParameterSchema & schema);
+};
+
+template<>
+struct ParameterUIHints<dl::widget::RecurrentBindingSlotParams> {
     static void annotate(ParameterSchema & schema);
 };
 
