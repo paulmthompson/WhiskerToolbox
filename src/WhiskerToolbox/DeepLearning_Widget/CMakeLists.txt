@@ -5,9 +5,11 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     DeepLearningWidgetRegistration.cpp
 
     Core/BatchInferenceResult.hpp
+    Core/DeepLearningBindingData.hpp
+    Core/DeepLearningParamSchemas.hpp
+    Core/DeepLearningParamSchemas.cpp
     Core/DeepLearningState.hpp
     Core/DeepLearningState.cpp
-    Core/DeepLearningBindingData.hpp
     Core/SlotAssembler.hpp
     Core/SlotAssembler.cpp
 
@@ -30,6 +32,7 @@ target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MaskData)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MediaData)
 
 target_link_libraries(DeepLearning_Widget PRIVATE DeepLearning)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::ParameterSchema)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::StateManagement)
 
 target_include_directories(DeepLearning_Widget PUBLIC
