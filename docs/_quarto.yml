@@ -128,6 +128,9 @@ website:
             - developer/DataManager/storage_benchmarking_roadmap.qmd
             - developer/DataManager/concurrency_architecture.qmd
             - developer/DataManager/threaded_loading_roadmap.qmd
+            - section: "TensorData"
+              contents:
+                - developer/DataObjects/Tensors/row_mutation.qmd
             - section: "Command Architecture"
               href: developer/DataManager/Commands/index.qmd
               contents:

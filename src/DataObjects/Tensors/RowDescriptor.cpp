@@ -18,8 +18,8 @@ RowDescriptor RowDescriptor::ordinal(std::size_t count) {
 }
 
 RowDescriptor RowDescriptor::fromTimeIndices(
-    std::shared_ptr<TimeIndexStorage> storage,
-    std::shared_ptr<TimeFrame> time_frame) {
+        std::shared_ptr<TimeIndexStorage> storage,
+        std::shared_ptr<TimeFrame> time_frame) {
     if (!storage) {
         throw std::invalid_argument("RowDescriptor::fromTimeIndices: storage must not be null");
     }
@@ -34,8 +34,8 @@ RowDescriptor RowDescriptor::fromTimeIndices(
 }
 
 RowDescriptor RowDescriptor::fromIntervals(
-    std::vector<TimeFrameInterval> intervals,
-    std::shared_ptr<TimeFrame> time_frame) {
+        std::vector<TimeFrameInterval> intervals,
+        std::shared_ptr<TimeFrame> time_frame) {
     if (!time_frame) {
         throw std::invalid_argument("RowDescriptor::fromIntervals: time_frame must not be null");
     }
@@ -55,13 +55,13 @@ std::size_t RowDescriptor::count() const noexcept {
         case RowType::Interval:
             return _intervals.size();
     }
-    return 0; // unreachable
+    return 0;// unreachable
 }
 
 TimeIndexStorage const & RowDescriptor::timeStorage() const {
     if (_type != RowType::TimeFrameIndex) {
         throw std::logic_error(
-            "RowDescriptor::timeStorage: row type is not TimeFrameIndex");
+                "RowDescriptor::timeStorage: row type is not TimeFrameIndex");
     }
     return *_time_storage;
 }
@@ -69,7 +69,7 @@ TimeIndexStorage const & RowDescriptor::timeStorage() const {
 std::shared_ptr<TimeIndexStorage> RowDescriptor::timeStoragePtr() const {
     if (_type != RowType::TimeFrameIndex) {
         throw std::logic_error(
-            "RowDescriptor::timeStoragePtr: row type is not TimeFrameIndex");
+                "RowDescriptor::timeStoragePtr: row type is not TimeFrameIndex");
     }
     return _time_storage;
 }
@@ -77,7 +77,7 @@ std::shared_ptr<TimeIndexStorage> RowDescriptor::timeStoragePtr() const {
 std::span<TimeFrameInterval const> RowDescriptor::intervals() const {
     if (_type != RowType::Interval) {
         throw std::logic_error(
-            "RowDescriptor::intervals: row type is not Interval");
+                "RowDescriptor::intervals: row type is not Interval");
     }
     return _intervals;
 }
@@ -87,8 +87,8 @@ std::shared_ptr<TimeFrame> RowDescriptor::timeFrame() const noexcept { return _t
 RowDescriptor::RowLabel RowDescriptor::labelAt(std::size_t row) const {
     if (row >= count()) {
         throw std::out_of_range(
-            "RowDescriptor::labelAt: row " + std::to_string(row) +
-            " out of range (count=" + std::to_string(count()) + ")");
+                "RowDescriptor::labelAt: row " + std::to_string(row) +
+                " out of range (count=" + std::to_string(count()) + ")");
     }
     switch (_type) {
         case RowType::Ordinal:
@@ -98,8 +98,51 @@ RowDescriptor::RowLabel RowDescriptor::labelAt(std::size_t row) const {
         case RowType::Interval:
             return _intervals[row];
     }
-    return std::monostate{}; // unreachable
+    return std::monostate{};// unreachable
 }
+
+// =============================================================================
+// Mutation
+// =============================================================================
+
+void RowDescriptor::setOrdinalCount(std::size_t new_count) {
+    if (_type != RowType::Ordinal) {
+        throw std::logic_error(
+                "RowDescriptor::setOrdinalCount: row type is not Ordinal");
+    }
+    if (new_count == 0) {
+        throw std::invalid_argument(
+                "RowDescriptor::setOrdinalCount: new_count must be > 0");
+    }
+    _ordinal_count = new_count;
+}
+
+void RowDescriptor::appendInterval(TimeFrameInterval interval) {
+    if (_type != RowType::Interval) {
+        throw std::logic_error(
+                "RowDescriptor::appendInterval: row type is not Interval");
+    }
+    _intervals.push_back(interval);
+}
+
+void RowDescriptor::insertInterval(std::size_t index, TimeFrameInterval interval) {
+    if (_type != RowType::Interval) {
+        throw std::logic_error(
+                "RowDescriptor::insertInterval: row type is not Interval");
+    }
+    if (index > _intervals.size()) {
+        throw std::out_of_range(
+                "RowDescriptor::insertInterval: index " + std::to_string(index) +
+                " > count " + std::to_string(_intervals.size()));
+    }
+    _intervals.insert(
+            _intervals.begin() + static_cast<std::ptrdiff_t>(index),
+            interval);
+}
+
+// =============================================================================
+// Comparison
+// =============================================================================
 
 bool RowDescriptor::operator==(RowDescriptor const & other) const {
     if (_type != other._type) {
@@ -123,5 +166,5 @@ bool RowDescriptor::operator==(RowDescriptor const & other) const {
         case RowType::Interval:
             return _intervals == other._intervals;
     }
-    return false; // unreachable
+    return false;// unreachable
 }

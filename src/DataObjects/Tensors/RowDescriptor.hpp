@@ -14,15 +14,15 @@
  * @see tensor_data_refactor_proposal.md §5 for design rationale.
  */
 
-#include "TimeFrame/TimeFrameIndex.hpp"   // TimeFrameIndex
-#include "TimeFrame/TimeIndexStorage.hpp" // TimeIndexStorage
-#include "TimeFrame/interval_data.hpp"    // TimeFrameInterval
+#include "TimeFrame/TimeFrameIndex.hpp"  // TimeFrameIndex
+#include "TimeFrame/TimeIndexStorage.hpp"// TimeIndexStorage
+#include "TimeFrame/interval_data.hpp"   // TimeFrameInterval
 
-#include <cstddef>      // size_t
-#include <memory>       // std::shared_ptr
-#include <span>         // std::span
-#include <variant>      // std::variant 
-#include <vector>       // std::vector
+#include <cstddef>// size_t
+#include <memory> // std::shared_ptr
+#include <span>   // std::span
+#include <variant>// std::variant
+#include <vector> // std::vector
 
 class TimeFrame;
 
@@ -35,9 +35,9 @@ class TimeFrame;
  * - **Ordinal**: Rows have no temporal meaning — plain 0..N-1 indexing
  */
 enum class RowType {
-    TimeFrameIndex,  ///< Each row is a single TimeFrameIndex
-    Interval,        ///< Each row is a TimeFrameInterval
-    Ordinal          ///< Rows have no temporal meaning (plain 0..N-1)
+    TimeFrameIndex,///< Each row is a single TimeFrameIndex
+    Interval,      ///< Each row is a TimeFrameInterval
+    Ordinal        ///< Rows have no temporal meaning (plain 0..N-1)
 };
 
 /**
@@ -81,8 +81,8 @@ public:
      * @throws std::invalid_argument if storage or time_frame is null
      */
     static RowDescriptor fromTimeIndices(
-        std::shared_ptr<TimeIndexStorage> storage,
-        std::shared_ptr<TimeFrame> time_frame);
+            std::shared_ptr<TimeIndexStorage> storage,
+            std::shared_ptr<TimeFrame> time_frame);
 
     /**
      * @brief Create an interval-based row descriptor
@@ -91,8 +91,8 @@ public:
      * @throws std::invalid_argument if time_frame is null
      */
     static RowDescriptor fromIntervals(
-        std::vector<TimeFrameInterval> intervals,
-        std::shared_ptr<TimeFrame> time_frame);
+            std::vector<TimeFrameInterval> intervals,
+            std::shared_ptr<TimeFrame> time_frame);
 
     // ========== Queries ==========
 
@@ -146,6 +146,42 @@ public:
      */
     [[nodiscard]] RowLabel labelAt(std::size_t row) const;
 
+    // ========== Mutation ==========
+
+    /**
+     * @brief Set the ordinal row count
+     *
+     * Only valid for Ordinal rows.
+     *
+     * @param new_count The new row count (must be > 0)
+     * @throws std::logic_error if type() != RowType::Ordinal
+     * @throws std::invalid_argument if new_count == 0
+     */
+    void setOrdinalCount(std::size_t new_count);
+
+    /**
+     * @brief Append an interval to the end
+     *
+     * Only valid for Interval rows.
+     *
+     * @param interval The interval for the new row
+     * @throws std::logic_error if type() != RowType::Interval
+     */
+    void appendInterval(TimeFrameInterval interval);
+
+    /**
+     * @brief Insert an interval at a specific position
+     *
+     * Only valid for Interval rows. Existing intervals at and after
+     * the insertion point are shifted.
+     *
+     * @param index Position to insert before (0-based; count() inserts at end)
+     * @param interval The interval for the new row
+     * @throws std::logic_error if type() != RowType::Interval
+     * @throws std::out_of_range if index > count()
+     */
+    void insertInterval(std::size_t index, TimeFrameInterval interval);
+
     // ========== Comparison ==========
 
     bool operator==(RowDescriptor const & other) const;
@@ -155,10 +191,10 @@ private:
     RowDescriptor() = default;
 
     RowType _type{RowType::Ordinal};
-    std::size_t _ordinal_count{0};                         ///< For Ordinal rows
-    std::shared_ptr<TimeIndexStorage> _time_storage;       ///< For TimeFrameIndex rows
-    std::vector<TimeFrameInterval> _intervals;             ///< For Interval rows
-    std::shared_ptr<TimeFrame> _time_frame;                ///< Shared time reference
+    std::size_t _ordinal_count{0};                  ///< For Ordinal rows
+    std::shared_ptr<TimeIndexStorage> _time_storage;///< For TimeFrameIndex rows
+    std::vector<TimeFrameInterval> _intervals;      ///< For Interval rows
+    std::shared_ptr<TimeFrame> _time_frame;         ///< Shared time reference
 };
 
-#endif // ROW_DESCRIPTOR_HPP
+#endif// ROW_DESCRIPTOR_HPP

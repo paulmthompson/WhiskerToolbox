@@ -8,43 +8,43 @@
 
 #include "DenseTensorStorage.hpp"
 
-#include <numeric>      // std::accumulate
-#include <stdexcept>    // std::invalid_argument, std::out_of_range
-#include <string>       // std::string  
+#include <numeric>  // std::accumulate
+#include <stdexcept>// std::invalid_argument, std::out_of_range
+#include <string>   // std::string
 
 // =============================================================================
 // Construction
 // =============================================================================
 
 DenseTensorStorage::DenseTensorStorage(std::vector<float> data, std::vector<std::size_t> shape)
-    : _data(std::move(data))
-    , _shape(std::move(shape))
-    , _strides(computeStrides(_shape)) {
+    : _data(std::move(data)),
+      _shape(std::move(shape)),
+      _strides(computeStrides(_shape)) {
     if (_shape.empty()) {
         throw std::invalid_argument(
-            "DenseTensorStorage: shape must not be empty");
+                "DenseTensorStorage: shape must not be empty");
     }
 
     auto const expected = std::accumulate(
-        _shape.begin(), _shape.end(), std::size_t{1}, std::multiplies<>());
+            _shape.begin(), _shape.end(), std::size_t{1}, std::multiplies<>());
 
     if (_data.size() != expected) {
         throw std::invalid_argument(
-            "DenseTensorStorage: data size (" + std::to_string(_data.size()) +
-            ") != product of shape (" + std::to_string(expected) + ")");
+                "DenseTensorStorage: data size (" + std::to_string(_data.size()) +
+                ") != product of shape (" + std::to_string(expected) + ")");
     }
 }
 
 DenseTensorStorage::DenseTensorStorage(std::vector<std::size_t> shape)
-    : _shape(std::move(shape))
-    , _strides(computeStrides(_shape)) {
+    : _shape(std::move(shape)),
+      _strides(computeStrides(_shape)) {
     if (_shape.empty()) {
         throw std::invalid_argument(
-            "DenseTensorStorage: shape must not be empty");
+                "DenseTensorStorage: shape must not be empty");
     }
 
     auto const total = std::accumulate(
-        _shape.begin(), _shape.end(), std::size_t{1}, std::multiplies<>());
+            _shape.begin(), _shape.end(), std::size_t{1}, std::multiplies<>());
     _data.resize(total, 0.0f);
 }
 
@@ -62,6 +62,55 @@ void DenseTensorStorage::setValueAt(std::span<std::size_t const> indices, float 
 }
 
 // =============================================================================
+// Row Mutation (2D only)
+// =============================================================================
+
+void DenseTensorStorage::appendRow(std::span<float const> row_data) {
+    if (_shape.size() != 2) {
+        throw std::logic_error(
+                "DenseTensorStorage::appendRow: only supported for 2D storage, "
+                "current ndim=" +
+                std::to_string(_shape.size()));
+    }
+    auto const num_cols = _shape[1];
+    if (row_data.size() != num_cols) {
+        throw std::invalid_argument(
+                "DenseTensorStorage::appendRow: row_data size (" +
+                std::to_string(row_data.size()) + ") != number of columns (" +
+                std::to_string(num_cols) + ")");
+    }
+    _data.insert(_data.end(), row_data.begin(), row_data.end());
+    _shape[0] += 1;
+    _strides = computeStrides(_shape);
+}
+
+void DenseTensorStorage::insertRow(std::size_t index, std::span<float const> row_data) {
+    if (_shape.size() != 2) {
+        throw std::logic_error(
+                "DenseTensorStorage::insertRow: only supported for 2D storage, "
+                "current ndim=" +
+                std::to_string(_shape.size()));
+    }
+    auto const num_rows = _shape[0];
+    auto const num_cols = _shape[1];
+    if (index > num_rows) {
+        throw std::out_of_range(
+                "DenseTensorStorage::insertRow: index " + std::to_string(index) +
+                " > number of rows " + std::to_string(num_rows));
+    }
+    if (row_data.size() != num_cols) {
+        throw std::invalid_argument(
+                "DenseTensorStorage::insertRow: row_data size (" +
+                std::to_string(row_data.size()) + ") != number of columns (" +
+                std::to_string(num_cols) + ")");
+    }
+    auto const insert_pos = _data.begin() + static_cast<std::ptrdiff_t>(index * num_cols);
+    _data.insert(insert_pos, row_data.begin(), row_data.end());
+    _shape[0] += 1;
+    _strides = computeStrides(_shape);
+}
+
+// =============================================================================
 // CRTP Implementation
 // =============================================================================
 
@@ -75,17 +124,17 @@ std::span<float const> DenseTensorStorage::flatDataImpl() const {
 }
 
 std::vector<float> DenseTensorStorage::sliceAlongAxisImpl(
-    std::size_t axis, std::size_t index) const {
+        std::size_t axis, std::size_t index) const {
 
     if (axis >= _shape.size()) {
         throw std::out_of_range(
-            "DenseTensorStorage::sliceAlongAxis: axis " + std::to_string(axis) +
-            " >= ndim " + std::to_string(_shape.size()));
+                "DenseTensorStorage::sliceAlongAxis: axis " + std::to_string(axis) +
+                " >= ndim " + std::to_string(_shape.size()));
     }
     if (index >= _shape[axis]) {
         throw std::out_of_range(
-            "DenseTensorStorage::sliceAlongAxis: index " + std::to_string(index) +
-            " >= shape[" + std::to_string(axis) + "] = " + std::to_string(_shape[axis]));
+                "DenseTensorStorage::sliceAlongAxis: index " + std::to_string(index) +
+                " >= shape[" + std::to_string(axis) + "] = " + std::to_string(_shape[axis]));
     }
 
     // Compute the shape of the result (all dimensions except the sliced one)
@@ -103,7 +152,7 @@ std::vector<float> DenseTensorStorage::sliceAlongAxisImpl(
     }
 
     auto const result_total = std::accumulate(
-        result_shape.begin(), result_shape.end(), std::size_t{1}, std::multiplies<>());
+            result_shape.begin(), result_shape.end(), std::size_t{1}, std::multiplies<>());
     std::vector<float> result(result_total);
 
     // Iterate over all positions in the result tensor.
@@ -143,16 +192,16 @@ std::vector<float> DenseTensorStorage::sliceAlongAxisImpl(
 std::vector<float> DenseTensorStorage::getColumnImpl(std::size_t col) const {
     if (_shape.size() < 2) {
         throw std::invalid_argument(
-            "DenseTensorStorage::getColumn: not supported for " +
-            std::to_string(_shape.size()) + "D tensor (need at least 2D)");
+                "DenseTensorStorage::getColumn: not supported for " +
+                std::to_string(_shape.size()) + "D tensor (need at least 2D)");
     }
 
     // Column axis is axis 1
     constexpr std::size_t column_axis = 1;
     if (col >= _shape[column_axis]) {
         throw std::out_of_range(
-            "DenseTensorStorage::getColumn: col " + std::to_string(col) +
-            " >= shape[1] = " + std::to_string(_shape[column_axis]));
+                "DenseTensorStorage::getColumn: col " + std::to_string(col) +
+                " >= shape[1] = " + std::to_string(_shape[column_axis]));
     }
 
     // For a 2D tensor [nrows, ncols]: result is nrows elements.
@@ -207,7 +256,7 @@ std::size_t DenseTensorStorage::flatOffset(std::span<std::size_t const> indices)
 }
 
 std::vector<std::size_t> DenseTensorStorage::computeStrides(
-    std::vector<std::size_t> const & shape) {
+        std::vector<std::size_t> const & shape) {
     if (shape.empty()) {
         return {};
     }
@@ -224,15 +273,15 @@ std::vector<std::size_t> DenseTensorStorage::computeStrides(
 void DenseTensorStorage::validateIndices(std::span<std::size_t const> indices) const {
     if (indices.size() != _shape.size()) {
         throw std::invalid_argument(
-            "DenseTensorStorage: expected " + std::to_string(_shape.size()) +
-            " indices, got " + std::to_string(indices.size()));
+                "DenseTensorStorage: expected " + std::to_string(_shape.size()) +
+                " indices, got " + std::to_string(indices.size()));
     }
     for (std::size_t d = 0; d < indices.size(); ++d) {
         if (indices[d] >= _shape[d]) {
             throw std::out_of_range(
-                "DenseTensorStorage: index[" + std::to_string(d) + "] = " +
-                std::to_string(indices[d]) + " >= shape[" + std::to_string(d) +
-                "] = " + std::to_string(_shape[d]));
+                    "DenseTensorStorage: index[" + std::to_string(d) + "] = " +
+                    std::to_string(indices[d]) + " >= shape[" + std::to_string(d) +
+                    "] = " + std::to_string(_shape[d]));
         }
     }
 }

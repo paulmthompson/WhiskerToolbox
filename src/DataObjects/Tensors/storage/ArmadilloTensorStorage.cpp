@@ -27,14 +27,14 @@ ArmadilloTensorStorage::ArmadilloTensorStorage(arma::fcube cube)
     : _data(std::move(cube)) {}
 
 ArmadilloTensorStorage::ArmadilloTensorStorage(
-    std::vector<float> const & data,
-    std::size_t num_rows,
-    std::size_t num_cols) {
+        std::vector<float> const & data,
+        std::size_t num_rows,
+        std::size_t num_cols) {
     if (data.size() != num_rows * num_cols) {
         throw std::invalid_argument(
-            "ArmadilloTensorStorage: data size (" + std::to_string(data.size()) +
-            ") != num_rows * num_cols (" + std::to_string(num_rows) + " * " +
-            std::to_string(num_cols) + " = " + std::to_string(num_rows * num_cols) + ")");
+                "ArmadilloTensorStorage: data size (" + std::to_string(data.size()) +
+                ") != num_rows * num_cols (" + std::to_string(num_rows) + " * " +
+                std::to_string(num_cols) + " = " + std::to_string(num_rows * num_cols) + ")");
     }
     // Input is row-major, Armadillo is column-major.
     // Construct a matrix and fill from row-major data.
@@ -48,6 +48,56 @@ ArmadilloTensorStorage::ArmadilloTensorStorage(
 }
 
 // =============================================================================
+// Row Mutation (2D only)
+// =============================================================================
+
+void ArmadilloTensorStorage::appendRow(std::span<float const> row_data) {
+    auto * mat = std::get_if<arma::fmat>(&_data);
+    if (mat == nullptr) {
+        throw std::logic_error(
+                "ArmadilloTensorStorage::appendRow: only supported for 2D (matrix) storage, "
+                "current storage is " +
+                dimLabel());
+    }
+    if (row_data.size() != mat->n_cols) {
+        throw std::invalid_argument(
+                "ArmadilloTensorStorage::appendRow: row_data size (" +
+                std::to_string(row_data.size()) + ") != number of columns (" +
+                std::to_string(mat->n_cols) + ")");
+    }
+    auto const old_rows = mat->n_rows;
+    mat->resize(old_rows + 1, mat->n_cols);
+    for (std::size_t c = 0; c < mat->n_cols; ++c) {
+        (*mat)(old_rows, c) = row_data[c];
+    }
+}
+
+void ArmadilloTensorStorage::insertRow(std::size_t index, std::span<float const> row_data) {
+    auto * mat = std::get_if<arma::fmat>(&_data);
+    if (mat == nullptr) {
+        throw std::logic_error(
+                "ArmadilloTensorStorage::insertRow: only supported for 2D (matrix) storage, "
+                "current storage is " +
+                dimLabel());
+    }
+    if (index > mat->n_rows) {
+        throw std::out_of_range(
+                "ArmadilloTensorStorage::insertRow: index " + std::to_string(index) +
+                " > number of rows " + std::to_string(mat->n_rows));
+    }
+    if (row_data.size() != mat->n_cols) {
+        throw std::invalid_argument(
+                "ArmadilloTensorStorage::insertRow: row_data size (" +
+                std::to_string(row_data.size()) + ") != number of columns (" +
+                std::to_string(mat->n_cols) + ")");
+    }
+    mat->insert_rows(index, 1);
+    for (std::size_t c = 0; c < mat->n_cols; ++c) {
+        (*mat)(index, c) = row_data[c];
+    }
+}
+
+// =============================================================================
 // Direct Armadillo Access
 // =============================================================================
 
@@ -56,7 +106,7 @@ arma::fvec const & ArmadilloTensorStorage::vector() const {
         return *v;
     }
     throw std::logic_error(
-        "ArmadilloTensorStorage::vector(): storage is " + dimLabel() + ", not 1D");
+            "ArmadilloTensorStorage::vector(): storage is " + dimLabel() + ", not 1D");
 }
 
 arma::fvec & ArmadilloTensorStorage::mutableVector() {
@@ -64,7 +114,7 @@ arma::fvec & ArmadilloTensorStorage::mutableVector() {
         return *v;
     }
     throw std::logic_error(
-        "ArmadilloTensorStorage::mutableVector(): storage is " + dimLabel() + ", not 1D");
+            "ArmadilloTensorStorage::mutableVector(): storage is " + dimLabel() + ", not 1D");
 }
 
 arma::fmat const & ArmadilloTensorStorage::matrix() const {
@@ -72,7 +122,7 @@ arma::fmat const & ArmadilloTensorStorage::matrix() const {
         return *m;
     }
     throw std::logic_error(
-        "ArmadilloTensorStorage::matrix(): storage is " + dimLabel() + ", not 2D");
+            "ArmadilloTensorStorage::matrix(): storage is " + dimLabel() + ", not 2D");
 }
 
 arma::fmat & ArmadilloTensorStorage::mutableMatrix() {
@@ -80,7 +130,7 @@ arma::fmat & ArmadilloTensorStorage::mutableMatrix() {
         return *m;
     }
     throw std::logic_error(
-        "ArmadilloTensorStorage::mutableMatrix(): storage is " + dimLabel() + ", not 2D");
+            "ArmadilloTensorStorage::mutableMatrix(): storage is " + dimLabel() + ", not 2D");
 }
 
 arma::fcube const & ArmadilloTensorStorage::cube() const {
@@ -88,7 +138,7 @@ arma::fcube const & ArmadilloTensorStorage::cube() const {
         return *c;
     }
     throw std::logic_error(
-        "ArmadilloTensorStorage::cube(): storage is " + dimLabel() + ", not 3D");
+            "ArmadilloTensorStorage::cube(): storage is " + dimLabel() + ", not 3D");
 }
 
 arma::fcube & ArmadilloTensorStorage::mutableCube() {
@@ -96,7 +146,7 @@ arma::fcube & ArmadilloTensorStorage::mutableCube() {
         return *c;
     }
     throw std::logic_error(
-        "ArmadilloTensorStorage::mutableCube(): storage is " + dimLabel() + ", not 3D");
+            "ArmadilloTensorStorage::mutableCube(): storage is " + dimLabel() + ", not 3D");
 }
 
 std::size_t ArmadilloTensorStorage::ndim() const noexcept {
@@ -109,7 +159,8 @@ std::size_t ArmadilloTensorStorage::ndim() const noexcept {
         } else {
             return 3;
         }
-    }, _data);
+    },
+                      _data);
 }
 
 // =============================================================================
@@ -122,81 +173,83 @@ float ArmadilloTensorStorage::getValueAtImpl(std::span<std::size_t const> indice
         if constexpr (std::is_same_v<T, arma::fvec>) {
             if (indices.size() != 1) {
                 throw std::invalid_argument(
-                    "ArmadilloTensorStorage::getValueAt: expected 1 index for 1D tensor, got " +
-                    std::to_string(indices.size()));
+                        "ArmadilloTensorStorage::getValueAt: expected 1 index for 1D tensor, got " +
+                        std::to_string(indices.size()));
             }
             if (indices[0] >= d.n_elem) {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::getValueAt: index " +
-                    std::to_string(indices[0]) + " >= size " + std::to_string(d.n_elem));
+                        "ArmadilloTensorStorage::getValueAt: index " +
+                        std::to_string(indices[0]) + " >= size " + std::to_string(d.n_elem));
             }
             return d(indices[0]);
         } else if constexpr (std::is_same_v<T, arma::fmat>) {
             if (indices.size() != 2) {
                 throw std::invalid_argument(
-                    "ArmadilloTensorStorage::getValueAt: expected 2 indices for 2D tensor, got " +
-                    std::to_string(indices.size()));
+                        "ArmadilloTensorStorage::getValueAt: expected 2 indices for 2D tensor, got " +
+                        std::to_string(indices.size()));
             }
             if (indices[0] >= d.n_rows) {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::getValueAt: row index " +
-                    std::to_string(indices[0]) + " >= n_rows " + std::to_string(d.n_rows));
+                        "ArmadilloTensorStorage::getValueAt: row index " +
+                        std::to_string(indices[0]) + " >= n_rows " + std::to_string(d.n_rows));
             }
             if (indices[1] >= d.n_cols) {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::getValueAt: col index " +
-                    std::to_string(indices[1]) + " >= n_cols " + std::to_string(d.n_cols));
+                        "ArmadilloTensorStorage::getValueAt: col index " +
+                        std::to_string(indices[1]) + " >= n_cols " + std::to_string(d.n_cols));
             }
             return d(indices[0], indices[1]);
-        } else { // arma::fcube
+        } else {// arma::fcube
             if (indices.size() != 3) {
                 throw std::invalid_argument(
-                    "ArmadilloTensorStorage::getValueAt: expected 3 indices for 3D tensor, got " +
-                    std::to_string(indices.size()));
+                        "ArmadilloTensorStorage::getValueAt: expected 3 indices for 3D tensor, got " +
+                        std::to_string(indices.size()));
             }
             // Our shape is [n_slices, n_rows, n_cols]
             // indices[0] = slice, indices[1] = row, indices[2] = col
             if (indices[0] >= d.n_slices) {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::getValueAt: slice index " +
-                    std::to_string(indices[0]) + " >= n_slices " + std::to_string(d.n_slices));
+                        "ArmadilloTensorStorage::getValueAt: slice index " +
+                        std::to_string(indices[0]) + " >= n_slices " + std::to_string(d.n_slices));
             }
             if (indices[1] >= d.n_rows) {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::getValueAt: row index " +
-                    std::to_string(indices[1]) + " >= n_rows " + std::to_string(d.n_rows));
+                        "ArmadilloTensorStorage::getValueAt: row index " +
+                        std::to_string(indices[1]) + " >= n_rows " + std::to_string(d.n_rows));
             }
             if (indices[2] >= d.n_cols) {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::getValueAt: col index " +
-                    std::to_string(indices[2]) + " >= n_cols " + std::to_string(d.n_cols));
+                        "ArmadilloTensorStorage::getValueAt: col index " +
+                        std::to_string(indices[2]) + " >= n_cols " + std::to_string(d.n_cols));
             }
-            return d(indices[1], indices[2], indices[0]); // arma: (row, col, slice)
+            return d(indices[1], indices[2], indices[0]);// arma: (row, col, slice)
         }
-    }, _data);
+    },
+                      _data);
 }
 
 std::span<float const> ArmadilloTensorStorage::flatDataImpl() const {
     return std::visit([](auto const & d) -> std::span<float const> {
         return {d.memptr(), d.n_elem};
-    }, _data);
+    },
+                      _data);
 }
 
 std::vector<float> ArmadilloTensorStorage::sliceAlongAxisImpl(
-    std::size_t axis, std::size_t index) const {
+        std::size_t axis, std::size_t index) const {
     return std::visit([&](auto const & d) -> std::vector<float> {
         using T = std::decay_t<decltype(d)>;
         if constexpr (std::is_same_v<T, arma::fvec>) {
             // 1D: slicing axis 0 at index → single element
             if (axis != 0) {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::sliceAlongAxis: axis " +
-                    std::to_string(axis) + " out of range for 1D tensor");
+                        "ArmadilloTensorStorage::sliceAlongAxis: axis " +
+                        std::to_string(axis) + " out of range for 1D tensor");
             }
             if (index >= d.n_elem) {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::sliceAlongAxis: index " +
-                    std::to_string(index) + " >= size " + std::to_string(d.n_elem));
+                        "ArmadilloTensorStorage::sliceAlongAxis: index " +
+                        std::to_string(index) + " >= size " + std::to_string(d.n_elem));
             }
             return {d(index)};
         } else if constexpr (std::is_same_v<T, arma::fmat>) {
@@ -204,8 +257,8 @@ std::vector<float> ArmadilloTensorStorage::sliceAlongAxisImpl(
                 // Slice row → returns a vector of length n_cols
                 if (index >= d.n_rows) {
                     throw std::out_of_range(
-                        "ArmadilloTensorStorage::sliceAlongAxis: row index " +
-                        std::to_string(index) + " >= n_rows " + std::to_string(d.n_rows));
+                            "ArmadilloTensorStorage::sliceAlongAxis: row index " +
+                            std::to_string(index) + " >= n_rows " + std::to_string(d.n_rows));
                 }
                 arma::frowvec row_vec = d.row(index);
                 return {row_vec.begin(), row_vec.end()};
@@ -213,23 +266,23 @@ std::vector<float> ArmadilloTensorStorage::sliceAlongAxisImpl(
                 // Slice column → returns a vector of length n_rows
                 if (index >= d.n_cols) {
                     throw std::out_of_range(
-                        "ArmadilloTensorStorage::sliceAlongAxis: col index " +
-                        std::to_string(index) + " >= n_cols " + std::to_string(d.n_cols));
+                            "ArmadilloTensorStorage::sliceAlongAxis: col index " +
+                            std::to_string(index) + " >= n_cols " + std::to_string(d.n_cols));
                 }
                 arma::fvec col_vec = d.col(index);
                 return {col_vec.begin(), col_vec.end()};
             } else {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::sliceAlongAxis: axis " +
-                    std::to_string(axis) + " out of range for 2D tensor");
+                        "ArmadilloTensorStorage::sliceAlongAxis: axis " +
+                        std::to_string(axis) + " out of range for 2D tensor");
             }
-        } else { // arma::fcube — shape [n_slices, n_rows, n_cols]
+        } else {// arma::fcube — shape [n_slices, n_rows, n_cols]
             if (axis == 0) {
                 // Fix slice → returns [n_rows, n_cols] in row-major
                 if (index >= d.n_slices) {
                     throw std::out_of_range(
-                        "ArmadilloTensorStorage::sliceAlongAxis: slice index " +
-                        std::to_string(index) + " >= n_slices " + std::to_string(d.n_slices));
+                            "ArmadilloTensorStorage::sliceAlongAxis: slice index " +
+                            std::to_string(index) + " >= n_slices " + std::to_string(d.n_slices));
                 }
                 arma::fmat slice_mat = d.slice(index);
                 std::vector<float> result;
@@ -244,8 +297,8 @@ std::vector<float> ArmadilloTensorStorage::sliceAlongAxisImpl(
                 // Fix row → returns [n_slices, n_cols] in row-major
                 if (index >= d.n_rows) {
                     throw std::out_of_range(
-                        "ArmadilloTensorStorage::sliceAlongAxis: row index " +
-                        std::to_string(index) + " >= n_rows " + std::to_string(d.n_rows));
+                            "ArmadilloTensorStorage::sliceAlongAxis: row index " +
+                            std::to_string(index) + " >= n_rows " + std::to_string(d.n_rows));
                 }
                 std::vector<float> result;
                 result.reserve(d.n_slices * d.n_cols);
@@ -259,8 +312,8 @@ std::vector<float> ArmadilloTensorStorage::sliceAlongAxisImpl(
                 // Fix col → returns [n_slices, n_rows] in row-major
                 if (index >= d.n_cols) {
                     throw std::out_of_range(
-                        "ArmadilloTensorStorage::sliceAlongAxis: col index " +
-                        std::to_string(index) + " >= n_cols " + std::to_string(d.n_cols));
+                            "ArmadilloTensorStorage::sliceAlongAxis: col index " +
+                            std::to_string(index) + " >= n_cols " + std::to_string(d.n_cols));
                 }
                 std::vector<float> result;
                 result.reserve(d.n_slices * d.n_rows);
@@ -272,11 +325,12 @@ std::vector<float> ArmadilloTensorStorage::sliceAlongAxisImpl(
                 return result;
             } else {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::sliceAlongAxis: axis " +
-                    std::to_string(axis) + " out of range for 3D tensor");
+                        "ArmadilloTensorStorage::sliceAlongAxis: axis " +
+                        std::to_string(axis) + " out of range for 3D tensor");
             }
         }
-    }, _data);
+    },
+                      _data);
 }
 
 std::vector<float> ArmadilloTensorStorage::getColumnImpl(std::size_t col) const {
@@ -284,22 +338,22 @@ std::vector<float> ArmadilloTensorStorage::getColumnImpl(std::size_t col) const 
         using T = std::decay_t<decltype(d)>;
         if constexpr (std::is_same_v<T, arma::fvec>) {
             throw std::invalid_argument(
-                "ArmadilloTensorStorage::getColumn: not supported for 1D tensor (no column axis)");
+                    "ArmadilloTensorStorage::getColumn: not supported for 1D tensor (no column axis)");
         } else if constexpr (std::is_same_v<T, arma::fmat>) {
             if (col >= d.n_cols) {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::getColumn: col " +
-                    std::to_string(col) + " >= n_cols " + std::to_string(d.n_cols));
+                        "ArmadilloTensorStorage::getColumn: col " +
+                        std::to_string(col) + " >= n_cols " + std::to_string(d.n_cols));
             }
             arma::fvec col_vec = d.col(col);
             return {col_vec.begin(), col_vec.end()};
-        } else { // arma::fcube — shape [n_slices, n_rows, n_cols]
+        } else {// arma::fcube — shape [n_slices, n_rows, n_cols]
             // getColumn on 3D: extract column along axis 1 (n_cols dimension),
             // flattening [n_slices, n_rows] into contiguous output
             if (col >= d.n_cols) {
                 throw std::out_of_range(
-                    "ArmadilloTensorStorage::getColumn: col " +
-                    std::to_string(col) + " >= n_cols " + std::to_string(d.n_cols));
+                        "ArmadilloTensorStorage::getColumn: col " +
+                        std::to_string(col) + " >= n_cols " + std::to_string(d.n_cols));
             }
             std::vector<float> result;
             result.reserve(d.n_slices * d.n_rows);
@@ -310,7 +364,8 @@ std::vector<float> ArmadilloTensorStorage::getColumnImpl(std::size_t col) const 
             }
             return result;
         }
-    }, _data);
+    },
+                      _data);
 }
 
 std::vector<std::size_t> ArmadilloTensorStorage::shapeImpl() const {
@@ -320,16 +375,18 @@ std::vector<std::size_t> ArmadilloTensorStorage::shapeImpl() const {
             return {d.n_elem};
         } else if constexpr (std::is_same_v<T, arma::fmat>) {
             return {d.n_rows, d.n_cols};
-        } else { // arma::fcube — shape [n_slices, n_rows, n_cols]
+        } else {// arma::fcube — shape [n_slices, n_rows, n_cols]
             return {d.n_slices, d.n_rows, d.n_cols};
         }
-    }, _data);
+    },
+                      _data);
 }
 
 std::size_t ArmadilloTensorStorage::totalElementsImpl() const {
     return std::visit([](auto const & d) -> std::size_t {
         return d.n_elem;
-    }, _data);
+    },
+                      _data);
 }
 
 TensorStorageCache ArmadilloTensorStorage::tryGetCacheImpl() const {
@@ -347,14 +404,15 @@ TensorStorageCache ArmadilloTensorStorage::tryGetCacheImpl() const {
             cache.shape = {d.n_rows, d.n_cols};
             // Armadillo is column-major: stride along row=1, stride along col=n_rows
             cache.strides = {1, d.n_rows};
-        } else { // arma::fcube
+        } else {// arma::fcube
             cache.shape = {d.n_slices, d.n_rows, d.n_cols};
             // Armadillo cube: column-major within each slice, slices contiguous
             // stride: (n_rows*n_cols for slice, 1 for row, n_rows for col)
             cache.strides = {d.n_rows * d.n_cols, 1, d.n_rows};
         }
         return cache;
-    }, _data);
+    },
+                      _data);
 }
 
 // =============================================================================
@@ -371,5 +429,6 @@ std::string ArmadilloTensorStorage::dimLabel() const {
         } else {
             return "3D (fcube)";
         }
-    }, _data);
+    },
+                      _data);
 }

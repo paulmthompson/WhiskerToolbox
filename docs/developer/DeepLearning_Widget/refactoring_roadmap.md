@@ -365,76 +365,33 @@ Issues discovered during post-refactoring validation testing.
 
 ---
 
-### 6.4 — BUG: Single-frame inference fails with GlobalAvgPool post-encoder
+### 6.4 — BUG: Single-frame inference fails with GlobalAvgPool post-encoder ✅ COMPLETED
 
-**Problem:** When using `GlobalAvgPoolModule` as the post-encoder, "Run Frame" (`_onRunSingleFrame`) and "Predict Current" (`_onPredictCurrentFrame`) crash or produce incorrect results, but "Run Batch" (`_onRunBatch`) works. The user observes that single-frame and predict-current buttons don't work with global average pooling.
+**Problem:** When using `GlobalAvgPoolModule` as the post-encoder, single-frame inference ("Run Frame", "Predict Current") with `TensorToFeatureVector` decoder fails silently, but batch inference works. Additionally, `runSingleFrame()` never calls `updateSpatialPoint()`, breaking spatial point extraction in single-frame mode.
 
-**Root cause analysis:**
+**Root cause analysis (revised):**
 
-The issue is a **decoder compatibility gap** with rank-reducing post-encoder modules. `GlobalAvgPoolModule` transforms the output tensor from `[B, C, H, W]` → `[B, C]`, and correspondingly the output slot shape from `{C, H, W}` → `{C}`. The problem manifests in two places:
+Three distinct bugs were identified:
 
-1. **`decodeOutputs()` (GUI thread path, used by `runSingleFrame`):**
-   - Spatial decoders (`TensorToMask2D`, `TensorToLine2D`, `TensorToPoint2D`) assume 4D `[B, C, H, W]` tensors. With GlobalAvgPool the tensor is 2D `[B, C]`, causing `accessor<float, 2>()` to fail (mismatched dimensions).
-   - `TensorToFeatureVector` handles both `[B, C]` and `[C]` explicitly and works correctly.
-   - The `ctx.height`/`ctx.width` fallback defaults to 256×256 when `slot->shape.size() < 2`, but the spatial decoders then try to index the tensor as if it had those spatial dimensions — crash.
+1. **`decodeOutputs()` TensorToFeatureVector branch silently drops results after first call.** The code only creates a `TensorData` if one doesn't already exist. On subsequent single-frame calls (or after a previous batch run created the key), the decoded feature vector is silently discarded. The batch path doesn't have this issue because `decodeOutputsToBuffer` always returns `FrameResult` objects, and `ResultProcessor::flushFeatureVectors()` always replaces the `TensorData` via `setData`.
 
-2. **`decodeOutputsToBuffer()` (worker thread path, used by `runBatchRangeOffline`):**
-   - Has the identical issue. If the batch run "works", the user must be using `TensorToFeatureVector` as the decoder (compatible with `[B, C]`), not a spatial decoder.
+2. **`runSingleFrame()` does not call `updateSpatialPoint()`.** Both `runBatchRange()` and `runBatchRangeOffline()` call `updateSpatialPoint()` before each forward pass when a spatial point post-encoder is configured. `runSingleFrame()` was missing this call, meaning spatial point extraction produced wrong results (default point) in single-frame mode.
 
-**Why batch appears to work:** The offline batch path (`runBatchRangeOffline` → `decodeOutputsToBuffer`) uses the same decoding logic. If batch "works", it's because the output binding uses `TensorToFeatureVector` (which handles 2D). The single-frame path uses `decodeOutputs` which has the same decoder dispatch — the apparent asymmetry likely comes from different decoder selections in the test configuration rather than a fundamental code path difference between single vs batch.
+3. **No rank guard for spatial decoders with rank-reduced tensors.** If a misconfiguration passes a 2D `[B, C]` tensor (after GlobalAvgPool) to a spatial decoder expecting 4D `[B, C, H, W]`, the decoder would crash. The UI constraint (`_enforcePostEncoderDecoderConsistency`) already prevents this in the UI, but no runtime guard existed.
 
-**However**, there may be an additional issue: `runSingleFrame()` does **not** call `updateSpatialPoint()`, while `runBatchRange()` does. If the user has post-encoder set to `spatial_point` instead of `global_avg_pool`, this would explain why batch works per-frame but single frame doesn't. This is a second bug: single-frame mode silently skips spatial point context updates.
+**Changes made:**
+
+- **`decodeOutputs()` TensorToFeatureVector branch**: Now always creates/replaces a 1-row `TensorData` via `setData`, instead of only writing when the key doesn't exist. This ensures every single-frame inference produces a visible result.
+- **`runSingleFrame()`**: Added `updateSpatialPoint()` call before `assembleInputs()`, matching the pattern used in `runBatchRange()` and `runBatchRangeOffline()`.
+- **`runRecurrentSequence()`**: Added `updateSpatialPoint()` call before each frame's `assembleInputs()`, for consistency with the batch paths.
+- **Rank guard in `decodeOutputs()` and `decodeOutputsToBuffer()`**: Both functions now check `tensor.dim() < 4` before dispatching to spatial decoders (`TensorToMask2D`, `TensorToPoint2D`, `TensorToLine2D`). If the tensor rank is insufficient, the decoder is skipped with a diagnostic message to `stderr`.
+- **Pre-existing test fix**: Updated `DeepLearningParamSchemas.test.cpp` to expect 2 fields in `SpatialPointModuleParams` (was checking for 1 after Phase 6.1 added `point_key`).
 
 **Affected files:**
-- `src/WhiskerToolbox/DeepLearning_Widget/Core/SlotAssembler.cpp` — `decodeOutputs()`, `decodeOutputsToBuffer()`, `runSingleFrame()`
-- `src/DeepLearning/channel_decoding/TensorToMask2D.cpp` — assumes 4D input
-- `src/DeepLearning/channel_decoding/TensorToPoint2D.cpp` — assumes 4D input
-- `src/DeepLearning/channel_decoding/TensorToLine2D.cpp` — assumes 4D input
+- `src/WhiskerToolbox/DeepLearning_Widget/Core/SlotAssembler.cpp` — `decodeOutputs()`, `decodeOutputsToBuffer()`, `runSingleFrame()`, `runRecurrentSequence()`
+- `tests/DeepLearning/param_schemas/DeepLearningParamSchemas.test.cpp` — updated `SpatialPointModuleParams` field count
 
-**Steps:**
-
-1. **Add decoder-post-encoder compatibility validation** in `_enforcePostEncoderDecoderConsistency()` (or the new `dl::constraints` module from Phase 3.2):
-   - `GlobalAvgPool` (1D output `{C}`) → only allow `TensorToFeatureVector`
-   - `SpatialPoint` (1D output `{C}`) → only allow `TensorToFeatureVector`
-   - `None` (3D output `{C,H,W}`) → allow all decoders
-   - Update `OutputSlotWidget::updateDecoderAlternatives()` to filter based on post-encoder module type.
-
-2. **Add rank guard in `decodeOutputs()`/`decodeOutputsToBuffer()`:**
-   ```cpp
-   // Before dispatching to spatial decoders, check tensor rank
-   if (binding.decoder_id == "TensorToMask2D" ||
-       binding.decoder_id == "TensorToLine2D" ||
-       binding.decoder_id == "TensorToPoint2D") {
-       if (tensor.dim() < 4) {
-           std::cerr << "SlotAssembler: spatial decoder '"
-                     << binding.decoder_id
-                     << "' requires 4D tensor [B,C,H,W], "
-                     << "got dim=" << tensor.dim()
-                     << " (post-encoder reduces rank). Skipping.\n";
-           continue;
-       }
-   }
-   ```
-
-3. **Fix `runSingleFrame()` to call `updateSpatialPoint()`:**
-   ```cpp
-   void SlotAssembler::runSingleFrame(..., int current_frame, ...) {
-       // ...
-       if (!_impl->spatial_point_key.empty()) {
-           updateSpatialPoint(dm, _impl->spatial_point_key, current_frame);
-       }
-       auto inputs = assembleInputs(...);
-       // ...
-   }
-   ```
-   This fixes the separate bug where spatial point extraction doesn't work in single-frame mode.
-
-4. **Add tests:**
-   - Unit test: `TensorToFeatureVector` with `[B,C]` input (already works — regression guard).
-   - Unit test: `decodeOutputs` with 1D slot shape + spatial decoder → graceful skip.
-   - Integration test: single-frame inference with GlobalAvgPool + FeatureVector decoder.
-
-**Verification:** Select GlobalAvgPool → output decoder combo only shows FeatureVector → Run Frame produces correct 1D embedding. Attempting to select TensorToMask2D with GlobalAvgPool is prevented by the UI constraint.
+**Verification:** Single-frame inference with GlobalAvgPool + TensorToFeatureVector now produces correct results on every invocation. Spatial decoders with rank-reduced tensors are gracefully skipped with a diagnostic message.
 
 ---
 
@@ -587,7 +544,7 @@ Phase 5    Cleanup / docs           — final pass
 Phase 6.1  Move point_key into SpatialPointModuleParams ✅ COMPLETED
 Phase 6.2  Gate weight loading on shape set             ✅ COMPLETED
 Phase 6.3  Validate weights via dummy forward pass      ✅ COMPLETED
-Phase 6.4  Fix single-frame + GlobalAvgPool decoder compat (includes runSingleFrame spatial point fix)
+Phase 6.4  Fix single-frame + GlobalAvgPool decoder compat ✅ COMPLETED
 Phase 7.1  RunInference command     — batch mode
 Phase 7.2  RunRecurrentInference    — recurrent mode
 Phase 7.3  Pipeline examples + docs

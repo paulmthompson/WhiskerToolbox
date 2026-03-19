@@ -619,6 +619,22 @@ void decodeOutputs(
 
         TimeFrameIndex const frame_idx(current_frame);
 
+        // Spatial decoders require 4D [B,C,H,W] tensors. Post-encoder
+        // modules like GlobalAvgPool reduce rank to 2D [B,C], making
+        // spatial decoders incompatible. Guard and skip gracefully.
+        bool const is_spatial_decoder =
+                (binding.decoder_id == "TensorToMask2D" ||
+                 binding.decoder_id == "TensorToPoint2D" ||
+                 binding.decoder_id == "TensorToLine2D");
+        if (is_spatial_decoder && tensor.dim() < 4) {
+            std::cerr << "SlotAssembler: spatial decoder '"
+                      << binding.decoder_id
+                      << "' requires 4D tensor [B,C,H,W], got dim="
+                      << tensor.dim()
+                      << " (post-encoder reduces rank). Skipping.\n";
+            continue;
+        }
+
         if (binding.decoder_id == "TensorToMask2D") {
             dl::TensorToMask2D const decoder;
             dl::MaskDecoderParams params;
@@ -671,21 +687,15 @@ void decodeOutputs(
             dl::FeatureVectorDecoderParams const fv_params;
             auto vec = dl::TensorToFeatureVector::decode(tensor, ctx, fv_params);
 
-            // Create a new 1-row TensorData for the current frame.
-            // For single-frame inference this replaces the previous row;
-            // for batch inference the widget accumulates rows separately.
+            // Always create/replace a 1-row TensorData for single-frame
+            // inference. Batch accumulation is handled separately via the
+            // FrameResult path in ResultProcessor.
             if (!vec.empty()) {
-                auto td = dm.getData<TensorData>(binding.data_key);
-                if (!td) {
-                    // First write: create a 1-row 2D TensorData
-                    auto new_td = std::make_shared<TensorData>(
-                            TensorData::createOrdinal2D(
-                                    vec, 1, vec.size()));
-                    dm.setData<TensorData>(
-                            binding.data_key, std::move(new_td), TimeKey("media"));
-                }
-                // Note: incremental append is not supported; batch accumulation
-                // is handled at the widget level via the FrameResult path.
+                auto new_td = std::make_shared<TensorData>(
+                        TensorData::createOrdinal2D(
+                                vec, 1, vec.size()));
+                dm.setData<TensorData>(
+                        binding.data_key, std::move(new_td), TimeKey("media"));
             }
 
         } else {
@@ -731,6 +741,20 @@ std::vector<FrameResult> decodeOutputsToBuffer(
                     static_cast<int>(slot->shape[slot->shape.size() - 2]);
             ctx.width =
                     static_cast<int>(slot->shape[slot->shape.size() - 1]);
+        }
+
+        // Rank guard: spatial decoders need 4D [B,C,H,W] tensors.
+        bool const is_spatial_decoder =
+                (binding.decoder_id == "TensorToMask2D" ||
+                 binding.decoder_id == "TensorToPoint2D" ||
+                 binding.decoder_id == "TensorToLine2D");
+        if (is_spatial_decoder && tensor.dim() < 4) {
+            std::cerr << "SlotAssembler(offline): spatial decoder '"
+                      << binding.decoder_id
+                      << "' requires 4D tensor [B,C,H,W], got dim="
+                      << tensor.dim()
+                      << " (post-encoder reduces rank). Skipping.\n";
+            continue;
         }
 
         if (binding.decoder_id == "TensorToMask2D") {
@@ -993,6 +1017,11 @@ void SlotAssembler::runSingleFrame(
     if (!isModelReady()) {
         throw std::runtime_error("SlotAssembler::runSingleFrame: "
                                  "model not loaded or weights missing");
+    }
+
+    // Update spatial-point query for the current frame if applicable
+    if (!_impl->spatial_point_key.empty()) {
+        updateSpatialPoint(dm, _impl->spatial_point_key, current_frame);
     }
 
     auto inputs = assembleInputs(
@@ -1337,6 +1366,11 @@ void SlotAssembler::runRecurrentSequence(
 
         if (progress) {
             progress(f, frame_count);
+        }
+
+        // Update spatial-point query for the current frame if applicable
+        if (!_impl->spatial_point_key.empty()) {
+            updateSpatialPoint(dm, _impl->spatial_point_key, frame);
         }
 
         // 1. Assemble dynamic + static inputs (batch_size = 1)
