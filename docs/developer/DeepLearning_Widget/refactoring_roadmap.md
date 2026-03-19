@@ -238,9 +238,21 @@ Sub-widget tests are in place (8 test binaries, ~1,700 lines of tests total). Re
 
 Issues discovered during post-refactoring validation testing.
 
-### 6.1 — Move `point_key` into `SpatialPointModuleParams` (UI parameter scoping)
+### 6.1 — Move `point_key` into `SpatialPointModuleParams` (UI parameter scoping) ✅ COMPLETED
 
-**Problem:** `PostEncoderSlotParams` currently has `point_key` as a top-level field alongside the `PostEncoderVariant module` discriminant. This means the "Point Key" combo is always visible in the Post-Encoder section regardless of which module variant is selected (None, GlobalAvgPool, or SpatialPoint). It should only appear when SpatialPoint is the active variant.
+**Problem:** `PostEncoderSlotParams` had `point_key` as a top-level field alongside the `PostEncoderVariant module` discriminant, making the "Point Key" combo always visible regardless of which module variant is selected. It is now correctly scoped inside `SpatialPointModuleParams`, so it only appears when Spatial Point Extraction is selected.
+
+**Changes made:**
+- `SpatialPointModuleParams` now has `point_key` field.
+- `ParameterUIHints<SpatialPointModuleParams>` annotates `point_key` with `dynamic_combo = true` and `include_none_sentinel = true`.
+- `PostEncoderParamSchemas.hpp` is included in `PostEncoderWidget.cpp` so the hints are applied during schema extraction.
+- `PostEncoderSlotParams` reduced to just `PostEncoderVariant module`.
+- `PostEncoderWidget::paramsFromState()` sets `point_key` inside `SpatialPointModuleParams`.
+- `PostEncoderWidget::_applyToStateAndAssembler()` extracts `point_key` from the variant visitor.
+- `AutoParamWidget::updateAllowedValues("point_key", ...)` already searched variant sub-rows, so `refreshDataSources()` required no change.
+- All tests updated and passing.
+
+**Original problem description:** `PostEncoderSlotParams` currently has `point_key` as a top-level field alongside the `PostEncoderVariant module` discriminant. This means the "Point Key" combo is always visible in the Post-Encoder section regardless of which module variant is selected (None, GlobalAvgPool, or SpatialPoint). It should only appear when SpatialPoint is the active variant.
 
 **Root cause:** The field is defined in `PostEncoderSlotParams` (widget-level struct) rather than inside `SpatialPointModuleParams` (library-level struct).
 

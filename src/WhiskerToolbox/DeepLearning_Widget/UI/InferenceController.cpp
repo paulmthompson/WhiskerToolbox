@@ -41,6 +41,7 @@ public:
             int start_frame,
             int end_frame,
             ImageSize source_image_size,
+            int batch_size,
             std::shared_ptr<WriteReservation> reservation,
             QObject * parent = nullptr)
         : QThread(parent),
@@ -53,6 +54,7 @@ public:
           _start_frame(start_frame),
           _end_frame(end_frame),
           _source_image_size(source_image_size),
+          _batch_size(batch_size),
           _reservation(std::move(reservation)) {}
 
     void requestCancel() {
@@ -78,6 +80,7 @@ protected:
                 _end_frame,
                 _source_image_size,
                 _cancel_requested,
+                _batch_size,
                 [this](int current, int total) {
                     emit progressChanged(current, total);
                 },
@@ -98,6 +101,7 @@ private:
     int _start_frame;
     int _end_frame;
     ImageSize _source_image_size;
+    int _batch_size;
     std::shared_ptr<WriteReservation> _reservation;
     std::atomic<bool> _cancel_requested{false};
     bool _success = true;
@@ -180,7 +184,7 @@ void InferenceController::runSingleFrame(int frame) {
     }
 }
 
-void InferenceController::runBatch(int start, int end, int /*batch_size*/) {
+void InferenceController::runBatch(int start, int end, int batch_size) {
     if (_impl->_batch_worker) {
         cancel();
         return;
@@ -234,6 +238,7 @@ void InferenceController::runBatch(int start, int end, int /*batch_size*/) {
             start,
             end,
             source_size,
+            batch_size,
             reservation,
             this);
 

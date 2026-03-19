@@ -61,7 +61,6 @@ TEST_CASE("PostEncoderWidget setParams and params round-trip for None",
 
     dl::widget::PostEncoderSlotParams p;
     p.module = dl::widget::NoPostEncoderParams{};
-    p.point_key = "";
     widget.setParams(p);
 
     auto result = widget.params();
@@ -81,7 +80,6 @@ TEST_CASE("PostEncoderWidget setParams and params round-trip for GlobalAvgPool",
 
     dl::widget::PostEncoderSlotParams p;
     p.module = dl::GlobalAvgPoolModuleParams{};
-    p.point_key = "";
     widget.setParams(p);
 
     auto result = widget.params();
@@ -103,16 +101,19 @@ TEST_CASE("PostEncoderWidget setParams and params round-trip for SpatialPoint",
     widget.refreshDataSources();
 
     dl::widget::PostEncoderSlotParams p;
-    p.module = dl::SpatialPointModuleParams{};
-    p.point_key = "points/query";
+    dl::SpatialPointModuleParams sp;
+    sp.point_key = "points/query";
+    p.module = sp;
     widget.setParams(p);
 
     auto result = widget.params();
     result.module.visit([&](auto const & mod) {
         using T = std::decay_t<decltype(mod)>;
         CHECK(std::is_same_v<T, dl::SpatialPointModuleParams>);
+        if constexpr (std::is_same_v<T, dl::SpatialPointModuleParams>) {
+            CHECK(mod.point_key == "points/query");
+        }
     });
-    CHECK(result.point_key == "points/query");
     CHECK(widget.moduleTypeForState() == "spatial_point");
 }
 
@@ -146,8 +147,10 @@ TEST_CASE("paramsFromState restores spatial_point with point_key",
     params.module.visit([&](auto const & mod) {
         using T = std::decay_t<decltype(mod)>;
         CHECK(std::is_same_v<T, dl::SpatialPointModuleParams>);
+        if constexpr (std::is_same_v<T, dl::SpatialPointModuleParams>) {
+            CHECK(mod.point_key == "points/my_key");
+        }
     });
-    CHECK(params.point_key == "points/my_key");
 }
 
 // ============================================================================
@@ -164,13 +167,19 @@ TEST_CASE("PostEncoderWidget refreshDataSources updates point_key combo",
     dl::widget::PostEncoderWidget widget(state, dm, assembler.get());
 
     dl::widget::PostEncoderSlotParams p;
-    p.module = dl::SpatialPointModuleParams{};
-    p.point_key = "points/a";
+    dl::SpatialPointModuleParams sp;
+    sp.point_key = "points/a";
+    p.module = sp;
     widget.setParams(p);
     widget.refreshDataSources();
 
     auto result = widget.params();
-    CHECK(result.point_key == "points/a");
+    result.module.visit([&](auto const & mod) {
+        using T = std::decay_t<decltype(mod)>;
+        if constexpr (std::is_same_v<T, dl::SpatialPointModuleParams>) {
+            CHECK(mod.point_key == "points/a");
+        }
+    });
 }
 
 // ============================================================================

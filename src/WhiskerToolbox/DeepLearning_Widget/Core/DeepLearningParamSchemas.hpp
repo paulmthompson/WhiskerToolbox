@@ -167,7 +167,6 @@ struct RecurrentBindingSlotParams {
 /// Full configuration for the post-encoder module section.
 struct PostEncoderSlotParams {
     PostEncoderVariant module = NoPostEncoderParams{};///< Post-encoder module variant
-    std::string point_key;///< DataManager key for SpatialPoint (dynamic combo)
 };
 
 /// Custom encoder input/output dimensions (UI-only, passed to

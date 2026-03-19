@@ -24,6 +24,7 @@ struct GlobalAvgPoolModuleParams {};
 /// User-configurable params for SpatialPointExtractModule.
 struct SpatialPointModuleParams {
     InterpolationMode interpolation = InterpolationMode::Nearest;
+    std::string point_key;///< DataManager key for PointData supplying the per-frame query point
 };
 
 /// Factory for creating `PostEncoderModule` instances by name.

@@ -7,6 +7,7 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
+#include "DeepLearning/post_encoder/PostEncoderParamSchemas.hpp"
 #include "DeepLearning/post_encoder/SpatialPointExtractModule.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
@@ -118,7 +119,7 @@ std::string PostEncoderWidget::moduleTypeForState() const {
     auto const p = params();
     auto const module_json = rfl::json::write(p.module);
     // Extract tag from variant JSON, e.g. {"SpatialPointModuleParams": {...}}
-    for (auto const & tag :
+    for (auto const & tag:
          {"NoPostEncoderParams", "GlobalAvgPoolModuleParams",
           "SpatialPointModuleParams"}) {
         if (module_json.find(tag) != std::string::npos) {
@@ -132,12 +133,13 @@ PostEncoderSlotParams PostEncoderWidget::paramsFromState(
         std::string const & module_type,
         std::string const & point_key) {
     PostEncoderSlotParams p;
-    p.point_key = (point_key == "(None)") ? "" : point_key;
 
     if (module_type == "global_avg_pool") {
         p.module = dl::GlobalAvgPoolModuleParams{};
     } else if (module_type == "spatial_point") {
-        p.module = dl::SpatialPointModuleParams{};
+        dl::SpatialPointModuleParams sp;
+        sp.point_key = (point_key == "(None)") ? "" : point_key;
+        p.module = sp;
     } else {
         p.module = NoPostEncoderParams{};
     }
@@ -153,22 +155,24 @@ void PostEncoderWidget::_applyToStateAndAssembler() {
     auto const type = moduleTypeForState();
 
     _state->setPostEncoderModuleType(type);
-    if (type == "spatial_point" && !p.point_key.empty() &&
-        p.point_key != "(None)") {
-        _state->setPostEncoderPointKey(p.point_key);
-    } else {
-        _state->setPostEncoderPointKey({});
-    }
 
     std::string interp = "nearest";
+    std::string point_key;
     p.module.visit([&](auto const & mod) {
         using T = std::decay_t<decltype(mod)>;
         if constexpr (std::is_same_v<T, dl::SpatialPointModuleParams>) {
             interp = (mod.interpolation == dl::InterpolationMode::Bilinear)
                              ? "bilinear"
                              : "nearest";
+            point_key = mod.point_key;
         }
     });
+
+    if (type == "spatial_point" && !point_key.empty() && point_key != "(None)") {
+        _state->setPostEncoderPointKey(point_key);
+    } else {
+        _state->setPostEncoderPointKey({});
+    }
 
     auto const source_size = _sourceImageSize();
 
@@ -179,7 +183,7 @@ void PostEncoderWidget::_applyToStateAndAssembler() {
 
 ImageSize PostEncoderWidget::_sourceImageSize() const {
     ImageSize source_size{256, 256};
-    for (auto const & binding : _state->inputBindings()) {
+    for (auto const & binding: _state->inputBindings()) {
         auto media = _dm->getData<MediaData>(binding.data_key);
         if (media) {
             source_size = media->getImageSize();

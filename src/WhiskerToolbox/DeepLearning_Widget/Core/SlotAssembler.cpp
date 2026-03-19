@@ -591,7 +591,8 @@ void decodeOutputs(
         std::vector<OutputBindingData> const & output_bindings,
         dl::ModelBase const & model,
         int current_frame,
-        ImageSize source_image_size) {
+        ImageSize source_image_size,
+        int batch_index = 0) {
 
     auto const output_slot_vec = model.outputSlots();
 
@@ -606,7 +607,7 @@ void decodeOutputs(
 
         dl::DecoderContext ctx;
         ctx.source_channel = 0;
-        ctx.batch_index = 0;
+        ctx.batch_index = batch_index;
         ctx.target_image_size = source_image_size;
 
         if (slot->shape.size() >= 2) {
@@ -705,7 +706,8 @@ std::vector<FrameResult> decodeOutputsToBuffer(
         std::vector<OutputBindingData> const & output_bindings,
         dl::ModelBase const & model,
         int current_frame,
-        ImageSize source_image_size) {
+        ImageSize source_image_size,
+        int batch_index = 0) {
 
     std::vector<FrameResult> frame_results;
     auto const output_slot_vec = model.outputSlots();
@@ -721,7 +723,7 @@ std::vector<FrameResult> decodeOutputsToBuffer(
 
         dl::DecoderContext ctx;
         ctx.source_channel = 0;
-        ctx.batch_index = 0;
+        ctx.batch_index = batch_index;
         ctx.target_image_size = source_image_size;
 
         if (slot->shape.size() >= 2) {
@@ -979,6 +981,7 @@ void SlotAssembler::runBatchRange(
         int start_frame,
         int end_frame,
         ImageSize source_image_size,
+        int batch_size,
         ProgressCallback const & progress) {
 
     if (!isModelReady()) {
@@ -989,19 +992,29 @@ void SlotAssembler::runBatchRange(
         throw std::runtime_error("SlotAssembler::runBatchRange: "
                                  "end_frame must be >= start_frame");
     }
+    if (batch_size < 1) batch_size = 1;
+
+    // Spatial point module requires per-frame updates; force batch_size=1.
+    if (!_impl->spatial_point_key.empty()) {
+        batch_size = 1;
+    }
 
     int const total_frames = end_frame - start_frame + 1;
+    int frames_processed = 0;
 
-    for (int i = 0; i < total_frames; ++i) {
-        int const frame = start_frame + i;
+    for (int chunk_start = start_frame; chunk_start <= end_frame;
+         chunk_start += batch_size) {
+
+        int const chunk_end = std::min(chunk_start + batch_size - 1, end_frame);
+        int const chunk_size = chunk_end - chunk_start + 1;
 
         if (progress) {
-            progress(i, total_frames);
+            progress(frames_processed, total_frames);
         }
 
         // Update spatial-point query for the current frame if applicable
         if (!_impl->spatial_point_key.empty()) {
-            updateSpatialPoint(dm, _impl->spatial_point_key, frame);
+            updateSpatialPoint(dm, _impl->spatial_point_key, chunk_start);
         }
 
         auto inputs = assembleInputs(
@@ -1009,13 +1022,19 @@ void SlotAssembler::runBatchRange(
                 input_bindings, static_inputs,
                 _impl->static_cache,
                 {},// no recurrent bindings
-                frame, /*batch_size=*/1);
+                chunk_start, /*batch_size=*/chunk_size);
 
         auto outputs = _impl->model->forward(inputs);
 
-        decodeOutputs(
-                dm, outputs, output_bindings,
-                *_impl->model, frame, source_image_size);
+        // Decode each batch element individually
+        for (int b = 0; b < chunk_size; ++b) {
+            int const frame = chunk_start + b;
+            decodeOutputs(
+                    dm, outputs, output_bindings,
+                    *_impl->model, frame, source_image_size, b);
+        }
+
+        frames_processed += chunk_size;
     }
 
     if (progress) {
@@ -1037,6 +1056,7 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
         int end_frame,
         ImageSize source_image_size,
         std::atomic<bool> const & cancel_requested,
+        int batch_size,
         ProgressCallback const & progress,
         ResultCallback const & result_callback) {
 
@@ -1056,24 +1076,34 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
                 "end_frame must be >= start_frame";
         return batch_result;
     }
+    if (batch_size < 1) batch_size = 1;
+
+    // Spatial point module requires per-frame updates; force batch_size=1.
+    if (!_impl->spatial_point_key.empty()) {
+        batch_size = 1;
+    }
 
     int const total_frames = end_frame - start_frame + 1;
+    int frames_processed = 0;
 
-    for (int i = 0; i < total_frames; ++i) {
+    for (int chunk_start = start_frame; chunk_start <= end_frame;
+         chunk_start += batch_size) {
+
         if (cancel_requested.load(std::memory_order_relaxed)) {
             break;
         }
 
-        int const frame = start_frame + i;
+        int const chunk_end = std::min(chunk_start + batch_size - 1, end_frame);
+        int const chunk_size = chunk_end - chunk_start + 1;
 
         if (progress) {
-            progress(i, total_frames);
+            progress(frames_processed, total_frames);
         }
 
         try {
             // Update spatial-point query for the current frame if applicable
             if (!_impl->spatial_point_key.empty()) {
-                updateSpatialPoint(dm, _impl->spatial_point_key, frame);
+                updateSpatialPoint(dm, _impl->spatial_point_key, chunk_start);
             }
 
             auto inputs = assembleInputs(
@@ -1081,28 +1111,34 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
                     input_bindings, static_inputs,
                     _impl->static_cache,
                     {},// no recurrent bindings
-                    frame, /*batch_size=*/1,
+                    chunk_start, /*batch_size=*/chunk_size,
                     &media_overrides);
 
             auto outputs = _impl->model->forward(inputs);
 
-            auto frame_results = decodeOutputsToBuffer(
-                    outputs, output_bindings,
-                    *_impl->model, frame, source_image_size);
+            // Decode each batch element individually
+            for (int b = 0; b < chunk_size; ++b) {
+                int const frame = chunk_start + b;
+                auto frame_results = decodeOutputsToBuffer(
+                        outputs, output_bindings,
+                        *_impl->model, frame, source_image_size, b);
 
-            if (result_callback) {
-                result_callback(std::move(frame_results));
-            } else {
-                batch_result.results.insert(
-                        batch_result.results.end(),
-                        std::make_move_iterator(frame_results.begin()),
-                        std::make_move_iterator(frame_results.end()));
+                if (result_callback) {
+                    result_callback(std::move(frame_results));
+                } else {
+                    batch_result.results.insert(
+                            batch_result.results.end(),
+                            std::make_move_iterator(frame_results.begin()),
+                            std::make_move_iterator(frame_results.end()));
+                }
             }
         } catch (std::exception const & e) {
             batch_result.success = false;
             batch_result.error_message = e.what();
             break;
         }
+
+        frames_processed += chunk_size;
     }
 
     if (progress) {

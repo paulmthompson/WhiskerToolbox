@@ -51,7 +51,7 @@ public slots:
     /// Run independent (non-recurrent) batch inference over [start, end].
     /// @param start First frame (inclusive).
     /// @param end Last frame (inclusive).
-    /// @param batch_size Unused; reserved for future batching.
+    /// @param batch_size Number of frames per forward pass (>= 1).
     void runBatch(int start, int end, int batch_size);
 
     /// Run sequential recurrent inference over a frame range.
