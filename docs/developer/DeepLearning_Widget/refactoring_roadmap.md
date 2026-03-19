@@ -314,11 +314,19 @@ Issues discovered during post-refactoring validation testing.
 
 ---
 
-### 6.3 — Validate loaded weights against configured shape
+### 6.3 — Validate loaded weights against configured shape ✅ COMPLETED
 
 **Problem:** After loading weights, there is no proactive validation that the weights are compatible with the specified encoder input/output shape. Mismatches are only caught at inference time (via libtorch exceptions), which gives poor user feedback. A dummy forward pass at load time would catch mismatches early.
 
-**Root cause:** `_loadModelIfReady()` calls `_assembler->loadWeights(path)` but does not attempt a trial forward pass.
+**Changes made:**
+- `SlotAssembler::validateWeights()` added to `Core/SlotAssembler.hpp/.cpp`. Creates zero tensors for all input slots (batch_size=1), calls `forward()` with `torch::NoGradGuard`, checks all expected output slots are present and non-empty. Returns empty string on success or a diagnostic message on failure.
+- `DeepLearningPropertiesWidget` gains a `_weights_validation_error` member (cleared on model change and at the start of each `_loadModelIfReady()` call).
+- `_loadModelIfReady()` calls `validateWeights()` after a successful `loadWeights()` and stores the result.
+- `_updateWeightsStatus()` now shows "✓ Loaded & validated" (green) on success or "⚠ Shape mismatch: <message>" (orange) on validation failure.
+
+**Original problem description:** After loading weights, there is no proactive validation that the weights are compatible with the specified encoder input/output shape. Mismatches are only caught at inference time (via libtorch exceptions), which gives poor user feedback.
+
+**Verification:** Load weights with correct shape → "✓ Loaded & validated". Load weights with wrong shape → "⚠ Shape mismatch: …". All existing inference paths are unchanged (validation is a read-only forward pass on zero tensors).
 
 **Affected files:**
 - `src/WhiskerToolbox/DeepLearning_Widget/Core/SlotAssembler.hpp/cpp` — new `validateWeights()` method
@@ -578,7 +586,7 @@ Phase 4    Fill test gaps           — after each phase above
 Phase 5    Cleanup / docs           — final pass
 Phase 6.1  Move point_key into SpatialPointModuleParams ✅ COMPLETED
 Phase 6.2  Gate weight loading on shape set             ✅ COMPLETED
-Phase 6.3  Validate weights via dummy forward pass (depends on 6.2)
+Phase 6.3  Validate weights via dummy forward pass      ✅ COMPLETED
 Phase 6.4  Fix single-frame + GlobalAvgPool decoder compat (includes runSingleFrame spatial point fix)
 Phase 7.1  RunInference command     — batch mode
 Phase 7.2  RunRecurrentInference    — recurrent mode

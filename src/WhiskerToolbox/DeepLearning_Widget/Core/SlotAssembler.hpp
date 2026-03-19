@@ -71,6 +71,16 @@ public:
     /// @return true on success.
     bool loadWeights(std::string const & weights_path);
 
+    /// Run a dummy forward pass to validate weight compatibility.
+    ///
+    /// Creates zero-filled input tensors matching each input slot's shape
+    /// (batch_size=1), calls forward(), and checks that outputs are produced.
+    /// Uses torch::NoGradGuard to avoid unnecessary gradient computation.
+    ///
+    /// @pre isModelReady() must be true.
+    /// @return Empty string on success, or a diagnostic message on mismatch.
+    [[nodiscard]] std::string validateWeights();
+
     /// Whether a model is loaded AND its weights are active.
     [[nodiscard]] bool isModelReady() const;
 

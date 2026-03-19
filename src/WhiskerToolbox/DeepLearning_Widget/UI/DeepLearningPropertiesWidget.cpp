@@ -273,6 +273,8 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
             _model_combo->itemData(index).toString().toStdString();
     _state->setSelectedModelId(model_id);
 
+    _weights_validation_error.clear();
+
     if (model_id.empty()) {
         _model_desc_label->setText(tr("Select a model to configure."));
         _current_info.reset();
@@ -349,11 +351,14 @@ void DeepLearningPropertiesWidget::_loadModelIfReady() {
         return;
     }
 
+    _weights_validation_error.clear();
+
     auto const & path = _state->weightsPath();
     if (!path.empty() && !_assembler->currentModelId().empty()) {
         try {
             if (std::filesystem::exists(path)) {
                 _assembler->loadWeights(path);
+                _weights_validation_error = _assembler->validateWeights();
                 _updateWeightsStatus();
             }
         } catch (std::exception const & e) {
@@ -408,8 +413,17 @@ void DeepLearningPropertiesWidget::_updateWeightsStatus() {
         _weights_status_label->setText(tr("\u2717 File not found"));
         _weights_status_label->setStyleSheet(QStringLiteral("color: red;"));
     } else if (_assembler->isModelReady()) {
-        _weights_status_label->setText(tr("\u2713 Loaded"));
-        _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
+        if (_weights_validation_error.empty()) {
+            _weights_status_label->setText(tr("\u2713 Loaded & validated"));
+            _weights_status_label->setStyleSheet(
+                    QStringLiteral("color: green;"));
+        } else {
+            _weights_status_label->setText(
+                    tr("\u26a0 Shape mismatch: %1")
+                            .arg(QString::fromStdString(_weights_validation_error)));
+            _weights_status_label->setStyleSheet(
+                    QStringLiteral("color: orange;"));
+        }
     } else {
         _weights_status_label->setText(tr("File exists, not yet loaded"));
         _weights_status_label->setStyleSheet(

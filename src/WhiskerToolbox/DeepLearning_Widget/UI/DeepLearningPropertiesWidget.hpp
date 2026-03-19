@@ -167,6 +167,9 @@ private:
     // Cached model display info (clean — no torch types).
     std::optional<ModelDisplayInfo> _current_info;
 
+    // Last weight-validation result; empty means validated OK.
+    std::string _weights_validation_error;
+
     // Current time position from EditorRegistry
     std::optional<TimePosition> _current_time_position;
 

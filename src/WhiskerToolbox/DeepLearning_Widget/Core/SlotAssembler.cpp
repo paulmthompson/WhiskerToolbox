@@ -835,6 +835,46 @@ bool SlotAssembler::loadWeights(std::string const & weights_path) {
     }
 }
 
+std::string SlotAssembler::validateWeights() {
+    if (!isModelReady()) {
+        return "Model not loaded or weights not applied";
+    }
+
+    auto const input_slots = _impl->model->inputSlots();
+    std::unordered_map<std::string, torch::Tensor> dummy_inputs;
+    dummy_inputs.reserve(input_slots.size());
+
+    for (auto const & slot: input_slots) {
+        std::vector<int64_t> shape;
+        shape.reserve(slot.shape.size() + 1);
+        shape.push_back(1);// batch_size = 1
+        shape.insert(shape.end(), slot.shape.begin(), slot.shape.end());
+        dummy_inputs[slot.name] =
+                torch::zeros(shape, dl::toTorchDType(slot.dtype));
+    }
+
+    try {
+        torch::NoGradGuard const no_grad;
+        auto const outputs = _impl->model->forward(dummy_inputs);
+
+        // Verify all expected output slots are present and non-empty.
+        for (auto const & expected: _impl->model->outputSlots()) {
+            auto it = outputs.find(expected.name);
+            if (it == outputs.end()) {
+                return "Missing output slot '" + expected.name + "'";
+            }
+            if (it->second.numel() == 0) {
+                return "Output slot '" + expected.name + "' returned empty tensor";
+            }
+        }
+        return {};// success
+    } catch (std::exception const & e) {
+        return e.what();
+    } catch (...) {
+        return "Unknown error during weight validation";
+    }
+}
+
 bool SlotAssembler::isModelReady() const {
     return _impl->model && _impl->model->isReady();
 }
