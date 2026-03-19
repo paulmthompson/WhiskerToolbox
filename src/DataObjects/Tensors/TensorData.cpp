@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -217,7 +218,7 @@ TensorData TensorData::createFromIntervals(
 
 TensorData TensorData::createND(
         std::vector<float> const & data,
-        const std::vector<AxisDescriptor>& axes) {
+        std::vector<AxisDescriptor> const & axes) {
     if (axes.empty()) {
         throw std::invalid_argument(
                 "TensorData::createND: axes must not be empty");
@@ -366,7 +367,7 @@ TensorData TensorData::createFromLazyColumns(
         std::size_t num_rows,
         std::vector<ColumnSource> columns,
         RowDescriptor rows,
-        const InvalidationWiringFn& wiring) {
+        InvalidationWiringFn const & wiring) {
     if (num_rows == 0) {
         throw std::invalid_argument(
                 "TensorData::createFromLazyColumns: num_rows must be > 0");
@@ -899,6 +900,121 @@ void TensorData::insertRow(std::size_t index, std::span<float const> row_data,
 
     _rows.insertInterval(index, interval);
     _dimensions.setAxisSize(0, new_row_count);
+
+    notifyObservers();
+}
+
+void TensorData::setRow(std::size_t index, std::span<float const> row_data) {
+    if (ndim() != 2) {
+        throw std::logic_error(
+                "TensorData::setRow: only supported for 2D tensors, "
+                "current ndim=" +
+                std::to_string(ndim()));
+    }
+    if (index >= numRows()) {
+        throw std::out_of_range(
+                "TensorData::setRow: index " + std::to_string(index) +
+                " >= numRows " + std::to_string(numRows()));
+    }
+
+    if (auto * arma = _storage.tryGetMutableAs<ArmadilloTensorStorage>()) {
+        arma->setRow(index, row_data);
+    } else if (auto * dense = _storage.tryGetMutableAs<DenseTensorStorage>()) {
+        dense->setRow(index, row_data);
+    } else {
+        throw std::logic_error(
+                "TensorData::setRow: only supported for "
+                "ArmadilloTensorStorage or DenseTensorStorage");
+    }
+
+    notifyObservers();
+}
+
+void TensorData::upsertRows(
+        std::vector<std::pair<int, std::vector<float>>> const & frame_rows,
+        std::shared_ptr<TimeFrame> time_frame) {
+    if (frame_rows.empty()) {
+        throw std::invalid_argument("TensorData::upsertRows: frame_rows must not be empty");
+    }
+    if (!time_frame) {
+        throw std::invalid_argument("TensorData::upsertRows: time_frame must not be null");
+    }
+
+    auto const new_cols = frame_rows.front().second.size();
+    for (auto const & [frame, vec]: frame_rows) {
+        if (vec.size() != new_cols) {
+            throw std::invalid_argument(
+                    "TensorData::upsertRows: inconsistent row sizes (" +
+                    std::to_string(vec.size()) + " vs " +
+                    std::to_string(new_cols) + ")");
+        }
+    }
+
+    // Build merged frame→data map: start from existing rows, overlay new ones
+    std::map<int, std::vector<float>> merged;
+
+    if (_storage.isValid() && numRows() > 0) {
+        if (ndim() != 2) {
+            throw std::logic_error(
+                    "TensorData::upsertRows: existing tensor must be 2D, "
+                    "current ndim=" +
+                    std::to_string(ndim()));
+        }
+        if (numColumns() != new_cols) {
+            throw std::invalid_argument(
+                    "TensorData::upsertRows: new row width (" +
+                    std::to_string(new_cols) +
+                    ") != existing numColumns (" +
+                    std::to_string(numColumns()) + ")");
+        }
+
+        // Extract existing frame→data from current storage
+        if (_rows.type() == RowType::TimeFrameIndex) {
+            auto const & ts = _rows.timeStorage();
+            for (std::size_t i = 0; i < numRows(); ++i) {
+                auto tfi = ts.getTimeFrameIndexAt(i);
+                merged[static_cast<int>(tfi.getValue())] = row(i);
+            }
+        } else {
+            // Ordinal rows — treat row index as frame index
+            for (std::size_t i = 0; i < numRows(); ++i) {
+                merged[static_cast<int>(i)] = row(i);
+            }
+        }
+    }
+
+    // Overlay new rows (overwrites existing frames, inserts new)
+    for (auto const & [frame, vec]: frame_rows) {
+        merged[frame] = vec;
+    }
+
+    // Flatten into sorted arrays
+    std::vector<TimeFrameIndex> time_indices;
+    std::vector<float> flat_data;
+    time_indices.reserve(merged.size());
+    flat_data.reserve(merged.size() * new_cols);
+
+    for (auto const & [frame, vec]: merged) {
+        time_indices.emplace_back(frame);
+        flat_data.insert(flat_data.end(), vec.begin(), vec.end());
+    }
+
+    auto const n_rows = time_indices.size();
+    auto time_storage = TimeIndexStorageFactory::createFromTimeIndices(
+            std::move(time_indices));
+
+    // Rebuild this tensor in-place
+    DimensionDescriptor dims{{{"time", n_rows}, {"channel", new_cols}}};
+
+    // Preserve column names if they match
+    if (hasNamedColumns() && columnNames().size() == new_cols) {
+        dims.setColumnNames(columnNames());
+    }
+
+    _rows = RowDescriptor::fromTimeIndices(std::move(time_storage), time_frame);
+    _dimensions = std::move(dims);
+    _storage = makeStorage(flat_data, {n_rows, new_cols});
+    _time_frame = std::move(time_frame);
 
     notifyObservers();
 }

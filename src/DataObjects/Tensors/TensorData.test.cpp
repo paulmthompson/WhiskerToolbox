@@ -1145,3 +1145,264 @@ TEST_CASE("TensorData multiple appendRow calls accumulate correctly", "[TensorDa
     CHECK_THAT(tensor.at(std::vector<std::size_t>{5, 0}), WithinAbs(50.0f, 1e-5f));
     CHECK_THAT(tensor.at(std::vector<std::size_t>{5, 1}), WithinAbs(51.0f, 1e-5f));
 }
+
+// =============================================================================
+// Row Mutation: setRow
+// =============================================================================
+
+TEST_CASE("TensorData setRow overwrites existing row", "[TensorData]") {
+    auto tensor = TensorData::createOrdinal2D(
+            {1.0f, 2.0f, 3.0f, 4.0f}, 2, 2);
+
+    std::vector<float> new_data = {10.0f, 20.0f};
+    tensor.setRow(0, new_data);
+
+    CHECK(tensor.numRows() == 2);// unchanged
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{0, 0}), WithinAbs(10.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{0, 1}), WithinAbs(20.0f, 1e-5f));
+    // Second row untouched
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{1, 0}), WithinAbs(3.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{1, 1}), WithinAbs(4.0f, 1e-5f));
+}
+
+TEST_CASE("TensorData setRow notifies observers", "[TensorData]") {
+    auto tensor = TensorData::createOrdinal2D({1.0f, 2.0f}, 1, 2);
+    int count = 0;
+    tensor.addObserver([&count]() { ++count; });
+    std::vector<float> row = {10.0f, 20.0f};
+    tensor.setRow(0, row);
+    CHECK(count == 1);
+}
+
+TEST_CASE("TensorData setRow rejects out-of-range index", "[TensorData]") {
+    auto tensor = TensorData::createOrdinal2D(
+            {1.0f, 2.0f, 3.0f, 4.0f}, 2, 2);
+    std::vector<float> row = {10.0f, 20.0f};
+    CHECK_THROWS_AS(tensor.setRow(2, row), std::out_of_range);
+}
+
+TEST_CASE("TensorData setRow rejects wrong size", "[TensorData]") {
+    auto tensor = TensorData::createOrdinal2D(
+            {1.0f, 2.0f, 3.0f, 4.0f}, 2, 2);
+    std::vector<float> bad_row = {10.0f};
+    CHECK_THROWS_AS(tensor.setRow(0, bad_row), std::invalid_argument);
+}
+
+TEST_CASE("TensorData setRow rejects non-2D tensor", "[TensorData]") {
+    auto tensor = TensorData::createND(
+            {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f},
+            {{"d0", 2}, {"d1", 2}, {"d2", 2}});
+    std::vector<float> row = {10.0f, 20.0f};
+    CHECK_THROWS_AS(tensor.setRow(0, row), std::logic_error);
+}
+
+// =============================================================================
+// Row Mutation: upsertRows
+// =============================================================================
+
+TEST_CASE("TensorData upsertRows into empty tensor creates time-indexed rows", "[TensorData]") {
+    TensorData tensor;
+    auto tf = makeTimeFrame(100);
+
+    std::vector<std::pair<int, std::vector<float>>> rows = {
+            {5, {1.0f, 2.0f}},
+            {10, {3.0f, 4.0f}},
+            {15, {5.0f, 6.0f}}};
+
+    tensor.upsertRows(rows, tf);
+
+    CHECK(tensor.numRows() == 3);
+    CHECK(tensor.numColumns() == 2);
+    CHECK(tensor.rowType() == RowType::TimeFrameIndex);
+
+    // Verify data at each position
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{0, 0}), WithinAbs(1.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{1, 0}), WithinAbs(3.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{2, 0}), WithinAbs(5.0f, 1e-5f));
+
+    // Verify time indices
+    auto const & ts = tensor.rows().timeStorage();
+    CHECK(ts.getTimeFrameIndexAt(0) == TimeFrameIndex{5});
+    CHECK(ts.getTimeFrameIndexAt(1) == TimeFrameIndex{10});
+    CHECK(ts.getTimeFrameIndexAt(2) == TimeFrameIndex{15});
+}
+
+TEST_CASE("TensorData upsertRows appends to existing time-indexed tensor", "[TensorData]") {
+    auto tf = makeTimeFrame(100);
+    auto time_storage = TimeIndexStorageFactory::createFromTimeIndices(
+            {TimeFrameIndex{1}, TimeFrameIndex{2}, TimeFrameIndex{3}});
+
+    auto tensor = TensorData::createTimeSeries2D(
+            {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f},
+            3, 2, time_storage, tf);
+
+    // Append frames 4 and 5
+    std::vector<std::pair<int, std::vector<float>>> new_rows = {
+            {4, {70.0f, 80.0f}},
+            {5, {90.0f, 100.0f}}};
+
+    tensor.upsertRows(new_rows, tf);
+
+    CHECK(tensor.numRows() == 5);
+
+    // Original rows preserved
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{0, 0}), WithinAbs(10.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{2, 0}), WithinAbs(50.0f, 1e-5f));
+
+    // New rows added
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{3, 0}), WithinAbs(70.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{4, 0}), WithinAbs(90.0f, 1e-5f));
+}
+
+TEST_CASE("TensorData upsertRows overwrites overlapping frames", "[TensorData]") {
+    auto tf = makeTimeFrame(100);
+    auto time_storage = TimeIndexStorageFactory::createFromTimeIndices(
+            {TimeFrameIndex{1}, TimeFrameIndex{2}, TimeFrameIndex{3}});
+
+    auto tensor = TensorData::createTimeSeries2D(
+            {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f},
+            3, 2, time_storage, tf);
+
+    // Overwrite frame 2 and add frame 4
+    std::vector<std::pair<int, std::vector<float>>> new_rows = {
+            {2, {99.0f, 88.0f}},
+            {4, {77.0f, 66.0f}}};
+
+    tensor.upsertRows(new_rows, tf);
+
+    CHECK(tensor.numRows() == 4);
+
+    // Frame 1 preserved
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{0, 0}), WithinAbs(10.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{0, 1}), WithinAbs(20.0f, 1e-5f));
+
+    // Frame 2 overwritten
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{1, 0}), WithinAbs(99.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{1, 1}), WithinAbs(88.0f, 1e-5f));
+
+    // Frame 3 preserved
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{2, 0}), WithinAbs(50.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{2, 1}), WithinAbs(60.0f, 1e-5f));
+
+    // Frame 4 added
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{3, 0}), WithinAbs(77.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{3, 1}), WithinAbs(66.0f, 1e-5f));
+}
+
+TEST_CASE("TensorData upsertRows batch1 then batch2 overlapping scenario", "[TensorData]") {
+    // Simulate: batch predict 1-10, then batch predict 5-15
+    auto tf = makeTimeFrame(100);
+    TensorData tensor;
+
+    // Batch 1: frames 1-10
+    std::vector<std::pair<int, std::vector<float>>> batch1;
+    for (int i = 1; i <= 10; ++i) {
+        batch1.emplace_back(i, std::vector<float>{static_cast<float>(i), static_cast<float>(i * 10)});
+    }
+    tensor.upsertRows(batch1, tf);
+    CHECK(tensor.numRows() == 10);
+
+    // Batch 2: frames 5-15 (overwrites 5-10, adds 11-15)
+    std::vector<std::pair<int, std::vector<float>>> batch2;
+    for (int i = 5; i <= 15; ++i) {
+        batch2.emplace_back(i, std::vector<float>{static_cast<float>(i + 100), static_cast<float>(i * 100)});
+    }
+    tensor.upsertRows(batch2, tf);
+    CHECK(tensor.numRows() == 15);
+
+    // Frames 1-4 from batch1 preserved
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{0, 0}), WithinAbs(1.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{3, 0}), WithinAbs(4.0f, 1e-5f));
+
+    // Frames 5-10 overwritten by batch2
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{4, 0}), WithinAbs(105.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{9, 0}), WithinAbs(110.0f, 1e-5f));
+
+    // Frames 11-15 added by batch2
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{10, 0}), WithinAbs(111.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{14, 0}), WithinAbs(115.0f, 1e-5f));
+}
+
+TEST_CASE("TensorData upsertRows from ordinal tensor preserves data", "[TensorData]") {
+    // Start with ordinal tensor, upsert treats row indices as frame indices
+    auto tf = makeTimeFrame(100);
+    auto tensor = TensorData::createOrdinal2D(
+            {1.0f, 2.0f, 3.0f, 4.0f}, 2, 2);
+
+    // Original rows 0 and 1 become frames 0 and 1; add frame 5
+    std::vector<std::pair<int, std::vector<float>>> new_rows = {
+            {5, {50.0f, 60.0f}}};
+
+    tensor.upsertRows(new_rows, tf);
+
+    CHECK(tensor.numRows() == 3);
+    CHECK(tensor.rowType() == RowType::TimeFrameIndex);
+
+    // Original data at frames 0,1 preserved
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{0, 0}), WithinAbs(1.0f, 1e-5f));
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{1, 0}), WithinAbs(3.0f, 1e-5f));
+    // New data at frame 5
+    CHECK_THAT(tensor.at(std::vector<std::size_t>{2, 0}), WithinAbs(50.0f, 1e-5f));
+}
+
+TEST_CASE("TensorData upsertRows notifies observers", "[TensorData]") {
+    TensorData tensor;
+    auto tf = makeTimeFrame(100);
+
+    int count = 0;
+    tensor.addObserver([&count]() { ++count; });
+
+    std::vector<std::pair<int, std::vector<float>>> rows = {
+            {0, {1.0f, 2.0f}}};
+    tensor.upsertRows(rows, tf);
+
+    CHECK(count == 1);
+}
+
+TEST_CASE("TensorData upsertRows rejects empty frame_rows", "[TensorData]") {
+    TensorData tensor;
+    auto tf = makeTimeFrame(100);
+    std::vector<std::pair<int, std::vector<float>>> empty;
+    CHECK_THROWS_AS(tensor.upsertRows(empty, tf), std::invalid_argument);
+}
+
+TEST_CASE("TensorData upsertRows rejects null time_frame", "[TensorData]") {
+    TensorData tensor;
+    std::vector<std::pair<int, std::vector<float>>> rows = {
+            {0, {1.0f}}};
+    CHECK_THROWS_AS(tensor.upsertRows(rows, nullptr), std::invalid_argument);
+}
+
+TEST_CASE("TensorData upsertRows rejects inconsistent row sizes", "[TensorData]") {
+    TensorData tensor;
+    auto tf = makeTimeFrame(100);
+    std::vector<std::pair<int, std::vector<float>>> rows = {
+            {0, {1.0f, 2.0f}},
+            {1, {3.0f}}};// wrong size
+    CHECK_THROWS_AS(tensor.upsertRows(rows, tf), std::invalid_argument);
+}
+
+TEST_CASE("TensorData upsertRows rejects column count mismatch with existing", "[TensorData]") {
+    auto tf = makeTimeFrame(100);
+    auto tensor = TensorData::createOrdinal2D(
+            {1.0f, 2.0f, 3.0f, 4.0f}, 2, 2);
+
+    std::vector<std::pair<int, std::vector<float>>> rows = {
+            {5, {1.0f, 2.0f, 3.0f}}};// 3 cols vs existing 2
+    CHECK_THROWS_AS(tensor.upsertRows(rows, tf), std::invalid_argument);
+}
+
+TEST_CASE("TensorData upsertRows preserves column names", "[TensorData]") {
+    auto tf = makeTimeFrame(100);
+    auto tensor = TensorData::createOrdinal2D(
+            {1.0f, 2.0f}, 1, 2, {"alpha", "beta"});
+
+    std::vector<std::pair<int, std::vector<float>>> rows = {
+            {5, {10.0f, 20.0f}}};
+    tensor.upsertRows(rows, tf);
+
+    CHECK(tensor.hasNamedColumns());
+    CHECK(tensor.columnNames().size() == 2);
+    CHECK(tensor.columnNames()[0] == "alpha");
+    CHECK(tensor.columnNames()[1] == "beta");
+}

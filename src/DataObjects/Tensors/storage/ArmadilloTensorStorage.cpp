@@ -97,6 +97,30 @@ void ArmadilloTensorStorage::insertRow(std::size_t index, std::span<float const>
     }
 }
 
+void ArmadilloTensorStorage::setRow(std::size_t index, std::span<float const> row_data) {
+    auto * mat = std::get_if<arma::fmat>(&_data);
+    if (mat == nullptr) {
+        throw std::logic_error(
+                "ArmadilloTensorStorage::setRow: only supported for 2D (matrix) storage, "
+                "current storage is " +
+                dimLabel());
+    }
+    if (index >= mat->n_rows) {
+        throw std::out_of_range(
+                "ArmadilloTensorStorage::setRow: index " + std::to_string(index) +
+                " >= number of rows " + std::to_string(mat->n_rows));
+    }
+    if (row_data.size() != mat->n_cols) {
+        throw std::invalid_argument(
+                "ArmadilloTensorStorage::setRow: row_data size (" +
+                std::to_string(row_data.size()) + ") != number of columns (" +
+                std::to_string(mat->n_cols) + ")");
+    }
+    for (std::size_t c = 0; c < mat->n_cols; ++c) {
+        (*mat)(index, c) = row_data[c];
+    }
+}
+
 // =============================================================================
 // Direct Armadillo Access
 // =============================================================================

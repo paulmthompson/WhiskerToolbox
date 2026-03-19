@@ -165,6 +165,19 @@ public:
      */
     void insertRow(std::size_t index, std::span<float const> row_data);
 
+    /**
+     * @brief Overwrite an existing row's data in-place
+     *
+     * Only valid for 2D storage (arma::fmat).
+     *
+     * @param index Row index to overwrite (0-based)
+     * @param row_data New values; size must equal number of columns
+     * @throws std::logic_error if storage is not 2D
+     * @throws std::out_of_range if index >= number of rows
+     * @throws std::invalid_argument if row_data.size() != number of columns
+     */
+    void setRow(std::size_t index, std::span<float const> row_data);
+
     // ========== CRTP Implementation ==========
 
     [[nodiscard]] float getValueAtImpl(std::span<std::size_t const> indices) const;

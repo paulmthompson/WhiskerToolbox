@@ -110,6 +110,30 @@ void DenseTensorStorage::insertRow(std::size_t index, std::span<float const> row
     _strides = computeStrides(_shape);
 }
 
+void DenseTensorStorage::setRow(std::size_t index, std::span<float const> row_data) {
+    if (_shape.size() != 2) {
+        throw std::logic_error(
+                "DenseTensorStorage::setRow: only supported for 2D storage, "
+                "current ndim=" +
+                std::to_string(_shape.size()));
+    }
+    auto const num_rows = _shape[0];
+    auto const num_cols = _shape[1];
+    if (index >= num_rows) {
+        throw std::out_of_range(
+                "DenseTensorStorage::setRow: index " + std::to_string(index) +
+                " >= number of rows " + std::to_string(num_rows));
+    }
+    if (row_data.size() != num_cols) {
+        throw std::invalid_argument(
+                "DenseTensorStorage::setRow: row_data size (" +
+                std::to_string(row_data.size()) + ") != number of columns (" +
+                std::to_string(num_cols) + ")");
+    }
+    auto const offset = index * num_cols;
+    std::copy(row_data.begin(), row_data.end(), _data.begin() + static_cast<std::ptrdiff_t>(offset));
+}
+
 // =============================================================================
 // CRTP Implementation
 // =============================================================================

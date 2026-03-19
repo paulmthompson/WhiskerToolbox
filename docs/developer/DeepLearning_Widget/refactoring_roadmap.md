@@ -395,6 +395,42 @@ Three distinct bugs were identified:
 
 ---
 
+### Phase 6.5 — TensorData Frame-Indexed Upsert for Accumulating Inference Results ✅ COMPLETED
+
+**Problem:** After Phase 6.4 fixed single-frame inference, `TensorToFeatureVector` output was still being entirely replaced on each run. Running batch inference on frames 1–10 and then frames 5–15 would discard the first batch entirely instead of merging the results.
+
+MaskData and PointData use per-frame `addAtTime()` which naturally accumulates, but TensorData had no frame-indexed upsert — only `appendRow` (ordinal) and `insertRow` (ordinal/interval). `TimeFrameIndex` rows were immutable, making frame-indexed mutation impossible without rebuilding.
+
+**Root cause:** `ResultProcessor::flushFeatureVectors()` called `setData<TensorData>()` to replace the entire tensor. `decodeOutputs()` (single-frame path) similarly replaced the tensor. Neither path attempted to merge with existing data.
+
+**Changes made:**
+
+- **`setRow(index, row_data)` added to storage backends** — Overwrites an existing row in-place for `ArmadilloTensorStorage` (2D only) and `DenseTensorStorage` (2D only). Validates bounds and column count.
+
+- **`upsertRows(frame_rows, time_frame)` added to `TensorData`** — Frame-indexed merge operation. Takes `std::vector<std::pair<int, std::vector<float>>>` mapping frame indices to row data, plus a `TimeFrame` for constructing `TimeIndexStorage`. Semantics:
+  - Reads existing frame→row mapping (from `TimeFrameIndex` or treats ordinal indices as frame IDs)
+  - Overlays new rows using `std::map` for sorted-merge behavior
+  - Rebuilds storage in-place via `makeStorage()` + `TimeIndexStorageFactory::createFromTimeIndices()`
+  - Preserves column names
+  - Handles empty tensor (first initialization)
+
+- **`ResultProcessor::flushFeatureVectors()`** — Changed from creating a brand-new `TensorData` via `setData` to get-or-create in DataManager then calling `upsertRows()` on the existing tensor.
+
+- **`SlotAssembler::decodeOutputs()` TensorToFeatureVector branch** — Changed from creating a 1-row replacement `TensorData` to get-or-create then `upsertRows()` with a single-element frame_rows vector.
+
+**Affected files:**
+- `src/DataObjects/Tensors/storage/ArmadilloTensorStorage.hpp/cpp` — `setRow()` added
+- `src/DataObjects/Tensors/storage/DenseTensorStorage.hpp/cpp` — `setRow()` added
+- `src/DataObjects/Tensors/TensorData.hpp/cpp` — `setRow()` and `upsertRows()` added
+- `src/WhiskerToolbox/DeepLearning_Widget/Core/ResultProcessor.cpp` — uses `upsertRows()`
+- `src/WhiskerToolbox/DeepLearning_Widget/Core/SlotAssembler.cpp` — uses `upsertRows()`
+
+**Tests:** 15 new test cases in `TensorData.test.cpp` covering `setRow` (5 tests) and `upsertRows` (10 tests), including the critical batch1-then-batch2 overlap scenario.
+
+**Verification:** Batch inference on frames 1–10 then 5–15 now produces a merged tensor with frames 1–15 (frames 5–10 overwritten, 11–15 appended, 1–4 preserved).
+
+---
+
 ## Phase 7 — Command Architecture Integration
 
 Integrate deep learning inference into the Command architecture so that inference can be invoked from TriageSession pipelines, JSON command sequences, and programmatic workflows without the widget.
@@ -545,6 +581,7 @@ Phase 6.1  Move point_key into SpatialPointModuleParams ✅ COMPLETED
 Phase 6.2  Gate weight loading on shape set             ✅ COMPLETED
 Phase 6.3  Validate weights via dummy forward pass      ✅ COMPLETED
 Phase 6.4  Fix single-frame + GlobalAvgPool decoder compat ✅ COMPLETED
+Phase 6.5  TensorData frame-indexed upsert for accumulation ✅ COMPLETED
 Phase 7.1  RunInference command     — batch mode
 Phase 7.2  RunRecurrentInference    — recurrent mode
 Phase 7.3  Pipeline examples + docs

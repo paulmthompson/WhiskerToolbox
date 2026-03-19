@@ -687,15 +687,20 @@ void decodeOutputs(
             dl::FeatureVectorDecoderParams const fv_params;
             auto vec = dl::TensorToFeatureVector::decode(tensor, ctx, fv_params);
 
-            // Always create/replace a 1-row TensorData for single-frame
-            // inference. Batch accumulation is handled separately via the
-            // FrameResult path in ResultProcessor.
+            // Upsert into existing TensorData so single-frame results
+            // accumulate across invocations (matching MaskData/PointData behavior).
             if (!vec.empty()) {
-                auto new_td = std::make_shared<TensorData>(
-                        TensorData::createOrdinal2D(
-                                vec, 1, vec.size()));
-                dm.setData<TensorData>(
-                        binding.data_key, std::move(new_td), TimeKey("media"));
+                auto tensor_data = dm.getData<TensorData>(binding.data_key);
+                if (!tensor_data) {
+                    dm.setData<TensorData>(binding.data_key, TimeKey("media"));
+                    tensor_data = dm.getData<TensorData>(binding.data_key);
+                }
+                if (tensor_data) {
+                    auto time_frame = dm.getTime();
+                    std::vector<std::pair<int, std::vector<float>>> rows;
+                    rows.emplace_back(static_cast<int>(frame_idx.getValue()), std::move(vec));
+                    tensor_data->upsertRows(rows, std::move(time_frame));
+                }
             }
 
         } else {

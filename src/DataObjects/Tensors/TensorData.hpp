@@ -180,7 +180,7 @@ public:
      */
     [[nodiscard]] static TensorData createND(
             std::vector<float> const & data,
-            const std::vector<AxisDescriptor>& axes);
+            std::vector<AxisDescriptor> const & axes);
 
     /**
      * @brief Create a 2D tensor from an Armadillo matrix (zero-copy)
@@ -256,7 +256,7 @@ public:
             std::size_t num_rows,
             std::vector<ColumnSource> columns,
             RowDescriptor rows,
-            const InvalidationWiringFn& wiring = {});
+            InvalidationWiringFn const & wiring = {});
 
     // ========== Dimension Queries ==========
 
@@ -534,6 +534,45 @@ public:
      */
     void insertRow(std::size_t index, std::span<float const> row_data,
                    TimeFrameInterval interval);
+
+    /**
+     * @brief Overwrite an existing row's data in-place
+     *
+     * Works for 2D tensors backed by ArmadilloTensorStorage or DenseTensorStorage.
+     * The row must already exist. Row descriptor and dimension metadata are unchanged.
+     * Notifies observers.
+     *
+     * @param index Row index to overwrite (0-based)
+     * @param row_data New values for the row (size must equal numColumns())
+     * @throws std::logic_error if the tensor is not 2D or has unsupported storage
+     * @throws std::out_of_range if index >= numRows()
+     * @throws std::invalid_argument if row_data.size() != numColumns()
+     */
+    void setRow(std::size_t index, std::span<float const> row_data);
+
+    /**
+     * @brief Upsert rows keyed by TimeFrameIndex
+     *
+     * Merges the given frame→row-data pairs into this tensor. For each pair:
+     * - If a row for that frame already exists, its data is overwritten.
+     * - If no row exists for that frame, a new row is inserted in sorted order.
+     *
+     * After the operation, the tensor's rows are sorted by TimeFrameIndex and
+     * backed by a fresh TimeIndexStorage. The tensor must be 2D and backed by
+     * ArmadilloTensorStorage or DenseTensorStorage. If the tensor is empty
+     * (no storage), it is initialized from the provided rows.
+     *
+     * @param frame_rows Pairs of (frame_index, row_data); row_data sizes must
+     *        all equal numColumns() (or each other for empty tensors)
+     * @param time_frame Shared TimeFrame for the resulting time-indexed rows
+     * @pre All row_data vectors must have the same size
+     * @throws std::invalid_argument if frame_rows is empty, row sizes are
+     *         inconsistent, or time_frame is null
+     * @throws std::logic_error if the tensor is non-empty and not 2D, or has
+     *         unsupported storage
+     */
+    void upsertRows(std::vector<std::pair<int, std::vector<float>>> const & frame_rows,
+                    std::shared_ptr<TimeFrame> time_frame);
 
     // ========== Storage Access ==========
 
