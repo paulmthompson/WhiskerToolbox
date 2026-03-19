@@ -5,13 +5,13 @@
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
-#include "DeepLearning_Widget/UI/InferenceController.hpp"
 #include "DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/RecurrentBindingWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/InferenceController.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"
@@ -342,6 +342,13 @@ void DeepLearningPropertiesWidget::_onWeightsPathEdited() {
 void DeepLearningPropertiesWidget::_loadModelIfReady() {
     _updateWeightsStatus();
 
+    // Gate weight loading on shape being explicitly configured for
+    // general_encoder (shape fields default to 0 until Apply is clicked).
+    if (_assembler->currentModelId() == "general_encoder" &&
+        !_state->shapeConfigured()) {
+        return;
+    }
+
     auto const & path = _state->weightsPath();
     if (!path.empty() && !_assembler->currentModelId().empty()) {
         try {
@@ -378,6 +385,20 @@ void DeepLearningPropertiesWidget::_updateWeightsStatus() {
         _weights_status_label->setStyleSheet(QStringLiteral("color: gray;"));
         return;
     }
+
+    // For general_encoder, require the user to explicitly apply a shape
+    // before enabling weight loading — mismatched shapes cause silent errors.
+    if (_assembler->currentModelId() == "general_encoder" &&
+        !_state->shapeConfigured()) {
+        _weights_path_edit->setEnabled(false);
+        _weights_browse_btn->setEnabled(false);
+        _weights_status_label->setText(tr("Set encoder shape first"));
+        _weights_status_label->setStyleSheet(QStringLiteral("color: orange;"));
+        return;
+    }
+    _weights_path_edit->setEnabled(true);
+    _weights_browse_btn->setEnabled(true);
+
     auto const & path = _state->weightsPath();
     if (path.empty()) {
         _weights_status_label->setText(tr("No weights file specified"));
@@ -439,6 +460,9 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                 [this]() {
                     _current_info = _assembler->currentModelDisplayInfo();
                     _rebuildSlotPanels();
+                    // Now that shape is configured, attempt to load weights
+                    // if a path was already entered (gate is now satisfied).
+                    _loadModelIfReady();
                 });
         _dynamic_layout->addWidget(_encoder_shape_widget);
     }
@@ -885,14 +909,14 @@ void DeepLearningPropertiesWidget::_onRunBatch() {
 }
 
 void DeepLearningPropertiesWidget::_onInferenceBatchFinished(bool success,
-                                                           QString const & error_message) {
+                                                             QString const & error_message) {
     if (success) {
         _weights_status_label->setText(tr("\u2713 Inference complete"));
         _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
     } else {
         if (!error_message.isEmpty()) {
             QMessageBox::critical(this, tr("Inference Error"),
-                                 tr("Inference failed:\n%1").arg(error_message));
+                                  tr("Inference failed:\n%1").arg(error_message));
         }
     }
 }
@@ -1163,7 +1187,7 @@ void DeepLearningPropertiesWidget::_onRunRecurrentSequence() {
     int const start_frame = _state->currentFrame();
     int const default_count =
             _state->batchSize() > 1 ? _state->batchSize()
-                                   : _batch_size_spin->maximum();
+                                    : _batch_size_spin->maximum();
 
     auto * frame_count_spin = new QSpinBox(this);
     frame_count_spin->setRange(1, 999999);

@@ -121,6 +121,13 @@ public:
     [[nodiscard]] std::string const & encoderOutputShape() const;
     void setEncoderOutputShape(std::string const & shape);
 
+    /// @brief Whether the encoder shape has been explicitly configured.
+    ///
+    /// Returns true if the user has clicked "Apply Shape" at least once,
+    /// which stores non-zero height/width values in the state.
+    /// Used to gate weight loading for general_encoder models.
+    [[nodiscard]] bool shapeConfigured() const;
+
 signals:
     void modelChanged();
     void weightsPathChanged();

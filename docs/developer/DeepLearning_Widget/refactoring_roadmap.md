@@ -289,7 +289,7 @@ Issues discovered during post-refactoring validation testing.
 
 ---
 
-### 6.2 — Gate weight loading on encoder shape being set
+### 6.2 — Gate weight loading on encoder shape being set ✅ COMPLETED
 
 **Problem:** For `general_encoder` models, the user can browse and load weights before setting the encoder input/output shape. If the shape hasn't been configured, the loaded weights may be silently incompatible, or the model may initialize with wrong default dimensions (224×224 / 384×7×7). The weights file selector and load logic should be disabled until the shape has been explicitly applied.
 
@@ -576,8 +576,8 @@ This is out of scope for the initial integration but should be designed for when
 Phase 3.2  ConstraintEnforcer       — small, immediately testable
 Phase 4    Fill test gaps           — after each phase above
 Phase 5    Cleanup / docs           — final pass
-Phase 6.1  Move point_key into SpatialPointModuleParams
-Phase 6.2  Gate weight loading on shape set
+Phase 6.1  Move point_key into SpatialPointModuleParams ✅ COMPLETED
+Phase 6.2  Gate weight loading on shape set             ✅ COMPLETED
 Phase 6.3  Validate weights via dummy forward pass (depends on 6.2)
 Phase 6.4  Fix single-frame + GlobalAvgPool decoder compat (includes runSingleFrame spatial point fix)
 Phase 7.1  RunInference command     — batch mode
