@@ -7,6 +7,8 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     Core/BatchInferenceResult.hpp
     Core/BindingConversion.hpp
     Core/BindingConversion.cpp
+    Core/ConstraintEnforcer.hpp
+    Core/ConstraintEnforcer.cpp
     Core/DeepLearningBindingData.hpp
     Core/ResultProcessor.hpp
     Core/ResultProcessor.cpp

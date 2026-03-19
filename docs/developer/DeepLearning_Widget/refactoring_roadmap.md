@@ -26,6 +26,7 @@ DeepLearning_Widget/
 │   ├── BatchInferenceResult.hpp
 │   ├── DeepLearningBindingData.hpp        ← flat fields for state serialization
 │   ├── BindingConversion.hpp/cpp          ← pure params<->binding mapping
+│   ├── ConstraintEnforcer.hpp/cpp         ← pure batch-size and decoder-compat constraints
 │   ├── DeepLearningParamSchemas.hpp/cpp   ← widget-level variant + slot param structs
 │   ├── DeepLearningState.hpp/cpp
 │   ├── SlotAssembler.hpp/cpp              ← PIMPL firewall; all libtorch usage here
@@ -198,9 +199,10 @@ connects each sub-widget’s `bindingChanged()` to `_syncBindingsFromUi()`.
 Run handlers still call `_syncBindingsFromUi()` before delegating; the next
 phase can remove this redundancy once Phase 2/2.2/3.2 changes stabilize.
 
-### 3.2 — `ConstraintEnforcer` (pure functions)
+### 3.2 — `ConstraintEnforcer` (pure functions) ✅ COMPLETED
 
-Extract the batch-size and decoder-consistency constraint logic as testable free functions:
+Batch-size and decoder-consistency constraint logic extracted as testable pure
+functions in `Core/ConstraintEnforcer.hpp/.cpp`:
 
 ```cpp
 namespace dl::constraints {
@@ -210,7 +212,18 @@ namespace dl::constraints {
 } // namespace dl::constraints
 ```
 
-`_updateBatchSizeConstraint()` and `_enforcePostEncoderDecoderConsistency()` each shrink to a single call plus a UI update.
+**Changes made:**
+- `Core/ConstraintEnforcer.hpp/.cpp` created with the two functions above.
+- `_updateBatchSizeConstraint()` now calls `computeBatchSizeConstraint(*_current_info,
+  _state->recurrentBindings())` and applies the result to the spinbox. The manual
+  widget-traversal loop (querying `_sequence_slot_widgets` and `_recurrent_binding_widgets`
+  directly) is gone; instead the live-state bindings from Phase 3.1 are used.
+- `_enforcePostEncoderDecoderConsistency()` now calls `validDecodersForModule(module_type)`
+  and passes the returned list to each output slot widget.
+- 15 unit tests added in `tests/WhiskerToolbox/DeepLearning_Widget/ConstraintEnforcer.test.cpp`
+  covering both functions, all batch-mode variants, active/inactive bindings, and all
+  module-type strings.
+- New test binary `test_dl_constraint_enforcer` registered in the test `CMakeLists.txt`.
 
 ---
 
@@ -574,7 +587,7 @@ This is out of scope for the initial integration but should be designed for when
 ## Execution Order (Remaining)
 
 ```
-Phase 3.2  ConstraintEnforcer       — small, immediately testable
+Phase 3.2  ConstraintEnforcer       ✅ COMPLETED
 Phase 4    Fill test gaps           — after each phase above
 Phase 5    Cleanup / docs           — final pass
 Phase 6.1  Move point_key into SpatialPointModuleParams ✅ COMPLETED

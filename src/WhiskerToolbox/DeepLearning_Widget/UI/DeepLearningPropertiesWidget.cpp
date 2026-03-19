@@ -1,6 +1,7 @@
 #include "DeepLearningPropertiesWidget.hpp"
 
 #include "DeepLearning_Widget/Core/BindingConversion.hpp"
+#include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
@@ -653,21 +654,10 @@ void DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency() {
     if (!_post_encoder_widget || !_current_info) return;
 
     auto const module_type = _post_encoder_widget->moduleTypeForState();
-
-    // Both global_avg_pool and spatial_point collapse spatial dims:
-    //   [B, C, H, W] -> [B, C]
-    // Only TensorToFeatureVector can decode a 2D tensor.
-    bool const spatial_dims_removed =
-            (module_type == "global_avg_pool" || module_type == "spatial_point");
-
-    std::vector<std::string> const all_decoders = {
-            "MaskDecoderParams", "PointDecoderParams", "LineDecoderParams",
-            "FeatureVectorDecoderParams"};
-    std::vector<std::string> const fv_only = {"FeatureVectorDecoderParams"};
+    auto const valid_decoders = dl::constraints::validDecodersForModule(module_type);
 
     for (auto * slot_widget: _output_slot_widgets) {
-        slot_widget->updateDecoderAlternatives(
-                spatial_dims_removed ? fv_only : all_decoders);
+        slot_widget->updateDecoderAlternatives(valid_decoders);
         slot_widget->refreshDataSources();
     }
 }
@@ -1184,61 +1174,27 @@ void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
 void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
     if (!_dynamic_container || !_batch_size_spin || !_current_info) return;
 
-    // ── Step 1: Check model-level batch mode ──
+    auto const constraint = dl::constraints::computeBatchSizeConstraint(
+            *_current_info, _state->recurrentBindings());
+
     auto const & mode = _current_info->batch_mode;
-    bool const model_locked = dl::isBatchLocked(mode);
-    int const model_max = dl::maxBatchSizeFromMode(mode);
-    int const model_min = dl::minBatchSizeFromMode(mode);
-
-    // ── Step 2: Check if any recurrent bindings are active in the UI ──
-    bool has_recurrent = false;
-    for (auto const & slot: _current_info->inputs) {
-        if (!slot.is_static || slot.is_boolean_mask) continue;
-
-        if (slot.hasSequenceDim()) {
-            for (auto const * seq_widget: _sequence_slot_widgets) {
-                if (seq_widget->slotName() == slot.name &&
-                    !seq_widget->getRecurrentBindings().empty()) {
-                    has_recurrent = true;
-                    break;
-                }
-            }
-        } else {
-            for (auto const * rb_widget: _recurrent_binding_widgets) {
-                if (rb_widget->slotName() == slot.name) {
-                    auto rb = rb_widget->toRecurrentBindingData();
-                    if (!rb.output_slot_name.empty()) {
-                        has_recurrent = true;
-                    }
-                    break;
-                }
-            }
-        }
-        if (has_recurrent) break;
-    }
-
-    // ── Step 3: Determine the most restrictive constraint ──
-    // Priority: recurrent bindings → model RecurrentOnly → model Fixed → model Dynamic
-    bool const lock_to_one = has_recurrent || model_locked;
+    bool const lock_to_one = (constraint.min == 1 && constraint.max == 1);
     QString tooltip;
 
-    if (has_recurrent) {
-        tooltip = tr("Batch size is locked to 1 when recurrent bindings are active.\n"
-                     "Sequential frame-by-frame processing requires batch=1.");
-    } else if (std::holds_alternative<dl::RecurrentOnlyBatch>(mode)) {
-        tooltip = tr("Model requires batch size = 1 (recurrent-only mode).");
-    } else if (auto const * f = std::get_if<dl::FixedBatch>(&mode)) {
-        if (f->size == 1) {
+    if (lock_to_one) {
+        if (constraint.forced_by_recurrent) {
+            tooltip = tr("Batch size is locked to 1 when recurrent bindings are active.\n"
+                         "Sequential frame-by-frame processing requires batch=1.");
+        } else if (std::holds_alternative<dl::RecurrentOnlyBatch>(mode)) {
+            tooltip = tr("Model requires batch size = 1 (recurrent-only mode).");
+        } else {
             tooltip = tr("Model is compiled for fixed batch size = 1.");
         }
-    }
-
-    if (lock_to_one) {
         _batch_size_spin->setValue(1);
         _batch_size_spin->setEnabled(false);
         _batch_size_spin->setToolTip(tooltip);
     } else if (auto const * f = std::get_if<dl::FixedBatch>(&mode)) {
-        // Fixed batch: lock spinbox to that value
+        // Fixed batch > 1: lock spinbox to that value
         _batch_size_spin->setRange(f->size, f->size);
         _batch_size_spin->setValue(f->size);
         _batch_size_spin->setEnabled(false);
@@ -1246,11 +1202,11 @@ void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
                 tr("Model is compiled for fixed batch size = %1.")
                         .arg(f->size));
     } else {
-        // Dynamic batch: allow range
+        // Dynamic batch: allow the model-reported range
         _batch_size_spin->setEnabled(true);
-        _batch_size_spin->setMinimum(model_min > 0 ? model_min : 1);
-        if (model_max > 0) {
-            _batch_size_spin->setMaximum(model_max);
+        _batch_size_spin->setMinimum(constraint.min > 0 ? constraint.min : 1);
+        if (constraint.max > 0) {
+            _batch_size_spin->setMaximum(constraint.max);
         } else {
             _batch_size_spin->setMaximum(9999);
         }
