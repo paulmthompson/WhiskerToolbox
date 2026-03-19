@@ -14,6 +14,8 @@
 #include "DeepLearning_Widget/UI/InferenceController.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "DataManager/utils/DataManagerKeys.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
@@ -23,6 +25,8 @@
 
 #include <QComboBox>
 #include <QCoreApplication>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QGridLayout>
@@ -34,6 +38,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QScrollArea>
 #include <QSpinBox>
 #include <QStandardItemModel>
@@ -886,40 +891,119 @@ void DeepLearningPropertiesWidget::_onRunBatch() {
 
     int const current = _state->currentFrame();
 
-    auto * start_spin = new QSpinBox(this);
+    // ── Build dialog ────────────────────────────────────────────────────
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Batch Inference"));
+    auto * form = new QFormLayout(&dialog);
+
+    // Mode selection: manual range vs interval series
+    auto * manual_radio = new QRadioButton(tr("Manual range"), &dialog);
+    auto * interval_radio = new QRadioButton(tr("From interval series"), &dialog);
+    manual_radio->setChecked(true);
+    form->addRow(manual_radio);
+
+    // Manual range controls
+    auto * start_spin = new QSpinBox(&dialog);
     start_spin->setRange(0, 999999);
     start_spin->setValue(current);
-
-    auto * end_spin = new QSpinBox(this);
+    auto * end_spin = new QSpinBox(&dialog);
     end_spin->setRange(0, 999999);
     end_spin->setValue(current + _state->batchSize());
+    form->addRow(tr("Start frame:"), start_spin);
+    form->addRow(tr("End frame:"), end_spin);
 
-    QMessageBox dialog(this);
-    dialog.setWindowTitle(tr("Batch Inference"));
-    dialog.setText(tr("Run inference independently on each frame in the range."));
-    dialog.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    // Interval series controls
+    form->addRow(interval_radio);
+    auto * interval_combo = new QComboBox(&dialog);
+    interval_combo->setEnabled(false);
 
-    auto * layout = qobject_cast<QGridLayout *>(dialog.layout());
-    if (layout) {
-        layout->addWidget(new QLabel(tr("Start frame:"), &dialog), 2, 0);
-        layout->addWidget(start_spin, 2, 1);
-        layout->addWidget(new QLabel(tr("End frame:"), &dialog), 3, 0);
-        layout->addWidget(end_spin, 3, 1);
+    // Populate with current DigitalIntervalSeries keys
+    auto const populate_combo = [this, interval_combo]() {
+        auto const keys = getKeysForTypes(
+                *_data_manager, {DM_DataType::DigitalInterval});
+        QString const prev = interval_combo->currentText();
+        interval_combo->clear();
+        for (auto const & k: keys) {
+            interval_combo->addItem(QString::fromStdString(k));
+        }
+        // Restore previous selection if still available
+        int const idx = interval_combo->findText(prev);
+        if (idx >= 0) {
+            interval_combo->setCurrentIndex(idx);
+        }
+    };
+    populate_combo();
+
+    // Register DataManager observer for live updates, store callback ID
+    int dm_cb_id = -1;
+    if (_data_manager) {
+        dm_cb_id = _data_manager->addObserver(populate_combo);
     }
+    // Clean up observer when dialog closes
+    QObject::connect(&dialog, &QObject::destroyed,
+                     this, [this, dm_cb_id]() {
+                         if (_data_manager && dm_cb_id >= 0) {
+                             _data_manager->removeObserver(dm_cb_id);
+                         }
+                     });
 
-    if (dialog.exec() != QMessageBox::Ok) return;
+    form->addRow(tr("Interval series:"), interval_combo);
 
-    int const start_frame = start_spin->value();
-    int const end_frame = end_spin->value();
+    // Toggle enable state based on radio selection
+    auto const update_mode = [=](bool manual_checked) {
+        start_spin->setEnabled(manual_checked);
+        end_spin->setEnabled(manual_checked);
+        interval_combo->setEnabled(!manual_checked);
+    };
+    QObject::connect(manual_radio, &QRadioButton::toggled, &dialog, update_mode);
 
-    if (end_frame < start_frame) {
-        QMessageBox::warning(this, tr("Invalid Range"),
-                             tr("End frame must be >= start frame."));
-        return;
-    }
+    // OK / Cancel buttons
+    auto * buttons = new QDialogButtonBox(
+            QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    form->addRow(buttons);
+    QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    // ── Execute dialog ──────────────────────────────────────────────────
+    if (dialog.exec() != QDialog::Accepted) return;
 
     _syncBindingsFromUi();
-    _inference_controller->runBatch(start_frame, end_frame, _state->batchSize());
+
+    if (manual_radio->isChecked()) {
+        int const start_frame = start_spin->value();
+        int const end_frame = end_spin->value();
+
+        if (end_frame < start_frame) {
+            QMessageBox::warning(this, tr("Invalid Range"),
+                                 tr("End frame must be >= start frame."));
+            return;
+        }
+        _inference_controller->runBatch(start_frame, end_frame,
+                                        _state->batchSize());
+    } else {
+        // Interval series mode
+        auto const key = interval_combo->currentText().toStdString();
+        if (key.empty()) {
+            QMessageBox::warning(this, tr("No Interval Selected"),
+                                 tr("Select an interval series."));
+            return;
+        }
+        auto series = _data_manager->getData<DigitalIntervalSeries>(key);
+        if (!series || series->size() == 0) {
+            QMessageBox::warning(this, tr("Empty Series"),
+                                 tr("The selected interval series has no intervals."));
+            return;
+        }
+
+        std::vector<std::pair<int64_t, int64_t>> intervals;
+        intervals.reserve(series->size());
+        for (auto const & elem: series->view()) {
+            intervals.emplace_back(elem.interval.start, elem.interval.end);
+        }
+
+        _inference_controller->runBatchIntervals(
+                std::move(intervals), _state->batchSize());
+    }
 }
 
 void DeepLearningPropertiesWidget::_onInferenceBatchFinished(bool success,

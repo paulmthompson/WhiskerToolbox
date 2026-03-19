@@ -18,8 +18,11 @@
 #include <QObject>
 #include <QString>
 
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 class DataManager;
 class DeepLearningState;
@@ -53,6 +56,13 @@ public slots:
     /// @param end Last frame (inclusive).
     /// @param batch_size Number of frames per forward pass (>= 1).
     void runBatch(int start, int end, int batch_size);
+
+    /// Run independent batch inference over multiple intervals.
+    /// Progress reports the cumulative frame count across all intervals.
+    /// @param intervals Vector of (start, end) frame ranges (inclusive).
+    /// @param batch_size Number of frames per forward pass (>= 1).
+    void runBatchIntervals(std::vector<std::pair<int64_t, int64_t>> intervals,
+                           int batch_size);
 
     /// Run sequential recurrent inference over a frame range.
     /// @param start First frame index.
