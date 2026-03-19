@@ -1,6 +1,6 @@
 #include "LabelConfigPanel.hpp"
 
-#include "MLCoreWidgetState.hpp"
+#include "Core/MLCoreWidgetState.hpp"
 #include "ui_LabelConfigPanel.h"
 
 #include "DataManager/DataManager.hpp"

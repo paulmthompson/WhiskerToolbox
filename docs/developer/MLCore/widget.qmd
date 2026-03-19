@@ -19,17 +19,27 @@ The widget follows the **self-contained tool widget** pattern:
 ```
 MLCore_Widget/
 ├── MLCoreWidget.hpp/.cpp                    # Top-level tab widget
-├── MLCoreWidgetState.hpp/.cpp               # EditorState subclass
-├── MLCoreWidgetStateData.hpp                # reflect-cpp POD state
 ├── MLCoreWidgetRegistration.hpp/.cpp        # EditorRegistry registration
-├── FeatureSelectionPanel.hpp/.cpp/.ui       # Feature tensor selection
-├── RegionSelectionPanel.hpp/.cpp/.ui        # Training/prediction region
-├── LabelConfigPanel.hpp/.cpp/.ui            # Label source configuration
-├── ModelConfigPanel.hpp/.cpp/.ui            # Algorithm & parameter selection
-├── PredictionPanel.hpp/.cpp/.ui             # Prediction region & output config
-├── ResultsPanel.hpp/.cpp/.ui               # Classification results display
-├── ClusteringPanel.hpp/.cpp/.ui             # Clustering data & algorithm config
-└── ClusterOutputPanel.hpp/.cpp/.ui          # Clustering results display
+├── Core/
+│   ├── MLCoreWidgetState.hpp/.cpp           # EditorState subclass
+│   └── MLCoreWidgetStateData.hpp            # reflect-cpp POD state
+└── UI/
+    ├── FeatureSelectionPanel/
+    │   └── FeatureSelectionPanel.hpp/.cpp/.ui   # Feature tensor selection
+    ├── RegionSelectionPanel/
+    │   └── RegionSelectionPanel.hpp/.cpp/.ui    # Training/prediction region
+    ├── LabelConfigPanel/
+    │   └── LabelConfigPanel.hpp/.cpp/.ui        # Label source configuration
+    ├── ModelConfigPanel/
+    │   └── ModelConfigPanel.hpp/.cpp/.ui        # Algorithm & parameter selection
+    ├── PredictionPanel/
+    │   └── PredictionPanel.hpp/.cpp/.ui         # Prediction region & output config
+    ├── ResultsPanel/
+    │   └── ResultsPanel.hpp/.cpp/.ui            # Classification results display
+    ├── ClusteringPanel/
+    │   └── ClusteringPanel.hpp/.cpp/.ui         # Clustering data & algorithm config
+    └── ClusterOutputPanel/
+        └── ClusterOutputPanel.hpp/.cpp/.ui      # Clustering results display
 ```
 
 ### Dependencies

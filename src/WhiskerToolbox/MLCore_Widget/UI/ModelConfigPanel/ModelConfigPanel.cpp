@@ -1,6 +1,6 @@
 #include "ModelConfigPanel.hpp"
 
-#include "MLCoreWidgetState.hpp"
+#include "Core/MLCoreWidgetState.hpp"
 #include "ui_ModelConfigPanel.h"
 
 #include "MLCore/models/MLModelParameters.hpp"

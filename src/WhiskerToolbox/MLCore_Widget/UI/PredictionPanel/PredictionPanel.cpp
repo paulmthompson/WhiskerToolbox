@@ -1,6 +1,6 @@
 #include "PredictionPanel.hpp"
 
-#include "MLCoreWidgetState.hpp"
+#include "Core/MLCoreWidgetState.hpp"
 #include "ui_PredictionPanel.h"
 
 #include "DataManager/DataManager.hpp"

@@ -1,6 +1,6 @@
 #include "ClusteringPanel.hpp"
 
-#include "MLCoreWidgetState.hpp"
+#include "Core/MLCoreWidgetState.hpp"
 #include "ui_ClusteringPanel.h"
 
 #include "DataManager/DataManager.hpp"

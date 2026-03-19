@@ -1,6 +1,6 @@
 #include "FeatureSelectionPanel.hpp"
 
-#include "MLCoreWidgetState.hpp"
+#include "Core/MLCoreWidgetState.hpp"
 #include "ui_FeatureSelectionPanel.h"
 
 #include "DataManager/DataManager.hpp"
