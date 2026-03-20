@@ -147,6 +147,13 @@ MLCoreWidget::MLCoreWidget(std::shared_ptr<MLCoreWidgetState> state,
     _setupUi();
     _connectSignals();
 
+    // Set initial visibility of constrained decoding based on restored model
+    if (_state) {
+        auto temp_model = _registry->create(_state->selectedModelName());
+        _prediction_panel->setSequenceModelActive(
+                temp_model && temp_model->isSequenceModel());
+    }
+
     // Connect to SelectionContext for passive data focus awareness (task 4.9)
     if (_selection_context) {
         connectToSelectionContext(_selection_context, this);
@@ -293,6 +300,14 @@ void MLCoreWidget::_connectSignals() {
     // "Predict" button in PredictionPanel → run prediction using last trained model
     connect(_prediction_panel, &PredictionPanel::predictRequested,
             this, &MLCoreWidget::_onPredictRequested);
+
+    // Model selection changed → show/hide constrained decoding checkbox
+    connect(_model_config_panel, &ModelConfigPanel::modelChanged,
+            this, [this](QString const & name) {
+                auto temp_model = _registry->create(name.toStdString());
+                bool const is_seq = temp_model && temp_model->isSequenceModel();
+                _prediction_panel->setSequenceModelActive(is_seq);
+            });
 
     // "Fit & Assign" button in ClusteringPanel → run clustering pipeline
     connect(_clustering_panel, &ClusteringPanel::fitRequested,

@@ -56,6 +56,7 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit probabilityThresholdChanged(_data.probability_threshold);
         emit outputProbabilitiesChanged(_data.output_probabilities);
         emit outputPredictionsChanged(_data.output_predictions);
+        emit constrainedDecodingChanged(_data.constrained_decoding);
         emit activeTabChanged(_data.active_tab);
         emit clusteringTensorKeyChanged(QString::fromStdString(_data.clustering_tensor_key));
         emit clusteringModelNameChanged(QString::fromStdString(_data.clustering_model_name));
