@@ -25,6 +25,17 @@ Training learns these transition probabilities and per-state Gaussian distributi
 |---|---|---|
 | Number of States | 2 | Number of hidden states. Use 2 for binary classification tasks. |
 | Tolerance | 1e-5 | Convergence tolerance for parameter estimation |
+| Diagonal Covariance | Off | Use diagonal covariance matrices for emissions (see below) |
+
+### Diagonal Covariance
+
+By default the HMM fits a **full covariance** matrix for each state's Gaussian emission distribution. When diagonal covariance is enabled (checkbox in Model Configuration), each state stores only a variance per feature instead of a full covariance matrix. This:
+
+- **Reduces parameters** dramatically — from $M(M+1)/2$ to $M$ per state (where $M$ is the number of features)
+- **Improves numerical stability** when training data is limited relative to the number of features
+- **Assumes conditional independence** of features given the hidden state
+
+Enable this option when you have many features relative to your training data, or if training with full covariance fails or produces unstable results.
 
 ## When to Use
 
@@ -81,6 +92,24 @@ This means: if the system is in State 0, there is a 97% chance it stays in State
 - **Z-score normalization** is recommended, as Gaussian emissions are sensitive to feature scaling.
 - If training fails, ensure your training data contains examples of *all* states and includes at least a few state transitions.
 - Compare HMM predictions against Random Forest to see if temporal smoothing improves your results.
+- Enable **diagonal covariance** if you have many features but limited training data.
+
+## Prediction Regions
+
+By default, the HMM predicts on all feature rows. You can restrict predictions to a specific frame range by selecting a `DigitalIntervalSeries` in the **Prediction** panel. When a prediction region is selected:
+
+1. The HMM still runs on the full temporal range covering both your training labels and the prediction region (so it retains temporal context at boundaries)
+2. Output is **filtered** to only write results for the frames you selected
+
+This is useful when you've labeled parts of your recording and want to predict just the unlabeled gap, while still benefiting from the HMM's awareness of the labeled regions on either side.
+
+### Constrained Decoding (Warm-Start)
+
+When a prediction region is adjacent to labeled training data, the HMM can **warm-start** predictions using the known state at the boundary. For example, if your training labels end at frame 1000 with state "Contact", the HMM starts predicting frame 1001 from that known state rather than guessing.
+
+This is controlled by the **"Constrained decoding"** checkbox in the Prediction panel (visible only when using HMM). It is enabled by default and generally improves prediction accuracy at region boundaries.
+
+Constrained decoding has no effect on frame-independent classifiers (Random Forest, Naive Bayes, Logistic Regression).
 
 ## Comparison with Frame-Based Classifiers
 

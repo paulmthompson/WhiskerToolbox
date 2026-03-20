@@ -1,0 +1,193 @@
+---
+title: "Prediction Regions"
+description: "Bounding span computation, output filtering, and constrained Viterbi warm-start"
+---
+
+## Overview
+
+By default the classification pipeline predicts on all feature rows. **Prediction regions**
+allow restricting output to a user-selected frame range while preserving full temporal
+context for sequence models like the HMM.
+
+**Files:**
+
+- `src/MLCore/pipelines/BoundingSpan.hpp` / `.cpp` — span computation and filtering utilities
+- `src/MLCore/pipelines/ClassificationPipeline.hpp` — `PredictionRegionConfig` struct
+- `tests/MLCore/BoundingSpan.test.cpp` — 21 unit tests
+- `tests/MLCore/ClassificationPipeline.test.cpp` — 9 pipeline-level integration tests
+
+## Configuration
+
+`PredictionRegionConfig` controls prediction scoping:
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `predict_all_rows` | `bool` | `true` | Predict on all rows of the training feature tensor |
+| `prediction_tensor_key` | `string` | `""` | Separate tensor for prediction (when `predict_all_rows` is false) |
+| `prediction_interval_key` | `string` | `""` | `DigitalIntervalSeries` key specifying output frames |
+| `constrained_decoding` | `bool` | `true` | HMM initial-state warm-start from training labels |
+
+When `prediction_interval_key` is set, the pipeline:
+
+1. Computes the **bounding span** — the temporal union of training label intervals and
+   prediction intervals
+2. Filters features to the bounding span (so sequence models retain full context)
+3. Runs prediction on the filtered feature range
+4. Filters **output** to only frames within the prediction intervals
+
+## Bounding Span
+
+### Motivation
+
+Consider training labels on frames 1–1000 and 2000–3000, with a prediction target
+of 1001–1999:
+
+- **Naively** predicting only frames 1001–1999 loses temporal context at boundaries
+- **Bounding span** predicts frames 1–3000 (the full union) and filters output to 1001–1999
+- The HMM carries state through frame 1000→1001 seamlessly
+
+Since Viterbi complexity is $O(K^2 \times N)$ where $K$ = states and $N$ = frames,
+this is cheap. For $K=2$ and $N=100{,}000$: ~2.4M FLOPs (sub-millisecond).
+
+### API
+
+```cpp
+namespace MLCore {
+
+struct BoundingSpan {
+    TimeFrameIndex min_time;
+    TimeFrameIndex max_time;
+};
+
+/// Compute [min(start), max(end)] across all intervals
+std::optional<BoundingSpan> computeIntervalBounds(
+    DigitalIntervalSeries const & series);
+
+/// Compute [min, max] of a time vector
+std::optional<BoundingSpan> computeRowTimeBounds(
+    std::vector<TimeFrameIndex> const & times);
+
+/// Union of two spans
+BoundingSpan mergeSpans(BoundingSpan a, BoundingSpan b);
+
+/// Keep only feature columns whose time falls within [min, max]
+FilteredRows filterRowsToSpan(
+    arma::mat const & features,
+    std::vector<TimeFrameIndex> const & times,
+    BoundingSpan span);
+
+/// Keep only predictions at times inside any interval
+FilteredPredictions filterPredictionsToIntervals(
+    arma::Row<std::size_t> const & predictions,
+    std::optional<arma::mat> const & probabilities,
+    std::vector<TimeFrameIndex> const & times,
+    DigitalIntervalSeries const & intervals);
+
+} // namespace MLCore
+```
+
+### Pipeline Integration
+
+In `ClassificationPipeline`, bounding span logic executes when
+`prediction_interval_key` is non-empty:
+
+**Stage 6 (Predict) — input filtering:**
+
+1. Load the prediction `DigitalIntervalSeries` from `DataManager`
+2. Compute its bounds; merge with training label interval bounds if available
+3. `filterRowsToSpan()` restricts `predict_features` and `predict_row_times`
+4. Prediction proceeds on the filtered (but temporally complete) range
+
+**Stage 8 (Output) — output filtering:**
+
+1. `filterPredictionsToIntervals()` restricts predictions, probabilities, and times
+   to only frames within the prediction intervals
+2. Filtered output is passed to `PredictionWriter`
+
+## Constrained Viterbi Decoding
+
+### Motivation
+
+When the prediction range is adjacent to labeled training regions, the HMM can leverage
+**known ground truth** at boundaries. If frame 1000 is labeled as state 1 with 100%
+certainty, the HMM should start from that state when predicting frame 1001 rather than
+guessing from the prior distribution.
+
+### Implementation
+
+For each prediction segment adjacent to labeled data:
+
+1. Build a map from `TimeFrameIndex` → training label
+2. For each segment's first frame, check if there's a known label at that frame
+   or at the frame immediately before it
+3. If found, clamp `hmm.Initial()` to a delta distribution on that state
+4. Run Viterbi, then restore the original initial distribution
+
+```cpp
+// Simplified pipeline logic:
+std::unordered_map<int64_t, std::size_t> label_map;
+for (std::size_t i = 0; i < train_times.size(); ++i) {
+    label_map[train_times[i].getValue()] = train_labels[i];
+}
+
+std::vector<std::optional<std::size_t>> constraints;
+for (auto const & seg : pred_segments) {
+    auto first = seg.times.front().getValue();
+    if (auto it = label_map.find(first); it != label_map.end())
+        constraints.emplace_back(it->second);
+    else if (auto it2 = label_map.find(first - 1); it2 != label_map.end())
+        constraints.emplace_back(it2->second);
+    else
+        constraints.emplace_back(std::nullopt);
+}
+
+model->predictSequencesConstrained(feature_seqs, pred_seqs, constraints);
+```
+
+### Scope
+
+- Applies only to sequence models (`isSequenceModel() == true`)
+- Gated by `config.prediction_region.constrained_decoding`
+- Frame-independent models (Random Forest, etc.) ignore it entirely
+- The `MLModelOperation` base class default delegates to `predictSequences()`
+
+## Widget Integration
+
+- **PredictionPanel**: `DigitalIntervalSeries` combo box sets `prediction_interval_key`.
+  "Constrained decoding" checkbox (visible only for sequence models) sets
+  `constrained_decoding`.
+- **State**: `prediction_region_key` and `constrained_decoding` fields in
+  `MLCoreWidgetStateData` with bidirectional sync.
+
+## Test Coverage
+
+### Unit Tests (`BoundingSpan.test.cpp`)
+
+| Category | Tests |
+|---|---|
+| `computeIntervalBounds` | Empty, single, multiple, overlapping intervals |
+| `computeRowTimeBounds` | Empty, single, multiple elements |
+| `mergeSpans` | Disjoint, overlapping, identical, commutativity |
+| `filterRowsToSpan` | Full coverage, subset, empty result, inclusive endpoints, non-contiguous |
+| `filterPredictionsToIntervals` | Single interval, multiple intervals, with probabilities, empty result, empty series, full coverage |
+
+### Pipeline Integration Tests (`ClassificationPipeline.test.cpp`)
+
+| Test | Verifies |
+|---|---|
+| Prediction interval restricts output frames | Output is filtered to 50 frames in the prediction region |
+| Prediction interval with Random Forest | Frame-independent models also respect output filtering |
+| Empty prediction interval key means no filtering | All rows predicted when key is empty |
+| Constrained decoding produces predictions | Pipeline completes successfully with constraints |
+| Constrained vs unconstrained accuracy comparison | Both modes produce valid results on clean data |
+| Constrained decoding ignored for non-sequence models | Random Forest works fine with constrained_decoding=true |
+| HMM with diagonal covariance | Pipeline trains and predicts using diagonal variant |
+| Diagonal covariance with event labels | Diagonal HMM + event label source combination |
+| Prediction region + constrained + diagonal combined | All Phase 8 features used together |
+| Missing prediction interval key fails gracefully | Non-existent key produces clear error |
+
+### HMM-Level Tests (`HiddenMarkovModel.test.cpp`)
+
+11 constrained Viterbi tests (single/multi-sequence, mixed constraints, restoration,
+error handling) and 4 diagonal covariance tests (training, save/load, multi-dim,
+constrained).

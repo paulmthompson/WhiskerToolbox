@@ -184,41 +184,19 @@ Both pipelines use early-return on failure. The `failed_stage` field indicates w
 
 ## Bounding Span (Prediction Region Filtering)
 
-`BoundingSpan.hpp` (`pipelines/BoundingSpan.hpp`) provides utilities for computing and applying temporal bounding spans when prediction is restricted to a specific interval.
+See [Prediction Regions](prediction_regions.qmd) for the full design of bounding span
+computation, output filtering, and constrained Viterbi warm-start.
 
-### Motivation
-
-When a user selects a prediction interval (e.g., "predict only frames 500–800"), sequence models like HMMs still need temporal context beyond those frames to avoid cold-start inaccuracy at boundaries. The bounding span covers the union of all training label intervals and prediction intervals, so the model sees the full relevant temporal range. Output is later filtered to only the requested prediction frames.
-
-### API
+Summary: `BoundingSpan.hpp` (`pipelines/BoundingSpan.hpp`) provides utilities for computing
+and applying temporal bounding spans when prediction is restricted to a specific interval.
+When `prediction_interval_key` is set, the pipeline computes the temporal union of training
+and prediction intervals, filters features to that range (preserving HMM context), runs
+prediction, then filters output back to the requested frames.
 
 | Function | Description |
 |---|---|
-| `computeIntervalBounds(series)` | Returns `[min(start), max(end)]` of all intervals in a `DigitalIntervalSeries` |
-| `computeRowTimeBounds(times)` | Returns `[min, max]` of a `vector<TimeFrameIndex>` |
+| `computeIntervalBounds(series)` | Returns `[min(start), max(end)]` of all intervals |
+| `computeRowTimeBounds(times)` | Returns `[min, max]` of a time vector |
 | `mergeSpans(a, b)` | Returns the union span covering both inputs |
-| `filterRowsToSpan(features, times, span)` | Filters feature matrix columns and time vector to only those within the span |
-
-### Pipeline Integration
-
-In `ClassificationPipeline`, when `prediction_interval_key` is non-empty:
-
-**Stage 6 (Predict) — Bounding span:**
-
-1. Load the prediction interval series from DataManager
-2. Compute its bounds; optionally merge with training label interval bounds
-3. Filter `predict_features` and `predict_row_times` to the merged bounding span
-4. Prediction proceeds on this filtered (but temporally complete) range
-
-**Stage 7 (Metrics)** runs on the full bounding-span predictions (unfiltered), giving training-set accuracy.
-
-**Stage 8 (Output) — Output filtering:**
-
-1. `filterPredictionsToIntervals()` filters predictions, probabilities, and times to only frames within the prediction intervals
-2. The filtered output is passed to `PredictionWriter`, so DataManager only receives results for the user-requested region
-
-This two-step design ensures sequence models get full temporal context during prediction, while output is limited to the frames the user actually requested.
-
-| Function | Description |
-|---|---|
-| `filterPredictionsToIntervals(preds, probs, times, intervals)` | Keeps only frames that fall within any interval in the series |
+| `filterRowsToSpan(features, times, span)` | Filters columns and times to span |
+| `filterPredictionsToIntervals(preds, probs, times, intervals)` | Keeps only frames within intervals |

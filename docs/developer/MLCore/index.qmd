@@ -75,6 +75,7 @@ See [Label Assembly](label_assembly.qmd) for details.
 - [Model Interface & Registry](models.qmd) — `MLModelOperation`, `MLModelRegistry`, task types, parameters
 - [Feature Processing](features.qmd) — validation, conversion, label assembly
 - [Pipelines](pipelines.qmd) — `ClassificationPipeline` and `ClusteringPipeline`
+- [Prediction Regions](prediction_regions.qmd) — bounding span, output filtering, constrained Viterbi
 - [Label Assembly](label_assembly.qmd) — three labeling modes in detail
 - [Output & Entity Utils](output.qmd) — `PredictionWriter`, `TimeEntityUtils`
 
@@ -91,12 +92,12 @@ See [Label Assembly](label_assembly.qmd) for details.
 
 ## Test Coverage
 
-285 test cases with 2899 assertions across 16 test files in `tests/MLCore/`. Key test areas:
+295+ test cases across 20 test files in `tests/MLCore/`. Key test areas:
 
 | Area | Files | Coverage |
 |---|---|---|
 | Model operations | 6 model test files | Training, prediction, probabilities, save/load, multi-class |
-| Pipelines | `ClassificationPipeline.test.cpp`, `ClusteringPipeline.test.cpp` | End-to-end with all models, error handling, balancing |
+| Pipelines | `ClassificationPipeline.test.cpp`, `ClusteringPipeline.test.cpp` | End-to-end with all models, error handling, balancing, prediction regions |
 | Features | `FeatureValidator.test.cpp`, `FeatureConverter.test.cpp` | RowDescriptor compatibility, NaN dropping, z-score |
 | Labels | `LabelAssembler.test.cpp` | All three labeling modes |
 | Metrics | `ClassificationMetrics.test.cpp` | Binary/multi-class metrics, formatting |

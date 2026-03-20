@@ -96,6 +96,7 @@ website:
                 - developer/MLCore/features.qmd
                 - developer/MLCore/label_assembly.qmd
                 - developer/MLCore/pipelines.qmd
+                - developer/MLCore/prediction_regions.qmd
                 - developer/MLCore/sequence_assembler.qmd
                 - developer/MLCore/output.qmd
                 - developer/MLCore/widget.qmd
