@@ -79,6 +79,35 @@ struct FilteredRows {
         std::vector<TimeFrameIndex> const & times,
         BoundingSpan span);
 
+/**
+ * @brief Result of filtering predictions to a set of intervals
+ */
+struct FilteredPredictions {
+    arma::Row<std::size_t> predictions;
+    std::optional<arma::mat> probabilities;
+    std::vector<TimeFrameIndex> times;
+};
+
+/**
+ * @brief Filter predictions to only frames that fall within any interval
+ *
+ * Keeps only observations whose corresponding time is contained in at least
+ * one interval of the provided series (start <= time <= end).
+ *
+ * @pre predictions.n_elem == times.size()
+ * @pre If probabilities has a value, probabilities->n_cols == times.size()
+ * @param predictions   Per-observation class labels
+ * @param probabilities Optional probability matrix (num_classes x num_obs)
+ * @param times         Time index for each observation
+ * @param intervals     The target intervals to filter to
+ * @return Filtered predictions, probabilities, and times
+ */
+[[nodiscard]] FilteredPredictions filterPredictionsToIntervals(
+        arma::Row<std::size_t> const & predictions,
+        std::optional<arma::mat> const & probabilities,
+        std::vector<TimeFrameIndex> const & times,
+        DigitalIntervalSeries const & intervals);
+
 }// namespace MLCore
 
 #endif// MLCORE_BOUNDINGSPAN_HPP

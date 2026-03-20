@@ -222,3 +222,94 @@ TEST_CASE("filterRowsToSpan with non-contiguous times",
     CHECK(result.times[2] == TimeFrameIndex(100));
     CHECK(result.times[3] == TimeFrameIndex(200));
 }
+
+// ============================================================================
+// filterPredictionsToIntervals
+// ============================================================================
+
+TEST_CASE("filterPredictionsToIntervals keeps frames inside single interval",
+          "[BoundingSpan]") {
+    arma::Row<std::size_t> preds = {0, 1, 0, 1, 0};
+    auto times = makeTimes({10, 20, 30, 40, 50});
+    auto intervals = makeIntervals({{20, 40}});
+
+    auto result = filterPredictionsToIntervals(preds, std::nullopt, times, *intervals);
+    REQUIRE(result.predictions.n_elem == 3);
+    REQUIRE(result.times.size() == 3);
+    CHECK(result.times[0] == TimeFrameIndex(20));
+    CHECK(result.times[1] == TimeFrameIndex(30));
+    CHECK(result.times[2] == TimeFrameIndex(40));
+    CHECK(result.predictions[0] == 1);
+    CHECK(result.predictions[1] == 0);
+    CHECK(result.predictions[2] == 1);
+    CHECK_FALSE(result.probabilities.has_value());
+}
+
+TEST_CASE("filterPredictionsToIntervals keeps frames inside multiple intervals",
+          "[BoundingSpan]") {
+    arma::Row<std::size_t> preds = {0, 1, 2, 3, 4, 5};
+    auto times = makeTimes({10, 20, 30, 40, 50, 60});
+    auto intervals = makeIntervals({{10, 20}, {50, 60}});
+
+    auto result = filterPredictionsToIntervals(preds, std::nullopt, times, *intervals);
+    REQUIRE(result.predictions.n_elem == 4);
+    CHECK(result.predictions[0] == 0);// t=10
+    CHECK(result.predictions[1] == 1);// t=20
+    CHECK(result.predictions[2] == 4);// t=50
+    CHECK(result.predictions[3] == 5);// t=60
+}
+
+TEST_CASE("filterPredictionsToIntervals filters probabilities alongside predictions",
+          "[BoundingSpan]") {
+    arma::Row<std::size_t> preds = {0, 1, 0};
+    auto times = makeTimes({10, 20, 30});
+    arma::mat probs(2, 3);
+    probs(0, 0) = 0.9;
+    probs(1, 0) = 0.1;
+    probs(0, 1) = 0.3;
+    probs(1, 1) = 0.7;
+    probs(0, 2) = 0.8;
+    probs(1, 2) = 0.2;
+    auto intervals = makeIntervals({{15, 25}});
+
+    auto result = filterPredictionsToIntervals(preds, probs, times, *intervals);
+    REQUIRE(result.predictions.n_elem == 1);
+    REQUIRE(result.probabilities.has_value());
+    CHECK(result.probabilities->n_cols == 1);
+    CHECK(result.probabilities->at(0, 0) == 0.3);
+    CHECK(result.probabilities->at(1, 0) == 0.7);
+    CHECK(result.times[0] == TimeFrameIndex(20));
+}
+
+TEST_CASE("filterPredictionsToIntervals returns empty when no frames in intervals",
+          "[BoundingSpan]") {
+    arma::Row<std::size_t> preds = {0, 1, 0};
+    auto times = makeTimes({10, 20, 30});
+    auto intervals = makeIntervals({{100, 200}});
+
+    auto result = filterPredictionsToIntervals(preds, std::nullopt, times, *intervals);
+    CHECK(result.predictions.n_elem == 0);
+    CHECK(result.times.empty());
+}
+
+TEST_CASE("filterPredictionsToIntervals with empty interval series returns empty",
+          "[BoundingSpan]") {
+    arma::Row<std::size_t> preds = {0, 1, 0};
+    auto times = makeTimes({10, 20, 30});
+    DigitalIntervalSeries empty_series;
+
+    auto result = filterPredictionsToIntervals(preds, std::nullopt, times, empty_series);
+    CHECK(result.predictions.n_elem == 0);
+    CHECK(result.times.empty());
+}
+
+TEST_CASE("filterPredictionsToIntervals keeps all when intervals cover everything",
+          "[BoundingSpan]") {
+    arma::Row<std::size_t> preds = {0, 1, 2};
+    auto times = makeTimes({10, 20, 30});
+    auto intervals = makeIntervals({{0, 100}});
+
+    auto result = filterPredictionsToIntervals(preds, std::nullopt, times, *intervals);
+    REQUIRE(result.predictions.n_elem == 3);
+    CHECK(result.times.size() == 3);
+}

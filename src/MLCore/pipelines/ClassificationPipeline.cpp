@@ -737,11 +737,26 @@ ClassificationPipelineResult runClassificationPipeline(
         reportProgress(progress, ClassificationStage::WritingOutput,
                        "Writing predictions to DataManager");
 
+        // Filter output to prediction intervals if specified
+        arma::Row<std::size_t> output_predictions = predictions;
+        std::optional<arma::mat> output_probabilities = probabilities;
+        std::vector<TimeFrameIndex> output_times = predict_row_times;
+
+        if (prediction_intervals && prediction_intervals->size() > 0) {
+            auto filtered = filterPredictionsToIntervals(
+                    predictions, probabilities, predict_row_times,
+                    *prediction_intervals);
+            output_predictions = std::move(filtered.predictions);
+            output_probabilities = std::move(filtered.probabilities);
+            output_times = std::move(filtered.times);
+            result.prediction_observations = output_predictions.n_elem;
+        }
+
         try {
             PredictionOutput pred_output;
-            pred_output.class_predictions = predictions;
-            pred_output.class_probabilities = probabilities;
-            pred_output.prediction_times = predict_row_times;
+            pred_output.class_predictions = std::move(output_predictions);
+            pred_output.class_probabilities = std::move(output_probabilities);
+            pred_output.prediction_times = std::move(output_times);
 
             auto writer_result = writePredictions(
                     dm, pred_output, labels.class_names, config.output_config);

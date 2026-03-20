@@ -78,4 +78,66 @@ FilteredRows filterRowsToSpan(
     return FilteredRows{features.cols(col_indices), std::move(kept_times)};
 }
 
+FilteredPredictions filterPredictionsToIntervals(
+        arma::Row<std::size_t> const & predictions,
+        std::optional<arma::mat> const & probabilities,
+        std::vector<TimeFrameIndex> const & times,
+        DigitalIntervalSeries const & intervals) {
+    assert(predictions.n_elem == times.size() &&
+           "predictions size must match times size");
+    assert(!probabilities.has_value() ||
+           probabilities->n_cols == times.size() &&
+                   "probabilities columns must match times size");
+
+    // Collect all intervals into a sorted vector for efficient lookup
+    std::vector<Interval> sorted_intervals;
+    sorted_intervals.reserve(intervals.size());
+    for (auto const & iwid: intervals.view()) {
+        sorted_intervals.push_back(iwid.interval);
+    }
+    std::sort(sorted_intervals.begin(), sorted_intervals.end());
+
+    // For each time, check if it falls within any interval
+    std::vector<arma::uword> keep_indices;
+    keep_indices.reserve(times.size());
+
+    for (std::size_t i = 0; i < times.size(); ++i) {
+        auto const t = times[i].getValue();
+        for (auto const & iv: sorted_intervals) {
+            if (t >= iv.start && t <= iv.end) {
+                keep_indices.push_back(static_cast<arma::uword>(i));
+                break;
+            }
+            // Since intervals are sorted by start, if start > t we can stop
+            if (iv.start > t) {
+                break;
+            }
+        }
+    }
+
+    FilteredPredictions result;
+    if (keep_indices.empty()) {
+        result.predictions.set_size(0);
+        if (probabilities.has_value()) {
+            result.probabilities = arma::mat(probabilities->n_rows, 0);
+        }
+        return result;
+    }
+
+    arma::uvec col_indices(keep_indices.size());
+    for (std::size_t i = 0; i < keep_indices.size(); ++i) {
+        col_indices[i] = keep_indices[i];
+    }
+
+    result.predictions = predictions.cols(col_indices);
+    if (probabilities.has_value()) {
+        result.probabilities = probabilities->cols(col_indices);
+    }
+    result.times.reserve(keep_indices.size());
+    for (auto idx: keep_indices) {
+        result.times.push_back(times[idx]);
+    }
+    return result;
+}
+
 }// namespace MLCore

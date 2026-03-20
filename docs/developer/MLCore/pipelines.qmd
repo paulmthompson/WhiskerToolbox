@@ -201,9 +201,24 @@ When a user selects a prediction interval (e.g., "predict only frames 500–800"
 
 ### Pipeline Integration
 
-In Stage 6 (Predict) of `ClassificationPipeline`, when `prediction_interval_key` is non-empty:
+In `ClassificationPipeline`, when `prediction_interval_key` is non-empty:
+
+**Stage 6 (Predict) — Bounding span:**
 
 1. Load the prediction interval series from DataManager
 2. Compute its bounds; optionally merge with training label interval bounds
 3. Filter `predict_features` and `predict_row_times` to the merged bounding span
 4. Prediction proceeds on this filtered (but temporally complete) range
+
+**Stage 7 (Metrics)** runs on the full bounding-span predictions (unfiltered), giving training-set accuracy.
+
+**Stage 8 (Output) — Output filtering:**
+
+1. `filterPredictionsToIntervals()` filters predictions, probabilities, and times to only frames within the prediction intervals
+2. The filtered output is passed to `PredictionWriter`, so DataManager only receives results for the user-requested region
+
+This two-step design ensures sequence models get full temporal context during prediction, while output is limited to the frames the user actually requested.
+
+| Function | Description |
+|---|---|
+| `filterPredictionsToIntervals(preds, probs, times, intervals)` | Keeps only frames that fall within any interval in the series |
