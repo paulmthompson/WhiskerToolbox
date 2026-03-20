@@ -68,6 +68,9 @@ public:
     void setPredictionRegionKey(std::string const & key);
     [[nodiscard]] std::string const & predictionRegionKey() const;
 
+    void setConstrainedDecoding(bool enabled);
+    [[nodiscard]] bool constrainedDecoding() const;
+
     // === Label configuration ===
 
     void setLabelSourceType(std::string const & type);
@@ -153,6 +156,7 @@ signals:
     void featureTensorKeyChanged(QString const & key);
     void trainingRegionKeyChanged(QString const & key);
     void predictionRegionKeyChanged(QString const & key);
+    void constrainedDecodingChanged(bool enabled);
     void labelSourceTypeChanged(QString const & type);
     void labelIntervalKeyChanged(QString const & key);
     void labelPositiveClassNameChanged(QString const & name);

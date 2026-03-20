@@ -108,6 +108,18 @@ std::string const & MLCoreWidgetState::predictionRegionKey() const {
     return _data.prediction_region_key;
 }
 
+void MLCoreWidgetState::setConstrainedDecoding(bool enabled) {
+    if (_data.constrained_decoding != enabled) {
+        _data.constrained_decoding = enabled;
+        markDirty();
+        emit constrainedDecodingChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::constrainedDecoding() const {
+    return _data.constrained_decoding;
+}
+
 // === Label configuration ===
 
 void MLCoreWidgetState::setLabelSourceType(std::string const & type) {

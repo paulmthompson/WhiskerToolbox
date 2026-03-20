@@ -77,6 +77,29 @@ struct PredictionRegionConfig {
      * If empty and predict_all_rows is false, no prediction is performed.
      */
     std::string prediction_tensor_key;
+
+    /**
+     * @brief DataManager key of a DigitalIntervalSeries specifying target output frames
+     *
+     * When non-empty, the pipeline computes the bounding span across training
+     * labels and this interval for prediction (so sequence models retain full
+     * temporal context), then filters output to only frames within this interval.
+     *
+     * When empty and predict_all_rows is true, output includes all frames.
+     */
+    std::string prediction_interval_key;
+
+    /**
+     * @brief For sequence models, clamp the HMM initial distribution at boundaries
+     *
+     * When true and the model is a sequence model (isSequenceModel()), the
+     * pipeline overrides the HMM initial state distribution to the last known
+     * ground-truth label at prediction segment boundaries. This avoids
+     * cold-start inaccuracy when predicting regions adjacent to labeled data.
+     *
+     * Ignored for frame-independent models.
+     */
+    bool constrained_decoding = true;
 };
 
 /**

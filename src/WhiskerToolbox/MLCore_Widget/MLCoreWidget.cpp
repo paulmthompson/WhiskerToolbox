@@ -1,10 +1,10 @@
 #include "MLCoreWidget.hpp"
 
+#include "Core/MLCoreWidgetState.hpp"
 #include "UI/ClusterOutputPanel/ClusterOutputPanel.hpp"
 #include "UI/ClusteringPanel/ClusteringPanel.hpp"
 #include "UI/FeatureSelectionPanel/FeatureSelectionPanel.hpp"
 #include "UI/LabelConfigPanel/LabelConfigPanel.hpp"
-#include "Core/MLCoreWidgetState.hpp"
 #include "UI/ModelConfigPanel/ModelConfigPanel.hpp"
 #include "UI/PredictionPanel/PredictionPanel.hpp"
 #include "UI/RegionSelectionPanel/RegionSelectionPanel.hpp"
@@ -165,7 +165,7 @@ void MLCoreWidget::onDataFocusChanged(EditorLib::SelectedDataKey const & data_ke
         return;
     }
 
-    QString const& key_str = data_key.toString();
+    QString const & key_str = data_key.toString();
     if (key_str.isEmpty()) {
         return;
     }
@@ -603,11 +603,14 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
             // No prediction region selected — predict on training data
             config.prediction_region.predict_all_rows = true;
         } else {
-            // A prediction interval was selected but the pipeline works with tensors.
-            // For now, predict on all rows of the training tensor (the recommended
-            // workflow). Future: build a separate prediction tensor filtered by intervals.
+            // Predict on all rows (for temporal context), but filter output
+            // to only the frames within the selected interval.
             config.prediction_region.predict_all_rows = true;
+            config.prediction_region.prediction_interval_key = pred_key;
         }
+    }
+    if (_state) {
+        config.prediction_region.constrained_decoding = _state->constrainedDecoding();
     }
 
     // -- Output --

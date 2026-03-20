@@ -54,6 +54,9 @@ struct MLCoreWidgetStateData {
     /// DigitalIntervalSeries key defining the prediction region (empty = all frames)
     std::string prediction_region_key;
 
+    /// For sequence models (HMM), clamp initial state to ground truth at boundaries
+    bool constrained_decoding = true;
+
     // === Label configuration ===
 
     /// Label source type: "intervals", "groups", or "entity_groups"

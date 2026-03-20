@@ -23,6 +23,7 @@
 #include "models/MLModelOperation.hpp"
 #include "models/MLModelRegistry.hpp"
 #include "output/PredictionWriter.hpp"
+#include "pipelines/BoundingSpan.hpp"
 #include "pipelines/SequenceAssembler.hpp"
 #include "preprocessing/ClassBalancing.hpp"
 
@@ -519,6 +520,53 @@ ClassificationPipelineResult runClassificationPipeline(
     arma::Row<std::size_t> predictions;
     std::optional<arma::mat> probabilities;
     std::size_t prediction_count = 0;
+
+    // Track the prediction interval series for possible output filtering
+    std::shared_ptr<DigitalIntervalSeries> prediction_intervals;
+
+    // Apply bounding span filtering when a prediction interval key is specified
+    if (do_prediction &&
+        !config.prediction_region.prediction_interval_key.empty()) {
+        prediction_intervals = dm.getData<DigitalIntervalSeries>(
+                config.prediction_region.prediction_interval_key);
+        if (!prediction_intervals) {
+            return makeFailure(ClassificationStage::Predicting,
+                               "Prediction interval series '" +
+                                       config.prediction_region.prediction_interval_key +
+                                       "' not found in DataManager");
+        }
+
+        auto pred_bounds = computeIntervalBounds(*prediction_intervals);
+        if (pred_bounds) {
+            // Optionally include training label intervals in the span
+            auto span = *pred_bounds;
+            if (!config.label_interval_key.empty()) {
+                auto train_intervals = dm.getData<DigitalIntervalSeries>(
+                        config.label_interval_key);
+                if (train_intervals) {
+                    auto train_bounds = computeIntervalBounds(*train_intervals);
+                    if (train_bounds) {
+                        span = mergeSpans(span, *train_bounds);
+                    }
+                }
+            }
+
+            auto filtered = filterRowsToSpan(
+                    predict_features, predict_row_times, span);
+            predict_features = std::move(filtered.features);
+            predict_row_times = std::move(filtered.times);
+
+            if (predict_features.n_cols == 0) {
+                return makeFailure(ClassificationStage::Predicting,
+                                   "No prediction rows remain after bounding-span "
+                                   "filtering to [" +
+                                           std::to_string(span.min_time.getValue()) +
+                                           ", " +
+                                           std::to_string(span.max_time.getValue()) +
+                                           "]");
+            }
+        }
+    }
 
     if (do_prediction) {
         reportProgress(progress, ClassificationStage::Predicting,
