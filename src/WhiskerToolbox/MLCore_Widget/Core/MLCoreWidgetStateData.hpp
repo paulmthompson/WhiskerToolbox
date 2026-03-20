@@ -57,6 +57,9 @@ struct MLCoreWidgetStateData {
     /// For sequence models (HMM), clamp initial state to ground truth at boundaries
     bool constrained_decoding = true;
 
+    /// Use diagonal covariance for HMM emissions (reduces parameters per state)
+    bool hmm_diagonal_covariance = false;
+
     // === Label configuration ===
 
     /// Label source type: "intervals", "groups", or "entity_groups"

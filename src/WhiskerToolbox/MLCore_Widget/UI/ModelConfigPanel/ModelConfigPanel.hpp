@@ -167,7 +167,7 @@ private:
     void _restoreFromState();
 
     /// Map model name → parameter stack page index
-    [[nodiscard]] int _pageIndexForModel(std::string const & name) const;
+    [[nodiscard]] static int _pageIndexForModel(std::string const & name) ;
 
     Ui::ModelConfigPanel * ui;
     std::shared_ptr<MLCoreWidgetState> _state;

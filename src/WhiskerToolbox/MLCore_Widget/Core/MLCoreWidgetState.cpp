@@ -57,6 +57,7 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit outputProbabilitiesChanged(_data.output_probabilities);
         emit outputPredictionsChanged(_data.output_predictions);
         emit constrainedDecodingChanged(_data.constrained_decoding);
+        emit hmmDiagonalCovarianceChanged(_data.hmm_diagonal_covariance);
         emit activeTabChanged(_data.active_tab);
         emit clusteringTensorKeyChanged(QString::fromStdString(_data.clustering_tensor_key));
         emit clusteringModelNameChanged(QString::fromStdString(_data.clustering_model_name));
@@ -119,6 +120,18 @@ void MLCoreWidgetState::setConstrainedDecoding(bool enabled) {
 
 bool MLCoreWidgetState::constrainedDecoding() const {
     return _data.constrained_decoding;
+}
+
+void MLCoreWidgetState::setHmmDiagonalCovariance(bool enabled) {
+    if (_data.hmm_diagonal_covariance != enabled) {
+        _data.hmm_diagonal_covariance = enabled;
+        markDirty();
+        emit hmmDiagonalCovarianceChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::hmmDiagonalCovariance() const {
+    return _data.hmm_diagonal_covariance;
 }
 
 // === Label configuration ===

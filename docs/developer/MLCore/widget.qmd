@@ -138,7 +138,7 @@ MLCore_Widget
 | `FeatureSelectionPanel` | Combo box listing `TensorData` keys. Shows column names, row count, row type, time frame info. |
 | `RegionSelectionPanel` | Combo box for `DigitalIntervalSeries` keys. Shows frame count. "All frames" checkbox. |
 | `LabelConfigPanel` | Radio buttons for label source. Dynamic stacked form per mode. Class name editing. |
-| `ModelConfigPanel` | Task type → model filter. Stacked parameter widgets per model. Class balancing config. Train button. |
+| `ModelConfigPanel` | Task type → model filter. Stacked parameter widgets per model. HMM page includes diagonal covariance checkbox. Class balancing config. Train button. |
 | `PredictionPanel` | Prediction region selection. Threshold slider + spinbox. Output type checkboxes. Constrained decoding checkbox (visible only for sequence models). Predict button. |
 | `ResultsPanel` | Displays `ClassificationPipelineResult`. Metrics, confusion matrix, clickable output keys. |
 

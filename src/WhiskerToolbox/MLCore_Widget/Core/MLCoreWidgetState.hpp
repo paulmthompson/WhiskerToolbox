@@ -71,6 +71,9 @@ public:
     void setConstrainedDecoding(bool enabled);
     [[nodiscard]] bool constrainedDecoding() const;
 
+    void setHmmDiagonalCovariance(bool enabled);
+    [[nodiscard]] bool hmmDiagonalCovariance() const;
+
     // === Label configuration ===
 
     void setLabelSourceType(std::string const & type);
@@ -157,6 +160,7 @@ signals:
     void trainingRegionKeyChanged(QString const & key);
     void predictionRegionKeyChanged(QString const & key);
     void constrainedDecodingChanged(bool enabled);
+    void hmmDiagonalCovarianceChanged(bool enabled);
     void labelSourceTypeChanged(QString const & type);
     void labelIntervalKeyChanged(QString const & key);
     void labelPositiveClassNameChanged(QString const & name);

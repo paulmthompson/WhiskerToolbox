@@ -5,10 +5,12 @@ description: "2-state Gaussian HMM for temporal sequence classification via mlpa
 
 ## Overview
 
-`HiddenMarkovModelOperation` wraps `mlpack::HMM<mlpack::GaussianDistribution<>>` to provide
-sequence-aware classification within the MLCore framework. Unlike frame-based classifiers
-(Random Forest, Logistic Regression) that treat each observation independently, the HMM
-exploits **temporal continuity** — the probability of being in state $s_t$ depends on $s_{t-1}$.
+`HiddenMarkovModelOperation` wraps `mlpack::HMM<mlpack::GaussianDistribution<>>` (full
+covariance) or `mlpack::HMM<mlpack::DiagonalGaussianDistribution<>>` (diagonal covariance)
+to provide sequence-aware classification within the MLCore framework. Unlike frame-based
+classifiers (Random Forest, Logistic Regression) that treat each observation independently,
+the HMM exploits **temporal continuity** — the probability of being in state $s_t$ depends
+on $s_{t-1}$.
 
 **Files:**
 
@@ -33,14 +35,18 @@ Non-sequence models (Random Forest, etc.) inherit the default concatenation beha
 
 ### Pimpl Pattern
 
-The implementation follows the project-standard Pimpl pattern to keep `mlpack.hpp` out of the header:
+The implementation follows the project-standard Pimpl pattern to keep `mlpack.hpp` out of the header.
+A `std::variant` holds either the full or diagonal covariance HMM, with all operations dispatched
+via a visitor:
 
 ```cpp
 struct HiddenMarkovModelOperation::Impl {
-    std::unique_ptr<GaussianHMM> model;
+    std::variant<std::unique_ptr<GaussianHMM>,
+                 std::unique_ptr<DiagonalGaussianHMM>> model;
     std::size_t num_states = 0;
     std::size_t num_features = 0;
     bool trained = false;
+    bool diagonal = false;
 };
 ```
 
@@ -141,6 +147,21 @@ double ll = hmm.logLikelihood(features);
 |---|---|---|
 | `num_states` | 2 | Number of hidden states (minimum 2) |
 | `tolerance` | 1e-5 | Convergence tolerance for training |
+| `use_diagonal_covariance` | false | Use diagonal covariance matrices for emissions |
+
+### Diagonal Covariance
+
+When `use_diagonal_covariance` is `true`, the HMM uses
+`mlpack::DiagonalGaussianDistribution<>` instead of full covariance. This:
+
+- Reduces covariance parameters per state from $\frac{M(M+1)}{2}$ to $M$
+- Reduces emission evaluation cost from $O(M^2)$ to $O(M)$
+- Improves numerical stability with limited training data
+- Assumes features are conditionally independent given the hidden state
+
+The `isDiagonalCovariance()` method reports the active variant after training.
+Serialization includes the diagonal flag, so loaded models correctly reconstruct
+the matching HMM type.
 
 ## Serialization
 
@@ -232,6 +253,7 @@ switches to the HMM parameter page. Controls:
 |---|---|---|
 | `QSpinBox` | Number of states | 2–100 |
 | `QDoubleSpinBox` | Tolerance | 1e-10 – 1.0 |
+| `QCheckBox` | Diagonal covariance | on/off |
 
 ### Label Configuration (LabelConfigPanel)
 
@@ -250,8 +272,9 @@ shows $P(\text{next state} \mid \text{current state})$ with columns summing to 1
 
 - **Supervised only:** The current implementation requires labeled sequences. Unsupervised
   Baum-Welch training (EM) is not exposed, though mlpack supports it.
-- **Gaussian emissions:** Only `GaussianDistribution<>` emissions are supported. Discrete
-  or mixture emissions would require a different template specialization.
+- **Gaussian emissions:** Only `GaussianDistribution<>` (full covariance) and
+  `DiagonalGaussianDistribution<>` (diagonal covariance) emissions are supported.
+  Discrete or mixture emissions would require a different template specialization.
 - **Fixed state count:** The number of states must be specified before training. Model
   selection (choosing the optimal state count) must be done manually.
 - **No warm-starting:** Each `train()` / `trainSequences()` call initializes a fresh HMM.
@@ -261,7 +284,8 @@ shows $P(\text{next state} \mid \text{current state})$ with columns summing to 1
 
 ## Test Coverage
 
-13 test cases with 513 assertions in `tests/MLCore/HiddenMarkovModel.test.cpp`:
+13 test cases with 513 assertions in `tests/MLCore/HiddenMarkovModel.test.cpp`, plus
+4 diagonal covariance test cases:
 
 | Category | Tests |
 |---|---|
@@ -278,6 +302,10 @@ shows $P(\text{next state} \mid \text{current state})$ with columns summing to 1
 | Save/load | Round-trip prediction preservation |
 | Registry | Registration, task type filtering, factory creation |
 | Base class API | Default trainSequences/predictSequences concatenation behavior |
+| Diagonal covariance | Training, Viterbi accuracy, Forward-Backward, transition matrix, log-likelihood |
+| Diagonal multi-dim | 2D diagonal covariance training and prediction accuracy |
+| Diagonal save/load | Round-trip preserves diagonal model and predictions |
+| Diagonal constrained | Constrained Viterbi decoding with diagonal covariance |
 
 Pipeline integration is covered by 4 additional test cases in `tests/MLCore/ClassificationPipeline.test.cpp`:
 sequence mode with interval labels, sequence mode with event labels, SegmentingSequences stage
