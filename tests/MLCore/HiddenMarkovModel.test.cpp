@@ -27,6 +27,7 @@
 
 #include <armadillo>
 
+#include <optional>
 #include <sstream>
 
 using namespace MLCore;
@@ -659,4 +660,199 @@ TEST_CASE("MLModelOperation - default trainSequences concatenates", "[MLCore][HM
         CHECK(predSeqs[0].n_elem == 20);
         CHECK(predSeqs[1].n_elem == 20);
     }
+}
+
+// ============================================================================
+// Constrained Viterbi decoding
+// ============================================================================
+
+TEST_CASE("HiddenMarkovModelOperation - predictSequencesConstrained",
+          "[MLCore][HMM]") {
+    HiddenMarkovModelOperation hmm;
+    auto data = makeBlockSequence(50, 4, 42);
+
+    // Train on the full sequence
+    std::vector<arma::mat> trainSeqs{data.features};
+    std::vector<arma::Row<std::size_t>> trainLabels{data.labels};
+    REQUIRE(hmm.trainSequences(trainSeqs, trainLabels, nullptr));
+
+    SECTION("constrained prediction matches unconstrained when no constraints") {
+        // All nullopt — should produce identical results to predictSequences
+        std::vector<std::optional<std::size_t>> constraints{std::nullopt};
+
+        std::vector<arma::Row<std::size_t>> constrained_preds;
+        bool ok = hmm.predictSequencesConstrained(
+                trainSeqs, constrained_preds, constraints);
+        REQUIRE(ok);
+        REQUIRE(constrained_preds.size() == 1);
+
+        std::vector<arma::Row<std::size_t>> unconstrained_preds;
+        REQUIRE(hmm.predictSequences(trainSeqs, unconstrained_preds));
+
+        CHECK(arma::approx_equal(
+                arma::conv_to<arma::mat>::from(constrained_preds[0]),
+                arma::conv_to<arma::mat>::from(unconstrained_preds[0]),
+                "absdiff", 0.0));
+    }
+
+    SECTION("constraining to correct initial state preserves accuracy") {
+        // The first block is state 0, so constraining to 0 is correct
+        std::vector<std::optional<std::size_t>> constraints{std::size_t{0}};
+
+        std::vector<arma::Row<std::size_t>> preds;
+        bool ok = hmm.predictSequencesConstrained(trainSeqs, preds, constraints);
+        REQUIRE(ok);
+        REQUIRE(preds.size() == 1);
+        REQUIRE(preds[0].n_elem == data.labels.n_elem);
+
+        // Should recover states with high accuracy
+        std::size_t correct = arma::accu(preds[0] == data.labels);
+        double accuracy = static_cast<double>(correct) / data.labels.n_elem;
+        CHECK(accuracy > 0.90);
+    }
+
+    SECTION("per-sequence constraints applied independently") {
+        // Split into two halves
+        std::size_t const half = data.features.n_cols / 2;
+        arma::mat seq1 = data.features.cols(0, half - 1);
+        arma::mat seq2 = data.features.cols(half, data.features.n_cols - 1);
+
+        std::vector<arma::mat> seqs{seq1, seq2};
+        // First half starts with state 0, second half starts with state 0
+        // (block_size=50, 4 blocks: 0,1,0,1,0,1,0,1 — half=200, position 200 is state 0)
+        std::vector<std::optional<std::size_t>> constraints{
+                std::size_t{0}, std::size_t{0}};
+
+        std::vector<arma::Row<std::size_t>> preds;
+        bool ok = hmm.predictSequencesConstrained(seqs, preds, constraints);
+        REQUIRE(ok);
+        REQUIRE(preds.size() == 2);
+        CHECK(preds[0].n_elem == half);
+        CHECK(preds[1].n_elem == data.features.n_cols - half);
+    }
+
+    SECTION("mixed constraints — some constrained, some not") {
+        std::size_t const half = data.features.n_cols / 2;
+        arma::mat seq1 = data.features.cols(0, half - 1);
+        arma::mat seq2 = data.features.cols(half, data.features.n_cols - 1);
+
+        std::vector<arma::mat> seqs{seq1, seq2};
+        // First sequence constrained, second unconstrained
+        std::vector<std::optional<std::size_t>> constraints{
+                std::size_t{0}, std::nullopt};
+
+        std::vector<arma::Row<std::size_t>> preds;
+        bool ok = hmm.predictSequencesConstrained(seqs, preds, constraints);
+        REQUIRE(ok);
+        REQUIRE(preds.size() == 2);
+    }
+
+    SECTION("initial distribution is restored after constrained prediction") {
+        // Get unconstrained predictions before
+        std::vector<arma::Row<std::size_t>> before_preds;
+        REQUIRE(hmm.predictSequences(trainSeqs, before_preds));
+
+        // Run constrained prediction (modifies Initial internally)
+        std::vector<std::optional<std::size_t>> constraints{std::size_t{1}};
+        std::vector<arma::Row<std::size_t>> constrained_preds;
+        REQUIRE(hmm.predictSequencesConstrained(
+                trainSeqs, constrained_preds, constraints));
+
+        // Get unconstrained predictions after — should match before
+        std::vector<arma::Row<std::size_t>> after_preds;
+        REQUIRE(hmm.predictSequences(trainSeqs, after_preds));
+
+        CHECK(arma::approx_equal(
+                arma::conv_to<arma::mat>::from(after_preds[0]),
+                arma::conv_to<arma::mat>::from(before_preds[0]),
+                "absdiff", 0.0));
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - predictSequencesConstrained error handling",
+          "[MLCore][HMM]") {
+
+    SECTION("fails on untrained model") {
+        HiddenMarkovModelOperation hmm;
+        arma::mat features(1, 10, arma::fill::randn);
+        std::vector<arma::mat> seqs{features};
+        std::vector<arma::Row<std::size_t>> preds;
+        std::vector<std::optional<std::size_t>> constraints{std::nullopt};
+        CHECK_FALSE(hmm.predictSequencesConstrained(seqs, preds, constraints));
+    }
+
+    SECTION("fails with mismatched constraint vector size") {
+        HiddenMarkovModelOperation hmm;
+        auto data = makeBlockSequence(20, 2, 42);
+        hmm.train(data.features, data.labels, nullptr);
+        REQUIRE(hmm.isTrained());
+
+        std::vector<arma::mat> seqs{data.features};
+        std::vector<arma::Row<std::size_t>> preds;
+        // Two constraints for one sequence — should fail
+        std::vector<std::optional<std::size_t>> constraints{
+                std::size_t{0}, std::size_t{1}};
+        CHECK_FALSE(hmm.predictSequencesConstrained(seqs, preds, constraints));
+    }
+
+    SECTION("fails with out-of-range constraint state") {
+        HiddenMarkovModelOperation hmm;
+        auto data = makeBlockSequence(20, 2, 42);
+        hmm.train(data.features, data.labels, nullptr);
+        REQUIRE(hmm.isTrained());
+
+        std::vector<arma::mat> seqs{data.features};
+        std::vector<arma::Row<std::size_t>> preds;
+        // State 99 is well beyond the 2-state model
+        std::vector<std::optional<std::size_t>> constraints{std::size_t{99}};
+        CHECK_FALSE(hmm.predictSequencesConstrained(seqs, preds, constraints));
+    }
+
+    SECTION("fails with empty sequences") {
+        HiddenMarkovModelOperation hmm;
+        auto data = makeBlockSequence(20, 2, 42);
+        hmm.train(data.features, data.labels, nullptr);
+        REQUIRE(hmm.isTrained());
+
+        std::vector<arma::mat> seqs;
+        std::vector<arma::Row<std::size_t>> preds;
+        std::vector<std::optional<std::size_t>> constraints;
+        CHECK_FALSE(hmm.predictSequencesConstrained(seqs, preds, constraints));
+    }
+
+    SECTION("fails with feature dimension mismatch") {
+        HiddenMarkovModelOperation hmm;
+        auto data = makeBlockSequence(20, 2, 42);
+        hmm.train(data.features, data.labels, nullptr);
+        REQUIRE(hmm.isTrained());
+
+        arma::mat wrong_dim(3, 10, arma::fill::randn);
+        std::vector<arma::mat> seqs{wrong_dim};
+        std::vector<arma::Row<std::size_t>> preds;
+        std::vector<std::optional<std::size_t>> constraints{std::nullopt};
+        CHECK_FALSE(hmm.predictSequencesConstrained(seqs, preds, constraints));
+    }
+}
+
+TEST_CASE("MLModelOperation - predictSequencesConstrained default delegates",
+          "[MLCore][HMM]") {
+    // Non-sequence models should ignore constraints and delegate to predictSequences
+    auto registry = MLModelRegistry{};
+    auto rf = registry.create("Random Forest");
+    REQUIRE(rf != nullptr);
+
+    arma::mat feat1(2, 20, arma::fill::randn);
+    arma::Row<std::size_t> lab1(20, arma::fill::zeros);
+
+    std::vector<arma::mat> seqs{feat1};
+    std::vector<arma::Row<std::size_t>> labels{lab1};
+    rf->trainSequences(seqs, labels, nullptr);
+    REQUIRE(rf->isTrained());
+
+    std::vector<arma::Row<std::size_t>> preds;
+    std::vector<std::optional<std::size_t>> constraints{std::size_t{0}};
+    bool ok = rf->predictSequencesConstrained(seqs, preds, constraints);
+    CHECK(ok);
+    REQUIRE(preds.size() == 1);
+    CHECK(preds[0].n_elem == 20);
 }

@@ -29,9 +29,11 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -619,7 +621,41 @@ ClassificationPipelineResult runClassificationPipeline(
             }
 
             std::vector<arma::Row<std::size_t>> pred_sequences;
-            pred_ok = model->predictSequences(pred_feature_seqs, pred_sequences);
+
+            // Use constrained Viterbi decoding when enabled and we have
+            // training label data to derive boundary constraints from
+            if (config.prediction_region.constrained_decoding &&
+                !train_row_times.empty()) {
+                // Build a map from TimeFrameIndex → training label
+                std::unordered_map<std::int64_t, std::size_t> label_map;
+                label_map.reserve(train_row_times.size());
+                for (std::size_t i = 0; i < train_row_times.size(); ++i) {
+                    label_map[train_row_times[i].getValue()] = train_labels[i];
+                }
+
+                // For each prediction segment, determine initial state constraint
+                std::vector<std::optional<std::size_t>> constraints;
+                constraints.reserve(pred_segments.size());
+                for (auto const & seg: pred_segments) {
+                    auto const first_time = seg.times.front().getValue();
+                    // Check if the segment's first frame has a known label
+                    if (auto it = label_map.find(first_time); it != label_map.end()) {
+                        constraints.emplace_back(it->second);
+                    }
+                    // Otherwise check the frame immediately before
+                    else if (auto it2 = label_map.find(first_time - 1);
+                             it2 != label_map.end()) {
+                        constraints.emplace_back(it2->second);
+                    } else {
+                        constraints.emplace_back(std::nullopt);
+                    }
+                }
+
+                pred_ok = model->predictSequencesConstrained(
+                        pred_feature_seqs, pred_sequences, constraints);
+            } else {
+                pred_ok = model->predictSequences(pred_feature_seqs, pred_sequences);
+            }
 
             if (pred_ok) {
                 // Reassemble predictions and times in segment order

@@ -107,6 +107,12 @@ public:
             std::vector<arma::mat> const & featureSequences,
             std::vector<arma::Row<std::size_t>> & predictionSequences) override;
 
+    /// @brief Viterbi decode with per-sequence initial state constraints
+    bool predictSequencesConstrained(
+            std::vector<arma::mat> const & featureSequences,
+            std::vector<arma::Row<std::size_t>> & predictionSequences,
+            std::vector<std::optional<std::size_t>> const & initial_state_constraints) override;
+
     /// @brief This model exploits temporal structure
     [[nodiscard]] bool isSequenceModel() const override;
 

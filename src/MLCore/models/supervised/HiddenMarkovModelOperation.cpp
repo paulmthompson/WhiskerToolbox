@@ -11,6 +11,7 @@
 #include <cereal/types/vector.hpp>
 #include <iostream>
 #include <limits>
+#include <optional>
 
 namespace MLCore {
 
@@ -167,6 +168,80 @@ bool HiddenMarkovModelOperation::predictSequences(
 
     } catch (std::exception const & e) {
         std::cerr << "HiddenMarkovModelOperation::predictSequences failed: "
+                  << e.what() << "\n";
+        return false;
+    }
+}
+
+bool HiddenMarkovModelOperation::predictSequencesConstrained(
+        std::vector<arma::mat> const & featureSequences,
+        std::vector<arma::Row<std::size_t>> & predictionSequences,
+        std::vector<std::optional<std::size_t>> const & initial_state_constraints) {
+    if (!_impl->trained || !_impl->model) {
+        std::cerr << "HiddenMarkovModelOperation::predictSequencesConstrained: "
+                  << "Model not trained.\n";
+        return false;
+    }
+    if (featureSequences.empty()) {
+        std::cerr << "HiddenMarkovModelOperation::predictSequencesConstrained: "
+                  << "No sequences provided.\n";
+        return false;
+    }
+    if (initial_state_constraints.size() != featureSequences.size()) {
+        std::cerr << "HiddenMarkovModelOperation::predictSequencesConstrained: "
+                  << "Constraint vector size (" << initial_state_constraints.size()
+                  << ") does not match sequence count (" << featureSequences.size()
+                  << ").\n";
+        return false;
+    }
+
+    try {
+        predictionSequences.clear();
+        predictionSequences.reserve(featureSequences.size());
+
+        // Save the original initial distribution so we can restore it after
+        arma::vec const original_initial = _impl->model->Initial();
+
+        for (std::size_t i = 0; i < featureSequences.size(); ++i) {
+            auto const & seq = featureSequences[i];
+
+            if (seq.n_rows != _impl->num_features) {
+                std::cerr << "HiddenMarkovModelOperation::predictSequencesConstrained: "
+                          << "Feature dimension mismatch — expected "
+                          << _impl->num_features << ", got " << seq.n_rows << ".\n";
+                _impl->model->Initial() = original_initial;
+                return false;
+            }
+
+            if (initial_state_constraints[i].has_value()) {
+                std::size_t const state = initial_state_constraints[i].value();
+                if (state >= _impl->num_states) {
+                    std::cerr << "HiddenMarkovModelOperation::predictSequencesConstrained: "
+                              << "Constraint state " << state
+                              << " >= num_states (" << _impl->num_states << ").\n";
+                    _impl->model->Initial() = original_initial;
+                    return false;
+                }
+                // Clamp initial distribution to a delta on the constrained state
+                arma::vec constrained(_impl->num_states, arma::fill::zeros);
+                constrained[state] = 1.0;
+                _impl->model->Initial() = constrained;
+            } else {
+                // Restore default distribution for unconstrained segments
+                _impl->model->Initial() = original_initial;
+            }
+
+            arma::Row<std::size_t> stateSeq;
+            _impl->model->Predict(seq, stateSeq);
+            predictionSequences.push_back(std::move(stateSeq));
+        }
+
+        // Restore the original initial distribution
+        _impl->model->Initial() = original_initial;
+        return true;
+
+    } catch (std::exception const & e) {
+        std::cerr << "HiddenMarkovModelOperation::predictSequencesConstrained failed: "
                   << e.what() << "\n";
         return false;
     }

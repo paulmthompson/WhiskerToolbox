@@ -26,6 +26,7 @@ The base `MLModelOperation` class provides optional virtual methods for sequence
 |---|---|---|
 | `trainSequences(featureSeqs, labelSeqs, params)` | Concatenates sequences, calls `train()` | Passes sequences directly to `mlpack::HMM::Train()` |
 | `predictSequences(featureSeqs, predSeqs)` | Concatenates, calls `predict()`, splits back | Viterbi decodes each sequence independently |
+| `predictSequencesConstrained(featureSeqs, predSeqs, constraints)` | Ignores constraints, delegates to `predictSequences()` | Clamps `hmm.Initial()` per-sequence, Viterbi decodes, restores |
 | `isSequenceModel()` | Returns `false` | Returns `true` |
 
 Non-sequence models (Random Forest, etc.) inherit the default concatenation behavior, so existing code is unaffected.
@@ -99,6 +100,19 @@ arma::mat probs;  // (num_states × observations)
 hmm.predictProbabilities(features, probs);
 // probs(state, time) = P(state at time t | all observations)
 ```
+
+### Constrained Viterbi Decoding
+
+`predictSequencesConstrained()` overrides the HMM's initial state distribution on a per-sequence basis before running Viterbi. This is used to warm-start prediction when a boundary frame's state is known from training labels.
+
+```cpp
+// constraints[i] = known initial state for sequence i, or nullopt
+std::vector<std::optional<std::size_t>> constraints{std::size_t{0}, std::nullopt};
+std::vector<arma::Row<std::size_t>> preds;
+hmm.predictSequencesConstrained(featureSeqs, preds, constraints);
+```
+
+Implementation: saves `hmm.Initial()`, sets it to a delta distribution `[0,...,1,...,0]` on the constrained state, calls `Predict()`, and restores. This ensures subsequent unconstrained predictions are unaffected. The `ClassificationPipeline` builds a label map from training data and automatically derives constraints when `constrained_decoding` is enabled.
 
 Each column sums to 1.0.
 

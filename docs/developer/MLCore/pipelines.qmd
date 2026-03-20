@@ -28,7 +28,7 @@ BalancingClasses → SegmentingSequences → Training → Predicting →
 ComputingMetrics → WritingOutput → Complete
 ```
 
-The `SegmentingSequences` stage uses `SequenceAssembler::segment()` to split the feature matrix and labels into contiguous temporal segments (based on gaps in `TimeFrameIndex`). Training then routes through `trainSequences()` and prediction through `predictSequences()`, preserving temporal structure for models like HMMs.
+The `SegmentingSequences` stage uses `SequenceAssembler::segment()` to split the feature matrix and labels into contiguous temporal segments (based on gaps in `TimeFrameIndex`). Training then routes through `trainSequences()` and prediction through `predictSequences()`, preserving temporal structure for models like HMMs. When `constrained_decoding` is enabled and training labels are available, prediction uses `predictSequencesConstrained()` to clamp the HMM's initial distribution at segment boundaries where the ground truth state is known.
 
 ### Configuration
 
