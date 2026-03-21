@@ -181,7 +181,67 @@ This is relevant to the "discoverability" problem — users don't know what oper
 
 **Concept:** Extend `SelectionContext` with a lightweight action discovery system. When a widget sets `dataFocus` on a TensorData with 2 columns named "PC1"/"PC2", other widgets can advertise available actions.
 
-**Implementation:**
+#### Architectural Boundary: Context Actions vs Commands
+
+The existing Commands system (`ICommand`, `CommandFactory`, `CommandContext`) and the proposed Context Actions serve **different layers** and are **compositional**, not competing:
+
+| Dimension | Commands (`ICommand`) | Context Actions (`ContextAction`) |
+|-----------|----------------------|----------------------------------|
+| **Layer** | Data model — mutates `DataManager` | UI orchestration — opens/configures widgets |
+| **Context** | `CommandContext` (DataManager + runtime variables) | `SelectionContext` (focused key, selected entities, data type) |
+| **Applicability** | None — no `poll()` or `canExecute()` predicate | `is_applicable(SelectionContext const &)` evaluated dynamically |
+| **Serialization** | JSON-serializable via reflect-cpp (`toJson()`) | **Not serializable** — contains `std::function` captures |
+| **Undo** | Opt-in via `isUndoable()` / `undo()` | Not undoable (UI state changes are not tracked) |
+| **Registration** | Explicit dispatcher via `CommandRegistry` (see [Commands Roadmap Phase 7](DataManager/Commands/roadmap.qmd#phase-7--command-registration-api-explicit-dispatcher)) | Runtime via `SelectionContext::registerAction()` (dynamic) |
+| **Invocation** | `executeSequence()` / `executeSingleCommand()` | User clicks context menu / action palette item |
+| **Examples** | `CopyByTimeRange`, `SaveData`, `SynthesizeData` | "Visualize in Scatter Plot", "Cluster with K-Means" |
+
+**The key relationship is composition.** A ContextAction's `execute()` body typically:
+1. **Performs UI orchestration** — opens/creates a widget, configures its EditorState
+2. **Optionally invokes a Command** — for the data-mutation step
+3. **Updates SelectionContext** — e.g., `setDataFocus()` on the output
+
+```
+┌─────────────────────────────────────────────────────┐
+│  ContextAction: "Cluster with K-Means"              │
+│                                                     │
+│  is_applicable: focused data is TensorData          │
+│                                                     │
+│  execute():                                         │
+│    1. Run clustering (Command or MLCore pipeline)   │  ← data mutation
+│    2. Open/focus ScatterPlotWidget                  │  ← UI orchestration
+│    3. setDataFocus(output_key)                      │  ← context update
+│    4. ScatterPlot auto-colors by cluster groups     │  ← observer cascade
+└─────────────────────────────────────────────────────┘
+```
+
+**Design rule:** If an operation *only* mutates data, it should be a Command (serializable, undoable, replayable). If it involves UI orchestration — opening widgets, configuring views, navigating — it should be a ContextAction that *may call* Commands internally.
+
+This mirrors the Blender pattern: Blender operators can be "pure data" (like `bpy.ops.mesh.subdivide`) or "UI + data" (like `bpy.ops.screen.area_split`). Both go through the same operator system, but only the data-mutating ones participate in undo. WhiskerToolbox keeps these layers explicitly separate rather than mixing them in one abstraction.
+
+**Future convergence:** If Commands gain a `canExecute(CommandContext)` predicate (tracked in `docs/developer/DataManager/Commands/roadmap.md`), pure-data commands could *also* surface through the ContextAction discovery UI. A thin adapter would wrap a Command as a ContextAction:
+
+```cpp
+// Hypothetical adapter — Command exposed as ContextAction
+ContextAction fromCommand(CommandInfo const & info, /* ... */) {
+    return ContextAction{
+        .action_id = "cmd." + info.name,
+        .display_name = QString::fromStdString(info.description),
+        .is_applicable = [&info](SelectionContext const & ctx) {
+            // Check data type compatibility from CommandInfo::supported_data_types
+            return std::ranges::contains(info.supported_data_types, ctx.dataFocusType());
+        },
+        .execute = [name = info.name](SelectionContext const & ctx) {
+            // Build CommandContext from SelectionContext + DataManager
+            // Invoke executeSingleCommand(name, params, cmd_ctx)
+        }
+    };
+};
+```
+
+This would make Commands discoverable in context menus without conflating the two abstractions.
+
+#### Implementation
 
 Add a `ContextAction` system to `SelectionContext`:
 
@@ -352,7 +412,227 @@ For each type of inter-widget interaction, use the appropriate layer:
 
 ---
 
-## Relationship to Tensor Transforms Roadmap
+## Ownership & Registration Best Practices
+
+This section answers: as operations grow, **who defines each Command and ContextAction**, and where does the code live?
+
+### The Scaling Problem
+
+Today, `CommandFactory` uses a hardcoded if-else chain — every new command requires editing [CommandFactory.cpp](src/Commands/Core/CommandFactory.cpp). The Commands library deliberately has **no dependency** on TransformsV2 or MLCore. This was the right choice for generic CRUD commands (`MoveByTimeRange`, `SaveData`), but it doesn't scale if every PCA variant, clustering algorithm, or dimensionality reduction method becomes a command class in `src/Commands/`.
+
+Meanwhile, TransformsV2 already solved this problem for transforms: RAII static registration lets each transform define itself in its own `.cpp` file, compiled into the library, automatically available at runtime. No central file needs editing.
+
+### Principle: The Provider Defines It
+
+The core principle for both Commands and ContextActions:
+
+> **The library/widget that implements a capability is the one that defines and registers it.**
+
+This follows from dependency direction: if PCA lives in MLCore, then only MLCore (or code that links MLCore) should define the "Run PCA" operation. The Commands library shouldn't grow a dependency on MLCore just to register that command.
+
+### Command Ownership by Category
+
+Commands split into three ownership tiers:
+
+#### Tier 1: Generic CRUD Commands → `src/Commands/`
+
+These are data-model operations that work across all data types and have no domain knowledge:
+
+| Command | Owner | Why |
+|---------|-------|-----|
+| `CreateData` | `src/Commands/` | Generic DataManager CRUD |
+| `DeleteData` | `src/Commands/` | Generic DataManager CRUD |
+| `MoveByTimeRange` | `src/Commands/` | Generic entity operations |
+| `CopyByTimeRange` | `src/Commands/` | Generic entity operations |
+| `SaveData` / `LoadData` | `src/Commands/` | Generic persistence |
+| `ForEachKey` | `src/Commands/` | Meta-command (works on any command) |
+
+These belong centrally because they depend only on DataManager and data object types — things Commands already links.
+
+#### Tier 2: Gateway Commands → `src/Commands/`
+
+Thin commands that delegate to an existing execution system. The command provides the serializable/recordable/undoable wrapper; the execution system provides the domain logic:
+
+| Command | Delegates To | Why |
+|---------|-------------|-----|
+| `RunTransform` | TransformsV2 `ElementRegistry` | One command covers *all* registered transforms |
+| `RunPipeline` | MLCore pipeline execution | One command covers all ML workflows |
+
+**Key insight:** A single `RunTransform` command can surface every TransformsV2 transform (PCA, t-SNE, MaskArea, etc.) without knowing about any of them at compile time. It takes a transform name + params as JSON, and the TransformsV2 registry resolves the rest. This is exactly how `SynthesizeData` already works — it delegates to `GeneratorRegistry` without Commands knowing about individual generators.
+
+```cpp
+// Hypothetical RunTransform command — lives in src/Commands/
+struct RunTransformParams {
+    std::string input_key;
+    std::string output_key;
+    std::string transform_name;     // Resolved by TransformsV2 registry at runtime
+    rfl::Generic transform_params;  // Passed through to transform
+};
+```
+
+The Commands library would need to link TransformsV2 (or accept a function pointer/interface for transform execution in CommandContext). The latter keeps the dependency cleaner:
+
+```cpp
+// In CommandContext — optional transform executor injected by the application
+std::function<CommandResult(std::string const & transform_name,
+                            rfl::Generic const & params,
+                            std::shared_ptr<DataManager>)> transform_executor;
+```
+
+This way Commands stays ignorant of TransformsV2 internals — the application wires the executor at startup.
+
+#### Tier 3: Domain-Specific Commands → Domain Libraries
+
+If a domain library needs commands that don't fit the gateway pattern (e.g., complex multi-step ML workflows that are a single logical operation), the domain library defines them:
+
+| Command | Owner | Why |
+|---------|-------|-----|
+| Future: `TrainModel` | `src/MLCore/` | Complex multi-step operation with native MLCore types |
+| Future: `RunInference` | `src/DeepLearning/` | Model loading + execution with libtorch types |
+
+These commands implement `ICommand` and are registered via **explicit dispatcher functions** — the same pattern adopted in [Commands Roadmap Phase 7](DataManager/Commands/roadmap.qmd#phase-7--command-registration-api-explicit-dispatcher). Each domain library defines a `register_*_commands()` function that imperatively registers its commands with `CommandRegistry::instance()`:
+
+```cpp
+// src/MLCore/commands/register_mlcore_commands.hpp
+namespace mlcore {
+void register_mlcore_commands();
+}
+
+// src/MLCore/commands/register_mlcore_commands.cpp
+#include <Commands/Core/CommandRegistry.hpp>
+#include "TrainModelCommand.hpp"
+
+namespace mlcore {
+void register_mlcore_commands() {
+    commands::registerTypedCommand<TrainModelCommand, TrainModelParams>(
+        commands::CommandRegistry::instance(),
+        "TrainModel",
+        {.name = "TrainModel",
+         .description = "Train an ML model",
+         .category = "ml",
+         .supports_undo = false});
+}
+}
+```
+
+The central dispatcher in the executable calls all registration functions at startup:
+
+```cpp
+// src/WhiskerToolbox/register_all_commands.cpp
+#include <Commands/Core/register_core_commands.hpp>
+#include <MLCore/commands/register_mlcore_commands.hpp>
+
+void register_all_commands() {
+    commands::register_core_commands();
+    mlcore::register_mlcore_commands();
+}
+```
+
+This avoids `--whole-archive` linker flags and produces loud linker errors on misconfiguration (vs. silent registration absence with the RAII pattern).
+
+### ContextAction Ownership: Widgets Define What They Provide
+
+ContextActions belong to the **widget that provides the capability**, registered during widget type registration. This follows naturally from the existing `EditorRegistry` pattern.
+
+**Why the widget?** Because only the widget knows:
+- What data shapes it can consume (scatter needs ≥2 columns; heatmap needs a matrix)
+- How to configure itself for the incoming data (scatter maps columns to axes)
+- What UI it presents (scatter vs. line plot vs. table)
+
+**Where in the code?** In the widget's registration file, which already captures EditorRegistry, DataManager, and GroupManager. Adding SelectionContext to the registration captures provides the hook:
+
+```cpp
+// In ScatterPlotWidgetRegistration.cpp
+void registerScatterPlotWidget(EditorRegistry * registry,
+                                std::shared_ptr<DataManager> dm,
+                                GroupManager * gm,
+                                SelectionContext * selection_ctx)  // NEW parameter
+{
+    // Existing widget registration
+    registry->registerType({ .type_id = "ScatterPlotWidget", /* ... */ });
+
+    // NEW: register what this widget can do for the user
+    selection_ctx->registerAction(ContextAction{
+        .action_id = "scatter_plot.visualize_2d_tensor",
+        .display_name = "Visualize in Scatter Plot",
+        .producer_type = EditorTypeId("ScatterPlotWidget"),
+        .is_applicable = [dm](SelectionContext const & ctx) {
+            // Only for TensorData with ≥2 columns
+            if (ctx.dataFocusType() != "TensorData") return false;
+            auto tensor = dm->getData<TensorData>(ctx.dataFocusKey());
+            return tensor && tensor->numColumns() >= 2;
+        },
+        .execute = [registry, dm](SelectionContext const & ctx) {
+            auto [state, _] = registry->findOrCreate("ScatterPlotWidget");
+            auto scatter_state = std::dynamic_pointer_cast<ScatterPlotState>(state);
+            auto tensor = dm->getData<TensorData>(ctx.dataFocusKey());
+            auto cols = tensor->columnNames();
+            scatter_state->setXSource({ctx.dataFocusKey(), cols[0]});
+            scatter_state->setYSource({ctx.dataFocusKey(), cols[1]});
+        }
+    });
+}
+```
+
+Similarly, MLCore_Widget registers ML-oriented actions:
+
+```cpp
+// In MLCoreWidgetRegistration.cpp
+selection_ctx->registerAction(ContextAction{
+    .action_id = "mlcore.cluster_tensor",
+    .display_name = "Cluster with K-Means",
+    .producer_type = EditorTypeId("MLCoreWidget"),
+    .is_applicable = [dm](SelectionContext const & ctx) {
+        return ctx.dataFocusType() == "TensorData";
+    },
+    .execute = [registry](SelectionContext const & ctx) {
+        auto [state, _] = registry->findOrCreate("MLCoreWidget");
+        auto ml_state = std::dynamic_pointer_cast<MLCoreWidgetState>(state);
+        ml_state->setFeatureTensorKey(ctx.dataFocusKey());
+        ml_state->setActiveTab(MLCoreTab::Clustering);
+    }
+});
+```
+
+### ContextActions That Compose Commands
+
+A ContextAction that both mutates data *and* orchestrates UI combines both systems:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  ContextAction: "Run PCA and Visualize" (registered by          │
+│                  DataTransform_Widget or a future Analysis_Widget)│
+│                                                                  │
+│  execute():                                                      │
+│    1. executeSingleCommand("RunTransform", {                     │
+│         transform: "TensorPCA", input: focused_key,              │
+│         output: focused_key + "_pca", n_components: 2            │  ← Command (data)
+│       })                                                         │
+│    2. Open/configure ScatterPlotWidget for output                │  ← UI orchestration
+│    3. setDataFocus(output_key)                                   │  ← Context update
+└──────────────────────────────────────────────────────────────────┘
+```
+
+The Command is recorded in the CommandRecorder (serializable, replayable, auditable). The UI orchestration is ephemeral — it's not recorded because it doesn't change data.
+
+### Summary Table
+
+| What | Defined By | Registered Where | Registration Mechanism |
+|------|-----------|-----------------|----------------------|
+| Generic CRUD commands | `src/Commands/` | `CommandRegistry` (via `register_core_commands()`) | Explicit dispatcher ([Phase 7](DataManager/Commands/roadmap.qmd#phase-7--command-registration-api-explicit-dispatcher)) |
+| Gateway commands (`RunTransform`) | `src/Commands/` | `CommandRegistry` (via `register_core_commands()`) | Delegates to domain registry via injected executor |
+| Domain-specific commands | Domain library (`src/MLCore/`, etc.) | `CommandRegistry` (via `register_*_commands()`) | Explicit dispatcher — one line in `register_all_commands.cpp` |
+| Transforms (element-level) | `src/TransformsV2/` | ElementRegistry singleton | RAII static `RegisterTransform<>` |
+| ContextActions | Provider widget | SelectionContext | Widget registration function |
+
+### Migration Path
+
+The recommended migration sequence aligns with [Commands Roadmap Phase 7](DataManager/Commands/roadmap.qmd#phase-7--command-registration-api-explicit-dispatcher):
+
+1. **Phase 7 (Commands):** Replace the hardcoded if-else chain in `CommandFactory` with `CommandRegistry` singleton + `register_core_commands()`. All existing commands self-register via explicit dispatcher functions. No `--whole-archive` needed.
+2. **When adding `RunTransform`:** Add `transform_executor` callback to `CommandContext`. This avoids a hard dependency from Commands → TransformsV2 while enabling transform invocation through the command system.
+3. **When domain libraries contribute commands:** Each domain library defines a `register_*_commands()` function. The central `register_all_commands.cpp` in the executable gains one line per library. Linker errors catch misconfigurations.
+4. **ContextActions from day one:** Use the widget registration pattern described above. No migration needed — it's greenfield.
 
 The `tensor_transforms_roadmap.md` phases depend on the communication improvements described here:
 
@@ -387,3 +667,116 @@ Once `MaskData`, `LineData`, and `PointData` are supported as interval-row sourc
 | 3 | Workflow Pipeline Descriptors | Low | High | Proposals 1, 2 should land first |
 
 Proposal 1 has the highest impact-to-effort ratio: it eliminates the most manual steps across the widest range of workflows, and its implementation (action registration + context menu/toolbar integration) is well-scoped.
+
+---
+
+## Cross-Roadmap Implementation Sequence
+
+The three roadmaps — [Commands](DataManager/Commands/roadmap.qmd), [Tensor Transforms](tensor_transforms_roadmap.md), and this document — are interdependent. This section defines a concrete implementation sequence that resolves dependencies and progressively eliminates friction.
+
+### Dependency Map
+
+```
+Commands Phase 7 (CommandRegistry + explicit dispatcher)
+    │
+    │ enables
+    ▼
+Tensor Phase 1 (PCA via mlpack + TransformsV2 wrapper)  ←── no command dependency
+    │                                                         (pure Transform, not Command)
+    │ enables scatter visualization of reduced features
+    ▼
+Tensor Phase 2 (Scatter Selection → Entity Groups)      ←── no command dependency
+    │                                                         (direct EntityGroupManager API)
+    │ enables interactive grouping
+    ▼
+Inter-Widget Proposal 1 (ContextAction framework)        ←── no hard dependency on above,
+    │                                                         but most useful after Phases 1-2
+    │                                                         provide the data and interactions
+    │                                                         that ContextActions orchestrate
+    ▼
+Tensor Phase 4 (MLCore Dim Reduction Tab + Auto-Focus)   ←── uses Proposal 1
+    │   ContextAction: "Visualize in Scatter"
+    ▼
+Tensor Phase 5 (Clustering ↔ Scatter)                    ←── uses Proposal 1
+    │   ContextAction: "Cluster with K-Means"
+    ▼
+Inter-Widget Proposal 2 (Bidirectional OperationContext)  ←── independent, can be done earlier
+    │
+    ▼
+Commands: RunTransform gateway command                    ←── depends on Phase 7 + Tensor Phase 1
+    │   Makes transforms serializable/replayable
+    ▼
+Inter-Widget Proposal 3 (Workflow Pipelines)              ←── depends on everything above
+```
+
+### Recommended Step Sequence
+
+The steps below are ordered to maximize user-visible value at each milestone while respecting dependencies. Steps within the same tier can be done in any order.
+
+#### Tier 1: Foundation (No Cross-Dependencies)
+
+These are independent and can proceed in parallel. They establish the infrastructure that later tiers build on.
+
+| Step | Source Roadmap | Description | Delivers |
+|------|---------------|-------------|----------|
+| **1a** | Commands Phase 7, Steps 7.1–7.4 | Create `CommandRegistry`, `registerTypedCommand<>`, `register_core_commands()`, `register_all_commands.cpp`. Remove if-else chain. | Extensible command registration; no `--whole-archive` for commands |
+| **1b** | Tensor Phase 1 | `MLDimReductionOperation` base class + `PCAOperation` in MLCore (mlpack backend) + `TensorPCA` TransformsV2 container wrapper with `RowDescriptor` preservation | PCA through DataTransform_Widget; output visible in scatter |
+| **1c** | Inter-Widget Proposal 4 | Add optional `DataFocusMetadata` to `SelectionContext::setDataFocus()` (row count, column count, column names, row type) | Richer context for downstream decisions; backward compatible |
+
+**Milestone 1:** User can run PCA on encoder features via DataTransform_Widget, open ScatterPlotWidget, manually select the PCA tensor + columns, and see points.
+
+#### Tier 2: Interactive Selection
+
+| Step | Source Roadmap | Description | Delivers |
+|------|---------------|-------------|----------|
+| **2a** | Tensor Phase 2 | "Create Group from Selection" context menu in ScatterPlotWidget. Maps selected `TimeFrameIndex` points → `EntityId` → `EntityGroupManager::createGroup()` | Visual cluster selection → entity groups |
+| **2b** | Tensor Phase 1 (verification) | Auto-focus output: `DataTransform_Widget` calls `setDataFocus(output_key)` after executing a transform | ScatterPlot auto-refreshes to show new tensor |
+
+**Milestone 2:** End-to-end workflow works: encoder → PCA → scatter → select cluster → create group. All manual, but functional.
+
+#### Tier 3: ContextAction Framework
+
+| Step | Source Roadmap | Description | Delivers |
+|------|---------------|-------------|----------|
+| **3a** | Inter-Widget Proposal 1 | `ContextAction` struct, `SelectionContext::registerAction()`, `applicableActions()` query, context menu integration in ScatterPlotWidget and DataManager_Widget | Action discovery system |
+| **3b** | Inter-Widget Proposal 1 | Register first ContextActions: ScatterPlotWidget → `"scatter_plot.visualize_2d_tensor"`, MLCore_Widget → `"mlcore.cluster_tensor"` | "Visualize in Scatter" and "Cluster with K-Means" appear in context menus |
+
+**Milestone 3:** Friction 2 (dim reduction → scatter) reduced from 5 manual steps to 1 click. Friction 3 (scatter → clustering) reduced from 3 steps to 1 click.
+
+#### Tier 4: Integrated UI
+
+| Step | Source Roadmap | Description | Delivers |
+|------|---------------|-------------|----------|
+| **4a** | Tensor Phase 4 | MLCore_Widget "Dimensionality Reduction" tab with `DimensionalityReductionPipeline`, algorithm selection, AutoParamWidget params | Dedicated dim reduction UI (alternative to DataTransform_Widget) |
+| **4b** | Tensor Phase 5 | MLCore_Widget ContextAction for clustering from scatter context menu; selective clustering on sub-selection | Tight scatter ↔ clustering loop |
+| **4c** | Inter-Widget Proposal 2 | Bidirectional OperationContext: `seed` + `keep_open_for_iteration` options. "Edit in Transforms V2" button in ColumnConfigDialog | Friction 1 (Column Builder ↔ TransformsV2) fully resolved |
+
+**Milestone 4:** The full encoder → PCA → scatter → cluster loop is smooth and discoverable.
+
+#### Tier 5: Commands Integration & Reproducibility
+
+| Step | Source Roadmap | Description | Delivers |
+|------|---------------|-------------|----------|
+| **5a** | Commands (gateway) | `RunTransform` gateway command: takes transform name + params JSON, delegates to `ElementRegistry` via `transform_executor` in `CommandContext` | Transforms are serializable/replayable commands |
+| **5b** | Commands Phase 3.5 | Wire `RunTransform` into `CommandRecorder`. User runs PCA via widget → Command Log shows `RunTransform` entry → exportable JSON | Transform operations appear in command log |
+| **5c** | Tensor Phase 3 | Add tapkee dependency; `TSNEOperation`, `IsomapOperation` in MLCore; TransformsV2 wrappers | Non-linear dim reduction |
+
+**Milestone 5:** Analysis workflows are recorded and reproducible. Non-linear methods available.
+
+#### Tier 6: Advanced (Long-Term)
+
+| Step | Source Roadmap | Description | Delivers |
+|------|---------------|-------------|----------|
+| **6a** | Inter-Widget Proposal 3 | Workflow Pipeline Descriptors: JSON-serializable multi-widget workflows | One-click replay of encoder → PCA → scatter → cluster |
+| **6b** | Tensor Phase 7 | Fit/project workflow, scree plot, 3D scatter | Production-quality ML tooling |
+| **6c** | Commands Phase 5 | Undo/Redo with `CommandStack` | Undoable transform + grouping operations |
+
+### Friction Resolution Summary
+
+| Friction | Resolved By | Tier |
+|----------|-------------|------|
+| **F1:** Column Builder ↔ TransformsV2 (discoverability, one-shot, unidirectional) | Tier 4c: Bidirectional OperationContext | 4 |
+| **F2:** Dim Reduction → Scatter (5 manual steps) | Tier 2b (auto-focus) + Tier 3b (`"Visualize in Scatter"` ContextAction) | 2–3 |
+| **F3:** Scatter → MLCore Clustering (context switch) | Tier 3b (`"Cluster with K-Means"` ContextAction) | 3 |
+| **F4:** Cluster → Scatter Recolor | Already works (Layer 1/2) | 0 |
+| **F5:** Multi-widget workflow not reproducible | Tier 5a-b (RunTransform command recording) + Tier 6a (Workflow Pipelines) | 5–6 |

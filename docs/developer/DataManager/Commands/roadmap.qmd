@@ -2,6 +2,8 @@
 title: "Command Architecture Roadmap"
 ---
 
+> **See also:** [Inter-Widget Communication Roadmap — Ownership & Registration Best Practices](../../inter_widget_communication_roadmap.md#ownership--registration-best-practices) for guidance on where Commands vs ContextActions should be defined as operations scale.
+
 ## Progress Summary
 
 *Last updated: 2026-03-12*
@@ -15,6 +17,7 @@ title: "Command Architecture Roadmap"
 | **Phase 4:** Action Journal Integration | Not Started | Generalizes CommandRecorder into persistent, timestamped journal |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
 | **Phase 6:** CLI Batch & Macro Recording | Not Started | Headless command execution; generalizes golden trace tests |
+| **Phase 7:** Command Registration API | Not Started | Replace hardcoded if-else factory with explicit-dispatcher registration; enable domain libraries to contribute commands |
 | **Widget Command-ification** | Ongoing | 9 new commands identified via audit; none yet implemented. See [GUI Verb Audit](gui_verb_audit.qmd). |
 
 For the full architectural design, types, and code examples, see the
@@ -82,12 +85,18 @@ Completed Foundation (Phases 1, 3)
    │       Independent of Phases 2, 4, 6
    │       MoveByTimeRange already supports undo; needs CommandStack
    │
-   └──► Phase 6: CLI Batch & Macro Recording
-           Depends on: Phases 3 (done), 4
-           Generalizes golden trace tests into CLI tool
+   ├──► Phase 6: CLI Batch & Macro Recording
+   │       Depends on: Phases 3 (done), 4
+   │       Generalizes golden trace tests into CLI tool
+   │
+   └──► Phase 7: Command Registration API (Explicit Dispatcher)
+           Independent of all other phases
+           Replaces hardcoded if-else factory with explicit registration functions
+           Enables: domain libraries (TransformsV2, MLCore) to contribute commands
+           No --whole-archive required; linker errors on misconfiguration
 ```
 
-**Parallelizable:** Phases 3.5, 5, and widget command-ification can proceed independently.
+**Parallelizable:** Phases 3.5, 5, 7, and widget command-ification can proceed independently.
 Phase 4 depends on Phase 3.5. Phase 6 requires Phase 4.
 
 ---
@@ -412,6 +421,384 @@ Generalizes the golden trace test pattern (load JSON → create `DataManager` �
   command sequences outside the triage workflow
 - [ ] JSON editor with validation feedback
 - [ ] Command list view with run button
+
+---
+
+## Phase 7 — Command Registration API (Explicit Dispatcher)
+
+**Goal:** Replace the hardcoded if-else chain in `CommandFactory` with an explicit-dispatcher
+registration pattern, enabling domain libraries to contribute commands without `--whole-archive`
+linker flags or silent registration failures.
+
+**Depends on:** Phase 1 (done). Independent of all other phases.
+
+**Motivation:** Today, `CommandFactory::createCommandFromJson()` is a 7-branch if-else chain,
+and `getAvailableCommands()` returns a hardcoded `std::vector<CommandInfo>`. Adding a command
+requires editing `CommandFactory.cpp`, adding `#include` directives for the new command header,
+and manually appending to both the creation chain and the info vector. This is fine for the
+current ~7 commands (and the ~9 CRUD commands from the [GUI Verb Audit](gui_verb_audit.qmd)),
+but it doesn't scale when domain libraries like TransformsV2 and MLCore need to contribute
+commands without creating circular dependencies.
+
+See [Inter-Widget Communication Roadmap — Ownership & Registration Best Practices](../../inter_widget_communication_roadmap.md#ownership--registration-best-practices)
+for the full motivation and command ownership tiers.
+
+### Why Explicit Dispatcher Over RAII
+
+The project's existing registries (TransformsV2 `RegisterTransform<>`, DataSynthesizer
+`RegisterGenerator<>`) use RAII static registration with `--whole-archive` linking. While
+this works, it has significant drawbacks that compound as libraries scale:
+
+| Concern | RAII + `--whole-archive` | Explicit Dispatcher |
+|---------|------------------------|---------------------|
+| **Failure mode** | **Silent** — missing `--whole-archive` → registrations vanish, no error | **Loud** — missing call → linker error (undefined reference) |
+| **Central file touch** | Build file (`CMakeLists.txt`) per new library | Source file (dispatcher `.cpp`) per new library |
+| **Binary size** | Forces linker to include every `.o` in the archive | Normal dead-code elimination applies |
+| **Platform boilerplate** | 3 platform-specific linker flag variants (Linux/macOS/MSVC) | None |
+| **Duplicated across consumers** | Every exe/test must repeat `--whole-archive` flags | Each test calls only the registration functions it needs |
+| **Shared library compatibility** | Singleton identity breaks across `.so` boundaries | Works with both static and shared libraries |
+
+The explicit dispatcher follows the Blender operator registration pattern: each module
+defines a `register_*_commands()` function, and a central dispatcher in the composition root
+calls them all. One line per module, loud failures, no linker magic.
+
+### Current State
+
+```cpp
+// CommandFactory.cpp — today
+bool isKnownCommandName(std::string const & name) {
+    return name == "MoveByTimeRange" || name == "CopyByTimeRange" ||
+           name == "AddInterval" || name == "ForEachKey" ||
+           name == "SaveData" || name == "LoadData" ||
+           name == "SynthesizeData";
+}
+
+std::unique_ptr<ICommand> createCommandFromJson(
+        std::string const & name, std::string const & params_json) {
+    auto const json = normalizeJsonNumbers(params_json);
+    if (name == "MoveByTimeRange") { /* deserialize + construct */ }
+    if (name == "CopyByTimeRange") { /* ... */ }
+    // ... 5 more branches
+    return nullptr;
+}
+```
+
+### Design
+
+#### Step 7.1 — CommandRegistry Singleton
+
+Replace the free functions in `CommandFactory` with a `CommandRegistry` singleton that stores
+a `std::unordered_map` from command name to a creator function + metadata:
+
+```cpp
+// src/Commands/Core/CommandRegistry.hpp
+namespace commands {
+
+/// Type-erased command creator: takes normalized JSON, returns ICommand.
+using CommandCreator = std::function<std::unique_ptr<ICommand>(std::string const &)>;
+
+class CommandRegistry {
+public:
+    static CommandRegistry & instance();
+
+    /// Register a command with its creator and metadata.
+    /// @pre name must not already be registered (asserts in debug).
+    void registerCommand(std::string name, CommandCreator creator, CommandInfo info);
+
+    /// Query
+    [[nodiscard]] bool isKnown(std::string const & name) const;
+    [[nodiscard]] std::unique_ptr<ICommand> create(std::string const & name,
+                                                    std::string const & params_json) const;
+    [[nodiscard]] std::vector<CommandInfo> availableCommands() const;
+    [[nodiscard]] std::optional<CommandInfo> commandInfo(std::string const & name) const;
+
+private:
+    struct Entry {
+        CommandCreator creator;
+        CommandInfo info;
+    };
+    std::unordered_map<std::string, Entry> _commands;
+};
+
+} // namespace commands
+```
+
+The existing free functions (`isKnownCommandName`, `createCommand`, `createCommandFromJson`,
+`getAvailableCommands`, `getCommandInfo`) become thin wrappers that delegate to
+`CommandRegistry::instance()`. This preserves backward compatibility — all existing callers
+continue to work unchanged.
+
+#### Step 7.2 — Per-Library Registration Functions
+
+Instead of RAII static objects (`RegisterCommand<>` in anonymous namespaces), each library
+defines an **explicit registration function** that imperatively registers its commands:
+
+```cpp
+// src/Commands/Core/register_core_commands.hpp
+namespace commands {
+/// Register all built-in commands (MoveByTimeRange, CopyByTimeRange, etc.)
+void register_core_commands();
+} // namespace commands
+
+// src/Commands/Core/register_core_commands.cpp
+#include "CommandRegistry.hpp"
+#include "commands/MoveByTimeRange.hpp"
+#include "commands/CopyByTimeRange.hpp"
+#include "commands/AddInterval.hpp"
+#include "commands/ForEachKey.hpp"
+#include "commands/SaveData.hpp"
+#include "commands/LoadData.hpp"
+#include "commands/SynthesizeData.hpp"
+
+namespace commands {
+
+void register_core_commands() {
+    auto & reg = CommandRegistry::instance();
+
+    reg.registerCommand(
+        "MoveByTimeRange",
+        [](std::string const & json) -> std::unique_ptr<ICommand> {
+            auto p = rfl::json::read<MoveByTimeRangeParams>(normalizeJsonNumbers(json));
+            if (!p) return nullptr;
+            return std::make_unique<MoveByTimeRange>(std::move(*p));
+        },
+        CommandInfo{
+            .name = "MoveByTimeRange",
+            .description = "Move entities in a time range between same-type data objects",
+            .category = "data_mutation",
+            .supports_undo = true,
+            .supported_data_types = {"LineData", "PointData", "MaskData", "DigitalEventSeries"},
+            .parameter_schema = extractParameterSchema<MoveByTimeRangeParams>(),
+        });
+
+    // ... repeat for each built-in command
+}
+
+} // namespace commands
+```
+
+A convenience helper template can reduce the boilerplate:
+
+```cpp
+// src/Commands/Core/CommandRegistry.hpp
+namespace commands {
+
+/// Helper: register a command with automatic JSON deserialization and schema extraction.
+template<typename CommandT, typename Params>
+void registerTypedCommand(CommandRegistry & reg, std::string name, CommandInfo info) {
+    info.parameter_schema = extractParameterSchema<Params>();
+    reg.registerCommand(
+        std::move(name),
+        [](std::string const & params_json) -> std::unique_ptr<ICommand> {
+            auto const json = normalizeJsonNumbers(params_json);
+            auto p = rfl::json::read<Params>(json);
+            if (!p) return nullptr;
+            return std::make_unique<CommandT>(std::move(*p));
+        },
+        std::move(info));
+}
+
+} // namespace commands
+```
+
+With this helper, each registration is a single call:
+
+```cpp
+void register_core_commands() {
+    auto & reg = CommandRegistry::instance();
+    registerTypedCommand<MoveByTimeRange, MoveByTimeRangeParams>(reg,
+        "MoveByTimeRange",
+        {.name = "MoveByTimeRange",
+         .description = "Move entities in a time range between same-type data objects",
+         .category = "data_mutation",
+         .supports_undo = true,
+         .supported_data_types = {"LineData", "PointData", "MaskData", "DigitalEventSeries"}});
+    // ...
+}
+```
+
+#### Step 7.3 — Domain Library Registration Functions
+
+Domain libraries define their own registration functions. The domain library links to
+`Commands` (upward dependency) — `Commands` never links to the domain library:
+
+```cpp
+// src/TransformsV2/commands/register_transform_commands.hpp
+namespace transforms {
+void register_transform_commands();
+}
+
+// src/TransformsV2/commands/register_transform_commands.cpp
+#include <Commands/Core/CommandRegistry.hpp>
+#include "RunTransform.hpp"
+
+namespace transforms {
+void register_transform_commands() {
+    commands::registerTypedCommand<RunTransformCommand, RunTransformParams>(
+        commands::CommandRegistry::instance(),
+        "RunTransform",
+        {.name = "RunTransform",
+         .description = "Execute a TransformsV2 pipeline on a data object",
+         .category = "transform",
+         .supports_undo = false});
+}
+}
+```
+
+The `RunTransform` command itself delegates to `ElementRegistry::instance()` at runtime —
+it doesn't need to know about individual transforms at compile time. See
+[Tier 2: Gateway Commands](../../inter_widget_communication_roadmap.md#ownership--registration-best-practices)
+for the full gateway pattern design.
+
+#### Step 7.4 — Central Dispatcher (Composition Root)
+
+The dispatcher lives in the executable — the **composition root** that knows about all
+concrete libraries. This is the only file that must be edited when a new library contributes
+commands:
+
+```cpp
+// src/WhiskerToolbox/register_all_commands.hpp
+void register_all_commands();
+
+// src/WhiskerToolbox/register_all_commands.cpp
+#include <Commands/Core/register_core_commands.hpp>
+// future: #include <TransformsV2/commands/register_transform_commands.hpp>
+// future: #include <MLCore/commands/register_mlcore_commands.hpp>
+
+void register_all_commands() {
+    commands::register_core_commands();
+    // future: transforms::register_transform_commands();
+    // future: mlcore::register_mlcore_commands();
+}
+```
+
+Called once at startup:
+
+```cpp
+// main.cpp (or MainWindow constructor)
+register_all_commands();  // before any command usage
+```
+
+**Failure modes:**
+
+- **Forget to add the call to the dispatcher:** Registration function exists but is never
+  called. The commands silently don't appear. However, unlike RAII, the function is a named
+  exported symbol easily detectable by grep or static analysis. A CI check can verify all
+  `register_*_commands()` functions are called somewhere.
+- **Forget to add the `#include` but add the call:** Compiler error (undeclared function).
+- **Add the `#include` and call, but the library doesn't define the function:** Linker error
+  (undefined reference). **This is the critical advantage** — the most common mistake
+  (misconfigured build) produces a loud failure instead of silent absence.
+
+#### Step 7.5 — Dependency Flow
+
+```
+CommandRegistry (in libCommands.a)
+       ↑ links to
+  MLCore (in libMLCore.a)
+       ↑ links to (normal, no --whole-archive)
+  WhiskerToolbox executable
+       │
+       ├── links libCommands.a     (normal linking)
+       ├── links libMLCore.a       (normal linking)
+       └── compiles register_all_commands.cpp
+               calls register_core_commands()    → pulls in Commands registrations
+               calls register_mlcore_commands()  → pulls in MLCore registrations
+```
+
+Because the dispatcher explicitly calls each registration function, the linker follows the
+call graph and pulls in the referenced command classes. No `--whole-archive` needed.
+
+#### Step 7.6 — Test Registration
+
+Tests register only the commands they need — no global dispatcher, no `--whole-archive`:
+
+```cpp
+// tests/Commands/test_setup.cpp
+#include <Commands/Core/register_core_commands.hpp>
+
+struct TestSetup {
+    TestSetup() { commands::register_core_commands(); }
+};
+static TestSetup const setup;  // or call in a Catch2 listener
+```
+
+Tests for domain commands include only that domain's registration:
+
+```cpp
+// tests/MLCore/test_mlcore_commands.cpp
+#include <MLCore/commands/register_mlcore_commands.hpp>
+static struct { /* constructor calls register */} setup;
+```
+
+This is simpler than the `--whole-archive` approach, eliminates the cross-platform linker
+flag conditional blocks, and gives tests precise control over which commands are available.
+
+#### Step 7.7 — Validation Compatibility
+
+The existing `validateSequence()` calls `isKnownCommandName()` for its structural check.
+Since this delegates to `CommandRegistry::instance().isKnown()`, it automatically recognizes
+domain-registered commands with no changes needed.
+
+`getAvailableCommands()` and `getCommandInfo()` similarly delegate to the registry, so
+AutoParamWidget-based UIs (Guided Pipeline Editor, future CommandSequenceWidget) automatically
+discover domain commands.
+
+### Migration Steps
+
+- [ ] **Step 7.1:** Create `CommandRegistry` class with `registerCommand()`, `isKnown()`,
+  `create()`, `availableCommands()`, `commandInfo()`. Add `registerTypedCommand<>` helper.
+- [ ] **Step 7.2:** Create `register_core_commands()` in `src/Commands/Core/`, registering
+  all 7 existing commands.
+- [ ] **Step 7.3:** Remove the if-else chain and hardcoded `CommandInfo` vector from
+  `CommandFactory.cpp`. Keep the free-function API as thin wrappers delegating to
+  `CommandRegistry::instance()`.
+- [ ] **Step 7.4:** Create `register_all_commands.cpp` in `src/WhiskerToolbox/`, calling
+  `register_core_commands()`. Wire into `main.cpp` or `MainWindow` constructor.
+- [ ] **Step 7.5:** Run all existing command tests — factory, validation, golden traces,
+  recorder — to verify zero regressions. Update test setup to call
+  `register_core_commands()` instead of relying on static initialization.
+- [ ] **Step 7.6:** Add a Catch2 test that calls `CommandRegistry::instance().availableCommands()`
+  and asserts all expected commands are present.
+- [ ] **Step 7.7:** Remove any `--whole-archive` flags that were previously needed for
+  Commands (if any). Verify normal linking suffices.
+
+### Exit Criteria
+
+1. `CommandFactory.cpp` contains zero if-else branches and zero `#include` of individual
+   command headers.
+2. All existing tests pass without modification (beyond registration setup changes).
+3. A new command can be added by: (a) creating the command class, (b) adding a
+   `registerTypedCommand<>` call in the library's registration function, and (c) if it's
+   a new library, adding one line to `register_all_commands.cpp`. No `--whole-archive`
+   flags needed.
+4. `getAvailableCommands()` reports all registered commands including any from domain
+   libraries.
+5. No `--whole-archive` / `-force_load` / `/WHOLEARCHIVE` flags in any CMakeLists.txt
+   for Commands.
+
+### Comparison with Existing Registries
+
+The explicit dispatcher approach diverges from the RAII pattern used by TransformsV2 and
+DataSynthesizer. This is a deliberate choice — the `--whole-archive` drawbacks are
+significant enough for Commands (which will span many domain libraries) to justify a
+different registration strategy.
+
+| Aspect | TransformsV2 (RAII) | DataSynthesizer (RAII) | Commands (Explicit Dispatcher) |
+|--------|---------------------|----------------------|-------------------------------|
+| Registration mechanism | `RegisterTransform<>` static object | `RegisterGenerator<>` static object | `register_*_commands()` function call |
+| Central file touch | CMakeLists.txt (`--whole-archive`) | CMakeLists.txt (`--whole-archive`) | `register_all_commands.cpp` (one line) |
+| `--whole-archive` | Required | Required | **Not needed** |
+| Failure on misconfiguration | Silent (missing registrations) | Silent (missing registrations) | **Linker error** (undefined reference) |
+| Binary size overhead | All `.o` files in archive forced in | All `.o` files in archive forced in | Only referenced code linked |
+| Platform-specific flags | 3 variants (Linux/macOS/MSVC) | 3 variants (Linux/macOS/MSVC) | None |
+| Test setup | `--whole-archive` in test CMakeLists | `--whole-archive` in test CMakeLists | Single function call per library |
+| Shared library compatible | Singleton identity risk | Singleton identity risk | Works with both static and shared |
+
+**Future consideration:** If the `--whole-archive` drawbacks become painful for TransformsV2
+or DataSynthesizer as they grow, the same explicit dispatcher pattern can be applied to those
+registries. The `CommandRegistry` singleton design (Step 7.1) is identical in both approaches —
+only the registration mechanism differs.
 
 ---
 

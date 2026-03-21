@@ -598,19 +598,22 @@ This phase bridges the **visualization → interaction** gap. The scatter widget
      - DataTransform_Widget → updates valid transforms list
 
 3. **"Visualize in Scatter" quick action**
-   - After dim reduction, MLCore_Widget output panel shows a "↗ Scatter Plot" button
-   - Clicking it:
-     1. Calls `setDataFocus` on the output tensor
-     2. Creates or finds a ScatterPlotWidget via `EditorRegistry`
-     3. Sets its state to use the output tensor's first two columns as X/Y
-   - This avoids manual axis configuration for the common 2-component case
+   - This is implemented as a **ContextAction** registered by ScatterPlotWidget (see [Inter-Widget Communication Roadmap — Proposal 1](inter_widget_communication_roadmap.md#proposal-1-context-aware-actions-priority-high)).
+   - The ContextAction's `is_applicable` returns true when a TensorData with ≥2 columns is focused.
+   - Its `execute()` body creates or finds a ScatterPlotWidget via `EditorRegistry` and sets X/Y from the first two columns.
+   - Additionally, MLCore_Widget output panel shows a "↗ Scatter Plot" button as a direct shortcut.
+   - This avoids manual axis configuration for the common 2-component case.
 
 ### Phase 5: Clustering ↔ Scatter Feedback Loop
 **Goal:** Tight integration between MLCore clustering and scatter visualization.
 
+> **Depends on:** [Inter-Widget Communication Roadmap — Proposal 1 (Context-Aware Actions)](inter_widget_communication_roadmap.md#proposal-1-context-aware-actions-priority-high). The context menu actions below are implemented as **ContextActions** registered by MLCore_Widget and ScatterPlotWidget respectively.
+
 1. **Run clustering on reduced features directly from scatter context menu**
-   - Right-click scatter → "Cluster Points..." → dialog for algorithm + params
-   - Internally: calls `ClusteringPipeline` on the scatter widget's current TensorData
+   - Implemented as a ContextAction (e.g., `"mlcore.cluster_tensor"`) registered by MLCore_Widget
+   - `is_applicable`: focused data is TensorData
+   - `execute()`: opens/focuses MLCore_Widget, sets feature tensor key, activates Clustering tab
+   - Right-click scatter → "Cluster Points..." → MLCore_Widget opens with correct tensor pre-selected
    - Output: entity groups written to `EntityGroupManager`
    - Scatter auto-recolors via existing group generation counter mechanism
 
