@@ -1,0 +1,162 @@
+---
+title: "DeepLearning Widget Helpers"
+---
+
+## Overview
+
+The `DeepLearning_Widget/UI/Helpers/` directory contains reusable utility classes
+extracted from the monolithic `DeepLearningPropertiesWidget` as part of the
+[refactoring roadmap](refactoring_roadmap.md) (Phases 0.2 and 0.3).
+
+## DataSourceComboHelper
+
+**Header:** `DeepLearning_Widget/UI/Helpers/DataSourceComboHelper.hpp`
+
+Centralises QComboBox population and auto-refresh for DataManager-aware combo
+boxes. Replaces the hand-written `_populateDataSourceCombo` /
+`_refreshDataSourceCombos` methods that were previously inlined in the properties
+widget.
+
+### Key features
+
+- **One-shot population** via `populateCombo(combo, types)` — clears the combo,
+  adds a `(None)` sentinel, then appends all DataManager keys matching the
+  requested `DM_DataType` filter. Preserves the user's current selection if it
+  is still valid after repopulation.
+- **Tracking** via `track(combo, types)` / `untrack(combo)` — registers a combo
+  for batch refresh when `refreshAll()` is called (typically from a DataManager
+  observer callback). Tracked combos auto-untrack on `QObject::destroyed` to
+  avoid dangling pointers.
+- **Type hint conversion** via the static `typesFromHint(string)` — translates
+  `SlotAssembler` type-hint strings (e.g. `"PointData"`, `"MediaData"`) to a
+  `std::vector<DM_DataType>` suitable for the filter parameter.
+
+### Typical usage
+
+```cpp
+auto helper = std::make_unique<DataSourceComboHelper>(data_manager, this);
+
+// One-shot
+helper->populateCombo(my_combo, DM_DataType::Points);
+
+// Track for auto-refresh
+helper->track(my_combo, "PointData");
+dm->addObserver([&]{ helper->refreshAll(); });
+```
+
+## SlotBindingWidget
+
+**Header:** `DeepLearning_Widget/UI/Helpers/SlotBindingWidget.hpp`
+
+A composite widget that pairs a DataManager-aware data-source combo (driven by
+`DataSourceComboHelper`) with an `AutoParamWidget` for the remaining parameter
+fields. This implements **Option C** from the refactoring roadmap (Phase 0.2).
+
+### Layout
+
+```
+┌──────────────────────────────┐
+│  [Data Source label] [combo] │  ← DataSourceComboHelper-managed
+├──────────────────────────────┤
+│  AutoParamWidget form        │  ← schema-driven from ParameterSchema
+└──────────────────────────────┘
+```
+
+### Signals
+
+| Signal | Emitted when |
+|---|---|
+| `dataSourceChanged(QString)` | User selects a different data source key |
+| `parametersChanged()` | Any AutoParamWidget field changes |
+| `bindingChanged()` | Either of the above (unified convenience signal) |
+
+### Typical usage
+
+```cpp
+auto* slot = new SlotBindingWidget(combo_helper, this);
+slot->setDataSourceTypes("PointData");
+slot->setParameterSchema(extractParameterSchema<Point2DEncoderParams>());
+
+connect(slot, &SlotBindingWidget::bindingChanged, this, &MyWidget::onChanged);
+
+// Read back
+QString key = slot->selectedDataSource();
+nlohmann::json params = slot->parametersJson();
+```
+
+::: {.callout-warning}
+`SlotBindingWidget` is **deprecated** as of Phase 0.2 revision.
+Phase 1 sub-widgets use the unified struct approach via `DynamicInputSlotWidget`
+and `AutoParamWidget::updateAllowedValues()` instead.
+:::
+
+## DynamicInputSlotWidget
+
+**Header:** `DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp`
+
+A self-contained widget for configuring one dynamic (per-frame) input slot.
+Introduced in Phase 1.1 of the refactoring roadmap, it replaces the hand-built
+`_buildDynamicInputGroup()` panel with a schema-driven form powered by
+`AutoParamWidget`.
+
+### Architecture
+
+The widget is driven by the `DynamicInputSlotParams` reflect-cpp struct:
+
+```cpp
+using EncoderVariant = rfl::TaggedUnion<
+    "encoder",
+    dl::ImageEncoderParams,
+    dl::Point2DEncoderParams,
+    dl::Mask2DEncoderParams,
+    dl::Line2DEncoderParams>;
+
+struct DynamicInputSlotParams {
+    std::string source;       ///< DataManager key (dynamic combo)
+    EncoderVariant encoder;   ///< Encoder type + per-encoder params
+    int time_offset = 0;      ///< Temporal offset from current frame
+};
+```
+
+AutoParamWidget automatically generates:
+
+- **`source`** → QComboBox (dynamic, populated from DataManager via `updateAllowedValues`)
+- **`encoder`** → QComboBox (Image/Point2D/Mask2D/Line2D) + QStackedWidget with
+  per-encoder sub-parameter forms (mode, gaussian_sigma, normalize)
+- **`time_offset`** → QSpinBox
+
+### Cross-field constraints
+
+When the encoder selection changes, the widget uses
+`SlotAssembler::dataTypeForEncoder()` and `DataSourceComboHelper::typesFromHint()`
+to filter the source combo to only show compatible DataManager keys. This is
+the **Encoder → Source** constraint direction.
+
+### Typical usage
+
+```cpp
+// In the coordinator widget (DeepLearningPropertiesWidget or its replacement)
+auto* slot_widget = new DynamicInputSlotWidget(slot_descriptor, data_manager, this);
+layout->addWidget(slot_widget);
+
+// Respond to binding changes
+connect(slot_widget, &DynamicInputSlotWidget::bindingChanged, this, [&]() {
+    auto params = slot_widget->params();
+    // Update state...
+});
+
+// Refresh data sources when DataManager changes
+dm_observer_callback = [slot_widget]() {
+    slot_widget->refreshDataSources();
+};
+```
+
+### Advantages over the old design
+
+| Aspect | Old (`_buildDynamicInputGroup`) | New (`DynamicInputSlotWidget`) |
+|---|---|---|
+| Form construction | ~90 lines of manual widget creation | Auto-generated from `ParameterSchema` |
+| State marshaling | `findChild<QComboBox*>("source_" + name)` | `params()` returns typed struct |
+| Encoder sub-params | Flat mode + sigma fields for all encoders | Per-encoder stacked forms |
+| JSON round-trip | Manual field-by-field extraction | `rfl::json::write/read` on the struct |
+| Testing | Requires full widget + DM integration | Struct tests are Qt-free |

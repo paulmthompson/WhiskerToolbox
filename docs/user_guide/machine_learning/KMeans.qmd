@@ -1,0 +1,38 @@
+---
+title: "K-Means Clustering"
+format: html
+---
+
+## Overview
+
+K-Means is a centroid-based clustering algorithm that partitions observations into K groups by minimizing within-cluster variance. Each observation is assigned to the cluster with the nearest centroid.
+
+## Parameters
+
+| Parameter | Default | Description |
+|---|---|---|
+| K | 3 | Number of clusters to create |
+| Max Iterations | 1000 | Maximum number of EM iterations |
+| Seed | (random) | Optional random seed for reproducible results |
+
+## When to Use
+
+- You know (or can estimate) the number of clusters
+- Clusters are roughly spherical and similar in size
+- You want fast, deterministic grouping
+
+## Output
+
+K-Means produces hard cluster assignments — each frame belongs to exactly one cluster. No probability output is available.
+
+Output is written as:
+
+- **Entity groups**: One putative group per cluster (e.g., `"Cluster:0"`, `"Cluster:1"`)
+- **Interval series**: Contiguous runs of each cluster assignment
+- Colors are auto-assigned via the GroupManager
+
+## Tips
+
+- Try different values of K and compare the resulting groupings
+- Enable z-score normalization if features have different scales
+- Set a seed for reproducible results when comparing parameter settings

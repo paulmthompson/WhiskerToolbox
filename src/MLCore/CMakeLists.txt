@@ -31,6 +31,8 @@ set(MLCore_SOURCES
     models/supervised/LogisticRegressionOperation.hpp
     models/supervised/NaiveBayesOperation.cpp
     models/supervised/NaiveBayesOperation.hpp
+    models/supervised/HiddenMarkovModelOperation.cpp
+    models/supervised/HiddenMarkovModelOperation.hpp
     models/supervised/RandomForestOperation.cpp
     models/supervised/RandomForestOperation.hpp
 
@@ -44,11 +46,17 @@ set(MLCore_SOURCES
     output/PredictionWriter.cpp
     output/PredictionWriter.hpp
 
+    pipelines/BoundingSpan.cpp
+    pipelines/BoundingSpan.hpp
+
     pipelines/ClassificationPipeline.cpp
     pipelines/ClassificationPipeline.hpp
 
     pipelines/ClusteringPipeline.cpp
     pipelines/ClusteringPipeline.hpp
+
+    pipelines/SequenceAssembler.cpp
+    pipelines/SequenceAssembler.hpp
 
     preprocessing/ClassBalancing.cpp
     preprocessing/ClassBalancing.hpp

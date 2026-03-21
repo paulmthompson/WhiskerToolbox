@@ -7,11 +7,11 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "EditorState/EditorRegistry.hpp"
+#include "EditorState/SelectionContext.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
-#include "EditorState/EditorRegistry.hpp"
-#include "EditorState/SelectionContext.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -105,6 +105,10 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager->addObserver([this]() {
         _createOptions();
     });
+
+    // Wire up the scene to the graphics view immediately so that
+    // data overlays render without requiring a separate media load.
+    updateMedia();
 }
 
 void Media_Widget::_createOptions() {
@@ -178,8 +182,8 @@ void Media_Widget::resizeEvent(QResizeEvent * event) {
 
 void Media_Widget::_updateCanvasSize() {
     if (_scene) {
-        int width = ui->graphicsView->width();
-        int height = ui->graphicsView->height();
+        int const width = ui->graphicsView->width();
+        int const height = ui->graphicsView->height();
 
         _scene->setCanvasSize(
                 ImageSize{width, height});
@@ -354,7 +358,7 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
     _scene->UpdateCanvas();
 }
 
-void Media_Widget::LoadFrame(TimePosition position) {
+void Media_Widget::LoadFrame(const TimePosition& position) {
 
     if (_scene == nullptr) {
         std::cout << "Scene is null during LoadFrame" << std::endl;
@@ -388,7 +392,7 @@ void Media_Widget::resetZoom() {
 
 void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
     if (!ui->graphicsView || !_state) return;
-    double current_zoom = _state->zoom();
+    double const current_zoom = _state->zoom();
     double new_zoom = current_zoom * factor;
     new_zoom = std::clamp(new_zoom, _min_zoom, _max_zoom);
     factor = new_zoom / current_zoom;// Adjust factor if clamped
@@ -407,7 +411,7 @@ bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
         // Handle wheel events for zoom
         if (event->type() == QEvent::Wheel) {
             auto * wheelEvent = dynamic_cast<QWheelEvent *>(event);
-            double angle = wheelEvent->angleDelta().y();
+            double const angle = wheelEvent->angleDelta().y();
             if (angle > 0) {
                 _applyZoom(_zoom_step, true);
             } else if (angle < 0) {
@@ -431,7 +435,7 @@ bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
 
         if (event->type() == QEvent::MouseMove && _is_panning) {
             auto * mouseEvent = dynamic_cast<QMouseEvent *>(event);
-            QPoint delta = mouseEvent->pos() - _last_pan_point;
+            QPoint const delta = mouseEvent->pos() - _last_pan_point;
             _last_pan_point = mouseEvent->pos();
 
             // Apply panning by translating the view
@@ -452,8 +456,8 @@ bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
 
                 // Sync final pan position to state directly
                 if (_state && ui->graphicsView) {
-                    double pan_x = ui->graphicsView->horizontalScrollBar()->value();
-                    double pan_y = ui->graphicsView->verticalScrollBar()->value();
+                    double const pan_x = ui->graphicsView->horizontalScrollBar()->value();
+                    double const pan_y = ui->graphicsView->verticalScrollBar()->value();
                     _state->setPan(pan_x, pan_y);
                 }
 
@@ -489,7 +493,7 @@ void Media_Widget::_onExternalSelectionChanged(SelectionSource const & source) {
         return;
     }
 
-    QString selected_key = _selection_context->primarySelectedData().toString();
+    QString const selected_key = _selection_context->primarySelectedData().toString();
     if (selected_key.isEmpty()) {
         return;
     }
@@ -539,12 +543,12 @@ void Media_Widget::_onStateZoomChanged(double zoom) {
 
     // Get current transform scale
     QTransform const transform = ui->graphicsView->transform();
-    double current_scale = transform.m11();// Assumes uniform scaling
+    double const current_scale = transform.m11();// Assumes uniform scaling
 
     // Only apply if different from current transform (avoid feedback loop)
     if (std::abs(current_scale - zoom) > 1e-6) {
         // Calculate scale factor to reach target zoom
-        double factor = zoom / current_scale;
+        double const factor = zoom / current_scale;
         ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
         ui->graphicsView->scale(factor, factor);
     }
@@ -554,8 +558,8 @@ void Media_Widget::_onStatePanChanged(double x, double y) {
     if (!ui->graphicsView) return;
 
     // Only apply if different from current pan
-    int current_x = ui->graphicsView->horizontalScrollBar()->value();
-    int current_y = ui->graphicsView->verticalScrollBar()->value();
+    int const current_x = ui->graphicsView->horizontalScrollBar()->value();
+    int const current_y = ui->graphicsView->verticalScrollBar()->value();
 
     if (std::abs(current_x - x) > 0.5 || std::abs(current_y - y) > 0.5) {
         ui->graphicsView->horizontalScrollBar()->setValue(static_cast<int>(x));
@@ -567,7 +571,7 @@ void Media_Widget::restoreFromState() {
     if (!_state) return;
 
     // Restore zoom - state is the source of truth
-    double saved_zoom = _state->zoom();
+    double const saved_zoom = _state->zoom();
     if (saved_zoom > 0 && ui->graphicsView) {
         ui->graphicsView->resetTransform();
         if (std::abs(saved_zoom - 1.0) > 1e-6) {

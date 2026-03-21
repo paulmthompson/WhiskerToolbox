@@ -46,6 +46,7 @@ website:
         - developer/fuzz/fuzzing.qmd
         - developer/intro_to_c.qmd
         - developer/analysis/static_analysis.qmd
+        - developer/analysis/precondition_protocol.qmd
         - section: "Testing"
           href: developer/testing/testing.qmd
           contents:
@@ -69,6 +70,10 @@ website:
                 - developer/DeepLearning/batch_inference.qmd
                 - developer/DeepLearning/background_inference_roadmap.qmd
                 - developer/DeepLearning/background_inference.qmd
+                - developer/DeepLearning/general_encoder.qmd
+                - developer/DeepLearning/post_encoder_modules.qmd
+                - developer/DeepLearning/param_schemas.qmd
+                - developer/DeepLearning/widget_param_schemas.qmd
                 - developer/DeepLearning/roadmap.qmd
             - section: "Transforms V2"
               href: developer/transforms_v2/index.qmd
@@ -83,6 +88,18 @@ website:
               contents:
                 - developer/DataSynthesizer/GeneratorRegistry.qmd
                 - developer/DataSynthesizer/Widget.qmd
+            - section: "MLCore"
+              href: developer/MLCore/index.qmd
+              contents:
+                - developer/MLCore/models.qmd
+                - developer/MLCore/hmm.qmd
+                - developer/MLCore/features.qmd
+                - developer/MLCore/label_assembly.qmd
+                - developer/MLCore/pipelines.qmd
+                - developer/MLCore/prediction_regions.qmd
+                - developer/MLCore/sequence_assembler.qmd
+                - developer/MLCore/output.qmd
+                - developer/MLCore/widget.qmd
             - developer/MediaProcessingPipeline/index.qmd
                 - section: "Generators"
                   contents:
@@ -111,7 +128,11 @@ website:
             - developer/DataManager/storage_testing_roadmap.qmd
             - developer/DataManager/storage_benchmarking_roadmap.qmd
             - developer/DataManager/concurrency_architecture.qmd
+            - developer/DataManager/observer_thread_safety_roadmap.qmd
             - developer/DataManager/threaded_loading_roadmap.qmd
+            - section: "TensorData"
+              contents:
+                - developer/DataObjects/Tensors/row_mutation.qmd
             - section: "Command Architecture"
               href: developer/DataManager/Commands/index.qmd
               contents:
@@ -137,6 +158,8 @@ website:
             - developer/ui/data_manager/data_manager_widget.qmd
             - developer/ui/data_transform/data_transform_widget.qmd
             - developer/ui/media_widget/media_widget.qmd
+            - developer/ui/media_widget/media_point_widget.qmd
+            - developer/ui/media_widget/media_line_widget.qmd
             - developer/ui/TriageSession_Widget/index.qmd
             - section: "Features"
               href: developer/ui/Features/overview.qmd
@@ -144,6 +167,10 @@ website:
                   - developer/ui/Features/Collapsible_Widget.qmd
             - text: "AutoParam System"
               href: developer/ui/autoparam.qmd
+            - section: "Deep Learning Widget"
+              contents:
+                  - developer/DeepLearning_Widget/helpers.qmd
+                  - developer/DeepLearning_Widget/inference_controller.qmd
             - section: "Plot Widgets"
               href: developer/ui/Plots/plot_widget_guide.md
               contents:
@@ -170,6 +197,8 @@ website:
           contents:
             - text: "Keypoint Labeling"
               href: examples/keypoint_labeling.qmd
+            - text: "HMM Behavioral Epoch Prediction"
+              href: learning-resources/how-to/hmm_behavioral_epochs.qmd
         - section: "Concepts"
           contents: 
             - concepts/timeframe.qmd
@@ -189,6 +218,8 @@ website:
               href: learning-resources/how-to/triage_line_data.qmd
             - text: "Label Video Intervals"
               href: learning-resources/how-to/label_video_intervals.qmd
+            - text: "Export an AOTI Encoder Model"
+              href: learning-resources/how-to/exporting_aoti_encoder.qmd
 
     - title: "User Guide"
       style: "docked"
@@ -284,11 +315,22 @@ website:
         - section: "Deep Learning"
           contents:
             - user_guide/deep_learning/deep_learning_widget.qmd
+            - user_guide/deep_learning/export_encoder_models.qmd
+            - user_guide/deep_learning/post_encoder_modules.qmd
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd
-            - user_guide/machine_learning/Naive_Bayes.qmd
-            - user_guide/machine_learning/Random_Forest.qmd
+            - text: "Classification"
+              contents:
+                - user_guide/machine_learning/Random_Forest.qmd
+                - user_guide/machine_learning/Naive_Bayes.qmd
+                - user_guide/machine_learning/Logistic_Regression.qmd
+                - user_guide/machine_learning/HMM.qmd
+            - text: "Clustering"
+              contents:
+                - user_guide/machine_learning/KMeans.qmd
+                - user_guide/machine_learning/DBSCAN.qmd
+                - user_guide/machine_learning/GMM.qmd
         - section: "Export"
           contents:
             - user_guide/export/video_export.qmd

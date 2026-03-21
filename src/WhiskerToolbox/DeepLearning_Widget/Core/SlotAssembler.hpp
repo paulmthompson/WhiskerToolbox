@@ -71,6 +71,16 @@ public:
     /// @return true on success.
     bool loadWeights(std::string const & weights_path);
 
+    /// Run a dummy forward pass to validate weight compatibility.
+    ///
+    /// Creates zero-filled input tensors matching each input slot's shape
+    /// (batch_size=1), calls forward(), and checks that outputs are produced.
+    /// Uses torch::NoGradGuard to avoid unnecessary gradient computation.
+    ///
+    /// @pre isModelReady() must be true.
+    /// @return Empty string on success, or a diagnostic message on mismatch.
+    [[nodiscard]] std::string validateWeights();
+
     /// Whether a model is loaded AND its weights are active.
     [[nodiscard]] bool isModelReady() const;
 
@@ -120,6 +130,9 @@ public:
     /// @param start_frame First frame to process (inclusive)
     /// @param end_frame Last frame to process (inclusive)
     /// @param source_image_size Original image dimensions
+    /// @param batch_size Number of frames to process per forward pass.
+    ///        Must be >= 1. Frames are batched along the batch dimension
+    ///        and decoded individually after the forward pass.
     /// @param progress Optional callback for progress reporting
     /// @throws std::runtime_error on inference failure
     void runBatchRange(
@@ -130,6 +143,7 @@ public:
             int start_frame,
             int end_frame,
             ImageSize source_image_size,
+            int batch_size = 1,
             ProgressCallback const & progress = nullptr);
 
     /// Map from DataManager data_key to a cloned MediaData instance.
@@ -158,6 +172,8 @@ public:
     /// @param end_frame Last frame to process (inclusive)
     /// @param source_image_size Original image dimensions
     /// @param cancel_requested Checked before each frame; stops early if true
+    /// @param batch_size Number of frames to process per forward pass.
+    ///        Must be >= 1. The last chunk may contain fewer frames.
     /// @param progress Optional callback for progress reporting
     /// @param result_callback Optional per-frame result callback for progressive
     ///        delivery.  When non-null, decoded outputs are pushed via this
@@ -174,6 +190,7 @@ public:
             int end_frame,
             ImageSize source_image_size,
             std::atomic<bool> const & cancel_requested,
+            int batch_size = 1,
             ProgressCallback const & progress = nullptr,
             ResultCallback const & result_callback = nullptr);
 
@@ -266,6 +283,12 @@ public:
     [[nodiscard]] static std::optional<ModelDisplayInfo> getModelDisplayInfo(
             std::string const & model_id);
 
+    /// Get display metadata from the currently loaded model instance.
+    ///
+    /// Unlike the static `getModelDisplayInfo()`, this reflects any runtime
+    /// reconfiguration (e.g. changed input resolution or output shape).
+    [[nodiscard]] std::optional<ModelDisplayInfo> currentModelDisplayInfo() const;
+
     // ── Static: encoder / decoder queries ──────────────────────────────────
 
     /// Available encoder names (e.g. "ImageEncoder", "Point2DEncoder", …).
@@ -282,6 +305,50 @@ public:
     /// Map decoder name → DataManager data type name for combo filtering.
     [[nodiscard]] static std::string dataTypeForDecoder(
             std::string const & decoder_id);
+
+    // ── Post-encoder configuration ─────────────────────────────────────────
+
+    /// Configure a post-encoder module on the currently loaded model.
+    ///
+    /// Only applies when the current model is a `GeneralEncoderModel`.
+    /// Calling this when the model changes will reset the configuration.
+    ///
+    /// @param module_type  Module key: "" / "none", "global_avg_pool",
+    ///                     or "spatial_point".
+    /// @param source_image_size  Source image size used for "spatial_point"
+    ///        coordinate scaling.
+    /// @param interpolation  "nearest" or "bilinear" (spatial_point only).
+    void configurePostEncoderModule(
+            std::string const & module_type,
+            ImageSize source_image_size = {},
+            std::string const & interpolation = "nearest");
+
+    /// Update the spatial-point query for the current frame.
+    ///
+    /// For the "spatial_point" post-encoder, reads the point at
+    /// `frame` from `point_key` in DataManager and forwards it to the module.
+    ///
+    /// No-op if the current module is not "spatial_point" or if `point_key`
+    /// is empty.
+    void updateSpatialPoint(DataManager & dm,
+                            std::string const & point_key,
+                            int frame);
+
+    // ── Model shape configuration ──────────────────────────────────────────
+
+    /// Reconfigure input resolution and output shape on the current model.
+    ///
+    /// Only applies when the current model is a `GeneralEncoderModel`.
+    /// Must be called before `loadWeights()` or inference.
+    ///
+    /// @param input_height  Input image height in pixels (> 0).
+    /// @param input_width   Input image width in pixels (> 0).
+    /// @param output_shape  Raw encoder output shape (excluding batch dim).
+    ///                      If empty, only input resolution is changed.
+    void configureModelShape(
+            int input_height,
+            int input_width,
+            std::vector<int64_t> const & output_shape = {});
 
 private:
     struct Impl;

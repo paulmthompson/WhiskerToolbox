@@ -109,15 +109,21 @@ The resulting `toy_segmenter.pt2` file contains compiled native code ready for l
 
 #### Dynamic Batch Size
 
-If you want the model to accept variable batch sizes at inference time:
+If you want the model to accept variable batch sizes at inference time, use an
+example input with **batch size > 1** (e.g., 2). PyTorch specializes batch size 1
+as a constant, which conflicts with the dynamic annotation:
 
 ```python
+# IMPORTANT: use batch > 1 in the example input — batch=1 causes PyTorch
+# to specialize the dimension as a constant and reject the dynamic annotation.
+example_inputs_dynamic = (torch.randn(2, 3, 256, 256),)
+
 batch_dim = torch.export.Dim("batch", min=1, max=32)
 dynamic_shapes = {"x": {0: batch_dim}}
 
 with torch.no_grad():
     exported = torch.export.export(
-        model, example_inputs, dynamic_shapes=dynamic_shapes
+        model, example_inputs_dynamic, dynamic_shapes=dynamic_shapes
     )
     torch._inductor.aoti_compile_and_package(
         exported,

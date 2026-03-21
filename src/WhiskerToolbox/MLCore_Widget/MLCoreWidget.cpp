@@ -1,14 +1,14 @@
 #include "MLCoreWidget.hpp"
 
-#include "ClusterOutputPanel.hpp"
-#include "ClusteringPanel.hpp"
-#include "FeatureSelectionPanel.hpp"
-#include "LabelConfigPanel.hpp"
-#include "MLCoreWidgetState.hpp"
-#include "ModelConfigPanel.hpp"
-#include "PredictionPanel.hpp"
-#include "RegionSelectionPanel.hpp"
-#include "ResultsPanel.hpp"
+#include "Core/MLCoreWidgetState.hpp"
+#include "UI/ClusterOutputPanel/ClusterOutputPanel.hpp"
+#include "UI/ClusteringPanel/ClusteringPanel.hpp"
+#include "UI/FeatureSelectionPanel/FeatureSelectionPanel.hpp"
+#include "UI/LabelConfigPanel/LabelConfigPanel.hpp"
+#include "UI/ModelConfigPanel/ModelConfigPanel.hpp"
+#include "UI/PredictionPanel/PredictionPanel.hpp"
+#include "UI/RegionSelectionPanel/RegionSelectionPanel.hpp"
+#include "UI/ResultsPanel/ResultsPanel.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/SelectionContext.hpp"
@@ -16,6 +16,7 @@
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "MLCore/models/MLModelParameters.hpp"
 #include "MLCore/models/MLModelRegistry.hpp"
+#include "MLCore/models/supervised/HiddenMarkovModelOperation.hpp"
 #include "MLCore/pipelines/ClassificationPipeline.hpp"
 #include "MLCore/pipelines/ClusteringPipeline.hpp"
 #include "MLCore/preprocessing/ClassBalancing.hpp"
@@ -61,7 +62,7 @@ public:
     }
 
 signals:
-    void progressUpdate(int stage_index, QString message);
+    void progressUpdate(int _t1, QString _t2);
 
 protected:
     void run() override {
@@ -104,7 +105,7 @@ public:
     }
 
 signals:
-    void progressUpdate(int stage_index, QString message);
+    void progressUpdate(int _t1, QString _t2);
 
 protected:
     void run() override {
@@ -146,6 +147,13 @@ MLCoreWidget::MLCoreWidget(std::shared_ptr<MLCoreWidgetState> state,
     _setupUi();
     _connectSignals();
 
+    // Set initial visibility of constrained decoding based on restored model
+    if (_state) {
+        auto temp_model = _registry->create(_state->selectedModelName());
+        _prediction_panel->setSequenceModelActive(
+                temp_model && temp_model->isSequenceModel());
+    }
+
     // Connect to SelectionContext for passive data focus awareness (task 4.9)
     if (_selection_context) {
         connectToSelectionContext(_selection_context, this);
@@ -164,7 +172,7 @@ void MLCoreWidget::onDataFocusChanged(EditorLib::SelectedDataKey const & data_ke
         return;
     }
 
-    QString const key_str = data_key.toString();
+    QString const & key_str = data_key.toString();
     if (key_str.isEmpty()) {
         return;
     }
@@ -292,6 +300,14 @@ void MLCoreWidget::_connectSignals() {
     // "Predict" button in PredictionPanel → run prediction using last trained model
     connect(_prediction_panel, &PredictionPanel::predictRequested,
             this, &MLCoreWidget::_onPredictRequested);
+
+    // Model selection changed → show/hide constrained decoding checkbox
+    connect(_model_config_panel, &ModelConfigPanel::modelChanged,
+            this, [this](QString const & name) {
+                auto temp_model = _registry->create(name.toStdString());
+                bool const is_seq = temp_model && temp_model->isSequenceModel();
+                _prediction_panel->setSequenceModelActive(is_seq);
+            });
 
     // "Fit & Assign" button in ClusteringPanel → run clustering pipeline
     connect(_clustering_panel, &ClusteringPanel::fitRequested,
@@ -470,12 +486,41 @@ void MLCoreWidget::_onPipelineComplete() {
         return;
     }
 
+    // Success — write deferred output on the main thread (thread-safe)
+    if (_last_result->deferred_output.has_value() && _data_manager) {
+        try {
+            auto writer_result = MLCore::writePredictions(
+                    *_data_manager,
+                    *_last_result->deferred_output,
+                    _last_result->class_names,
+                    _last_result->deferred_output_config.value_or(MLCore::PredictionWriterConfig{}));
+            _last_result->writer_result = std::move(writer_result);
+        } catch (std::exception const & e) {
+            _status_label->setText(
+                    QStringLiteral("<span style='color: red;'>Output writing failed: %1</span>")
+                            .arg(QString::fromStdString(e.what())));
+            return;
+        }
+        _last_result->deferred_output.reset();
+        _last_result->deferred_output_config.reset();
+    }
+
     // Success — show results
     _status_label->setText(
             QStringLiteral("<span style='color: green;'>Pipeline completed successfully</span>"));
 
     std::string const model_name = _model_config_panel->selectedModelName();
     _results_panel->showClassificationResult(*_last_result, model_name);
+
+    // Show transition matrix for HMM models
+    if (_last_result->trained_model) {
+        auto const * hmm = dynamic_cast<MLCore::HiddenMarkovModelOperation const *>(
+                _last_result->trained_model.get());
+        if (hmm != nullptr) {
+            arma::mat const trans = hmm->getTransitionMatrix();
+            _results_panel->showTransitionMatrix(trans, _last_result->class_names);
+        }
+    }
 }
 
 // =============================================================================
@@ -565,6 +610,10 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
             label_cfg.data_key = _state->labelDataKey();
         }
         config.label_config = label_cfg;
+    } else if (source_type == "events") {
+        MLCore::LabelFromEvents const label_cfg;
+        config.label_config = label_cfg;
+        config.label_event_key = _label_panel->selectedEventKey();
     }
 
     // -- Feature conversion (use sensible defaults) --
@@ -588,11 +637,14 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
             // No prediction region selected — predict on training data
             config.prediction_region.predict_all_rows = true;
         } else {
-            // A prediction interval was selected but the pipeline works with tensors.
-            // For now, predict on all rows of the training tensor (the recommended
-            // workflow). Future: build a separate prediction tensor filtered by intervals.
+            // Predict on all rows (for temporal context), but filter output
+            // to only the frames within the selected interval.
             config.prediction_region.predict_all_rows = true;
+            config.prediction_region.prediction_interval_key = pred_key;
         }
+    }
+    if (_state) {
+        config.prediction_region.constrained_decoding = _state->constrainedDecoding();
     }
 
     // -- Output --
@@ -601,6 +653,11 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
     config.output_config.write_probabilities = _prediction_panel->outputProbabilities();
     config.output_config.write_to_putative_groups = true;
     config.output_config.time_key_str = config.time_key_str;
+
+    // -- Thread safety --
+    // Defer DataManager writes to the main thread to avoid triggering
+    // observer callbacks from the background PipelineWorker thread.
+    config.defer_dm_writes = true;
 
     return config;
 }
@@ -733,6 +790,9 @@ MLCore::ClusteringPipelineConfig MLCoreWidget::_buildClusteringPipelineConfig() 
     config.output_config.write_to_putative_groups = true;
     config.output_config.time_key_str = config.time_key_str;
 
+    // -- Thread safety --
+    config.defer_dm_writes = true;
+
     return config;
 }
 
@@ -796,6 +856,28 @@ void MLCoreWidget::_onClusteringPipelineComplete() {
                         .arg(stage_name,
                              QString::fromStdString(_last_clustering_result->error_message)));
         return;
+    }
+
+    // Write deferred output on the main thread (thread-safe)
+    if (_last_clustering_result->deferred_output.has_value() && _data_manager) {
+        try {
+            auto writer_result = MLCore::writePredictions(
+                    *_data_manager,
+                    *_last_clustering_result->deferred_output,
+                    _last_clustering_result->deferred_cluster_names,
+                    _last_clustering_result->deferred_output_config.value_or(
+                            MLCore::PredictionWriterConfig{}));
+            _last_clustering_result->interval_keys = std::move(writer_result.interval_keys);
+            _last_clustering_result->probability_keys = std::move(writer_result.probability_keys);
+            _last_clustering_result->putative_group_ids = std::move(writer_result.putative_group_ids);
+        } catch (std::exception const & e) {
+            _clustering_status_label->setText(
+                    QStringLiteral("<span style='color: red;'>Output writing failed: %1</span>")
+                            .arg(QString::fromStdString(e.what())));
+            return;
+        }
+        _last_clustering_result->deferred_output.reset();
+        _last_clustering_result->deferred_output_config.reset();
     }
 
     // Success — show results

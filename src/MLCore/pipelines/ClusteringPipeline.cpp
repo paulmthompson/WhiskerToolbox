@@ -6,10 +6,10 @@
 #include "ClusteringPipeline.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "Tensors/TensorData.hpp"
-#include "Tensors/RowDescriptor.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
+#include "Tensors/RowDescriptor.hpp"
+#include "Tensors/TensorData.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
@@ -33,13 +33,20 @@ namespace MLCore {
 
 std::string toString(ClusteringStage stage) {
     switch (stage) {
-        case ClusteringStage::ValidatingFeatures: return "Validating features";
-        case ClusteringStage::ConvertingFeatures:  return "Converting features";
-        case ClusteringStage::Fitting:             return "Fitting model";
-        case ClusteringStage::AssigningClusters:   return "Assigning clusters";
-        case ClusteringStage::WritingOutput:       return "Writing output";
-        case ClusteringStage::Complete:            return "Complete";
-        case ClusteringStage::Failed:              return "Failed";
+        case ClusteringStage::ValidatingFeatures:
+            return "Validating features";
+        case ClusteringStage::ConvertingFeatures:
+            return "Converting features";
+        case ClusteringStage::Fitting:
+            return "Fitting model";
+        case ClusteringStage::AssigningClusters:
+            return "Assigning clusters";
+        case ClusteringStage::WritingOutput:
+            return "Writing output";
+        case ClusteringStage::Complete:
+            return "Complete";
+        case ClusteringStage::Failed:
+            return "Failed";
     }
     return "Unknown";
 }
@@ -54,10 +61,9 @@ namespace {
  * @brief Report progress if a callback is registered
  */
 void reportProgress(
-    ClusteringProgressCallback const & cb,
-    ClusteringStage stage,
-    std::string const & msg)
-{
+        ClusteringProgressCallback const & cb,
+        ClusteringStage stage,
+        std::string const & msg) {
     if (cb) {
         cb(stage, msg);
     }
@@ -67,9 +73,8 @@ void reportProgress(
  * @brief Build a failure result at a specific stage
  */
 ClusteringPipelineResult makeFailure(
-    ClusteringStage stage,
-    std::string const & msg)
-{
+        ClusteringStage stage,
+        std::string const & msg) {
     ClusteringPipelineResult result;
     result.success = false;
     result.error_message = msg;
@@ -99,12 +104,11 @@ std::vector<TimeFrameIndex> extractRowTimes(TensorData const & tensor) {
  * @brief Filter a row_times vector to keep only indices that survived NaN dropping
  */
 std::vector<TimeFrameIndex> filterRowTimes(
-    std::vector<TimeFrameIndex> const & all_times,
-    std::vector<std::size_t> const & valid_indices)
-{
+        std::vector<TimeFrameIndex> const & all_times,
+        std::vector<std::size_t> const & valid_indices) {
     std::vector<TimeFrameIndex> filtered;
     filtered.reserve(valid_indices.size());
-    for (auto idx : valid_indices) {
+    for (auto idx: valid_indices) {
         filtered.push_back(all_times[idx]);
     }
     return filtered;
@@ -118,9 +122,8 @@ std::vector<TimeFrameIndex> filterRowTimes(
  * @return Vector of sizes indexed by cluster id
  */
 std::vector<std::size_t> computeClusterSizes(
-    arma::Row<std::size_t> const & assignments,
-    std::size_t num_clusters)
-{
+        arma::Row<std::size_t> const & assignments,
+        std::size_t num_clusters) {
     std::vector<std::size_t> sizes(num_clusters, 0);
     for (std::size_t j = 0; j < assignments.n_elem; ++j) {
         if (assignments[j] < num_clusters) {
@@ -134,8 +137,7 @@ std::vector<std::size_t> computeClusterSizes(
  * @brief Count noise points (assigned SIZE_MAX) in cluster assignments
  */
 std::size_t countNoisePoints(arma::Row<std::size_t> const & assignments,
-                              std::size_t num_clusters)
-{
+                             std::size_t num_clusters) {
     std::size_t count = 0;
     for (std::size_t j = 0; j < assignments.n_elem; ++j) {
         if (assignments[j] >= num_clusters) {
@@ -149,9 +151,8 @@ std::size_t countNoisePoints(arma::Row<std::size_t> const & assignments,
  * @brief Generate cluster names from config prefix
  */
 std::vector<std::string> generateClusterNames(
-    std::string const & prefix,
-    std::size_t num_clusters)
-{
+        std::string const & prefix,
+        std::size_t num_clusters) {
     std::vector<std::string> names;
     names.reserve(num_clusters);
     for (std::size_t k = 0; k < num_clusters; ++k) {
@@ -160,18 +161,17 @@ std::vector<std::string> generateClusterNames(
     return names;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // Pipeline implementation
 // ============================================================================
 
 ClusteringPipelineResult runClusteringPipeline(
-    DataManager & dm,
-    MLModelRegistry const & registry,
-    ClusteringPipelineConfig const & config,
-    ClusteringProgressCallback progress)
-{
+        DataManager & dm,
+        MLModelRegistry const & registry,
+        ClusteringPipelineConfig const & config,
+        const ClusteringProgressCallback& progress) {
     // ========================================================================
     // Stage 1: Validate features
     // ========================================================================
@@ -183,7 +183,7 @@ ClusteringPipelineResult runClusteringPipeline(
     if (!feature_tensor) {
         return makeFailure(ClusteringStage::ValidatingFeatures,
                            "Feature tensor '" + config.feature_tensor_key +
-                           "' not found in DataManager");
+                                   "' not found in DataManager");
     }
 
     // Validate tensor structure
@@ -195,7 +195,7 @@ ClusteringPipelineResult runClusteringPipeline(
 
     // Check that the tensor has time-indexed rows (needed for time-based output)
     bool const has_time_rows =
-        (feature_tensor->rows().type() == RowType::TimeFrameIndex);
+            (feature_tensor->rows().type() == RowType::TimeFrameIndex);
 
     // Extract row times if available (used for output writing)
     std::vector<TimeFrameIndex> all_row_times;
@@ -207,7 +207,7 @@ ClusteringPipelineResult runClusteringPipeline(
     if (!registry.hasModel(config.model_name)) {
         return makeFailure(ClusteringStage::ValidatingFeatures,
                            "Model '" + config.model_name +
-                           "' not found in registry");
+                                   "' not found in registry");
     }
 
     // Verify the model is a clustering model
@@ -215,8 +215,8 @@ ClusteringPipelineResult runClusteringPipeline(
     if (task_type && *task_type != MLTaskType::Clustering) {
         return makeFailure(ClusteringStage::ValidatingFeatures,
                            "Model '" + config.model_name +
-                           "' is not a clustering model (task type: " +
-                           toString(*task_type) + ")");
+                                   "' is not a clustering model (task type: " +
+                                   toString(*task_type) + ")");
     }
 
     // ========================================================================
@@ -224,7 +224,7 @@ ClusteringPipelineResult runClusteringPipeline(
     // ========================================================================
     reportProgress(progress, ClusteringStage::ConvertingFeatures,
                    "Converting " + std::to_string(feature_tensor->numRows()) + "×" +
-                   std::to_string(feature_tensor->numColumns()) + " tensor to arma::mat");
+                           std::to_string(feature_tensor->numColumns()) + " tensor to arma::mat");
 
     ConvertedFeatures converted;
     try {
@@ -251,8 +251,8 @@ ClusteringPipelineResult runClusteringPipeline(
     // ========================================================================
     reportProgress(progress, ClusteringStage::Fitting,
                    "Fitting '" + config.model_name + "' on " +
-                   std::to_string(converted.matrix.n_cols) + " observations × " +
-                   std::to_string(converted.matrix.n_rows) + " features");
+                           std::to_string(converted.matrix.n_cols) + " observations × " +
+                           std::to_string(converted.matrix.n_rows) + " features");
 
     auto model = registry.create(config.model_name);
     if (!model) {
@@ -260,7 +260,7 @@ ClusteringPipelineResult runClusteringPipeline(
                            "Failed to create model '" + config.model_name + "'");
     }
 
-    bool fit_ok = model->fit(converted.matrix, config.model_params);
+    bool const fit_ok = model->fit(converted.matrix, config.model_params);
     if (!fit_ok || !model->isTrained()) {
         return makeFailure(ClusteringStage::Fitting,
                            "Model fitting failed for '" + config.model_name + "'");
@@ -285,37 +285,37 @@ ClusteringPipelineResult runClusteringPipeline(
     } else if (!config.assignment_region.assignment_tensor_key.empty()) {
         // Assign on a separate tensor
         auto assign_tensor = dm.getData<TensorData>(
-            config.assignment_region.assignment_tensor_key);
+                config.assignment_region.assignment_tensor_key);
         if (!assign_tensor) {
             return makeFailure(ClusteringStage::AssigningClusters,
                                "Assignment tensor '" +
-                               config.assignment_region.assignment_tensor_key +
-                               "' not found in DataManager");
+                                       config.assignment_region.assignment_tensor_key +
+                                       "' not found in DataManager");
         }
 
         try {
             auto assign_converted = convertTensorToArma(*assign_tensor,
-                                                         config.conversion_config);
+                                                        config.conversion_config);
             assign_features = std::move(assign_converted.matrix);
 
             if (assign_tensor->rows().type() == RowType::TimeFrameIndex) {
                 auto assign_all_times = extractRowTimes(*assign_tensor);
                 assign_row_times = filterRowTimes(assign_all_times,
-                                                   assign_converted.valid_row_indices);
+                                                  assign_converted.valid_row_indices);
                 has_assign_time_rows = true;
             } else {
                 // Ordinal rows — generate synthetic sequential times
                 assign_row_times.reserve(assign_converted.valid_row_indices.size());
-                for (std::size_t i = 0; i < assign_converted.valid_row_indices.size(); ++i) {
+                for (unsigned long valid_row_indice : assign_converted.valid_row_indices) {
                     assign_row_times.emplace_back(
-                        static_cast<std::int64_t>(assign_converted.valid_row_indices[i]));
+                            static_cast<std::int64_t>(valid_row_indice));
                 }
                 has_assign_time_rows = false;
             }
         } catch (std::exception const & e) {
             return makeFailure(ClusteringStage::AssigningClusters,
                                std::string("Assignment feature conversion failed: ") +
-                               e.what());
+                                       e.what());
         }
         do_assignment = true;
     }
@@ -328,35 +328,35 @@ ClusteringPipelineResult runClusteringPipeline(
     if (do_assignment) {
         reportProgress(progress, ClusteringStage::AssigningClusters,
                        "Assigning clusters to " +
-                       std::to_string(assign_features.n_cols) + " observations");
+                               std::to_string(assign_features.n_cols) + " observations");
 
         // Validate feature dimensionality matches fitting
         if (assign_features.n_rows != model->numFeatures()) {
             return makeFailure(ClusteringStage::AssigningClusters,
                                "Assignment features have " +
-                               std::to_string(assign_features.n_rows) +
-                               " features but model expects " +
-                               std::to_string(model->numFeatures()));
+                                       std::to_string(assign_features.n_rows) +
+                                       " features but model expects " +
+                                       std::to_string(model->numFeatures()));
         }
 
         // Apply z-score normalization with fitting parameters if computed
         if (config.conversion_config.zscore_normalize &&
             !converted.zscore_means.empty() &&
-            !config.assignment_region.assign_all_rows)
-        {
+            !config.assignment_region.assign_all_rows) {
             try {
                 applyZscoreNormalization(assign_features,
-                                          converted.zscore_means,
-                                          converted.zscore_stds,
-                                          config.conversion_config.zscore_epsilon);
+                                         converted.zscore_means,
+                                         converted.zscore_stds,
+                                         config.conversion_config.zscore_epsilon);
             } catch (std::exception const & e) {
                 return makeFailure(ClusteringStage::AssigningClusters,
                                    std::string("Z-score normalization of assignment "
-                                               "features failed: ") + e.what());
+                                               "features failed: ") +
+                                           e.what());
             }
         }
 
-        bool assign_ok = model->assignClusters(assign_features, assignments);
+        bool const assign_ok = model->assignClusters(assign_features, assignments);
         if (!assign_ok) {
             return makeFailure(ClusteringStage::AssigningClusters,
                                "Cluster assignment failed");
@@ -382,7 +382,7 @@ ClusteringPipelineResult runClusteringPipeline(
     result.fitted_model = std::move(model);
 
     auto cluster_names = generateClusterNames(
-        config.output_config.output_prefix, num_clusters);
+            config.output_config.output_prefix, num_clusters);
     result.cluster_names = cluster_names;
 
     if (do_assignment && assignment_count > 0) {
@@ -441,27 +441,31 @@ ClusteringPipelineResult runClusteringPipeline(
             // which is the generic interface for probability output
             arma::mat prob_mat;
             if (result.fitted_model && result.fitted_model->predictProbabilities(
-                    filtered_features, prob_mat))
-            {
+                                               filtered_features, prob_mat)) {
                 pred_output.class_probabilities = std::move(prob_mat);
             }
 
             // Translate ClusteringOutputConfig → PredictionWriterConfig
             PredictionWriterConfig writer_config;
             writer_config.output_prefix = config.output_config.output_prefix;
-            writer_config.write_intervals = config.output_config.write_intervals
-                                            && has_assign_time_rows;
+            writer_config.write_intervals = config.output_config.write_intervals && has_assign_time_rows;
             writer_config.write_probabilities = config.output_config.write_probabilities;
-            writer_config.write_to_putative_groups = config.output_config.write_to_putative_groups
-                                                     && has_assign_time_rows;
+            writer_config.write_to_putative_groups = config.output_config.write_to_putative_groups && has_assign_time_rows;
             writer_config.time_key_str = config.output_config.time_key_str;
 
-            auto writer_result = writePredictions(
-                dm, pred_output, cluster_names, writer_config);
+            if (config.defer_dm_writes) {
+                // Store output for the caller to write on the main thread.
+                result.deferred_output = std::move(pred_output);
+                result.deferred_cluster_names = cluster_names;
+                result.deferred_output_config = writer_config;
+            } else {
+                auto writer_result = writePredictions(
+                        dm, pred_output, cluster_names, writer_config);
 
-            result.interval_keys = std::move(writer_result.interval_keys);
-            result.probability_keys = std::move(writer_result.probability_keys);
-            result.putative_group_ids = std::move(writer_result.putative_group_ids);
+                result.interval_keys = std::move(writer_result.interval_keys);
+                result.probability_keys = std::move(writer_result.probability_keys);
+                result.putative_group_ids = std::move(writer_result.putative_group_ids);
+            }
 
         } catch (std::exception const & e) {
             return makeFailure(ClusteringStage::WritingOutput,
@@ -475,4 +479,4 @@ ClusteringPipelineResult runClusteringPipeline(
     return result;
 }
 
-} // namespace MLCore
+}// namespace MLCore

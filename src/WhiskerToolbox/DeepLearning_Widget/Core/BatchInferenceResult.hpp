@@ -18,12 +18,16 @@
 #include <vector>
 
 /// Decoded data produced by a single output decoder for one frame.
-using DecodedOutputVariant = std::variant<Mask2D, Point2D<float>, Line2D>;
+///
+/// `std::vector<float>` represents a feature vector output from
+/// `TensorToFeatureVector`, to be written into a `TensorData` row.
+using DecodedOutputVariant = std::variant<Mask2D, Point2D<float>, Line2D,
+                                          std::vector<float>>;
 
 /// A single decoded result for one frame + one output binding.
 struct FrameResult {
     int frame_index = 0;      ///< Frame that was processed
-    DecodedOutputVariant data;///< Decoded geometry data
+    DecodedOutputVariant data;///< Decoded geometry data or feature vector
     std::string data_key;     ///< DataManager key to write into
     std::string decoder_id;   ///< Decoder that produced this result
 };

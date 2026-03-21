@@ -140,3 +140,67 @@ void DeepLearningState::setRecurrentBindings(std::vector<RecurrentBindingData> b
 bool DeepLearningState::hasRecurrentBindings() const {
     return !_data.recurrent_bindings.empty();
 }
+
+std::string const & DeepLearningState::postEncoderModuleType() const {
+    return _data.post_encoder_module_type;
+}
+
+void DeepLearningState::setPostEncoderModuleType(std::string const & type) {
+    _data.post_encoder_module_type = type;
+    markDirty();
+    emit postEncoderModuleChanged();
+}
+
+std::string const & DeepLearningState::postEncoderPointKey() const {
+    return _data.post_encoder_point_key;
+}
+
+void DeepLearningState::setPostEncoderPointKey(std::string const & key) {
+    _data.post_encoder_point_key = key;
+    markDirty();
+    emit postEncoderModuleChanged();
+}
+
+// ── Encoder Shape Configuration ──
+
+int DeepLearningState::encoderInputHeight() const {
+    return _data.encoder_input_height;
+}
+
+void DeepLearningState::setEncoderInputHeight(int height) {
+    if (_data.encoder_input_height != height) {
+        _data.encoder_input_height = height;
+        markDirty();
+        emit encoderShapeChanged();
+    }
+}
+
+int DeepLearningState::encoderInputWidth() const {
+    return _data.encoder_input_width;
+}
+
+void DeepLearningState::setEncoderInputWidth(int width) {
+    if (_data.encoder_input_width != width) {
+        _data.encoder_input_width = width;
+        markDirty();
+        emit encoderShapeChanged();
+    }
+}
+
+std::string const & DeepLearningState::encoderOutputShape() const {
+    return _data.encoder_output_shape;
+}
+
+void DeepLearningState::setEncoderOutputShape(std::string const & shape) {
+    if (_data.encoder_output_shape != shape) {
+        _data.encoder_output_shape = shape;
+        markDirty();
+        emit encoderShapeChanged();
+    }
+}
+
+bool DeepLearningState::shapeConfigured() const {
+    // encoder_input_height/width start at 0 (default); EncoderShapeWidget
+    // sets them to >= 1 (minimum 224) when the user clicks "Apply Shape".
+    return _data.encoder_input_height > 0 || _data.encoder_input_width > 0;
+}

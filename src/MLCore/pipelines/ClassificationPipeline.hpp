@@ -77,6 +77,29 @@ struct PredictionRegionConfig {
      * If empty and predict_all_rows is false, no prediction is performed.
      */
     std::string prediction_tensor_key;
+
+    /**
+     * @brief DataManager key of a DigitalIntervalSeries specifying target output frames
+     *
+     * When non-empty, the pipeline computes the bounding span across training
+     * labels and this interval for prediction (so sequence models retain full
+     * temporal context), then filters output to only frames within this interval.
+     *
+     * When empty and predict_all_rows is true, output includes all frames.
+     */
+    std::string prediction_interval_key;
+
+    /**
+     * @brief For sequence models, clamp the HMM initial distribution at boundaries
+     *
+     * When true and the model is a sequence model (isSequenceModel()), the
+     * pipeline overrides the HMM initial state distribution to the last known
+     * ground-truth label at prediction segment boundaries. This avoids
+     * cold-start inaccuracy when predicting regions adjacent to labeled data.
+     *
+     * Ignored for frame-independent models.
+     */
+    bool constrained_decoding = true;
 };
 
 /**
@@ -119,9 +142,17 @@ struct ClassificationPipelineConfig {
      * @brief DataManager key of the DigitalIntervalSeries for interval-based labels
      *
      * Required when label_config holds LabelFromIntervals.
-     * Ignored for group-based labeling modes.
+     * Ignored for other labeling modes.
      */
     std::string label_interval_key;
+
+    /**
+     * @brief DataManager key of the DigitalEventSeries for event-based labels
+     *
+     * Required when label_config holds LabelFromEvents.
+     * Ignored for other labeling modes.
+     */
+    std::string label_event_key;
 
     // -- Feature conversion --
 
@@ -165,6 +196,15 @@ struct ClassificationPipelineConfig {
      * Used for label assembly (interval lookups) and output writing.
      */
     std::string time_key_str = "time";
+
+    /**
+     * @brief If true, skip DataManager writes and store output in the result
+     *
+     * When running from a background thread, DataManager writes trigger observer
+     * callbacks that may manipulate Qt widgets, which is undefined behavior.
+     * Set this to true and perform the writes on the main thread instead.
+     */
+    bool defer_dm_writes = false;
 };
 
 // ============================================================================
@@ -179,6 +219,7 @@ enum class ClassificationStage {
     ConvertingFeatures,
     AssemblingLabels,
     BalancingClasses,
+    SegmentingSequences,
     Training,
     Predicting,
     ComputingMetrics,
@@ -284,6 +325,21 @@ struct ClassificationPipelineResult {
      */
     std::optional<PredictionWriterResult> writer_result;
 
+    // -- Deferred output (when defer_dm_writes is true) --
+
+    /**
+     * @brief Prediction data awaiting main-thread writing
+     *
+     * Populated when config.defer_dm_writes is true. The caller must call
+     * writePredictions() on the main thread with this data.
+     */
+    std::optional<PredictionOutput> deferred_output;
+
+    /**
+     * @brief Output config for deferred writing (paired with deferred_output)
+     */
+    std::optional<PredictionWriterConfig> deferred_output_config;
+
     // -- Model --
 
     /**
@@ -307,9 +363,10 @@ struct ClassificationPipelineResult {
  * 2. **Convert** — TensorData → arma::mat (NaN dropping, optional z-score)
  * 3. **Assemble labels** — from intervals, time-entity groups, or data-entity groups
  * 4. **Balance** — optional class balancing (subsample/oversample)
- * 5. **Train** — trains the selected model
- * 6. **Predict** — on training data or a separate prediction tensor
- * 7. **Metrics** — computes classification metrics on predictions
+ * 5. **Segment** — (sequence models only) split into contiguous temporal sequences
+ * 6. **Train** — trains the selected model
+ * 7. **Predict** — on training data or a separate prediction tensor
+ * 8. **Metrics** — computes classification metrics on predictions
  * 8. **Write output** — writes predictions as intervals, probabilities, and/or groups
  *
  * @param dm DataManager containing the feature tensor, label sources, and output targets
@@ -322,7 +379,7 @@ struct ClassificationPipelineResult {
         DataManager & dm,
         MLModelRegistry const & registry,
         ClassificationPipelineConfig const & config,
-        PipelineProgressCallback progress = nullptr);
+        PipelineProgressCallback const & progress = nullptr);
 
 }// namespace MLCore
 

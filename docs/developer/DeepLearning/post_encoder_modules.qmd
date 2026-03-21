@@ -1,0 +1,174 @@
+---
+title: "Post-Encoder Feature Extraction Modules"
+---
+
+## Overview
+
+Post-encoder modules are optional processing stages applied between the encoder backbone and the channel decoder. They transform the raw 4-D feature map `[B, C, H, W]` produced by the encoder into a form suitable for further decoding — most commonly collapsing the spatial dimensions.
+
+All post-encoder modules implement the `dl::PostEncoderModule` abstract interface, live in `src/DeepLearning/post_encoder/`, and are instantiated via `PostEncoderModuleFactory`.
+
+```
+[B,C,H,W] encoder output
+        │
+        ▼
+ PostEncoderModule::apply()
+        │
+        ▼
+ [B,C] or [B,C,H',W'] reduced tensor
+        │
+        ▼
+ Channel Decoder (e.g. TensorToFeatureVector)
+```
+
+## Abstract Interface
+
+```cpp
+// src/DeepLearning/post_encoder/PostEncoderModule.hpp
+
+class PostEncoderModule {
+public:
+    virtual ~PostEncoderModule() = default;
+
+    /// Apply the module to the encoder output.
+    virtual at::Tensor apply(at::Tensor const &) const = 0;
+
+    /// Given raw encoder output shape (C, H, W), return the output shape.
+    virtual std::vector<int64_t> outputShape(
+            std::vector<int64_t> const & encoder_shape) const = 0;
+
+    virtual std::string name() const = 0;
+};
+```
+
+The header forward-declares `at::Tensor` to remain torch-free at inclusion time. All concrete `.cpp` implementations include `<torch/torch.h>` directly.
+
+## Implementations
+
+### GlobalAvgPoolModule
+
+`[B,C,H,W] → [B,C]` via `torch::adaptive_avg_pool2d({1,1}).squeeze(-1).squeeze(-1)`.
+
+Use when you want a single feature vector summarising the entire spatial map.
+
+```cpp
+// Example
+auto mod = std::make_unique<dl::GlobalAvgPoolModule>();
+auto out = mod->apply(features); // [B,C]
+```
+
+### SpatialPointExtractModule
+
+Extracts the C-dimensional feature vector at a specific 2-D point in source-image coordinates. Supports two backends controlled by `dl::InterpolationMode`:
+
+| Mode | Mechanics |
+|------|-----------|
+| `Nearest` | Scales point to feature-map pixel, clamps, slices `[B, C, iy, ix]` |
+| `Bilinear` | Normalises point to `[-1, 1]`, creates `[B,1,1,2]` grid, calls `torch::nn::functional::grid_sample` with `align_corners=true` and border padding |
+
+The module is **stateful**: call `setPoint(Point2D<float>)` before every forward pass. When used with `SlotAssembler`, the widget calls `updateSpatialPoint()` per frame, which reads the first point from the configured `PointData` key and forwards it to the module.
+
+```cpp
+ImageSize const src_size{640, 480};
+auto mod = std::make_unique<dl::SpatialPointExtractModule>(
+        src_size, dl::InterpolationMode::Bilinear);
+mod->setPoint({320.0f, 240.0f}); // centre of frame
+auto out = mod->apply(features); // [B,C]
+```
+
+### PostEncoderPipeline
+
+An ordered chain of `PostEncoderModule` instances that is itself a `PostEncoderModule`. `apply()` threads the tensor through each stage in sequence. `outputShape()` propagates the shape transformation through all stages.
+
+An empty pipeline is a pass-through (no allocation, no copy).
+
+```cpp
+dl::PostEncoderPipeline pipeline;
+pipeline.add(std::make_unique<dl::GlobalAvgPoolModule>());
+// more modules can be added...
+auto out = pipeline.apply(features);
+```
+
+## Factory
+
+`PostEncoderModuleFactory::create(name, source_image_size, params)` maps string keys to concrete modules:
+
+| Key | Result |
+|-----|--------|
+| `"none"` / `""` | `nullptr` (no post-processing) |
+| `"global_avg_pool"` | `GlobalAvgPoolModule` |
+| `"spatial_point"` | `SpatialPointExtractModule` using `source_image_size` and `params.interpolation` |
+| anything else | `nullptr` (unknown key) |
+
+The factory takes two parameter structs:
+
+1. **`ImageSize source_image_size`** — Runtime context for coordinate scaling (not user-configurable).
+2. **Per-module params** — User-configurable parameters specific to each module type
+   (`GlobalAvgPoolModuleParams`, `SpatialPointModuleParams`).
+
+```cpp
+/// No user-configurable params.
+struct GlobalAvgPoolModuleParams {};
+
+/// User-configurable params for SpatialPointExtractModule.
+struct SpatialPointModuleParams {
+    InterpolationMode interpolation = InterpolationMode::Nearest;
+};
+```
+
+## Integration with GeneralEncoderModel
+
+`GeneralEncoderModel` holds an optional `unique_ptr<PostEncoderModule>` set via `setPostEncoderModule(...)`.
+
+- **`forward()`** applies the module (if set) to the raw encoder output before returning.
+- **`effectiveOutputShape()`** returns the shape after the module's transformation; `outputSlots()` uses this to advertise the correct slot dimensions to the widget.
+- **`outputShape()`** still returns the raw encoder shape.
+
+## Integration with SlotAssembler
+
+`SlotAssembler` exposes two public methods:
+
+```cpp
+void configurePostEncoderModule(
+    std::string const & module_type,
+    ImageSize source_image_size,
+    std::string const & interpolation);
+
+void updateSpatialPoint(
+    DataManager & dm,
+    std::string const & point_key,
+    int frame);
+```
+
+`configurePostEncoderModule` performs a `dynamic_cast<GeneralEncoderModel*>` and calls `setPostEncoderModule` on success. If the current model is not a `GeneralEncoderModel`, the call is silently ignored.
+
+`updateSpatialPoint` reads `PointData[point_key]` at `frame`, takes the first point, and calls `SpatialPointExtractModule::setPoint()`. It is called automatically before every forward pass (both single-frame and batch) when a non-empty `spatial_point_key` is stored in the assembler's `Impl`.
+
+## Widget UI
+
+The **Post-Encoder Module** section appears at the bottom of the Dynamic Slot panels in `DeepLearningPropertiesWidget`. It contains:
+
+1. **Module** combo: `None`, `Global Average Pooling`, `Spatial Point Extraction`
+2. **Interpolation** combo (spatial only): `Bilinear`, `Nearest`
+3. **Point Key** combo (spatial only): populated from all `PointData` keys in DataManager
+
+On any change the widget immediately calls `_assembler->configurePostEncoderModule(...)` and persists the selection to `DeepLearningState` (fields `post_encoder_module_type` and `post_encoder_point_key`).
+
+## Batch Inference and TensorData Output
+
+For batch runs with `TensorToFeatureVector` as the decoder, `_mergeResults()` collects `(frame_index, std::vector<float>)` pairs in `_pending_feature_rows` (keyed by `data_key`). At `_onBatchFinished()`, the rows are sorted by frame, flattened, and written as a single `TensorData::createOrdinal2D` matrix to the DataManager. Each row corresponds to one frame and each column to one feature channel.
+
+## Testing
+
+Unit tests live in `tests/DeepLearning/post_encoder/PostEncoderModules.test.cpp`:
+
+- `GlobalAvgPoolModule`: output shape, value averaging, single-pixel passthrough
+- `SpatialPointExtractModule`: name/shape, nearest/bilinear extraction, clamping
+- `PostEncoderPipeline`: empty passthrough, single-module delegation, shape chaining
+- `PostEncoderModuleFactory`: `none`, `global_avg_pool`, `spatial_point`, unknown key
+
+Run with:
+
+```bash
+ctest --preset linux-clang-release -R "post_encoder"
+```

@@ -41,6 +41,8 @@ Describes a single field in a parameter struct at runtime:
 | `is_advanced` | `bool` | Collapsed by default in the UI |
 | `is_optional` | `bool` | True for `std::optional<T>` fields |
 | `is_bound` | `bool` | True if typically populated from a value store |
+| `dynamic_combo` | `bool` | If true, create QComboBox even with empty `allowed_values` |
+| `include_none_sentinel` | `bool` | If true, prepend "(None)" sentinel to combo (maps to `""` in JSON) |
 | `is_variant` | `bool` | True for `rfl::TaggedUnion` fields |
 | `variant_discriminator` | `std::string` | Tag field name (e.g. `"model"`) |
 | `variant_alternatives` | `std::vector<VariantAlternative>` | One entry per union alternative |

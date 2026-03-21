@@ -9,6 +9,11 @@ problems need concurrency, what design patterns fit the existing single-threaded
 DataManager-centric architecture, and a staged plan for introducing safe 
 concurrency without rewriting the core.
 
+For the immediate, actionable task list addressing the existing observer
+thread-safety problem — callback hardening, deferred writes, and thread
+assertions — see
+[Observer Thread-Safety Roadmap](observer_thread_safety_roadmap.qmd).
+
 ## Context: How the System Works Today
 
 WhiskerToolbox runs entirely on the Qt main thread. A shared `DataManager` 
@@ -465,4 +470,7 @@ code path selection, and self-documenting code. No runtime overhead.
   allows interactive editing, has zero overhead for fast operations.
 - **Staged rollout.** Each stage is useful alone. No big-bang migration.
 - **DataManager stays single-threaded indefinitely.** Workers return or 
-  buffer results; main thread writes.
+  buffer results; main thread writes. The
+  [Observer Thread-Safety Roadmap](observer_thread_safety_roadmap.qmd)
+  documents the deferred-writes pattern that enforces this today, which is
+  the low-cost precursor to Stage 2 (Write Reservations).

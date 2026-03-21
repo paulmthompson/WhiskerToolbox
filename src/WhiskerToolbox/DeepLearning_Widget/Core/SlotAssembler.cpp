@@ -4,11 +4,11 @@
 #include "DeepLearningBindingData.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "Media/Media_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "Tensors/TensorData.hpp"
 
 #include "channel_encoding/ChannelEncoder.hpp"
 #include "channel_encoding/EncoderFactory.hpp"
@@ -19,6 +19,7 @@
 
 #include "channel_decoding/ChannelDecoder.hpp"
 #include "channel_decoding/DecoderFactory.hpp"
+#include "channel_decoding/TensorToFeatureVector.hpp"
 #include "channel_decoding/TensorToLine2D.hpp"
 #include "channel_decoding/TensorToMask2D.hpp"
 #include "channel_decoding/TensorToPoint2D.hpp"
@@ -26,6 +27,9 @@
 #include "models_v2/ModelBase.hpp"
 #include "models_v2/TensorDTypeUtils.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
+#include "models_v2/general_encoder/GeneralEncoderModel.hpp"
+#include "post_encoder/PostEncoderModuleFactory.hpp"
+#include "post_encoder/SpatialPointExtractModule.hpp"
 #include "registry/ModelRegistry.hpp"
 
 #include <torch/torch.h>
@@ -57,6 +61,10 @@ struct SlotAssembler::Impl {
     /// Stores the output tensor from the previous frame that will be
     /// injected into the input slot on the next frame.
     std::unordered_map<std::string, torch::Tensor> recurrent_cache;
+
+    /// DataManager key for the PointData source of the spatial_point module.
+    /// Empty if no spatial_point module is active.
+    std::string spatial_point_key;
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -117,26 +125,23 @@ int64_t sequenceLength(dl::TensorSlotDescriptor const & slot) {
     return slot.shape[static_cast<std::size_t>(slot.sequence_dim)];
 }
 
-dl::EncoderParams makeEncoderParams(
+dl::EncoderContext makeEncoderContext(
         dl::TensorSlotDescriptor const & slot,
-        SlotBindingData const & binding,
         int batch_index) {
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = batch_index;
-    params.mode = modeFromString(binding.mode);
-    params.gaussian_sigma = binding.gaussian_sigma;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = batch_index;
 
     if (slot.shape.size() >= 2) {
-        params.height = static_cast<int>(slot.shape[slot.shape.size() - 2]);
-        params.width = static_cast<int>(slot.shape[slot.shape.size() - 1]);
+        ctx.height = static_cast<int>(slot.shape[slot.shape.size() - 2]);
+        ctx.width = static_cast<int>(slot.shape[slot.shape.size() - 1]);
     } else if (slot.shape.size() == 1) {
-        params.height = 1;
-        params.width = static_cast<int>(slot.shape[0]);
+        ctx.height = 1;
+        ctx.width = static_cast<int>(slot.shape[0]);
     }
 
-    return params;
+    return ctx;
 }
 
 /// Encode a dynamic (per-frame) input slot into the tensor.
@@ -160,7 +165,7 @@ void encodeDynamicSlot(
         ImageSize const & source_image_size,
         SlotAssembler::MediaOverrides const * media_overrides = nullptr) {
 
-    auto params = makeEncoderParams(slot, binding, batch_index);
+    auto ctx = makeEncoderContext(slot, batch_index);
 
     if (binding.encoder_id == "ImageEncoder") {
         // Check overrides first, then DataManager
@@ -186,12 +191,13 @@ void encodeDynamicSlot(
         auto const image_size = media->getImageSize();
 
         dl::ImageEncoder const encoder;
+        dl::ImageEncoderParams const params{.normalize = true};
         if (media->is8Bit()) {
             auto const & data = media->getRawData8(frame);
-            encoder.encode(data, image_size, channels, tensor, params);
+            dl::ImageEncoder::encode(data, image_size, channels, tensor, ctx, params);
         } else {
             auto const & data = media->getRawData32(frame);
-            encoder.encode(data, image_size, channels, tensor, params);
+            dl::ImageEncoder::encode(data, image_size, channels, tensor, ctx, params);
         }
 
     } else if (binding.encoder_id == "Point2DEncoder") {
@@ -200,8 +206,11 @@ void encodeDynamicSlot(
         // Use the original image size for coordinate scaling, not model input size
         ImageSize const & actual_source = (source_image_size.width > 0 && source_image_size.height > 0)
                                                   ? source_image_size
-                                                  : ImageSize{params.width, params.height};
+                                                  : ImageSize{ctx.width, ctx.height};
         dl::Point2DEncoder const encoder;
+        dl::Point2DEncoderParams const params{
+                .mode = modeFromString(binding.mode),
+                .gaussian_sigma = binding.gaussian_sigma};
 
         // Get points at the requested frame
         auto points_at_frame = point_data->getAtTime(TimeFrameIndex(frame));
@@ -209,7 +218,7 @@ void encodeDynamicSlot(
         for (auto const & pt: points_at_frame) {
             points_vec.push_back(pt);
         }
-        encoder.encode(points_vec, actual_source, tensor, params);
+        dl::Point2DEncoder::encode(points_vec, actual_source, tensor, ctx, params);
 
     } else if (binding.encoder_id == "Mask2DEncoder") {
         auto mask_data = dm.getData<MaskData>(binding.data_key);
@@ -217,8 +226,10 @@ void encodeDynamicSlot(
         // Use the original image size for coordinate scaling, not model input size
         ImageSize const & actual_source = (source_image_size.width > 0 && source_image_size.height > 0)
                                                   ? source_image_size
-                                                  : ImageSize{params.width, params.height};
+                                                  : ImageSize{ctx.width, ctx.height};
         dl::Mask2DEncoder const encoder;
+        dl::Mask2DEncoderParams const params{
+                .mode = modeFromString(binding.mode)};
 
         // Get masks at the requested frame, use the first one if available
         auto masks_at_frame = mask_data->getAtTime(TimeFrameIndex(frame));
@@ -227,7 +238,7 @@ void encodeDynamicSlot(
             mask_to_encode = m;// Use the first mask found
             break;
         }
-        encoder.encode(mask_to_encode, actual_source, tensor, params);
+        dl::Mask2DEncoder::encode(mask_to_encode, actual_source, tensor, ctx, params);
 
     } else if (binding.encoder_id == "Line2DEncoder") {
         auto line_data = dm.getData<LineData>(binding.data_key);
@@ -235,8 +246,11 @@ void encodeDynamicSlot(
         // Use the original image size for coordinate scaling, not model input size
         ImageSize const & actual_source = (source_image_size.width > 0 && source_image_size.height > 0)
                                                   ? source_image_size
-                                                  : ImageSize{params.width, params.height};
+                                                  : ImageSize{ctx.width, ctx.height};
         dl::Line2DEncoder const encoder;
+        dl::Line2DEncoderParams const params{
+                .mode = modeFromString(binding.mode),
+                .gaussian_sigma = binding.gaussian_sigma};
 
         // Get lines at the requested frame, use the first one if available
         auto lines_at_frame = line_data->getAtTime(TimeFrameIndex(frame));
@@ -245,7 +259,7 @@ void encodeDynamicSlot(
             line_to_encode = l;// Use the first line found
             break;
         }
-        encoder.encode(line_to_encode, actual_source, tensor, params);
+        dl::Line2DEncoder::encode(line_to_encode, actual_source, tensor, ctx, params);
 
     } else {
         std::cerr << "SlotAssembler: unknown encoder '" << binding.encoder_id
@@ -577,7 +591,8 @@ void decodeOutputs(
         std::vector<OutputBindingData> const & output_bindings,
         dl::ModelBase const & model,
         int current_frame,
-        ImageSize source_image_size) {
+        ImageSize source_image_size,
+        int batch_index = 0) {
 
     auto const output_slot_vec = model.outputSlots();
 
@@ -590,25 +605,41 @@ void decodeOutputs(
         auto const * slot = findSlot(output_slot_vec, binding.slot_name);
         if (!slot) continue;
 
-        dl::DecoderParams params;
-        params.source_channel = 0;
-        params.batch_index = 0;
-        params.threshold = binding.threshold;
-        params.subpixel = binding.subpixel;
-        params.target_image_size = source_image_size;
+        dl::DecoderContext ctx;
+        ctx.source_channel = 0;
+        ctx.batch_index = batch_index;
+        ctx.target_image_size = source_image_size;
 
         if (slot->shape.size() >= 2) {
-            params.height =
+            ctx.height =
                     static_cast<int>(slot->shape[slot->shape.size() - 2]);
-            params.width =
+            ctx.width =
                     static_cast<int>(slot->shape[slot->shape.size() - 1]);
         }
 
         TimeFrameIndex const frame_idx(current_frame);
 
+        // Spatial decoders require 4D [B,C,H,W] tensors. Post-encoder
+        // modules like GlobalAvgPool reduce rank to 2D [B,C], making
+        // spatial decoders incompatible. Guard and skip gracefully.
+        bool const is_spatial_decoder =
+                (binding.decoder_id == "TensorToMask2D" ||
+                 binding.decoder_id == "TensorToPoint2D" ||
+                 binding.decoder_id == "TensorToLine2D");
+        if (is_spatial_decoder && tensor.dim() < 4) {
+            std::cerr << "SlotAssembler: spatial decoder '"
+                      << binding.decoder_id
+                      << "' requires 4D tensor [B,C,H,W], got dim="
+                      << tensor.dim()
+                      << " (post-encoder reduces rank). Skipping.\n";
+            continue;
+        }
+
         if (binding.decoder_id == "TensorToMask2D") {
             dl::TensorToMask2D const decoder;
-            auto mask = decoder.decode(tensor, params);
+            dl::MaskDecoderParams params;
+            params.threshold = binding.threshold;
+            auto mask = dl::TensorToMask2D::decode(tensor, ctx, params);
 
             // Get or create MaskData and add the decoded mask
             auto mask_data = dm.getData<MaskData>(binding.data_key);
@@ -623,7 +654,9 @@ void decodeOutputs(
 
         } else if (binding.decoder_id == "TensorToPoint2D") {
             dl::TensorToPoint2D const decoder;
-            auto point = decoder.decode(tensor, params);
+            dl::PointDecoderParams pt_params;
+            pt_params.subpixel = binding.subpixel;
+            auto point = dl::TensorToPoint2D::decode(tensor, ctx, pt_params);
 
             auto point_data = dm.getData<PointData>(binding.data_key);
             if (!point_data) {
@@ -636,7 +669,9 @@ void decodeOutputs(
 
         } else if (binding.decoder_id == "TensorToLine2D") {
             dl::TensorToLine2D const decoder;
-            auto line = decoder.decode(tensor, params);
+            dl::LineDecoderParams ln_params;
+            ln_params.threshold = binding.threshold;
+            auto line = dl::TensorToLine2D::decode(tensor, ctx, ln_params);
 
             auto line_data = dm.getData<LineData>(binding.data_key);
             if (!line_data) {
@@ -645,6 +680,27 @@ void decodeOutputs(
             }
             if (line_data && !line.empty()) {
                 line_data->addAtTime(frame_idx, std::move(line), NotifyObservers::Yes);
+            }
+
+        } else if (binding.decoder_id == "TensorToFeatureVector") {
+            dl::TensorToFeatureVector const decoder;
+            dl::FeatureVectorDecoderParams const fv_params;
+            auto vec = dl::TensorToFeatureVector::decode(tensor, ctx, fv_params);
+
+            // Upsert into existing TensorData so single-frame results
+            // accumulate across invocations (matching MaskData/PointData behavior).
+            if (!vec.empty()) {
+                auto tensor_data = dm.getData<TensorData>(binding.data_key);
+                if (!tensor_data) {
+                    dm.setData<TensorData>(binding.data_key, TimeKey("media"));
+                    tensor_data = dm.getData<TensorData>(binding.data_key);
+                }
+                if (tensor_data) {
+                    auto time_frame = dm.getTime();
+                    std::vector<std::pair<int, std::vector<float>>> rows;
+                    rows.emplace_back(static_cast<int>(frame_idx.getValue()), std::move(vec));
+                    tensor_data->upsertRows(rows, std::move(time_frame));
+                }
             }
 
         } else {
@@ -665,7 +721,8 @@ std::vector<FrameResult> decodeOutputsToBuffer(
         std::vector<OutputBindingData> const & output_bindings,
         dl::ModelBase const & model,
         int current_frame,
-        ImageSize source_image_size) {
+        ImageSize source_image_size,
+        int batch_index = 0) {
 
     std::vector<FrameResult> frame_results;
     auto const output_slot_vec = model.outputSlots();
@@ -679,23 +736,37 @@ std::vector<FrameResult> decodeOutputsToBuffer(
         auto const * slot = findSlot(output_slot_vec, binding.slot_name);
         if (!slot) continue;
 
-        dl::DecoderParams params;
-        params.source_channel = 0;
-        params.batch_index = 0;
-        params.threshold = binding.threshold;
-        params.subpixel = binding.subpixel;
-        params.target_image_size = source_image_size;
+        dl::DecoderContext ctx;
+        ctx.source_channel = 0;
+        ctx.batch_index = batch_index;
+        ctx.target_image_size = source_image_size;
 
         if (slot->shape.size() >= 2) {
-            params.height =
+            ctx.height =
                     static_cast<int>(slot->shape[slot->shape.size() - 2]);
-            params.width =
+            ctx.width =
                     static_cast<int>(slot->shape[slot->shape.size() - 1]);
+        }
+
+        // Rank guard: spatial decoders need 4D [B,C,H,W] tensors.
+        bool const is_spatial_decoder =
+                (binding.decoder_id == "TensorToMask2D" ||
+                 binding.decoder_id == "TensorToPoint2D" ||
+                 binding.decoder_id == "TensorToLine2D");
+        if (is_spatial_decoder && tensor.dim() < 4) {
+            std::cerr << "SlotAssembler(offline): spatial decoder '"
+                      << binding.decoder_id
+                      << "' requires 4D tensor [B,C,H,W], got dim="
+                      << tensor.dim()
+                      << " (post-encoder reduces rank). Skipping.\n";
+            continue;
         }
 
         if (binding.decoder_id == "TensorToMask2D") {
             dl::TensorToMask2D const decoder;
-            auto mask = decoder.decode(tensor, params);
+            dl::MaskDecoderParams params;
+            params.threshold = binding.threshold;
+            auto mask = dl::TensorToMask2D::decode(tensor, ctx, params);
             if (!mask.empty()) {
                 frame_results.push_back(FrameResult{
                         current_frame,
@@ -705,7 +776,9 @@ std::vector<FrameResult> decodeOutputsToBuffer(
             }
         } else if (binding.decoder_id == "TensorToPoint2D") {
             dl::TensorToPoint2D const decoder;
-            auto point = decoder.decode(tensor, params);
+            dl::PointDecoderParams params;
+            params.subpixel = binding.subpixel;
+            auto point = dl::TensorToPoint2D::decode(tensor, ctx, params);
             frame_results.push_back(FrameResult{
                     current_frame,
                     point,
@@ -713,11 +786,24 @@ std::vector<FrameResult> decodeOutputsToBuffer(
                     binding.decoder_id});
         } else if (binding.decoder_id == "TensorToLine2D") {
             dl::TensorToLine2D const decoder;
-            auto line = decoder.decode(tensor, params);
+            dl::LineDecoderParams params;
+            params.threshold = binding.threshold;
+            auto line = dl::TensorToLine2D::decode(tensor, ctx, params);
             if (!line.empty()) {
                 frame_results.push_back(FrameResult{
                         current_frame,
                         std::move(line),
+                        binding.data_key,
+                        binding.decoder_id});
+            }
+        } else if (binding.decoder_id == "TensorToFeatureVector") {
+            dl::TensorToFeatureVector const decoder;
+            dl::FeatureVectorDecoderParams const params;
+            auto vec = dl::TensorToFeatureVector::decode(tensor, ctx, params);
+            if (!vec.empty()) {
+                frame_results.push_back(FrameResult{
+                        current_frame,
+                        std::move(vec),
                         binding.data_key,
                         binding.decoder_id});
             }
@@ -775,6 +861,46 @@ bool SlotAssembler::loadWeights(std::string const & weights_path) {
     } catch (std::exception const & e) {
         std::cerr << "SlotAssembler::loadWeights: " << e.what() << '\n';
         return false;
+    }
+}
+
+std::string SlotAssembler::validateWeights() {
+    if (!isModelReady()) {
+        return "Model not loaded or weights not applied";
+    }
+
+    auto const input_slots = _impl->model->inputSlots();
+    std::unordered_map<std::string, torch::Tensor> dummy_inputs;
+    dummy_inputs.reserve(input_slots.size());
+
+    for (auto const & slot: input_slots) {
+        std::vector<int64_t> shape;
+        shape.reserve(slot.shape.size() + 1);
+        shape.push_back(1);// batch_size = 1
+        shape.insert(shape.end(), slot.shape.begin(), slot.shape.end());
+        dummy_inputs[slot.name] =
+                torch::zeros(shape, dl::toTorchDType(slot.dtype));
+    }
+
+    try {
+        torch::NoGradGuard const no_grad;
+        auto const outputs = _impl->model->forward(dummy_inputs);
+
+        // Verify all expected output slots are present and non-empty.
+        for (auto const & expected: _impl->model->outputSlots()) {
+            auto it = outputs.find(expected.name);
+            if (it == outputs.end()) {
+                return "Missing output slot '" + expected.name + "'";
+            }
+            if (it->second.numel() == 0) {
+                return "Output slot '" + expected.name + "' returned empty tensor";
+            }
+        }
+        return {};// success
+    } catch (std::exception const & e) {
+        return e.what();
+    } catch (...) {
+        return "Unknown error during weight validation";
     }
 }
 
@@ -898,6 +1024,11 @@ void SlotAssembler::runSingleFrame(
                                  "model not loaded or weights missing");
     }
 
+    // Update spatial-point query for the current frame if applicable
+    if (!_impl->spatial_point_key.empty()) {
+        updateSpatialPoint(dm, _impl->spatial_point_key, current_frame);
+    }
+
     auto inputs = assembleInputs(
             dm, *_impl->model,
             input_bindings, static_inputs,
@@ -924,6 +1055,7 @@ void SlotAssembler::runBatchRange(
         int start_frame,
         int end_frame,
         ImageSize source_image_size,
+        int batch_size,
         ProgressCallback const & progress) {
 
     if (!isModelReady()) {
@@ -934,14 +1066,29 @@ void SlotAssembler::runBatchRange(
         throw std::runtime_error("SlotAssembler::runBatchRange: "
                                  "end_frame must be >= start_frame");
     }
+    if (batch_size < 1) batch_size = 1;
+
+    // Spatial point module requires per-frame updates; force batch_size=1.
+    if (!_impl->spatial_point_key.empty()) {
+        batch_size = 1;
+    }
 
     int const total_frames = end_frame - start_frame + 1;
+    int frames_processed = 0;
 
-    for (int i = 0; i < total_frames; ++i) {
-        int const frame = start_frame + i;
+    for (int chunk_start = start_frame; chunk_start <= end_frame;
+         chunk_start += batch_size) {
+
+        int const chunk_end = std::min(chunk_start + batch_size - 1, end_frame);
+        int const chunk_size = chunk_end - chunk_start + 1;
 
         if (progress) {
-            progress(i, total_frames);
+            progress(frames_processed, total_frames);
+        }
+
+        // Update spatial-point query for the current frame if applicable
+        if (!_impl->spatial_point_key.empty()) {
+            updateSpatialPoint(dm, _impl->spatial_point_key, chunk_start);
         }
 
         auto inputs = assembleInputs(
@@ -949,13 +1096,19 @@ void SlotAssembler::runBatchRange(
                 input_bindings, static_inputs,
                 _impl->static_cache,
                 {},// no recurrent bindings
-                frame, /*batch_size=*/1);
+                chunk_start, /*batch_size=*/chunk_size);
 
         auto outputs = _impl->model->forward(inputs);
 
-        decodeOutputs(
-                dm, outputs, output_bindings,
-                *_impl->model, frame, source_image_size);
+        // Decode each batch element individually
+        for (int b = 0; b < chunk_size; ++b) {
+            int const frame = chunk_start + b;
+            decodeOutputs(
+                    dm, outputs, output_bindings,
+                    *_impl->model, frame, source_image_size, b);
+        }
+
+        frames_processed += chunk_size;
     }
 
     if (progress) {
@@ -977,6 +1130,7 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
         int end_frame,
         ImageSize source_image_size,
         std::atomic<bool> const & cancel_requested,
+        int batch_size,
         ProgressCallback const & progress,
         ResultCallback const & result_callback) {
 
@@ -996,48 +1150,69 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
                 "end_frame must be >= start_frame";
         return batch_result;
     }
+    if (batch_size < 1) batch_size = 1;
+
+    // Spatial point module requires per-frame updates; force batch_size=1.
+    if (!_impl->spatial_point_key.empty()) {
+        batch_size = 1;
+    }
 
     int const total_frames = end_frame - start_frame + 1;
+    int frames_processed = 0;
 
-    for (int i = 0; i < total_frames; ++i) {
+    for (int chunk_start = start_frame; chunk_start <= end_frame;
+         chunk_start += batch_size) {
+
         if (cancel_requested.load(std::memory_order_relaxed)) {
             break;
         }
 
-        int const frame = start_frame + i;
+        int const chunk_end = std::min(chunk_start + batch_size - 1, end_frame);
+        int const chunk_size = chunk_end - chunk_start + 1;
 
         if (progress) {
-            progress(i, total_frames);
+            progress(frames_processed, total_frames);
         }
 
         try {
+            // Update spatial-point query for the current frame if applicable
+            if (!_impl->spatial_point_key.empty()) {
+                updateSpatialPoint(dm, _impl->spatial_point_key, chunk_start);
+            }
+
             auto inputs = assembleInputs(
                     dm, *_impl->model,
                     input_bindings, static_inputs,
                     _impl->static_cache,
                     {},// no recurrent bindings
-                    frame, /*batch_size=*/1,
+                    chunk_start, /*batch_size=*/chunk_size,
                     &media_overrides);
 
             auto outputs = _impl->model->forward(inputs);
 
-            auto frame_results = decodeOutputsToBuffer(
-                    outputs, output_bindings,
-                    *_impl->model, frame, source_image_size);
+            // Decode each batch element individually
+            for (int b = 0; b < chunk_size; ++b) {
+                int const frame = chunk_start + b;
+                auto frame_results = decodeOutputsToBuffer(
+                        outputs, output_bindings,
+                        *_impl->model, frame, source_image_size, b);
 
-            if (result_callback) {
-                result_callback(std::move(frame_results));
-            } else {
-                batch_result.results.insert(
-                        batch_result.results.end(),
-                        std::make_move_iterator(frame_results.begin()),
-                        std::make_move_iterator(frame_results.end()));
+                if (result_callback) {
+                    result_callback(std::move(frame_results));
+                } else {
+                    batch_result.results.insert(
+                            batch_result.results.end(),
+                            std::make_move_iterator(frame_results.begin()),
+                            std::make_move_iterator(frame_results.end()));
+                }
             }
         } catch (std::exception const & e) {
             batch_result.success = false;
             batch_result.error_message = e.what();
             break;
         }
+
+        frames_processed += chunk_size;
     }
 
     if (progress) {
@@ -1198,6 +1373,11 @@ void SlotAssembler::runRecurrentSequence(
             progress(f, frame_count);
         }
 
+        // Update spatial-point query for the current frame if applicable
+        if (!_impl->spatial_point_key.empty()) {
+            updateSpatialPoint(dm, _impl->spatial_point_key, frame);
+        }
+
         // 1. Assemble dynamic + static inputs (batch_size = 1)
         //    In hybrid mode, assembleInputs skips recurrent-claimed positions.
         auto inputs = assembleInputs(
@@ -1318,6 +1498,22 @@ std::optional<ModelDisplayInfo> SlotAssembler::getModelDisplayInfo(
     return display;
 }
 
+std::optional<ModelDisplayInfo> SlotAssembler::currentModelDisplayInfo() const {
+    if (!_impl || !_impl->model) return std::nullopt;
+
+    auto const & model = *_impl->model;
+    ModelDisplayInfo display;
+    display.model_id = model.modelId();
+    display.display_name = model.displayName();
+    display.description = model.description();
+    display.inputs = model.inputSlots();
+    display.outputs = model.outputSlots();
+    display.preferred_batch_size = model.preferredBatchSize();
+    display.max_batch_size = model.maxBatchSize();
+    display.batch_mode = model.batchMode();
+    return display;
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // Static: encoder / decoder queries
 // ════════════════════════════════════════════════════════════════════════════
@@ -1342,5 +1538,79 @@ std::string SlotAssembler::dataTypeForDecoder(std::string const & decoder_id) {
     if (decoder_id == "TensorToPoint2D") return "PointData";
     if (decoder_id == "TensorToMask2D") return "MaskData";
     if (decoder_id == "TensorToLine2D") return "LineData";
+    if (decoder_id == "TensorToFeatureVector") return "TensorData";
     return {};
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Post-encoder configuration
+// ════════════════════════════════════════════════════════════════════════════
+
+void SlotAssembler::configurePostEncoderModule(
+        std::string const & module_type,
+        ImageSize source_image_size,
+        std::string const & interpolation) {
+    if (!_impl || !_impl->model) return;
+
+    // Only GeneralEncoderModel supports post-encoder modules
+    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
+    if (!enc) return;
+
+    auto const mode = (interpolation == "bilinear")
+                              ? dl::InterpolationMode::Bilinear
+                              : dl::InterpolationMode::Nearest;
+    dl::SpatialPointModuleParams const params{.interpolation = mode};
+
+    auto module = dl::PostEncoderModuleFactory::create(
+            module_type, source_image_size, params);
+    enc->setPostEncoderModule(std::move(module));
+
+    // Clear the spatial point key unless spatial_point is configured
+    if (module_type != "spatial_point") {
+        _impl->spatial_point_key.clear();
+    }
+}
+
+void SlotAssembler::updateSpatialPoint(
+        DataManager & dm,
+        std::string const & point_key,
+        int frame) {
+    if (!_impl || !_impl->model || point_key.empty()) return;
+
+    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
+    if (!enc) return;
+
+    auto * module = enc->postEncoderModule();
+    if (!module || module->name() != "spatial_point") return;
+
+    auto * sp = dynamic_cast<dl::SpatialPointExtractModule *>(module);
+    if (!sp) return;
+
+    auto point_data = dm.getData<PointData>(point_key);
+    if (!point_data) return;
+
+    auto points = point_data->getAtTime(TimeFrameIndex(frame));
+    if (!points.empty()) {
+        sp->setPoint(*points.begin());
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Model shape configuration
+// ════════════════════════════════════════════════════════════════════════════
+
+void SlotAssembler::configureModelShape(
+        int input_height,
+        int input_width,
+        std::vector<int64_t> const & output_shape) {
+    if (!_impl || !_impl->model) return;
+
+    auto * enc = dynamic_cast<dl::GeneralEncoderModel *>(_impl->model.get());
+    if (!enc) return;
+
+    enc->setInputResolution(input_height, input_width);
+
+    if (!output_shape.empty()) {
+        enc->setOutputShape(output_shape);
+    }
 }

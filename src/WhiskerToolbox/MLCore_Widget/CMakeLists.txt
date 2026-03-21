@@ -6,37 +6,41 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 find_package(reflectcpp CONFIG REQUIRED)
 
 set(MLCORE_WIDGET_SOURCES
+
+    Core/MLCoreWidgetState.hpp
+    Core/MLCoreWidgetState.cpp
+    Core/MLCoreWidgetStateData.hpp
+
+
     MLCoreWidget.hpp
     MLCoreWidget.cpp
-    MLCoreWidgetState.hpp
-    MLCoreWidgetState.cpp
-    MLCoreWidgetStateData.hpp
+    
     MLCoreWidgetRegistration.hpp
     MLCoreWidgetRegistration.cpp
-    FeatureSelectionPanel.hpp
-    FeatureSelectionPanel.cpp
-    FeatureSelectionPanel.ui
-    RegionSelectionPanel.hpp
-    RegionSelectionPanel.cpp
-    RegionSelectionPanel.ui
-    LabelConfigPanel.hpp
-    LabelConfigPanel.cpp
-    LabelConfigPanel.ui
-    ModelConfigPanel.hpp
-    ModelConfigPanel.cpp
-    ModelConfigPanel.ui
-    PredictionPanel.hpp
-    PredictionPanel.cpp
-    PredictionPanel.ui
-    ResultsPanel.hpp
-    ResultsPanel.cpp
-    ResultsPanel.ui
-    ClusteringPanel.hpp
-    ClusteringPanel.cpp
-    ClusteringPanel.ui
-    ClusterOutputPanel.hpp
-    ClusterOutputPanel.cpp
-    ClusterOutputPanel.ui
+    UI/FeatureSelectionPanel/FeatureSelectionPanel.hpp
+    UI/FeatureSelectionPanel/FeatureSelectionPanel.cpp
+    UI/FeatureSelectionPanel/FeatureSelectionPanel.ui
+    UI/RegionSelectionPanel/RegionSelectionPanel.hpp
+    UI/RegionSelectionPanel/RegionSelectionPanel.cpp
+    UI/RegionSelectionPanel/RegionSelectionPanel.ui
+    UI/LabelConfigPanel/LabelConfigPanel.hpp
+    UI/LabelConfigPanel/LabelConfigPanel.cpp
+    UI/LabelConfigPanel/LabelConfigPanel.ui
+    UI/ModelConfigPanel/ModelConfigPanel.hpp
+    UI/ModelConfigPanel/ModelConfigPanel.cpp
+    UI/ModelConfigPanel/ModelConfigPanel.ui
+    UI/PredictionPanel/PredictionPanel.hpp
+    UI/PredictionPanel/PredictionPanel.cpp
+    UI/PredictionPanel/PredictionPanel.ui
+    UI/ResultsPanel/ResultsPanel.hpp
+    UI/ResultsPanel/ResultsPanel.cpp
+    UI/ResultsPanel/ResultsPanel.ui
+    UI/ClusteringPanel/ClusteringPanel.hpp
+    UI/ClusteringPanel/ClusteringPanel.cpp
+    UI/ClusteringPanel/ClusteringPanel.ui
+    UI/ClusterOutputPanel/ClusterOutputPanel.hpp
+    UI/ClusterOutputPanel/ClusterOutputPanel.cpp
+    UI/ClusterOutputPanel/ClusterOutputPanel.ui
 )
 
 add_library(MLCore_Widget STATIC ${MLCORE_WIDGET_SOURCES})

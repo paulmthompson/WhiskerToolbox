@@ -3,6 +3,7 @@
 
 #include "../Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 #include "../Media_Widget/DisplayOptions/DisplayOptions.hpp"
+#include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "Entity/EntityTypes.hpp"
@@ -114,8 +115,27 @@ public:
      */
     void UpdateCanvas();
 
+    /**
+     * @brief Get X scaling factor from canvas coordinate system to canvas pixels
+     * 
+     * Retained for backward compatibility with external callers (e.g., MediaLine_Widget).
+     * Internally uses the resolved CanvasCoordinateSystem.
+     */
     [[nodiscard]] float getXAspect() const;
     [[nodiscard]] float getYAspect() const;
+
+    /**
+     * @brief Resolve the canvas coordinate system using the priority chain
+     * 
+     * Priority: user override > active media > first data object with ImageSize > default.
+     * Updates the coordinate system stored in MediaWidgetState.
+     */
+    void resolveCanvasCoordinateSystem();
+
+    /**
+     * @brief Get the current resolved canvas coordinate system
+     */
+    [[nodiscard]] CanvasCoordinateSystem const & canvasCoordinateSystem() const { return _canvas_coord_system; }
 
     void setCanvasSize(ImageSize image_size) {
         _canvasWidth = image_size.width;
@@ -234,6 +254,8 @@ private:
 
     int _canvasHeight{default_height};
     int _canvasWidth{default_width};
+
+    CanvasCoordinateSystem _canvas_coord_system;///< Resolved logical coordinate system
 
     QVector<QGraphicsPathItem *> _line_paths;
     QVector<QGraphicsItem *> _points;

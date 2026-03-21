@@ -13,6 +13,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_MLCore
+    BoundingSpan.test.cpp
     ClassBalancing.test.cpp
     ClassificationMetrics.test.cpp
     ClassificationPipeline.test.cpp
@@ -21,6 +22,7 @@ add_executable(test_MLCore
     FeatureValidator.test.cpp
     DBSCANOperation.test.cpp
     GaussianMixtureOperation.test.cpp
+    HiddenMarkovModel.test.cpp
     KMeansOperation.test.cpp
     LabelAssembler.test.cpp
     LogisticRegressionOperation.test.cpp
@@ -28,6 +30,7 @@ add_executable(test_MLCore
     NaiveBayesOperation.test.cpp
     PredictionWriter.test.cpp
     RandomForestOperation.test.cpp
+    SequenceAssembler.test.cpp
     TimeEntityUtils.test.cpp
 )
 

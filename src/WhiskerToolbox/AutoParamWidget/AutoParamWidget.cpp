@@ -16,6 +16,7 @@
 
 #include <rfl/json.hpp>
 
+#include <algorithm>
 #include <limits>
 #include <sstream>
 
@@ -185,8 +186,12 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
         row.bool_check = check;
         value_widget = check;
 
-    } else if ((desc.type_name == "std::string" || desc.type_name == "enum") && !desc.allowed_values.empty()) {
+    } else if ((desc.type_name == "std::string" || desc.type_name == "enum") &&
+               (!desc.allowed_values.empty() || desc.dynamic_combo)) {
         auto * combo = new QComboBox(this);
+        if (desc.include_none_sentinel) {
+            combo->addItem(QStringLiteral("(None)"));
+        }
         for (auto const & val: desc.allowed_values) {
             combo->addItem(QString::fromStdString(val));
         }
@@ -197,7 +202,11 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
             if (def_result) {
                 auto const & val = def_result.value().get();
                 if (auto const * s = std::get_if<std::string>(&val)) {
-                    int const idx = combo->findText(QString::fromStdString(*s));
+                    QString target = QString::fromStdString(*s);
+                    if (desc.include_none_sentinel && s->empty()) {
+                        target = QStringLiteral("(None)");
+                    }
+                    int const idx = combo->findText(target);
                     if (idx >= 0) {
                         combo->setCurrentIndex(idx);
                     }
@@ -208,6 +217,7 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
         connect(combo, &QComboBox::currentIndexChanged, this, &AutoParamWidget::onFieldChanged);
 
         row.combo_box = combo;
+        row.include_none_sentinel = desc.include_none_sentinel;
         value_widget = combo;
 
     } else {
@@ -286,9 +296,13 @@ void AutoParamWidget::buildVariantRow(ParameterFieldDescriptor const & desc,
     v_layout->setSpacing(4);
 
     // Combo box for selecting the active alternative
+    // Each item stores its stack index as user-data so updateVariantAlternatives
+    // can filter alternatives without breaking the combo→stack mapping.
     auto * combo = new QComboBox(this);
-    for (auto const & alt: desc.variant_alternatives) {
-        combo->addItem(QString::fromStdString(alt.tag));
+    for (size_t i = 0; i < desc.variant_alternatives.size(); ++i) {
+        auto const & alt = desc.variant_alternatives[i];
+        combo->addItem(QString::fromStdString(alt.tag), QVariant(static_cast<int>(i)));
+        row.variant_all_tags.push_back(alt.tag);
     }
     v_layout->addWidget(combo);
     row.variant_combo = combo;
@@ -374,8 +388,11 @@ void AutoParamWidget::buildVariantRow(ParameterFieldDescriptor const & desc,
                 sub_row.bool_check = check;
                 value_widget = check;
             } else if ((sub_desc.type_name == "std::string" || sub_desc.type_name == "enum") &&
-                       !sub_desc.allowed_values.empty()) {
+                       (!sub_desc.allowed_values.empty() || sub_desc.dynamic_combo)) {
                 auto * sub_combo = new QComboBox(page);
+                if (sub_desc.include_none_sentinel) {
+                    sub_combo->addItem(QStringLiteral("(None)"));
+                }
                 for (auto const & val: sub_desc.allowed_values) {
                     sub_combo->addItem(QString::fromStdString(val));
                 }
@@ -384,13 +401,18 @@ void AutoParamWidget::buildVariantRow(ParameterFieldDescriptor const & desc,
                     if (def_result) {
                         auto const & val = def_result.value().get();
                         if (auto const * s = std::get_if<std::string>(&val)) {
-                            int const idx = sub_combo->findText(QString::fromStdString(*s));
+                            QString target = QString::fromStdString(*s);
+                            if (sub_desc.include_none_sentinel && s->empty()) {
+                                target = QStringLiteral("(None)");
+                            }
+                            int const idx = sub_combo->findText(target);
                             if (idx >= 0) sub_combo->setCurrentIndex(idx);
                         }
                     }
                 }
                 connect(sub_combo, &QComboBox::currentIndexChanged, this, &AutoParamWidget::onFieldChanged);
                 sub_row.combo_box = sub_combo;
+                sub_row.include_none_sentinel = sub_desc.include_none_sentinel;
                 value_widget = sub_combo;
             } else {
                 auto * edit = new QLineEdit(page);
@@ -434,22 +456,22 @@ void AutoParamWidget::buildVariantRow(ParameterFieldDescriptor const & desc,
         page_widget->setSizePolicy(sp);
     }
 
-    // Connect combo box to switch stacked widget pages
-    connect(combo, &QComboBox::currentIndexChanged, stack, &QStackedWidget::setCurrentIndex);
-    connect(combo, &QComboBox::currentIndexChanged, this, &AutoParamWidget::onFieldChanged);
-
-    // When the active page changes, update size policies so the stack
-    // shrinks/grows to fit only the newly visible page.
-    connect(combo, &QComboBox::currentIndexChanged, this, [stack, this](int new_index) {
+    // Connect combo to switch stacked widget pages using item-data stack index.
+    // This supports updateVariantAlternatives() which may filter visible alternatives.
+    connect(combo, &QComboBox::currentIndexChanged, this, [combo, stack, this](int) {
+        if (combo->currentIndex() < 0) return;
+        int const stack_idx = combo->currentData().toInt();
+        stack->setCurrentIndex(stack_idx);
         for (int i = 0; i < stack->count(); ++i) {
-            QWidget * page_widget = stack->widget(i);
-            QSizePolicy sp = page_widget->sizePolicy();
-            sp.setVerticalPolicy(i == new_index ? QSizePolicy::Preferred : QSizePolicy::Ignored);
-            page_widget->setSizePolicy(sp);
+            auto * page = stack->widget(i);
+            auto sp = page->sizePolicy();
+            sp.setVerticalPolicy(i == stack_idx ? QSizePolicy::Preferred : QSizePolicy::Ignored);
+            page->setSizePolicy(sp);
         }
         stack->adjustSize();
         adjustSize();
     });
+    connect(combo, &QComboBox::currentIndexChanged, this, &AutoParamWidget::onFieldChanged);
 
     // Set default if available: parse the discriminator from the default JSON
     if (desc.default_value_json.has_value()) {
@@ -486,9 +508,9 @@ std::string AutoParamWidget::variantSubRowsToJson(FieldRow const & row) {
     oss << "\"" << row.variant_discriminator << "\":\""
         << row.variant_combo->currentText().toStdString() << "\"";
 
-    int const active_idx = row.variant_combo->currentIndex();
-    if (active_idx >= 0 && active_idx < static_cast<int>(row.variant_sub_rows.size())) {
-        for (auto const & sub: row.variant_sub_rows[static_cast<size_t>(active_idx)]) {
+    int const stack_idx = row.variant_combo->currentData().toInt();
+    if (stack_idx >= 0 && stack_idx < static_cast<int>(row.variant_sub_rows.size())) {
+        for (auto const & sub: row.variant_sub_rows[static_cast<size_t>(stack_idx)]) {
             oss << ",\"" << sub.field_name << "\":";
             if (sub.double_spin) {
                 oss << sub.double_spin->value();
@@ -497,7 +519,12 @@ std::string AutoParamWidget::variantSubRowsToJson(FieldRow const & row) {
             } else if (sub.bool_check) {
                 oss << (sub.bool_check->isChecked() ? "true" : "false");
             } else if (sub.combo_box) {
-                oss << "\"" << sub.combo_box->currentText().toStdString() << "\"";
+                auto text = sub.combo_box->currentText().toStdString();
+                if (sub.include_none_sentinel && text == "(None)") {
+                    oss << "\"\"";
+                } else {
+                    oss << "\"" << text << "\"";
+                }
             } else if (sub.line_edit) {
                 oss << "\"" << sub.line_edit->text().toStdString() << "\"";
             }
@@ -530,10 +557,10 @@ void AutoParamWidget::variantSubRowsFromJson(FieldRow & row, std::string const &
     }
 
     // Populate sub-row widgets from the JSON fields
-    int const active_idx = row.variant_combo->currentIndex();
-    if (active_idx < 0 || active_idx >= static_cast<int>(row.variant_sub_rows.size())) return;
+    int const stack_idx = row.variant_combo->currentData().toInt();
+    if (stack_idx < 0 || stack_idx >= static_cast<int>(row.variant_sub_rows.size())) return;
 
-    for (auto & sub: row.variant_sub_rows[static_cast<size_t>(active_idx)]) {
+    for (auto & sub: row.variant_sub_rows[static_cast<size_t>(stack_idx)]) {
         auto field_result = obj->get(sub.field_name);
         if (!field_result) continue;
 
@@ -556,7 +583,11 @@ void AutoParamWidget::variantSubRowsFromJson(FieldRow & row, std::string const &
             }
         } else if (sub.combo_box) {
             if (auto const * s = std::get_if<std::string>(&value)) {
-                int const idx = sub.combo_box->findText(QString::fromStdString(*s));
+                QString target = QString::fromStdString(*s);
+                if (sub.include_none_sentinel && s->empty()) {
+                    target = QStringLiteral("(None)");
+                }
+                int const idx = sub.combo_box->findText(target);
                 if (idx >= 0) sub.combo_box->setCurrentIndex(idx);
             }
         } else if (sub.line_edit) {
@@ -598,7 +629,12 @@ std::string AutoParamWidget::toJson() const {
         } else if (row.bool_check) {
             oss << (row.bool_check->isChecked() ? "true" : "false");
         } else if (row.combo_box) {
-            oss << "\"" << row.combo_box->currentText().toStdString() << "\"";
+            auto text = row.combo_box->currentText().toStdString();
+            if (row.include_none_sentinel && text == "(None)") {
+                oss << "\"\"";
+            } else {
+                oss << "\"" << text << "\"";
+            }
         } else if (row.line_edit) {
             // Escape the string for JSON
             auto text = row.line_edit->text().toStdString();
@@ -669,7 +705,11 @@ bool AutoParamWidget::fromJson(std::string const & json) {
             }
         } else if (row.combo_box) {
             if (auto const * s = std::get_if<std::string>(&value)) {
-                int const idx = row.combo_box->findText(QString::fromStdString(*s));
+                QString target = QString::fromStdString(*s);
+                if (row.include_none_sentinel && s->empty()) {
+                    target = QStringLiteral("(None)");
+                }
+                int const idx = row.combo_box->findText(target);
                 if (idx >= 0) {
                     row.combo_box->setCurrentIndex(idx);
                 }
@@ -742,5 +782,122 @@ void AutoParamWidget::onFieldChanged() {
             }
         }
         emit parametersChanged();
+    }
+}
+
+// ============================================================================
+// updateAllowedValues — Dynamically populate combo items for a field
+// ============================================================================
+
+void AutoParamWidget::updateAllowedValues(std::string const & field_name,
+                                          std::vector<std::string> const & values) {
+    bool selection_changed = false;
+
+    auto const updateCombo = [&](QComboBox * combo, bool sentinel) {
+        auto const previous = combo->currentText();
+
+        // Block signals so intermediate changes don't fire parametersChanged
+        bool const was_blocked = combo->signalsBlocked();
+        combo->blockSignals(true);
+        combo->clear();
+
+        if (sentinel) {
+            combo->addItem(QStringLiteral("(None)"));
+        }
+        for (auto const & val: values) {
+            combo->addItem(QString::fromStdString(val));
+        }
+
+        // Restore previous selection if still available
+        int const idx = combo->findText(previous);
+        if (idx >= 0) {
+            combo->setCurrentIndex(idx);
+        } else if (combo->count() > 0) {
+            combo->setCurrentIndex(0);
+        }
+
+        combo->blockSignals(was_blocked);
+
+        if (combo->currentText() != previous) {
+            selection_changed = true;
+        }
+    };
+
+    for (auto & row: _field_rows) {
+        if (row.field_name == field_name && row.combo_box) {
+            updateCombo(row.combo_box, row.include_none_sentinel);
+        }
+
+        // Also search variant sub-rows (same field name may appear in multiple alternatives)
+        if (row.is_variant) {
+            for (auto & alt_rows: row.variant_sub_rows) {
+                for (auto & sub_row: alt_rows) {
+                    if (sub_row.field_name == field_name && sub_row.combo_box) {
+                        updateCombo(sub_row.combo_box, sub_row.include_none_sentinel);
+                    }
+                }
+            }
+        }
+    }
+
+    if (selection_changed) {
+        emit parametersChanged();
+    }
+}
+
+// ============================================================================
+// updateVariantAlternatives — Filter visible variant alternatives by tag
+// ============================================================================
+
+void AutoParamWidget::updateVariantAlternatives(std::string const & field_name,
+                                                std::vector<std::string> const & allowed_tags) {
+    for (auto & row: _field_rows) {
+        if (row.field_name != field_name || !row.is_variant || !row.variant_combo) {
+            continue;
+        }
+
+        auto const previous_tag = row.variant_combo->currentText().toStdString();
+
+        bool const was_blocked = row.variant_combo->signalsBlocked();
+        row.variant_combo->blockSignals(true);
+        row.variant_combo->clear();
+
+        for (size_t i = 0; i < row.variant_all_tags.size(); ++i) {
+            auto const & tag = row.variant_all_tags[i];
+            if (std::find(allowed_tags.begin(), allowed_tags.end(), tag) != allowed_tags.end()) {
+                row.variant_combo->addItem(
+                        QString::fromStdString(tag),
+                        QVariant(static_cast<int>(i)));
+            }
+        }
+
+        // Restore previous selection if still allowed
+        int new_idx = row.variant_combo->findText(QString::fromStdString(previous_tag));
+        if (new_idx < 0 && row.variant_combo->count() > 0) {
+            new_idx = 0;
+        }
+        if (new_idx >= 0) {
+            row.variant_combo->setCurrentIndex(new_idx);
+        }
+
+        row.variant_combo->blockSignals(was_blocked);
+
+        // Update stack to show the correct page
+        if (row.variant_combo->currentIndex() >= 0 && row.variant_stack) {
+            int const stack_idx = row.variant_combo->currentData().toInt();
+            row.variant_stack->setCurrentIndex(stack_idx);
+            for (int i = 0; i < row.variant_stack->count(); ++i) {
+                auto * page = row.variant_stack->widget(i);
+                auto sp = page->sizePolicy();
+                sp.setVerticalPolicy(i == stack_idx ? QSizePolicy::Preferred : QSizePolicy::Ignored);
+                page->setSizePolicy(sp);
+            }
+            row.variant_stack->adjustSize();
+        }
+
+        if (previous_tag != row.variant_combo->currentText().toStdString()) {
+            emit parametersChanged();
+        }
+        return;
     }
 }

@@ -159,6 +159,35 @@ void MediaWidgetState::setViewport(ViewportState const & viewport) {
     }
 }
 
+// === Canvas Coordinate System ===
+
+void MediaWidgetState::setCanvasCoordinateSystem(CanvasCoordinateSystem const & coord_system) {
+    if (_canvas_coord_system != coord_system) {
+        _canvas_coord_system = coord_system;
+        emit canvasCoordinateSystemChanged(coord_system);
+    }
+}
+
+void MediaWidgetState::setCanvasCoordOverride(int width, int height) {
+    if (!_data.canvas_coord_override_active ||
+        _data.canvas_coord_override_width != width ||
+        _data.canvas_coord_override_height != height) {
+        _data.canvas_coord_override_active = true;
+        _data.canvas_coord_override_width = width;
+        _data.canvas_coord_override_height = height;
+        markDirty();
+        emit viewportChanged();
+    }
+}
+
+void MediaWidgetState::clearCanvasCoordOverride() {
+    if (_data.canvas_coord_override_active) {
+        _data.canvas_coord_override_active = false;
+        markDirty();
+        emit viewportChanged();
+    }
+}
+
 // === Feature Management ===
 
 void MediaWidgetState::setFeatureEnabled(QString const & data_key, QString const & data_type, bool enabled) {

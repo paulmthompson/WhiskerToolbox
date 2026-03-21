@@ -107,6 +107,29 @@ struct GMMParameters : public MLModelParametersBase {
     std::optional<std::size_t> seed; ///< Random seed for reproducibility
 };
 
+// ============================================================================
+// Sequence model parameters
+// ============================================================================
+
+/**
+ * @brief Parameters for Hidden Markov Model (Gaussian emissions)
+ *
+ * Maps to mlpack::HMM<mlpack::GaussianDistribution<>> hyperparameters.
+ * Supervised training uses labeled sequences to estimate transition and
+ * emission parameters directly.
+ *
+ * When `use_diagonal_covariance` is true, uses
+ * mlpack::DiagonalGaussianDistribution instead of the full covariance
+ * variant. Diagonal covariance reduces parameters per state from
+ * M(M+1)/2 to M, improving numerical stability with limited training
+ * data and reducing emission evaluation cost from O(M^2) to O(M).
+ */
+struct HMMParameters : public MLModelParametersBase {
+    std::size_t num_states = 2;          ///< Number of hidden states
+    double tolerance = 1e-5;             ///< Convergence tolerance for training
+    bool use_diagonal_covariance = false;///< Use diagonal covariance emissions
+};
+
 }// namespace MLCore
 
 #endif// MLCORE_MLMODELPARAMETERS_HPP

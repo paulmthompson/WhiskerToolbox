@@ -6,7 +6,9 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 
-namespace at { class Tensor; }
+namespace at {
+class Tensor;
+}
 
 namespace dl {
 
@@ -23,12 +25,13 @@ public:
     [[nodiscard]] std::string inputTypeName() const override;
 
     /// Encode a polyline into tensor[batch_index, target_channel, :, :]
-    void encode(Line2D const & line,
+    static void encode(Line2D const & line,
                 ImageSize source_size,
                 at::Tensor & tensor,
-                EncoderParams const & params) const;
+                EncoderContext const & ctx,
+                Line2DEncoderParams const & params) ;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_LINE2D_ENCODER_HPP
+#endif// WHISKERTOOLBOX_LINE2D_ENCODER_HPP

@@ -1,0 +1,132 @@
+---
+title: "Exporting Encoder Models"
+---
+
+## Overview
+
+WhiskerToolbox can use general-purpose image encoder models (such as ConvNeXt, ViT, 
+or ResNet) to extract feature maps from video frames. This guide explains how to 
+export an encoder model from Python and load it in WhiskerToolbox.
+
+## Prerequisites
+
+Install PyTorch and torchvision:
+
+```bash
+pip install torch torchvision
+```
+
+## Quick Start: Export ConvNeXt
+
+WhiskerToolbox ships with a ready-to-use export script for ConvNeXt models:
+
+```bash
+python examples/export_convnext_encoder.py
+```
+
+This exports a ConvNeXt-Tiny encoder and produces three files:
+
+| File | Description |
+|---|---|
+| `convnext_tiny_encoder.pt` | TorchScript model (works everywhere) |
+| `convnext_tiny_encoder.pt2` | AOT Inductor model (faster, PyTorch 2.1+) |
+| `convnext_tiny_encoder_spec.json` | Model specification for WhiskerToolbox |
+
+### Using a Different ConvNeXt Variant
+
+```bash
+# ConvNeXt-Small (768-dim features)
+python examples/export_convnext_encoder.py --model convnext_small
+
+# ConvNeXt-Base (1024-dim features)
+python examples/export_convnext_encoder.py --model convnext_base
+
+# ConvNeXt-Large (1536-dim features)
+python examples/export_convnext_encoder.py --model convnext_large
+```
+
+### Export Options
+
+```bash
+python examples/export_convnext_encoder.py --help
+```
+
+| Option | Description |
+|---|---|
+| `--model` | ConvNeXt variant (`convnext_tiny`, `convnext_small`, `convnext_base`, `convnext_large`) |
+| `--output-dir` | Directory for exported files (default: current directory) |
+| `--no-pt` | Skip TorchScript export |
+| `--no-pt2` | Skip AOT Inductor export |
+
+## Loading in WhiskerToolbox
+
+### Method 1: Widget UI
+
+1. Open the Deep Learning widget (**View → Deep Learning**)
+2. Select **"General Encoder"** from the model dropdown
+3. Under the **"image"** slot, bind to your video data source
+4. Click **Load Weights** and select the exported `.pt` or `.pt2` file
+5. Click **Run** to extract features
+
+### Method 2: JSON Specification
+
+For more control, use the generated JSON specification file:
+
+1. Open the Deep Learning widget
+2. Click **Load Model Spec** and select the `_spec.json` file
+3. The model will appear with the correct input/output shapes pre-configured
+
+## Exporting Custom Encoders
+
+To export your own encoder (not a ConvNeXt), create a Python wrapper that outputs 
+the spatial feature map and follows this pattern:
+
+```python
+import torch
+
+class MyEncoderWrapper(torch.nn.Module):
+    def __init__(self, backbone):
+        super().__init__()
+        self.backbone = backbone
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x: [B, C, H, W] input image
+        # return: [B, C_out, H_out, W_out] feature map
+        return self.backbone.extract_features(x)
+
+# Export as TorchScript
+wrapper = MyEncoderWrapper(my_model).eval()
+example = torch.randn(1, 3, 224, 224)
+traced = torch.jit.trace(wrapper, example)
+traced.save("my_encoder.pt")
+```
+
+Then create a JSON specification:
+
+```json
+{
+  "model_id": "my_encoder",
+  "display_name": "My Custom Encoder",
+  "weights_path": "my_encoder.pt",
+  "inputs": [
+    { "name": "image", "shape": [3, 224, 224], "recommended_encoder": "ImageEncoder" }
+  ],
+  "outputs": [
+    { "name": "features", "shape": [512, 7, 7] }
+  ]
+}
+```
+
+## Output Format
+
+The encoder output is a **spatial feature tensor** of shape `[B, C, H, W]`:
+
+- **B** — batch size (number of frames processed simultaneously)
+- **C** — number of feature channels (depends on the encoder architecture)
+- **H, W** — spatial dimensions of the feature map
+
+For ConvNeXt with 224×224 input, the output spatial size is 7×7 (224 / 32).
+
+This feature tensor can be used as input to downstream processing such as 
+global average pooling, spatial point extraction, or classification heads 
+(see the Deep Learning roadmap for planned post-encoder modules).

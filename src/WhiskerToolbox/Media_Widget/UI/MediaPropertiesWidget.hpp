@@ -39,6 +39,7 @@
 
 #include <memory>
 
+class CanvasCoord_Widget;
 class DataManager;
 class MediaWidgetState;
 class Media_Window;
@@ -104,11 +105,19 @@ private:
     Section * _text_section{nullptr};
     MediaText_Widget * _text_widget{nullptr};
 
+    // Canvas coordinate system widgets
+    Section * _canvas_coord_section{nullptr};
+    CanvasCoord_Widget * _canvas_coord_widget{nullptr};
+
+    void resizeEvent(QResizeEvent * event) override;
+
     void _connectStateSignals();
     void _setupFeatureTable();
     void _setupTextOverlays();
+    void _setupCanvasCoordSection();
     void _createStackedWidgets();
     void _connectTextWidgetToScene();
+    void _updateChildWidths();
 
 private slots:
     void _featureSelected(QString const & feature);

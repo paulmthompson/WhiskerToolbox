@@ -75,6 +75,26 @@ struct WeightsVariant {
     std::optional<std::string> backend;///< Optional backend override
 };
 
+/// JSON-serializable specification for a single post-encoder module step.
+///
+/// Used within the `"post_encoder"` array of a `RuntimeModelSpec`. Each entry
+/// specifies a module by `"module"` key and optional parameters.
+///
+/// JSON examples:
+/// @code{.json}
+///   "post_encoder": [
+///     { "module": "global_avg_pool" }
+///   ]
+///
+///   "post_encoder": [
+///     { "module": "spatial_point", "interpolation": "bilinear" }
+///   ]
+/// @endcode
+struct PostEncoderStepSpec {
+    std::string module;                        ///< Module key (e.g. "global_avg_pool")
+    std::optional<std::string> interpolation;  ///< "nearest" | "bilinear" (spatial_point only)
+};
+
 /// JSON-serializable specification for a runtime-defined model.
 ///
 /// Allows users to specify an ExecuTorch model's inputs and outputs via JSON
@@ -99,6 +119,9 @@ struct WeightsVariant {
 ///   ],
 ///   "outputs": [
 ///     { "name": "heatmap", "shape": [1, 256, 256], "recommended_decoder": "TensorToMask2D" }
+///   ],
+///   "post_encoder": [
+///     { "module": "global_avg_pool" }
 ///   ]
 /// }
 /// @endcode
@@ -110,10 +133,11 @@ struct RuntimeModelSpec {
     std::optional<std::string> backend;///< "auto", "torchscript", "aotinductor", "executorch"
     std::optional<int> preferred_batch_size;
     std::optional<int> max_batch_size;
-    std::optional<BatchModeSpec> batch_mode;                    ///< Rich batch-size constraint
-    std::optional<std::vector<WeightsVariant>> weights_variants;///< Multi-variant weights
+    std::optional<BatchModeSpec> batch_mode;                            ///< Rich batch-size constraint
+    std::optional<std::vector<WeightsVariant>> weights_variants;        ///< Multi-variant weights
     std::vector<SlotSpec> inputs;
     std::vector<SlotSpec> outputs;
+    std::optional<std::vector<PostEncoderStepSpec>> post_encoder;       ///< Optional post-encoder pipeline
 
     /// Parse a RuntimeModelSpec from a JSON string.
     [[nodiscard]] static rfl::Result<RuntimeModelSpec>

@@ -140,12 +140,12 @@ public:
      * @throws std::invalid_argument on size mismatches or null pointers
      */
     [[nodiscard]] static TensorData createTimeSeries2D(
-        std::vector<float> const & data,
-        std::size_t num_rows,
-        std::size_t num_cols,
-        std::shared_ptr<TimeIndexStorage> time_storage,
-        std::shared_ptr<TimeFrame> time_frame,
-        std::vector<std::string> column_names = {});
+            std::vector<float> const & data,
+            std::size_t num_rows,
+            std::size_t num_cols,
+            std::shared_ptr<TimeIndexStorage> time_storage,
+            std::shared_ptr<TimeFrame> time_frame,
+            std::vector<std::string> column_names = {});
 
     /**
      * @brief Create a 2D tensor with interval-based rows
@@ -161,12 +161,12 @@ public:
      * @throws std::invalid_argument on size mismatches
      */
     [[nodiscard]] static TensorData createFromIntervals(
-        std::vector<float> const & data,
-        std::size_t num_rows,
-        std::size_t num_cols,
-        std::vector<TimeFrameInterval> intervals,
-        std::shared_ptr<TimeFrame> time_frame,
-        std::vector<std::string> column_names = {});
+            std::vector<float> const & data,
+            std::size_t num_rows,
+            std::size_t num_cols,
+            std::vector<TimeFrameInterval> intervals,
+            std::shared_ptr<TimeFrame> time_frame,
+            std::vector<std::string> column_names = {});
 
     /**
      * @brief Create an N-dimensional tensor from flat data and axis descriptors
@@ -179,8 +179,8 @@ public:
      * @throws std::invalid_argument if data size doesn't match total elements
      */
     [[nodiscard]] static TensorData createND(
-        std::vector<float> const & data,
-        std::vector<AxisDescriptor> axes);
+            std::vector<float> const & data,
+            std::vector<AxisDescriptor> const & axes);
 
     /**
      * @brief Create a 2D tensor from an Armadillo matrix (zero-copy)
@@ -191,8 +191,8 @@ public:
      * @param column_names Optional column labels
      */
     [[nodiscard]] static TensorData createFromArmadillo(
-        arma::fmat matrix,
-        std::vector<std::string> column_names = {});
+            arma::fmat matrix,
+            std::vector<std::string> column_names = {});
 
     /**
      * @brief Create a 3D tensor from an Armadillo cube (zero-copy)
@@ -202,8 +202,8 @@ public:
      *        {"dim0", nslices}, {"dim1", nrows}, {"dim2", ncols}
      */
     [[nodiscard]] static TensorData createFromArmadillo(
-        arma::fcube cube,
-        std::vector<AxisDescriptor> axes = {});
+            arma::fcube cube,
+            std::vector<AxisDescriptor> axes = {});
 
     /**
      * @brief Create a 2D ordinal tensor from flat data
@@ -217,10 +217,10 @@ public:
      * @param column_names Optional column labels
      */
     [[nodiscard]] static TensorData createOrdinal2D(
-        std::vector<float> const & data,
-        std::size_t num_rows,
-        std::size_t num_cols,
-        std::vector<std::string> column_names = {});
+            std::vector<float> const & data,
+            std::size_t num_rows,
+            std::size_t num_cols,
+            std::vector<std::string> column_names = {});
 
 #ifdef TENSOR_BACKEND_LIBTORCH
     /**
@@ -230,8 +230,8 @@ public:
      * @param axes Optional axis descriptors; if empty, auto-generated
      */
     [[nodiscard]] static TensorData createFromTorch(
-        torch::Tensor tensor,
-        std::vector<AxisDescriptor> axes = {});
+            torch::Tensor tensor,
+            std::vector<AxisDescriptor> axes = {});
 #endif
 
     /**
@@ -253,10 +253,10 @@ public:
      * @throws std::invalid_argument if num_rows == 0 or columns is empty
      */
     [[nodiscard]] static TensorData createFromLazyColumns(
-        std::size_t num_rows,
-        std::vector<ColumnSource> columns,
-        RowDescriptor rows,
-        InvalidationWiringFn wiring = {});
+            std::size_t num_rows,
+            std::vector<ColumnSource> columns,
+            RowDescriptor rows,
+            InvalidationWiringFn const & wiring = {});
 
     // ========== Dimension Queries ==========
 
@@ -471,6 +471,109 @@ public:
      */
     void removeColumn(std::size_t col);
 
+    // ========== Row Mutation ==========
+
+    /**
+     * @brief Append a row to the end of the tensor
+     *
+     * Works for 2D tensors backed by ArmadilloTensorStorage or DenseTensorStorage
+     * with Ordinal or Interval row semantics.
+     *
+     * For Ordinal rows, the ordinal count is incremented.
+     * For Interval rows, the provided interval is appended to the row descriptor.
+     * TimeFrameIndex rows are not supported (time index storage is immutable).
+     *
+     * Updates the dimension descriptor (axis 0 size) and notifies observers.
+     *
+     * @param row_data Values for the new row (size must equal numColumns())
+     * @throws std::logic_error if the tensor is not 2D, is backed by an
+     *         unsupported storage type, or has TimeFrameIndex rows
+     * @throws std::invalid_argument if row_data.size() != numColumns()
+     */
+    void appendRow(std::span<float const> row_data);
+
+    /**
+     * @brief Append a row with an associated interval
+     *
+     * Convenience overload for tensors with Interval row semantics.
+     *
+     * @param row_data Values for the new row
+     * @param interval Time interval for the new row
+     * @throws std::logic_error if rowType() != RowType::Interval, or
+     *         storage is unsupported
+     * @throws std::invalid_argument if row_data.size() != numColumns()
+     */
+    void appendRow(std::span<float const> row_data, TimeFrameInterval interval);
+
+    /**
+     * @brief Insert a row at a specific position
+     *
+     * Same storage and row-type constraints as appendRow(). Existing rows
+     * at and after the insertion point are shifted down.
+     *
+     * @param index Position to insert before (0-based; numRows() appends)
+     * @param row_data Values for the new row
+     * @throws std::logic_error if unsupported storage or TimeFrameIndex rows
+     * @throws std::out_of_range if index > numRows()
+     * @throws std::invalid_argument if row_data.size() != numColumns()
+     */
+    void insertRow(std::size_t index, std::span<float const> row_data);
+
+    /**
+     * @brief Insert a row with an associated interval
+     *
+     * Convenience overload for tensors with Interval row semantics.
+     *
+     * @param index Position to insert before
+     * @param row_data Values for the new row
+     * @param interval Time interval for the new row
+     * @throws std::logic_error if rowType() != RowType::Interval, or
+     *         storage is unsupported
+     * @throws std::out_of_range if index > numRows()
+     * @throws std::invalid_argument if row_data.size() != numColumns()
+     */
+    void insertRow(std::size_t index, std::span<float const> row_data,
+                   TimeFrameInterval interval);
+
+    /**
+     * @brief Overwrite an existing row's data in-place
+     *
+     * Works for 2D tensors backed by ArmadilloTensorStorage or DenseTensorStorage.
+     * The row must already exist. Row descriptor and dimension metadata are unchanged.
+     * Notifies observers.
+     *
+     * @param index Row index to overwrite (0-based)
+     * @param row_data New values for the row (size must equal numColumns())
+     * @throws std::logic_error if the tensor is not 2D or has unsupported storage
+     * @throws std::out_of_range if index >= numRows()
+     * @throws std::invalid_argument if row_data.size() != numColumns()
+     */
+    void setRow(std::size_t index, std::span<float const> row_data);
+
+    /**
+     * @brief Upsert rows keyed by TimeFrameIndex
+     *
+     * Merges the given frame→row-data pairs into this tensor. For each pair:
+     * - If a row for that frame already exists, its data is overwritten.
+     * - If no row exists for that frame, a new row is inserted in sorted order.
+     *
+     * After the operation, the tensor's rows are sorted by TimeFrameIndex and
+     * backed by a fresh TimeIndexStorage. The tensor must be 2D and backed by
+     * ArmadilloTensorStorage or DenseTensorStorage. If the tensor is empty
+     * (no storage), it is initialized from the provided rows.
+     *
+     * @param frame_rows Pairs of (frame_index, row_data); row_data sizes must
+     *        all equal numColumns() (or each other for empty tensors)
+     * @param time_frame Shared TimeFrame for the resulting time-indexed rows
+     * @pre All row_data vectors must have the same size
+     * @throws std::invalid_argument if frame_rows is empty, row sizes are
+     *         inconsistent, or time_frame is null
+     * @throws std::logic_error if the tensor is non-empty and not 2D, or has
+     *         unsupported storage
+     */
+    void upsertRows(std::vector<std::pair<int, std::vector<float>>> const & frame_rows,
+                    std::shared_ptr<TimeFrame> time_frame);
+
     // ========== Storage Access ==========
 
     /**
@@ -520,17 +623,16 @@ private:
      * @brief Fully specified internal constructor
      */
     TensorData(DimensionDescriptor dimensions,
-                 RowDescriptor rows,
-                 TensorStorageWrapper storage,
-                 std::shared_ptr<TimeFrame> time_frame);
+               RowDescriptor rows,
+               TensorStorageWrapper storage,
+               std::shared_ptr<TimeFrame> time_frame);
 
     // ========== Members ==========
-    DimensionDescriptor _dimensions;          ///< Named axes + shape
-    RowDescriptor _rows;                      ///< Row type (time/interval/ordinal)
-    TensorStorageWrapper _storage;            ///< Type-erased storage backend
-    std::shared_ptr<TimeFrame> _time_frame;   ///< Absolute time reference (nullable)
+    DimensionDescriptor _dimensions;       ///< Named axes + shape
+    RowDescriptor _rows;                   ///< Row type (time/interval/ordinal)
+    TensorStorageWrapper _storage;         ///< Type-erased storage backend
+    std::shared_ptr<TimeFrame> _time_frame;///< Absolute time reference (nullable)
 };
 
 
-
-#endif // TENSOR_DATA_V2_HPP
+#endif// TENSOR_DATA_V2_HPP

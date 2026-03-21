@@ -33,7 +33,9 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace MLCore {
 
@@ -166,6 +168,109 @@ public:
         static_cast<void>(probabilities);
         return false;
     }
+
+    // ========================================================================
+    // Sequence-based training & prediction (for temporal models like HMMs)
+    // ========================================================================
+
+    /**
+     * @brief Train the model on pre-segmented temporal sequences
+     *
+     * @param featureSequences  Vector of feature matrices, one per contiguous
+     *                          temporal segment. Each matrix is (features × segment_length).
+     * @param labelSequences    Vector of label row vectors, aligned 1:1 with
+     *                          featureSequences. Each row is (1 × segment_length).
+     * @param params            Algorithm-specific parameters. May be nullptr.
+     * @return true if training succeeded
+     *
+     * The default implementation concatenates all sequences into a single
+     * matrix and delegates to `train()`. Sequence-aware models (e.g., HMM)
+     * override this to preserve temporal structure.
+     */
+    virtual bool trainSequences(
+            std::vector<arma::mat> const & featureSequences,
+            std::vector<arma::Row<std::size_t>> const & labelSequences,
+            MLModelParametersBase const * params) {
+        if (featureSequences.empty()) {
+            return false;
+        }
+        arma::mat combined = featureSequences[0];
+        arma::Row<std::size_t> combinedLabels = labelSequences[0];
+        for (std::size_t i = 1; i < featureSequences.size(); ++i) {
+            combined = arma::join_horiz(combined, featureSequences[i]);
+            combinedLabels = arma::join_horiz(combinedLabels, labelSequences[i]);
+        }
+        return train(combined, combinedLabels, params);
+    }
+
+    /**
+     * @brief Predict labels for pre-segmented temporal sequences
+     *
+     * @param featureSequences   Vector of feature matrices, one per segment
+     * @param predictionSequences [out] Vector of prediction row vectors,
+     *                            one per segment, aligned with featureSequences
+     * @return true if prediction succeeded
+     *
+     * The default implementation concatenates, calls `predict()`, and splits
+     * the result back. Sequence-aware models override to preserve temporal
+     * continuity (e.g., Viterbi decoding per sequence).
+     */
+    virtual bool predictSequences(
+            std::vector<arma::mat> const & featureSequences,
+            std::vector<arma::Row<std::size_t>> & predictionSequences) {
+        if (featureSequences.empty()) {
+            return false;
+        }
+        arma::mat combined = featureSequences[0];
+        for (std::size_t i = 1; i < featureSequences.size(); ++i) {
+            combined = arma::join_horiz(combined, featureSequences[i]);
+        }
+        arma::Row<std::size_t> allPredictions;
+        if (!predict(combined, allPredictions)) {
+            return false;
+        }
+        predictionSequences.clear();
+        predictionSequences.reserve(featureSequences.size());
+        std::size_t offset = 0;
+        for (auto const & seq: featureSequences) {
+            predictionSequences.push_back(
+                    allPredictions.subvec(offset, offset + seq.n_cols - 1));
+            offset += seq.n_cols;
+        }
+        return true;
+    }
+
+    /**
+     * @brief Predict labels with per-sequence initial state constraints
+     *
+     * @param featureSequences         Vector of feature matrices, one per segment
+     * @param predictionSequences      [out] Predicted labels per segment
+     * @param initial_state_constraints Per-sequence initial state override.
+     *        If element i has a value, the model's initial state distribution
+     *        is clamped to a delta on that state for sequence i.
+     *        If nullopt, the model's learned initial distribution is used.
+     * @return true if prediction succeeded
+     *
+     * The default implementation ignores constraints and delegates to
+     * predictSequences(). Sequence-aware models (e.g., HMM) override this
+     * to apply constrained Viterbi decoding.
+     */
+    virtual bool predictSequencesConstrained(
+            std::vector<arma::mat> const & featureSequences,
+            std::vector<arma::Row<std::size_t>> & predictionSequences,
+            std::vector<std::optional<std::size_t>> const & initial_state_constraints) {
+        static_cast<void>(initial_state_constraints);
+        return predictSequences(featureSequences, predictionSequences);
+    }
+
+    /**
+     * @brief Whether this model natively handles temporal sequences
+     *
+     * Models that override trainSequences/predictSequences to exploit
+     * temporal structure should return true. Used by pipelines to decide
+     * whether to segment data before training.
+     */
+    [[nodiscard]] virtual bool isSequenceModel() const { return false; }
 
     // ========================================================================
     // Unsupervised fitting & cluster assignment

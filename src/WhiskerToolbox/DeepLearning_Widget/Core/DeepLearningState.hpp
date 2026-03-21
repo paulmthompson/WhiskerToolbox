@@ -35,6 +35,20 @@ struct DeepLearningStateData {
     std::vector<RecurrentBindingData> recurrent_bindings;
     std::string instance_id;
     std::string display_name = "Deep Learning";
+    /// Post-encoder module type for GeneralEncoderModel.
+    /// Accepted values: "" / "none" (pass-through), "global_avg_pool",
+    /// "spatial_point".
+    std::string post_encoder_module_type;
+    /// DataManager key of the PointData object supplying the per-frame query
+    /// point for the "spatial_point" post-encoder module.
+    std::string post_encoder_point_key;
+    /// Custom input height for GeneralEncoderModel (0 = use default 224).
+    int encoder_input_height = 0;
+    /// Custom input width for GeneralEncoderModel (0 = use default 224).
+    int encoder_input_width = 0;
+    /// Custom raw output shape string for GeneralEncoderModel.
+    /// Comma-separated dimensions, e.g. "768,16,16" (empty = use default).
+    std::string encoder_output_shape;
 };
 
 /**
@@ -90,6 +104,30 @@ public:
     /// Whether any recurrent bindings are active (forces batch_size=1).
     [[nodiscard]] bool hasRecurrentBindings() const;
 
+    // ── Post-Encoder Module ──
+    [[nodiscard]] std::string const & postEncoderModuleType() const;
+    void setPostEncoderModuleType(std::string const & type);
+
+    [[nodiscard]] std::string const & postEncoderPointKey() const;
+    void setPostEncoderPointKey(std::string const & key);
+
+    // ── Encoder Shape Configuration ──
+    [[nodiscard]] int encoderInputHeight() const;
+    void setEncoderInputHeight(int height);
+
+    [[nodiscard]] int encoderInputWidth() const;
+    void setEncoderInputWidth(int width);
+
+    [[nodiscard]] std::string const & encoderOutputShape() const;
+    void setEncoderOutputShape(std::string const & shape);
+
+    /// @brief Whether the encoder shape has been explicitly configured.
+    ///
+    /// Returns true if the user has clicked "Apply Shape" at least once,
+    /// which stores non-zero height/width values in the state.
+    /// Used to gate weight loading for general_encoder models.
+    [[nodiscard]] bool shapeConfigured() const;
+
 signals:
     void modelChanged();
     void weightsPathChanged();
@@ -99,6 +137,8 @@ signals:
     void outputBindingsChanged();
     void staticInputsChanged();
     void recurrentBindingsChanged();
+    void postEncoderModuleChanged();
+    void encoderShapeChanged();
 
 private:
     DeepLearningStateData _data;

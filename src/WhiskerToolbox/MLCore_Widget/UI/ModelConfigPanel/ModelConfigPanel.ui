@@ -1,0 +1,762 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ModelConfigPanel</class>
+ <widget class="QWidget" name="ModelConfigPanel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="modelGroupBox">
+     <property name="title">
+      <string>Model</string>
+     </property>
+     <layout class="QVBoxLayout" name="groupBoxLayout">
+      <!-- Task type and algorithm selection -->
+      <item>
+       <layout class="QHBoxLayout" name="taskTypeLayout">
+        <item>
+         <widget class="QLabel" name="taskTypeLabel">
+          <property name="text">
+           <string>Task:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="taskTypeComboBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Select the ML task type to filter available algorithms</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="algorithmLayout">
+        <item>
+         <widget class="QLabel" name="algorithmLabel">
+          <property name="text">
+           <string>Algorithm:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="algorithmComboBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Select the ML algorithm to use</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <!-- Dynamic parameter area -->
+      <item>
+       <widget class="QStackedWidget" name="parameterStack">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <!-- Page 0: Empty / no model selected -->
+        <widget class="QWidget" name="emptyPage">
+         <layout class="QVBoxLayout" name="emptyPageLayout">
+          <item>
+           <widget class="QLabel" name="noParametersLabel">
+            <property name="text">
+             <string>Select an algorithm to configure parameters</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { color: gray; font-style: italic; }</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 1: Random Forest parameters -->
+        <widget class="QWidget" name="randomForestPage">
+         <layout class="QGridLayout" name="rfGridLayout">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="rfNumTreesLabel">
+            <property name="text">
+             <string>Number of Trees:</string>
+            </property>
+            <property name="toolTip">
+             <string>Number of decision trees in the forest</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="rfNumTreesSpinBox">
+            <property name="toolTip">
+             <string>More trees generally improve performance but increase computation time</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>10000</number>
+            </property>
+            <property name="value">
+             <number>10</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="rfMinLeafLabel">
+            <property name="text">
+             <string>Min Leaf Size:</string>
+            </property>
+            <property name="toolTip">
+             <string>Minimum number of samples in a leaf node</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="rfMinLeafSpinBox">
+            <property name="toolTip">
+             <string>Larger values prevent overfitting</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>10000</number>
+            </property>
+            <property name="value">
+             <number>1</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="rfMaxDepthLabel">
+            <property name="text">
+             <string>Max Depth:</string>
+            </property>
+            <property name="toolTip">
+             <string>Maximum tree depth (0 = unlimited)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="rfMaxDepthSpinBox">
+            <property name="toolTip">
+             <string>Maximum depth of each tree (0 = unlimited)</string>
+            </property>
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>1000</number>
+            </property>
+            <property name="value">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 2: Naive Bayes parameters -->
+        <widget class="QWidget" name="naiveBayesPage">
+         <layout class="QGridLayout" name="nbGridLayout">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="nbEpsilonLabel">
+            <property name="text">
+             <string>Epsilon (variance smoothing):</string>
+            </property>
+            <property name="toolTip">
+             <string>Variance smoothing parameter to stabilize computation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="nbEpsilonSpinBox">
+            <property name="toolTip">
+             <string>Small value added to variance for numerical stability</string>
+            </property>
+            <property name="decimals">
+             <number>12</number>
+            </property>
+            <property name="minimum">
+             <double>0.0</double>
+            </property>
+            <property name="maximum">
+             <double>1.0</double>
+            </property>
+            <property name="singleStep">
+             <double>0.000000001</double>
+            </property>
+            <property name="value">
+             <double>0.000000001</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 3: Logistic Regression parameters -->
+        <widget class="QWidget" name="logisticRegressionPage">
+         <layout class="QGridLayout" name="lrGridLayout">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="lrLambdaLabel">
+            <property name="text">
+             <string>Lambda (L2 regularization):</string>
+            </property>
+            <property name="toolTip">
+             <string>L2 regularization strength (0 = no regularization)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="lrLambdaSpinBox">
+            <property name="toolTip">
+             <string>Higher values increase regularization, reducing overfitting</string>
+            </property>
+            <property name="decimals">
+             <number>6</number>
+            </property>
+            <property name="minimum">
+             <double>0.0</double>
+            </property>
+            <property name="maximum">
+             <double>1000.0</double>
+            </property>
+            <property name="singleStep">
+             <double>0.01</double>
+            </property>
+            <property name="value">
+             <double>0.0</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="lrMaxIterLabel">
+            <property name="text">
+             <string>Max Iterations:</string>
+            </property>
+            <property name="toolTip">
+             <string>Maximum optimizer iterations (0 = unlimited)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="lrMaxIterSpinBox">
+            <property name="toolTip">
+             <string>Maximum number of optimizer iterations</string>
+            </property>
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>1000000</number>
+            </property>
+            <property name="value">
+             <number>10000</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 4: K-Means parameters -->
+        <widget class="QWidget" name="kMeansPage">
+         <layout class="QGridLayout" name="kmGridLayout">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="kmKLabel">
+            <property name="text">
+             <string>K (clusters):</string>
+            </property>
+            <property name="toolTip">
+             <string>Number of clusters</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="kmKSpinBox">
+            <property name="toolTip">
+             <string>Number of clusters to produce</string>
+            </property>
+            <property name="minimum">
+             <number>2</number>
+            </property>
+            <property name="maximum">
+             <number>1000</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="kmMaxIterLabel">
+            <property name="text">
+             <string>Max Iterations:</string>
+            </property>
+            <property name="toolTip">
+             <string>Maximum iterations (0 = unlimited)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="kmMaxIterSpinBox">
+            <property name="toolTip">
+             <string>Maximum number of iterations</string>
+            </property>
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>1000000</number>
+            </property>
+            <property name="value">
+             <number>1000</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="kmSeedLabel">
+            <property name="text">
+             <string>Random Seed:</string>
+            </property>
+            <property name="toolTip">
+             <string>Seed for reproducibility (-1 = random)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="kmSeedSpinBox">
+            <property name="toolTip">
+             <string>Random seed for reproducibility (-1 = non-deterministic)</string>
+            </property>
+            <property name="minimum">
+             <number>-1</number>
+            </property>
+            <property name="maximum">
+             <number>999999</number>
+            </property>
+            <property name="value">
+             <number>-1</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 5: DBSCAN parameters -->
+        <widget class="QWidget" name="dbscanPage">
+         <layout class="QGridLayout" name="dbGridLayout">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="dbEpsilonLabel">
+            <property name="text">
+             <string>Epsilon (neighborhood radius):</string>
+            </property>
+            <property name="toolTip">
+             <string>Maximum distance between two samples for them to be considered neighbors</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="dbEpsilonSpinBox">
+            <property name="toolTip">
+             <string>Neighborhood radius for density estimation</string>
+            </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="minimum">
+             <double>0.0001</double>
+            </property>
+            <property name="maximum">
+             <double>10000.0</double>
+            </property>
+            <property name="singleStep">
+             <double>0.1</double>
+            </property>
+            <property name="value">
+             <double>1.0</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="dbMinPointsLabel">
+            <property name="text">
+             <string>Min Points:</string>
+            </property>
+            <property name="toolTip">
+             <string>Minimum number of points to form a dense region</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="dbMinPointsSpinBox">
+            <property name="toolTip">
+             <string>Minimum points in epsilon-neighborhood to form core point</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>10000</number>
+            </property>
+            <property name="value">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 6: Gaussian Mixture parameters -->
+        <widget class="QWidget" name="gmmPage">
+         <layout class="QGridLayout" name="gmmGridLayout">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="gmmKLabel">
+            <property name="text">
+             <string>K (components):</string>
+            </property>
+            <property name="toolTip">
+             <string>Number of Gaussian components</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="gmmKSpinBox">
+            <property name="toolTip">
+             <string>Number of Gaussian mixture components</string>
+            </property>
+            <property name="minimum">
+             <number>2</number>
+            </property>
+            <property name="maximum">
+             <number>1000</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="gmmMaxIterLabel">
+            <property name="text">
+             <string>Max EM Iterations:</string>
+            </property>
+            <property name="toolTip">
+             <string>Maximum EM iterations</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="gmmMaxIterSpinBox">
+            <property name="toolTip">
+             <string>Maximum number of EM iterations</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>1000000</number>
+            </property>
+            <property name="value">
+             <number>300</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="gmmSeedLabel">
+            <property name="text">
+             <string>Random Seed:</string>
+            </property>
+            <property name="toolTip">
+             <string>Seed for reproducibility (-1 = random)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="gmmSeedSpinBox">
+            <property name="toolTip">
+             <string>Random seed for reproducibility (-1 = non-deterministic)</string>
+            </property>
+            <property name="minimum">
+             <number>-1</number>
+            </property>
+            <property name="maximum">
+             <number>999999</number>
+            </property>
+            <property name="value">
+             <number>-1</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 7: Hidden Markov Model parameters -->
+        <widget class="QWidget" name="hmmPage">
+         <layout class="QGridLayout" name="hmmGridLayout">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="hmmNumStatesLabel">
+            <property name="text">
+             <string>Number of States:</string>
+            </property>
+            <property name="toolTip">
+             <string>Number of hidden states in the HMM</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="hmmNumStatesSpinBox">
+            <property name="toolTip">
+             <string>Number of hidden states (typically 2 for binary classification)</string>
+            </property>
+            <property name="minimum">
+             <number>2</number>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="value">
+             <number>2</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="hmmToleranceLabel">
+            <property name="text">
+             <string>Convergence Tolerance:</string>
+            </property>
+            <property name="toolTip">
+             <string>Convergence tolerance for training (smaller = more precise)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="hmmToleranceSpinBox">
+            <property name="toolTip">
+             <string>Training stops when log-likelihood improvement is below this threshold</string>
+            </property>
+            <property name="decimals">
+             <number>10</number>
+            </property>
+            <property name="minimum">
+             <double>0.0</double>
+            </property>
+            <property name="maximum">
+             <double>1.0</double>
+            </property>
+            <property name="singleStep">
+             <double>0.000001</double>
+            </property>
+            <property name="value">
+             <double>0.00001</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QCheckBox" name="hmmDiagonalCovCheckBox">
+            <property name="text">
+             <string>Diagonal covariance</string>
+            </property>
+            <property name="toolTip">
+             <string>Use diagonal covariance matrices instead of full covariance. Reduces parameters from M(M+1)/2 to M per state, improving stability with limited training data.</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+      <!-- Class balancing section (for classification only) -->
+      <item>
+       <widget class="QGroupBox" name="balancingGroupBox">
+        <property name="title">
+         <string>Class Balancing</string>
+        </property>
+        <layout class="QVBoxLayout" name="balancingLayout">
+         <item>
+          <widget class="QCheckBox" name="enableBalancingCheckBox">
+           <property name="text">
+            <string>Enable Class Balancing</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="balancingStrategyLayout">
+           <item>
+            <widget class="QLabel" name="strategyLabel">
+             <property name="text">
+              <string>Strategy:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="strategyComboBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>1</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>Strategy for balancing class distribution</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="ratioLayout">
+           <item>
+            <widget class="QLabel" name="ratioLabel">
+             <property name="text">
+              <string>Max Ratio:</string>
+             </property>
+             <property name="toolTip">
+              <string>Maximum ratio of majority to minority class samples</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="ratioSpinBox">
+             <property name="toolTip">
+              <string>Maximum ratio of majority to minority class (1.0 = perfectly balanced)</string>
+             </property>
+             <property name="minimum">
+              <double>1.0</double>
+             </property>
+             <property name="maximum">
+              <double>10.0</double>
+             </property>
+             <property name="singleStep">
+              <double>0.1</double>
+             </property>
+             <property name="value">
+              <double>1.0</double>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="ratioSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <!-- Train button -->
+      <item>
+       <widget class="QPushButton" name="trainButton">
+        <property name="text">
+         <string>Train Model</string>
+        </property>
+        <property name="toolTip">
+         <string>Train the selected model using the configured features, regions, and labels</string>
+        </property>
+       </widget>
+      </item>
+      <!-- Status label -->
+      <item>
+       <widget class="QLabel" name="statusLabel">
+        <property name="text">
+         <string>Ready</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: gray; font-style: italic; }</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

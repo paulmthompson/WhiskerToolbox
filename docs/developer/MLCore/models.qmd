@@ -1,0 +1,153 @@
+---
+title: "Model Interface & Registry"
+description: "MLModelOperation abstract interface, MLModelRegistry, task types, and parameters"
+---
+
+## Model Operation Interface
+
+`MLModelOperation` (`models/MLModelOperation.hpp`) is the abstract base class for all ML algorithms. It provides a uniform API for both supervised and unsupervised workflows.
+
+### Supervised Workflow
+
+```cpp
+auto model = registry.create("Random Forest");
+auto params = model->getDefaultParameters();
+
+model->train(features, labels, params.get());
+model->predict(new_features, predictions);
+// Optional:
+model->predictProbabilities(new_features, probabilities);
+```
+
+### Unsupervised Workflow
+
+```cpp
+auto model = registry.create("K-Means");
+auto params = model->getDefaultParameters();
+
+model->fit(features, params.get());
+model->assignClusters(new_features, assignments);
+```
+
+### Data Convention
+
+All methods operate on armadillo matrices in **mlpack convention**:
+
+- Feature matrices: `(features × observations)` — each **column** is one sample
+- Label rows: `(1 × observations)` — each element is a class index `[0, num_classes)`
+- Probability matrices: `(num_classes × observations)` — each column sums to 1.0
+
+### Interface Methods
+
+| Category | Method | Description |
+|---|---|---|
+| **Identity** | `getName()` | Human-readable name (e.g., "Random Forest") |
+| | `getTaskType()` | `MLTaskType` enum value |
+| | `getDefaultParameters()` | Factory for default parameter set |
+| **Supervised** | `train(features, labels, params)` | Train on labeled data |
+| | `predict(features, predictions)` | Predict class labels |
+| | `predictProbabilities(features, probs)` | Per-class probability matrix |
+| **Sequences** | `trainSequences(featureSeqs, labelSeqs, params)` | Train on pre-segmented temporal sequences (default: concatenates and calls `train()`) |
+| | `predictSequences(featureSeqs, predSeqs)` | Predict per sequence (default: concatenates, predicts, splits back) |
+| | `predictSequencesConstrained(featureSeqs, predSeqs, constraints)` | Predict with per-sequence initial state override (default: ignores constraints, delegates to `predictSequences()`) |
+| | `isSequenceModel()` | Whether model natively handles temporal sequences (default: `false`) |
+| **Unsupervised** | `fit(features, params)` | Fit to unlabeled data |
+| | `assignClusters(features, assignments)` | Assign cluster labels |
+| **Persistence** | `save(ostream)` / `load(istream)` | Model serialization |
+| **Query** | `isTrained()` | Whether model is ready for prediction |
+| | `numClasses()` / `numFeatures()` | Training data dimensions |
+
+Default implementations of supervised methods return `false` for unsupervised models (and vice versa), so each concrete model only overrides the methods relevant to its task type.
+
+## Task Types
+
+`MLTaskType` (`models/MLTaskType.hpp`) categorizes model operations:
+
+```cpp
+enum class MLTaskType {
+    BinaryClassification,     // Two-class supervised
+    MultiClassClassification, // N-class supervised (N ≥ 2)
+    Clustering,               // Unsupervised grouping
+};
+```
+
+The registry uses this to filter models when the UI selects a task type.
+
+## Model Parameters
+
+`MLModelParametersBase` (`models/MLModelParameters.hpp`) is the abstract base for algorithm-specific parameter sets. Each model has a concrete subclass:
+
+### Supervised Parameters
+
+| Struct | Parameters |
+|---|---|
+| `RandomForestParameters` | `num_trees` (10), `minimum_leaf_size` (1), `minimum_gain_split` (1e-7), `maximum_depth` (0 = unlimited) |
+| `NaiveBayesParameters` | `epsilon` (1e-9) — variance smoothing |
+| `LogisticRegressionParameters` | `lambda` (0.0), `step_size` (0.01), `max_iterations` (10000) |
+| `HMMParameters` | `num_states` (2), `tolerance` (1e-5) |
+
+### Unsupervised Parameters
+
+| Struct | Parameters |
+|---|---|
+| `KMeansParameters` | `k` (3), `max_iterations` (1000), `seed` (optional) |
+| `DBSCANParameters` | `epsilon` (1.0), `min_points` (5) |
+| `GMMParameters` | `k` (3), `max_iterations` (300), `seed` (optional) |
+
+## Model Registry
+
+`MLModelRegistry` (`models/MLModelRegistry.hpp`) is a factory registry that stores factory functions for ML models. Each `create()` call returns a fresh, untrained model instance.
+
+### Built-in Registration
+
+The constructor registers all six built-in models. External code can register additional models via `registerModel()`.
+
+### API
+
+```cpp
+MLModelRegistry registry;
+
+// Query
+auto all_names = registry.getAllModelNames();
+auto classifiers = registry.getModelNames(MLTaskType::MultiClassClassification);
+auto clusterers = registry.getModelNames(MLTaskType::Clustering);
+bool has_rf = registry.hasModel("Random Forest");
+
+// Create
+auto model = registry.create("Random Forest");  // fresh, untrained instance
+auto params = model->getDefaultParameters();
+
+// Register custom model
+registry.registerModel<MyCustomModel>();
+// or:
+registry.registerModel("My Model", MLTaskType::Clustering, []() {
+    return std::make_unique<MyCustomModel>();
+});
+```
+
+### Custom Model Registration
+
+To add a new model:
+
+1. Subclass `MLModelOperation` and implement the relevant methods
+2. Create a corresponding parameter struct inheriting `MLModelParametersBase`
+3. Register via `registerModel<T>()` or the three-argument overload
+
+```cpp
+class MyModel : public MLModelOperation {
+public:
+    std::string getName() const override { return "My Model"; }
+    MLTaskType getTaskType() const override { return MLTaskType::Clustering; }
+    std::unique_ptr<MLModelParametersBase> getDefaultParameters() const override {
+        return std::make_unique<MyModelParameters>();
+    }
+    bool fit(arma::mat const & features, MLModelParametersBase const * params) override;
+    bool assignClusters(arma::mat const & features, arma::Row<size_t> & assignments) override;
+    bool isTrained() const override { return _trained; }
+private:
+    bool _trained = false;
+};
+
+// In the registry constructor or your registration code:
+registry.registerModel<MyModel>();
+```

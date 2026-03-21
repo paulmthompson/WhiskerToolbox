@@ -10,13 +10,11 @@
 
 namespace dl {
 
-std::string TensorToLine2D::name() const
-{
+std::string TensorToLine2D::name() const {
     return "TensorToLine2D";
 }
 
-std::string TensorToLine2D::outputTypeName() const
-{
+std::string TensorToLine2D::outputTypeName() const {
     return "Line2D";
 }
 
@@ -25,8 +23,7 @@ namespace {
 /// Zhang-Suen thinning algorithm.
 /// Thins a binary image in-place to a 1-pixel-wide skeleton.
 /// grid is row-major: grid[y * w + x], with values 0 or 1.
-void zhang_suen_thinning(std::vector<uint8_t> & grid, int const w, int const h)
-{
+void zhang_suen_thinning(std::vector<uint8_t> & grid, int const w, int const h) {
     bool changed = true;
 
     auto at = [&](int x, int y) -> uint8_t {
@@ -76,7 +73,7 @@ void zhang_suen_thinning(std::vector<uint8_t> & grid, int const w, int const h)
                 to_remove.push_back(y * w + x);
             }
         }
-        for (int const idx : to_remove) {
+        for (int const idx: to_remove) {
             grid[idx] = 0;
             changed = true;
         }
@@ -117,7 +114,7 @@ void zhang_suen_thinning(std::vector<uint8_t> & grid, int const w, int const h)
                 to_remove.push_back(y * w + x);
             }
         }
-        for (int const idx : to_remove) {
+        for (int const idx: to_remove) {
             grid[idx] = 0;
             changed = true;
         }
@@ -127,8 +124,7 @@ void zhang_suen_thinning(std::vector<uint8_t> & grid, int const w, int const h)
 /// Find an endpoint of the skeleton (pixel with exactly 1 neighbor).
 /// If no endpoint exists (closed loop), return any skeleton pixel.
 /// Returns {-1, -1} if skeleton is empty.
-std::pair<int, int> find_endpoint(std::vector<uint8_t> const & grid, int const w, int const h)
-{
+std::pair<int, int> find_endpoint(std::vector<uint8_t> const & grid, int const w, int const h) {
     std::pair<int, int> any_pixel{-1, -1};
 
     for (int y = 0; y < h; ++y) {
@@ -156,22 +152,21 @@ std::pair<int, int> find_endpoint(std::vector<uint8_t> const & grid, int const w
         }
     }
 
-    return any_pixel; // fallback (loop or single pixel)
+    return any_pixel;// fallback (loop or single pixel)
 }
 
 /// Trace the skeleton by following connected pixels from a starting point.
 /// Marks visited pixels to avoid revisiting.
 std::vector<std::pair<int, int>> trace_skeleton(std::vector<uint8_t> & grid,
                                                 int const w, int const h,
-                                                std::pair<int, int> const start)
-{
+                                                std::pair<int, int> const start) {
     std::vector<std::pair<int, int>> path;
     if (start.first < 0) return path;
 
     int cx = start.first;
     int cy = start.second;
-    grid[cy * w + cx] = 0; // mark visited
-    path.push_back({cx, cy});
+    grid[cy * w + cx] = 0;// mark visited
+    path.emplace_back(cx, cy);
 
     bool found = true;
     while (found) {
@@ -185,8 +180,8 @@ std::vector<std::pair<int, int>> trace_skeleton(std::vector<uint8_t> & grid,
             int const nx = cx + dx_order[i];
             int const ny = cy + dy_order[i];
             if (nx >= 0 && nx < w && ny >= 0 && ny < h && grid[ny * w + nx] != 0) {
-                grid[ny * w + nx] = 0; // mark visited
-                path.push_back({nx, ny});
+                grid[ny * w + nx] = 0;// mark visited
+                path.emplace_back(nx, ny);
                 cx = nx;
                 cy = ny;
                 found = true;
@@ -201,8 +196,7 @@ std::vector<std::pair<int, int>> trace_skeleton(std::vector<uint8_t> & grid,
 /// Scale a point from tensor coordinates to target image coordinates
 Point2D<float> scale_to_target(float const x, float const y,
                                int const tensor_h, int const tensor_w,
-                               ImageSize const target)
-{
+                               ImageSize const target) {
     if (target.width <= 0 || target.height <= 0) {
         return {x, y};
     }
@@ -211,14 +205,14 @@ Point2D<float> scale_to_target(float const x, float const y,
     return {x * sx, y * sy};
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 Line2D TensorToLine2D::decode(at::Tensor const & tensor,
-                              DecoderParams const & params) const
-{
-    auto channel = tensor[params.batch_index][params.source_channel];
-    auto const h = params.height;
-    auto const w = params.width;
+                              DecoderContext const & ctx,
+                              LineDecoderParams const & params) {
+    auto channel = tensor[ctx.batch_index][ctx.source_channel];
+    auto const h = ctx.height;
+    auto const w = ctx.width;
     auto accessor = channel.accessor<float, 2>();
 
     // Step 1: Threshold to binary grid
@@ -245,13 +239,13 @@ Line2D TensorToLine2D::decode(at::Tensor const & tensor,
     // Step 4: Convert to Line2D with coordinate scaling
     std::vector<Point2D<float>> points;
     points.reserve(path.size());
-    for (auto const & p : path) {
+    for (auto const & p: path) {
         points.push_back(scale_to_target(
-            static_cast<float>(p.first), static_cast<float>(p.second),
-            h, w, params.target_image_size));
+                static_cast<float>(p.first), static_cast<float>(p.second),
+                h, w, ctx.target_image_size));
     }
 
     return Line2D{std::move(points)};
 }
 
-} // namespace dl
+}// namespace dl

@@ -417,7 +417,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         PointDisplayOptions opts;
         opts.hex_color() = "#0000ff";
         opts.point_size = 10;
-        opts.marker_shape = PointMarkerShape::Square;
+        opts.marker_shape = CorePlotting::GlyphType::Square;
 
         state.displayOptions().set("point_1", opts);
 
@@ -425,7 +425,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->hex_color() == "#0000ff");
         REQUIRE(retrieved->point_size == 10);
-        REQUIRE(retrieved->marker_shape == PointMarkerShape::Square);
+        REQUIRE(retrieved->marker_shape == CorePlotting::GlyphType::Square);
 
         state.displayOptions().remove<PointDisplayOptions>("point_1");
         REQUIRE(state.displayOptions().get<PointDisplayOptions>("point_1") == nullptr);

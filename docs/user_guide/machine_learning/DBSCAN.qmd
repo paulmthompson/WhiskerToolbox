@@ -1,0 +1,41 @@
+---
+title: "DBSCAN Clustering"
+format: html
+---
+
+## Overview
+
+DBSCAN (Density-Based Spatial Clustering of Applications with Noise) discovers clusters of arbitrary shape based on point density. Unlike K-Means, it does not require specifying the number of clusters in advance and can identify noise points that don't belong to any cluster.
+
+## Parameters
+
+| Parameter | Default | Description |
+|---|---|---|
+| Epsilon | 1.0 | Neighborhood radius — the maximum distance between two points to be considered neighbors |
+| Min Points | 5 | Minimum number of points required to form a dense region (core point threshold) |
+
+## When to Use
+
+- You don't know the number of clusters
+- Clusters have arbitrary shapes (non-spherical)
+- Your data contains noise or outliers that should not be assigned to any cluster
+- Cluster densities are roughly uniform
+
+## Noise Detection
+
+DBSCAN labels points that are not within `epsilon` distance of at least `min_points` other points as **noise**. These points are not assigned to any cluster. The cluster output panel shows the noise point count.
+
+## Output
+
+DBSCAN produces hard cluster assignments plus noise detection:
+
+- **Entity groups**: One putative group per discovered cluster
+- **Interval series**: Contiguous runs of each cluster assignment
+- **Noise points**: Reported separately, not assigned to any group
+
+## Tips
+
+- **Epsilon** is the most important parameter. If all points are noise, increase epsilon. If everything is one cluster, decrease it.
+- Enable z-score normalization so that epsilon has consistent meaning across features with different scales
+- **Min Points** controls sensitivity: higher values create fewer, larger clusters
+- Start with `min_points = 2 × num_features` as a rule of thumb

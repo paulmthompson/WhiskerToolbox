@@ -1,0 +1,202 @@
+---
+title: "Pipelines"
+description: "End-to-end classification and clustering orchestration"
+---
+
+## Overview
+
+MLCore provides two pipeline entry points that compose all lower-level components into single-call workflows. Both pipelines follow the same pattern: configure → run → check result.
+
+## Classification Pipeline
+
+`ClassificationPipeline` (`pipelines/ClassificationPipeline.hpp`) orchestrates supervised classification end-to-end.
+
+### Pipeline Stages
+
+For frame-based models (Random Forest, Naive Bayes, Logistic Regression):
+
+```
+ValidatingFeatures → ConvertingFeatures → AssemblingLabels →
+BalancingClasses → Training → Predicting → ComputingMetrics → WritingOutput → Complete
+```
+
+For sequence models (HMM):
+
+```
+ValidatingFeatures → ConvertingFeatures → AssemblingLabels →
+BalancingClasses → SegmentingSequences → Training → Predicting →
+ComputingMetrics → WritingOutput → Complete
+```
+
+The `SegmentingSequences` stage uses `SequenceAssembler::segment()` to split the feature matrix and labels into contiguous temporal segments (based on gaps in `TimeFrameIndex`). Training then routes through `trainSequences()` and prediction through `predictSequences()`, preserving temporal structure for models like HMMs. When `constrained_decoding` is enabled and training labels are available, prediction uses `predictSequencesConstrained()` to clamp the HMM's initial distribution at segment boundaries where the ground truth state is known.
+
+### Configuration
+
+```cpp
+ClassificationPipelineConfig config;
+
+// Model
+config.model_name = "Random Forest";
+config.model_params = &rf_params;  // or nullptr for defaults
+
+// Features
+config.feature_tensor_key = "ml_features";
+
+// Labels (variant — pick one mode)
+config.label_config = LabelFromIntervals{"Contact", "No Contact"};
+config.label_interval_key = "contact_intervals";
+
+// Conversion
+config.conversion_config.zscore_normalize = true;
+
+// Balancing (optional)
+config.balance_classes = true;
+config.balancing_config.strategy = BalancingStrategy::Subsample;
+
+// Prediction region
+config.prediction_region.predict_all_rows = true;
+// Optional: filter output to a specific interval (runs Viterbi on full span
+// for temporal context, writes only frames within the interval)
+// config.prediction_region.prediction_interval_key = "target_region";
+// config.prediction_region.constrained_decoding = true; // HMM warm-start
+
+// Output
+config.output_config.output_prefix = "Predicted:";
+config.time_key_str = "camera";
+```
+
+### Entry Point
+
+```cpp
+auto result = runClassificationPipeline(dm, registry, config, progress_callback);
+
+if (result.success) {
+    // result.training_observations, result.num_classes
+    // result.binary_train_metrics or result.multi_class_train_metrics
+    // result.writer_result contains created DataManager keys
+    // result.trained_model can be reused or saved
+}
+```
+
+### Result Fields
+
+| Field | Description |
+|---|---|
+| `success` | Whether the pipeline completed |
+| `error_message` | Human-readable error (if failed) |
+| `failed_stage` | Which stage failed |
+| `training_observations` | Count after NaN dropping and balancing |
+| `num_features` / `num_classes` | Training dimensions |
+| `class_names` | From label assembly |
+| `rows_dropped_nan` | NaN/Inf rows removed |
+| `was_balanced` | Whether balancing was applied |
+| `binary_train_metrics` | Accuracy, sensitivity, specificity, F1, confusion matrix |
+| `multi_class_train_metrics` | Per-class precision/recall/F1, overall accuracy |
+| `prediction_observations` | Count of predicted frames |
+| `writer_result` | Created DataManager keys, group IDs |
+| `trained_model` | Ownership transferred — reusable or saveable |
+
+### Progress Callback
+
+```cpp
+auto progress = [](ClassificationStage stage, std::string const & msg) {
+    spdlog::info("Pipeline: {} — {}", toString(stage), msg);
+};
+```
+
+## Clustering Pipeline
+
+`ClusteringPipeline` (`pipelines/ClusteringPipeline.hpp`) orchestrates unsupervised clustering end-to-end.
+
+### Pipeline Stages
+
+```
+ValidatingFeatures → ConvertingFeatures → Fitting →
+AssigningClusters → WritingOutput → Complete
+```
+
+### Configuration
+
+```cpp
+ClusteringPipelineConfig config;
+
+// Model
+config.model_name = "K-Means";
+config.model_params = &kmeans_params;
+
+// Features
+config.feature_tensor_key = "pca_features";
+
+// Conversion
+config.conversion_config.zscore_normalize = true;
+
+// Assignment region
+config.assignment_region.assign_all_rows = true;
+
+// Output
+config.output_config.output_prefix = "Cluster:";
+config.output_config.write_to_putative_groups = true;
+config.output_config.write_intervals = true;
+config.output_config.write_probabilities = true;  // GMM only
+config.time_key_str = "camera";
+```
+
+### Entry Point
+
+```cpp
+auto result = runClusteringPipeline(dm, registry, config, progress_callback);
+
+if (result.success) {
+    // result.num_clusters, result.cluster_sizes, result.cluster_names
+    // result.interval_keys — created DigitalIntervalSeries keys
+    // result.probability_keys — created AnalogTimeSeries keys (GMM)
+    // result.putative_group_ids — created entity group IDs
+    // result.fitted_model — reusable
+}
+```
+
+### Result Fields
+
+| Field | Description |
+|---|---|
+| `success` | Whether the pipeline completed |
+| `error_message` | Human-readable error (if failed) |
+| `fitting_observations` | Count after NaN dropping |
+| `num_features` / `num_clusters` | Fitting dimensions |
+| `noise_points` | DBSCAN noise count (0 for others) |
+| `cluster_sizes` | Per-cluster observation counts |
+| `cluster_names` | `"{prefix}{index}"` format |
+| `interval_keys` | Created `DigitalIntervalSeries` DataManager keys |
+| `probability_keys` | Created `AnalogTimeSeries` keys (GMM soft assignments) |
+| `putative_group_ids` | Created entity group IDs |
+| `fitted_model` | Ownership transferred — reusable |
+
+## Error Handling
+
+Both pipelines use early-return on failure. The `failed_stage` field indicates where the problem occurred. Common failure modes:
+
+- **ValidatingFeatures**: Feature tensor not found, not 2D, or empty
+- **ConvertingFeatures**: All rows dropped due to NaN/Inf
+- **AssemblingLabels**: No labels found, incompatible row types
+- **SegmentingSequences**: No contiguous sequences meeting minimum length
+- **Training/Fitting**: Model failed internally (rare with valid data)
+- **WritingOutput**: DataManager write failure
+
+## Bounding Span (Prediction Region Filtering)
+
+See [Prediction Regions](prediction_regions.qmd) for the full design of bounding span
+computation, output filtering, and constrained Viterbi warm-start.
+
+Summary: `BoundingSpan.hpp` (`pipelines/BoundingSpan.hpp`) provides utilities for computing
+and applying temporal bounding spans when prediction is restricted to a specific interval.
+When `prediction_interval_key` is set, the pipeline computes the temporal union of training
+and prediction intervals, filters features to that range (preserving HMM context), runs
+prediction, then filters output back to the requested frames.
+
+| Function | Description |
+|---|---|
+| `computeIntervalBounds(series)` | Returns `[min(start), max(end)]` of all intervals |
+| `computeRowTimeBounds(times)` | Returns `[min, max]` of a time vector |
+| `mergeSpans(a, b)` | Returns the union span covering both inputs |
+| `filterRowsToSpan(features, times, span)` | Filters columns and times to span |
+| `filterPredictionsToIntervals(preds, probs, times, intervals)` | Keeps only frames within intervals |

@@ -260,6 +260,53 @@ endif()
 
 enable_whiskertoolbox_shared_test_pch(test_neurosam_model)
 
+# --- General Encoder Model Tests ---
+add_executable(test_general_encoder_model
+    models_v2/GeneralEncoderModel.test.cpp
+)
+
+target_link_libraries(test_general_encoder_model PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::DeepLearning
+    NEURALYZER_GEOMETRY
+    "${TORCH_LIBRARIES}"
+)
+
+target_include_directories(test_general_encoder_model PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_general_encoder_model PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_general_encoder_model PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_general_encoder_model PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_general_encoder_model
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_general_encoder_model)
+    endif()
+else()
+    add_test(NAME test_general_encoder_model_all
+        COMMAND test_general_encoder_model
+        )
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_general_encoder_model)
+
 
 # --- Runtime model tests  ---
 add_executable(test_runtime_model
@@ -308,6 +355,56 @@ else()
 endif()
 
 enable_whiskertoolbox_shared_test_pch(test_runtime_model)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Post-Encoder Module Tests
+# ─────────────────────────────────────────────────────────────────────────────
+
+add_executable(test_post_encoder_modules
+    post_encoder/PostEncoderModules.test.cpp
+)
+
+target_link_libraries(test_post_encoder_modules PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::DeepLearning
+    NEURALYZER_GEOMETRY
+    "${TORCH_LIBRARIES}"
+)
+
+target_include_directories(test_post_encoder_modules PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_post_encoder_modules PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_post_encoder_modules PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_post_encoder_modules PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_post_encoder_modules
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_post_encoder_modules)
+    endif()
+else()
+    add_test(NAME test_post_encoder_modules_all
+        COMMAND test_post_encoder_modules
+    )
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_post_encoder_modules)
 
 # ────────────────────────────────────────────────────────────────────────────
 # Standalone test driver for NeuroSAM debugging
@@ -382,3 +479,57 @@ else()
 endif()
 
 enable_whiskertoolbox_shared_test_pch(test_binding_data)
+
+# --- Widget-Level Param Schema Tests (no libtorch needed) ---
+find_package(reflectcpp CONFIG REQUIRED)
+
+add_executable(test_dl_param_schemas
+    param_schemas/DeepLearningParamSchemas.test.cpp
+)
+
+target_link_libraries(test_dl_param_schemas PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::ParameterSchema
+    WhiskerToolbox::DeepLearning
+    reflectcpp::reflectcpp
+)
+
+target_include_directories(test_dl_param_schemas PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
+)
+
+target_sources(test_dl_param_schemas PRIVATE
+    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningParamSchemas.cpp"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_dl_param_schemas PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_dl_param_schemas PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_dl_param_schemas PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_dl_param_schemas
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_dl_param_schemas)
+    endif()
+else()
+    add_test(NAME test_dl_param_schemas_all
+        COMMAND test_dl_param_schemas
+        )
+endif()
+
+enable_whiskertoolbox_shared_test_pch(test_dl_param_schemas)

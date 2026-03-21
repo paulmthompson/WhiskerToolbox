@@ -12,9 +12,10 @@ namespace dl {
 /// Factory for creating ChannelDecoder instances by string key.
 ///
 /// The following keys are registered by default:
-///   - "TensorToPoint2D"  → TensorToPoint2D
-///   - "TensorToMask2D"   → TensorToMask2D
-///   - "TensorToLine2D"   → TensorToLine2D
+///   - "TensorToPoint2D"         → TensorToPoint2D
+///   - "TensorToMask2D"          → TensorToMask2D
+///   - "TensorToLine2D"          → TensorToLine2D
+///   - "TensorToFeatureVector"   → TensorToFeatureVector
 class DecoderFactory {
 public:
     /// Create a decoder instance by name.

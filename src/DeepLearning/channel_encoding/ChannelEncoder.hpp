@@ -1,29 +1,53 @@
 #ifndef WHISKERTOOLBOX_CHANNEL_ENCODER_HPP
 #define WHISKERTOOLBOX_CHANNEL_ENCODER_HPP
 
-#include <string> // std::string
+/// @file ChannelEncoder.hpp
+/// @brief Base class for channel encoders and per-encoder parameter structs.
 
-//#include <torch/torch.h>
+#include <string>
 
 namespace dl {
 
-/// How a geometry primitive is rasterized onto a tensor channel
+/// How a geometry primitive is rasterized onto a tensor channel.
 enum class RasterMode {
-    Binary,   ///< 1.0 at occupied pixels, 0.0 elsewhere
-    Heatmap,  ///< Gaussian blob (requires sigma parameter)
-    Distance, ///< Distance transform from geometry
-    Raw       ///< Direct pixel copy (images)
+    Binary,  ///< 1.0 at occupied pixels, 0.0 elsewhere
+    Heatmap, ///< Gaussian blob (requires sigma parameter)
+    Distance,///< Distance transform from geometry
+    Raw      ///< Direct pixel copy (images)
 };
 
-/// Parameters controlling how data is encoded into a tensor channel
-struct EncoderParams {
-    int target_channel = 0;            ///< which channel in the output tensor
-    int batch_index = 0;               ///< which batch index to write into
-    int height = 256;                  ///< spatial H of the tensor
-    int width = 256;                   ///< spatial W of the tensor
-    RasterMode mode = RasterMode::Binary;
-    float gaussian_sigma = 2.0f;       ///< only used when mode == Heatmap
-    bool normalize = true;             ///< normalize output to [0, 1]
+/// Fields set by SlotAssembler from model metadata and runtime state.
+/// Not user-configurable — describes how to index into the input tensor.
+struct EncoderContext {
+    int target_channel = 0;///< Which channel to write into
+    int batch_index = 0;   ///< Which batch index to write into
+    int height = 256;      ///< Tensor spatial height
+    int width = 256;       ///< Tensor spatial width
+};
+
+/// User-configurable params for ImageEncoder.
+struct ImageEncoderParams {
+    bool normalize = true;///< Normalize output to [0, 1]
+};
+
+/// User-configurable params for Point2DEncoder.
+struct Point2DEncoderParams {
+    RasterMode mode = RasterMode::Binary;///< Binary or Heatmap
+    float gaussian_sigma = 2.0f;         ///< Sigma for Gaussian heatmap (Heatmap mode only)
+    bool normalize = true;               ///< Normalize output to [0, 1]
+};
+
+/// User-configurable params for Mask2DEncoder.
+struct Mask2DEncoderParams {
+    RasterMode mode = RasterMode::Binary;///< Binary only
+    bool normalize = true;               ///< Normalize output to [0, 1]
+};
+
+/// User-configurable params for Line2DEncoder.
+struct Line2DEncoderParams {
+    RasterMode mode = RasterMode::Binary;///< Binary or Heatmap
+    float gaussian_sigma = 2.0f;         ///< Sigma for Gaussian heatmap (Heatmap mode only)
+    bool normalize = true;               ///< Normalize output to [0, 1]
 };
 
 /// Abstract base class for encoding geometry/image data into a tensor channel.
@@ -42,6 +66,6 @@ public:
     [[nodiscard]] virtual std::string inputTypeName() const = 0;
 };
 
-} // namespace dl
+}// namespace dl
 
-#endif // WHISKERTOOLBOX_CHANNEL_ENCODER_HPP
+#endif// WHISKERTOOLBOX_CHANNEL_ENCODER_HPP

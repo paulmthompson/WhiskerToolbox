@@ -1,0 +1,130 @@
+---
+title: "Widget-Level Parameter Schemas"
+---
+
+## Overview
+
+`DeepLearningParamSchemas.hpp` defines **widget-level** reflect-cpp parameter structs
+and tagged unions that compose the per-component param structs from the DeepLearning
+library. These types describe how the UI organizes slot bindings and are separate from
+the core inference library.
+
+**Location:** `src/WhiskerToolbox/DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp`
+
+## Design Rationale
+
+Phase 0.0 of the DeepLearning Widget refactoring moved per-component parameter structs
+(e.g. `MaskDecoderParams`, `Point2DEncoderParams`) into the DeepLearning library. This
+phase (0.1) defines the **widget-level binding structs** that compose those library
+types into variant hierarchies representing UI choices.
+
+The key distinction:
+
+| Layer | Owns | Example |
+|---|---|---|
+| DeepLearning library | Per-component params (one struct per encoder/decoder/module) | `dl::MaskDecoderParams{threshold}` |
+| Widget level | Variant unions and composite structs for UI binding | `dl::widget::DecoderVariant` (tagged union of all decoder params) |
+
+## Tagged Unions
+
+All variants use `rfl::TaggedUnion` with a discriminator field name. The
+`extractParameterSchema<>()` function auto-detects these and produces variant field
+descriptors with sub-schemas for each alternative.
+
+### CaptureModeVariant
+
+Discriminator: `"capture_mode"`
+
+How a static input is acquired:
+
+- **`RelativeCaptureParams`** — Encode at `current_frame + time_offset` each run.
+- **`AbsoluteCaptureParams`** — Encode once at a specific frame and cache the tensor.
+
+### RecurrentInitVariant
+
+Discriminator: `"init_mode"`
+
+How recurrent (feedback) state is initialized at t=0:
+
+- **`ZerosInitParams`** — Initialize with zeros (no fields).
+- **`StaticCaptureInitParams`** — Capture a static data source (`data_key`, `frame`).
+- **`FirstOutputInitParams`** — Use the first model output (no fields).
+
+### SequenceEntryVariant
+
+Discriminator: `"source_type"`
+
+One entry in a sequence (static) input slot:
+
+- **`StaticSequenceEntryParams`** — Data-driven entry (`data_key`, `capture_mode_str`, `time_offset`).
+- **`RecurrentSequenceEntryParams`** — Recurrent feedback entry (`output_slot_name`, `init_mode_str`).
+
+### PostEncoderVariant
+
+Discriminator: `"module"`
+
+Which post-encoder module to apply:
+
+- **`NoPostEncoderParams`** — Identity pass-through (no fields).
+- **`dl::GlobalAvgPoolModuleParams`** — Global average pooling (no fields, re-used from library).
+- **`dl::SpatialPointModuleParams`** — Spatial point extraction (`interpolation` enum, re-used from library).
+
+### DecoderVariant
+
+Discriminator: `"decoder"`
+
+Which decoder to use for an output slot. All alternatives are re-used from the
+DeepLearning library:
+
+- **`dl::MaskDecoderParams`** — `{threshold}`
+- **`dl::PointDecoderParams`** — `{subpixel, threshold}`
+- **`dl::LineDecoderParams`** — `{threshold}`
+- **`dl::FeatureVectorDecoderParams`** — (no fields)
+
+## Composite Structs
+
+### OutputSlotParams
+
+Combines a `data_key` (DataManager target for decoded results) with a `DecoderVariant`:
+
+```cpp
+struct OutputSlotParams {
+    std::string data_key;
+    DecoderVariant decoder = MaskDecoderParams{};
+};
+```
+
+### EncoderShapeParams
+
+Custom encoder input/output dimensions (UI-only):
+
+```cpp
+struct EncoderShapeParams {
+    rfl::Validator<int, rfl::Minimum<1>> input_height = 224;
+    rfl::Validator<int, rfl::Minimum<1>> input_width = 224;
+    std::string output_shape;
+};
+```
+
+## ParameterUIHints
+
+Specializations are provided for structs that benefit from UI annotations:
+
+| Struct | Annotations |
+|---|---|
+| `RelativeCaptureParams` | Tooltip for `time_offset` |
+| `StaticCaptureInitParams` | Tooltips for `data_key`, `frame` |
+| `StaticSequenceEntryParams` | Display name + allowed values for `capture_mode_str` |
+| `RecurrentSequenceEntryParams` | Display name + allowed values for `init_mode_str` |
+| `OutputSlotParams` | Tooltips for `data_key`, `decoder` |
+| `EncoderShapeParams` | Tooltips for all three fields |
+
+## Test Coverage
+
+Unit tests live in `tests/DeepLearning/param_schemas/DeepLearningParamSchemas.test.cpp`
+and verify:
+
+- Schema extraction for all variant types (correct discriminators, alternatives, sub-schema fields)
+- JSON round-trips via `rfl::json::write` / `rfl::json::read` for every variant alternative
+- UIHints annotations (display names, allowed values, tooltips)
+- Composite struct schema extraction (`OutputSlotParams`, `EncoderShapeParams`)

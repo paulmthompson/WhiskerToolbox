@@ -83,6 +83,10 @@ struct ParameterFieldDescriptor {
     bool is_optional = false;///< True for std::optional<T> fields
     bool is_bound = false;   ///< True if typically populated from PipelineValueStore
 
+    // Dynamic combo support (for fields populated at runtime, e.g. DataManager keys)
+    bool dynamic_combo = false;        ///< If true, create QComboBox even with empty allowed_values
+    bool include_none_sentinel = false;///< If true, prepend "(None)" sentinel to combo
+
     // Variant support (populated only when type_name == "variant")
     bool is_variant = false;                             ///< True for rfl::TaggedUnion fields
     std::string variant_discriminator;                   ///< Discriminator field name (e.g., "model")
@@ -208,6 +212,29 @@ struct is_tagged_union<T, std::void_t<
 template<typename T>
 inline constexpr bool is_tagged_union_v = is_tagged_union<T>::value;
 
+/// Extract the first alternative type from a TaggedUnion (for default construction).
+/// TaggedUnion has no default constructor; we use the first alternative.
+/// Disc is a non-type template parameter (StringLiteral), so use auto.
+template<typename T>
+struct first_tagged_union_alt {};
+
+template<auto Disc, typename First, typename... Rest>
+struct first_tagged_union_alt<rfl::TaggedUnion<Disc, First, Rest...>> {
+    using type = First;
+};
+
+/// Return a default instance of Params for schema extraction.
+/// TaggedUnion is not default-constructible; use first alternative.
+template<typename Params>
+Params getDefaultInstance() {
+    if constexpr (is_tagged_union_v<Params>) {
+        using FirstAlt = typename first_tagged_union_alt<Params>::type;
+        return Params{FirstAlt{}};
+    } else {
+        return Params{};
+    }
+}
+
 }// namespace detail
 
 // Forward declaration for recursive use in detail::makeVariantAlternative
@@ -289,8 +316,10 @@ ParameterSchema extractParameterSchema() {
 
     auto meta_fields = rfl::fields<Params>();
 
-    // Default-construct a Params instance and serialize to JSON to extract defaults
-    auto const defaults_json = rfl::json::write(Params{});
+    // Default-construct a Params instance and serialize to JSON to extract defaults.
+    // TaggedUnion has no default constructor; use first alternative.
+    auto const defaults_instance = detail::getDefaultInstance<Params>();
+    auto const defaults_json = rfl::json::write(defaults_instance);
     auto const defaults_parsed = rfl::json::read<rfl::Generic>(defaults_json);
     rfl::Generic::Object const * defaults_obj = nullptr;
     if (defaults_parsed) {
@@ -330,13 +359,13 @@ ParameterSchema extractParameterSchema() {
     // Enum detection pass: rfl::fields() only provides type strings, but we
     // need actual C++ types to use std::is_enum_v and rfl::get_enumerator_array.
     // rfl::to_view() gives typed references to each field.
-    auto defaults_instance = Params{};
     auto view = rfl::to_view(defaults_instance);
     size_t field_idx = 0;
     view.apply([&](auto const & field) {
         // rfl::to_view returns pointer fields, so field.value() is T*
+        // defaults_instance is const, so pointers are const T* — strip cv.
         using PtrType = std::remove_cvref_t<decltype(field.value())>;
-        using RawFieldType = std::remove_pointer_t<PtrType>;
+        using RawFieldType = std::remove_cv_t<std::remove_pointer_t<PtrType>>;
         using InnerType = detail::unwrap_optional_t<RawFieldType>;
 
         if constexpr (detail::is_tagged_union_v<InnerType>) {

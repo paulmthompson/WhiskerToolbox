@@ -5,9 +5,17 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     DeepLearningWidgetRegistration.cpp
 
     Core/BatchInferenceResult.hpp
+    Core/BindingConversion.hpp
+    Core/BindingConversion.cpp
+    Core/ConstraintEnforcer.hpp
+    Core/ConstraintEnforcer.cpp
+    Core/DeepLearningBindingData.hpp
+    Core/ResultProcessor.hpp
+    Core/ResultProcessor.cpp
+    Core/DeepLearningParamSchemas.hpp
+    Core/DeepLearningParamSchemas.cpp
     Core/DeepLearningState.hpp
     Core/DeepLearningState.cpp
-    Core/DeepLearningBindingData.hpp
     Core/SlotAssembler.hpp
     Core/SlotAssembler.cpp
 
@@ -16,6 +24,25 @@ set(DEEP_LEARNING_WIDGET_SOURCES
 
     UI/DeepLearningPropertiesWidget.hpp
     UI/DeepLearningPropertiesWidget.cpp
+    UI/InferenceController.hpp
+    UI/InferenceController.cpp
+
+    UI/Helpers/DataSourceComboHelper.hpp
+    UI/Helpers/DataSourceComboHelper.cpp
+    UI/Helpers/DynamicInputSlotWidget.hpp
+    UI/Helpers/DynamicInputSlotWidget.cpp
+    UI/Helpers/EncoderShapeWidget.hpp
+    UI/Helpers/EncoderShapeWidget.cpp
+    UI/Helpers/OutputSlotWidget.hpp
+    UI/Helpers/OutputSlotWidget.cpp
+    UI/Helpers/PostEncoderWidget.hpp
+    UI/Helpers/PostEncoderWidget.cpp
+    UI/Helpers/RecurrentBindingWidget.hpp
+    UI/Helpers/RecurrentBindingWidget.cpp
+    UI/Helpers/SequenceSlotWidget.hpp
+    UI/Helpers/SequenceSlotWidget.cpp
+    UI/Helpers/StaticInputSlotWidget.hpp
+    UI/Helpers/StaticInputSlotWidget.cpp
 )
 
 add_library(DeepLearning_Widget STATIC ${DEEP_LEARNING_WIDGET_SOURCES})
@@ -28,9 +55,14 @@ target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::PointData)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::LineData)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MaskData)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MediaData)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::TensorData)
 
 target_link_libraries(DeepLearning_Widget PRIVATE DeepLearning)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::ParameterSchema)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::StateManagement)
+target_link_libraries(DeepLearning_Widget PRIVATE AutoParamWidget)
 
 target_include_directories(DeepLearning_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"

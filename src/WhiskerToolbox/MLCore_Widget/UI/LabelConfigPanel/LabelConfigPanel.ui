@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LabelConfigPanel</class>
+ <widget class="QWidget" name="LabelConfigPanel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="labelGroupBox">
+     <property name="title">
+      <string>Labels</string>
+     </property>
+     <layout class="QVBoxLayout" name="groupBoxLayout">
+      <!-- Radio buttons for label source selection -->
+      <item>
+       <layout class="QHBoxLayout" name="sourceLayout">
+        <item>
+         <widget class="QRadioButton" name="intervalRadio">
+          <property name="text">
+           <string>Interval Series</string>
+          </property>
+          <property name="toolTip">
+           <string>Binary labeling: frames inside intervals vs. outside</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="groupsRadio">
+          <property name="text">
+           <string>Entity Groups</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="toolTip">
+           <string>Multi-class labeling from TimeEntity groups</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="dataGroupsRadio">
+          <property name="text">
+           <string>Data Entity Groups</string>
+          </property>
+          <property name="toolTip">
+           <string>Multi-class labeling from data-object entity groups</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="eventsRadio">
+          <property name="text">
+           <string>Event Series</string>
+          </property>
+          <property name="toolTip">
+           <string>Binary labeling: frames with events vs. without (ideal for HMM)</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <!-- Stacked widget with per-mode content -->
+      <item>
+       <widget class="QStackedWidget" name="contentStack">
+        <!-- Page 0: Interval Series mode -->
+        <widget class="QWidget" name="intervalPage">
+         <layout class="QVBoxLayout" name="intervalLayout">
+          <item>
+           <layout class="QHBoxLayout" name="intervalSelectorLayout">
+            <item>
+             <widget class="QLabel" name="intervalLabel">
+              <property name="text">
+               <string>Interval Series:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="intervalComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select a DigitalIntervalSeries for binary labeling</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="intervalRefreshButton">
+              <property name="text">
+               <string>↻</string>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>30</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Refresh the list of available interval series</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="positiveClassLayout">
+            <item>
+             <widget class="QLabel" name="positiveClassLabel">
+              <property name="text">
+               <string>Positive class:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="positiveClassEdit">
+              <property name="text">
+               <string>Inside</string>
+              </property>
+              <property name="toolTip">
+               <string>Name for the positive class (frames inside intervals)</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="negativeClassLayout">
+            <item>
+             <widget class="QLabel" name="negativeClassLabel">
+              <property name="text">
+               <string>Negative class:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="negativeClassEdit">
+              <property name="text">
+               <string>Outside</string>
+              </property>
+              <property name="toolTip">
+               <string>Name for the negative class (frames outside intervals)</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="intervalInfoLabel">
+            <property name="text">
+             <string></string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::RichText</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 1: Entity Groups mode -->
+        <widget class="QWidget" name="groupsPage">
+         <layout class="QVBoxLayout" name="groupsLayout">
+          <item>
+           <layout class="QHBoxLayout" name="groupAddLayout">
+            <item>
+             <widget class="QLabel" name="addGroupLabel">
+              <property name="text">
+               <string>Add group:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="groupComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select an entity group to add as a class</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="addGroupButton">
+              <property name="text">
+               <string>Add Class</string>
+              </property>
+              <property name="toolTip">
+               <string>Add the selected group as a new class label</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QListWidget" name="classListWidget">
+            <property name="toolTip">
+             <string>List of class labels (group → class mapping, in order)</string>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>120</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="removeGroupButton">
+            <property name="text">
+             <string>Remove Selected</string>
+            </property>
+            <property name="toolTip">
+             <string>Remove the selected class from the label configuration</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 2: Data Entity Groups mode -->
+        <widget class="QWidget" name="dataGroupsPage">
+         <layout class="QVBoxLayout" name="dataGroupsLayout">
+          <item>
+           <layout class="QHBoxLayout" name="dataKeySelectorLayout">
+            <item>
+             <widget class="QLabel" name="dataKeyLabel">
+              <property name="text">
+               <string>Data Key:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="dataKeyComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select the data key whose entities define class labels</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="dataKeyRefreshButton">
+              <property name="text">
+               <string>↻</string>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>30</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Refresh the list of available data keys</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="dataGroupAddLayout">
+            <item>
+             <widget class="QLabel" name="addDataGroupLabel">
+              <property name="text">
+               <string>Add group:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="dataGroupComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select an entity group to add as a class</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="addDataGroupButton">
+              <property name="text">
+               <string>Add Class</string>
+              </property>
+              <property name="toolTip">
+               <string>Add the selected group as a new class label</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QListWidget" name="dataClassListWidget">
+            <property name="toolTip">
+             <string>List of class labels (group → class mapping, in order)</string>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>120</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="removeDataGroupButton">
+            <property name="text">
+             <string>Remove Selected</string>
+            </property>
+            <property name="toolTip">
+             <string>Remove the selected class from the label configuration</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 3: Event Series mode -->
+        <widget class="QWidget" name="eventsPage">
+         <layout class="QVBoxLayout" name="eventsLayout">
+          <item>
+           <layout class="QHBoxLayout" name="eventSelectorLayout">
+            <item>
+             <widget class="QLabel" name="eventLabel">
+              <property name="text">
+               <string>Event Series:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="eventComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select a DigitalEventSeries for binary labeling (event present = state 1)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="eventRefreshButton">
+              <property name="text">
+               <string>↻</string>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>30</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Refresh the list of available event series</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="eventInfoLabel">
+            <property name="text">
+             <string></string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::RichText</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+      <!-- Validation label -->
+      <item>
+       <widget class="QLabel" name="validationLabel">
+        <property name="text">
+         <string></string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

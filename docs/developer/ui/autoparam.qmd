@@ -87,3 +87,50 @@ ParamWidgetRegistry::instance().registerCustomWidget<MyComplexParams>(
 ```
 
 If a custom widget is registered, the `AutoParamWidget` is bypassed entirely for that type.
+
+## Dynamic Field Support
+
+AutoParamWidget supports fields whose combo items are not known at schema-extraction time but are populated at runtime (e.g., data keys from `DataManager`).
+
+### Dynamic Combo Fields
+
+Set `dynamic_combo = true` on a `ParameterFieldDescriptor` to create a `QComboBox` even when `allowed_values` is empty. Optionally set `include_none_sentinel = true` to prepend a `"(None)"` entry that maps to an empty string in JSON.
+
+```cpp
+template<>
+struct ParameterUIHints<MySlotParams> {
+    static void annotate(ParameterSchema& schema) {
+        if (auto* f = schema.field("source")) {
+            f->dynamic_combo = true;
+            f->include_none_sentinel = true;
+        }
+    }
+};
+```
+
+### `updateAllowedValues()`
+
+Dynamically repopulates a string/enum combo at runtime:
+
+```cpp
+auto keys = getKeysFromDataManager();
+widget->updateAllowedValues("source", keys);
+```
+
+- Preserves the current selection if it still exists in the new values.
+- Falls back to the first item (or sentinel) if the previous selection is gone.
+- Emits `parametersChanged` only if the selection actually changes.
+- Works on both top-level fields and variant sub-row fields.
+
+### `updateVariantAlternatives()`
+
+Shows or hides variant alternatives by tag name:
+
+```cpp
+widget->updateVariantAlternatives("encoder", {"ImageEncoderParams", "MaskEncoderParams"});
+```
+
+- Filters the variant combo to show only the specified tags.
+- If the current selection is hidden, switches to the first visible alternative.
+- Preserves the combo → stacked-widget index mapping via `Qt::UserRole` item data.
+- Emits `parametersChanged` only if the active alternative changes.

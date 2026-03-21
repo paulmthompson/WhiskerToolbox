@@ -33,6 +33,7 @@
 #include <variant>
 #include <vector>
 
+class DigitalEventSeries;
 class DigitalIntervalSeries;
 class EntityGroupManager;
 class EntityRegistry;
@@ -80,14 +81,26 @@ struct LabelFromDataEntityGroups {
 };
 
 /**
+ * @brief Configuration for binary labeling from a DigitalEventSeries
+ *
+ * Frames where a discrete event exists are labeled 1 (positive_class_name),
+ * frames without an event are labeled 0 (negative_class_name).
+ */
+struct LabelFromEvents {
+    std::string positive_class_name = "Event";  ///< Name for class 1 (event present)
+    std::string negative_class_name = "NoEvent";///< Name for class 0 (no event)
+};
+
+/**
  * @brief Configuration variant for label assembly
  *
- * Select one of the three labeling modes.
+ * Select one of the four labeling modes.
  */
 using LabelAssemblyConfig = std::variant<
         LabelFromIntervals,
         LabelFromTimeEntityGroups,
-        LabelFromDataEntityGroups>;
+        LabelFromDataEntityGroups,
+        LabelFromEvents>;
 
 // ============================================================================
 // Result type
@@ -206,6 +219,28 @@ struct AssembledLabels {
         EntityRegistry const & registry,
         std::span<TimeFrameIndex const> row_times,
         LabelFromDataEntityGroups const & config);
+
+/**
+ * @brief Assemble binary labels from a DigitalEventSeries
+ *
+ * For each row_time, checks if an event exists at that time.
+ * Event exists → label 1, no event → label 0. Every row receives a label.
+ *
+ * @param events The event series defining the positive class
+ * @param source_time_frame The TimeFrame that row_times are expressed in.
+ *        This is typically the feature tensor's TimeFrame from RowDescriptor.
+ * @param row_times The time indices of each feature tensor row
+ * @param config Configuration with class names (defaults: "NoEvent", "Event")
+ * @return Binary labels aligned with row_times (unlabeled_count always 0)
+ *
+ * @pre row_times must not be empty
+ * @throws std::invalid_argument if row_times is empty
+ */
+[[nodiscard]] AssembledLabels assembleLabelsFromEvents(
+        DigitalEventSeries const & events,
+        TimeFrame const & source_time_frame,
+        std::span<TimeFrameIndex const> row_times,
+        LabelFromEvents const & config = {});
 
 // ============================================================================
 // Utility functions

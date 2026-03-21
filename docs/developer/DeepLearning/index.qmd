@@ -61,12 +61,21 @@ Encoders write geometry data into a pre-allocated `[B, C, H, W]` float tensor at
 batch index and channel. They are pure functions on geometry primitives with no DataManager 
 dependency, making them independently testable.
 
-| Encoder | Input Type | Modes | Description |
-|---------|-----------|-------|-------------|
-| `ImageEncoder` | raw pixel data + `ImageSize` | Raw | Resizes to `(H, W)`, normalizes to `[0,1]`. Supports grayscale (replicates to 3 channels) and RGB. |
-| `Point2DEncoder` | `Point2D<float>` | Binary, Heatmap | Scales coordinates to tensor resolution. Heatmap places 2D Gaussians; overlapping peaks use max operator. |
-| `Mask2DEncoder` | `Mask2D` | Binary | Scales pixel coordinates to tensor resolution. Sets 1.0 at each mask pixel location. |
-| `Line2DEncoder` | `Line2D` | Binary, Heatmap | Rasterizes polyline onto tensor. Binary uses Bresenham line drawing. Heatmap uses distance-to-line Gaussian. |
+Each encoder's `encode()` method takes two parameter structs:
+
+1. **`EncoderContext`** — Runtime context set by `SlotAssembler` (target channel, batch index,
+   tensor dimensions). Not user-configurable.
+2. **Per-encoder params** — User-configurable parameters specific to each encoder type
+   (`ImageEncoderParams`, `Point2DEncoderParams`, `Mask2DEncoderParams`, `Line2DEncoderParams`).
+
+All structs are defined in `ChannelEncoder.hpp`.
+
+| Encoder | Input Type | Params Struct | Modes | Description |
+|---------|-----------|---------------|-------|-------------|
+| `ImageEncoder` | raw pixel data + `ImageSize` | `ImageEncoderParams` | Raw | Resizes to `(H, W)`, normalizes to `[0,1]`. Supports grayscale (replicates to 3 channels) and RGB. |
+| `Point2DEncoder` | `Point2D<float>` | `Point2DEncoderParams` | Binary, Heatmap | Scales coordinates to tensor resolution. Heatmap places 2D Gaussians; overlapping peaks use max operator. |
+| `Mask2DEncoder` | `Mask2D` | `Mask2DEncoderParams` | Binary | Scales pixel coordinates to tensor resolution. Sets 1.0 at each mask pixel location. |
+| `Line2DEncoder` | `Line2D` | `Line2DEncoderParams` | Binary, Heatmap | Rasterizes polyline onto tensor. Binary uses Bresenham line drawing. Heatmap uses distance-to-line Gaussian. |
 
 All encoders are registered in `EncoderFactory` by string key (e.g. `"ImageEncoder"`) so that 
 JSON model specs and the widget UI can reference them by name.
@@ -75,13 +84,23 @@ JSON model specs and the widget UI can reference them by name.
 
 Decoders read from a specified batch index and channel of an output tensor, converting the 
 activation pattern back into a geometry type. Coordinates are scaled back to the original 
-image dimensions via `target_image_size`.
+image dimensions via `DecoderContext::target_image_size`.
 
-| Decoder | Output Type | Strategy |
-|---------|-----------|----------|
-| `TensorToPoint2D` | `Point2D<float>` | Argmax with optional parabolic subpixel refinement. Also supports multi-peak detection via local maxima. |
-| `TensorToMask2D` | `Mask2D` | Thresholding — collects all pixels above a configurable threshold. |
-| `TensorToLine2D` | `Line2D` | Threshold → Zhang-Suen skeletonization (thin to 1px) → endpoint detection → connectivity tracing. |
+Each decoder's `decode()` method takes two parameter structs:
+
+1. **`DecoderContext`** — Runtime context set by `SlotAssembler` (source channel, batch index,
+   tensor dimensions, target image size). Not user-configurable.
+2. **Per-decoder params** — User-configurable parameters specific to each decoder type
+   (`MaskDecoderParams`, `PointDecoderParams`, `LineDecoderParams`, `FeatureVectorDecoderParams`).
+
+All structs are defined in `ChannelDecoder.hpp`.
+
+| Decoder | Output Type | Params Struct | Strategy |
+|---------|-----------|---------------|----------|
+| `TensorToPoint2D` | `Point2D<float>` | `PointDecoderParams` | Argmax with optional parabolic subpixel refinement. Also supports multi-peak detection via local maxima. |
+| `TensorToMask2D` | `Mask2D` | `MaskDecoderParams` | Thresholding — collects all pixels above a configurable threshold. |
+| `TensorToLine2D` | `Line2D` | `LineDecoderParams` | Threshold → Zhang-Suen skeletonization (thin to 1px) → endpoint detection → connectivity tracing. |
+| `TensorToFeatureVector` | `std::vector<float>` | `FeatureVectorDecoderParams` | Direct extraction of feature values from the tensor. |
 
 All decoders are registered in `DecoderFactory` by string key.
 

@@ -11,34 +11,32 @@
 
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE("Line2DEncoder - name and input type", "[channel_encoding][Line2DEncoder]")
-{
+TEST_CASE("Line2DEncoder - name and input type", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
     CHECK(encoder.name() == "Line2DEncoder");
     CHECK(encoder.inputTypeName() == "Line2D");
 }
 
-TEST_CASE("Line2DEncoder - horizontal line binary", "[channel_encoding][Line2DEncoder]")
-{
+TEST_CASE("Line2DEncoder - horizontal line binary", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Line2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     // Horizontal line at y=5 from x=0 to x=9
-    Line2D line({
-        Point2D<float>{0.0f, 5.0f},
-        Point2D<float>{9.0f, 5.0f}
-    });
+    Line2D line({Point2D<float>{0.0f, 5.0f},
+                 Point2D<float>{9.0f, 5.0f}});
 
-    encoder.encode(line, src_size, tensor, params);
+    encoder.encode(line, src_size, tensor, ctx, params);
 
     auto accessor = tensor.accessor<float, 4>();
 
@@ -52,27 +50,26 @@ TEST_CASE("Line2DEncoder - horizontal line binary", "[channel_encoding][Line2DEn
     CHECK_THAT(accessor[0][0][9][5], WithinAbs(0.0f, 1e-5f));
 }
 
-TEST_CASE("Line2DEncoder - vertical line binary", "[channel_encoding][Line2DEncoder]")
-{
+TEST_CASE("Line2DEncoder - vertical line binary", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Line2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     // Vertical line at x=3 from y=0 to y=9
-    Line2D line({
-        Point2D<float>{3.0f, 0.0f},
-        Point2D<float>{3.0f, 9.0f}
-    });
+    Line2D line({Point2D<float>{3.0f, 0.0f},
+                 Point2D<float>{3.0f, 9.0f}});
 
-    encoder.encode(line, src_size, tensor, params);
+    encoder.encode(line, src_size, tensor, ctx, params);
 
     auto accessor = tensor.accessor<float, 4>();
 
@@ -82,88 +79,87 @@ TEST_CASE("Line2DEncoder - vertical line binary", "[channel_encoding][Line2DEnco
     }
 }
 
-TEST_CASE("Line2DEncoder - empty and single point lines", "[channel_encoding][Line2DEncoder]")
-{
+TEST_CASE("Line2DEncoder - empty and single point lines", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Line2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     // Empty line
     Line2D empty_line;
-    encoder.encode(empty_line, src_size, tensor, params);
+    encoder.encode(empty_line, src_size, tensor, ctx, params);
     CHECK_THAT(tensor.sum().item<float>(), WithinAbs(0.0f, 1e-5f));
 
     // Single point line (not enough for a segment)
     Line2D single_point({Point2D<float>{5.0f, 5.0f}});
-    encoder.encode(single_point, src_size, tensor, params);
+    encoder.encode(single_point, src_size, tensor, ctx, params);
     CHECK_THAT(tensor.sum().item<float>(), WithinAbs(0.0f, 1e-5f));
 }
 
-TEST_CASE("Line2DEncoder - multi-segment polyline binary", "[channel_encoding][Line2DEncoder]")
-{
+TEST_CASE("Line2DEncoder - multi-segment polyline binary", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Line2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     // L-shaped line: horizontal then vertical
-    Line2D line({
-        Point2D<float>{0.0f, 0.0f},
-        Point2D<float>{5.0f, 0.0f},
-        Point2D<float>{5.0f, 5.0f}
-    });
+    Line2D line({Point2D<float>{0.0f, 0.0f},
+                 Point2D<float>{5.0f, 0.0f},
+                 Point2D<float>{5.0f, 5.0f}});
 
-    encoder.encode(line, src_size, tensor, params);
+    encoder.encode(line, src_size, tensor, ctx, params);
 
     auto accessor = tensor.accessor<float, 4>();
 
     // Check corners of the L
-    CHECK_THAT(accessor[0][0][0][0], WithinAbs(1.0f, 1e-5f)); // start
-    CHECK_THAT(accessor[0][0][0][5], WithinAbs(1.0f, 1e-5f)); // corner
-    CHECK_THAT(accessor[0][0][5][5], WithinAbs(1.0f, 1e-5f)); // end
+    CHECK_THAT(accessor[0][0][0][0], WithinAbs(1.0f, 1e-5f));// start
+    CHECK_THAT(accessor[0][0][0][5], WithinAbs(1.0f, 1e-5f));// corner
+    CHECK_THAT(accessor[0][0][5][5], WithinAbs(1.0f, 1e-5f));// end
 
     // Total number of set pixels should be reasonable for an L shape
     auto const total = tensor.sum().item<float>();
-    CHECK(total >= 10.0f); // at least 10 pixels for an L spanning 5+5
+    CHECK(total >= 10.0f);// at least 10 pixels for an L spanning 5+5
 }
 
-TEST_CASE("Line2DEncoder - heatmap mode", "[channel_encoding][Line2DEncoder]")
-{
+TEST_CASE("Line2DEncoder - heatmap mode", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{20, 20};
     auto tensor = torch::zeros({1, 1, 20, 20});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 0;
-    params.height = 20;
-    params.width = 20;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 20;
+    ctx.width = 20;
+
+    dl::Line2DEncoderParams params;
     params.mode = dl::RasterMode::Heatmap;
     params.gaussian_sigma = 2.0f;
 
     // Horizontal line at y=10
-    Line2D line({
-        Point2D<float>{0.0f, 10.0f},
-        Point2D<float>{19.0f, 10.0f}
-    });
+    Line2D line({Point2D<float>{0.0f, 10.0f},
+                 Point2D<float>{19.0f, 10.0f}});
 
-    encoder.encode(line, src_size, tensor, params);
+    encoder.encode(line, src_size, tensor, ctx, params);
 
     auto accessor = tensor.accessor<float, 4>();
 
@@ -184,29 +180,28 @@ TEST_CASE("Line2DEncoder - heatmap mode", "[channel_encoding][Line2DEncoder]")
     CHECK(max_val <= 1.0f + 1e-5f);
 }
 
-TEST_CASE("Line2DEncoder - scaling from larger source", "[channel_encoding][Line2DEncoder]")
-{
+TEST_CASE("Line2DEncoder - scaling from larger source", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
 
     // Source 100x100, tensor 10x10
     ImageSize const src_size{100, 100};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 0;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Line2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     // Horizontal line at y=50 from x=0 to x=99 in source
     // Should map to y=5 across tensor
-    Line2D line({
-        Point2D<float>{0.0f, 50.0f},
-        Point2D<float>{99.0f, 50.0f}
-    });
+    Line2D line({Point2D<float>{0.0f, 50.0f},
+                 Point2D<float>{99.0f, 50.0f}});
 
-    encoder.encode(line, src_size, tensor, params);
+    encoder.encode(line, src_size, tensor, ctx, params);
 
     auto accessor = tensor.accessor<float, 4>();
     // Row 5 should have the line
@@ -215,38 +210,40 @@ TEST_CASE("Line2DEncoder - scaling from larger source", "[channel_encoding][Line
     }
 }
 
-TEST_CASE("Line2DEncoder - invalid mode throws", "[channel_encoding][Line2DEncoder]")
-{
+TEST_CASE("Line2DEncoder - invalid mode throws", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({1, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Line2DEncoderParams params;
     params.mode = dl::RasterMode::Raw;
 
     Line2D line({Point2D<float>{0.0f, 0.0f}, Point2D<float>{9.0f, 9.0f}});
-    CHECK_THROWS_AS(encoder.encode(line, src_size, tensor, params), std::invalid_argument);
+    CHECK_THROWS_AS(encoder.encode(line, src_size, tensor, ctx, params), std::invalid_argument);
 }
 
-TEST_CASE("Line2DEncoder - batch index", "[channel_encoding][Line2DEncoder]")
-{
+TEST_CASE("Line2DEncoder - batch index", "[channel_encoding][Line2DEncoder]") {
     dl::Line2DEncoder encoder;
 
     ImageSize const src_size{10, 10};
     auto tensor = torch::zeros({2, 1, 10, 10});
 
-    dl::EncoderParams params;
-    params.target_channel = 0;
-    params.batch_index = 1;
-    params.height = 10;
-    params.width = 10;
+    dl::EncoderContext ctx;
+    ctx.target_channel = 0;
+    ctx.batch_index = 1;
+    ctx.height = 10;
+    ctx.width = 10;
+
+    dl::Line2DEncoderParams params;
     params.mode = dl::RasterMode::Binary;
 
     Line2D line({Point2D<float>{0.0f, 5.0f}, Point2D<float>{9.0f, 5.0f}});
-    encoder.encode(line, src_size, tensor, params);
+    encoder.encode(line, src_size, tensor, ctx, params);
 
     auto accessor = tensor.accessor<float, 4>();
     // Batch 0 should remain all zeros

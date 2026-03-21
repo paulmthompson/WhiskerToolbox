@@ -24,6 +24,7 @@ set(DEEP_LEARNING_SOURCES
     models/scm/scm.cpp
 
     channel_encoding/ChannelEncoder.hpp
+    channel_encoding/EncoderParamSchemas.hpp
     channel_encoding/ImageEncoder.hpp
     channel_encoding/ImageEncoder.cpp
     channel_encoding/Point2DEncoder.hpp
@@ -36,6 +37,7 @@ set(DEEP_LEARNING_SOURCES
     channel_encoding/EncoderFactory.cpp
 
     channel_decoding/ChannelDecoder.hpp
+    channel_decoding/DecoderParamSchemas.hpp
     channel_decoding/TensorToPoint2D.hpp
     channel_decoding/TensorToPoint2D.cpp
     channel_decoding/TensorToMask2D.hpp
@@ -69,6 +71,23 @@ set(DEEP_LEARNING_SOURCES
 
     models_v2/neurosam/NeuroSAMModel.hpp
     models_v2/neurosam/NeuroSAMModel.cpp
+
+    models_v2/general_encoder/GeneralEncoderModel.hpp
+    models_v2/general_encoder/GeneralEncoderModel.cpp
+
+    channel_decoding/TensorToFeatureVector.hpp
+    channel_decoding/TensorToFeatureVector.cpp
+
+    post_encoder/PostEncoderModule.hpp
+    post_encoder/PostEncoderParamSchemas.hpp
+    post_encoder/GlobalAvgPoolModule.hpp
+    post_encoder/GlobalAvgPoolModule.cpp
+    post_encoder/SpatialPointExtractModule.hpp
+    post_encoder/SpatialPointExtractModule.cpp
+    post_encoder/PostEncoderPipeline.hpp
+    post_encoder/PostEncoderPipeline.cpp
+    post_encoder/PostEncoderModuleFactory.hpp
+    post_encoder/PostEncoderModuleFactory.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})
@@ -81,6 +100,7 @@ target_include_directories(DeepLearning PUBLIC
 
 target_link_libraries(DeepLearning PRIVATE "${TORCH_LIBRARIES}")
 target_link_libraries(DeepLearning PRIVATE NEURALYZER_GEOMETRY)
+target_link_libraries(DeepLearning PUBLIC WhiskerToolbox::ParameterSchema)
 
 if(ENABLE_EXECUTORCH)
     target_sources(DeepLearning PRIVATE

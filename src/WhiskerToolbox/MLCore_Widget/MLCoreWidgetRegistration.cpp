@@ -1,7 +1,7 @@
 #include "MLCoreWidgetRegistration.hpp"
 
 #include "MLCoreWidget.hpp"
-#include "MLCoreWidgetState.hpp"
+#include "Core/MLCoreWidgetState.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 

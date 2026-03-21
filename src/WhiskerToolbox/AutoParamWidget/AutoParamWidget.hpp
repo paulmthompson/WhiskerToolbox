@@ -103,6 +103,31 @@ public:
      */
     void setPostEditHook(PostEditHook hook);
 
+    /**
+     * @brief Dynamically update the combo items for a string/enum field.
+     *
+     * Finds the FieldRow(s) matching field_name. If the field has a combo_box,
+     * repopulates it with values while preserving the current selection.
+     * If include_none_sentinel was set, "(None)" is prepended.
+     * If the field is a QLineEdit (non-dynamic), this is a no-op.
+     *
+     * Does not emit parametersChanged unless the selection actually changes.
+     */
+    void updateAllowedValues(std::string const & field_name,
+                             std::vector<std::string> const & values);
+
+    /**
+     * @brief Show or hide variant alternatives by tag name.
+     *
+     * Finds the variant FieldRow matching field_name. Hides alternatives
+     * whose tags are not in allowed_tags. If the currently selected
+     * alternative is hidden, switches to the first visible one.
+     *
+     * Does not emit parametersChanged unless the active alternative changes.
+     */
+    void updateVariantAlternatives(std::string const & field_name,
+                                   std::vector<std::string> const & allowed_tags);
+
 signals:
     /**
      * @brief Emitted whenever any parameter value changes
@@ -126,12 +151,16 @@ private:
         // For optional fields: checkbox that gates the value widget
         QCheckBox * optional_gate = nullptr;
 
+        // For dynamic combo fields
+        bool include_none_sentinel = false;///< Whether to prepend "(None)" to combo items
+
         // For variant (TaggedUnion) fields
         bool is_variant = false;
         std::string variant_discriminator;
         QComboBox * variant_combo = nullptr;
         QStackedWidget * variant_stack = nullptr;
         std::vector<std::vector<FieldRow>> variant_sub_rows;///< One vector per alternative
+        std::vector<std::string> variant_all_tags;          ///< All variant tags from schema
     };
 
     void buildFieldRow(WhiskerToolbox::Transforms::V2::ParameterFieldDescriptor const & desc,
