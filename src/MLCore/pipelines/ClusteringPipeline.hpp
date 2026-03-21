@@ -179,6 +179,15 @@ struct ClusteringPipelineConfig {
      * Used for output writing (intervals, groups).
      */
     std::string time_key_str = "time";
+
+    /**
+     * @brief If true, skip DataManager writes and store output in the result
+     *
+     * When running from a background thread, DataManager writes trigger observer
+     * callbacks that may manipulate Qt widgets, which is undefined behavior.
+     * Set this to true and perform the writes on the main thread instead.
+     */
+    bool defer_dm_writes = false;
 };
 
 // ============================================================================
@@ -307,6 +316,26 @@ struct ClusteringPipelineResult {
      */
     std::vector<GroupId> putative_group_ids;
 
+    // -- Deferred output (when defer_dm_writes is true) --
+
+    /**
+     * @brief Prediction data awaiting main-thread writing
+     *
+     * Populated when config.defer_dm_writes is true. The caller must call
+     * writePredictions() on the main thread with this data.
+     */
+    std::optional<PredictionOutput> deferred_output;
+
+    /**
+     * @brief Cluster names for deferred writing (paired with deferred_output)
+     */
+    std::vector<std::string> deferred_cluster_names;
+
+    /**
+     * @brief Writer config for deferred writing (paired with deferred_output)
+     */
+    std::optional<PredictionWriterConfig> deferred_output_config;
+
     // -- Model --
 
     /**
@@ -343,7 +372,7 @@ struct ClusteringPipelineResult {
         DataManager & dm,
         MLModelRegistry const & registry,
         ClusteringPipelineConfig const & config,
-        ClusteringProgressCallback progress = nullptr);
+        const ClusteringProgressCallback& progress = nullptr);
 
 }// namespace MLCore
 

@@ -196,6 +196,15 @@ struct ClassificationPipelineConfig {
      * Used for label assembly (interval lookups) and output writing.
      */
     std::string time_key_str = "time";
+
+    /**
+     * @brief If true, skip DataManager writes and store output in the result
+     *
+     * When running from a background thread, DataManager writes trigger observer
+     * callbacks that may manipulate Qt widgets, which is undefined behavior.
+     * Set this to true and perform the writes on the main thread instead.
+     */
+    bool defer_dm_writes = false;
 };
 
 // ============================================================================
@@ -315,6 +324,21 @@ struct ClassificationPipelineResult {
      * Present when prediction and output writing succeeded.
      */
     std::optional<PredictionWriterResult> writer_result;
+
+    // -- Deferred output (when defer_dm_writes is true) --
+
+    /**
+     * @brief Prediction data awaiting main-thread writing
+     *
+     * Populated when config.defer_dm_writes is true. The caller must call
+     * writePredictions() on the main thread with this data.
+     */
+    std::optional<PredictionOutput> deferred_output;
+
+    /**
+     * @brief Output config for deferred writing (paired with deferred_output)
+     */
+    std::optional<PredictionWriterConfig> deferred_output_config;
 
     // -- Model --
 

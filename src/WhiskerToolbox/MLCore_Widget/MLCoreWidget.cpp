@@ -486,6 +486,25 @@ void MLCoreWidget::_onPipelineComplete() {
         return;
     }
 
+    // Success — write deferred output on the main thread (thread-safe)
+    if (_last_result->deferred_output.has_value() && _data_manager) {
+        try {
+            auto writer_result = MLCore::writePredictions(
+                    *_data_manager,
+                    *_last_result->deferred_output,
+                    _last_result->class_names,
+                    _last_result->deferred_output_config.value_or(MLCore::PredictionWriterConfig{}));
+            _last_result->writer_result = std::move(writer_result);
+        } catch (std::exception const & e) {
+            _status_label->setText(
+                    QStringLiteral("<span style='color: red;'>Output writing failed: %1</span>")
+                            .arg(QString::fromStdString(e.what())));
+            return;
+        }
+        _last_result->deferred_output.reset();
+        _last_result->deferred_output_config.reset();
+    }
+
     // Success — show results
     _status_label->setText(
             QStringLiteral("<span style='color: green;'>Pipeline completed successfully</span>"));
@@ -635,6 +654,11 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
     config.output_config.write_to_putative_groups = true;
     config.output_config.time_key_str = config.time_key_str;
 
+    // -- Thread safety --
+    // Defer DataManager writes to the main thread to avoid triggering
+    // observer callbacks from the background PipelineWorker thread.
+    config.defer_dm_writes = true;
+
     return config;
 }
 
@@ -766,6 +790,9 @@ MLCore::ClusteringPipelineConfig MLCoreWidget::_buildClusteringPipelineConfig() 
     config.output_config.write_to_putative_groups = true;
     config.output_config.time_key_str = config.time_key_str;
 
+    // -- Thread safety --
+    config.defer_dm_writes = true;
+
     return config;
 }
 
@@ -829,6 +856,28 @@ void MLCoreWidget::_onClusteringPipelineComplete() {
                         .arg(stage_name,
                              QString::fromStdString(_last_clustering_result->error_message)));
         return;
+    }
+
+    // Write deferred output on the main thread (thread-safe)
+    if (_last_clustering_result->deferred_output.has_value() && _data_manager) {
+        try {
+            auto writer_result = MLCore::writePredictions(
+                    *_data_manager,
+                    *_last_clustering_result->deferred_output,
+                    _last_clustering_result->deferred_cluster_names,
+                    _last_clustering_result->deferred_output_config.value_or(
+                            MLCore::PredictionWriterConfig{}));
+            _last_clustering_result->interval_keys = std::move(writer_result.interval_keys);
+            _last_clustering_result->probability_keys = std::move(writer_result.probability_keys);
+            _last_clustering_result->putative_group_ids = std::move(writer_result.putative_group_ids);
+        } catch (std::exception const & e) {
+            _clustering_status_label->setText(
+                    QStringLiteral("<span style='color: red;'>Output writing failed: %1</span>")
+                            .arg(QString::fromStdString(e.what())));
+            return;
+        }
+        _last_clustering_result->deferred_output.reset();
+        _last_clustering_result->deferred_output_config.reset();
     }
 
     // Success — show results

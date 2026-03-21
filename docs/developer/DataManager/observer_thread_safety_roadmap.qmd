@@ -1,0 +1,462 @@
+---
+title: "Observer Thread-Safety Roadmap"
+---
+
+## Overview
+
+This document provides a concrete task list for hardening the `ObserverData`
+callback system against thread-safety violations. It describes the problem,
+the patterns that fix it, and step-by-step instructions for applying each
+pattern to existing code.
+
+For the broader concurrency architecture — ownership model, write
+reservations, and staged design — see
+[Concurrency Architecture](concurrency_architecture.qmd).
+
+## Problem Statement
+
+`ObserverData` is explicitly **not thread-safe**: `notifyObservers()` calls
+every registered callback synchronously on the *calling* thread. When
+`DataManager::setData()` is called from a background `QThread`, observer
+callbacks that manipulate Qt widgets execute on the wrong thread — undefined
+behavior that causes heap corruption, ASAN crashes, and intermittent
+segfaults.
+
+This was discovered via a crash in `MLCoreWidget`: the `PipelineWorker`
+(QThread) called `writePredictions()` → `dm.setData()` → `notifyObservers()`
+on the background thread. Over 20 widget callbacks directly called
+`QComboBox::clear()`, `QTreeWidget::clear()`, and similar — all require the
+main thread.
+
+### Why It Surfaces Intermittently
+
+On the first pipeline run, few observers are registered for the new output
+keys. On subsequent runs, more widgets have attached observers, increasing the
+number of unsafe cross-thread callbacks and making the race more likely to
+manifest.
+
+## Current State of Callbacks
+
+An audit of all `addObserver` call sites found two categories:
+
+### Safe Callbacks (6 call sites)
+
+These callbacks marshal work to the main thread before touching Qt widgets:
+
+| Widget | File | Pattern |
+|--------|------|---------|
+| ClusteringPanel | `MLCore_Widget/UI/ClusteringPanel/ClusteringPanel.cpp` | `QTimer::singleShot(0, this, &...)` |
+| PredictionPanel | `MLCore_Widget/UI/PredictionPanel/PredictionPanel.cpp` | `QTimer::singleShot(0, this, &...)` |
+| RegionSelectionPanel | `MLCore_Widget/UI/RegionSelectionPanel/RegionSelectionPanel.cpp` | `QTimer::singleShot(0, this, &...)` |
+| FeatureSelectionPanel | `MLCore_Widget/UI/FeatureSelectionPanel/FeatureSelectionPanel.cpp` | `QTimer::singleShot(0, this, &...)` |
+| LabelConfigPanel | `MLCore_Widget/UI/LabelConfigPanel/LabelConfigPanel.cpp` | `QTimer::singleShot(0, this, &...)` |
+| GroupManager | `GroupManagementWidget/GroupManager.cpp` | `QMetaObject::invokeMethod(this, ...)` |
+
+### Unsafe Callbacks (20+ call sites)
+
+These callbacks directly manipulate Qt widgets inside the observer callback
+body. They are safe **only** when called from the main thread:
+
+| Widget | File |
+|--------|------|
+| Whisker_Widget | `Whisker_Widget/Whisker_Widget.cpp` |
+| ML_Widget | `ML_Widget/ML_Widget.cpp` |
+| Media_Window | `Media_Widget/Media_Window.cpp` |
+| Media_Widget | `Media_Widget/Media_Widget.cpp` |
+| Feature_Tree_Widget | `DataManager_Widget/Feature_Tree_Widget/Feature_Tree_Widget.cpp` |
+| Feature_Table_Widget | `DataManager_Widget/Feature_Table_Widget/Feature_Table_Widget.cpp` |
+| TimeScrollBar | `TimeScrollBar/TimeScrollBar.cpp` |
+| TableDesignerWidget | `TableDesignerWidget/TableDesignerWidget.cpp` |
+| LineInspector | `DataManager_Widget/ObjectInspectors/LineInspector.cpp` |
+| PointInspector | `DataManager_Widget/ObjectInspectors/PointInspector.cpp` |
+| MaskInspector | `DataManager_Widget/ObjectInspectors/MaskInspector.cpp` |
+| TimeFrame_Table_Widget | `TimeFrame/TimeFrame_Table_Widget.cpp` |
+| DeepLearningPropertiesWidget | `Plots/.../DeepLearningPropertiesWidget.cpp` |
+| TemporalProjectionViewPropertiesWidget | `Plots/.../TemporalProjectionViewPropertiesWidget.cpp` |
+| ACFPropertiesWidget | `Plots/.../ACFPropertiesWidget.cpp` |
+| OnionSkinViewPropertiesWidget | `Plots/.../OnionSkinViewPropertiesWidget.cpp` |
+| PlotAlignmentWidget | `Plots/.../PlotAlignmentWidget.cpp` |
+| ScatterPlotPropertiesWidget | `Plots/.../ScatterPlotPropertiesWidget.cpp` |
+| EventPlotPropertiesWidget | `Plots/.../EventPlotPropertiesWidget.cpp` |
+| 3DPlotPropertiesWidget | `Plots/.../3DPlotPropertiesWidget.cpp` |
+| PSTHPropertiesWidget | `Plots/.../PSTHPropertiesWidget.cpp` |
+| LinePlotPropertiesWidget | `Plots/.../LinePlotPropertiesWidget.cpp` |
+
+## Fix Patterns
+
+Three complementary strategies address the problem at different layers. They
+can be adopted independently and incrementally.
+
+### Pattern 1: Deferred Writes (Worker-Side)
+
+**Idea:** The background worker never calls `DataManager::setData()`.
+Instead, it stores its output in the result struct. The main-thread
+completion handler writes to DataManager after the worker finishes.
+
+**When to use:** Any `QThread` worker that produces data to write into
+DataManager (pipelines, inference, batch transforms).
+
+**Already implemented:** `MLCoreWidget` for both ClassificationPipeline and
+ClusteringPipeline.
+
+#### How It Works
+
+```
+         Background Thread                 Main Thread
+         ────────────────                  ───────────
+         run pipeline logic
+         store output in result struct
+         emit finished()
+                                    ← Qt::QueuedConnection ←
+                                           _onPipelineComplete()
+                                           dm.setData(...)
+                                           notifyObservers() [safe: main thread]
+```
+
+#### Step-by-Step: Adding Deferred Writes to a New Worker
+
+1. **Add `defer_dm_writes` to the pipeline config struct:**
+
+```cpp
+struct MyPipelineConfig {
+    // ... existing fields ...
+
+    /// When true, the pipeline stores output in the result struct
+    /// instead of writing to DataManager. The caller is responsible
+    /// for writing the deferred output on the main thread.
+    bool defer_dm_writes = false;
+};
+```
+
+2. **Add deferred output fields to the result struct:**
+
+```cpp
+struct MyPipelineResult {
+    bool success = false;
+    std::string error_message;
+
+    // ... existing fields ...
+
+    /// Deferred output — populated when defer_dm_writes is true.
+    /// The caller must write this to DataManager on the main thread.
+    std::optional<OutputType> deferred_output;
+};
+```
+
+3. **Conditionally skip writes in the pipeline:**
+
+```cpp
+if (config.defer_dm_writes) {
+    result.deferred_output = std::move(output);
+} else {
+    writeOutput(dm, output);  // existing code path for tests/scripts
+}
+```
+
+4. **Write in the main-thread completion handler:**
+
+```cpp
+void MyWidget::_onWorkerComplete() {
+    // This runs on the main thread (Qt::QueuedConnection from finished())
+    if (_last_result->deferred_output.has_value()) {
+        writeOutput(*_data_manager, *_last_result->deferred_output);
+        _last_result->deferred_output.reset();
+    }
+}
+```
+
+5. **Set `defer_dm_writes = true` in the widget's config builder:**
+
+```cpp
+auto config = _buildConfig();
+config.defer_dm_writes = true;  // Widget always defers
+```
+
+::: {.callout-note}
+Default `defer_dm_writes` to `false` so that non-GUI callers (unit tests,
+scripts, CLI tools) continue working without changes.
+:::
+
+### Pattern 2: Thread-Safe Callback Wrappers (Observer-Side)
+
+**Idea:** Each widget wraps its observer callback so that Qt widget
+operations always execute on the main thread, regardless of which thread
+calls `notifyObservers()`.
+
+**When to use:** Any widget that registers an observer callback on
+DataManager or any `ObserverData`-based object. Use this to harden existing
+callbacks without modifying the data-producing code.
+
+#### Option A: `QTimer::singleShot(0, ...)`
+
+Defers the callback body to the next main-thread event loop iteration.
+
+```cpp
+// BEFORE (unsafe — runs on calling thread):
+auto id = dm->addObserver([this]() {
+    _combo_box->clear();
+    for (auto const & key : dm->getKeys()) {
+        _combo_box->addItem(QString::fromStdString(key));
+    }
+});
+
+// AFTER (safe — always runs on main thread):
+auto id = dm->addObserver([this]() {
+    QTimer::singleShot(0, this, [this]() {
+        _combo_box->clear();
+        for (auto const & key : dm->getKeys()) {
+            _combo_box->addItem(QString::fromStdString(key));
+        }
+    });
+});
+```
+
+**Pros:** Simple, one-line wrapper. The `this` receiver ensures the lambda
+is not invoked if the widget is destroyed before the timer fires.
+
+**Cons:** Introduces a one-event-loop-iteration delay. Multiple observers
+may see a stale DataManager state between iterations.
+
+#### Option B: `QMetaObject::invokeMethod` with `Qt::QueuedConnection`
+
+Equivalent to `QTimer::singleShot(0, ...)` but more explicit about intent:
+
+```cpp
+auto id = dm->addObserver([this]() {
+    QMetaObject::invokeMethod(this, [this]() {
+        refreshList();
+    }, Qt::QueuedConnection);
+});
+```
+
+**Pros:** Explicit connection type. Familiar to Qt developers.
+
+**Cons:** Slightly more verbose.
+
+#### Step-by-Step: Hardening an Existing Callback
+
+1. **Find the `addObserver` call** in the widget's constructor or setup
+   method.
+2. **Identify the callback body** — the lambda passed to `addObserver`.
+3. **Wrap the body** with `QTimer::singleShot(0, this, [this]() { ... })`.
+4. **Verify the widget stores the `CallbackID`** and calls `removeObserver`
+   in its destructor. (This is an existing requirement, not new.)
+5. **Test:** Run the widget with ASAN/TSAN enabled while triggering observer
+   notifications from a background thread.
+
+### Pattern 3: Main-Thread Assertion (Defensive)
+
+**Idea:** Add a debug-only assertion to `ObserverData::notifyObservers()`
+that verifies it is being called from the Qt main thread. This catches
+violations at the call site rather than waiting for a crash downstream.
+
+**When to use:** As a global safety net. Once added, every existing and
+future `notifyObservers()` call is automatically guarded.
+
+#### Implementation
+
+Add to `Observer_Data.cpp`:
+
+```cpp
+#include <cassert>
+
+#ifdef QT_CORE_LIB
+#include <QThread>
+#include <QCoreApplication>
+#endif
+
+void ObserverData::notifyObservers() {
+#if !defined(NDEBUG) && defined(QT_CORE_LIB)
+    // In debug builds with Qt available, assert we're on the main thread.
+    // ObserverData callbacks typically manipulate Qt widgets, which require
+    // the main thread. If this fires, the caller must defer the write to
+    // the main thread (see observer_thread_safety_roadmap.qmd).
+    auto const * app = QCoreApplication::instance();
+    if (app != nullptr) {
+        assert(QThread::currentThread() == app->thread()
+               && "notifyObservers() called from non-main thread. "
+                  "Observer callbacks may touch Qt widgets. "
+                  "Use deferred writes or QTimer::singleShot to marshal to main thread.");
+    }
+#endif
+
+    for (auto const & [id, callback] : _observers) {
+        callback();
+    }
+}
+```
+
+::: {.callout-warning}
+**Adding this assertion will immediately surface all existing violations in
+debug builds.** Before enabling it project-wide, either (a) harden all
+unsafe callbacks first, or (b) add it behind a `#define` that can be enabled
+per-developer for auditing.
+:::
+
+#### Staged Rollout for the Assertion
+
+1. **Phase A — Opt-in:** Add the assertion behind
+   `#ifdef WHISKER_ASSERT_OBSERVER_MAIN_THREAD`. Developers enable it
+   locally to find violations.
+2. **Phase B — Fix callbacks:** Work through the unsafe callback list above,
+   wrapping each with `QTimer::singleShot`. This can be done incrementally.
+3. **Phase C — Enable by default:** Remove the opt-in `#ifdef` and enable
+   the assertion unconditionally in debug builds. Any new violation is
+   caught immediately during development.
+
+#### Alternative: `ASSERT_MAIN_THREAD` Macro
+
+For use in individual widget callbacks:
+
+```cpp
+#if !defined(NDEBUG) && defined(QT_CORE_LIB)
+#define ASSERT_MAIN_THREAD() \
+    do { \
+        auto const * _app = QCoreApplication::instance(); \
+        assert((!_app || QThread::currentThread() == _app->thread()) \
+               && "Must be called from the main thread"); \
+    } while (false)
+#else
+#define ASSERT_MAIN_THREAD() ((void)0)
+#endif
+```
+
+Usage in a widget method called from an observer:
+
+```cpp
+void MyWidget::refreshList() {
+    ASSERT_MAIN_THREAD();
+    _combo_box->clear();
+    // ...
+}
+```
+
+## Task Checklist
+
+### Phase 1: Immediate Hardening (No Architecture Changes)
+
+These tasks use the existing API. Each can be done as an independent PR.
+
+- [x] **Defer MLCore pipeline writes** — `ClassificationPipeline` and
+  `ClusteringPipeline` store output in result; `MLCoreWidget` writes on
+  main thread. *(Done — the fix that prompted this document.)*
+
+- [ ] **Add `ASSERT_MAIN_THREAD` macro** — Define in a shared header
+  (e.g., `src/CoreUtilities/ThreadAssert.hpp`). Zero runtime cost in
+  release builds.
+
+- [ ] **Add assertion to `ObserverData::notifyObservers()`** — Behind
+  opt-in `#ifdef WHISKER_ASSERT_OBSERVER_MAIN_THREAD`. Enable locally,
+  run the application, fix any firing assertions.
+
+- [ ] **Harden DataManager_Widget callbacks** — Wrap observer callbacks in
+  `Feature_Tree_Widget`, `Feature_Table_Widget`, `LineInspector`,
+  `PointInspector`, `MaskInspector` with `QTimer::singleShot(0, ...)`.
+
+- [ ] **Harden Media_Widget callbacks** — Wrap `Media_Widget` and
+  `Media_Window` observer callbacks.
+
+- [ ] **Harden Plot widget callbacks** — Wrap all `*PropertiesWidget`
+  observer callbacks. These are numerous but follow the same pattern.
+
+- [ ] **Harden remaining widget callbacks** — `Whisker_Widget`,
+  `ML_Widget`, `TimeScrollBar`, `TableDesignerWidget`,
+  `TimeFrame_Table_Widget`.
+
+### Phase 2: Structural Improvements
+
+- [ ] **Add `NotifyObservers::No` overload to `DataManager::setData()`** —
+  Allow callers to batch multiple writes and notify once:
+
+  ```cpp
+  dm.setData("key1", data1, NotifyObservers::No);
+  dm.setData("key2", data2, NotifyObservers::No);
+  dm.notifyObservers();  // single notification
+  ```
+
+  The `NotifyObservers` enum already exists in `Observer_Data.hpp`.
+
+- [ ] **Create `QtObserverBridge` utility** — A small Qt helper that wraps
+  `ObserverData::addObserver()` with automatic main-thread marshaling:
+
+  ```cpp
+  class QtObserverBridge : public QObject {
+      Q_OBJECT
+  public:
+      /// Register callback that always runs on the main thread
+      static ObserverData::CallbackID addSafeObserver(
+              ObserverData & observable,
+              QObject * receiver,
+              std::function<void()> callback)
+      {
+          return observable.addObserver([receiver, cb = std::move(callback)]() {
+              QTimer::singleShot(0, receiver, [cb]() { cb(); });
+          });
+      }
+  };
+  ```
+
+  Widgets then use:
+
+  ```cpp
+  _observer_id = QtObserverBridge::addSafeObserver(
+      *_data_manager, this, [this]() { refreshList(); });
+  ```
+
+  This centralizes the pattern so individual widgets don't need to remember
+  the wrapping.
+
+- [ ] **Enable `notifyObservers()` assertion by default in debug builds** —
+  After all callbacks are hardened, remove the opt-in `#ifdef`.
+
+### Phase 3: Verification
+
+- [ ] **Enable ThreadSanitizer (TSAN) in CI** — Add a
+  `linux-clang-tsan` CMake preset with `-fsanitize=thread`. Run the test
+  suite under TSAN to catch any remaining data races.
+
+- [ ] **Integration test for threaded observer safety** — Write a test
+  that calls `DataManager::setData()` from a background thread while
+  observers are registered. Verify no TSAN warnings, no crashes.
+
+## Design Decisions
+
+- **`QTimer::singleShot(0, ...)` over `Qt::QueuedConnection` signals.**
+  Both work. `QTimer::singleShot` is simpler to add to existing lambdas
+  and does not require adding new signals.
+
+- **Assertion in `notifyObservers()` instead of individual widgets.**
+  Catches the problem at the source (wrong-thread notification) rather than
+  the symptom (wrong-thread widget manipulation). One assertion covers all
+  current and future observers.
+
+- **Deferred writes as the primary fix for workers, not callback hardening.**
+  Hardening callbacks makes them tolerant of wrong-thread calls, but the
+  fundamental design principle is: **workers should never call
+  `DataManager::setData()`.** Deferred writes enforce this at the
+  architecture level.
+
+- **`ObserverData` stays Qt-free.** The assertion uses `#ifdef QT_CORE_LIB`
+  guards. Non-Qt consumers of `ObserverData` are not affected.
+
+## Relationship to Other Roadmaps
+
+| Roadmap | Scope | Relationship |
+|---------|-------|-------------|
+| [Concurrency Architecture](concurrency_architecture.qmd) | DataManager ownership, write reservations, borrow tracking | This document addresses the *immediate* observer problem; the concurrency architecture provides the *long-term* structural solution (workers never write to DataManager directly) |
+| [Threaded Loading Roadmap](threaded_loading_roadmap.qmd) | Background data loading via fork-join | Data loading is already safe by design (worker returns data, main thread calls `setData`). No observer hardening needed — but the `ASSERT_MAIN_THREAD` macro will verify this. |
+
+The deferred-writes pattern in this document is the low-cost precursor to
+Stage 2 (Write Reservations) of the concurrency architecture. It achieves
+the same thread confinement guarantee without the full reservation
+infrastructure.
+
+```
+This document              Concurrency Architecture
+(immediate fixes)          (long-term design)
+─────────────────          ──────────────────────────
+Deferred writes      →     Write Reservations (Stage 2)
+Callback hardening   →     Eliminated (workers never notify)
+notifyObservers()    →     Borrow Tracking (Stage 3)
+ assertion                  enforces protocol at compile time
+```

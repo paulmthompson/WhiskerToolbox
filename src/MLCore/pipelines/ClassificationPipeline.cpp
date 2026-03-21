@@ -794,9 +794,18 @@ ClassificationPipelineResult runClassificationPipeline(
             pred_output.class_probabilities = std::move(output_probabilities);
             pred_output.prediction_times = std::move(output_times);
 
-            auto writer_result = writePredictions(
-                    dm, pred_output, labels.class_names, config.output_config);
-            result.writer_result = std::move(writer_result);
+            if (config.defer_dm_writes) {
+                // Store output for the caller to write on the main thread.
+                // This avoids DataManager observer callbacks firing from
+                // a background thread, which would be undefined behavior
+                // for Qt widget observers.
+                result.deferred_output = std::move(pred_output);
+                result.deferred_output_config = config.output_config;
+            } else {
+                auto writer_result = writePredictions(
+                        dm, pred_output, labels.class_names, config.output_config);
+                result.writer_result = std::move(writer_result);
+            }
         } catch (std::exception const & e) {
             return makeFailure(ClassificationStage::WritingOutput,
                                std::string("Output writing failed: ") + e.what());
