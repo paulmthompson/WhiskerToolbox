@@ -153,6 +153,9 @@ website:
         - section: "Triage Session"
           contents:
             - developer/TriageSession/index.qmd
+        - section: "Architecture"
+          contents:
+            - developer/inter_widget_communication_roadmap.md
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd
