@@ -141,6 +141,28 @@ bool HiddenMarkovModelOperation::trainSequences(
                     mlpack::DiagonalGaussianDistribution<>(dim));
             hmm->Tolerance() = hmm_params->tolerance;
             hmm->Train(featureSequences, labelSequences);
+
+            // mlpack's DiagonalGaussianDistribution::Train() does not apply
+            // any variance floor (unlike GaussianDistribution which applies
+            // PositiveDefiniteConstraint to clamp the condition number).
+            // Near-zero variances produce infinite inverse covariance values
+            // that dominate the log-likelihood and corrupt Viterbi decoding.
+            //
+            // Note: mlpack's PositiveDefiniteConstraint vector overload has a
+            // bug (initializes maxEigval to -lowest() = +DBL_MAX, so the
+            // max-finding loop is a no-op). We implement correct regularization
+            // here: clamp each variance so the per-state condition number is
+            // at most 1e5, matching the full-covariance constraint behavior.
+            for (std::size_t s = 0; s < num_states; ++s) {
+                arma::vec cov = hmm->Emission()[s].Covariance();
+                double const max_var = cov.max();
+                double const floor = std::max(max_var / 1e5, 1e-50);
+                cov.transform([floor](double v) {
+                    return std::max(v, floor);
+                });
+                hmm->Emission()[s].Covariance(std::move(cov));
+            }
+
             _impl->model = std::move(hmm);
         } else {
             auto hmm = std::make_unique<GaussianHMM>(
