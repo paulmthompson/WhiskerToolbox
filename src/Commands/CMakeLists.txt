@@ -9,6 +9,10 @@ set(COMMAND_SOURCES
     Core/ICommand.hpp
     Core/CommandFactory.hpp
     Core/CommandFactory.cpp
+    Core/CommandRegistry.hpp
+    Core/CommandRegistry.cpp
+    Core/register_core_commands.hpp
+    register_core_commands.cpp
     Core/VariableSubstitution.hpp #Detail?
     Core/VariableSubstitution.cpp #Detail?
     Core/SequenceExecution.hpp

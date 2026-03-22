@@ -14,6 +14,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 # TriageSession tests use the co-located test file from src/TriageSession
 add_executable(test_triage_session
+    ${CMAKE_SOURCE_DIR}/tests/shared/RegisterCommandsListener.cpp
     ${CMAKE_SOURCE_DIR}/src/TriageSession/TriageSession.test.cpp
 )
 
@@ -23,6 +24,7 @@ target_link_libraries(test_triage_session PRIVATE
 )
 
 target_link_libraries(test_triage_session PRIVATE DataManager)
+target_link_libraries(test_triage_session PRIVATE Commands)
 target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::LineData)
 target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::DigitalTimeSeries)
 

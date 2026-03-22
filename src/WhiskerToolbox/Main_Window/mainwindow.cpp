@@ -78,6 +78,7 @@
 #include "StateManagement/WorkspaceManager.hpp"
 
 #include "Commands/Core/CommandRecorder.hpp"
+#include "Commands/Core/register_core_commands.hpp"
 #include "utils/DataLoadUtils.hpp"
 
 #include <QCloseEvent>
@@ -195,6 +196,9 @@ MainWindow::MainWindow(QWidget * parent)
     _time_scrollbar_state = std::make_shared<TimeScrollBarState>();
     _time_scrollbar = new TimeScrollBar(_data_manager, _time_scrollbar_state, this);
     _time_scrollbar->setEditorRegistry(_editor_registry.get());
+
+    // Register all commands with the CommandRegistry (before any command usage)
+    commands::register_core_commands();
 
     // Register editor types with the factory
     // Must be called AFTER creating dependencies (TimeScrollBar, GroupManager)

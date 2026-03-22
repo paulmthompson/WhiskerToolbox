@@ -17,6 +17,7 @@ message(STATUS ${DATAMANAGER_TEST_SOURCES_TEMP})
 
 add_executable(test_data_manager
 
+       ${CMAKE_SOURCE_DIR}/tests/shared/RegisterCommandsListener.cpp
        test_data_manager.cpp
 
         ragged_storage_test.cpp
@@ -192,7 +193,7 @@ if(ENABLE_OPENCV)
     target_compile_definitions(test_data_manager PUBLIC ENABLE_OPENCV)
 endif()
 
-target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
+target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager Commands)
 target_link_libraries(test_data_manager PRIVATE DataManagerIO)
 target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)
 target_link_libraries(test_data_manager PRIVATE TensorData)

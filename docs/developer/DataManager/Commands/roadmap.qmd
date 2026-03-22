@@ -17,7 +17,7 @@ title: "Command Architecture Roadmap"
 | **Phase 4:** Action Journal Integration | Not Started | Generalizes CommandRecorder into persistent, timestamped journal |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
 | **Phase 6:** CLI Batch & Macro Recording | Not Started | Headless command execution; generalizes golden trace tests |
-| **Phase 7:** Command Registration API | Not Started | Replace hardcoded if-else factory with explicit-dispatcher registration; enable domain libraries to contribute commands |
+| **Phase 7:** Command Registration API | **In Progress** | Steps 7.1–7.6 complete. Domain library registration (7.3) and --whole-archive removal (7.7) N/A until domain commands exist. |
 | **Widget Command-ification** | Ongoing | 9 new commands identified via audit; none yet implemented. See [GUI Verb Audit](gui_verb_audit.qmd). |
 
 For the full architectural design, types, and code examples, see the
@@ -746,22 +746,31 @@ discover domain commands.
 
 ### Migration Steps
 
-- [ ] **Step 7.1:** Create `CommandRegistry` class with `registerCommand()`, `isKnown()`,
+- [x] **Step 7.1:** Create `CommandRegistry` class with `registerCommand()`, `isKnown()`,
   `create()`, `availableCommands()`, `commandInfo()`. Add `registerTypedCommand<>` helper.
-- [ ] **Step 7.2:** Create `register_core_commands()` in `src/Commands/Core/`, registering
+  *Done — see `src/Commands/Core/CommandRegistry.hpp/.cpp`.*
+- [x] **Step 7.2:** Create `register_core_commands()` in `src/Commands/Core/`, registering
   all 7 existing commands.
-- [ ] **Step 7.3:** Remove the if-else chain and hardcoded `CommandInfo` vector from
+  *Done — see `src/Commands/Core/register_core_commands.hpp` and `src/Commands/register_core_commands.cpp`.*
+- [x] **Step 7.3:** Remove the if-else chain and hardcoded `CommandInfo` vector from
   `CommandFactory.cpp`. Keep the free-function API as thin wrappers delegating to
   `CommandRegistry::instance()`.
-- [ ] **Step 7.4:** Create `register_all_commands.cpp` in `src/WhiskerToolbox/`, calling
+  *Done — `CommandFactory.cpp` now contains zero if-else branches.*
+- [x] **Step 7.4:** Create `register_all_commands.cpp` in `src/WhiskerToolbox/`, calling
   `register_core_commands()`. Wire into `main.cpp` or `MainWindow` constructor.
-- [ ] **Step 7.5:** Run all existing command tests — factory, validation, golden traces,
+  *Done — wired directly in `MainWindow` constructor. A dedicated `register_all_commands.cpp`
+  can be introduced when domain libraries start contributing commands.*
+- [x] **Step 7.5:** Run all existing command tests — factory, validation, golden traces,
   recorder — to verify zero regressions. Update test setup to call
   `register_core_commands()` instead of relying on static initialization.
-- [ ] **Step 7.6:** Add a Catch2 test that calls `CommandRegistry::instance().availableCommands()`
+  *Done — reusable `tests/shared/RegisterCommandsListener.cpp` Catch2 listener added to
+  test_commands, test_data_manager, and test_triage_session. All 662 tests pass.*
+- [x] **Step 7.6:** Add a Catch2 test that calls `CommandRegistry::instance().availableCommands()`
   and asserts all expected commands are present.
+  *Done — see `CommandRegistry.test.cpp` (10 test cases).*
 - [ ] **Step 7.7:** Remove any `--whole-archive` flags that were previously needed for
   Commands (if any). Verify normal linking suffices.
+  *N/A — Commands never used `--whole-archive` (explicit dispatcher pattern avoids it).*
 
 ### Exit Criteria
 
