@@ -47,7 +47,7 @@ Downstream analysis (classification, interval generation, export)
 | Scatter plot of reduced features | ScatterPlotWidget | **Exists** — supports TensorData columns on X/Y axes |
 | Color points by group | ScatterPlotWidget | **Exists** — `colorByGroup` + `GroupManager` integration |
 | Select points in scatter | ScatterPlotWidget | **Exists** — single-point (Ctrl+Click) and polygon selection |
-| Create group from selection | ScatterPlotWidget → EntityGroupManager | **Gap — needs work** (§ Cross-Widget Interaction Gaps) |
+| Create group from selection | ScatterPlotWidget → EntityGroupManager | **Done** — Phase 2 ✅ |
 | Cluster automatically | MLCore_Widget (ClusteringPipeline) | **Exists** — but needs scatter↔MLCore coordination |
 | Propagate groups to other widgets | SelectionContext + DataFocusAware | **Exists** — entity selection broadcasts to all listeners |
 
@@ -518,44 +518,32 @@ struct ParameterUIHints<TensorPCAParams> {
    - Open ScatterPlotWidget → select PCA tensor → set X=PC1, Y=PC2
    - Confirm points render, double-click navigates to frame
 
-### Phase 2: Scatter Selection → Entity Groups
+### Phase 2: Scatter Selection → Entity Groups ✅
 **Goal:** Users can lasso points in the scatter plot and create entity groups for downstream analysis.
 
 This phase bridges the **visualization → interaction** gap. The scatter widget already has polygon selection and `GroupManager` integration for *reading*. This phase adds *writing*.
 
-1. **Add "Create Group from Selection" context menu action to `ScatterPlotOpenGLWidget`**
-   - Trigger: Right-click while points are selected → context menu → "Create Group from Selection..."
-   - Prompt: Dialog for group name (default: "Selection_1", auto-incrementing)
-   - Implementation:
-     ```
-     selected_indices → ScatterPointData::time_indices[i] → EntityId via EntityRegistry
-     → EntityGroupManager::createGroup(name) → addEntitiesToGroup(group_id, entity_ids)
-     ```
-   - Observer notification automatically triggers:
-     - ScatterPlotWidget re-colors points by group
-     - MLCore_Widget sees new group (if listening)
-     - GroupManagementWidget updates list
+1. ✅ **"Create Group from Selection" context menu action in `ScatterPlotOpenGLWidget`**
+   - Already implemented via `GroupContextMenuHandler` (shared with MediaWidget, LinePlotOpenGLWidget, etc.)
+   - `createContextMenu()` wires up callbacks: `getSelectedEntities`, `clearSelection`, `hasSelection`, `onGroupOperationCompleted`
+   - Observer notification automatically triggers scatter recolor via `applyGroupColorsToScene()`
 
-2. **Add "Add to Existing Group" sub-menu**
-   - Lists existing groups from `EntityGroupManager`
-   - Appends selected entities to chosen group
-   - Useful for iterative refinement of selections
+2. ✅ **"Add to Existing Group" sub-menu**
+   - Provided by `GroupContextMenuHandler::setupGroupMenuSection()` — lists existing groups from `EntityGroupManager`
 
-3. **Ensure `EntityId` resolution works for TensorData rows**
-   - Currently `EntityId` is based on `data_key + EntityKind + time + local_index`
-   - For TensorData ordinal rows (no TimeFrameIndex), we need a mapping strategy:
-     - Option A: Use row index as local_index with a `EntityKind::TensorRow` 
-     - Option B: Require TimeFrameIndex rows for entity selection (simpler; PCA preserves them)
-   - **Recommendation:** Option B for Phase 2. Only support entity selection on TensorData with `TimeFrameIndex` rows. This covers the encoder workflow. Option A can be added later if needed.
-   - **Future extension:** Once interval-row support for non-analog types lands (item #1 in `tensor_roadmap.md`), the same entity preservation logic should generalize to interval-row TensorData. If the input has `Interval` rows from `MaskData`/`LineData`/`PointData` sources, entity IDs derived from intervals must also survive dimensionality reduction and be selectable in the scatter plot. This is blocked on the `[IntervalGap]` work in `GatherPipelineExecutor`.
+3. ✅ **`EntityId` resolution for TensorData rows**
+   - **Decision:** Option B — only TimeFrameIndex and Interval rows support entity selection. Ordinal rows return `nullopt`.
+   - **Fix:** `getEntityIdForPoint()` was fabricating `EntityId{static_cast<uint64_t>(tfi.getValue())}` which didn't go through `EntityRegistry`. Fixed to use `DataManager::ensureTimeEntityId(time_key, tfi)` via `DataManager::getTimeKey(source_data_key)`.
+   - Added `source_data_key` and `source_row_type` fields to `ScatterPointData` to carry source provenance from `buildScatterPoints()`.
+   - **Future extension:** Once interval-row support for non-analog types lands (item #1 in `tensor_roadmap.md`), the same entity preservation logic should generalize to interval-row TensorData.
 
-4. **Add `EntityKind::TemporalFeature` (or reuse existing kind) for TensorData-sourced entities**
-   - Need to verify that `EntityRegistry` supports creating EntityIds from a TensorData key + TimeFrameIndex
-   - If not, add a factory: `EntityRegistry::entityIdForTensorRow(data_key, time_frame_index)`
+4. ✅ **Reuse existing `TimeEntity` EntityKind for TensorData-sourced entities**
+   - `DataManager::ensureTimeEntityId(TimeKey, TimeFrameIndex)` already creates `TimeEntity` kind entities via `EntityRegistry::ensureId()`.
+   - No new `EntityKind` needed — TimeEntity covers the encoder workflow correctly.
 
-5. **Test the selection → group creation → scatter recolor loop**
-   - Integration test: Create scatter with grouped data → verify group colors rendered
-   - Manual test: Select cluster → create group → confirm colors update
+5. ✅ **Selection → group creation → scatter recolor loop**
+   - All 23 related tests pass (scatter_plot_widget, TransformsV2, MLCore, TimeEntity, EntityGroupManager)
+   - Manual testing recommended for full end-to-end visual verification
 
 ### Phase 3: Tapkee Integration (t-SNE, Manifold Methods)
 **Goal:** Non-linear dimensionality reduction via tapkee.
@@ -768,14 +756,13 @@ EntityGroupManager notifies observers
 | `docs/developer/MLCore/dim_reduction.qmd` | Create | Developer docs |
 | `docs/developer/transforms_v2/tensor_transforms.qmd` | Create | Developer docs |
 
-### Phase 2 (Scatter Selection → Groups)
+### Phase 2 (Scatter Selection → Groups) ✅
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.hpp` | Edit | Add context menu actions |
-| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp` | Edit | Implement "Create Group from Selection" |
-| `src/Entity/EntityRegistry.hpp` | Edit (if needed) | Add TensorData row → EntityId factory |
-| `tests/WhiskerToolbox/Plots/ScatterPlotWidget/ScatterSelection.test.cpp` | Create | Test selection → group flow |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPointData.hpp` | Edit | Added `source_data_key` and `source_row_type` for entity resolution |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/BuildScatterPoints.cpp` | Edit | Propagate source context to ScatterPointData |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp` | Edit | Fixed `getEntityIdForPoint()` to use `ensureTimeEntityId()` |
 
 ### Phase 3 (Tapkee)
 

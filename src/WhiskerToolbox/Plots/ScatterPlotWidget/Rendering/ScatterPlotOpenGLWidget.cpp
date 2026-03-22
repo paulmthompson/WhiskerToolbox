@@ -503,7 +503,7 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
         highlight_style.color = glm::vec4(1.0f, 0.8f, 0.0f, 1.0f);// Yellow highlight
 
         std::vector<CorePlotting::MappedElement> const highlight_elem{elements[*_navigated_index]};
-        builder.addGlyphs("scatter_highlight", std::move(highlight_elem), highlight_style);
+        builder.addGlyphs("scatter_highlight", highlight_elem, highlight_style);
     }
 
     // Add y=x reference line if enabled
@@ -738,8 +738,18 @@ std::optional<EntityId> ScatterPlotOpenGLWidget::getEntityIdForPoint(std::size_t
         return std::nullopt;
     }
 
+    // Ordinal sources have no entity mapping
+    if (_scatter_data.source_row_type == ScatterSourceRowType::TensorOrdinal || _scatter_data.source_row_type == ScatterSourceRowType::Unknown) {
+        return std::nullopt;
+    }
+
+    if (_scatter_data.source_data_key.empty()) {
+        return std::nullopt;
+    }
+
     TimeFrameIndex const tfi = _scatter_data.time_indices[index];
-    return EntityId{static_cast<uint64_t>(tfi.getValue())};
+    auto const time_key = _data_manager->getTimeKey(_scatter_data.source_data_key);
+    return _data_manager->ensureTimeEntityId(time_key, tfi);
 }
 
 // === Single-point selection ===
