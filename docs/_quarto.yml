@@ -92,6 +92,7 @@ website:
               href: developer/MLCore/index.qmd
               contents:
                 - developer/MLCore/models.qmd
+                - developer/MLCore/dim_reduction.qmd
                 - developer/MLCore/hmm.qmd
                 - developer/MLCore/features.qmd
                 - developer/MLCore/label_assembly.qmd

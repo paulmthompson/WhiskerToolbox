@@ -17,6 +17,7 @@
 #include "algorithms/MaskArea/MaskArea.hpp"
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
+#include "algorithms/TensorPCA/TensorPCA.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
 
@@ -64,6 +65,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
     registerPipelineStepFactoryFor<IntervalReductionParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
+    registerPipelineStepFactoryFor<TensorPCAParams>();
     return true;
 }();
 
@@ -639,6 +641,20 @@ auto const register_interval_overlap_reduction = RegisterBinaryContainerTransfor
                 .description = "Gather overlapping intervals and reduce to a TensorData column",
                 .category = "Signal Processing / Reduction",
                 .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register TensorPCA (Container Transform: TensorData → TensorData)
+auto const register_tensor_pca = RegisterContainerTransform<TensorData, TensorData, TensorPCAParams>(
+        "TensorPCA",
+        tensorPCA,
+        ContainerTransformMetadata{
+                .description = "Apply PCA dimensionality reduction to a TensorData",
+                .category = "Dimensionality Reduction",
+                .input_type_name = "TensorData",
+                .output_type_name = "TensorData",
+                .params_type_name = "TensorPCAParams",
+                .is_expensive = true,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 

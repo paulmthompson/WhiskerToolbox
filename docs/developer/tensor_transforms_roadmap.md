@@ -471,20 +471,20 @@ struct ParameterUIHints<TensorPCAParams> {
 
 ## Implementation Roadmap
 
-### Phase 1: Foundation — PCA via mlpack + Row Time Preservation
+### Phase 1: Foundation — PCA via mlpack + Row Time Preservation ✅
 **Goal:** End-to-end TensorData → TensorData working through TransformsV2 pipeline, with time indices preserved for scatter plot integration.
 
-1. **Add `MLDimReductionOperation` base class to MLCore**
+1. ✅ **Add `MLDimReductionOperation` base class to MLCore**
    - New file: `src/MLCore/models/MLDimReductionOperation.hpp`
    - Pure virtual interface: `fitTransform()`, `transform()`, `isFitted()`, `outputDimensions()`
 
-2. **Implement `PCAOperation` in MLCore using mlpack**
+2. ✅ **Implement `PCAOperation` in MLCore using mlpack**
    - New files: `src/MLCore/models/unsupervised/PCAOperation.hpp/.cpp`
    - Use `mlpack::PCA` internally
    - Store eigenvectors for re-projection via `transform()`
    - Expose `explainedVarianceRatio()`
 
-3. **Create TransformsV2 `TensorPCA` wrapper**
+3. ✅ **Create TransformsV2 `TensorPCA` wrapper**
    - New files: `src/TransformsV2/algorithms/TensorPCA/TensorPCA.hpp/.cpp`
    - reflect-cpp `TensorPCAParams` struct
    - Container transform: `TensorData → TensorData`
@@ -504,13 +504,13 @@ struct ParameterUIHints<TensorPCAParams> {
        col_names);                     // "PC1", "PC2", ...
    ```
 
-4. **Add unit tests**
+4. ✅ **Add unit tests**
    - MLCore PCA: correctness on known matrix (identity covariance, etc.)
    - TransformsV2 integration: round-trip through registry
    - Shape validation: reject non-2D, too-few-rows, etc.
    - **Row descriptor preservation:** Verify output TimeFrameIndex matches input
 
-5. **Verify pipeline composability**
+5. **Verify pipeline composability** (manual verification)
    - JSON pipeline: `IntervalReduction → TensorPCA → KMeans`
 
 6. **Verify scatter plot integration (manual test)**

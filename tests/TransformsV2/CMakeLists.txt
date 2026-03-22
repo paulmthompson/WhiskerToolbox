@@ -51,6 +51,7 @@ add_executable(test_TransformsV2
         #Range Reductions
         #SumReduction
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorPCA/TensorPCA.test.cpp
 )
 
 target_include_directories(test_TransformsV2 PRIVATE

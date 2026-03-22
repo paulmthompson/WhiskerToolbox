@@ -25,6 +25,7 @@ add_executable(test_MLCore
     HiddenMarkovModel.test.cpp
     KMeansOperation.test.cpp
     LabelAssembler.test.cpp
+    PCAOperation.test.cpp
     LogisticRegressionOperation.test.cpp
     MLModelOperation.test.cpp
     NaiveBayesOperation.test.cpp
