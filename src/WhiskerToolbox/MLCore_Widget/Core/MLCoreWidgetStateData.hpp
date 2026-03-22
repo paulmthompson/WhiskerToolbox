@@ -136,6 +136,26 @@ struct MLCoreWidgetStateData {
     /// Whether to normalize features (z-score) before clustering
     bool clustering_zscore_normalize = false;
 
+    // === Dim Reduction configuration ===
+
+    /// DataManager key of the TensorData to reduce
+    std::string dim_reduction_tensor_key;
+
+    /// Registry name of the selected dim reduction algorithm (e.g. "PCA")
+    std::string dim_reduction_model_name = "PCA";
+
+    /// Output key for the reduced TensorData
+    std::string dim_reduction_output_key = "reduced";
+
+    /// Number of output components
+    int dim_reduction_n_components = 2;
+
+    /// Whether to scale features before reduction
+    bool dim_reduction_scale = true;
+
+    /// Whether to z-score normalize features before reduction
+    bool dim_reduction_zscore_normalize = false;
+
     // === UI state ===
 
     /// Active workflow tab index (0 = classification, 1 = clustering)

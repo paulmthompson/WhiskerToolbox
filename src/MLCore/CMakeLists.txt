@@ -59,6 +59,9 @@ set(MLCore_SOURCES
     pipelines/ClusteringPipeline.cpp
     pipelines/ClusteringPipeline.hpp
 
+    pipelines/DimReductionPipeline.cpp
+    pipelines/DimReductionPipeline.hpp
+
     pipelines/SequenceAssembler.cpp
     pipelines/SequenceAssembler.hpp
 

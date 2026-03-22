@@ -5,7 +5,7 @@ description: "Qt widget for interactive supervised and unsupervised ML workflows
 
 ## Overview
 
-`MLCore_Widget` (`src/WhiskerToolbox/MLCore_Widget/`) is a Qt6 widget providing an interactive GUI for machine learning workflows. It exposes the `MLCore` library's classification and clustering pipelines through a tab-based interface with panel-per-step layout.
+`MLCore_Widget` (`src/WhiskerToolbox/MLCore_Widget/`) is a Qt6 widget providing an interactive GUI for machine learning workflows. It exposes the `MLCore` library's classification, clustering, and dimensionality reduction pipelines through a tab-based interface with panel-per-step layout.
 
 ## Architecture
 
@@ -38,8 +38,10 @@ MLCore_Widget/
     │   └── ResultsPanel.hpp/.cpp/.ui            # Classification results display
     ├── ClusteringPanel/
     │   └── ClusteringPanel.hpp/.cpp/.ui         # Clustering data & algorithm config
-    └── ClusterOutputPanel/
-        └── ClusterOutputPanel.hpp/.cpp/.ui      # Clustering results display
+    ├── ClusterOutputPanel/
+    │   └── ClusterOutputPanel.hpp/.cpp/.ui      # Clustering results display
+    └── DimReductionPanel/
+        └── DimReductionPanel.hpp/.cpp/.ui       # Dim reduction config & results
 ```
 
 ### Dependencies
@@ -92,11 +94,22 @@ MLCore_Widget
 | `clustering_write_probabilities` | `bool` | Write soft probabilities (GMM) |
 | `clustering_zscore_normalize` | `bool` | Z-score normalize before clustering |
 
+### Dim Reduction State
+
+| Field | Type | Description |
+|---|---|---|
+| `dim_reduction_tensor_key` | `string` | TensorData key for dim reduction |
+| `dim_reduction_model_name` | `string` | Algorithm name (default: `"PCA"`) |
+| `dim_reduction_output_key` | `string` | Output TensorData key (default: `"reduced"`) |
+| `dim_reduction_n_components` | `int` | Number of output components (default: 2) |
+| `dim_reduction_scale` | `bool` | Scale features before reduction (default: true) |
+| `dim_reduction_zscore_normalize` | `bool` | Z-score normalize before reduction (default: false) |
+
 ### UI State
 
 | Field | Type | Description |
 |---|---|---|
-| `active_tab` | `int` | Active workflow tab (0=classification, 1=clustering) |
+| `active_tab` | `int` | Active workflow tab (0=classification, 1=clustering, 2=dim reduction) |
 
 ## Classification Tab
 
@@ -170,16 +183,50 @@ MLCore_Widget
 | `ClusteringPanel` | TensorData selection, algorithm combo filtered to `MLTaskType::Clustering`, per-algorithm parameter stack, normalization option, output config. |
 | `ClusterOutputPanel` | Algorithm summary, cluster assignment table with counts and fractions, noise point info, clickable output keys with color swatches. |
 
+## Dim Reduction Tab
+
+### Panel Layout
+
+```
+┌─── Data Source ──────────────────────────────┐
+│ TensorData: [combo ▼]  shape info label       │
+│ ☐ Z-score normalize                          │
+└───────────────────────────────────────────────┘
+┌─── Algorithm ────────────────────────────────┐
+│ Algorithm: [combo ▼]  Components: [spinbox]   │
+│ ☐ Scale features                              │
+└───────────────────────────────────────────────┘
+┌─── Output ───────────────────────────────────┐
+│ Output key: [text]                            │
+│ [Run Reduction]                               │
+└───────────────────────────────────────────────┘
+┌─── Results ──────────────────────────────────┐
+│ Observations, features, dropped rows          │
+│ Explained variance per component              │
+└───────────────────────────────────────────────┘
+```
+
+### Sub-Panel
+
+| Panel | Purpose |
+|---|---|
+| `DimReductionPanel` | TensorData selection, algorithm combo filtered to `MLTaskType::DimensionalityReduction`, n_components spinbox, scale/z-score checkboxes, output key, run button. Shows explained variance ratio per component after completion. |
+
+### Auto-Focus
+
+After a successful dim reduction, the output TensorData key is broadcast via `SelectionContext::setDataFocus()`. This causes `DataFocusAware` widgets (ScatterPlotWidget, DataInspector, etc.) to update automatically.
+
 ## Pipeline Execution
 
-Both pipelines run asynchronously in a `QThread` background worker:
+All three pipelines run asynchronously in a `QThread` background worker:
 
 1. UI panels are disabled during execution
 2. Progress callback updates a status label and indeterminate progress bar
 3. On completion, results are displayed in the output panel
 4. On failure, an error message is shown
+5. Deferred writes are committed on the main thread for thread safety
 
-The `_runPipelineAsync()` / `_runClusteringPipelineAsync()` methods assemble the config from panel state, spawn a worker thread, and connect completion signals.
+The `_runPipelineAsync()` / `_runClusteringPipelineAsync()` / `_runDimReductionPipelineAsync()` methods assemble the config from panel state, spawn a worker thread, and connect completion signals.
 
 ## SelectionContext Integration
 

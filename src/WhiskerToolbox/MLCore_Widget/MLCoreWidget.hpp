@@ -10,6 +10,7 @@
  *
  * - **Classification**: Supervised classification using MLCore pipelines
  * - **Clustering**: Unsupervised clustering using MLCore pipelines
+ * - **Dim Reduction**: Dimensionality reduction (PCA) using MLCore pipelines
  *
  * The Classification tab contains sub-panels for each workflow step:
  * FeatureSelectionPanel, RegionSelectionPanel,
@@ -59,6 +60,7 @@
 class ClusteringPanel;
 class ClusterOutputPanel;
 class DataManager;
+class DimReductionPanel;
 class FeatureSelectionPanel;
 class GroupManager;
 class LabelConfigPanel;
@@ -77,6 +79,8 @@ struct ClassificationPipelineConfig;
 struct ClassificationPipelineResult;
 struct ClusteringPipelineConfig;
 struct ClusteringPipelineResult;
+struct DimReductionPipelineConfig;
+struct DimReductionPipelineResult;
 }// namespace MLCore
 
 class MLCoreWidget : public QWidget, public DataFocusAware {
@@ -139,6 +143,16 @@ signals:
      */
     void _clusteringPipelineFinished();
 
+    /**
+     * @brief Emitted from the worker thread to report dim reduction pipeline progress
+     */
+    void _dimReductionProgressReported(int stage_index, QString message);
+
+    /**
+     * @brief Emitted when the dim reduction pipeline finishes
+     */
+    void _dimReductionPipelineFinished();
+
 private slots:
     void _onTrainRequested();
     void _onPredictRequested();
@@ -148,6 +162,10 @@ private slots:
     void _onClusteringFitRequested();
     void _onClusteringProgress(int stage_index, QString const & message);
     void _onClusteringPipelineComplete();
+
+    void _onDimReductionRunRequested();
+    void _onDimReductionProgress(int stage_index, QString const & message);
+    void _onDimReductionPipelineComplete();
 
 private:
     void _setupUi();
@@ -162,6 +180,11 @@ private:
     [[nodiscard]] MLCore::ClusteringPipelineConfig _buildClusteringPipelineConfig() const;
     void _runClusteringPipelineAsync(MLCore::ClusteringPipelineConfig config);
     void _setClusteringPipelineRunning(bool running);
+
+    [[nodiscard]] bool _validateDimReductionPanels() const;
+    [[nodiscard]] MLCore::DimReductionPipelineConfig _buildDimReductionPipelineConfig() const;
+    void _runDimReductionPipelineAsync(MLCore::DimReductionPipelineConfig config);
+    void _setDimReductionPipelineRunning(bool running);
 
     /**
      * @brief Select all entities in a group via SelectionContext
@@ -191,6 +214,9 @@ private:
     ClusteringPanel * _clustering_panel = nullptr;
     ClusterOutputPanel * _cluster_output_panel = nullptr;
 
+    // Sub-panels (Dim Reduction)
+    DimReductionPanel * _dim_reduction_panel = nullptr;
+
     // Progress UI (Classification)
     QLabel * _status_label = nullptr;
     QProgressBar * _progress_bar = nullptr;
@@ -199,12 +225,18 @@ private:
     QLabel * _clustering_status_label = nullptr;
     QProgressBar * _clustering_progress_bar = nullptr;
 
+    // Progress UI (Dim Reduction)
+    QLabel * _dim_reduction_status_label = nullptr;
+    QProgressBar * _dim_reduction_progress_bar = nullptr;
+
     // Pipeline infrastructure
     std::unique_ptr<MLCore::MLModelRegistry> _registry;
     std::unique_ptr<MLCore::ClassificationPipelineResult> _last_result;
     std::unique_ptr<MLCore::ClusteringPipelineResult> _last_clustering_result;
+    std::unique_ptr<MLCore::DimReductionPipelineResult> _last_dim_reduction_result;
     bool _pipeline_running = false;
     bool _clustering_pipeline_running = false;
+    bool _dim_reduction_pipeline_running = false;
 };
 
 #endif// MLCORE_WIDGET_HPP

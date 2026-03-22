@@ -563,34 +563,31 @@ This phase bridges the **visualization → interaction** gap. The scatter widget
    - Stages: ValidateFeatures → ConvertFeatures → FitTransform → WriteOutput
    - Handles time alignment, NaN dropping, optional normalization
 
-### Phase 4: MLCore Widget Dim Reduction Tab + Auto-Focus
+### Phase 4: MLCore Widget Dim Reduction Tab + Auto-Focus ✅
 **Goal:** Integrated UI for dimensionality reduction with scatter visualization feedback loop.
 
-1. **Add "Dimensionality Reduction" tab to MLCore_Widget**
+**Status: COMPLETE**
+
+1. ✅ **Add "Dimensionality Reduction" tab to MLCore_Widget**
    - Follows existing tab pattern (Classification, Clustering)
-   - Sub-panels:
-     - `FeatureSelectionPanel` (reuse existing — selects input TensorData)
-     - `DimReductionAlgorithmPanel` (algorithm combo: PCA, t-SNE, ...; param widgets via AutoParamWidget)
-     - `OutputPreviewPanel` (shows output shape, explained variance for PCA)
-   - "Run" button triggers `DimensionalityReductionPipeline`
-   - Output written as new TensorData key (e.g., `"encoder_features_pca"`)
+   - New files:
+     - `DimReductionPanel.ui/.hpp/.cpp` — UI panel with tensor selection, algorithm config (PCA), n_components, scale, z-score
+     - `DimReductionPipeline.hpp/.cpp` — Pipeline: ValidateFeatures → ConvertFeatures → FitTransform → WriteOutput
+   - State fields in `MLCoreWidgetStateData`: `dim_reduction_tensor_key`, `dim_reduction_model_name`, `dim_reduction_output_key`, `dim_reduction_n_components`, `dim_reduction_scale`, `dim_reduction_zscore_normalize`
+   - Worker thread: `DimReductionPipelineWorker` runs pipeline on background QThread
+   - Deferred writes: output TensorData written on main thread for thread safety
+   - Shows explained variance ratio per component after completion
+   - "Run Reduction" button triggers pipeline; output key auto-generated (e.g., `"features_pca"`)
 
-2. **Auto-focus output after transform execution**
-   - After DataTransform_Widget or MLCore_Widget writes a result:
-     ```cpp
-     _selection_context->setDataFocus(output_key, "TensorData", source);
-     ```
-   - All `DataFocusAware` widgets update:
-     - ScatterPlotPropertiesWidget → refreshes key combos, output key appears at top
-     - TensorInspector → loads new tensor
-     - DataTransform_Widget → updates valid transforms list
+2. ✅ **Auto-focus output after transform execution**
+   - `MLCoreWidget`: calls `SelectionContext::setDataFocus()` after successful dim reduction, broadcasting output TensorData key
+   - `DataTransform_Widget`: calls `SelectionContext::setDataFocus()` after `_doTransform()` writes output to DataManager
+   - All `DataFocusAware` widgets update automatically
 
-3. **"Visualize in Scatter" quick action**
-   - This is implemented as a **ContextAction** registered by ScatterPlotWidget (see [Inter-Widget Communication Roadmap — Proposal 1](inter_widget_communication_roadmap.md#proposal-1-context-aware-actions-priority-high)).
-   - The ContextAction's `is_applicable` returns true when a TensorData with ≥2 columns is focused.
-   - Its `execute()` body creates or finds a ScatterPlotWidget via `EditorRegistry` and sets X/Y from the first two columns.
-   - Additionally, MLCore_Widget output panel shows a "↗ Scatter Plot" button as a direct shortcut.
-   - This avoids manual axis configuration for the common 2-component case.
+3. ✅ **"Visualize in Scatter" quick action**
+   - Already implemented in `ScatterPlotWidgetRegistration.cpp` as `scatter_plot.visualize_2d_tensor` ContextAction
+   - `is_applicable` returns true when a TensorData with ≥2 columns is focused
+   - `execute()` creates or navigates to ScatterPlotWidget and sets X/Y from first two columns
 
 ### Phase 5: Clustering ↔ Scatter Feedback Loop
 **Goal:** Tight integration between MLCore clustering and scatter visualization.
@@ -774,13 +771,18 @@ EntityGroupManager notifies observers
 | `src/TransformsV2/algorithms/TensorTSNE/TensorTSNE.hpp/.cpp` | Create | TransformsV2 wrapper |
 | `src/TransformsV2/algorithms/TensorIsomap/TensorIsomap.hpp/.cpp` | Create | TransformsV2 wrapper |
 
-### Phase 4 (MLCore Dim Reduction Tab)
+### Phase 4 (MLCore Dim Reduction Tab) ✅
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/` | Create | New tab panel(s) |
-| `src/WhiskerToolbox/MLCore_Widget/MLCoreWidget.hpp/.cpp` | Edit | Add tab, auto-focus output |
-| `src/WhiskerToolbox/DataTransform_Widget/DataTransform_Widget.cpp` | Edit | Auto-focus output after execution |
+| `src/MLCore/pipelines/DimReductionPipeline.hpp/.cpp` | Create | Dim reduction pipeline (validate → convert → fit → write) |
+| `src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.ui/.hpp/.cpp` | Create | New dim reduction tab panel |
+| `src/WhiskerToolbox/MLCore_Widget/Core/MLCoreWidgetStateData.hpp` | Edit | Add dim reduction state fields |
+| `src/WhiskerToolbox/MLCore_Widget/Core/MLCoreWidgetState.hpp/.cpp` | Edit | Add getters/setters/signals for dim reduction state |
+| `src/WhiskerToolbox/MLCore_Widget/MLCoreWidget.hpp/.cpp` | Edit | Add Dim Reduction tab, worker thread, auto-focus output |
+| `src/WhiskerToolbox/DataTransform_Widget/DataTransform_Widget.cpp` | Edit | Auto-focus output after transform execution |
+| `src/MLCore/CMakeLists.txt` | Edit | Add DimReductionPipeline sources |
+| `src/WhiskerToolbox/MLCore_Widget/CMakeLists.txt` | Edit | Add DimReductionPanel sources |
 ## Priority Summary
 
 | # | Phase | Priority | Complexity | Key Deliverable |
@@ -788,7 +790,7 @@ EntityGroupManager notifies observers
 | 1 | PCA Foundation | **High** | Medium | TensorData → TensorData through TransformsV2; row preservation |
 | 2 | Scatter Selection → Groups | **High** | Low-Medium | "Create Group from Selection" context menu in scatter |
 | 3 | Tapkee (t-SNE, manifold) | Medium | Medium | Non-linear dim reduction algorithms |
-| 4 | MLCore Dim Reduction Tab | Medium | Medium | Integrated UI; auto-focus output |
+| 4 | MLCore Dim Reduction Tab | ✅ **Complete** | Medium | Integrated UI; auto-focus output |
 | 5 | Clustering ↔ Scatter Loop | Medium | Low | Context-menu clustering; sub-selection clustering |
 | 6 | Elemental Tensor Transforms | Low | Low | Row-level `f(row) → row` element transforms |
 | 7 | Advanced Features | Low | Varies | Fit/project, scree plot, 3D scatter, benchmarks |

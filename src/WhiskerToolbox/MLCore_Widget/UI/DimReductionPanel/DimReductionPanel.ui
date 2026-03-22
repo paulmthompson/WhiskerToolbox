@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DimReductionPanel</class>
+ <widget class="QWidget" name="DimReductionPanel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>450</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <!-- Data Source section -->
+   <item>
+    <widget class="QGroupBox" name="dataSourceGroupBox">
+     <property name="title">
+      <string>Data Source</string>
+     </property>
+     <layout class="QVBoxLayout" name="dataSourceLayout">
+      <item>
+       <layout class="QHBoxLayout" name="tensorSelectorLayout">
+        <item>
+         <widget class="QLabel" name="tensorLabel">
+          <property name="text">
+           <string>TensorData:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="tensorComboBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Select a TensorData object for dimensionality reduction</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="refreshButton">
+          <property name="text">
+           <string>↻</string>
+          </property>
+          <property name="toolTip">
+           <string>Refresh the list of available tensors</string>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="tensorInfoLabel">
+        <property name="text">
+         <string>No tensor selected</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: gray; font-style: italic; }</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="zscoreCheckBox">
+        <property name="text">
+         <string>Z-score normalize features</string>
+        </property>
+        <property name="toolTip">
+         <string>Standardize features to zero mean and unit variance before reduction</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Algorithm section -->
+   <item>
+    <widget class="QGroupBox" name="algorithmGroupBox">
+     <property name="title">
+      <string>Algorithm</string>
+     </property>
+     <layout class="QVBoxLayout" name="algorithmLayout">
+      <item>
+       <layout class="QHBoxLayout" name="algorithmSelectorLayout">
+        <item>
+         <widget class="QLabel" name="algorithmLabel">
+          <property name="text">
+           <string>Algorithm:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="algorithmComboBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Select the dimensionality reduction algorithm</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <!-- PCA parameters -->
+      <item>
+       <widget class="QWidget" name="pcaParamsWidget">
+        <layout class="QGridLayout" name="pcaGridLayout">
+         <property name="horizontalSpacing">
+          <number>10</number>
+         </property>
+         <property name="verticalSpacing">
+          <number>6</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QLabel" name="nComponentsLabel">
+           <property name="text">
+            <string>Components:</string>
+           </property>
+           <property name="toolTip">
+            <string>Number of output dimensions</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="nComponentsSpinBox">
+           <property name="toolTip">
+            <string>Number of principal components to retain</string>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>1000</number>
+           </property>
+           <property name="value">
+            <number>2</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QCheckBox" name="scaleCheckBox">
+           <property name="text">
+            <string>Scale features (unit variance)</string>
+           </property>
+           <property name="toolTip">
+            <string>Standardize each feature to unit variance before PCA. Recommended when features have different scales.</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Output section -->
+   <item>
+    <widget class="QGroupBox" name="outputGroupBox">
+     <property name="title">
+      <string>Output</string>
+     </property>
+     <layout class="QVBoxLayout" name="outputLayout">
+      <item>
+       <layout class="QHBoxLayout" name="outputKeyLayout">
+        <item>
+         <widget class="QLabel" name="outputKeyLabel">
+          <property name="text">
+           <string>Output key:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="outputKeyLineEdit">
+          <property name="text">
+           <string>reduced</string>
+          </property>
+          <property name="toolTip">
+           <string>DataManager key for the output reduced TensorData</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Run button -->
+   <item>
+    <widget class="QPushButton" name="runButton">
+     <property name="text">
+      <string>Run Reduction</string>
+     </property>
+     <property name="toolTip">
+      <string>Run the dimensionality reduction algorithm on the selected tensor</string>
+     </property>
+    </widget>
+   </item>
+   <!-- Results section -->
+   <item>
+    <widget class="QGroupBox" name="resultsGroupBox">
+     <property name="title">
+      <string>Results</string>
+     </property>
+     <layout class="QVBoxLayout" name="resultsLayout">
+      <item>
+       <widget class="QLabel" name="resultsLabel">
+        <property name="text">
+         <string>No results yet</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: gray; font-style: italic; }</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="varianceLabel">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
