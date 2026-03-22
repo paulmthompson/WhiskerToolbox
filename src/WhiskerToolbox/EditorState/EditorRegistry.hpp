@@ -229,13 +229,13 @@ public:
     /**
      * @brief Create view widget for an existing state
      */
-    [[nodiscard]] QWidget * createView(std::shared_ptr<EditorState> state);
+    [[nodiscard]] QWidget * createView(const std::shared_ptr<EditorState>& state);
 
     /**
      * @brief Create properties widget for an existing state
      * @return Properties widget, or nullptr if type has no properties factory
      */
-    [[nodiscard]] QWidget * createProperties(std::shared_ptr<EditorState> state);
+    [[nodiscard]] QWidget * createProperties(const std::shared_ptr<EditorState>& state);
 
     // ========== State Registry ==========
 
@@ -244,7 +244,7 @@ public:
      *
      * Use for states created via createState() or deserialized.
      */
-    void registerState(std::shared_ptr<EditorState> state);
+    void registerState(const std::shared_ptr<EditorState>& state);
 
     /**
      * @brief Unregister a state by instance ID
@@ -293,6 +293,34 @@ public:
      * @brief Get the DataManager
      */
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const;
+
+    // ========== Editor Opening ==========
+
+    /// Callback type for opening/focusing an editor and returning its state
+    using OpenEditorCallback = std::function<std::shared_ptr<EditorState>(EditorTypeId const &)>;
+
+    /**
+     * @brief Set the callback used to open/focus an editor in the UI
+     *
+     * MainWindow sets this after construction. ContextActions use it to
+     * open editors and get the state back for configuration.
+     *
+     * @param callback Called with editor type_id, returns the state of
+     *        the opened (or reused) editor instance
+     */
+    void setOpenEditorCallback(OpenEditorCallback callback);
+
+    /**
+     * @brief Open or focus an editor and return its state
+     *
+     * Delegates to the callback set by setOpenEditorCallback(). For
+     * allow_multiple=false types, reuses the existing instance. For
+     * allow_multiple=true types, creates a new instance.
+     *
+     * @param type_id The editor type to open
+     * @return The state of the opened editor, or nullptr if unavailable
+     */
+    [[nodiscard]] std::shared_ptr<EditorState> openEditor(EditorTypeId const & type_id);
 
     // ========== Closed-State Cache ==========
 
@@ -379,7 +407,7 @@ public:
      * 
      * @param position The TimePosition (index + TimeFrame pointer) to set
      */
-    void setCurrentTime(TimePosition position);
+    void setCurrentTime(const TimePosition& position);
 
     /**
      * @brief Set the current visualization time with TimeFrameIndex and TimeFrame
@@ -517,7 +545,9 @@ private:
     TimeKey _active_time_key{TimeKey("time")};///< Currently selected TimeFrame key (defaults to "time")
     bool _time_update_in_progress{false};     ///< Guard flag to prevent re-entrant time updates
 
-    void connectStateSignals(EditorState * state);
+    OpenEditorCallback _open_editor_callback;
+
+    void connectStateSignals(EditorState * state) const;
 
 public:
     /**

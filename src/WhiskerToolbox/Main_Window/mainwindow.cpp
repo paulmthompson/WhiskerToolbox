@@ -200,6 +200,14 @@ MainWindow::MainWindow(QWidget * parent)
     // Register all commands with the CommandRegistry (before any command usage)
     commands::register_core_commands();
 
+    // Wire the openEditor callback so ContextActions can open/focus editors
+    _editor_registry->setOpenEditorCallback([this](EditorTypeId const & type_id)
+                                                    -> std::shared_ptr<EditorState> {
+        openEditor(type_id.value);
+        auto states = _editor_registry->statesByType(type_id);
+        return states.empty() ? nullptr : states.back();
+    });
+
     // Register editor types with the factory
     // Must be called AFTER creating dependencies (TimeScrollBar, GroupManager)
     _registerEditorTypes();
@@ -413,7 +421,7 @@ void MainWindow::_createActions() {
     connect(_time_scrollbar,
             qOverload<TimePosition>(&TimeScrollBar::timeChanged),
             _editor_registry.get(),
-            qOverload<TimePosition>(&EditorRegistry::setCurrentTime));
+            qOverload<TimePosition const &>(&EditorRegistry::setCurrentTime));
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);

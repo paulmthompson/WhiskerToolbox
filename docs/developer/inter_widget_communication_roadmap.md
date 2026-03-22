@@ -714,9 +714,9 @@ These are independent and can proceed in parallel. They establish the infrastruc
 | Step | Source Roadmap | Description | Delivers |
 |------|---------------|-------------|----------|
 | **3a** ✅ | Inter-Widget Proposal 1 | `ContextAction` struct, `SelectionContext::registerAction()`, `applicableActions()` query, context menu integration in DataManager_Widget | Action discovery system |
-| **3b** | Inter-Widget Proposal 1 | Register first ContextActions: ScatterPlotWidget → `"scatter_plot.visualize_2d_tensor"`, MLCore_Widget → `"mlcore.cluster_tensor"` | "Visualize in Scatter" and "Cluster with K-Means" appear in context menus |
+| **3b** ✅ | Inter-Widget Proposal 1 | Register first ContextActions: ScatterPlotWidget → `"scatter_plot.visualize_2d_tensor"`, MLCore_Widget → `"mlcore.cluster_tensor"`. `EditorRegistry::openEditor()` callback for ContextAction editor creation. | "Visualize in Scatter" and "Cluster with K-Means" appear in context menus |
 
-**Milestone 3:** Friction 2 (dim reduction → scatter) reduced from 5 manual steps to 1 click. Friction 3 (scatter → clustering) reduced from 3 steps to 1 click.
+**Milestone 3:** ✅ Friction 2 (dim reduction → scatter) reduced from 5 manual steps to 1 click. Friction 3 (scatter → clustering) reduced from 3 steps to 1 click.
 
 #### Tier 4: Integrated UI
 
