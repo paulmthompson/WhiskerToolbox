@@ -366,33 +366,9 @@ This is architecturally similar to the existing `CommandSequenceDescriptor` / `T
 
 ---
 
-### Proposal 4: Richer SelectionContext Payloads (Priority: Medium)
+### ~~Proposal 4: Richer SelectionContext Payloads~~ (Removed)
 
-**Problem addressed:** Limited context (only data key + entities), preventing widgets from making smart decisions.
-
-**Concept:** Extend `SelectionContext` to carry optional metadata about the focused data:
-
-```cpp
-struct DataFocusMetadata {
-    std::optional<std::size_t> num_rows;
-    std::optional<std::size_t> num_columns;
-    std::optional<std::vector<std::string>> column_names;
-    std::optional<QString> row_type;  // "TimeFrameIndex", "Interval", "Ordinal"
-    // Extensible via std::any for future metadata
-    std::unordered_map<QString, QVariant> extra;
-};
-
-void setDataFocus(SelectedDataKey key, QString data_type,
-                  SelectionSource source,
-                  DataFocusMetadata metadata = {});
-```
-
-**Benefits:**
-- Context-aware actions (Proposal 1) can make better applicability decisions without querying DataManager
-- Widgets can show richer info in their focus-response UI (e.g., "PCA output: 1000×2, columns: PC1, PC2")
-- Scatter widget can auto-suggest column mapping from metadata
-
-**Implementation cost:** Small — add optional metadata to the signal; existing consumers ignore it (backward compatible).
+**Status:** Removed. The metadata this proposed (row count, column count, column names, row type) is tensor-specific and would bloat a generic communication layer. ContextActions already capture `std::shared_ptr<DataManager>` and can query data properties directly — one cheap map lookup is always fresh and works for every data type. This follows Blender's pattern: context carries *identity and type*, operators query the *data* for details.
 
 ---
 
@@ -663,7 +639,7 @@ Once `MaskData`, `LineData`, and `PointData` are supported as interval-row sourc
 |---|----------|----------|------------|------------|
 | 1 | Context-Aware Actions | **High** | Medium | Nothing — can start immediately |
 | 2 | Bidirectional OperationContext | Medium | Low | Nothing |
-| 4 | Richer SelectionContext Payloads | Medium | Low | Nothing |
+| ~~4~~ | ~~Richer SelectionContext Payloads~~ | ~~Medium~~ | ~~Low~~ | Removed — ContextActions query DataManager directly |
 | 3 | Workflow Pipeline Descriptors | Low | High | Proposals 1, 2 should land first |
 
 Proposal 1 has the highest impact-to-effort ratio: it eliminates the most manual steps across the widest range of workflows, and its implementation (action registration + context menu/toolbar integration) is well-scoped.
@@ -719,17 +695,16 @@ These are independent and can proceed in parallel. They establish the infrastruc
 
 | Step | Source Roadmap | Description | Delivers |
 |------|---------------|-------------|----------|
-| **1a** | Commands Phase 7, Steps 7.1–7.4 | Create `CommandRegistry`, `registerTypedCommand<>`, `register_core_commands()`, `register_all_commands.cpp`. Remove if-else chain. | Extensible command registration; no `--whole-archive` for commands |
-| **1b** | Tensor Phase 1 | `MLDimReductionOperation` base class + `PCAOperation` in MLCore (mlpack backend) + `TensorPCA` TransformsV2 container wrapper with `RowDescriptor` preservation | PCA through DataTransform_Widget; output visible in scatter |
-| **1c** | Inter-Widget Proposal 4 | Add optional `DataFocusMetadata` to `SelectionContext::setDataFocus()` (row count, column count, column names, row type) | Richer context for downstream decisions; backward compatible |
+| ✅ **1a** | Commands Phase 7, Steps 7.1–7.4 | Create `CommandRegistry`, `registerTypedCommand<>`, `register_core_commands()`, `register_all_commands.cpp`. Remove if-else chain. | Extensible command registration; no `--whole-archive` for commands |
+| ✅ **1b** | Tensor Phase 1 | `MLDimReductionOperation` base class + `PCAOperation` in MLCore (mlpack backend) + `TensorPCA` TransformsV2 container wrapper with `RowDescriptor` preservation | PCA through DataTransform_Widget; output visible in scatter |
 
-**Milestone 1:** User can run PCA on encoder features via DataTransform_Widget, open ScatterPlotWidget, manually select the PCA tensor + columns, and see points.
+**Milestone 1:** ✅ User can run PCA on encoder features via DataTransform_Widget, open ScatterPlotWidget, manually select the PCA tensor + columns, and see points.
 
 #### Tier 2: Interactive Selection
 
 | Step | Source Roadmap | Description | Delivers |
 |------|---------------|-------------|----------|
-| **2a** | Tensor Phase 2 | "Create Group from Selection" context menu in ScatterPlotWidget. Maps selected `TimeFrameIndex` points → `EntityId` → `EntityGroupManager::createGroup()` | Visual cluster selection → entity groups |
+| ✅ **2a** | Tensor Phase 2 | "Create Group from Selection" context menu in ScatterPlotWidget. Maps selected `TimeFrameIndex` points → `EntityId` → `EntityGroupManager::createGroup()` | Visual cluster selection → entity groups |
 | **2b** | Tensor Phase 1 (verification) | Auto-focus output: `DataTransform_Widget` calls `setDataFocus(output_key)` after executing a transform | ScatterPlot auto-refreshes to show new tensor |
 
 **Milestone 2:** End-to-end workflow works: encoder → PCA → scatter → select cluster → create group. All manual, but functional.
@@ -738,7 +713,7 @@ These are independent and can proceed in parallel. They establish the infrastruc
 
 | Step | Source Roadmap | Description | Delivers |
 |------|---------------|-------------|----------|
-| **3a** | Inter-Widget Proposal 1 | `ContextAction` struct, `SelectionContext::registerAction()`, `applicableActions()` query, context menu integration in ScatterPlotWidget and DataManager_Widget | Action discovery system |
+| **3a** ✅ | Inter-Widget Proposal 1 | `ContextAction` struct, `SelectionContext::registerAction()`, `applicableActions()` query, context menu integration in DataManager_Widget | Action discovery system |
 | **3b** | Inter-Widget Proposal 1 | Register first ContextActions: ScatterPlotWidget → `"scatter_plot.visualize_2d_tensor"`, MLCore_Widget → `"mlcore.cluster_tensor"` | "Visualize in Scatter" and "Cluster with K-Means" appear in context menus |
 
 **Milestone 3:** Friction 2 (dim reduction → scatter) reduced from 5 manual steps to 1 click. Friction 3 (scatter → clustering) reduced from 3 steps to 1 click.

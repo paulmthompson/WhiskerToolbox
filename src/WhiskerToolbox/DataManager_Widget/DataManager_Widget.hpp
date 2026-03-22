@@ -74,7 +74,7 @@ private slots:
      * 
      * @param dir_name The new directory path as a QString
      */
-    void _changeOutputDir(QString dir_name);
+    void _changeOutputDir(const QString& dir_name);
 
     /**
      * @brief Handle selection of a feature from the feature table
@@ -103,7 +103,7 @@ private slots:
      * @param type The type of data to create (e.g., "Point", "Mask", "Line")
      * @param timeframe_key The timeframe to assign to the new data
      */
-    void _createNewData(std::string key, std::string type, std::string timeframe_key);
+    void _createNewData(const std::string& key, const std::string& type, const std::string& timeframe_key);
 
     /**
      * @brief Handle deletion of data from the feature table
