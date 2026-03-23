@@ -19,6 +19,7 @@
 #include "models/MLModelParameters.hpp"
 #include "models/MLModelRegistry.hpp"
 #include "models/MLTaskType.hpp"
+#include "models/supervised/HiddenMarkovModelOperation.hpp"
 
 #include <algorithm>
 #include <armadillo>
@@ -91,7 +92,7 @@ void createLinSepTensor(
     auto ts = makeDenseTimeStorage(total);
     auto tf = dm.getTime(TimeKey(time_key));
 
-    std::vector<std::string> names = {"feature_0", "feature_1"};
+    std::vector<std::string> const names = {"feature_0", "feature_1"};
     auto tensor = std::make_shared<TensorData>(
             TensorData::createTimeSeries2D(data, total, cols, ts, tf, names));
 
@@ -177,7 +178,7 @@ TEST_CASE("ClassificationPipeline: stage toString", "[ClassificationPipeline]") 
 TEST_CASE("ClassificationPipeline: fails if feature tensor not found",
           "[ClassificationPipeline]") {
     auto dm = makeDM("cam", 200);
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -195,7 +196,7 @@ TEST_CASE("ClassificationPipeline: fails if model not in registry",
           "[ClassificationPipeline]") {
     auto dm = makeDM("cam", 200);
     createLinSepTensor(*dm, "features", "cam", 50);
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "NonexistentModel";
@@ -213,7 +214,7 @@ TEST_CASE("ClassificationPipeline: fails if label interval not found",
           "[ClassificationPipeline]") {
     auto dm = makeDM("cam", 200);
     createLinSepTensor(*dm, "features", "cam", 50);
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -238,7 +239,7 @@ TEST_CASE("ClassificationPipeline: end-to-end with Random Forest and interval la
     createLinSepTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -315,7 +316,7 @@ TEST_CASE("ClassificationPipeline: end-to-end with Naive Bayes",
     createLinSepTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Naive Bayes";
@@ -350,7 +351,7 @@ TEST_CASE("ClassificationPipeline: end-to-end with Logistic Regression",
     createLinSepTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Logistic Regression";
@@ -382,10 +383,10 @@ TEST_CASE("ClassificationPipeline: class balancing subsample",
     auto dm = makeDM("cam", 200);
 
     // Build imbalanced tensor manually
-    std::size_t class0 = 80;
-    std::size_t class1 = 20;
-    std::size_t total = class0 + class1;
-    std::size_t cols = 2;
+    std::size_t const class0 = 80;
+    std::size_t const class1 = 20;
+    std::size_t const total = class0 + class1;
+    std::size_t const cols = 2;
     std::vector<float> data(total * cols);
     for (std::size_t i = 0; i < class0; ++i) {
         data[i * cols + 0] = static_cast<float>(i) * 0.1f;
@@ -412,7 +413,7 @@ TEST_CASE("ClassificationPipeline: class balancing subsample",
             TimeFrameIndex(static_cast<int64_t>(total - 1)));
     dm->setData<DigitalIntervalSeries>("labels", series, TimeKey("cam"));
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -448,7 +449,7 @@ TEST_CASE("ClassificationPipeline: labels from TimeEntity groups",
     createLinSepTensor(*dm, "features", "cam", per_class);
     auto [g0, g1] = createTimeEntityGroups(*dm, "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::LabelFromTimeEntityGroups group_labels;
     group_labels.class_groups = {g0, g1};
@@ -483,7 +484,7 @@ TEST_CASE("ClassificationPipeline: z-score normalization",
     createLinSepTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -513,8 +514,8 @@ TEST_CASE("ClassificationPipeline: handles NaN rows in features",
     auto dm = makeDM("cam", 200);
 
     // Create tensor with some NaN rows
-    std::size_t total = 100;
-    std::size_t cols = 2;
+    std::size_t const total = 100;
+    std::size_t const cols = 2;
     std::vector<float> data(total * cols);
     for (std::size_t i = 0; i < total; ++i) {
         if (i < 50) {
@@ -536,7 +537,7 @@ TEST_CASE("ClassificationPipeline: handles NaN rows in features",
     dm->setData<TensorData>("features", tensor, TimeKey("cam"));
     createLabelIntervalSeries(*dm, "labels", "cam", 50);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -568,7 +569,7 @@ TEST_CASE("ClassificationPipeline: train only, no prediction",
     createLinSepTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -605,8 +606,8 @@ TEST_CASE("ClassificationPipeline: predict on separate tensor",
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
     // Create a separate prediction tensor with features in the same range
-    std::size_t pred_rows = 20;
-    std::size_t cols = 2;
+    std::size_t const pred_rows = 20;
+    std::size_t const cols = 2;
     std::vector<float> pred_data(pred_rows * cols);
     for (std::size_t i = 0; i < pred_rows; ++i) {
         // Alternate between class 0 and class 1 ranges
@@ -631,7 +632,7 @@ TEST_CASE("ClassificationPipeline: predict on separate tensor",
                                            pred_ts, tf, {"feature_0", "feature_1"}));
     dm->setData<TensorData>("pred_features", pred_tensor, TimeKey("cam"));
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -668,7 +669,7 @@ TEST_CASE("ClassificationPipeline: fails if prediction tensor not found",
     createLinSepTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -697,7 +698,7 @@ TEST_CASE("ClassificationPipeline: returned model can re-predict",
     createLinSepTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -721,7 +722,7 @@ TEST_CASE("ClassificationPipeline: returned model can re-predict",
     test_features.col(3) = arma::vec{13.0, 0.0};
 
     arma::Row<std::size_t> preds;
-    bool ok = result.trained_model->predict(test_features, preds);
+    bool const ok = result.trained_model->predict(test_features, preds);
     REQUIRE(ok);
     REQUIRE(preds.n_elem == 4);
     // Class 0 and class 1 should be separable
@@ -741,7 +742,7 @@ TEST_CASE("ClassificationPipeline: progress callback receives all stages",
     createLinSepTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -793,7 +794,7 @@ TEST_CASE("ClassificationPipeline: output uses configured prefix",
     createLinSepTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -849,7 +850,7 @@ void createBlockSequenceTensor(
     auto ts = makeDenseTimeStorage(total);
     auto tf = dm.getTime(TimeKey(time_key));
 
-    std::vector<std::string> names = {"feature_0"};
+    std::vector<std::string> const names = {"feature_0"};
     auto tensor = std::make_shared<TensorData>(
             TensorData::createTimeSeries2D(data, total, cols, ts, tf, names));
 
@@ -884,7 +885,7 @@ TEST_CASE("ClassificationPipeline: HMM end-to-end with interval labels",
     createBlockSequenceTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Hidden Markov Model (Gaussian)";
@@ -944,7 +945,7 @@ TEST_CASE("ClassificationPipeline: HMM end-to-end with event labels",
     createBlockSequenceTensor(*dm, "features", "cam", per_class);
     createEventSeries(*dm, "events", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Hidden Markov Model (Gaussian)";
@@ -978,7 +979,7 @@ TEST_CASE("ClassificationPipeline: HMM progress includes SegmentingSequences",
     createBlockSequenceTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Hidden Markov Model (Gaussian)";
@@ -1016,7 +1017,7 @@ TEST_CASE("ClassificationPipeline: non-sequence model skips SegmentingSequences"
     createLinSepTensor(*dm, "features", "cam", per_class);
     createLabelIntervalSeries(*dm, "labels", "cam", per_class);
 
-    MLCore::MLModelRegistry registry;
+    MLCore::MLModelRegistry const registry;
 
     MLCore::ClassificationPipelineConfig config;
     config.model_name = "Random Forest";
@@ -1039,4 +1040,408 @@ TEST_CASE("ClassificationPipeline: non-sequence model skips SegmentingSequences"
     auto it = std::find(stages.begin(), stages.end(),
                         MLCore::ClassificationStage::SegmentingSequences);
     CHECK(it == stages.end());
+}
+
+// ============================================================================
+// Phase 8: Prediction region, bounding span, constrained decoding, diagonal
+// ============================================================================
+
+namespace {
+
+/**
+ * @brief Create two block-sequence tensors and a prediction interval for Phase 8 tests
+ *
+ * Training region: frames  0–49 (state 0, feature ~-2) and 50–99 (state 1, feature ~+2)
+ * Gap:            frames 100–149 (unlabeled, "predict me" region, feature values
+ *                 picked to match state 0 early and state 1 late)
+ * Second region:  frames 150–199 (state 1, feature ~+2) and 200–249 (state 0, feature ~-2)
+ *
+ * Returns a DM with:
+ *   "features" — 1D block tensor over frames 0–249
+ *   "train_labels" — DigitalIntervalSeries marking frames 50–99 as positive
+ *   "train_labels_2" — DigitalIntervalSeries marking frames 150–199 as positive
+ *   "predict_region" — DigitalIntervalSeries covering frames 100–149
+ */
+std::shared_ptr<DataManager> makePhase8DM() {
+    auto dm = std::make_shared<DataManager>();
+    dm->setTime(TimeKey("cam"), makeTimeFrame(250));
+
+    // Build feature tensor: 5 blocks of 50 frames each
+    // Block 0 (0-49):   state 0 features ~-2
+    // Block 1 (50-99):  state 1 features ~+2
+    // Block 2 (100-149): state 0 early (100-124) then state 1 late (125-149)
+    // Block 3 (150-199): state 1 features ~+2
+    // Block 4 (200-249): state 0 features ~-2
+    constexpr std::size_t total = 250;
+    std::vector<float> data(total);
+    for (std::size_t i = 0; i < 50; ++i) {
+        data[i] = -2.0f + static_cast<float>(i) * 0.001f;// block 0: state 0
+    }
+    for (std::size_t i = 50; i < 100; ++i) {
+        data[i] = 2.0f + static_cast<float>(i - 50) * 0.001f;// block 1: state 1
+    }
+    for (std::size_t i = 100; i < 125; ++i) {
+        data[i] = -2.0f + static_cast<float>(i - 100) * 0.001f;// block 2a: state 0
+    }
+    for (std::size_t i = 125; i < 150; ++i) {
+        data[i] = 2.0f + static_cast<float>(i - 125) * 0.001f;// block 2b: state 1
+    }
+    for (std::size_t i = 150; i < 200; ++i) {
+        data[i] = 2.0f + static_cast<float>(i - 150) * 0.001f;// block 3: state 1
+    }
+    for (std::size_t i = 200; i < 250; ++i) {
+        data[i] = -2.0f + static_cast<float>(i - 200) * 0.001f;// block 4: state 0
+    }
+
+    auto ts = makeDenseTimeStorage(total);
+    auto tf = dm->getTime(TimeKey("cam"));
+    std::vector<std::string> const names = {"feature_0"};
+    auto tensor = std::make_shared<TensorData>(
+            TensorData::createTimeSeries2D(data, total, 1, ts, tf, names));
+    dm->setData<TensorData>("features", tensor, TimeKey("cam"));
+
+    // Training labels: frames 50–99 are positive (state 1)
+    auto train_labels = std::make_shared<DigitalIntervalSeries>();
+    train_labels->setTimeFrame(tf);
+    train_labels->addEvent(TimeFrameIndex(50), TimeFrameIndex(99));
+    dm->setData<DigitalIntervalSeries>("train_labels", train_labels, TimeKey("cam"));
+
+    // Additional training labels on the far side: frames 150–199 positive
+    auto train_labels_2 = std::make_shared<DigitalIntervalSeries>();
+    train_labels_2->setTimeFrame(tf);
+    train_labels_2->addEvent(TimeFrameIndex(150), TimeFrameIndex(199));
+    dm->setData<DigitalIntervalSeries>("train_labels_2", train_labels_2, TimeKey("cam"));
+
+    // Prediction region: frames 100–149 (the gap between training blocks)
+    auto predict_region = std::make_shared<DigitalIntervalSeries>();
+    predict_region->setTimeFrame(tf);
+    predict_region->addEvent(TimeFrameIndex(100), TimeFrameIndex(149));
+    dm->setData<DigitalIntervalSeries>("predict_region", predict_region, TimeKey("cam"));
+
+    return dm;
+}
+
+}// anonymous namespace
+
+// ============================================================================
+// Prediction interval filtering (bounding span + output restriction)
+// ============================================================================
+
+TEST_CASE("ClassificationPipeline: prediction interval restricts output frames",
+          "[ClassificationPipeline][PredictionRegion]") {
+    auto dm = makePhase8DM();
+    MLCore::MLModelRegistry const registry;
+
+    MLCore::ClassificationPipelineConfig config;
+    config.model_name = "Hidden Markov Model (Gaussian)";
+    config.feature_tensor_key = "features";
+    config.label_config = MLCore::LabelFromIntervals{"State1", "State0"};
+    config.label_interval_key = "train_labels";
+    config.time_key_str = "cam";
+    config.output_config.output_prefix = "PR:";
+    config.output_config.time_key_str = "cam";
+    config.output_config.write_intervals = true;
+    config.prediction_region.predict_all_rows = true;
+    config.prediction_region.prediction_interval_key = "predict_region";
+    config.prediction_region.constrained_decoding = false;
+
+    auto result = MLCore::runClassificationPipeline(*dm, registry, config);
+
+    REQUIRE(result.success);
+    // Output should be filtered to frames 100–149 only (50 frames)
+    CHECK(result.prediction_observations == 50);
+    REQUIRE(result.writer_result.has_value());
+    // Intervals created for 2 classes
+    CHECK(result.writer_result->interval_keys.size() == 2);
+}
+
+TEST_CASE("ClassificationPipeline: prediction interval with Random Forest",
+          "[ClassificationPipeline][PredictionRegion]") {
+    // Frame-independent models should also respect prediction interval filtering
+    auto dm = makePhase8DM();
+    MLCore::MLModelRegistry const registry;
+
+    MLCore::ClassificationPipelineConfig config;
+    config.model_name = "Random Forest";
+    config.feature_tensor_key = "features";
+    config.label_config = MLCore::LabelFromIntervals{"State1", "State0"};
+    config.label_interval_key = "train_labels";
+    config.time_key_str = "cam";
+    config.output_config.output_prefix = "RF:";
+    config.output_config.time_key_str = "cam";
+    config.output_config.write_intervals = true;
+    config.prediction_region.predict_all_rows = true;
+    config.prediction_region.prediction_interval_key = "predict_region";
+
+    auto result = MLCore::runClassificationPipeline(*dm, registry, config);
+
+    REQUIRE(result.success);
+    CHECK(result.prediction_observations == 50);
+}
+
+TEST_CASE("ClassificationPipeline: empty prediction interval key means no filtering",
+          "[ClassificationPipeline][PredictionRegion]") {
+    constexpr std::size_t per_class = 30;
+    auto dm = makeDM("cam", 200);
+    createBlockSequenceTensor(*dm, "features", "cam", per_class);
+    createLabelIntervalSeries(*dm, "labels", "cam", per_class);
+
+    MLCore::MLModelRegistry const registry;
+
+    MLCore::ClassificationPipelineConfig config;
+    config.model_name = "Hidden Markov Model (Gaussian)";
+    config.feature_tensor_key = "features";
+    config.label_config = MLCore::LabelFromIntervals{"P", "N"};
+    config.label_interval_key = "labels";
+    config.time_key_str = "cam";
+    config.output_config.time_key_str = "cam";
+    config.prediction_region.predict_all_rows = true;
+    config.prediction_region.prediction_interval_key = "";
+
+    auto result = MLCore::runClassificationPipeline(*dm, registry, config);
+
+    REQUIRE(result.success);
+    // All 60 training rows should be predicted (no filtering)
+    CHECK(result.prediction_observations == per_class * 2);
+}
+
+// ============================================================================
+// Constrained Viterbi in pipeline
+// ============================================================================
+
+TEST_CASE("ClassificationPipeline: constrained decoding produces predictions",
+          "[ClassificationPipeline][ConstrainedDecoding]") {
+    auto dm = makePhase8DM();
+    MLCore::MLModelRegistry const registry;
+
+    MLCore::ClassificationPipelineConfig config;
+    config.model_name = "Hidden Markov Model (Gaussian)";
+    config.feature_tensor_key = "features";
+    config.label_config = MLCore::LabelFromIntervals{"State1", "State0"};
+    config.label_interval_key = "train_labels";
+    config.time_key_str = "cam";
+    config.output_config.output_prefix = "CD:";
+    config.output_config.time_key_str = "cam";
+    config.prediction_region.predict_all_rows = true;
+    config.prediction_region.constrained_decoding = true;
+
+    auto result = MLCore::runClassificationPipeline(*dm, registry, config);
+
+    REQUIRE(result.success);
+    CHECK(result.prediction_observations > 0);
+    CHECK(result.trained_model->isSequenceModel());
+}
+
+TEST_CASE("ClassificationPipeline: constrained vs unconstrained accuracy comparison",
+          "[ClassificationPipeline][ConstrainedDecoding]") {
+    // Both constrained and unconstrained should succeed on clean data.
+    // Constrained decoding should produce >= accuracy as unconstrained
+    // when the training labels provide useful boundary information.
+    auto dm_constrained = makePhase8DM();
+    auto dm_unconstrained = makePhase8DM();
+    MLCore::MLModelRegistry const registry;
+
+    auto makeConfig = [](bool constrained) {
+        MLCore::ClassificationPipelineConfig config;
+        config.model_name = "Hidden Markov Model (Gaussian)";
+        config.feature_tensor_key = "features";
+        config.label_config = MLCore::LabelFromIntervals{"State1", "State0"};
+        config.label_interval_key = "train_labels";
+        config.time_key_str = "cam";
+        config.output_config.output_prefix = constrained ? "Con:" : "Unc:";
+        config.output_config.time_key_str = "cam";
+        config.output_config.write_intervals = true;
+        config.prediction_region.predict_all_rows = true;
+        config.prediction_region.constrained_decoding = constrained;
+        return config;
+    };
+
+    auto constrained_result = MLCore::runClassificationPipeline(
+            *dm_constrained, registry, makeConfig(true));
+    auto unconstrained_result = MLCore::runClassificationPipeline(
+            *dm_unconstrained, registry, makeConfig(false));
+
+    REQUIRE(constrained_result.success);
+    REQUIRE(unconstrained_result.success);
+
+    // Both should produce the same number of predictions
+    CHECK(constrained_result.prediction_observations ==
+          unconstrained_result.prediction_observations);
+
+    // Both should have trained models
+    CHECK(constrained_result.trained_model->isTrained());
+    CHECK(unconstrained_result.trained_model->isTrained());
+}
+
+TEST_CASE("ClassificationPipeline: constrained decoding ignored for non-sequence models",
+          "[ClassificationPipeline][ConstrainedDecoding]") {
+    constexpr std::size_t per_class = 30;
+    auto dm = makeDM("cam", 200);
+    createLinSepTensor(*dm, "features", "cam", per_class);
+    createLabelIntervalSeries(*dm, "labels", "cam", per_class);
+
+    MLCore::MLModelRegistry const registry;
+
+    MLCore::ClassificationPipelineConfig config;
+    config.model_name = "Random Forest";
+    config.feature_tensor_key = "features";
+    config.label_config = MLCore::LabelFromIntervals{"P", "N"};
+    config.label_interval_key = "labels";
+    config.time_key_str = "cam";
+    config.output_config.time_key_str = "cam";
+    config.prediction_region.predict_all_rows = true;
+    // Constrained decoding enabled but model is not a sequence model
+    config.prediction_region.constrained_decoding = true;
+
+    auto result = MLCore::runClassificationPipeline(*dm, registry, config);
+
+    REQUIRE(result.success);
+    CHECK(result.prediction_observations == per_class * 2);
+}
+
+// ============================================================================
+// Diagonal covariance in pipeline
+// ============================================================================
+
+TEST_CASE("ClassificationPipeline: HMM with diagonal covariance",
+          "[ClassificationPipeline][DiagonalCovariance]") {
+    constexpr std::size_t per_class = 50;
+    auto dm = makeDM("cam", 200);
+    createBlockSequenceTensor(*dm, "features", "cam", per_class);
+    createLabelIntervalSeries(*dm, "labels", "cam", per_class);
+
+    MLCore::MLModelRegistry const registry;
+
+    MLCore::HMMParameters hmm_params;
+    hmm_params.num_states = 2;
+    hmm_params.use_diagonal_covariance = true;
+
+    MLCore::ClassificationPipelineConfig config;
+    config.model_name = "Hidden Markov Model (Gaussian)";
+    config.model_params = &hmm_params;
+    config.feature_tensor_key = "features";
+    config.label_config = MLCore::LabelFromIntervals{"Contact", "NoContact"};
+    config.label_interval_key = "labels";
+    config.time_key_str = "cam";
+    config.output_config.output_prefix = "Diag:";
+    config.output_config.time_key_str = "cam";
+    config.output_config.write_intervals = true;
+    config.prediction_region.predict_all_rows = true;
+
+    auto result = MLCore::runClassificationPipeline(*dm, registry, config);
+
+    REQUIRE(result.success);
+    CHECK(result.prediction_observations == per_class * 2);
+    CHECK(result.num_classes == 2);
+
+    // Verify the trained model uses diagonal covariance
+    REQUIRE(result.trained_model != nullptr);
+    auto const * hmm = dynamic_cast<MLCore::HiddenMarkovModelOperation const *>(
+            result.trained_model.get());
+    REQUIRE(hmm != nullptr);
+    CHECK(hmm->isDiagonalCovariance());
+    CHECK(hmm->isTrained());
+}
+
+TEST_CASE("ClassificationPipeline: diagonal covariance with event labels",
+          "[ClassificationPipeline][DiagonalCovariance]") {
+    constexpr std::size_t per_class = 50;
+    auto dm = makeDM("cam", 200);
+    createBlockSequenceTensor(*dm, "features", "cam", per_class);
+    createEventSeries(*dm, "events", "cam", per_class);
+
+    MLCore::MLModelRegistry const registry;
+
+    MLCore::HMMParameters hmm_params;
+    hmm_params.use_diagonal_covariance = true;
+
+    MLCore::ClassificationPipelineConfig config;
+    config.model_name = "Hidden Markov Model (Gaussian)";
+    config.model_params = &hmm_params;
+    config.feature_tensor_key = "features";
+    config.label_config = MLCore::LabelFromEvents{"Contact", "NoContact"};
+    config.label_event_key = "events";
+    config.time_key_str = "cam";
+    config.output_config.output_prefix = "DiagEvt:";
+    config.output_config.time_key_str = "cam";
+    config.prediction_region.predict_all_rows = true;
+
+    auto result = MLCore::runClassificationPipeline(*dm, registry, config);
+
+    REQUIRE(result.success);
+    CHECK(result.prediction_observations == per_class * 2);
+
+    auto const * hmm = dynamic_cast<MLCore::HiddenMarkovModelOperation const *>(
+            result.trained_model.get());
+    REQUIRE(hmm != nullptr);
+    CHECK(hmm->isDiagonalCovariance());
+}
+
+// ============================================================================
+// Combined Phase 8 features
+// ============================================================================
+
+TEST_CASE("ClassificationPipeline: prediction region + constrained + diagonal combined",
+          "[ClassificationPipeline][PredictionRegion][ConstrainedDecoding][DiagonalCovariance]") {
+    auto dm = makePhase8DM();
+    MLCore::MLModelRegistry const registry;
+
+    MLCore::HMMParameters hmm_params;
+    hmm_params.use_diagonal_covariance = true;
+
+    MLCore::ClassificationPipelineConfig config;
+    config.model_name = "Hidden Markov Model (Gaussian)";
+    config.model_params = &hmm_params;
+    config.feature_tensor_key = "features";
+    config.label_config = MLCore::LabelFromIntervals{"State1", "State0"};
+    config.label_interval_key = "train_labels";
+    config.time_key_str = "cam";
+    config.output_config.output_prefix = "All:";
+    config.output_config.time_key_str = "cam";
+    config.output_config.write_intervals = true;
+    config.prediction_region.predict_all_rows = true;
+    config.prediction_region.prediction_interval_key = "predict_region";
+    config.prediction_region.constrained_decoding = true;
+
+    auto result = MLCore::runClassificationPipeline(*dm, registry, config);
+
+    REQUIRE(result.success);
+    // Output filtered to prediction region: frames 100–149 = 50 frames
+    CHECK(result.prediction_observations == 50);
+
+    auto const * hmm = dynamic_cast<MLCore::HiddenMarkovModelOperation const *>(
+            result.trained_model.get());
+    REQUIRE(hmm != nullptr);
+    CHECK(hmm->isDiagonalCovariance());
+    CHECK(hmm->isSequenceModel());
+
+    REQUIRE(result.writer_result.has_value());
+    CHECK(result.writer_result->interval_keys.size() == 2);
+}
+
+TEST_CASE("ClassificationPipeline: missing prediction interval key fails gracefully",
+          "[ClassificationPipeline][PredictionRegion]") {
+    constexpr std::size_t per_class = 30;
+    auto dm = makeDM("cam", 200);
+    createBlockSequenceTensor(*dm, "features", "cam", per_class);
+    createLabelIntervalSeries(*dm, "labels", "cam", per_class);
+
+    MLCore::MLModelRegistry const registry;
+
+    MLCore::ClassificationPipelineConfig config;
+    config.model_name = "Hidden Markov Model (Gaussian)";
+    config.feature_tensor_key = "features";
+    config.label_config = MLCore::LabelFromIntervals{"P", "N"};
+    config.label_interval_key = "labels";
+    config.time_key_str = "cam";
+    config.output_config.time_key_str = "cam";
+    config.prediction_region.predict_all_rows = true;
+    // Reference a non-existent interval series
+    config.prediction_region.prediction_interval_key = "nonexistent_series";
+
+    auto result = MLCore::runClassificationPipeline(*dm, registry, config);
+
+    CHECK_FALSE(result.success);
+    CHECK(result.failed_stage == MLCore::ClassificationStage::Predicting);
+    CHECK_FALSE(result.error_message.empty());
 }

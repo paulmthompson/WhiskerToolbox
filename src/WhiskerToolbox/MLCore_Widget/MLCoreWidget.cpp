@@ -1,14 +1,15 @@
 #include "MLCoreWidget.hpp"
 
-#include "ClusterOutputPanel.hpp"
-#include "ClusteringPanel.hpp"
-#include "FeatureSelectionPanel.hpp"
-#include "LabelConfigPanel.hpp"
-#include "MLCoreWidgetState.hpp"
-#include "ModelConfigPanel.hpp"
-#include "PredictionPanel.hpp"
-#include "RegionSelectionPanel.hpp"
-#include "ResultsPanel.hpp"
+#include "Core/MLCoreWidgetState.hpp"
+#include "UI/ClusterOutputPanel/ClusterOutputPanel.hpp"
+#include "UI/ClusteringPanel/ClusteringPanel.hpp"
+#include "UI/DimReductionPanel/DimReductionPanel.hpp"
+#include "UI/FeatureSelectionPanel/FeatureSelectionPanel.hpp"
+#include "UI/LabelConfigPanel/LabelConfigPanel.hpp"
+#include "UI/ModelConfigPanel/ModelConfigPanel.hpp"
+#include "UI/PredictionPanel/PredictionPanel.hpp"
+#include "UI/RegionSelectionPanel/RegionSelectionPanel.hpp"
+#include "UI/ResultsPanel/ResultsPanel.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/SelectionContext.hpp"
@@ -19,6 +20,7 @@
 #include "MLCore/models/supervised/HiddenMarkovModelOperation.hpp"
 #include "MLCore/pipelines/ClassificationPipeline.hpp"
 #include "MLCore/pipelines/ClusteringPipeline.hpp"
+#include "MLCore/pipelines/DimReductionPipeline.hpp"
 #include "MLCore/preprocessing/ClassBalancing.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
@@ -124,6 +126,49 @@ private:
     MLCore::ClusteringPipelineResult _result;
 };
 
+/**
+ * @brief Worker that runs the DimReductionPipeline on a background thread
+ *
+ * Owns the pipeline config and result. Emits progress via a signal connected
+ * to the main thread with Qt::QueuedConnection (handled by MLCoreWidget).
+ */
+class DimReductionPipelineWorker : public QThread {
+    Q_OBJECT
+
+public:
+    DimReductionPipelineWorker(DataManager * dm,
+                               MLCore::MLModelRegistry const * registry,
+                               MLCore::DimReductionPipelineConfig config,
+                               QObject * parent = nullptr)
+        : QThread(parent),
+          _dm(dm),
+          _registry(registry),
+          _config(std::move(config)) {}
+
+    [[nodiscard]] MLCore::DimReductionPipelineResult takeResult() {
+        return std::move(_result);
+    }
+
+signals:
+    void progressUpdate(int _t1, QString _t2);
+
+protected:
+    void run() override {
+        auto progress_cb = [this](MLCore::DimReductionStage stage,
+                                  std::string const & msg) {
+            emit progressUpdate(static_cast<int>(stage), QString::fromStdString(msg));
+        };
+
+        _result = MLCore::runDimReductionPipeline(*_dm, *_registry, _config, progress_cb);
+    }
+
+private:
+    DataManager * _dm;
+    MLCore::MLModelRegistry const * _registry;
+    MLCore::DimReductionPipelineConfig _config;
+    MLCore::DimReductionPipelineResult _result;
+};
+
 }// namespace
 
 // Need to include the moc for the anonymous-namespace QObject subclass
@@ -147,6 +192,13 @@ MLCoreWidget::MLCoreWidget(std::shared_ptr<MLCoreWidgetState> state,
     _setupUi();
     _connectSignals();
 
+    // Set initial visibility of constrained decoding based on restored model
+    if (_state) {
+        auto temp_model = _registry->create(_state->selectedModelName());
+        _prediction_panel->setSequenceModelActive(
+                temp_model && temp_model->isSequenceModel());
+    }
+
     // Connect to SelectionContext for passive data focus awareness (task 4.9)
     if (_selection_context) {
         connectToSelectionContext(_selection_context, this);
@@ -165,7 +217,7 @@ void MLCoreWidget::onDataFocusChanged(EditorLib::SelectedDataKey const & data_ke
         return;
     }
 
-    QString const& key_str = data_key.toString();
+    QString const & key_str = data_key.toString();
     if (key_str.isEmpty()) {
         return;
     }
@@ -263,8 +315,34 @@ void MLCoreWidget::_setupUi() {
     clustering_layout->addWidget(_cluster_output_panel);
     clustering_layout->addStretch();
 
+    // Dim Reduction tab
+    auto * dim_reduction_tab = new QWidget();
+    auto * dim_reduction_layout = new QVBoxLayout(dim_reduction_tab);
+
+    _dim_reduction_panel = new DimReductionPanel(_state, _data_manager, dim_reduction_tab);
+    dim_reduction_layout->addWidget(_dim_reduction_panel);
+
+    // Progress / status UI for dim reduction
+    auto * dim_reduction_progress_widget = new QWidget(dim_reduction_tab);
+    auto * dim_reduction_progress_layout = new QHBoxLayout(dim_reduction_progress_widget);
+    dim_reduction_progress_layout->setContentsMargins(0, 2, 0, 2);
+
+    _dim_reduction_status_label = new QLabel(dim_reduction_tab);
+    _dim_reduction_status_label->setWordWrap(true);
+    dim_reduction_progress_layout->addWidget(_dim_reduction_status_label, 1);
+
+    _dim_reduction_progress_bar = new QProgressBar(dim_reduction_tab);
+    _dim_reduction_progress_bar->setRange(0, 0);// indeterminate
+    _dim_reduction_progress_bar->setMaximumWidth(120);
+    _dim_reduction_progress_bar->setVisible(false);
+    dim_reduction_progress_layout->addWidget(_dim_reduction_progress_bar);
+
+    dim_reduction_layout->addWidget(dim_reduction_progress_widget);
+    dim_reduction_layout->addStretch();
+
     tabs->addTab(classification_tab, QStringLiteral("Classification"));
     tabs->addTab(clustering_tab, QStringLiteral("Clustering"));
+    tabs->addTab(dim_reduction_tab, QStringLiteral("Dim Reduction"));
 
     // Restore active tab from state
     if (_state) {
@@ -294,6 +372,14 @@ void MLCoreWidget::_connectSignals() {
     connect(_prediction_panel, &PredictionPanel::predictRequested,
             this, &MLCoreWidget::_onPredictRequested);
 
+    // Model selection changed → show/hide constrained decoding checkbox
+    connect(_model_config_panel, &ModelConfigPanel::modelChanged,
+            this, [this](QString const & name) {
+                auto temp_model = _registry->create(name.toStdString());
+                bool const is_seq = temp_model && temp_model->isSequenceModel();
+                _prediction_panel->setSequenceModelActive(is_seq);
+            });
+
     // "Fit & Assign" button in ClusteringPanel → run clustering pipeline
     connect(_clustering_panel, &ClusteringPanel::fitRequested,
             this, &MLCoreWidget::_onClusteringFitRequested);
@@ -306,6 +392,15 @@ void MLCoreWidget::_connectSignals() {
     // Clustering pipeline progress (cross-thread signal → main-thread slot)
     connect(this, &MLCoreWidget::_clusteringProgressReported,
             this, &MLCoreWidget::_onClusteringProgress,
+            Qt::QueuedConnection);
+
+    // "Run Reduction" button in DimReductionPanel → run dim reduction pipeline
+    connect(_dim_reduction_panel, &DimReductionPanel::runRequested,
+            this, &MLCoreWidget::_onDimReductionRunRequested);
+
+    // Dim Reduction pipeline progress (cross-thread signal → main-thread slot)
+    connect(this, &MLCoreWidget::_dimReductionProgressReported,
+            this, &MLCoreWidget::_onDimReductionProgress,
             Qt::QueuedConnection);
 
     // Output key clicked in ResultsPanel → emit data focus via SelectionContext (task 4.9)
@@ -471,6 +566,25 @@ void MLCoreWidget::_onPipelineComplete() {
         return;
     }
 
+    // Success — write deferred output on the main thread (thread-safe)
+    if (_last_result->deferred_output.has_value() && _data_manager) {
+        try {
+            auto writer_result = MLCore::writePredictions(
+                    *_data_manager,
+                    *_last_result->deferred_output,
+                    _last_result->class_names,
+                    _last_result->deferred_output_config.value_or(MLCore::PredictionWriterConfig{}));
+            _last_result->writer_result = std::move(writer_result);
+        } catch (std::exception const & e) {
+            _status_label->setText(
+                    QStringLiteral("<span style='color: red;'>Output writing failed: %1</span>")
+                            .arg(QString::fromStdString(e.what())));
+            return;
+        }
+        _last_result->deferred_output.reset();
+        _last_result->deferred_output_config.reset();
+    }
+
     // Success — show results
     _status_label->setText(
             QStringLiteral("<span style='color: green;'>Pipeline completed successfully</span>"));
@@ -603,11 +717,14 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
             // No prediction region selected — predict on training data
             config.prediction_region.predict_all_rows = true;
         } else {
-            // A prediction interval was selected but the pipeline works with tensors.
-            // For now, predict on all rows of the training tensor (the recommended
-            // workflow). Future: build a separate prediction tensor filtered by intervals.
+            // Predict on all rows (for temporal context), but filter output
+            // to only the frames within the selected interval.
             config.prediction_region.predict_all_rows = true;
+            config.prediction_region.prediction_interval_key = pred_key;
         }
+    }
+    if (_state) {
+        config.prediction_region.constrained_decoding = _state->constrainedDecoding();
     }
 
     // -- Output --
@@ -616,6 +733,11 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
     config.output_config.write_probabilities = _prediction_panel->outputProbabilities();
     config.output_config.write_to_putative_groups = true;
     config.output_config.time_key_str = config.time_key_str;
+
+    // -- Thread safety --
+    // Defer DataManager writes to the main thread to avoid triggering
+    // observer callbacks from the background PipelineWorker thread.
+    config.defer_dm_writes = true;
 
     return config;
 }
@@ -748,6 +870,9 @@ MLCore::ClusteringPipelineConfig MLCoreWidget::_buildClusteringPipelineConfig() 
     config.output_config.write_to_putative_groups = true;
     config.output_config.time_key_str = config.time_key_str;
 
+    // -- Thread safety --
+    config.defer_dm_writes = true;
+
     return config;
 }
 
@@ -813,6 +938,28 @@ void MLCoreWidget::_onClusteringPipelineComplete() {
         return;
     }
 
+    // Write deferred output on the main thread (thread-safe)
+    if (_last_clustering_result->deferred_output.has_value() && _data_manager) {
+        try {
+            auto writer_result = MLCore::writePredictions(
+                    *_data_manager,
+                    *_last_clustering_result->deferred_output,
+                    _last_clustering_result->deferred_cluster_names,
+                    _last_clustering_result->deferred_output_config.value_or(
+                            MLCore::PredictionWriterConfig{}));
+            _last_clustering_result->interval_keys = std::move(writer_result.interval_keys);
+            _last_clustering_result->probability_keys = std::move(writer_result.probability_keys);
+            _last_clustering_result->putative_group_ids = std::move(writer_result.putative_group_ids);
+        } catch (std::exception const & e) {
+            _clustering_status_label->setText(
+                    QStringLiteral("<span style='color: red;'>Output writing failed: %1</span>")
+                            .arg(QString::fromStdString(e.what())));
+            return;
+        }
+        _last_clustering_result->deferred_output.reset();
+        _last_clustering_result->deferred_output_config.reset();
+    }
+
     // Success — show results
     _clustering_status_label->setText(
             QStringLiteral("<span style='color: green;'>Clustering completed successfully</span>"));
@@ -835,6 +982,200 @@ void MLCoreWidget::_setClusteringPipelineRunning(bool running) {
 
     // Disable the clustering panel during pipeline execution
     _clustering_panel->setEnabled(!running);
+}
+
+// =============================================================================
+// Dim Reduction — Run slot
+// =============================================================================
+
+void MLCoreWidget::_onDimReductionRunRequested() {
+    if (_dim_reduction_pipeline_running) {
+        return;
+    }
+
+    if (!_validateDimReductionPanels()) {
+        return;
+    }
+
+    auto config = _buildDimReductionPipelineConfig();
+    _runDimReductionPipelineAsync(std::move(config));
+}
+
+// =============================================================================
+// Dim Reduction — Validation
+// =============================================================================
+
+bool MLCoreWidget::_validateDimReductionPanels() const {
+    QStringList issues;
+
+    if (!_dim_reduction_panel->hasValidConfiguration()) {
+        issues << QStringLiteral("Dim reduction panel configuration is incomplete "
+                                 "(select a tensor and algorithm)");
+    }
+
+    if (!issues.isEmpty()) {
+        QMessageBox::warning(
+                const_cast<MLCoreWidget *>(this),
+                QStringLiteral("Cannot Run Dim Reduction Pipeline"),
+                QStringLiteral("Please fix the following issues before running:\n\n• ") +
+                        issues.join(QStringLiteral("\n• ")));
+        return false;
+    }
+
+    return true;
+}
+
+// =============================================================================
+// Dim Reduction — Pipeline config assembly
+// =============================================================================
+
+MLCore::DimReductionPipelineConfig MLCoreWidget::_buildDimReductionPipelineConfig() const {
+    MLCore::DimReductionPipelineConfig config;
+
+    // -- Model --
+    config.model_name = _dim_reduction_panel->selectedAlgorithmName();
+    config.model_params = nullptr;// set in _runDimReductionPipelineAsync
+
+    // -- Features --
+    config.feature_tensor_key = _dim_reduction_panel->selectedTensorKey();
+
+    // -- Time key (from the tensor's registered time frame in DataManager) --
+    if (_data_manager) {
+        TimeKey const tk = _data_manager->getTimeKey(config.feature_tensor_key);
+        if (!tk.empty()) {
+            config.time_key_str = tk.str();
+        }
+    }
+
+    // -- Feature conversion --
+    config.conversion_config.drop_nan = true;
+    config.conversion_config.zscore_normalize = _dim_reduction_panel->zscoreNormalize();
+
+    // -- Output --
+    config.output_config.output_key = _dim_reduction_panel->outputKey();
+    config.output_config.time_key_str = config.time_key_str;
+
+    // -- Thread safety --
+    config.defer_dm_writes = true;
+
+    return config;
+}
+
+// =============================================================================
+// Dim Reduction — Async execution
+// =============================================================================
+
+void MLCoreWidget::_runDimReductionPipelineAsync(MLCore::DimReductionPipelineConfig config) {
+    _setDimReductionPipelineRunning(true);
+    _dim_reduction_panel->clearResults();
+
+    // Retrieve user-configured model parameters and bind to config
+    auto params = _dim_reduction_panel->currentParameters();
+    config.model_params = params.get();
+
+    auto * worker = new DimReductionPipelineWorker(
+            _data_manager.get(), _registry.get(), std::move(config), this);
+
+    // Forward worker progress signal → our cross-thread signal
+    connect(worker, &DimReductionPipelineWorker::progressUpdate,
+            this, &MLCoreWidget::_dimReductionProgressReported);
+
+    // On completion, harvest result and clean up
+    connect(worker, &QThread::finished, this, [this, worker, p = std::move(params)]() mutable {
+        _last_dim_reduction_result = std::make_unique<MLCore::DimReductionPipelineResult>(
+                worker->takeResult());
+        worker->deleteLater();
+        p.reset();// release parameter storage now that pipeline is done
+        _onDimReductionPipelineComplete();
+    });
+
+    worker->start();
+}
+
+// =============================================================================
+// Dim Reduction — Progress and completion
+// =============================================================================
+
+void MLCoreWidget::_onDimReductionProgress(int stage_index, QString const & message) {
+    auto const stage = static_cast<MLCore::DimReductionStage>(stage_index);
+    QString const stage_name = QString::fromStdString(MLCore::toString(stage));
+
+    _dim_reduction_status_label->setText(
+            QStringLiteral("<b>%1:</b> %2").arg(stage_name, message));
+}
+
+void MLCoreWidget::_onDimReductionPipelineComplete() {
+    _setDimReductionPipelineRunning(false);
+
+    if (!_last_dim_reduction_result) {
+        _dim_reduction_status_label->setText(
+                QStringLiteral("<span style='color: red;'>Pipeline returned no result</span>"));
+        return;
+    }
+
+    if (!_last_dim_reduction_result->success) {
+        auto const stage_name = QString::fromStdString(
+                MLCore::toString(_last_dim_reduction_result->failed_stage));
+        _dim_reduction_status_label->setText(
+                QStringLiteral("<span style='color: red;'>Failed at %1: %2</span>")
+                        .arg(stage_name,
+                             QString::fromStdString(_last_dim_reduction_result->error_message)));
+        return;
+    }
+
+    // Write deferred output on the main thread (thread-safe)
+    if (_last_dim_reduction_result->deferred_output && _data_manager) {
+        std::string const & out_key = _last_dim_reduction_result->deferred_output_key;
+        std::string const & time_key = _last_dim_reduction_result->deferred_time_key;
+        _data_manager->setData(out_key, _last_dim_reduction_result->deferred_output,
+                               TimeKey(time_key));
+        _last_dim_reduction_result->output_key = out_key;
+        _last_dim_reduction_result->deferred_output.reset();
+    }
+
+    // Success — show results
+    _dim_reduction_status_label->setText(
+            QStringLiteral("<span style='color: green;'>Dim reduction completed successfully</span>"));
+
+    _dim_reduction_panel->showResults(
+            _last_dim_reduction_result->num_observations,
+            _last_dim_reduction_result->num_input_features,
+            _last_dim_reduction_result->num_output_components,
+            _last_dim_reduction_result->rows_dropped_nan,
+            _last_dim_reduction_result->explained_variance_ratio);
+
+    // Auto-focus the output tensor so other widgets (ScatterPlot, DataViewer) can pick it up
+    if (_selection_context && !_last_dim_reduction_result->output_key.empty()) {
+        SelectionSource const source{
+                _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
+                       : EditorLib::EditorInstanceId{},
+                QStringLiteral("DimReductionPanel")};
+
+        _selection_context->setDataFocus(
+                EditorLib::SelectedDataKey(
+                        QString::fromStdString(_last_dim_reduction_result->output_key)),
+                QStringLiteral("TensorData"),
+                source);
+    }
+
+    // Refresh tensor list in the panel so the new output appears
+    _dim_reduction_panel->refreshTensorList();
+}
+
+// =============================================================================
+// Dim Reduction — UI state management
+// =============================================================================
+
+void MLCoreWidget::_setDimReductionPipelineRunning(bool running) {
+    _dim_reduction_pipeline_running = running;
+    _dim_reduction_progress_bar->setVisible(running);
+
+    if (running) {
+        _dim_reduction_status_label->setText(QStringLiteral("Starting dim reduction pipeline..."));
+    }
+
+    // Disable the dim reduction panel during pipeline execution
+    _dim_reduction_panel->setEnabled(!running);
 }
 
 // =============================================================================

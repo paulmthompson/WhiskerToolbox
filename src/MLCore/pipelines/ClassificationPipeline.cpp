@@ -23,14 +23,17 @@
 #include "models/MLModelOperation.hpp"
 #include "models/MLModelRegistry.hpp"
 #include "output/PredictionWriter.hpp"
+#include "pipelines/BoundingSpan.hpp"
 #include "pipelines/SequenceAssembler.hpp"
 #include "preprocessing/ClassBalancing.hpp"
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -520,6 +523,53 @@ ClassificationPipelineResult runClassificationPipeline(
     std::optional<arma::mat> probabilities;
     std::size_t prediction_count = 0;
 
+    // Track the prediction interval series for possible output filtering
+    std::shared_ptr<DigitalIntervalSeries> prediction_intervals;
+
+    // Apply bounding span filtering when a prediction interval key is specified
+    if (do_prediction &&
+        !config.prediction_region.prediction_interval_key.empty()) {
+        prediction_intervals = dm.getData<DigitalIntervalSeries>(
+                config.prediction_region.prediction_interval_key);
+        if (!prediction_intervals) {
+            return makeFailure(ClassificationStage::Predicting,
+                               "Prediction interval series '" +
+                                       config.prediction_region.prediction_interval_key +
+                                       "' not found in DataManager");
+        }
+
+        auto pred_bounds = computeIntervalBounds(*prediction_intervals);
+        if (pred_bounds) {
+            // Optionally include training label intervals in the span
+            auto span = *pred_bounds;
+            if (!config.label_interval_key.empty()) {
+                auto train_intervals = dm.getData<DigitalIntervalSeries>(
+                        config.label_interval_key);
+                if (train_intervals) {
+                    auto train_bounds = computeIntervalBounds(*train_intervals);
+                    if (train_bounds) {
+                        span = mergeSpans(span, *train_bounds);
+                    }
+                }
+            }
+
+            auto filtered = filterRowsToSpan(
+                    predict_features, predict_row_times, span);
+            predict_features = std::move(filtered.features);
+            predict_row_times = std::move(filtered.times);
+
+            if (predict_features.n_cols == 0) {
+                return makeFailure(ClassificationStage::Predicting,
+                                   "No prediction rows remain after bounding-span "
+                                   "filtering to [" +
+                                           std::to_string(span.min_time.getValue()) +
+                                           ", " +
+                                           std::to_string(span.max_time.getValue()) +
+                                           "]");
+            }
+        }
+    }
+
     if (do_prediction) {
         reportProgress(progress, ClassificationStage::Predicting,
                        "Predicting on " + std::to_string(predict_features.n_cols) +
@@ -571,7 +621,41 @@ ClassificationPipelineResult runClassificationPipeline(
             }
 
             std::vector<arma::Row<std::size_t>> pred_sequences;
-            pred_ok = model->predictSequences(pred_feature_seqs, pred_sequences);
+
+            // Use constrained Viterbi decoding when enabled and we have
+            // training label data to derive boundary constraints from
+            if (config.prediction_region.constrained_decoding &&
+                !train_row_times.empty()) {
+                // Build a map from TimeFrameIndex → training label
+                std::unordered_map<std::int64_t, std::size_t> label_map;
+                label_map.reserve(train_row_times.size());
+                for (std::size_t i = 0; i < train_row_times.size(); ++i) {
+                    label_map[train_row_times[i].getValue()] = train_labels[i];
+                }
+
+                // For each prediction segment, determine initial state constraint
+                std::vector<std::optional<std::size_t>> constraints;
+                constraints.reserve(pred_segments.size());
+                for (auto const & seg: pred_segments) {
+                    auto const first_time = seg.times.front().getValue();
+                    // Check if the segment's first frame has a known label
+                    if (auto it = label_map.find(first_time); it != label_map.end()) {
+                        constraints.emplace_back(it->second);
+                    }
+                    // Otherwise check the frame immediately before
+                    else if (auto it2 = label_map.find(first_time - 1);
+                             it2 != label_map.end()) {
+                        constraints.emplace_back(it2->second);
+                    } else {
+                        constraints.emplace_back(std::nullopt);
+                    }
+                }
+
+                pred_ok = model->predictSequencesConstrained(
+                        pred_feature_seqs, pred_sequences, constraints);
+            } else {
+                pred_ok = model->predictSequences(pred_feature_seqs, pred_sequences);
+            }
 
             if (pred_ok) {
                 // Reassemble predictions and times in segment order
@@ -689,15 +773,39 @@ ClassificationPipelineResult runClassificationPipeline(
         reportProgress(progress, ClassificationStage::WritingOutput,
                        "Writing predictions to DataManager");
 
+        // Filter output to prediction intervals if specified
+        arma::Row<std::size_t> output_predictions = predictions;
+        std::optional<arma::mat> output_probabilities = probabilities;
+        std::vector<TimeFrameIndex> output_times = predict_row_times;
+
+        if (prediction_intervals && prediction_intervals->size() > 0) {
+            auto filtered = filterPredictionsToIntervals(
+                    predictions, probabilities, predict_row_times,
+                    *prediction_intervals);
+            output_predictions = std::move(filtered.predictions);
+            output_probabilities = std::move(filtered.probabilities);
+            output_times = std::move(filtered.times);
+            result.prediction_observations = output_predictions.n_elem;
+        }
+
         try {
             PredictionOutput pred_output;
-            pred_output.class_predictions = predictions;
-            pred_output.class_probabilities = probabilities;
-            pred_output.prediction_times = predict_row_times;
+            pred_output.class_predictions = std::move(output_predictions);
+            pred_output.class_probabilities = std::move(output_probabilities);
+            pred_output.prediction_times = std::move(output_times);
 
-            auto writer_result = writePredictions(
-                    dm, pred_output, labels.class_names, config.output_config);
-            result.writer_result = std::move(writer_result);
+            if (config.defer_dm_writes) {
+                // Store output for the caller to write on the main thread.
+                // This avoids DataManager observer callbacks firing from
+                // a background thread, which would be undefined behavior
+                // for Qt widget observers.
+                result.deferred_output = std::move(pred_output);
+                result.deferred_output_config = config.output_config;
+            } else {
+                auto writer_result = writePredictions(
+                        dm, pred_output, labels.class_names, config.output_config);
+                result.writer_result = std::move(writer_result);
+            }
         } catch (std::exception const & e) {
             return makeFailure(ClassificationStage::WritingOutput,
                                std::string("Output writing failed: ") + e.what());

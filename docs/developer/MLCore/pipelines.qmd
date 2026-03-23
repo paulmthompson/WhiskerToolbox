@@ -28,7 +28,7 @@ BalancingClasses → SegmentingSequences → Training → Predicting →
 ComputingMetrics → WritingOutput → Complete
 ```
 
-The `SegmentingSequences` stage uses `SequenceAssembler::segment()` to split the feature matrix and labels into contiguous temporal segments (based on gaps in `TimeFrameIndex`). Training then routes through `trainSequences()` and prediction through `predictSequences()`, preserving temporal structure for models like HMMs.
+The `SegmentingSequences` stage uses `SequenceAssembler::segment()` to split the feature matrix and labels into contiguous temporal segments (based on gaps in `TimeFrameIndex`). Training then routes through `trainSequences()` and prediction through `predictSequences()`, preserving temporal structure for models like HMMs. When `constrained_decoding` is enabled and training labels are available, prediction uses `predictSequencesConstrained()` to clamp the HMM's initial distribution at segment boundaries where the ground truth state is known.
 
 ### Configuration
 
@@ -55,6 +55,10 @@ config.balancing_config.strategy = BalancingStrategy::Subsample;
 
 // Prediction region
 config.prediction_region.predict_all_rows = true;
+// Optional: filter output to a specific interval (runs Viterbi on full span
+// for temporal context, writes only frames within the interval)
+// config.prediction_region.prediction_interval_key = "target_region";
+// config.prediction_region.constrained_decoding = true; // HMM warm-start
 
 // Output
 config.output_config.output_prefix = "Predicted:";
@@ -177,3 +181,93 @@ Both pipelines use early-return on failure. The `failed_stage` field indicates w
 - **SegmentingSequences**: No contiguous sequences meeting minimum length
 - **Training/Fitting**: Model failed internally (rare with valid data)
 - **WritingOutput**: DataManager write failure
+
+## Bounding Span (Prediction Region Filtering)
+
+See [Prediction Regions](prediction_regions.qmd) for the full design of bounding span
+computation, output filtering, and constrained Viterbi warm-start.
+
+Summary: `BoundingSpan.hpp` (`pipelines/BoundingSpan.hpp`) provides utilities for computing
+and applying temporal bounding spans when prediction is restricted to a specific interval.
+When `prediction_interval_key` is set, the pipeline computes the temporal union of training
+and prediction intervals, filters features to that range (preserving HMM context), runs
+prediction, then filters output back to the requested frames.
+
+| Function | Description |
+|---|---|
+| `computeIntervalBounds(series)` | Returns `[min(start), max(end)]` of all intervals |
+| `computeRowTimeBounds(times)` | Returns `[min, max]` of a time vector |
+| `mergeSpans(a, b)` | Returns the union span covering both inputs |
+| `filterRowsToSpan(features, times, span)` | Filters columns and times to span |
+| `filterPredictionsToIntervals(preds, probs, times, intervals)` | Keeps only frames within intervals |
+
+## Dimensionality Reduction Pipeline
+
+`DimReductionPipeline` (`pipelines/DimReductionPipeline.hpp`) orchestrates dimensionality reduction end-to-end.
+
+### Pipeline Stages
+
+```
+ValidatingFeatures → ConvertingFeatures → FittingAndTransforming → WritingOutput → Complete
+```
+
+### Configuration
+
+```cpp
+DimReductionPipelineConfig config;
+
+// Model
+config.model_name = "PCA";
+config.model_params = &pca_params;  // or nullptr for defaults
+
+// Features
+config.feature_tensor_key = "encoder_features";
+
+// Conversion
+config.conversion_config.drop_nan = true;
+config.conversion_config.zscore_normalize = false;
+
+// Output
+config.output_config.output_key = "encoder_features_pca";
+config.output_config.time_key_str = "camera";
+
+// Thread safety (defer writes for background execution)
+config.defer_dm_writes = true;
+```
+
+### Entry Point
+
+```cpp
+auto result = runDimReductionPipeline(dm, registry, config, progress_callback);
+
+if (result.success) {
+    // result.num_observations, result.num_input_features, result.num_output_components
+    // result.explained_variance_ratio — per-component (PCA only)
+    // result.output_key — DataManager key of new TensorData
+    // result.fitted_model — reusable for re-projection
+}
+```
+
+### Result Fields
+
+| Field | Description |
+|---|---|
+| `success` | Whether the pipeline completed |
+| `error_message` | Human-readable error (if failed) |
+| `num_observations` | Count after NaN dropping |
+| `num_input_features` / `num_output_components` | Dimensions |
+| `rows_dropped_nan` | Rows dropped due to NaN/Inf |
+| `explained_variance_ratio` | Per-component variance (PCA; empty for others) |
+| `output_key` | Created TensorData DataManager key |
+| `deferred_output` | `shared_ptr<TensorData>` for main-thread writing |
+| `fitted_model` | Ownership transferred — reusable |
+
+### Row Preservation
+
+The output `TensorData` preserves the input's `RowDescriptor` type:
+
+- **TimeFrameIndex**: Filtered time indices are stored using `SparseTimeIndexStorage`
+- **Interval**: Filtered intervals are carried through
+- **Ordinal**: Row count matches observation count after NaN dropping
+
+Column names are auto-generated: `"PC1"`, `"PC2"`, ... for PCA; `"Dim1"`, `"Dim2"`, ... for other algorithms.

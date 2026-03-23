@@ -1,16 +1,16 @@
 #include "ScatterPlotPropertiesWidget.hpp"
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "Collapsible_Widget/Section.hpp"
 #include "Core/ScatterAxisSource.hpp"
 #include "Core/ScatterPlotState.hpp"
 #include "Core/SourceCompatibility.hpp"
 #include "DataManager/DataManager.hpp"
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "Tensors/TensorData.hpp"
-#include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
-#include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
-#include "Plots/Common/SelectionInstructions.hpp"
-#include "Collapsible_Widget/Section.hpp"
 #include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
+#include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
+#include "Plots/Common/SelectionInstructions.hpp"
+#include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
+#include "Tensors/TensorData.hpp"
 #include "UI/ScatterPlotWidget.hpp"
 
 #include <QCheckBox>
@@ -30,17 +30,15 @@ constexpr char const * ATS_PREFIX = "[ATS] ";
 constexpr char const * TD_PREFIX = "[Tensor] ";
 
 /// Format a data key with its type prefix for display in combo boxes
-QString formatKeyItem(std::string const & key, char const * prefix)
-{
+QString formatKeyItem(std::string const & key, char const * prefix) {
     return QString::fromStdString(prefix + key);
 }
 
 /// Extract the raw data key from a combo box display string
-std::string extractKey(QString const & display_text)
-{
+std::string extractKey(QString const & display_text) {
     auto text = display_text.toStdString();
     // Strip known prefixes
-    for (auto const * prefix : {ATS_PREFIX, TD_PREFIX}) {
+    for (auto const * prefix: {ATS_PREFIX, TD_PREFIX}) {
         auto len = std::string_view(prefix).size();
         if (text.size() > len && text.substr(0, len) == prefix) {
             return text.substr(len);
@@ -49,7 +47,7 @@ std::string extractKey(QString const & display_text)
     return text;
 }
 
-}  // namespace
+}// namespace
 
 ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(std::shared_ptr<ScatterPlotState> state,
                                                          std::shared_ptr<DataManager> data_manager,
@@ -57,8 +55,7 @@ ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(std::shared_ptr<Scatter
     : QWidget(parent),
       ui(new Ui::ScatterPlotPropertiesWidget),
       _state(std::move(state)),
-      _data_manager(std::move(data_manager))
-{
+      _data_manager(std::move(data_manager)) {
     ui->setupUi(this);
 
     _createDataSourceUI();
@@ -74,16 +71,14 @@ ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(std::shared_ptr<Scatter
     }
 }
 
-ScatterPlotPropertiesWidget::~ScatterPlotPropertiesWidget()
-{
+ScatterPlotPropertiesWidget::~ScatterPlotPropertiesWidget() {
     if (_data_manager && _dm_observer_id != -1) {
         _data_manager->removeObserver(_dm_observer_id);
     }
     delete ui;
 }
 
-void ScatterPlotPropertiesWidget::_createDataSourceUI()
-{
+void ScatterPlotPropertiesWidget::_createDataSourceUI() {
     // === Data Sources Section ===
     _data_source_section = new Section(this, "Data Sources");
 
@@ -152,7 +147,7 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
     _reference_line_section->setContentLayout(*ref_layout);
 
     // Insert after data source section
-    int insert_idx = ui->main_layout->indexOf(_data_source_section) + 1;
+    int const insert_idx = ui->main_layout->indexOf(_data_source_section) + 1;
     ui->main_layout->insertWidget(insert_idx, _reference_line_section);
 
     // === Glyph Style Section ===
@@ -168,16 +163,24 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
         // Color by group checkbox
         _color_by_group_checkbox = new QCheckBox("Color by group assignment");
         _color_by_group_checkbox->setToolTip(
-            "When enabled, points are colored according to their group color.\n"
-            "Points not in any group use the default glyph color above.");
+                "When enabled, points are colored according to their group color.\n"
+                "Points not in any group use the default glyph color above.");
         _color_by_group_checkbox->setChecked(_state->colorByGroup());
         glyph_layout->addWidget(_color_by_group_checkbox);
+
+        // Show cluster labels checkbox
+        _show_cluster_labels_checkbox = new QCheckBox("Show cluster labels");
+        _show_cluster_labels_checkbox->setToolTip(
+                "When enabled, labels are drawn at cluster centroids\n"
+                "showing group name and point count.");
+        _show_cluster_labels_checkbox->setChecked(_state->showClusterLabels());
+        glyph_layout->addWidget(_show_cluster_labels_checkbox);
 
         _glyph_style_section->setContentLayout(*glyph_layout);
     }
 
     // Insert after reference line section
-    int glyph_insert_idx = ui->main_layout->indexOf(_reference_line_section) + 1;
+    int const glyph_insert_idx = ui->main_layout->indexOf(_reference_line_section) + 1;
     ui->main_layout->insertWidget(glyph_insert_idx, _glyph_style_section);
 
     // === Selection Mode Section ===
@@ -202,7 +205,7 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
 
     _selection_section->setContentLayout(*sel_layout);
 
-    int sel_insert_idx = ui->main_layout->indexOf(_glyph_style_section) + 1;
+    int const sel_insert_idx = ui->main_layout->indexOf(_glyph_style_section) + 1;
     ui->main_layout->insertWidget(sel_insert_idx, _selection_section);
 
     _updateSelectionInstructions();
@@ -226,6 +229,14 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
         connect(_color_by_group_checkbox, &QCheckBox::toggled,
                 this, &ScatterPlotPropertiesWidget::_onColorByGroupToggled);
     }
+    if (_show_cluster_labels_checkbox) {
+        connect(_show_cluster_labels_checkbox, &QCheckBox::toggled,
+                this, [this](bool checked) {
+                    if (_state) {
+                        _state->setShowClusterLabels(checked);
+                    }
+                });
+    }
     connect(_selection_mode_combo, &QComboBox::currentIndexChanged,
             this, &ScatterPlotPropertiesWidget::_onSelectionModeChanged);
 
@@ -233,8 +244,7 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
     _populateKeyComboBoxes();
 }
 
-void ScatterPlotPropertiesWidget::_populateKeyComboBoxes()
-{
+void ScatterPlotPropertiesWidget::_populateKeyComboBoxes() {
     _updating_combos = true;
 
     // Save current selections
@@ -255,7 +265,7 @@ void ScatterPlotPropertiesWidget::_populateKeyComboBoxes()
 
     // Add AnalogTimeSeries keys
     auto ats_keys = _data_manager->getKeys<AnalogTimeSeries>();
-    for (auto const & key : ats_keys) {
+    for (auto const & key: ats_keys) {
         auto display = formatKeyItem(key, ATS_PREFIX);
         _x_key_combo->addItem(display);
         _y_key_combo->addItem(display);
@@ -263,14 +273,14 @@ void ScatterPlotPropertiesWidget::_populateKeyComboBoxes()
 
     // Add TensorData keys
     auto td_keys = _data_manager->getKeys<TensorData>();
-    for (auto const & key : td_keys) {
+    for (auto const & key: td_keys) {
         auto display = formatKeyItem(key, TD_PREFIX);
         _x_key_combo->addItem(display);
         _y_key_combo->addItem(display);
     }
 
     // Restore previous selections if still valid, otherwise handle stale keys
-    int x_idx = _x_key_combo->findText(x_current);
+    int const x_idx = _x_key_combo->findText(x_current);
     if (x_idx >= 0) {
         _x_key_combo->setCurrentIndex(x_idx);
     } else if (!x_current.isEmpty()) {
@@ -282,7 +292,7 @@ void ScatterPlotPropertiesWidget::_populateKeyComboBoxes()
         }
     }
 
-    int y_idx = _y_key_combo->findText(y_current);
+    int const y_idx = _y_key_combo->findText(y_current);
     if (y_idx >= 0) {
         _y_key_combo->setCurrentIndex(y_idx);
     } else if (!y_current.isEmpty()) {
@@ -307,8 +317,7 @@ void ScatterPlotPropertiesWidget::_populateKeyComboBoxes()
     _updateCompatibilityLabel();
 }
 
-void ScatterPlotPropertiesWidget::_populateColumnComboBox(QComboBox * combo, std::string const & data_key)
-{
+void ScatterPlotPropertiesWidget::_populateColumnComboBox(QComboBox * combo, std::string const & data_key) {
     if (!_data_manager || data_key.empty()) {
         combo->clear();
         combo->setVisible(false);
@@ -330,7 +339,7 @@ void ScatterPlotPropertiesWidget::_populateColumnComboBox(QComboBox * combo, std
 
     auto const & col_names = tensor->columnNames();
     if (!col_names.empty()) {
-        for (auto const & name : col_names) {
+        for (auto const & name: col_names) {
             combo->addItem(QString::fromStdString(name));
         }
     } else {
@@ -342,7 +351,7 @@ void ScatterPlotPropertiesWidget::_populateColumnComboBox(QComboBox * combo, std
     }
 
     // Restore previous selection
-    int idx = combo->findText(prev_text);
+    int const idx = combo->findText(prev_text);
     if (idx >= 0) {
         combo->setCurrentIndex(idx);
     } else if (combo->count() > 0) {
@@ -350,8 +359,7 @@ void ScatterPlotPropertiesWidget::_populateColumnComboBox(QComboBox * combo, std
     }
 }
 
-void ScatterPlotPropertiesWidget::_onXKeyChanged()
-{
+void ScatterPlotPropertiesWidget::_onXKeyChanged() {
     auto key_text = _x_key_combo->currentText();
     if (key_text.isEmpty()) {
         _x_column_combo->clear();
@@ -369,8 +377,7 @@ void ScatterPlotPropertiesWidget::_onXKeyChanged()
     _updateCompatibilityLabel();
 }
 
-void ScatterPlotPropertiesWidget::_onYKeyChanged()
-{
+void ScatterPlotPropertiesWidget::_onYKeyChanged() {
     auto key_text = _y_key_combo->currentText();
     if (key_text.isEmpty()) {
         _y_column_combo->clear();
@@ -388,42 +395,35 @@ void ScatterPlotPropertiesWidget::_onYKeyChanged()
     _updateCompatibilityLabel();
 }
 
-void ScatterPlotPropertiesWidget::_onXColumnChanged()
-{
+void ScatterPlotPropertiesWidget::_onXColumnChanged() {
     _applyXSourceToState();
 }
 
-void ScatterPlotPropertiesWidget::_onYColumnChanged()
-{
+void ScatterPlotPropertiesWidget::_onYColumnChanged() {
     _applyYSourceToState();
 }
 
-void ScatterPlotPropertiesWidget::_onXOffsetChanged(int /*value*/)
-{
+void ScatterPlotPropertiesWidget::_onXOffsetChanged(int /*value*/) {
     _applyXSourceToState();
 }
 
-void ScatterPlotPropertiesWidget::_onYOffsetChanged(int /*value*/)
-{
+void ScatterPlotPropertiesWidget::_onYOffsetChanged(int /*value*/) {
     _applyYSourceToState();
 }
 
-void ScatterPlotPropertiesWidget::_onReferenceLineToggled(bool checked)
-{
+void ScatterPlotPropertiesWidget::_onReferenceLineToggled(bool checked) {
     if (_state) {
         _state->setShowReferenceLine(checked);
     }
 }
 
-void ScatterPlotPropertiesWidget::_onColorByGroupToggled(bool checked)
-{
+void ScatterPlotPropertiesWidget::_onColorByGroupToggled(bool checked) {
     if (_state) {
         _state->setColorByGroup(checked);
     }
 }
 
-void ScatterPlotPropertiesWidget::_onSelectionModeChanged(int index)
-{
+void ScatterPlotPropertiesWidget::_onSelectionModeChanged(int index) {
     if (_updating_combos || !_state) {
         return;
     }
@@ -432,8 +432,7 @@ void ScatterPlotPropertiesWidget::_onSelectionModeChanged(int index)
     _updateSelectionInstructions();
 }
 
-void ScatterPlotPropertiesWidget::_updateSelectionInstructions()
-{
+void ScatterPlotPropertiesWidget::_updateSelectionInstructions() {
     if (!_selection_instructions_label || !_selection_mode_combo) {
         return;
     }
@@ -442,16 +441,15 @@ void ScatterPlotPropertiesWidget::_updateSelectionInstructions()
     if (idx == 0) {
         // Single Point
         _selection_instructions_label->setText(
-            WhiskerToolbox::Plots::SelectionInstructions::singlePoint());
+                WhiskerToolbox::Plots::SelectionInstructions::singlePoint());
     } else {
         // Polygon
         _selection_instructions_label->setText(
-            WhiskerToolbox::Plots::SelectionInstructions::polygon());
+                WhiskerToolbox::Plots::SelectionInstructions::polygon());
     }
 }
 
-void ScatterPlotPropertiesWidget::_applyXSourceToState()
-{
+void ScatterPlotPropertiesWidget::_applyXSourceToState() {
     if (!_state) {
         return;
     }
@@ -487,8 +485,7 @@ void ScatterPlotPropertiesWidget::_applyXSourceToState()
     _state->setXSource(source);
 }
 
-void ScatterPlotPropertiesWidget::_applyYSourceToState()
-{
+void ScatterPlotPropertiesWidget::_applyYSourceToState() {
     if (!_state) {
         return;
     }
@@ -522,8 +519,7 @@ void ScatterPlotPropertiesWidget::_applyYSourceToState()
     _state->setYSource(source);
 }
 
-void ScatterPlotPropertiesWidget::_updateCompatibilityLabel()
-{
+void ScatterPlotPropertiesWidget::_updateCompatibilityLabel() {
     if (!_compatibility_label || !_state || !_data_manager) {
         return;
     }
@@ -547,8 +543,7 @@ void ScatterPlotPropertiesWidget::_updateCompatibilityLabel()
     }
 }
 
-void ScatterPlotPropertiesWidget::setPlotWidget(ScatterPlotWidget * plot_widget)
-{
+void ScatterPlotPropertiesWidget::setPlotWidget(ScatterPlotWidget * plot_widget) {
     _plot_widget = plot_widget;
     if (!_plot_widget || !_state) {
         return;
@@ -560,9 +555,9 @@ void ScatterPlotPropertiesWidget::setPlotWidget(ScatterPlotWidget * plot_widget)
         _horizontal_range_controls = new HorizontalAxisRangeControls(horizontal_axis_state, _horizontal_range_controls_section);
         _horizontal_range_controls_section->autoSetContentLayout();
         // Insert after reference line section
-        int insert_index = _reference_line_section
-                ? ui->main_layout->indexOf(_reference_line_section) + 1
-                : ui->main_layout->indexOf(_data_source_section) + 1;
+        int const insert_index = _reference_line_section
+                                   ? ui->main_layout->indexOf(_reference_line_section) + 1
+                                   : ui->main_layout->indexOf(_data_source_section) + 1;
         ui->main_layout->insertWidget(insert_index, _horizontal_range_controls_section);
     }
 
@@ -571,17 +566,16 @@ void ScatterPlotPropertiesWidget::setPlotWidget(ScatterPlotWidget * plot_widget)
         _vertical_range_controls_section = new Section(this, "Y-Axis Range Controls");
         _vertical_range_controls = new VerticalAxisRangeControls(vertical_axis_state, _vertical_range_controls_section);
         _vertical_range_controls_section->autoSetContentLayout();
-        int insert_index = _horizontal_range_controls_section
-                ? ui->main_layout->indexOf(_horizontal_range_controls_section) + 1
-                : (_reference_line_section
-                    ? ui->main_layout->indexOf(_reference_line_section) + 1
-                    : 0);
+        int const insert_index = _horizontal_range_controls_section
+                                   ? ui->main_layout->indexOf(_horizontal_range_controls_section) + 1
+                                   : (_reference_line_section
+                                              ? ui->main_layout->indexOf(_reference_line_section) + 1
+                                              : 0);
         ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
     }
 }
 
-void ScatterPlotPropertiesWidget::_updateUIFromState()
-{
+void ScatterPlotPropertiesWidget::_updateUIFromState() {
     if (!_state) {
         return;
     }
@@ -595,22 +589,22 @@ void ScatterPlotPropertiesWidget::_updateUIFromState()
         if (_data_manager) {
             auto ats = _data_manager->getData<AnalogTimeSeries>(x_src->data_key);
             auto display = ats
-                ? formatKeyItem(x_src->data_key, ATS_PREFIX)
-                : formatKeyItem(x_src->data_key, TD_PREFIX);
-            int idx = _x_key_combo->findText(display);
+                                   ? formatKeyItem(x_src->data_key, ATS_PREFIX)
+                                   : formatKeyItem(x_src->data_key, TD_PREFIX);
+            int const idx = _x_key_combo->findText(display);
             if (idx >= 0) {
                 _x_key_combo->setCurrentIndex(idx);
                 _populateColumnComboBox(_x_column_combo, x_src->data_key);
                 // Set the column
                 if (x_src->tensor_column_name.has_value()) {
-                    int col_idx = _x_column_combo->findText(
-                        QString::fromStdString(*x_src->tensor_column_name));
+                    int const col_idx = _x_column_combo->findText(
+                            QString::fromStdString(*x_src->tensor_column_name));
                     if (col_idx >= 0) {
                         _x_column_combo->setCurrentIndex(col_idx);
                     }
                 } else if (x_src->tensor_column_index.has_value()) {
                     _x_column_combo->setCurrentIndex(
-                        static_cast<int>(*x_src->tensor_column_index));
+                            static_cast<int>(*x_src->tensor_column_index));
                 }
             }
         }
@@ -623,21 +617,21 @@ void ScatterPlotPropertiesWidget::_updateUIFromState()
         if (_data_manager) {
             auto ats = _data_manager->getData<AnalogTimeSeries>(y_src->data_key);
             auto display = ats
-                ? formatKeyItem(y_src->data_key, ATS_PREFIX)
-                : formatKeyItem(y_src->data_key, TD_PREFIX);
-            int idx = _y_key_combo->findText(display);
+                                   ? formatKeyItem(y_src->data_key, ATS_PREFIX)
+                                   : formatKeyItem(y_src->data_key, TD_PREFIX);
+            int const idx = _y_key_combo->findText(display);
             if (idx >= 0) {
                 _y_key_combo->setCurrentIndex(idx);
                 _populateColumnComboBox(_y_column_combo, y_src->data_key);
                 if (y_src->tensor_column_name.has_value()) {
-                    int col_idx = _y_column_combo->findText(
-                        QString::fromStdString(*y_src->tensor_column_name));
+                    int const col_idx = _y_column_combo->findText(
+                            QString::fromStdString(*y_src->tensor_column_name));
                     if (col_idx >= 0) {
                         _y_column_combo->setCurrentIndex(col_idx);
                     }
                 } else if (y_src->tensor_column_index.has_value()) {
                     _y_column_combo->setCurrentIndex(
-                        static_cast<int>(*y_src->tensor_column_index));
+                            static_cast<int>(*y_src->tensor_column_index));
                 }
             }
         }
@@ -654,11 +648,16 @@ void ScatterPlotPropertiesWidget::_updateUIFromState()
         _color_by_group_checkbox->setChecked(_state->colorByGroup());
     }
 
+    // Cluster labels
+    if (_show_cluster_labels_checkbox) {
+        _show_cluster_labels_checkbox->setChecked(_state->showClusterLabels());
+    }
+
     // Selection mode
     if (_selection_mode_combo) {
         auto mode = _state->selectionMode();
         _selection_mode_combo->setCurrentIndex(
-            mode == ScatterSelectionMode::Polygon ? 1 : 0);
+                mode == ScatterSelectionMode::Polygon ? 1 : 0);
         _updateSelectionInstructions();
     }
 

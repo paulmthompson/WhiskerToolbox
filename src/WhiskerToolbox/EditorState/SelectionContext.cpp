@@ -1,6 +1,7 @@
 #include "SelectionContext.hpp"
 
 #include <algorithm>
+#include <cassert>
 
 SelectionContext::SelectionContext(QObject * parent)
     : QObject(parent) {
@@ -30,7 +31,7 @@ void SelectionContext::setSelectedData(SelectedDataKey const & data_key, Selecti
     bool const focus_changed = (_data_focus != data_key);
     _data_focus = data_key;
     // Note: We don't know the data type here, so keep existing _data_focus_type
-    
+
     if (focus_changed) {
         emit dataFocusChanged(data_key, _data_focus_type, source);
     }
@@ -111,7 +112,7 @@ void SelectionContext::setSelectedEntities(std::vector<int64_t> const & entity_i
 
 void SelectionContext::addSelectedEntities(std::vector<int64_t> const & entity_ids,
                                            SelectionSource const & source) {
-    for (auto id : entity_ids) {
+    for (auto id: entity_ids) {
         if (std::find(_selected_entities.begin(), _selected_entities.end(), id) ==
             _selected_entities.end()) {
             _selected_entities.push_back(id);
@@ -140,10 +141,10 @@ bool SelectionContext::isEntitySelected(int64_t entity_id) const {
 // === Data Focus (Phase 1 - Passive Awareness) ===
 
 void SelectionContext::setDataFocus(SelectedDataKey const & data_key,
-                                     QString const & data_type,
-                                     SelectionSource const & source) {
+                                    QString const & data_type,
+                                    SelectionSource const & source) {
     bool const focus_changed = (_data_focus != data_key || _data_focus_type != data_type);
-    
+
     _data_focus = data_key;
     _data_focus_type = data_type;
 
@@ -152,7 +153,7 @@ void SelectionContext::setDataFocus(SelectedDataKey const & data_key,
         _time_frame_focus.clear();
         emit timeFrameFocusChanged(QString(), source);
     }
-    
+
     // Also update legacy selection for backward compatibility
     _selected_data.clear();
     _selected_entities.clear();
@@ -163,11 +164,11 @@ void SelectionContext::setDataFocus(SelectedDataKey const & data_key,
         _primary_selected.clear();
     }
     _selected_data_type = data_type;
-    
+
     if (focus_changed) {
         // Emit the new dataFocusChanged signal (primary for passive awareness)
         emit dataFocusChanged(data_key, data_type, source);
-        
+
         // Also emit legacy signals for backward compatibility
         emit selectionChanged(source);
         emit propertiesContextChanged();
@@ -180,6 +181,39 @@ SelectedDataKey SelectionContext::dataFocus() const {
 
 QString SelectionContext::dataFocusType() const {
     return _data_focus_type;
+}
+
+// === Context Actions ===
+
+void SelectionContext::registerAction(ContextAction action) {
+    assert(!action.action_id.isEmpty() && "registerAction: action_id must not be empty");
+    assert(action.is_applicable && "registerAction: is_applicable must be callable");
+    assert(action.execute && "registerAction: execute must be callable");
+
+    // Replace if action with same ID already exists
+    for (auto & existing: _registered_actions) {
+        if (existing.action_id == action.action_id) {
+            existing = std::move(action);
+            return;
+        }
+    }
+    _registered_actions.push_back(std::move(action));
+}
+
+void SelectionContext::removeAction(QString const & action_id) {
+    std::erase_if(_registered_actions, [&](ContextAction const & a) {
+        return a.action_id == action_id;
+    });
+}
+
+std::vector<ContextAction const *> SelectionContext::applicableActions() const {
+    std::vector<ContextAction const *> result;
+    for (auto const & action: _registered_actions) {
+        if (action.is_applicable(*this)) {
+            result.push_back(&action);
+        }
+    }
+    return result;
 }
 
 // === TimeFrame Focus ===
@@ -212,7 +246,7 @@ void SelectionContext::setActiveEditor(EditorInstanceId const & instance_id) {
     if (_active_editor_id != instance_id) {
         _active_editor_id = instance_id;
         emit activeEditorChanged(instance_id);
-        emit widgetFocusChanged(instance_id);  // New signal for Phase 1
+        emit widgetFocusChanged(instance_id);// New signal for Phase 1
     }
 }
 

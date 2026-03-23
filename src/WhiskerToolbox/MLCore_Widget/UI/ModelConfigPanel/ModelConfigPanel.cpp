@@ -1,6 +1,6 @@
 #include "ModelConfigPanel.hpp"
 
-#include "MLCoreWidgetState.hpp"
+#include "Core/MLCoreWidgetState.hpp"
 #include "ui_ModelConfigPanel.h"
 
 #include "MLCore/models/MLModelParameters.hpp"
@@ -121,6 +121,7 @@ std::unique_ptr<MLCore::MLModelParametersBase> ModelConfigPanel::currentParamete
             auto params = std::make_unique<MLCore::HMMParameters>();
             params->num_states = static_cast<std::size_t>(ui->hmmNumStatesSpinBox->value());
             params->tolerance = ui->hmmToleranceSpinBox->value();
+            params->use_diagonal_covariance = ui->hmmDiagonalCovCheckBox->isChecked();
             return params;
         }
         default:
@@ -286,6 +287,20 @@ void ModelConfigPanel::_setupConnections() {
             this, &ModelConfigPanel::_onParameterValueChanged);
     connect(ui->hmmToleranceSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &ModelConfigPanel::_onParameterValueChanged);
+    connect(ui->hmmDiagonalCovCheckBox, &QCheckBox::toggled,
+            this, &ModelConfigPanel::_onParameterValueChanged);
+
+    // Bidirectional sync: state → checkbox for diagonal covariance
+    if (_state) {
+        connect(_state.get(), &MLCoreWidgetState::hmmDiagonalCovarianceChanged,
+                this, [this](bool checked) {
+                    if (!_updating) {
+                        _updating = true;
+                        ui->hmmDiagonalCovCheckBox->setChecked(checked);
+                        _updating = false;
+                    }
+                });
+    }
 }
 
 void ModelConfigPanel::_populateTaskTypes() {
@@ -385,6 +400,9 @@ void ModelConfigPanel::_syncToState() {
                     : "subsample");
     _state->setBalancingMaxRatio(balancingMaxRatio());
 
+    // Sync HMM-specific settings
+    _state->setHmmDiagonalCovariance(ui->hmmDiagonalCovCheckBox->isChecked());
+
     // Serialize current parameters to JSON for state persistence
     // (reserved for future implementation — the individual spin box values
     // are the source of truth for now)
@@ -435,6 +453,9 @@ void ModelConfigPanel::_restoreFromState() {
     }
     ui->ratioSpinBox->setValue(_state->balancingMaxRatio());
 
+    // Restore HMM-specific settings
+    ui->hmmDiagonalCovCheckBox->setChecked(_state->hmmDiagonalCovariance());
+
     _updating = false;
 
     // Update balancing UI enabled state
@@ -442,7 +463,7 @@ void ModelConfigPanel::_restoreFromState() {
     _updateBalancingVisibility();
 }
 
-int ModelConfigPanel::_pageIndexForModel(std::string const & name) const {
+int ModelConfigPanel::_pageIndexForModel(std::string const & name) {
     if (name == "Random Forest") {
         return kPageRandomForest;
     }

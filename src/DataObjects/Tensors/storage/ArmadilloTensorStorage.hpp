@@ -138,6 +138,46 @@ public:
      */
     [[nodiscard]] std::size_t ndim() const noexcept;
 
+    // ========== Row Mutation (2D only) ==========
+
+    /**
+     * @brief Append a row to the end of the matrix
+     *
+     * Only valid for 2D storage (arma::fmat).
+     *
+     * @param row_data Row values; size must equal number of columns
+     * @throws std::logic_error if storage is not 2D
+     * @throws std::invalid_argument if row_data.size() != number of columns
+     */
+    void appendRow(std::span<float const> row_data);
+
+    /**
+     * @brief Insert a row at a specific position in the matrix
+     *
+     * Only valid for 2D storage (arma::fmat). Existing rows at and after
+     * the insertion point are shifted down.
+     *
+     * @param index Row index to insert before (0-based; numRows inserts at end)
+     * @param row_data Row values; size must equal number of columns
+     * @throws std::logic_error if storage is not 2D
+     * @throws std::out_of_range if index > number of rows
+     * @throws std::invalid_argument if row_data.size() != number of columns
+     */
+    void insertRow(std::size_t index, std::span<float const> row_data);
+
+    /**
+     * @brief Overwrite an existing row's data in-place
+     *
+     * Only valid for 2D storage (arma::fmat).
+     *
+     * @param index Row index to overwrite (0-based)
+     * @param row_data New values; size must equal number of columns
+     * @throws std::logic_error if storage is not 2D
+     * @throws std::out_of_range if index >= number of rows
+     * @throws std::invalid_argument if row_data.size() != number of columns
+     */
+    void setRow(std::size_t index, std::span<float const> row_data);
+
     // ========== CRTP Implementation ==========
 
     [[nodiscard]] float getValueAtImpl(std::span<std::size_t const> indices) const;
@@ -159,4 +199,4 @@ private:
     [[nodiscard]] std::string dimLabel() const;
 };
 
-#endif // ARMADILLO_TENSOR_STORAGE_HPP
+#endif// ARMADILLO_TENSOR_STORAGE_HPP

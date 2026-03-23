@@ -1,6 +1,6 @@
 #include "PredictionPanel.hpp"
 
-#include "MLCoreWidgetState.hpp"
+#include "Core/MLCoreWidgetState.hpp"
 #include "ui_PredictionPanel.h"
 
 #include "DataManager/DataManager.hpp"
@@ -82,6 +82,14 @@ bool PredictionPanel::outputProbabilities() const {
     return ui->outputProbabilitiesCheckBox->isChecked();
 }
 
+bool PredictionPanel::constrainedDecoding() const {
+    return ui->constrainedDecodingCheckBox->isChecked();
+}
+
+void PredictionPanel::setSequenceModelActive(bool active) {
+    ui->constrainedDecodingCheckBox->setVisible(active);
+}
+
 // =============================================================================
 // Public slots
 // =============================================================================
@@ -115,7 +123,7 @@ void PredictionPanel::refreshRegionList() {
     for (auto const & key: interval_keys) {
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);
         if (series) {
-            QString display = QStringLiteral("%1 (%2 intervals)")
+            QString const display = QStringLiteral("%1 (%2 intervals)")
                                       .arg(QString::fromStdString(key))
                                       .arg(series->size());
             ui->regionComboBox->addItem(display, QString::fromStdString(key));
@@ -234,6 +242,12 @@ void PredictionPanel::_onOutputProbabilitiesToggled(bool checked) {
     emit outputConfigChanged();
 }
 
+void PredictionPanel::_onConstrainedDecodingToggled(bool checked) {
+    if (!_updating && _state) {
+        _state->setConstrainedDecoding(checked);
+    }
+}
+
 void PredictionPanel::_onPredictClicked() {
     // Sync all current settings to state before emitting
     if (_state) {
@@ -242,6 +256,7 @@ void PredictionPanel::_onPredictClicked() {
         _state->setProbabilityThreshold(threshold());
         _state->setOutputPredictions(outputPredictions());
         _state->setOutputProbabilities(outputProbabilities());
+        _state->setConstrainedDecoding(constrainedDecoding());
     }
     emit predictRequested();
 }
@@ -274,6 +289,9 @@ void PredictionPanel::_setupConnections() {
 
     connect(ui->outputProbabilitiesCheckBox, &QCheckBox::toggled,
             this, &PredictionPanel::_onOutputProbabilitiesToggled);
+
+    connect(ui->constrainedDecodingCheckBox, &QCheckBox::toggled,
+            this, &PredictionPanel::_onConstrainedDecodingToggled);
 
     connect(ui->predictButton, &QPushButton::clicked,
             this, &PredictionPanel::_onPredictClicked);
@@ -348,6 +366,16 @@ void PredictionPanel::_setupConnections() {
                     ui->outputPredictionsCheckBox->setChecked(enabled);
                     _updating = false;
                     _updateValidity();
+                });
+
+        connect(_state.get(), &MLCoreWidgetState::constrainedDecodingChanged,
+                this, [this](bool enabled) {
+                    if (_updating) {
+                        return;
+                    }
+                    _updating = true;
+                    ui->constrainedDecodingCheckBox->setChecked(enabled);
+                    _updating = false;
                 });
     }
 }
@@ -498,6 +526,7 @@ void PredictionPanel::_restoreFromState() {
     // Restore output checkboxes
     ui->outputPredictionsCheckBox->setChecked(_state->outputPredictions());
     ui->outputProbabilitiesCheckBox->setChecked(_state->outputProbabilities());
+    ui->constrainedDecodingCheckBox->setChecked(_state->constrainedDecoding());
 
     _updating = false;
 

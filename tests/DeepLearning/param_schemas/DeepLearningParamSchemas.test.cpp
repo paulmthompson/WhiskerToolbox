@@ -224,12 +224,14 @@ TEST_CASE("PostEncoderVariant schema extraction",
         CHECK(f->variant_alternatives[1].schema->fields.empty());
     }
 
-    SECTION("SpatialPointModuleParams has interpolation field") {
+    SECTION("SpatialPointModuleParams has interpolation and point_key fields") {
         auto const & s = *f->variant_alternatives[2].schema;
-        CHECK(s.fields.size() == 1);
+        CHECK(s.fields.size() == 2);
         auto * interp = s.field("interpolation");
         REQUIRE(interp != nullptr);
         CHECK(interp->type_name == "enum");
+        auto * pk = s.field("point_key");
+        REQUIRE(pk != nullptr);
     }
 }
 

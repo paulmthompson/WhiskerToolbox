@@ -1,0 +1,141 @@
+---
+title: "TensorData Row Mutation"
+---
+
+## Overview
+
+`TensorData` supports appending and inserting rows into 2D tensors. This enables
+incremental construction of tensors (e.g., adding new time points as data arrives)
+without rebuilding the entire tensor.
+
+## Supported Backends
+
+Row mutation is supported for:
+
+- **ArmadilloTensorStorage** (default 2D backend) — uses Armadillo's native row
+  insertion via `insert_rows()` and `resize()`.
+- **DenseTensorStorage** — manipulates the flat `std::vector<float>` buffer directly.
+
+Row mutation is **not** supported for:
+
+- `LazyColumnTensorStorage` — column providers have a fixed row count.
+- `LibTorchTensorStorage` — torch tensors are not resizable in-place.
+- 1D or 3D+ tensors — only 2D tensors support row mutation.
+
+## API
+
+### `appendRow(std::span<float const> row_data)`
+
+Appends a row at the end of the tensor. Works for **Ordinal** and **Interval** rows
+(see overloads below). Throws `std::logic_error` for `TimeFrameIndex` rows since
+`TimeIndexStorage` is immutable.
+
+### `appendRow(std::span<float const> row_data, TimeFrameInterval interval)`
+
+Appends a row with an associated interval. Only valid for tensors with Interval row
+semantics.
+
+### `insertRow(std::size_t index, std::span<float const> row_data)`
+
+Inserts a row before the given index. Index may equal `numRows()` to insert at the end.
+
+### `insertRow(std::size_t index, std::span<float const> row_data, TimeFrameInterval interval)`
+
+Inserts a row with an associated interval at a specific position.
+
+### `setRow(std::size_t index, std::span<float const> row_data)`
+
+Overwrites the data for an existing row. Works for all row types (Ordinal,
+TimeFrameIndex, Interval). Does not change the row descriptor or dimension
+descriptor — only replaces the float data. Throws if the tensor is not 2D,
+the index is out of range, or `row_data.size()` does not match the column count.
+
+### `upsertRows(frame_rows, time_frame)`
+
+```cpp
+void upsertRows(
+    std::vector<std::pair<int, std::vector<float>>> const & frame_rows,
+    std::shared_ptr<TimeFrame> time_frame);
+```
+
+Frame-indexed merge operation for accumulating results across runs. Takes a
+vector of `(frame_index, row_data)` pairs and a `TimeFrame` reference. Semantics:
+
+- Reads the existing frame-to-row mapping (from `TimeFrameIndex` rows, or treats
+  ordinal row indices as frame IDs).
+- Overlays the new rows using `std::map` for sorted-merge behavior:
+  matching frames are overwritten, new frames are appended.
+- Rebuilds storage in-place with `makeStorage()` and
+  `TimeIndexStorageFactory::createFromTimeIndices()`.
+- Preserves column names.
+- Handles empty tensor (first initialization).
+
+This is the primary API for deep learning inference output, where batch runs
+on overlapping frame ranges should merge rather than replace.
+
+## Orchestration
+
+Each mutation method performs four steps:
+
+1. **Validate** — checks 2D, supported backend, row type compatibility, and data size.
+2. **Storage mutation** — delegates to `ArmadilloTensorStorage::appendRow/insertRow`
+   or `DenseTensorStorage::appendRow/insertRow`.
+3. **RowDescriptor update** — increments ordinal count or inserts an interval.
+4. **DimensionDescriptor update** — resizes axis 0 via `setAxisSize()`.
+5. **Observer notification** — calls `notifyObservers()`.
+
+## Row Descriptor Mutation
+
+`RowDescriptor` exposes three mutation methods:
+
+| Method | Row Type | Effect |
+|--------|----------|--------|
+| `setOrdinalCount(n)` | Ordinal | Sets the ordinal count |
+| `appendInterval(iv)` | Interval | Appends an interval |
+| `insertInterval(i, iv)` | Interval | Inserts an interval at position `i` |
+
+`TimeFrameIndex` rows cannot be mutated because `TimeIndexStorage` is an abstract
+interface with no insertion API.
+
+## Example
+
+```cpp
+// Create a 3×2 ordinal tensor
+auto tensor = TensorData::createOrdinal2D(
+    {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f}, 3, 2);
+
+// Append a new row
+tensor.appendRow(std::vector<float>{7.0f, 8.0f});
+// tensor is now 4×2
+
+// Insert at the beginning
+tensor.insertRow(0, std::vector<float>{-1.0f, -2.0f});
+// tensor is now 5×2, with {-1, -2} as row 0
+```
+
+## Frame-Indexed Upsert Example
+
+```cpp
+auto time_frame = std::make_shared<TimeFrame>();
+time_frame->setTotalFrameCount(100);
+
+auto tensor = std::make_shared<TensorData>();
+
+// First batch: frames 1–3
+std::vector<std::pair<int, std::vector<float>>> batch1 = {
+    {1, {1.0f, 2.0f}},
+    {2, {3.0f, 4.0f}},
+    {3, {5.0f, 6.0f}},
+};
+tensor->upsertRows(batch1, time_frame);
+// tensor has 3 rows: frames 1, 2, 3
+
+// Second batch: frames 2–4 (frame 2–3 overwritten, frame 4 appended)
+std::vector<std::pair<int, std::vector<float>>> batch2 = {
+    {2, {30.0f, 40.0f}},
+    {3, {50.0f, 60.0f}},
+    {4, {70.0f, 80.0f}},
+};
+tensor->upsertRows(batch2, time_frame);
+// tensor now has 4 rows: frame 1 preserved, frames 2–3 overwritten, frame 4 appended
+```

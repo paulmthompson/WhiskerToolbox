@@ -1,0 +1,50 @@
+---
+title: "InferenceController"
+---
+
+## Overview
+
+**Header:** `DeepLearning_Widget/UI/InferenceController.hpp`
+
+`InferenceController` orchestrates deep learning inference runs (single frame,
+batch, multi-interval batch, and recurrent sequence). It owns the background
+worker thread lifecycle and delegates result merging to `ResultProcessor`.
+
+## Batch Inference
+
+### Single Range
+
+`runBatch(start, end, batch_size)` launches a `BatchInferenceWorker` on a
+background `QThread`. The worker calls `SlotAssembler::runBatchRangeOffline()`
+for the given frame range and reports progress via `batchProgressChanged(current, total)`.
+
+### Multi-Interval Batch
+
+`runBatchIntervals(intervals, batch_size)` accepts a vector of `(start, end)`
+frame ranges (e.g. from a `DigitalIntervalSeries`) and processes each interval
+sequentially on a single background thread. Progress is reported against the
+**total** frame count across all intervals, so the progress bar reflects the
+cumulative work (e.g. two intervals of 1000 frames reports progress out of 2000).
+
+The `_onRunBatch()` dialog in `DeepLearningPropertiesWidget` offers two modes:
+
+- **Manual range**: User specifies start/end frames directly (original behavior).
+- **From interval series**: User selects a `DigitalIntervalSeries` key from
+  DataManager. The combo box auto-populates and refreshes via a DataManager
+  observer callback. The callback is cleaned up when the dialog is destroyed.
+
+## Cancellation
+
+All worker types share a `std::shared_ptr<std::atomic<bool>>` cancel flag owned
+by the `InferenceController::Impl`. Calling `cancel()` sets this flag, which is
+polled by `SlotAssembler::runBatchRangeOffline()` between batches. The same flag
+is set in the destructor to ensure clean shutdown.
+
+## Signal Chain
+
+```
+Worker::progressChanged(current, total)
+    → InferenceController::batchProgressChanged(current, total)
+        → DeepLearningPropertiesWidget::batchProgressChanged(current, total)
+            → DeepLearningViewWidget::updateRecurrentProgress(current, total)
+```

@@ -27,6 +27,8 @@ set(MLCore_SOURCES
     models/MLModelRegistry.hpp
     models/MLTaskType.hpp
 
+    models/MLDimReductionOperation.hpp
+
     models/supervised/LogisticRegressionOperation.cpp
     models/supervised/LogisticRegressionOperation.hpp
     models/supervised/NaiveBayesOperation.cpp
@@ -42,15 +44,23 @@ set(MLCore_SOURCES
     models/unsupervised/GaussianMixtureOperation.hpp
     models/unsupervised/KMeansOperation.cpp
     models/unsupervised/KMeansOperation.hpp
+    models/unsupervised/PCAOperation.cpp
+    models/unsupervised/PCAOperation.hpp
 
     output/PredictionWriter.cpp
     output/PredictionWriter.hpp
+
+    pipelines/BoundingSpan.cpp
+    pipelines/BoundingSpan.hpp
 
     pipelines/ClassificationPipeline.cpp
     pipelines/ClassificationPipeline.hpp
 
     pipelines/ClusteringPipeline.cpp
     pipelines/ClusteringPipeline.hpp
+
+    pipelines/DimReductionPipeline.cpp
+    pipelines/DimReductionPipeline.hpp
 
     pipelines/SequenceAssembler.cpp
     pipelines/SequenceAssembler.hpp

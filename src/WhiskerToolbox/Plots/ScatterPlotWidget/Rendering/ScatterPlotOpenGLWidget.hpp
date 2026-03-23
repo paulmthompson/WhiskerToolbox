@@ -44,6 +44,7 @@ class QMouseEvent;
 class QWheelEvent;
 class QKeyEvent;
 class ScatterPlotState;
+class SelectionContext;
 
 namespace CorePlotting {
 class RenderableScene;
@@ -86,6 +87,12 @@ public:
      * @param group_manager Pointer to the GroupManager (not owned)
      */
     void setGroupManager(GroupManager * group_manager);
+
+    /**
+     * @brief Set the SelectionContext for ContextAction integration in the context menu
+     * @param selection_context Pointer to the SelectionContext (not owned)
+     */
+    void setSelectionContext(SelectionContext * selection_context);
 
 signals:
     void viewBoundsChanged();
@@ -149,6 +156,11 @@ private:
     QMenu * _context_menu{nullptr};
     uint64_t _last_group_generation{0};///< Cached generation for change detection
 
+    // ContextAction integration
+    SelectionContext * _selection_context{nullptr};
+    std::vector<QAction *> _dynamic_context_actions;///< Dynamically added ContextAction menu items
+    QAction * _cluster_selection_action{nullptr};   ///< "Cluster Selection..." menu action
+
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);
@@ -197,6 +209,20 @@ private:
     void handlePolygonCtrlClick(QMouseEvent * event);
     void completePolygonSelection();
     void cancelPolygonSelection();
+
+    // === Selective clustering ===
+    /**
+     * @brief Execute "Cluster Selection..." — create filtered TensorData and trigger clustering
+     */
+    void _executeClusterSelection();
+
+    /**
+     * @brief Draw cluster centroid labels as a QPainter overlay
+     *
+     * Computes per-group centroids from scatter point positions and renders
+     * text labels like "Group N (n=42)" at the centroid screen coordinates.
+     */
+    void drawClusterLabels();
 };
 
 #endif// SCATTER_PLOT_OPENGL_WIDGET_HPP

@@ -1,19 +1,22 @@
 #include "DeepLearningPropertiesWidget.hpp"
 
 #include "DeepLearning_Widget/Core/BindingConversion.hpp"
+#include "DeepLearning_Widget/Core/ConstraintEnforcer.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningBindingData.hpp"
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
-#include "DeepLearning_Widget/UI/InferenceController.hpp"
 #include "DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/OutputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/PostEncoderWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/RecurrentBindingWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/SequenceSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/StaticInputSlotWidget.hpp"
+#include "DeepLearning_Widget/UI/InferenceController.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "DataManager/utils/DataManagerKeys.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
@@ -23,6 +26,8 @@
 
 #include <QComboBox>
 #include <QCoreApplication>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QGridLayout>
@@ -34,6 +39,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QScrollArea>
 #include <QSpinBox>
 #include <QStandardItemModel>
@@ -273,6 +279,8 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
             _model_combo->itemData(index).toString().toStdString();
     _state->setSelectedModelId(model_id);
 
+    _weights_validation_error.clear();
+
     if (model_id.empty()) {
         _model_desc_label->setText(tr("Select a model to configure."));
         _current_info.reset();
@@ -342,11 +350,21 @@ void DeepLearningPropertiesWidget::_onWeightsPathEdited() {
 void DeepLearningPropertiesWidget::_loadModelIfReady() {
     _updateWeightsStatus();
 
+    // Gate weight loading on shape being explicitly configured for
+    // general_encoder (shape fields default to 0 until Apply is clicked).
+    if (_assembler->currentModelId() == "general_encoder" &&
+        !_state->shapeConfigured()) {
+        return;
+    }
+
+    _weights_validation_error.clear();
+
     auto const & path = _state->weightsPath();
     if (!path.empty() && !_assembler->currentModelId().empty()) {
         try {
             if (std::filesystem::exists(path)) {
                 _assembler->loadWeights(path);
+                _weights_validation_error = _assembler->validateWeights();
                 _updateWeightsStatus();
             }
         } catch (std::exception const & e) {
@@ -378,6 +396,20 @@ void DeepLearningPropertiesWidget::_updateWeightsStatus() {
         _weights_status_label->setStyleSheet(QStringLiteral("color: gray;"));
         return;
     }
+
+    // For general_encoder, require the user to explicitly apply a shape
+    // before enabling weight loading — mismatched shapes cause silent errors.
+    if (_assembler->currentModelId() == "general_encoder" &&
+        !_state->shapeConfigured()) {
+        _weights_path_edit->setEnabled(false);
+        _weights_browse_btn->setEnabled(false);
+        _weights_status_label->setText(tr("Set encoder shape first"));
+        _weights_status_label->setStyleSheet(QStringLiteral("color: orange;"));
+        return;
+    }
+    _weights_path_edit->setEnabled(true);
+    _weights_browse_btn->setEnabled(true);
+
     auto const & path = _state->weightsPath();
     if (path.empty()) {
         _weights_status_label->setText(tr("No weights file specified"));
@@ -387,8 +419,17 @@ void DeepLearningPropertiesWidget::_updateWeightsStatus() {
         _weights_status_label->setText(tr("\u2717 File not found"));
         _weights_status_label->setStyleSheet(QStringLiteral("color: red;"));
     } else if (_assembler->isModelReady()) {
-        _weights_status_label->setText(tr("\u2713 Loaded"));
-        _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
+        if (_weights_validation_error.empty()) {
+            _weights_status_label->setText(tr("\u2713 Loaded & validated"));
+            _weights_status_label->setStyleSheet(
+                    QStringLiteral("color: green;"));
+        } else {
+            _weights_status_label->setText(
+                    tr("\u26a0 Shape mismatch: %1")
+                            .arg(QString::fromStdString(_weights_validation_error)));
+            _weights_status_label->setStyleSheet(
+                    QStringLiteral("color: orange;"));
+        }
     } else {
         _weights_status_label->setText(tr("File exists, not yet loaded"));
         _weights_status_label->setStyleSheet(
@@ -439,6 +480,9 @@ void DeepLearningPropertiesWidget::_rebuildSlotPanels() {
                 [this]() {
                     _current_info = _assembler->currentModelDisplayInfo();
                     _rebuildSlotPanels();
+                    // Now that shape is configured, attempt to load weights
+                    // if a path was already entered (gate is now satisfied).
+                    _loadModelIfReady();
                 });
         _dynamic_layout->addWidget(_encoder_shape_widget);
     }
@@ -610,21 +654,10 @@ void DeepLearningPropertiesWidget::_enforcePostEncoderDecoderConsistency() {
     if (!_post_encoder_widget || !_current_info) return;
 
     auto const module_type = _post_encoder_widget->moduleTypeForState();
-
-    // Both global_avg_pool and spatial_point collapse spatial dims:
-    //   [B, C, H, W] -> [B, C]
-    // Only TensorToFeatureVector can decode a 2D tensor.
-    bool const spatial_dims_removed =
-            (module_type == "global_avg_pool" || module_type == "spatial_point");
-
-    std::vector<std::string> const all_decoders = {
-            "MaskDecoderParams", "PointDecoderParams", "LineDecoderParams",
-            "FeatureVectorDecoderParams"};
-    std::vector<std::string> const fv_only = {"FeatureVectorDecoderParams"};
+    auto const valid_decoders = dl::constraints::validDecodersForModule(module_type);
 
     for (auto * slot_widget: _output_slot_widgets) {
-        slot_widget->updateDecoderAlternatives(
-                spatial_dims_removed ? fv_only : all_decoders);
+        slot_widget->updateDecoderAlternatives(valid_decoders);
         slot_widget->refreshDataSources();
     }
 }
@@ -848,51 +881,130 @@ void DeepLearningPropertiesWidget::_onRunBatch() {
 
     int const current = _state->currentFrame();
 
-    auto * start_spin = new QSpinBox(this);
+    // ── Build dialog ────────────────────────────────────────────────────
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Batch Inference"));
+    auto * form = new QFormLayout(&dialog);
+
+    // Mode selection: manual range vs interval series
+    auto * manual_radio = new QRadioButton(tr("Manual range"), &dialog);
+    auto * interval_radio = new QRadioButton(tr("From interval series"), &dialog);
+    manual_radio->setChecked(true);
+    form->addRow(manual_radio);
+
+    // Manual range controls
+    auto * start_spin = new QSpinBox(&dialog);
     start_spin->setRange(0, 999999);
     start_spin->setValue(current);
-
-    auto * end_spin = new QSpinBox(this);
+    auto * end_spin = new QSpinBox(&dialog);
     end_spin->setRange(0, 999999);
     end_spin->setValue(current + _state->batchSize());
+    form->addRow(tr("Start frame:"), start_spin);
+    form->addRow(tr("End frame:"), end_spin);
 
-    QMessageBox dialog(this);
-    dialog.setWindowTitle(tr("Batch Inference"));
-    dialog.setText(tr("Run inference independently on each frame in the range."));
-    dialog.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    // Interval series controls
+    form->addRow(interval_radio);
+    auto * interval_combo = new QComboBox(&dialog);
+    interval_combo->setEnabled(false);
 
-    auto * layout = qobject_cast<QGridLayout *>(dialog.layout());
-    if (layout) {
-        layout->addWidget(new QLabel(tr("Start frame:"), &dialog), 2, 0);
-        layout->addWidget(start_spin, 2, 1);
-        layout->addWidget(new QLabel(tr("End frame:"), &dialog), 3, 0);
-        layout->addWidget(end_spin, 3, 1);
+    // Populate with current DigitalIntervalSeries keys
+    auto const populate_combo = [this, interval_combo]() {
+        auto const keys = getKeysForTypes(
+                *_data_manager, {DM_DataType::DigitalInterval});
+        QString const prev = interval_combo->currentText();
+        interval_combo->clear();
+        for (auto const & k: keys) {
+            interval_combo->addItem(QString::fromStdString(k));
+        }
+        // Restore previous selection if still available
+        int const idx = interval_combo->findText(prev);
+        if (idx >= 0) {
+            interval_combo->setCurrentIndex(idx);
+        }
+    };
+    populate_combo();
+
+    // Register DataManager observer for live updates, store callback ID
+    int dm_cb_id = -1;
+    if (_data_manager) {
+        dm_cb_id = _data_manager->addObserver(populate_combo);
     }
+    // Clean up observer when dialog closes
+    QObject::connect(&dialog, &QObject::destroyed,
+                     this, [this, dm_cb_id]() {
+                         if (_data_manager && dm_cb_id >= 0) {
+                             _data_manager->removeObserver(dm_cb_id);
+                         }
+                     });
 
-    if (dialog.exec() != QMessageBox::Ok) return;
+    form->addRow(tr("Interval series:"), interval_combo);
 
-    int const start_frame = start_spin->value();
-    int const end_frame = end_spin->value();
+    // Toggle enable state based on radio selection
+    auto const update_mode = [=](bool manual_checked) {
+        start_spin->setEnabled(manual_checked);
+        end_spin->setEnabled(manual_checked);
+        interval_combo->setEnabled(!manual_checked);
+    };
+    QObject::connect(manual_radio, &QRadioButton::toggled, &dialog, update_mode);
 
-    if (end_frame < start_frame) {
-        QMessageBox::warning(this, tr("Invalid Range"),
-                             tr("End frame must be >= start frame."));
-        return;
-    }
+    // OK / Cancel buttons
+    auto * buttons = new QDialogButtonBox(
+            QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    form->addRow(buttons);
+    QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    // ── Execute dialog ──────────────────────────────────────────────────
+    if (dialog.exec() != QDialog::Accepted) return;
 
     _syncBindingsFromUi();
-    _inference_controller->runBatch(start_frame, end_frame, _state->batchSize());
+
+    if (manual_radio->isChecked()) {
+        int const start_frame = start_spin->value();
+        int const end_frame = end_spin->value();
+
+        if (end_frame < start_frame) {
+            QMessageBox::warning(this, tr("Invalid Range"),
+                                 tr("End frame must be >= start frame."));
+            return;
+        }
+        _inference_controller->runBatch(start_frame, end_frame,
+                                        _state->batchSize());
+    } else {
+        // Interval series mode
+        auto const key = interval_combo->currentText().toStdString();
+        if (key.empty()) {
+            QMessageBox::warning(this, tr("No Interval Selected"),
+                                 tr("Select an interval series."));
+            return;
+        }
+        auto series = _data_manager->getData<DigitalIntervalSeries>(key);
+        if (!series || series->size() == 0) {
+            QMessageBox::warning(this, tr("Empty Series"),
+                                 tr("The selected interval series has no intervals."));
+            return;
+        }
+
+        std::vector<std::pair<int64_t, int64_t>> intervals;
+        intervals.reserve(series->size());
+        for (auto const & elem: series->view()) {
+            intervals.emplace_back(elem.interval.start, elem.interval.end);
+        }
+
+        _inference_controller->runBatchIntervals(
+                std::move(intervals), _state->batchSize());
+    }
 }
 
 void DeepLearningPropertiesWidget::_onInferenceBatchFinished(bool success,
-                                                           QString const & error_message) {
+                                                             QString const & error_message) {
     if (success) {
         _weights_status_label->setText(tr("\u2713 Inference complete"));
         _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
     } else {
         if (!error_message.isEmpty()) {
             QMessageBox::critical(this, tr("Inference Error"),
-                                 tr("Inference failed:\n%1").arg(error_message));
+                                  tr("Inference failed:\n%1").arg(error_message));
         }
     }
 }
@@ -1062,61 +1174,27 @@ void DeepLearningPropertiesWidget::_onCaptureSequenceEntry(
 void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
     if (!_dynamic_container || !_batch_size_spin || !_current_info) return;
 
-    // ── Step 1: Check model-level batch mode ──
+    auto const constraint = dl::constraints::computeBatchSizeConstraint(
+            *_current_info, _state->recurrentBindings());
+
     auto const & mode = _current_info->batch_mode;
-    bool const model_locked = dl::isBatchLocked(mode);
-    int const model_max = dl::maxBatchSizeFromMode(mode);
-    int const model_min = dl::minBatchSizeFromMode(mode);
-
-    // ── Step 2: Check if any recurrent bindings are active in the UI ──
-    bool has_recurrent = false;
-    for (auto const & slot: _current_info->inputs) {
-        if (!slot.is_static || slot.is_boolean_mask) continue;
-
-        if (slot.hasSequenceDim()) {
-            for (auto const * seq_widget: _sequence_slot_widgets) {
-                if (seq_widget->slotName() == slot.name &&
-                    !seq_widget->getRecurrentBindings().empty()) {
-                    has_recurrent = true;
-                    break;
-                }
-            }
-        } else {
-            for (auto const * rb_widget: _recurrent_binding_widgets) {
-                if (rb_widget->slotName() == slot.name) {
-                    auto rb = rb_widget->toRecurrentBindingData();
-                    if (!rb.output_slot_name.empty()) {
-                        has_recurrent = true;
-                    }
-                    break;
-                }
-            }
-        }
-        if (has_recurrent) break;
-    }
-
-    // ── Step 3: Determine the most restrictive constraint ──
-    // Priority: recurrent bindings → model RecurrentOnly → model Fixed → model Dynamic
-    bool const lock_to_one = has_recurrent || model_locked;
+    bool const lock_to_one = (constraint.min == 1 && constraint.max == 1);
     QString tooltip;
 
-    if (has_recurrent) {
-        tooltip = tr("Batch size is locked to 1 when recurrent bindings are active.\n"
-                     "Sequential frame-by-frame processing requires batch=1.");
-    } else if (std::holds_alternative<dl::RecurrentOnlyBatch>(mode)) {
-        tooltip = tr("Model requires batch size = 1 (recurrent-only mode).");
-    } else if (auto const * f = std::get_if<dl::FixedBatch>(&mode)) {
-        if (f->size == 1) {
+    if (lock_to_one) {
+        if (constraint.forced_by_recurrent) {
+            tooltip = tr("Batch size is locked to 1 when recurrent bindings are active.\n"
+                         "Sequential frame-by-frame processing requires batch=1.");
+        } else if (std::holds_alternative<dl::RecurrentOnlyBatch>(mode)) {
+            tooltip = tr("Model requires batch size = 1 (recurrent-only mode).");
+        } else {
             tooltip = tr("Model is compiled for fixed batch size = 1.");
         }
-    }
-
-    if (lock_to_one) {
         _batch_size_spin->setValue(1);
         _batch_size_spin->setEnabled(false);
         _batch_size_spin->setToolTip(tooltip);
     } else if (auto const * f = std::get_if<dl::FixedBatch>(&mode)) {
-        // Fixed batch: lock spinbox to that value
+        // Fixed batch > 1: lock spinbox to that value
         _batch_size_spin->setRange(f->size, f->size);
         _batch_size_spin->setValue(f->size);
         _batch_size_spin->setEnabled(false);
@@ -1124,11 +1202,11 @@ void DeepLearningPropertiesWidget::_updateBatchSizeConstraint() {
                 tr("Model is compiled for fixed batch size = %1.")
                         .arg(f->size));
     } else {
-        // Dynamic batch: allow range
+        // Dynamic batch: allow the model-reported range
         _batch_size_spin->setEnabled(true);
-        _batch_size_spin->setMinimum(model_min > 0 ? model_min : 1);
-        if (model_max > 0) {
-            _batch_size_spin->setMaximum(model_max);
+        _batch_size_spin->setMinimum(constraint.min > 0 ? constraint.min : 1);
+        if (constraint.max > 0) {
+            _batch_size_spin->setMaximum(constraint.max);
         } else {
             _batch_size_spin->setMaximum(9999);
         }
@@ -1163,7 +1241,7 @@ void DeepLearningPropertiesWidget::_onRunRecurrentSequence() {
     int const start_frame = _state->currentFrame();
     int const default_count =
             _state->batchSize() > 1 ? _state->batchSize()
-                                   : _batch_size_spin->maximum();
+                                    : _batch_size_spin->maximum();
 
     auto * frame_count_spin = new QSpinBox(this);
     frame_count_spin->setRange(1, 999999);

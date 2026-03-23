@@ -15,6 +15,7 @@
 #include "Points/Point_Data.hpp"
 #include "Tensors/TensorData.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <QTimer>
@@ -135,18 +136,16 @@ void ResultProcessor::flushFeatureVectors() {
         std::sort(rows.begin(), rows.end(),
                   [](auto const & a, auto const & b) { return a.first < b.first; });
 
-        std::size_t const n_rows = rows.size();
-        std::size_t const n_cols = rows.front().second.size();
-
-        std::vector<float> flat_data;
-        flat_data.reserve(n_rows * n_cols);
-        for (auto const & [frame, vec]: rows) {
-            flat_data.insert(flat_data.end(), vec.begin(), vec.end());
+        // Get or create the TensorData for this key
+        auto tensor = _impl->_dm->getData<TensorData>(key);
+        if (!tensor) {
+            _impl->_dm->setData<TensorData>(key, TimeKey("media"));
+            tensor = _impl->_dm->getData<TensorData>(key);
         }
-
-        auto tensor = std::make_shared<TensorData>(
-                TensorData::createOrdinal2D(flat_data, n_rows, n_cols));
-        _impl->_dm->setData<TensorData>(key, tensor, TimeKey("time"));
+        if (tensor) {
+            auto time_frame = _impl->_dm->getTime();
+            tensor->upsertRows(rows, std::move(time_frame));
+        }
     }
     _impl->_pending_feature_rows.clear();
 }

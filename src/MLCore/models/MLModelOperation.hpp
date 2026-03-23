@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -237,6 +238,29 @@ public:
             offset += seq.n_cols;
         }
         return true;
+    }
+
+    /**
+     * @brief Predict labels with per-sequence initial state constraints
+     *
+     * @param featureSequences         Vector of feature matrices, one per segment
+     * @param predictionSequences      [out] Predicted labels per segment
+     * @param initial_state_constraints Per-sequence initial state override.
+     *        If element i has a value, the model's initial state distribution
+     *        is clamped to a delta on that state for sequence i.
+     *        If nullopt, the model's learned initial distribution is used.
+     * @return true if prediction succeeded
+     *
+     * The default implementation ignores constraints and delegates to
+     * predictSequences(). Sequence-aware models (e.g., HMM) override this
+     * to apply constrained Viterbi decoding.
+     */
+    virtual bool predictSequencesConstrained(
+            std::vector<arma::mat> const & featureSequences,
+            std::vector<arma::Row<std::size_t>> & predictionSequences,
+            std::vector<std::optional<std::size_t>> const & initial_state_constraints) {
+        static_cast<void>(initial_state_constraints);
+        return predictSequences(featureSequences, predictionSequences);
     }
 
     /**

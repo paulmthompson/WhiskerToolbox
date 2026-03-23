@@ -77,6 +77,29 @@ struct PredictionRegionConfig {
      * If empty and predict_all_rows is false, no prediction is performed.
      */
     std::string prediction_tensor_key;
+
+    /**
+     * @brief DataManager key of a DigitalIntervalSeries specifying target output frames
+     *
+     * When non-empty, the pipeline computes the bounding span across training
+     * labels and this interval for prediction (so sequence models retain full
+     * temporal context), then filters output to only frames within this interval.
+     *
+     * When empty and predict_all_rows is true, output includes all frames.
+     */
+    std::string prediction_interval_key;
+
+    /**
+     * @brief For sequence models, clamp the HMM initial distribution at boundaries
+     *
+     * When true and the model is a sequence model (isSequenceModel()), the
+     * pipeline overrides the HMM initial state distribution to the last known
+     * ground-truth label at prediction segment boundaries. This avoids
+     * cold-start inaccuracy when predicting regions adjacent to labeled data.
+     *
+     * Ignored for frame-independent models.
+     */
+    bool constrained_decoding = true;
 };
 
 /**
@@ -173,6 +196,15 @@ struct ClassificationPipelineConfig {
      * Used for label assembly (interval lookups) and output writing.
      */
     std::string time_key_str = "time";
+
+    /**
+     * @brief If true, skip DataManager writes and store output in the result
+     *
+     * When running from a background thread, DataManager writes trigger observer
+     * callbacks that may manipulate Qt widgets, which is undefined behavior.
+     * Set this to true and perform the writes on the main thread instead.
+     */
+    bool defer_dm_writes = false;
 };
 
 // ============================================================================
@@ -292,6 +324,21 @@ struct ClassificationPipelineResult {
      * Present when prediction and output writing succeeded.
      */
     std::optional<PredictionWriterResult> writer_result;
+
+    // -- Deferred output (when defer_dm_writes is true) --
+
+    /**
+     * @brief Prediction data awaiting main-thread writing
+     *
+     * Populated when config.defer_dm_writes is true. The caller must call
+     * writePredictions() on the main thread with this data.
+     */
+    std::optional<PredictionOutput> deferred_output;
+
+    /**
+     * @brief Output config for deferred writing (paired with deferred_output)
+     */
+    std::optional<PredictionWriterConfig> deferred_output_config;
 
     // -- Model --
 

@@ -6,6 +6,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 find_package(reflectcpp CONFIG REQUIRED)
 
 set(EDITOR_STATE_SOURCES
+    ContextAction.hpp
     DataFocusAware.hpp
     EditorRegistry.cpp
     EditorRegistry.hpp

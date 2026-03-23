@@ -92,10 +92,12 @@ website:
               href: developer/MLCore/index.qmd
               contents:
                 - developer/MLCore/models.qmd
+                - developer/MLCore/dim_reduction.qmd
                 - developer/MLCore/hmm.qmd
                 - developer/MLCore/features.qmd
                 - developer/MLCore/label_assembly.qmd
                 - developer/MLCore/pipelines.qmd
+                - developer/MLCore/prediction_regions.qmd
                 - developer/MLCore/sequence_assembler.qmd
                 - developer/MLCore/output.qmd
                 - developer/MLCore/widget.qmd
@@ -128,7 +130,11 @@ website:
             - developer/DataManager/storage_testing_roadmap.qmd
             - developer/DataManager/storage_benchmarking_roadmap.qmd
             - developer/DataManager/concurrency_architecture.qmd
+            - developer/DataManager/observer_thread_safety_roadmap.qmd
             - developer/DataManager/threaded_loading_roadmap.qmd
+            - section: "TensorData"
+              contents:
+                - developer/DataObjects/Tensors/row_mutation.qmd
             - section: "Command Architecture"
               href: developer/DataManager/Commands/index.qmd
               contents:
@@ -142,6 +148,7 @@ website:
                 - developer/DataManager/Commands/synthesize_data.qmd
                 - developer/DataManager/Commands/validation.qmd
                 - developer/DataManager/Commands/command_introspection.qmd
+                - developer/DataManager/Commands/command_registry.qmd
                 - developer/DataManager/Commands/gui_verb_audit.qmd
                 - developer/DataManager/Commands/widget_save_refactoring_guide.qmd
                 - developer/DataManager/Commands/data_manager_snapshot.qmd
@@ -149,6 +156,9 @@ website:
         - section: "Triage Session"
           contents:
             - developer/TriageSession/index.qmd
+        - section: "Architecture"
+          contents:
+            - developer/inter_widget_communication_roadmap.md
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd
@@ -166,6 +176,7 @@ website:
             - section: "Deep Learning Widget"
               contents:
                   - developer/DeepLearning_Widget/helpers.qmd
+                  - developer/DeepLearning_Widget/inference_controller.qmd
             - section: "Plot Widgets"
               href: developer/ui/Plots/plot_widget_guide.md
               contents:

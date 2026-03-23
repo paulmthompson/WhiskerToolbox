@@ -164,6 +164,9 @@ void ColumnConfigDialog::_onIntervalPropertyToggled(bool checked) {
     _pipeline_json_edit->setEnabled(!checked);
     _validate_btn->setEnabled(!checked);
     _request_tv2_btn->setEnabled(!checked && _operation_context != nullptr);
+    _edit_in_tv2_btn->setEnabled(
+            !checked && _operation_context != nullptr &&
+            !_pipeline_json_edit->toPlainText().trimmed().isEmpty());
     _updateAutoName();
 }
 
@@ -226,6 +229,15 @@ void ColumnConfigDialog::_setupUi() {
     _request_tv2_btn->setEnabled(_operation_context != nullptr);
     btn_layout->addWidget(_request_tv2_btn);
 
+    _edit_in_tv2_btn = new QPushButton(
+            QStringLiteral("Edit in Transforms V2"), pipeline_group);
+    _edit_in_tv2_btn->setToolTip(
+            QStringLiteral("Send the current pipeline JSON to Transforms V2 for editing. "
+                           "Modify the pipeline there, then click 'Send Pipeline' to "
+                           "deliver the updated version back."));
+    _edit_in_tv2_btn->setEnabled(false);
+    btn_layout->addWidget(_edit_in_tv2_btn);
+
     _validate_btn = new QPushButton(QStringLiteral("Validate"), pipeline_group);
     btn_layout->addWidget(_validate_btn);
     pipeline_layout->addLayout(btn_layout);
@@ -284,6 +296,16 @@ void ColumnConfigDialog::_connectSignals() {
             this, &ColumnConfigDialog::_onValidateClicked);
     connect(_request_tv2_btn, &QPushButton::clicked,
             this, &ColumnConfigDialog::_onRequestTV2Clicked);
+    connect(_edit_in_tv2_btn, &QPushButton::clicked,
+            this, &ColumnConfigDialog::_onEditInTV2Clicked);
+
+    // Update "Edit in Transforms V2" enabled state when pipeline text changes
+    connect(_pipeline_json_edit, &QTextEdit::textChanged, this, [this]() {
+        bool const has_text = !_pipeline_json_edit->toPlainText().trimmed().isEmpty();
+        bool const no_pending = _pending_operation_id.isEmpty();
+        _edit_in_tv2_btn->setEnabled(
+                has_text && no_pending && _operation_context != nullptr);
+    });
 
     // Interval property
     if (_interval_property_group) {
@@ -314,7 +336,7 @@ void ColumnConfigDialog::_populateSourceKeys() {
         auto const type = _data_manager->getType(key);
 
         // Show all concrete data types that are valid column sources.
-        bool compatible = (type != DM_DataType::Unknown &&
+        bool const compatible = (type != DM_DataType::Unknown &&
                            type != DM_DataType::Time &&
                            type != DM_DataType::Tensor);
 
@@ -452,7 +474,9 @@ void ColumnConfigDialog::_onRequestTV2Clicked() {
             EditorLib::OperationRequestOptions{
                     .channel = EditorLib::DataChannels::TransformPipeline,
                     .close_on_selection_change = false,
-                    .close_after_delivery = true});
+                    .close_after_delivery = true,
+                    .keep_open_for_iteration = false,
+                    .seed = std::nullopt});
 
     if (result.has_value()) {
         _pending_operation_id = result->id.toString();
@@ -466,6 +490,76 @@ void ColumnConfigDialog::_onRequestTV2Clicked() {
         _validation_label->setStyleSheet(QStringLiteral("color: red;"));
         _validation_label->setText(
                 QStringLiteral("Failed to request pipeline from Transforms V2 widget."));
+    }
+}
+
+void ColumnConfigDialog::_onEditInTV2Clicked() {
+    if (!_operation_context) {
+        _validation_label->setStyleSheet(QStringLiteral("color: red;"));
+        _validation_label->setText(
+                QStringLiteral("OperationContext not available. Cannot edit pipeline."));
+        return;
+    }
+
+    auto const pipeline_text = _pipeline_json_edit->toPlainText().trimmed().toStdString();
+    if (pipeline_text.empty()) {
+        _validation_label->setStyleSheet(QStringLiteral("color: red;"));
+        _validation_label->setText(
+                QStringLiteral("No pipeline to edit. Use 'Request from Transforms V2' first."));
+        return;
+    }
+
+    // Clean up any previous request
+    _cleanupPendingOperation();
+
+    // Build the seed envelope with the current pipeline JSON and source key
+    nlohmann::json envelope;
+    try {
+        envelope["pipeline"] = nlohmann::json::parse(pipeline_text);
+    } catch (...) {
+        envelope["pipeline"] = pipeline_text;
+    }
+
+    // Include source key and type for context
+    int const source_idx = _source_combo->currentIndex();
+    if (source_idx >= 0) {
+        auto const source_key = _source_combo->currentData().toString().toStdString();
+        envelope["input_key"] = source_key;
+        if (_data_manager) {
+            auto const source_type = _data_manager->getType(source_key);
+            envelope["input_type"] = convert_data_type_to_string(source_type);
+        }
+    }
+
+    auto seed = EditorLib::OperationResult::create(
+            EditorLib::DataChannels::TransformPipeline,
+            envelope.dump());
+
+    // Request with seed, keep open for iteration
+    auto result = _operation_context->requestOperation(
+            EditorLib::EditorInstanceId(_requester_id),
+            EditorLib::EditorTypeId(QStringLiteral("TransformsV2Widget")),
+            EditorLib::OperationRequestOptions{
+                    .channel = EditorLib::DataChannels::TransformPipeline,
+                    .close_on_selection_change = false,
+                    .close_after_delivery = false,
+                    .keep_open_for_iteration = true,
+                    .seed = std::move(seed)});
+
+    if (result.has_value()) {
+        _pending_operation_id = result->id.toString();
+        _request_tv2_btn->setText(QStringLiteral("Waiting for pipeline..."));
+        _request_tv2_btn->setEnabled(false);
+        _edit_in_tv2_btn->setEnabled(false);
+        _validation_label->setStyleSheet(QStringLiteral("color: #0066cc;"));
+        _validation_label->setText(
+                QStringLiteral("Pipeline sent to Transforms V2 for editing. "
+                               "Modify the pipeline there, then click 'Send Pipeline' "
+                               "to deliver the updated version."));
+    } else {
+        _validation_label->setStyleSheet(QStringLiteral("color: red;"));
+        _validation_label->setText(
+                QStringLiteral("Failed to open Transforms V2 for editing."));
     }
 }
 
@@ -553,9 +647,16 @@ void ColumnConfigDialog::_onOperationDelivered(
     // Auto-validate the received pipeline
     _onValidateClicked();
 
-    // Reset the button and clear the pending operation ID
-    _pending_operation_id.clear();
-    _resetRequestButton();
+    // If operation stays open for iteration, keep the pending state active
+    if (op.keep_open_for_iteration) {
+        _request_tv2_btn->setText(QStringLiteral("Editing in Transforms V2..."));
+        _request_tv2_btn->setEnabled(false);
+        _edit_in_tv2_btn->setEnabled(false);
+    } else {
+        // Reset the button and clear the pending operation ID
+        _pending_operation_id.clear();
+        _resetRequestButton();
+    }
 }
 
 void ColumnConfigDialog::_onOperationClosed(EditorLib::OperationId const & id) {
@@ -579,5 +680,10 @@ void ColumnConfigDialog::_resetRequestButton() {
     if (_request_tv2_btn) {
         _request_tv2_btn->setText(QStringLiteral("Request from Transforms V2"));
         _request_tv2_btn->setEnabled(_operation_context != nullptr);
+    }
+    if (_edit_in_tv2_btn) {
+        bool const has_text = !_pipeline_json_edit->toPlainText().trimmed().isEmpty();
+        _edit_in_tv2_btn->setEnabled(
+                has_text && _operation_context != nullptr);
     }
 }

@@ -18,6 +18,7 @@
  * @see WorkspaceManager for state registry
  */
 
+#include "ContextAction.hpp"
 #include "StrongTypes.hpp"
 
 #include <QObject>
@@ -29,8 +30,8 @@
 #include <string>
 #include <vector>
 
-using EditorLib::SelectedDataKey;
 using EditorLib::EditorInstanceId;
+using EditorLib::SelectedDataKey;
 
 /**
  * @brief Identifies the source of a selection change
@@ -48,8 +49,8 @@ using EditorLib::EditorInstanceId;
  * ```
  */
 struct SelectionSource {
-    EditorInstanceId editor_instance_id;  ///< Instance ID of the editor that made the selection
-    QString widget_id;                     ///< Specific widget within editor (optional, for compound editors)
+    EditorInstanceId editor_instance_id;///< Instance ID of the editor that made the selection
+    QString widget_id;                  ///< Specific widget within editor (optional, for compound editors)
 
     bool operator==(SelectionSource const & other) const {
         return editor_instance_id == other.editor_instance_id && widget_id == other.widget_id;
@@ -66,9 +67,9 @@ struct SelectionSource {
  * - All three for maximum specificity
  */
 struct SelectedItem {
-    SelectedDataKey data_key;                    ///< Key in DataManager
-    std::optional<int64_t> entity_id;    ///< Specific entity within data (optional)
-    std::optional<int> time_index;       ///< Specific time frame (optional)
+    SelectedDataKey data_key;        ///< Key in DataManager
+    std::optional<int64_t> entity_id;///< Specific entity within data (optional)
+    std::optional<int> time_index;   ///< Specific time frame (optional)
 
     bool operator<(SelectedItem const & other) const {
         if (data_key != other.data_key) return data_key < other.data_key;
@@ -90,9 +91,9 @@ struct SelectedItem {
  * interaction pattern.
  */
 struct PropertiesContext {
-    EditorInstanceId last_interacted_editor;  ///< Editor that had last meaningful interaction
-    SelectedDataKey selected_data_key;                ///< Currently selected data
-    QString data_type;                        ///< Type of selected data (e.g., "LineData", "MaskData")
+    EditorInstanceId last_interacted_editor;///< Editor that had last meaningful interaction
+    SelectedDataKey selected_data_key;      ///< Currently selected data
+    QString data_type;                      ///< Type of selected data (e.g., "LineData", "MaskData")
 };
 
 /**
@@ -271,7 +272,7 @@ public:
      * @param data_type Type of the data (e.g., "LineData", "MaskData")
      * @param source Who is making this selection
      */
-    void setDataFocus(SelectedDataKey const & data_key, 
+    void setDataFocus(SelectedDataKey const & data_key,
                       QString const & data_type,
                       SelectionSource const & source);
 
@@ -364,6 +365,38 @@ public:
      */
     void setSelectedDataType(QString const & data_type);
 
+    // === Context Actions ===
+
+    /**
+     * @brief Register a context-aware action
+     *
+     * Widgets call this at startup to advertise actions they can perform.
+     * Actions are evaluated against the current context when a consumer
+     * calls applicableActions().
+     *
+     * @pre action.action_id must not be empty
+     * @pre action.is_applicable must be callable
+     * @pre action.execute must be callable
+     * @param action The action to register
+     */
+    void registerAction(ContextAction action);
+
+    /**
+     * @brief Remove a previously registered action
+     * @param action_id The ID of the action to remove
+     */
+    void removeAction(QString const & action_id);
+
+    /**
+     * @brief Get all actions applicable to the current context
+     *
+     * Evaluates each registered action's is_applicable predicate against
+     * the current SelectionContext state and returns those that pass.
+     *
+     * @return Vector of pointers to applicable ContextActions (non-owning)
+     */
+    [[nodiscard]] std::vector<ContextAction const *> applicableActions() const;
+
 signals:
     // === Modern Signals (Phase 1 - Passive Awareness) ===
 
@@ -452,6 +485,9 @@ private:
     EditorInstanceId _active_editor_id;
     EditorInstanceId _last_interacted_editor;
     QString _selected_data_type;
+
+    // Context-aware actions
+    std::vector<ContextAction> _registered_actions;
 };
 
-#endif // SELECTION_CONTEXT_HPP
+#endif// SELECTION_CONTEXT_HPP

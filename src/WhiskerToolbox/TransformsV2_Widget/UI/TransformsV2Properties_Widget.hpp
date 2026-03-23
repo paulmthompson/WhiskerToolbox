@@ -24,6 +24,7 @@
 
 namespace EditorLib {
 class OperationContext;
+struct PendingOperation;
 }// namespace EditorLib
 
 class TransformsV2State;
@@ -176,6 +177,16 @@ private:
      * @brief Update visibility/state of the deliver button based on pending operations
      */
     void updateDeliverButtonState();
+
+    /**
+     * @brief Load seed data from a pending operation into the UI
+     *
+     * Called when a new pending operation arrives with seed data.
+     * Parses the seed envelope JSON and loads the pipeline into the UI.
+     *
+     * @param op The pending operation containing seed data
+     */
+    void loadSeedFromOperation(EditorLib::PendingOperation const & op);
 
     /// Guard against feedback loops during bidirectional sync
     bool _syncing_json = false;

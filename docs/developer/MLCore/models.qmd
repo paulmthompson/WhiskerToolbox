@@ -49,6 +49,7 @@ All methods operate on armadillo matrices in **mlpack convention**:
 | | `predictProbabilities(features, probs)` | Per-class probability matrix |
 | **Sequences** | `trainSequences(featureSeqs, labelSeqs, params)` | Train on pre-segmented temporal sequences (default: concatenates and calls `train()`) |
 | | `predictSequences(featureSeqs, predSeqs)` | Predict per sequence (default: concatenates, predicts, splits back) |
+| | `predictSequencesConstrained(featureSeqs, predSeqs, constraints)` | Predict with per-sequence initial state override (default: ignores constraints, delegates to `predictSequences()`) |
 | | `isSequenceModel()` | Whether model natively handles temporal sequences (default: `false`) |
 | **Unsupervised** | `fit(features, params)` | Fit to unlabeled data |
 | | `assignClusters(features, assignments)` | Assign cluster labels |

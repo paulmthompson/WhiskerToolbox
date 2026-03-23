@@ -54,6 +54,12 @@ struct MLCoreWidgetStateData {
     /// DigitalIntervalSeries key defining the prediction region (empty = all frames)
     std::string prediction_region_key;
 
+    /// For sequence models (HMM), clamp initial state to ground truth at boundaries
+    bool constrained_decoding = true;
+
+    /// Use diagonal covariance for HMM emissions (reduces parameters per state)
+    bool hmm_diagonal_covariance = false;
+
     // === Label configuration ===
 
     /// Label source type: "intervals", "groups", or "entity_groups"
@@ -129,6 +135,26 @@ struct MLCoreWidgetStateData {
 
     /// Whether to normalize features (z-score) before clustering
     bool clustering_zscore_normalize = false;
+
+    // === Dim Reduction configuration ===
+
+    /// DataManager key of the TensorData to reduce
+    std::string dim_reduction_tensor_key;
+
+    /// Registry name of the selected dim reduction algorithm (e.g. "PCA")
+    std::string dim_reduction_model_name = "PCA";
+
+    /// Output key for the reduced TensorData
+    std::string dim_reduction_output_key = "reduced";
+
+    /// Number of output components
+    int dim_reduction_n_components = 2;
+
+    /// Whether to scale features before reduction
+    bool dim_reduction_scale = true;
+
+    /// Whether to z-score normalize features before reduction
+    bool dim_reduction_zscore_normalize = false;
 
     // === UI state ===
 

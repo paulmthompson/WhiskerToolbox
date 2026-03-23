@@ -68,6 +68,12 @@ public:
     void setPredictionRegionKey(std::string const & key);
     [[nodiscard]] std::string const & predictionRegionKey() const;
 
+    void setConstrainedDecoding(bool enabled);
+    [[nodiscard]] bool constrainedDecoding() const;
+
+    void setHmmDiagonalCovariance(bool enabled);
+    [[nodiscard]] bool hmmDiagonalCovariance() const;
+
     // === Label configuration ===
 
     void setLabelSourceType(std::string const & type);
@@ -149,10 +155,32 @@ public:
     void setClusteringZscoreNormalize(bool enabled);
     [[nodiscard]] bool clusteringZscoreNormalize() const;
 
+    // === Dim Reduction configuration ===
+
+    void setDimReductionTensorKey(std::string const & key);
+    [[nodiscard]] std::string const & dimReductionTensorKey() const;
+
+    void setDimReductionModelName(std::string const & name);
+    [[nodiscard]] std::string const & dimReductionModelName() const;
+
+    void setDimReductionOutputKey(std::string const & key);
+    [[nodiscard]] std::string const & dimReductionOutputKey() const;
+
+    void setDimReductionNComponents(int n);
+    [[nodiscard]] int dimReductionNComponents() const;
+
+    void setDimReductionScale(bool enabled);
+    [[nodiscard]] bool dimReductionScale() const;
+
+    void setDimReductionZscoreNormalize(bool enabled);
+    [[nodiscard]] bool dimReductionZscoreNormalize() const;
+
 signals:
     void featureTensorKeyChanged(QString const & key);
     void trainingRegionKeyChanged(QString const & key);
     void predictionRegionKeyChanged(QString const & key);
+    void constrainedDecodingChanged(bool enabled);
+    void hmmDiagonalCovarianceChanged(bool enabled);
     void labelSourceTypeChanged(QString const & type);
     void labelIntervalKeyChanged(QString const & key);
     void labelPositiveClassNameChanged(QString const & name);
@@ -176,6 +204,12 @@ signals:
     void clusteringWriteIntervalsChanged(bool enabled);
     void clusteringWriteProbabilitiesChanged(bool enabled);
     void clusteringZscoreNormalizeChanged(bool enabled);
+    void dimReductionTensorKeyChanged(QString const & key);
+    void dimReductionModelNameChanged(QString const & name);
+    void dimReductionOutputKeyChanged(QString const & key);
+    void dimReductionNComponentsChanged(int n);
+    void dimReductionScaleChanged(bool enabled);
+    void dimReductionZscoreNormalizeChanged(bool enabled);
 
 private:
     MLCoreWidgetStateData _data;

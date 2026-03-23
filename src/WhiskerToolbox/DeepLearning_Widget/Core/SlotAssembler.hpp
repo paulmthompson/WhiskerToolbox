@@ -71,6 +71,16 @@ public:
     /// @return true on success.
     bool loadWeights(std::string const & weights_path);
 
+    /// Run a dummy forward pass to validate weight compatibility.
+    ///
+    /// Creates zero-filled input tensors matching each input slot's shape
+    /// (batch_size=1), calls forward(), and checks that outputs are produced.
+    /// Uses torch::NoGradGuard to avoid unnecessary gradient computation.
+    ///
+    /// @pre isModelReady() must be true.
+    /// @return Empty string on success, or a diagnostic message on mismatch.
+    [[nodiscard]] std::string validateWeights();
+
     /// Whether a model is loaded AND its weights are active.
     [[nodiscard]] bool isModelReady() const;
 
@@ -120,6 +130,9 @@ public:
     /// @param start_frame First frame to process (inclusive)
     /// @param end_frame Last frame to process (inclusive)
     /// @param source_image_size Original image dimensions
+    /// @param batch_size Number of frames to process per forward pass.
+    ///        Must be >= 1. Frames are batched along the batch dimension
+    ///        and decoded individually after the forward pass.
     /// @param progress Optional callback for progress reporting
     /// @throws std::runtime_error on inference failure
     void runBatchRange(
@@ -130,6 +143,7 @@ public:
             int start_frame,
             int end_frame,
             ImageSize source_image_size,
+            int batch_size = 1,
             ProgressCallback const & progress = nullptr);
 
     /// Map from DataManager data_key to a cloned MediaData instance.
@@ -158,6 +172,8 @@ public:
     /// @param end_frame Last frame to process (inclusive)
     /// @param source_image_size Original image dimensions
     /// @param cancel_requested Checked before each frame; stops early if true
+    /// @param batch_size Number of frames to process per forward pass.
+    ///        Must be >= 1. The last chunk may contain fewer frames.
     /// @param progress Optional callback for progress reporting
     /// @param result_callback Optional per-frame result callback for progressive
     ///        delivery.  When non-null, decoded outputs are pushed via this
@@ -174,6 +190,7 @@ public:
             int end_frame,
             ImageSize source_image_size,
             std::atomic<bool> const & cancel_requested,
+            int batch_size = 1,
             ProgressCallback const & progress = nullptr,
             ResultCallback const & result_callback = nullptr);
 

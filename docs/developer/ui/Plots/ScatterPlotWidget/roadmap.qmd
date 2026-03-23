@@ -34,6 +34,9 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Temporal offset for outlier detection**: Per-axis `time_offset` field in `ScatterAxisSource` enables lag-plots ($x(t)$ vs $x(t-1)$); `buildScatterPoints()` applies offsets for all source type combinations; offset spinboxes (-10000 to 10000) in properties panel per axis; points where offset pushes index outside valid range are excluded; tested in `BuildScatterPoints.test.cpp`
 
 - **Hover tooltip**: `PlotTooltipManager` integration showing X/Y values and `TimeFrameIndex` on dwell; pan/zoom suppression; text provider with 3-decimal precision
+- **ContextAction integration**: Right-click context menu dynamically populates applicable ContextActions from `SelectionContext`; `setSelectionContext()` wired in registration; enables cross-widget ML workflows
+- **Selective clustering ("Cluster Selection...")**: Context menu action extracts selected point rows from source `TensorData`, creates a filtered `TensorData` stored as `"<key>_selection"`, sets data focus, and programmatically triggers the `mlcore.cluster_tensor` ContextAction
+- **Cluster label overlay**: QPainter text overlay showing group name + count at per-group centroids over the OpenGL scatter; `show_cluster_labels` state field with checkbox in properties panel
 
 **Not yet implemented**:
 feature coloring (Phase 7), stale key handling (Phase 6.3).

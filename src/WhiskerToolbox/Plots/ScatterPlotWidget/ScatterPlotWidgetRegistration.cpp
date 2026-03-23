@@ -1,21 +1,26 @@
 #include "ScatterPlotWidgetRegistration.hpp"
 
+#include "Core/ScatterAxisSource.hpp"
 #include "Core/ScatterPlotState.hpp"
 #include "Rendering/ScatterPlotOpenGLWidget.hpp"
 #include "UI/ScatterPlotPropertiesWidget.hpp"
 #include "UI/ScatterPlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "EditorState/ContextAction.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/SelectionContext.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
+#include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <iostream>
+#include <utility>
 
 namespace ScatterPlotWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
+                   const std::shared_ptr<DataManager>& data_manager,
                    GroupManager * group_manager) {
 
     if (!registry) {
@@ -24,7 +29,7 @@ void registerTypes(EditorRegistry * registry,
     }
 
     // Capture dependencies for lambdas
-    auto dm = data_manager;
+    auto const & dm = std::move(data_manager);
     auto reg = registry;
     auto gm = group_manager;
 
@@ -43,7 +48,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<ScatterPlotState>(); },
 
                             // View factory - creates ScatterPlotWidget (the view component)
-                            .create_view = [dm, reg, gm](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_view = [dm, reg, gm](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<ScatterPlotState>(state);
                                 if (!plot_state) {
                                     std::cerr << "ScatterPlotWidgetModule: Failed to cast state to ScatterPlotState" << std::endl;
@@ -52,7 +57,7 @@ void registerTypes(EditorRegistry * registry,
 
                                 auto * widget = new ScatterPlotWidget(dm);
                                 widget->setState(plot_state);
-                                
+
                                 // Set the group manager if available
                                 if (gm) {
                                     widget->setGroupManager(gm);
@@ -62,7 +67,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Properties factory - creates ScatterPlotPropertiesWidget
-                            .create_properties = [dm](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_properties = [dm](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<ScatterPlotState>(state);
                                 if (!plot_state) {
                                     std::cerr << "ScatterPlotWidgetModule: Failed to cast state to ScatterPlotState for properties" << std::endl;
@@ -83,10 +88,15 @@ void registerTypes(EditorRegistry * registry,
                                 // Create the view widget
                                 auto * view = new ScatterPlotWidget(dm);
                                 view->setState(state);
-                                
+
                                 // Set the group manager if available
                                 if (gm) {
                                     view->setGroupManager(gm);
+                                }
+
+                                // Set selection context for ContextAction menu integration
+                                if (reg->selectionContext()) {
+                                    view->setSelectionContext(reg->selectionContext());
                                 }
 
                                 // Create the properties widget with the shared state
@@ -97,7 +107,7 @@ void registerTypes(EditorRegistry * registry,
                                 // This allows the scatter plot to navigate to a specific time position
                                 if (reg) {
                                     QObject::connect(view, &ScatterPlotWidget::timePositionSelected,
-                                                     [reg](TimePosition position) {
+                                                     [reg](const TimePosition& position) {
                                                          // Update EditorRegistry time (triggers timeChanged signal for other widgets)
                                                          reg->setCurrentTime(position);
                                                      });
@@ -111,6 +121,51 @@ void registerTypes(EditorRegistry * registry,
                                         .view = view,
                                         .properties = props};
                             }});
+
+    // Register "Visualize in Scatter Plot" ContextAction
+    auto * selection_ctx = registry->selectionContext();
+    if (selection_ctx) {
+        ContextAction visualize_action;
+        visualize_action.action_id = QStringLiteral("scatter_plot.visualize_2d_tensor");
+        visualize_action.display_name = QStringLiteral("Visualize in Scatter Plot");
+        visualize_action.producer_type = EditorLib::EditorTypeId(QStringLiteral("ScatterPlotWidget"));
+
+        visualize_action.is_applicable = [dm](SelectionContext const & ctx) -> bool {
+            if (ctx.dataFocusType() != QStringLiteral("TensorData")) {
+                return false;
+            }
+            auto const key = ctx.dataFocus().toStdString();
+            auto tensor = dm->getData<TensorData>(key);
+            return tensor && tensor->numColumns() >= 2;
+        };
+
+        visualize_action.execute = [reg](SelectionContext const & ctx) {
+            auto state = reg->openEditor(EditorLib::EditorTypeId(QStringLiteral("ScatterPlotWidget")));
+            if (!state) {
+                return;
+            }
+            auto scatter_state = std::dynamic_pointer_cast<ScatterPlotState>(state);
+            if (!scatter_state) {
+                return;
+            }
+
+            auto const key = ctx.dataFocus().toStdString();
+
+            // X axis = first column, Y axis = second column
+            ScatterAxisSource x_source;
+            x_source.data_key = key;
+            x_source.tensor_column_index = 0;
+
+            ScatterAxisSource y_source;
+            y_source.data_key = key;
+            y_source.tensor_column_index = 1;
+
+            scatter_state->setXSource(x_source);
+            scatter_state->setYSource(y_source);
+        };
+
+        selection_ctx->registerAction(std::move(visualize_action));
+    }
 }
 
 }// namespace ScatterPlotWidgetModule

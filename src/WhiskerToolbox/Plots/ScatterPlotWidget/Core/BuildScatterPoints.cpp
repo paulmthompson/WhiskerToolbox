@@ -1,11 +1,11 @@
 #include "BuildScatterPoints.hpp"
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DataManager.hpp"
 #include "ScatterAxisSource.hpp"
 #include "SourceCompatibility.hpp"
-#include "DataManager/DataManager.hpp"
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "Tensors/TensorData.hpp"
 #include "Tensors/RowDescriptor.hpp"
+#include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
 
 #include <algorithm>
@@ -20,9 +20,8 @@ namespace {
  * Uses tensor_column_name first, then tensor_column_index as fallback.
  */
 std::vector<float> extractTensorColumn(
-    TensorData const & tensor,
-    ScatterAxisSource const & source)
-{
+        TensorData const & tensor,
+        ScatterAxisSource const & source) {
     if (source.tensor_column_name.has_value() && !source.tensor_column_name->empty()) {
         return tensor.getColumn(*source.tensor_column_name);
     }
@@ -44,8 +43,7 @@ struct AnalogData {
     std::shared_ptr<TimeIndexStorage> time_storage;
 };
 
-AnalogData getAnalogData(AnalogTimeSeries const & ats)
-{
+AnalogData getAnalogData(AnalogTimeSeries const & ats) {
     AnalogData result;
     result.time_storage = ats.getTimeStorage();
     result.time_indices = result.time_storage->getAllTimeIndices();
@@ -60,11 +58,10 @@ AnalogData getAnalogData(AnalogTimeSeries const & ats)
  * Temporal offsets shift the lookup index.
  */
 ScatterPointData buildFromAnalogAnalog(
-    AnalogTimeSeries const & x_ats,
-    AnalogTimeSeries const & y_ats,
-    int x_offset,
-    int y_offset)
-{
+        AnalogTimeSeries const & x_ats,
+        AnalogTimeSeries const & y_ats,
+        int x_offset,
+        int y_offset) {
     ScatterPointData result;
 
     auto x_data = getAnalogData(x_ats);
@@ -111,12 +108,11 @@ ScatterPointData buildFromAnalogAnalog(
  * @brief Build scatter points from AnalogTimeSeries (X) and TensorData with TFI rows (Y)
  */
 ScatterPointData buildFromAnalogTensorTFI(
-    AnalogTimeSeries const & x_ats,
-    TensorData const & y_tensor,
-    ScatterAxisSource const & y_source,
-    int x_offset,
-    int y_offset)
-{
+        AnalogTimeSeries const & x_ats,
+        TensorData const & y_tensor,
+        ScatterAxisSource const & y_source,
+        int x_offset,
+        int y_offset) {
     ScatterPointData result;
 
     auto x_data = getAnalogData(x_ats);
@@ -162,12 +158,11 @@ ScatterPointData buildFromAnalogTensorTFI(
  * @brief Build scatter points from TensorData (X, TFI) and AnalogTimeSeries (Y)
  */
 ScatterPointData buildFromTensorTFIAnalog(
-    TensorData const & x_tensor,
-    ScatterAxisSource const & x_source,
-    AnalogTimeSeries const & y_ats,
-    int x_offset,
-    int y_offset)
-{
+        TensorData const & x_tensor,
+        ScatterAxisSource const & x_source,
+        AnalogTimeSeries const & y_ats,
+        int x_offset,
+        int y_offset) {
     ScatterPointData result;
 
     auto x_col = extractTensorColumn(x_tensor, x_source);
@@ -186,8 +181,7 @@ ScatterPointData buildFromTensorTFIAnalog(
         y_index_map[y_data.time_indices[i].getValue()] = i;
     }
 
-    for (std::size_t xi = 0; xi < x_time_indices.size(); ++xi) {
-        auto const base_tfi = x_time_indices[xi];
+    for (auto base_tfi: x_time_indices) {
         auto const x_lookup = TimeFrameIndex(base_tfi.getValue() + x_offset);
         auto const y_lookup = TimeFrameIndex(base_tfi.getValue() + y_offset);
 
@@ -213,13 +207,12 @@ ScatterPointData buildFromTensorTFIAnalog(
  * @brief Build scatter points from two TensorData sources with TFI rows
  */
 ScatterPointData buildFromTensorTFITensorTFI(
-    TensorData const & x_tensor,
-    ScatterAxisSource const & x_source,
-    TensorData const & y_tensor,
-    ScatterAxisSource const & y_source,
-    int x_offset,
-    int y_offset)
-{
+        TensorData const & x_tensor,
+        ScatterAxisSource const & x_source,
+        TensorData const & y_tensor,
+        ScatterAxisSource const & y_source,
+        int x_offset,
+        int y_offset) {
     ScatterPointData result;
 
     auto x_col = extractTensorColumn(x_tensor, x_source);
@@ -240,8 +233,7 @@ ScatterPointData buildFromTensorTFITensorTFI(
         y_index_map[y_time_indices[i].getValue()] = i;
     }
 
-    for (std::size_t xi = 0; xi < x_time_indices.size(); ++xi) {
-        auto const base_tfi = x_time_indices[xi];
+    for (auto base_tfi: x_time_indices) {
         auto const x_lookup = TimeFrameIndex(base_tfi.getValue() + x_offset);
         auto const y_lookup = TimeFrameIndex(base_tfi.getValue() + y_offset);
 
@@ -267,11 +259,10 @@ ScatterPointData buildFromTensorTFITensorTFI(
  * @brief Build scatter points from two Ordinal TensorData sources (positional pairing)
  */
 ScatterPointData buildFromOrdinalOrdinal(
-    TensorData const & x_tensor,
-    ScatterAxisSource const & x_source,
-    TensorData const & y_tensor,
-    ScatterAxisSource const & y_source)
-{
+        TensorData const & x_tensor,
+        ScatterAxisSource const & x_source,
+        TensorData const & y_tensor,
+        ScatterAxisSource const & y_source) {
     ScatterPointData result;
 
     auto x_col = extractTensorColumn(x_tensor, x_source);
@@ -285,7 +276,7 @@ ScatterPointData buildFromOrdinalOrdinal(
     for (std::size_t i = 0; i < count; ++i) {
         result.x_values.push_back(x_col[i]);
         result.y_values.push_back(y_col[i]);
-        result.time_indices.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
+        result.time_indices.emplace_back(static_cast<int64_t>(i));
     }
 
     return result;
@@ -295,11 +286,10 @@ ScatterPointData buildFromOrdinalOrdinal(
  * @brief Build scatter points from two Interval TensorData sources (positional pairing)
  */
 ScatterPointData buildFromIntervalInterval(
-    TensorData const & x_tensor,
-    ScatterAxisSource const & x_source,
-    TensorData const & y_tensor,
-    ScatterAxisSource const & y_source)
-{
+        TensorData const & x_tensor,
+        ScatterAxisSource const & x_source,
+        TensorData const & y_tensor,
+        ScatterAxisSource const & y_source) {
     ScatterPointData result;
 
     auto x_col = extractTensorColumn(x_tensor, x_source);
@@ -316,23 +306,22 @@ ScatterPointData buildFromIntervalInterval(
         // Use the start of the interval as the TimeFrameIndex
         auto intervals = x_tensor.rows().intervals();
         if (i < intervals.size()) {
-            result.time_indices.push_back(TimeFrameIndex(
-                intervals[i].start.getValue()));
+            result.time_indices.emplace_back(
+                    intervals[i].start.getValue());
         } else {
-            result.time_indices.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
+            result.time_indices.emplace_back(static_cast<int64_t>(i));
         }
     }
 
     return result;
 }
 
-}  // namespace
+}// namespace
 
 ScatterPointData buildScatterPoints(
-    DataManager & dm,
-    ScatterAxisSource const & x_source,
-    ScatterAxisSource const & y_source)
-{
+        DataManager & dm,
+        ScatterAxisSource const & x_source,
+        ScatterAxisSource const & y_source) {
     // Resolve source types
     auto const x_type = resolveSourceRowType(dm, x_source);
     auto const y_type = resolveSourceRowType(dm, y_source);
@@ -340,67 +329,68 @@ ScatterPointData buildScatterPoints(
     int const x_offset = x_source.time_offset;
     int const y_offset = y_source.time_offset;
 
+    ScatterPointData result;
+
     // AnalogTimeSeries x AnalogTimeSeries
-    if (x_type == ScatterSourceRowType::AnalogTimeSeries
-        && y_type == ScatterSourceRowType::AnalogTimeSeries) {
+    if (x_type == ScatterSourceRowType::AnalogTimeSeries && y_type == ScatterSourceRowType::AnalogTimeSeries) {
         auto x_ats = dm.getData<AnalogTimeSeries>(x_source.data_key);
         auto y_ats = dm.getData<AnalogTimeSeries>(y_source.data_key);
         if (x_ats && y_ats) {
-            return buildFromAnalogAnalog(*x_ats, *y_ats, x_offset, y_offset);
+            result = buildFromAnalogAnalog(*x_ats, *y_ats, x_offset, y_offset);
         }
     }
 
     // AnalogTimeSeries x TensorData (TFI)
-    if (x_type == ScatterSourceRowType::AnalogTimeSeries
-        && y_type == ScatterSourceRowType::TensorTimeFrameIndex) {
+    else if (x_type == ScatterSourceRowType::AnalogTimeSeries && y_type == ScatterSourceRowType::TensorTimeFrameIndex) {
         auto x_ats = dm.getData<AnalogTimeSeries>(x_source.data_key);
         auto y_tensor = dm.getData<TensorData>(y_source.data_key);
         if (x_ats && y_tensor) {
-            return buildFromAnalogTensorTFI(*x_ats, *y_tensor, y_source, x_offset, y_offset);
+            result = buildFromAnalogTensorTFI(*x_ats, *y_tensor, y_source, x_offset, y_offset);
         }
     }
 
     // TensorData (TFI) x AnalogTimeSeries
-    if (x_type == ScatterSourceRowType::TensorTimeFrameIndex
-        && y_type == ScatterSourceRowType::AnalogTimeSeries) {
+    else if (x_type == ScatterSourceRowType::TensorTimeFrameIndex && y_type == ScatterSourceRowType::AnalogTimeSeries) {
         auto x_tensor = dm.getData<TensorData>(x_source.data_key);
         auto y_ats = dm.getData<AnalogTimeSeries>(y_source.data_key);
         if (x_tensor && y_ats) {
-            return buildFromTensorTFIAnalog(*x_tensor, x_source, *y_ats, x_offset, y_offset);
+            result = buildFromTensorTFIAnalog(*x_tensor, x_source, *y_ats, x_offset, y_offset);
         }
     }
 
     // TensorData (TFI) x TensorData (TFI)
-    if (x_type == ScatterSourceRowType::TensorTimeFrameIndex
-        && y_type == ScatterSourceRowType::TensorTimeFrameIndex) {
+    else if (x_type == ScatterSourceRowType::TensorTimeFrameIndex && y_type == ScatterSourceRowType::TensorTimeFrameIndex) {
         auto x_tensor = dm.getData<TensorData>(x_source.data_key);
         auto y_tensor = dm.getData<TensorData>(y_source.data_key);
         if (x_tensor && y_tensor) {
-            return buildFromTensorTFITensorTFI(*x_tensor, x_source, *y_tensor, y_source,
-                                               x_offset, y_offset);
+            result = buildFromTensorTFITensorTFI(*x_tensor, x_source, *y_tensor, y_source,
+                                                 x_offset, y_offset);
         }
     }
 
     // TensorData (Ordinal) x TensorData (Ordinal)
-    if (x_type == ScatterSourceRowType::TensorOrdinal
-        && y_type == ScatterSourceRowType::TensorOrdinal) {
+    else if (x_type == ScatterSourceRowType::TensorOrdinal && y_type == ScatterSourceRowType::TensorOrdinal) {
         auto x_tensor = dm.getData<TensorData>(x_source.data_key);
         auto y_tensor = dm.getData<TensorData>(y_source.data_key);
         if (x_tensor && y_tensor) {
-            return buildFromOrdinalOrdinal(*x_tensor, x_source, *y_tensor, y_source);
+            result = buildFromOrdinalOrdinal(*x_tensor, x_source, *y_tensor, y_source);
         }
     }
 
     // TensorData (Interval) x TensorData (Interval)
-    if (x_type == ScatterSourceRowType::TensorInterval
-        && y_type == ScatterSourceRowType::TensorInterval) {
+    else if (x_type == ScatterSourceRowType::TensorInterval && y_type == ScatterSourceRowType::TensorInterval) {
         auto x_tensor = dm.getData<TensorData>(x_source.data_key);
         auto y_tensor = dm.getData<TensorData>(y_source.data_key);
         if (x_tensor && y_tensor) {
-            return buildFromIntervalInterval(*x_tensor, x_source, *y_tensor, y_source);
+            result = buildFromIntervalInterval(*x_tensor, x_source, *y_tensor, y_source);
         }
     }
 
-    // Incompatible or unknown — return empty
-    return {};
+    // Populate source context for entity resolution
+    if (!result.empty()) {
+        result.source_data_key = x_source.data_key;
+        result.source_row_type = x_type;
+    }
+
+    return result;
 }

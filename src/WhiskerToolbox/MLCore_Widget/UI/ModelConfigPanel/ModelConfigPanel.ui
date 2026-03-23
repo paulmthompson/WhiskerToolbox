@@ -620,6 +620,19 @@
             </property>
            </widget>
           </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QCheckBox" name="hmmDiagonalCovCheckBox">
+            <property name="text">
+             <string>Diagonal covariance</string>
+            </property>
+            <property name="toolTip">
+             <string>Use diagonal covariance matrices instead of full covariance. Reduces parameters from M(M+1)/2 to M per state, improving stability with limited training data.</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </widget>

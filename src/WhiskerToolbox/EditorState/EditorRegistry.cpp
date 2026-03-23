@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <utility>
 
 // === Serialization Structures ===
 
@@ -63,7 +64,7 @@ bool EditorRegistry::registerType(EditorTypeInfo info) {
         return false;
     }
 
-    EditorTypeId type_id(info.type_id);
+    EditorTypeId const type_id(info.type_id);
     if (_types.contains(type_id)) {
         std::cerr << "EditorRegistry::registerType: type_id already registered: "
                   << info.type_id.toStdString() << std::endl;
@@ -193,12 +194,12 @@ std::shared_ptr<EditorState> EditorRegistry::createState(EditorTypeId const & ty
     return it->second.create_state();
 }
 
-QWidget * EditorRegistry::createView(std::shared_ptr<EditorState> state) {
+QWidget * EditorRegistry::createView(const std::shared_ptr<EditorState>& state) {
     if (!state) {
         return nullptr;
     }
 
-    EditorTypeId type_id(state->getTypeName());
+    EditorTypeId const type_id(state->getTypeName());
     auto it = _types.find(type_id);
     if (it == _types.end()) {
         std::cerr << "EditorRegistry::createView: unknown type_id: "
@@ -213,12 +214,12 @@ QWidget * EditorRegistry::createView(std::shared_ptr<EditorState> state) {
     return it->second.create_view(state);
 }
 
-QWidget * EditorRegistry::createProperties(std::shared_ptr<EditorState> state) {
+QWidget * EditorRegistry::createProperties(const std::shared_ptr<EditorState>& state) {
     if (!state) {
         return nullptr;
     }
 
-    EditorTypeId type_id(state->getTypeName());
+    EditorTypeId const type_id(state->getTypeName());
     auto it = _types.find(type_id);
     if (it == _types.end()) {
         std::cerr << "EditorRegistry::createProperties: unknown type_id: "
@@ -235,12 +236,12 @@ QWidget * EditorRegistry::createProperties(std::shared_ptr<EditorState> state) {
 
 // === State Registry ===
 
-void EditorRegistry::registerState(std::shared_ptr<EditorState> state) {
+void EditorRegistry::registerState(const std::shared_ptr<EditorState>& state) {
     if (!state) {
         return;
     }
 
-    EditorInstanceId instance_id(state->getInstanceId());
+    EditorInstanceId const instance_id(state->getInstanceId());
 
     if (_states.contains(instance_id)) {
         return;// Already registered
@@ -314,6 +315,17 @@ EditorLib::OperationContext * EditorRegistry::operationContext() const {
     return _operation_context.get();
 }
 
+void EditorRegistry::setOpenEditorCallback(OpenEditorCallback callback) {
+    _open_editor_callback = std::move(callback);
+}
+
+std::shared_ptr<EditorState> EditorRegistry::openEditor(EditorTypeId const & type_id) {
+    if (_open_editor_callback) {
+        return _open_editor_callback(type_id);
+    }
+    return nullptr;
+}
+
 // === Serialization ===
 
 void EditorRegistry::cacheClosedState(EditorTypeId const & type_id, std::string state_json) {
@@ -372,7 +384,7 @@ bool EditorRegistry::fromJson(std::string const & json) {
 
     // Restore states
     for (auto const & serialized: workspace.states) {
-        EditorTypeId type_id(QString::fromStdString(serialized.type_id));
+        EditorTypeId const type_id(QString::fromStdString(serialized.type_id));
 
         auto it = _types.find(type_id);
         if (it == _types.end()) {
@@ -399,7 +411,7 @@ bool EditorRegistry::fromJson(std::string const & json) {
     // Restore selection
     // Important: setSelectedData() must be called first because it clears
     // _selected_data. Then addToSelection() adds the remaining keys.
-    SelectionSource source{EditorInstanceId("EditorRegistry"), "fromJson"};
+    SelectionSource const source{EditorInstanceId("EditorRegistry"), "fromJson"};
     _selection_context->clearSelection(source);
     if (!workspace.primary_selection.empty()) {
         _selection_context->setSelectedData(
@@ -425,7 +437,7 @@ void EditorRegistry::markAllClean() {
 
 // === Global Time ===
 
-void EditorRegistry::setCurrentTime(TimePosition position) {
+void EditorRegistry::setCurrentTime(const TimePosition& position) {
 
     // Guard against re-entrant calls to prevent infinite loops
     if (_time_update_in_progress) {
@@ -451,7 +463,7 @@ void EditorRegistry::setCurrentTime(TimePosition position) {
 }
 
 void EditorRegistry::setCurrentTime(TimeFrameIndex index, std::shared_ptr<TimeFrame> time_frame) {
-    setCurrentTime(TimePosition(index, time_frame));
+    setCurrentTime(TimePosition(index, std::move(time_frame)));
 }
 
 TimePosition EditorRegistry::currentPosition() const {
@@ -468,7 +480,7 @@ void EditorRegistry::onStateDirtyChanged(bool is_dirty) {
     emit unsavedChangesChanged(hasUnsavedChanges());
 }
 
-void EditorRegistry::connectStateSignals(EditorState * state) {
+void EditorRegistry::connectStateSignals(EditorState * state) const {
     connect(state, &EditorState::stateChanged, this, &EditorRegistry::onStateChanged);
     connect(state, &EditorState::dirtyChanged, this, &EditorRegistry::onStateDirtyChanged);
 }

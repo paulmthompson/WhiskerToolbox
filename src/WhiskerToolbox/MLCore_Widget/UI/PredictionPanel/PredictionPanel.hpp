@@ -118,6 +118,21 @@ public:
      */
     [[nodiscard]] bool outputProbabilities() const;
 
+    /**
+     * @brief Whether constrained decoding is enabled
+     */
+    [[nodiscard]] bool constrainedDecoding() const;
+
+    /**
+     * @brief Show or hide the constrained decoding checkbox
+     *
+     * Called when the selected model changes. The checkbox is only
+     * relevant for sequence models (e.g., HMM).
+     *
+     * @param active true to show the checkbox, false to hide it
+     */
+    void setSequenceModelActive(bool active);
+
 public slots:
     /**
      * @brief Refresh the list of available DigitalIntervalSeries keys
@@ -170,6 +185,7 @@ private slots:
     void _onOutputPrefixChanged(QString const & text);
     void _onOutputPredictionsToggled(bool checked);
     void _onOutputProbabilitiesToggled(bool checked);
+    void _onConstrainedDecodingToggled(bool checked);
     void _onPredictClicked();
 
 private:

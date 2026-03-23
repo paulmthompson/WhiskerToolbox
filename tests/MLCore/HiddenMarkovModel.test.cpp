@@ -27,6 +27,7 @@
 
 #include <armadillo>
 
+#include <optional>
 #include <sstream>
 
 using namespace MLCore;
@@ -658,5 +659,612 @@ TEST_CASE("MLModelOperation - default trainSequences concatenates", "[MLCore][HM
         REQUIRE(predSeqs.size() == 2);
         CHECK(predSeqs[0].n_elem == 20);
         CHECK(predSeqs[1].n_elem == 20);
+    }
+}
+
+// ============================================================================
+// Constrained Viterbi decoding
+// ============================================================================
+
+TEST_CASE("HiddenMarkovModelOperation - predictSequencesConstrained",
+          "[MLCore][HMM]") {
+    HiddenMarkovModelOperation hmm;
+    auto data = makeBlockSequence(50, 4, 42);
+
+    // Train on the full sequence
+    std::vector<arma::mat> trainSeqs{data.features};
+    std::vector<arma::Row<std::size_t>> trainLabels{data.labels};
+    REQUIRE(hmm.trainSequences(trainSeqs, trainLabels, nullptr));
+
+    SECTION("constrained prediction matches unconstrained when no constraints") {
+        // All nullopt — should produce identical results to predictSequences
+        std::vector<std::optional<std::size_t>> constraints{std::nullopt};
+
+        std::vector<arma::Row<std::size_t>> constrained_preds;
+        bool ok = hmm.predictSequencesConstrained(
+                trainSeqs, constrained_preds, constraints);
+        REQUIRE(ok);
+        REQUIRE(constrained_preds.size() == 1);
+
+        std::vector<arma::Row<std::size_t>> unconstrained_preds;
+        REQUIRE(hmm.predictSequences(trainSeqs, unconstrained_preds));
+
+        CHECK(arma::approx_equal(
+                arma::conv_to<arma::mat>::from(constrained_preds[0]),
+                arma::conv_to<arma::mat>::from(unconstrained_preds[0]),
+                "absdiff", 0.0));
+    }
+
+    SECTION("constraining to correct initial state preserves accuracy") {
+        // The first block is state 0, so constraining to 0 is correct
+        std::vector<std::optional<std::size_t>> constraints{std::size_t{0}};
+
+        std::vector<arma::Row<std::size_t>> preds;
+        bool ok = hmm.predictSequencesConstrained(trainSeqs, preds, constraints);
+        REQUIRE(ok);
+        REQUIRE(preds.size() == 1);
+        REQUIRE(preds[0].n_elem == data.labels.n_elem);
+
+        // Should recover states with high accuracy
+        std::size_t correct = arma::accu(preds[0] == data.labels);
+        double accuracy = static_cast<double>(correct) / data.labels.n_elem;
+        CHECK(accuracy > 0.90);
+    }
+
+    SECTION("per-sequence constraints applied independently") {
+        // Split into two halves
+        std::size_t const half = data.features.n_cols / 2;
+        arma::mat seq1 = data.features.cols(0, half - 1);
+        arma::mat seq2 = data.features.cols(half, data.features.n_cols - 1);
+
+        std::vector<arma::mat> seqs{seq1, seq2};
+        // First half starts with state 0, second half starts with state 0
+        // (block_size=50, 4 blocks: 0,1,0,1,0,1,0,1 — half=200, position 200 is state 0)
+        std::vector<std::optional<std::size_t>> constraints{
+                std::size_t{0}, std::size_t{0}};
+
+        std::vector<arma::Row<std::size_t>> preds;
+        bool ok = hmm.predictSequencesConstrained(seqs, preds, constraints);
+        REQUIRE(ok);
+        REQUIRE(preds.size() == 2);
+        CHECK(preds[0].n_elem == half);
+        CHECK(preds[1].n_elem == data.features.n_cols - half);
+    }
+
+    SECTION("mixed constraints — some constrained, some not") {
+        std::size_t const half = data.features.n_cols / 2;
+        arma::mat seq1 = data.features.cols(0, half - 1);
+        arma::mat seq2 = data.features.cols(half, data.features.n_cols - 1);
+
+        std::vector<arma::mat> seqs{seq1, seq2};
+        // First sequence constrained, second unconstrained
+        std::vector<std::optional<std::size_t>> constraints{
+                std::size_t{0}, std::nullopt};
+
+        std::vector<arma::Row<std::size_t>> preds;
+        bool ok = hmm.predictSequencesConstrained(seqs, preds, constraints);
+        REQUIRE(ok);
+        REQUIRE(preds.size() == 2);
+    }
+
+    SECTION("initial distribution is restored after constrained prediction") {
+        // Get unconstrained predictions before
+        std::vector<arma::Row<std::size_t>> before_preds;
+        REQUIRE(hmm.predictSequences(trainSeqs, before_preds));
+
+        // Run constrained prediction (modifies Initial internally)
+        std::vector<std::optional<std::size_t>> constraints{std::size_t{1}};
+        std::vector<arma::Row<std::size_t>> constrained_preds;
+        REQUIRE(hmm.predictSequencesConstrained(
+                trainSeqs, constrained_preds, constraints));
+
+        // Get unconstrained predictions after — should match before
+        std::vector<arma::Row<std::size_t>> after_preds;
+        REQUIRE(hmm.predictSequences(trainSeqs, after_preds));
+
+        CHECK(arma::approx_equal(
+                arma::conv_to<arma::mat>::from(after_preds[0]),
+                arma::conv_to<arma::mat>::from(before_preds[0]),
+                "absdiff", 0.0));
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - predictSequencesConstrained error handling",
+          "[MLCore][HMM]") {
+
+    SECTION("fails on untrained model") {
+        HiddenMarkovModelOperation hmm;
+        arma::mat features(1, 10, arma::fill::randn);
+        std::vector<arma::mat> seqs{features};
+        std::vector<arma::Row<std::size_t>> preds;
+        std::vector<std::optional<std::size_t>> constraints{std::nullopt};
+        CHECK_FALSE(hmm.predictSequencesConstrained(seqs, preds, constraints));
+    }
+
+    SECTION("fails with mismatched constraint vector size") {
+        HiddenMarkovModelOperation hmm;
+        auto data = makeBlockSequence(20, 2, 42);
+        hmm.train(data.features, data.labels, nullptr);
+        REQUIRE(hmm.isTrained());
+
+        std::vector<arma::mat> seqs{data.features};
+        std::vector<arma::Row<std::size_t>> preds;
+        // Two constraints for one sequence — should fail
+        std::vector<std::optional<std::size_t>> constraints{
+                std::size_t{0}, std::size_t{1}};
+        CHECK_FALSE(hmm.predictSequencesConstrained(seqs, preds, constraints));
+    }
+
+    SECTION("fails with out-of-range constraint state") {
+        HiddenMarkovModelOperation hmm;
+        auto data = makeBlockSequence(20, 2, 42);
+        hmm.train(data.features, data.labels, nullptr);
+        REQUIRE(hmm.isTrained());
+
+        std::vector<arma::mat> seqs{data.features};
+        std::vector<arma::Row<std::size_t>> preds;
+        // State 99 is well beyond the 2-state model
+        std::vector<std::optional<std::size_t>> constraints{std::size_t{99}};
+        CHECK_FALSE(hmm.predictSequencesConstrained(seqs, preds, constraints));
+    }
+
+    SECTION("fails with empty sequences") {
+        HiddenMarkovModelOperation hmm;
+        auto data = makeBlockSequence(20, 2, 42);
+        hmm.train(data.features, data.labels, nullptr);
+        REQUIRE(hmm.isTrained());
+
+        std::vector<arma::mat> seqs;
+        std::vector<arma::Row<std::size_t>> preds;
+        std::vector<std::optional<std::size_t>> constraints;
+        CHECK_FALSE(hmm.predictSequencesConstrained(seqs, preds, constraints));
+    }
+
+    SECTION("fails with feature dimension mismatch") {
+        HiddenMarkovModelOperation hmm;
+        auto data = makeBlockSequence(20, 2, 42);
+        hmm.train(data.features, data.labels, nullptr);
+        REQUIRE(hmm.isTrained());
+
+        arma::mat wrong_dim(3, 10, arma::fill::randn);
+        std::vector<arma::mat> seqs{wrong_dim};
+        std::vector<arma::Row<std::size_t>> preds;
+        std::vector<std::optional<std::size_t>> constraints{std::nullopt};
+        CHECK_FALSE(hmm.predictSequencesConstrained(seqs, preds, constraints));
+    }
+}
+
+TEST_CASE("MLModelOperation - predictSequencesConstrained default delegates",
+          "[MLCore][HMM]") {
+    // Non-sequence models should ignore constraints and delegate to predictSequences
+    auto registry = MLModelRegistry{};
+    auto rf = registry.create("Random Forest");
+    REQUIRE(rf != nullptr);
+
+    arma::mat feat1(2, 20, arma::fill::randn);
+    arma::Row<std::size_t> lab1(20, arma::fill::zeros);
+
+    std::vector<arma::mat> seqs{feat1};
+    std::vector<arma::Row<std::size_t>> labels{lab1};
+    rf->trainSequences(seqs, labels, nullptr);
+    REQUIRE(rf->isTrained());
+
+    std::vector<arma::Row<std::size_t>> preds;
+    std::vector<std::optional<std::size_t>> constraints{std::size_t{0}};
+    bool ok = rf->predictSequencesConstrained(seqs, preds, constraints);
+    CHECK(ok);
+    REQUIRE(preds.size() == 1);
+    CHECK(preds[0].n_elem == 20);
+}
+
+// ============================================================================
+// Diagonal covariance HMM
+// ============================================================================
+
+TEST_CASE("HiddenMarkovModelOperation - diagonal covariance training",
+          "[MLCore][HMM]") {
+    HiddenMarkovModelOperation hmm;
+    auto data = makeBlockSequence(50, 4, 42);
+
+    HMMParameters params;
+    params.num_states = 2;
+    params.use_diagonal_covariance = true;
+
+    std::vector<arma::mat> seqs{data.features};
+    std::vector<arma::Row<std::size_t>> labelSeqs{data.labels};
+
+    SECTION("trains successfully with diagonal covariance") {
+        bool ok = hmm.trainSequences(seqs, labelSeqs, &params);
+        CHECK(ok);
+        CHECK(hmm.isTrained());
+        CHECK(hmm.numClasses() == 2);
+        CHECK(hmm.numFeatures() == 1);
+        CHECK(hmm.isDiagonalCovariance());
+    }
+
+    SECTION("full covariance model reports isDiagonalCovariance == false") {
+        params.use_diagonal_covariance = false;
+        hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(hmm.isTrained());
+        CHECK_FALSE(hmm.isDiagonalCovariance());
+    }
+
+    SECTION("Viterbi decoding recovers states with high accuracy") {
+        hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(hmm.isTrained());
+
+        std::vector<arma::Row<std::size_t>> predSeqs;
+        bool ok = hmm.predictSequences(seqs, predSeqs);
+        REQUIRE(ok);
+        REQUIRE(predSeqs.size() == 1);
+
+        std::size_t correct = arma::accu(predSeqs[0] == data.labels);
+        double accuracy = static_cast<double>(correct) / data.labels.n_elem;
+        CHECK(accuracy > 0.90);
+    }
+
+    SECTION("Forward-Backward probabilities have correct shape") {
+        hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(hmm.isTrained());
+
+        arma::mat probs;
+        bool ok = hmm.predictProbabilities(data.features, probs);
+        REQUIRE(ok);
+        CHECK(probs.n_rows == 2);
+        CHECK(probs.n_cols == data.features.n_cols);
+    }
+
+    SECTION("transition matrix is valid") {
+        hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(hmm.isTrained());
+
+        arma::mat trans = hmm.getTransitionMatrix();
+        CHECK(trans.n_rows == 2);
+        CHECK(trans.n_cols == 2);
+        arma::rowvec col_sums = arma::sum(trans, 0);
+        CHECK_THAT(col_sums(0), Catch::Matchers::WithinAbs(1.0, 0.01));
+        CHECK_THAT(col_sums(1), Catch::Matchers::WithinAbs(1.0, 0.01));
+    }
+
+    SECTION("log-likelihood is finite") {
+        hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(hmm.isTrained());
+
+        double ll = hmm.logLikelihood(data.features);
+        CHECK(std::isfinite(ll));
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - diagonal covariance multi-dimensional",
+          "[MLCore][HMM]") {
+    HiddenMarkovModelOperation hmm;
+    auto data = makeMultiDimBlockSequence(40, 3, 42);
+
+    HMMParameters params;
+    params.num_states = 2;
+    params.use_diagonal_covariance = true;
+
+    SECTION("trains and predicts on 2D data") {
+        bool ok = hmm.train(data.features, data.labels, &params);
+        REQUIRE(ok);
+        CHECK(hmm.numFeatures() == 2);
+        CHECK(hmm.isDiagonalCovariance());
+
+        arma::Row<std::size_t> predictions;
+        hmm.predict(data.features, predictions);
+
+        std::size_t correct = arma::accu(predictions == data.labels);
+        double accuracy = static_cast<double>(correct) / data.labels.n_elem;
+        CHECK(accuracy > 0.90);
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - diagonal covariance save/load",
+          "[MLCore][HMM]") {
+    auto data = makeBlockSequence(50, 4, 42);
+
+    HMMParameters params;
+    params.use_diagonal_covariance = true;
+
+    SECTION("round-trip preserves diagonal model") {
+        HiddenMarkovModelOperation original;
+        original.train(data.features, data.labels, &params);
+        REQUIRE(original.isTrained());
+        REQUIRE(original.isDiagonalCovariance());
+
+        arma::Row<std::size_t> original_preds;
+        original.predict(data.features, original_preds);
+
+        // Save
+        std::stringstream ss;
+        REQUIRE(original.save(ss));
+
+        // Load into new instance
+        HiddenMarkovModelOperation loaded;
+        REQUIRE(loaded.load(ss));
+        CHECK(loaded.isTrained());
+        CHECK(loaded.isDiagonalCovariance());
+        CHECK(loaded.numClasses() == original.numClasses());
+        CHECK(loaded.numFeatures() == original.numFeatures());
+
+        // Predictions should match
+        arma::Row<std::size_t> loaded_preds;
+        loaded.predict(data.features, loaded_preds);
+        CHECK(arma::approx_equal(
+                arma::conv_to<arma::mat>::from(original_preds),
+                arma::conv_to<arma::mat>::from(loaded_preds),
+                "absdiff", 0.0));
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - diagonal constrained Viterbi",
+          "[MLCore][HMM]") {
+    HiddenMarkovModelOperation hmm;
+    auto data = makeBlockSequence(50, 4, 42);
+
+    HMMParameters params;
+    params.use_diagonal_covariance = true;
+
+    std::vector<arma::mat> seqs{data.features};
+    std::vector<arma::Row<std::size_t>> labelSeqs{data.labels};
+    REQUIRE(hmm.trainSequences(seqs, labelSeqs, &params));
+
+    SECTION("constrained prediction works with diagonal model") {
+        std::vector<std::optional<std::size_t>> constraints{std::size_t{0}};
+        std::vector<arma::Row<std::size_t>> preds;
+        bool ok = hmm.predictSequencesConstrained(seqs, preds, constraints);
+        REQUIRE(ok);
+        REQUIRE(preds.size() == 1);
+
+        std::size_t correct = arma::accu(preds[0] == data.labels);
+        double accuracy = static_cast<double>(correct) / data.labels.n_elem;
+        CHECK(accuracy > 0.90);
+    }
+}
+
+// ============================================================================
+// High-dimensional tests: diagonal vs full covariance
+// ============================================================================
+
+namespace {
+
+/**
+ * @brief Generate high-dimensional 2-state data with some near-zero-variance
+ *        features, mimicking real neural data.
+ *
+ * @param num_features  Total feature dimensionality
+ * @param informative   Number of informative features with clear class separation
+ * @param block_size    Frames per state block
+ * @param num_blocks    Number of state-0/state-1 pairs
+ * @param seed          Random seed
+ */
+SyntheticSequenceData makeHighDimSequence(
+        std::size_t num_features = 64,
+        std::size_t informative = 16,
+        std::size_t block_size = 200,
+        std::size_t num_blocks = 4,
+        int seed = 123) {
+    arma::arma_rng::set_seed(seed);
+
+    std::size_t const total = block_size * num_blocks * 2;
+    SyntheticSequenceData data;
+    data.features.set_size(num_features, total);
+    data.labels.set_size(total);
+
+    std::size_t col = 0;
+    for (std::size_t b = 0; b < num_blocks; ++b) {
+        for (int state = 0; state < 2; ++state) {
+            double const sign = (state == 0) ? -1.0 : 1.0;
+            for (std::size_t i = 0; i < block_size; ++i) {
+                // Informative features: well-separated means
+                for (std::size_t f = 0; f < informative; ++f) {
+                    data.features(f, col) = sign * 2.0 + arma::randn() * 0.5;
+                }
+                // Near-zero-variance features (constant + tiny noise)
+                for (std::size_t f = informative; f < num_features; ++f) {
+                    data.features(f, col) = 5.0 + arma::randn() * 1e-8;
+                }
+                data.labels(col) = static_cast<std::size_t>(state);
+                ++col;
+            }
+        }
+    }
+
+    return data;
+}
+
+}// anonymous namespace
+
+TEST_CASE("HiddenMarkovModelOperation - diagonal vs full high-dimensional",
+          "[MLCore][HMM]") {
+    // Scenario: 64 features, 16 informative, rest near-zero-variance.
+    // Both models should achieve high accuracy after the regularization fix.
+    auto data = makeHighDimSequence(64, 16, 200, 4, 42);
+
+    // Split into train (first 3 blocks) and test (last block)
+    std::size_t const block_size = 200;
+    std::size_t const train_cols = block_size * 6;// 3 pairs × 2 states
+    std::size_t const test_start = train_cols;
+    std::size_t const test_cols = data.features.n_cols - train_cols;
+
+    arma::mat train_features = data.features.cols(0, train_cols - 1);
+    arma::Row<std::size_t> train_labels = data.labels.subvec(0, train_cols - 1);
+    arma::mat test_features = data.features.cols(test_start, data.features.n_cols - 1);
+    arma::Row<std::size_t> test_labels = data.labels.subvec(test_start, data.labels.n_elem - 1);
+
+    REQUIRE(test_cols > 0);
+
+    std::vector<arma::mat> train_seqs{train_features};
+    std::vector<arma::Row<std::size_t>> train_label_seqs{train_labels};
+    std::vector<arma::mat> test_seqs{test_features};
+
+    SECTION("full covariance achieves high accuracy on held-out data") {
+        HiddenMarkovModelOperation hmm;
+        HMMParameters params;
+        params.num_states = 2;
+        params.use_diagonal_covariance = false;
+
+        REQUIRE(hmm.trainSequences(train_seqs, train_label_seqs, &params));
+
+        std::vector<arma::Row<std::size_t>> preds;
+        REQUIRE(hmm.predictSequences(test_seqs, preds));
+        REQUIRE(preds.size() == 1);
+
+        std::size_t correct = arma::accu(preds[0] == test_labels);
+        double accuracy = static_cast<double>(correct) / test_labels.n_elem;
+        CHECK(accuracy > 0.90);
+    }
+
+    SECTION("diagonal covariance achieves high accuracy on held-out data") {
+        HiddenMarkovModelOperation hmm;
+        HMMParameters params;
+        params.num_states = 2;
+        params.use_diagonal_covariance = true;
+
+        REQUIRE(hmm.trainSequences(train_seqs, train_label_seqs, &params));
+
+        std::vector<arma::Row<std::size_t>> preds;
+        REQUIRE(hmm.predictSequences(test_seqs, preds));
+        REQUIRE(preds.size() == 1);
+
+        std::size_t correct = arma::accu(preds[0] == test_labels);
+        double accuracy = static_cast<double>(correct) / test_labels.n_elem;
+        CHECK(accuracy > 0.90);
+    }
+
+    SECTION("both variants produce comparable accuracy") {
+        HiddenMarkovModelOperation hmm_full;
+        HiddenMarkovModelOperation hmm_diag;
+
+        HMMParameters params_full;
+        params_full.num_states = 2;
+        params_full.use_diagonal_covariance = false;
+
+        HMMParameters params_diag;
+        params_diag.num_states = 2;
+        params_diag.use_diagonal_covariance = true;
+
+        REQUIRE(hmm_full.trainSequences(train_seqs, train_label_seqs, &params_full));
+        REQUIRE(hmm_diag.trainSequences(train_seqs, train_label_seqs, &params_diag));
+
+        std::vector<arma::Row<std::size_t>> preds_full;
+        std::vector<arma::Row<std::size_t>> preds_diag;
+        REQUIRE(hmm_full.predictSequences(test_seqs, preds_full));
+        REQUIRE(hmm_diag.predictSequences(test_seqs, preds_diag));
+
+        auto accuracy = [&](arma::Row<std::size_t> const & p) {
+            return static_cast<double>(arma::accu(p == test_labels)) / test_labels.n_elem;
+        };
+
+        double acc_full = accuracy(preds_full[0]);
+        double acc_diag = accuracy(preds_diag[0]);
+
+        // Both should be good; diagonal should not be dramatically worse
+        CHECK(acc_full > 0.90);
+        CHECK(acc_diag > 0.90);
+        // Accuracy gap should be small (< 15 percentage points)
+        CHECK(std::abs(acc_full - acc_diag) < 0.15);
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - diagonal regularizes near-zero variances",
+          "[MLCore][HMM]") {
+    // 32 features: 8 informative, 24 with essentially zero variance.
+    // Without regularization the diagonal model would fail on this data.
+    auto data = makeHighDimSequence(32, 8, 150, 3, 99);
+
+    std::vector<arma::mat> seqs{data.features};
+    std::vector<arma::Row<std::size_t>> label_seqs{data.labels};
+
+    SECTION("diagonal model trains and predicts successfully") {
+        HiddenMarkovModelOperation hmm;
+        HMMParameters params;
+        params.num_states = 2;
+        params.use_diagonal_covariance = true;
+
+        bool ok = hmm.trainSequences(seqs, label_seqs, &params);
+        REQUIRE(ok);
+
+        arma::Row<std::size_t> predictions;
+        ok = hmm.predict(data.features, predictions);
+        REQUIRE(ok);
+
+        std::size_t correct = arma::accu(predictions == data.labels);
+        double accuracy = static_cast<double>(correct) / data.labels.n_elem;
+        CHECK(accuracy > 0.90);
+    }
+
+    SECTION("log-likelihood is finite for diagonal model") {
+        HiddenMarkovModelOperation hmm;
+        HMMParameters params;
+        params.num_states = 2;
+        params.use_diagonal_covariance = true;
+
+        REQUIRE(hmm.trainSequences(seqs, label_seqs, &params));
+
+        double ll = hmm.logLikelihood(data.features);
+        CHECK(std::isfinite(ll));
+    }
+
+    SECTION("forward-backward probabilities are valid") {
+        HiddenMarkovModelOperation hmm;
+        HMMParameters params;
+        params.num_states = 2;
+        params.use_diagonal_covariance = true;
+
+        REQUIRE(hmm.trainSequences(seqs, label_seqs, &params));
+
+        arma::mat probs;
+        bool ok = hmm.predictProbabilities(data.features, probs);
+        REQUIRE(ok);
+        REQUIRE(probs.n_rows == 2);
+        REQUIRE(probs.n_cols == data.features.n_cols);
+
+        // All probabilities should be finite and non-negative
+        CHECK(probs.is_finite());
+        CHECK(arma::all(arma::vectorise(probs) >= 0.0));
+
+        // Columns should sum to approximately 1.0
+        arma::rowvec col_sums = arma::sum(probs, 0);
+        for (std::size_t c = 0; c < col_sums.n_elem; ++c) {
+            CHECK_THAT(col_sums(c), Catch::Matchers::WithinAbs(1.0, 0.01));
+        }
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - high-dim save/load diagonal",
+          "[MLCore][HMM]") {
+    // Verify that the regularized diagonal model round-trips correctly
+    auto data = makeHighDimSequence(32, 8, 100, 2, 77);
+
+    HiddenMarkovModelOperation original;
+    HMMParameters params;
+    params.num_states = 2;
+    params.use_diagonal_covariance = true;
+
+    std::vector<arma::mat> seqs{data.features};
+    std::vector<arma::Row<std::size_t>> label_seqs{data.labels};
+    REQUIRE(original.trainSequences(seqs, label_seqs, &params));
+
+    arma::Row<std::size_t> original_preds;
+    REQUIRE(original.predict(data.features, original_preds));
+
+    SECTION("predictions match after save/load") {
+        std::stringstream ss;
+        REQUIRE(original.save(ss));
+
+        HiddenMarkovModelOperation loaded;
+        REQUIRE(loaded.load(ss));
+
+        CHECK(loaded.isDiagonalCovariance());
+        CHECK(loaded.numFeatures() == 32);
+
+        arma::Row<std::size_t> loaded_preds;
+        REQUIRE(loaded.predict(data.features, loaded_preds));
+
+        CHECK(arma::approx_equal(
+                arma::conv_to<arma::mat>::from(original_preds),
+                arma::conv_to<arma::mat>::from(loaded_preds),
+                "absdiff", 0.0));
     }
 }

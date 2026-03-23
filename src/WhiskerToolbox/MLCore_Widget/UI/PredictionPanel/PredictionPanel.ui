@@ -216,6 +216,23 @@
         </property>
        </widget>
       </item>
+      <!-- Constrained decoding (sequence models only) -->
+      <item>
+       <widget class="QCheckBox" name="constrainedDecodingCheckBox">
+        <property name="text">
+         <string>Constrained decoding (warm-start from labels)</string>
+        </property>
+        <property name="toolTip">
+         <string>For sequence models (HMM): clamp initial state to ground truth at prediction segment boundaries for improved accuracy</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
       <!-- Predict button -->
       <item>
        <widget class="QPushButton" name="predictButton">

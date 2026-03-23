@@ -16,10 +16,10 @@
 
 #include "TensorStorageBase.hpp"
 
-#include <cstddef>      // size_t
-#include <span>         // std::span
-#include <string>       // std::string
-#include <vector>       // std::vector
+#include <cstddef>// size_t
+#include <span>   // std::span
+#include <string> // std::string
+#include <vector> // std::vector
 
 /**
  * @brief Tensor storage backend using a flat std::vector<float> in row-major order
@@ -95,6 +95,46 @@ public:
      */
     void setValueAt(std::span<std::size_t const> indices, float value);
 
+    // ========== Row Mutation (2D only) ==========
+
+    /**
+     * @brief Append a row to the end of the tensor
+     *
+     * Only valid for 2D storage.
+     *
+     * @param row_data Row values; size must equal number of columns (shape[1])
+     * @throws std::logic_error if storage is not 2D
+     * @throws std::invalid_argument if row_data.size() != shape[1]
+     */
+    void appendRow(std::span<float const> row_data);
+
+    /**
+     * @brief Insert a row at a specific position
+     *
+     * Only valid for 2D storage. Existing rows at and after the insertion
+     * point are shifted down.
+     *
+     * @param index Row index to insert before (0-based; numRows inserts at end)
+     * @param row_data Row values; size must equal number of columns (shape[1])
+     * @throws std::logic_error if storage is not 2D
+     * @throws std::out_of_range if index > number of rows
+     * @throws std::invalid_argument if row_data.size() != shape[1]
+     */
+    void insertRow(std::size_t index, std::span<float const> row_data);
+
+    /**
+     * @brief Overwrite an existing row's data in-place
+     *
+     * Only valid for 2D storage.
+     *
+     * @param index Row index to overwrite (0-based)
+     * @param row_data New values; size must equal number of columns (shape[1])
+     * @throws std::logic_error if storage is not 2D
+     * @throws std::out_of_range if index >= number of rows
+     * @throws std::invalid_argument if row_data.size() != shape[1]
+     */
+    void setRow(std::size_t index, std::span<float const> row_data);
+
     // ========== Metadata ==========
 
     /**
@@ -126,7 +166,7 @@ public:
 private:
     std::vector<float> _data;
     std::vector<std::size_t> _shape;
-    std::vector<std::size_t> _strides; ///< Precomputed row-major strides
+    std::vector<std::size_t> _strides;///< Precomputed row-major strides
 
     /**
      * @brief Compute the flat offset from multi-dimensional indices
@@ -148,4 +188,4 @@ private:
     void validateIndices(std::span<std::size_t const> indices) const;
 };
 
-#endif // DENSE_TENSOR_STORAGE_HPP
+#endif// DENSE_TENSOR_STORAGE_HPP

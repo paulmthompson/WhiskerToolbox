@@ -39,6 +39,12 @@ The widget appears as a tabbed panel in the right dock area. The **Classificatio
 
 Predictions and cluster assignments never overwrite your original labels. All outputs are written to new data keys and entity groups with a configurable prefix (e.g., `"Predicted:Contact"`, `"Cluster:0"`). This lets you compare ML results against your manual annotations.
 
+## Prediction Regions
+
+You can restrict predictions to a specific frame range by selecting a `DigitalIntervalSeries` in the Prediction panel. This is especially useful when you have labeled some parts of a recording and want to predict just the unlabeled sections.
+
+For the HMM, the pipeline automatically extends the prediction range to include training labels (for temporal context), then filters output back to your selected frames. A **constrained decoding** option (HMM only) uses the last known label at region boundaries to warm-start predictions.
+
 ## Available Models
 
 ### Supervised (Classification Tab)

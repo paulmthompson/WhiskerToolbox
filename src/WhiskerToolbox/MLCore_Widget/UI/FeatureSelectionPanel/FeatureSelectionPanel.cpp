@@ -1,12 +1,13 @@
 #include "FeatureSelectionPanel.hpp"
 
-#include "MLCoreWidgetState.hpp"
+#include "Core/MLCoreWidgetState.hpp"
 #include "ui_FeatureSelectionPanel.h"
 
 #include "DataManager/DataManager.hpp"
 #include "Tensors/TensorData.hpp"
 
 #include <QTimer>
+#include <QVariant>
 
 #include <algorithm>
 
@@ -25,12 +26,14 @@ FeatureSelectionPanel::FeatureSelectionPanel(
     // Initial population
     refreshTensorList();
 
-    // Restore selection from state
+    // Restore selection from state (match DataManager key in itemData, not display text)
     if (_state && !_state->featureTensorKey().empty()) {
-        int idx = ui->tensorComboBox->findText(
-                QString::fromStdString(_state->featureTensorKey()));
-        if (idx != -1) {
-            ui->tensorComboBox->setCurrentIndex(idx);
+        QString const key = QString::fromStdString(_state->featureTensorKey());
+        for (int i = 0; i < ui->tensorComboBox->count(); ++i) {
+            if (ui->tensorComboBox->itemData(i).toString() == key) {
+                ui->tensorComboBox->setCurrentIndex(i);
+                break;
+            }
         }
     }
 }
@@ -47,8 +50,15 @@ bool FeatureSelectionPanel::hasValidSelection() const {
 }
 
 std::string FeatureSelectionPanel::selectedTensorKey() const {
-    QString text = ui->tensorComboBox->currentText();
-    return text.toStdString();
+    int const idx = ui->tensorComboBox->currentIndex();
+    if (idx < 0) {
+        return {};
+    }
+    QVariant const data = ui->tensorComboBox->itemData(idx);
+    if (data.isValid()) {
+        return data.toString().toStdString();
+    }
+    return ui->tensorComboBox->currentText().toStdString();
 }
 
 void FeatureSelectionPanel::refreshTensorList() {
@@ -56,7 +66,16 @@ void FeatureSelectionPanel::refreshTensorList() {
         return;
     }
 
-    QString current_selection = ui->tensorComboBox->currentText();
+    QString current_selection;
+    int const cur_idx = ui->tensorComboBox->currentIndex();
+    if (cur_idx >= 0) {
+        QVariant const data = ui->tensorComboBox->itemData(cur_idx);
+        if (data.isValid()) {
+            current_selection = data.toString();
+        } else {
+            current_selection = ui->tensorComboBox->currentText();
+        }
+    }
 
     ui->tensorComboBox->blockSignals(true);
     ui->tensorComboBox->clear();
@@ -71,7 +90,7 @@ void FeatureSelectionPanel::refreshTensorList() {
         // Build display text with shape info
         auto tensor = _data_manager->getData<TensorData>(key);
         if (tensor) {
-            QString display = QStringLiteral("%1 (%2×%3)")
+            QString const display = QStringLiteral("%1 (%2×%3)")
                                       .arg(QString::fromStdString(key))
                                       .arg(tensor->numRows())
                                       .arg(tensor->numColumns());
@@ -82,18 +101,17 @@ void FeatureSelectionPanel::refreshTensorList() {
         }
     }
 
-    // Restore previous selection if still available
-    int idx = -1;
+    // Restore previous selection if still available (prefer key in itemData)
+    int restored_idx = -1;
     for (int i = 0; i < ui->tensorComboBox->count(); ++i) {
-        if (ui->tensorComboBox->itemText(i) == current_selection ||
-            ui->tensorComboBox->itemData(i).toString() == current_selection) {
-            idx = i;
+        if (ui->tensorComboBox->itemData(i).toString() == current_selection) {
+            restored_idx = i;
             break;
         }
     }
 
-    if (idx != -1) {
-        ui->tensorComboBox->setCurrentIndex(idx);
+    if (restored_idx != -1) {
+        ui->tensorComboBox->setCurrentIndex(restored_idx);
     } else {
         ui->tensorComboBox->setCurrentIndex(0);
     }
@@ -107,7 +125,7 @@ void FeatureSelectionPanel::_onTensorComboChanged(int index) {
     // Get the actual key from item data (falls back to text if no data set)
     QString key_str;
     if (index >= 0) {
-        QVariant data = ui->tensorComboBox->itemData(index);
+        QVariant const data = ui->tensorComboBox->itemData(index);
         if (data.isValid()) {
             key_str = data.toString();
         } else {
@@ -115,7 +133,7 @@ void FeatureSelectionPanel::_onTensorComboChanged(int index) {
         }
     }
 
-    std::string key = key_str.toStdString();
+    std::string const key = key_str.toStdString();
 
     // Update state
     if (_state) {
@@ -140,7 +158,7 @@ void FeatureSelectionPanel::_setupConnections() {
                 this, [this](QString const & key) {
                     // Find and select the matching item
                     for (int i = 0; i < ui->tensorComboBox->count(); ++i) {
-                        QVariant data = ui->tensorComboBox->itemData(i);
+                        QVariant const data = ui->tensorComboBox->itemData(i);
                         if (data.isValid() && data.toString() == key) {
                             ui->tensorComboBox->blockSignals(true);
                             ui->tensorComboBox->setCurrentIndex(i);
@@ -156,14 +174,14 @@ void FeatureSelectionPanel::_setupConnections() {
 }
 
 void FeatureSelectionPanel::_updateTensorInfo() {
-    std::string key = selectedTensorKey();
+    std::string const key = selectedTensorKey();
 
     if (key.empty() || !_data_manager) {
         ui->tensorInfoLabel->setText(QStringLiteral("No tensor selected"));
         ui->columnListLabel->setText(QString{});
         ui->validationLabel->setText(QString{});
 
-        bool was_valid = _valid;
+        bool const was_valid = _valid;
         _valid = false;
         if (was_valid) {
             emit validityChanged(false);
@@ -179,7 +197,7 @@ void FeatureSelectionPanel::_updateTensorInfo() {
         ui->columnListLabel->setText(QString{});
         ui->validationLabel->setText(QString{});
 
-        bool was_valid = _valid;
+        bool const was_valid = _valid;
         _valid = false;
         if (was_valid) {
             emit validityChanged(false);
@@ -212,7 +230,7 @@ void FeatureSelectionPanel::_updateTensorInfo() {
 
     // Time frame info (if temporal)
     if (tensor->rowType() != RowType::Ordinal) {
-        TimeKey time_key = _data_manager->getTimeKey(key);
+        TimeKey const time_key = _data_manager->getTimeKey(key);
         if (!time_key.empty()) {
             auto time_frame = _data_manager->getTime(time_key);
             QString tf_info = QStringLiteral("<br><b>Time frame:</b> %1")
@@ -242,7 +260,7 @@ void FeatureSelectionPanel::_updateTensorInfo() {
         if (col_list.size() <= max_display_cols) {
             col_text = QStringLiteral("<b>Columns:</b> %1").arg(col_list.join(", "));
         } else {
-            QStringList truncated = col_list.mid(0, max_display_cols);
+            QStringList const truncated = col_list.mid(0, max_display_cols);
             col_text = QStringLiteral("<b>Columns:</b> %1, ... (+%2 more)")
                                .arg(truncated.join(", "))
                                .arg(col_list.size() - max_display_cols);
@@ -255,7 +273,7 @@ void FeatureSelectionPanel::_updateTensorInfo() {
     }
 
     // --- Validation ---
-    bool new_valid = (tensor->numRows() > 0 && tensor->numColumns() > 0);
+    bool const new_valid = (tensor->numRows() > 0 && tensor->numColumns() > 0);
     QString validation_msg;
 
     if (tensor->numRows() == 0) {

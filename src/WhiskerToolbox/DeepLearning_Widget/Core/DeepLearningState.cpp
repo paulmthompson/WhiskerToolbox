@@ -198,3 +198,9 @@ void DeepLearningState::setEncoderOutputShape(std::string const & shape) {
         emit encoderShapeChanged();
     }
 }
+
+bool DeepLearningState::shapeConfigured() const {
+    // encoder_input_height/width start at 0 (default); EncoderShapeWidget
+    // sets them to >= 1 (minimum 224) when the user clicks "Apply Shape".
+    return _data.encoder_input_height > 0 || _data.encoder_input_width > 0;
+}

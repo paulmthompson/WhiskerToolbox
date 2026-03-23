@@ -39,7 +39,7 @@ enum class DesignerRowType;
 namespace EditorLib {
 class OperationContext;
 struct PendingOperation;
-struct OperationResult;
+class OperationResult;
 struct EditorInstanceId;
 struct OperationId;
 }// namespace EditorLib
@@ -101,6 +101,7 @@ private slots:
     void _updateAutoName();
     void _onValidateClicked();
     void _onRequestTV2Clicked();
+    void _onEditInTV2Clicked();
     void _onOperationDelivered(EditorLib::PendingOperation const & op,
                                EditorLib::OperationResult const & result);
     void _onOperationClosed(EditorLib::OperationId const & id);
@@ -136,6 +137,7 @@ private:
     QTextEdit * _pipeline_json_edit{nullptr};
     QPushButton * _validate_btn{nullptr};
     QPushButton * _request_tv2_btn{nullptr};
+    QPushButton * _edit_in_tv2_btn{nullptr};
     QLabel * _validation_label{nullptr};
 
     // Interval property (visible only for interval row type)

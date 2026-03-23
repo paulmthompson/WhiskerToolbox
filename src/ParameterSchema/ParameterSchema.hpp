@@ -363,8 +363,9 @@ ParameterSchema extractParameterSchema() {
     size_t field_idx = 0;
     view.apply([&](auto const & field) {
         // rfl::to_view returns pointer fields, so field.value() is T*
+        // defaults_instance is const, so pointers are const T* — strip cv.
         using PtrType = std::remove_cvref_t<decltype(field.value())>;
-        using RawFieldType = std::remove_pointer_t<PtrType>;
+        using RawFieldType = std::remove_cv_t<std::remove_pointer_t<PtrType>>;
         using InnerType = detail::unwrap_optional_t<RawFieldType>;
 
         if constexpr (detail::is_tagged_union_v<InnerType>) {

@@ -108,6 +108,20 @@ struct GMMParameters : public MLModelParametersBase {
 };
 
 // ============================================================================
+// Dimensionality reduction parameters
+// ============================================================================
+
+/**
+ * @brief Parameters for PCA dimensionality reduction
+ *
+ * Wraps mlpack::PCA hyperparameters.
+ */
+struct PCAParameters : public MLModelParametersBase {
+    std::size_t n_components = 2;///< Number of principal components to retain
+    bool scale = true;           ///< Standardize features (zero mean, unit variance) before PCA
+};
+
+// ============================================================================
 // Sequence model parameters
 // ============================================================================
 
@@ -117,10 +131,17 @@ struct GMMParameters : public MLModelParametersBase {
  * Maps to mlpack::HMM<mlpack::GaussianDistribution<>> hyperparameters.
  * Supervised training uses labeled sequences to estimate transition and
  * emission parameters directly.
+ *
+ * When `use_diagonal_covariance` is true, uses
+ * mlpack::DiagonalGaussianDistribution instead of the full covariance
+ * variant. Diagonal covariance reduces parameters per state from
+ * M(M+1)/2 to M, improving numerical stability with limited training
+ * data and reducing emission evaluation cost from O(M^2) to O(M).
  */
 struct HMMParameters : public MLModelParametersBase {
-    std::size_t num_states = 2;///< Number of hidden states
-    double tolerance = 1e-5;   ///< Convergence tolerance for training
+    std::size_t num_states = 2;          ///< Number of hidden states
+    double tolerance = 1e-5;             ///< Convergence tolerance for training
+    bool use_diagonal_covariance = false;///< Use diagonal covariance emissions
 };
 
 }// namespace MLCore

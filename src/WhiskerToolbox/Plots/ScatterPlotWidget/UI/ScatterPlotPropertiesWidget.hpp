@@ -44,8 +44,8 @@ class ScatterPlotPropertiesWidget : public QWidget {
 
 public:
     explicit ScatterPlotPropertiesWidget(std::shared_ptr<ScatterPlotState> state,
-                                          std::shared_ptr<DataManager> data_manager,
-                                          QWidget * parent = nullptr);
+                                         std::shared_ptr<DataManager> data_manager,
+                                         QWidget * parent = nullptr);
     ~ScatterPlotPropertiesWidget() override;
 
     [[nodiscard]] std::shared_ptr<ScatterPlotState> state() const { return _state; }
@@ -103,6 +103,9 @@ private:
     // Group coloring
     QCheckBox * _color_by_group_checkbox{nullptr};
 
+    // Cluster labels
+    QCheckBox * _show_cluster_labels_checkbox{nullptr};
+
     // Selection mode
     Section * _selection_section{nullptr};
     QComboBox * _selection_mode_combo{nullptr};
@@ -118,4 +121,4 @@ private:
     bool _updating_combos{false};
 };
 
-#endif  // SCATTER_PLOT_PROPERTIES_WIDGET_HPP
+#endif// SCATTER_PLOT_PROPERTIES_WIDGET_HPP

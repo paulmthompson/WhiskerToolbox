@@ -107,6 +107,12 @@ public:
             std::vector<arma::mat> const & featureSequences,
             std::vector<arma::Row<std::size_t>> & predictionSequences) override;
 
+    /// @brief Viterbi decode with per-sequence initial state constraints
+    bool predictSequencesConstrained(
+            std::vector<arma::mat> const & featureSequences,
+            std::vector<arma::Row<std::size_t>> & predictionSequences,
+            std::vector<std::optional<std::size_t>> const & initial_state_constraints) override;
+
     /// @brief This model exploits temporal structure
     [[nodiscard]] bool isSequenceModel() const override;
 
@@ -138,6 +144,12 @@ public:
      * @return Log-likelihood value, or -infinity if not trained
      */
     [[nodiscard]] double logLikelihood(arma::mat const & features) const;
+
+    /**
+     * @brief Whether the model uses diagonal covariance emissions
+     * @return true if trained with use_diagonal_covariance, false otherwise
+     */
+    [[nodiscard]] bool isDiagonalCovariance() const;
 
 private:
     /// Pimpl to keep mlpack HMM headers out of this header
