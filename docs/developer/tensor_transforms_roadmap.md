@@ -589,29 +589,48 @@ This phase bridges the **visualization → interaction** gap. The scatter widget
    - `is_applicable` returns true when a TensorData with ≥2 columns is focused
    - `execute()` creates or navigates to ScatterPlotWidget and sets X/Y from first two columns
 
-### Phase 5: Clustering ↔ Scatter Feedback Loop
+### Phase 5: Clustering ↔ Scatter Feedback Loop ✅
 **Goal:** Tight integration between MLCore clustering and scatter visualization.
+**Status:** Complete.
 
 > **Depends on:** [Inter-Widget Communication Roadmap — Proposal 1 (Context-Aware Actions)](inter_widget_communication_roadmap.md#proposal-1-context-aware-actions-priority-high). The context menu actions below are implemented as **ContextActions** registered by MLCore_Widget and ScatterPlotWidget respectively.
 
-1. **Run clustering on reduced features directly from scatter context menu**
-   - Implemented as a ContextAction (e.g., `"mlcore.cluster_tensor"`) registered by MLCore_Widget
-   - `is_applicable`: focused data is TensorData
-   - `execute()`: opens/focuses MLCore_Widget, sets feature tensor key, activates Clustering tab
-   - Right-click scatter → "Cluster Points..." → MLCore_Widget opens with correct tensor pre-selected
+1. ✅ **Run clustering on reduced features directly from scatter context menu**
+   - Existing `"mlcore.cluster_tensor"` ContextAction now calls `setActiveTab(1)` to switch to Clustering tab
+   - Scatter plot context menu dynamically populates applicable ContextActions from `SelectionContext`
+   - `SelectionContext` plumbed through `ScatterPlotWidget` → `ScatterPlotOpenGLWidget`
+   - Right-click scatter → applicable ContextActions (including "Cluster with K-Means") appear in menu
    - Output: entity groups written to `EntityGroupManager`
    - Scatter auto-recolors via existing group generation counter mechanism
 
-2. **Selective clustering: cluster only selected points**
-   - User selects a subset in scatter → right-click → "Cluster Selection..."
-   - Creates a filtered TensorData view (or copy) containing only selected rows
-   - Runs clustering on the subset
-   - Maps cluster assignments back to full-dataset entity IDs
-   - Result: sub-groups within the original scatter
+2. ✅ **Selective clustering: cluster only selected points**
+   - "Cluster Selection..." context menu action in scatter plot
+   - Creates filtered `TensorData` copy with only selected rows via `TensorData::createOrdinal2D()`
+   - Stores filtered tensor in DataManager with `"<source>_selection"` key
+   - Sets data focus and programmatically triggers `mlcore.cluster_tensor` ContextAction
+   - Enabled only when points are selected and source is TensorData
 
-3. **Cluster label overlay in scatter**
-   - Display cluster centroid labels (e.g., "Cluster 0 (n=42)") as text annotations
-   - Toggleable via scatter properties panel
+3. ✅ **Cluster label overlay in scatter**
+   - QPainter overlay in `paintGL()` draws text labels at cluster centroids
+   - Computes per-group centroids from scatter point positions + `GroupManager` membership
+   - Labels show "GroupName (n=count)" with group color + dark outline for readability
+   - Toggleable via "Show cluster labels" checkbox in scatter properties panel
+   - New `show_cluster_labels` field in `ScatterPlotStateData` (serialized)
+
+#### Phase 5 — Files Touched
+
+| File | Action | Detail |
+|------|--------|--------|
+| `src/WhiskerToolbox/MLCore_Widget/MLCoreWidgetRegistration.cpp` | Edit | Add `setActiveTab(1)` to cluster ContextAction execute |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.hpp` | Edit | Add `setSelectionContext()`, `_executeClusterSelection()`, `drawClusterLabels()`, members |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp` | Edit | Implement ContextAction menu, selective clustering, QPainter label overlay |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotWidget.hpp` | Edit | Add `setSelectionContext()` delegation |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotWidget.cpp` | Edit | Implement `setSelectionContext()` pass-through |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.cpp` | Edit | Wire `SelectionContext` to scatter widget creation |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPlotState.hpp` | Edit | Add `show_cluster_labels` field, getter/setter/signal |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPlotState.cpp` | Edit | Implement `setShowClusterLabels()` |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotPropertiesWidget.hpp` | Edit | Add `_show_cluster_labels_checkbox` member |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotPropertiesWidget.cpp` | Edit | Add checkbox UI, connection, sync from state |
 
 ### Phase 6: Elemental Tensor Transforms
 **Goal:** Support simple per-element operations on tensor data.
@@ -791,7 +810,7 @@ EntityGroupManager notifies observers
 | 2 | Scatter Selection → Groups | **High** | Low-Medium | "Create Group from Selection" context menu in scatter |
 | 3 | Tapkee (t-SNE, manifold) | Medium | Medium | Non-linear dim reduction algorithms |
 | 4 | MLCore Dim Reduction Tab | ✅ **Complete** | Medium | Integrated UI; auto-focus output |
-| 5 | Clustering ↔ Scatter Loop | Medium | Low | Context-menu clustering; sub-selection clustering |
+| 5 | Clustering ↔ Scatter Loop | ✅ **Complete** | Low | Context-menu clustering; sub-selection clustering; label overlay |
 | 6 | Elemental Tensor Transforms | Low | Low | Row-level `f(row) → row` element transforms |
 | 7 | Advanced Features | Low | Varies | Fit/project, scree plot, 3D scatter, benchmarks |
 

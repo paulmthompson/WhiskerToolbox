@@ -91,6 +91,7 @@ void registerTypes(EditorRegistry * registry,
             }
 
             ml_state->setClusteringTensorKey(ctx.dataFocus().toStdString());
+            ml_state->setActiveTab(1);// Switch to Clustering tab
         };
 
         selection_ctx->registerAction(std::move(cluster_action));

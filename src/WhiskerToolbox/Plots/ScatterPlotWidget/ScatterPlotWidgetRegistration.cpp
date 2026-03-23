@@ -20,7 +20,7 @@
 namespace ScatterPlotWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
+                   const std::shared_ptr<DataManager>& data_manager,
                    GroupManager * group_manager) {
 
     if (!registry) {
@@ -29,7 +29,7 @@ void registerTypes(EditorRegistry * registry,
     }
 
     // Capture dependencies for lambdas
-    const auto& dm = std::move(data_manager);
+    auto const & dm = std::move(data_manager);
     auto reg = registry;
     auto gm = group_manager;
 
@@ -48,7 +48,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<ScatterPlotState>(); },
 
                             // View factory - creates ScatterPlotWidget (the view component)
-                            .create_view = [dm, reg, gm](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                            .create_view = [dm, reg, gm](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<ScatterPlotState>(state);
                                 if (!plot_state) {
                                     std::cerr << "ScatterPlotWidgetModule: Failed to cast state to ScatterPlotState" << std::endl;
@@ -67,7 +67,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Properties factory - creates ScatterPlotPropertiesWidget
-                            .create_properties = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                            .create_properties = [dm](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<ScatterPlotState>(state);
                                 if (!plot_state) {
                                     std::cerr << "ScatterPlotWidgetModule: Failed to cast state to ScatterPlotState for properties" << std::endl;
@@ -94,6 +94,11 @@ void registerTypes(EditorRegistry * registry,
                                     view->setGroupManager(gm);
                                 }
 
+                                // Set selection context for ContextAction menu integration
+                                if (reg->selectionContext()) {
+                                    view->setSelectionContext(reg->selectionContext());
+                                }
+
                                 // Create the properties widget with the shared state
                                 auto * props = new ScatterPlotPropertiesWidget(state, dm);
                                 props->setPlotWidget(view);
@@ -102,9 +107,9 @@ void registerTypes(EditorRegistry * registry,
                                 // This allows the scatter plot to navigate to a specific time position
                                 if (reg) {
                                     QObject::connect(view, &ScatterPlotWidget::timePositionSelected,
-                                                     [reg](TimePosition position) {
+                                                     [reg](const TimePosition& position) {
                                                          // Update EditorRegistry time (triggers timeChanged signal for other widgets)
-                                                         reg->setCurrentTime(std::move(position));
+                                                         reg->setCurrentTime(position);
                                                      });
                                 }
 

@@ -81,6 +81,7 @@ struct ScatterPlotStateData {
     std::optional<ScatterAxisSource> x_source;  ///< X-axis data source
     std::optional<ScatterAxisSource> y_source;  ///< Y-axis data source
     bool show_reference_line = false;           ///< Show y=x reference line
+    bool show_cluster_labels = false;           ///< Show cluster centroid labels as text overlay
 
     /// Glyph style for scatter points (shape, size, color, alpha)
     CorePlotting::GlyphStyleData glyph_style{GlyphType::Circle, 5.0f, "#3388FF", 0.8f};
@@ -98,7 +99,10 @@ The `x_source` and `y_source` fields describe which data to plot on each axis. W
 | `viewStateChanged` | Zoom, pan, or bounds changed |
 | `xSourceChanged` | X-axis data source key, column, or offset changed |
 | `ySourceChanged` | Y-axis data source key, column, or offset changed |
-| `referenceLineChanged` | Reference line show/hide toggled || `glyphStyleChanged` | Any glyph style property (shape, size, color, alpha) changed || `stateChanged` (inherited) | Any change requiring scene rebuild |
+| `referenceLineChanged` | Reference line show/hide toggled |
+| `clusterLabelsChanged` | Cluster label overlay show/hide toggled |
+| `glyphStyleChanged` | Any glyph style property (shape, size, color, alpha) changed |
+| `stateChanged` (inherited) | Any change requiring scene rebuild |
 
 **Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild. Source changes emit their specific signal plus `stateChanged()` to trigger a full scene rebuild (recomputing point pairs and re-uploading GPU buffers).
 
@@ -381,6 +385,42 @@ The polygon drawing interaction uses the shared `PolygonInteractionController` f
 
 See [roadmap](roadmap.qmd) Phase 3 for the full polygon selection and group integration implementation plan.
 
+## ContextAction Integration
+
+The scatter plot's right-click context menu dynamically populates **ContextActions** from the `SelectionContext` system. When a `SelectionContext` is available (set via `setSelectionContext()` during registration), `contextMenuEvent()` queries `SelectionContext::applicableActions()` and appends matching actions to the menu below the group management actions.
+
+This enables cross-widget workflows: for example, right-clicking in the scatter plot can trigger the "Cluster with ML Workflow" action registered by `MLCoreWidgetRegistration`, which sets the scatter's data source as the clustering input and switches to the Clustering tab.
+
+### Selective Clustering ("Cluster Selection...")
+
+A dedicated "Cluster Selection..." action appears in the context menu when:
+
+1. Points are currently selected (via polygon selection)
+2. The scatter data source is a `TensorData` key (not `AnalogTimeSeries`)
+
+When triggered, `_executeClusterSelection()`:
+
+1. Extracts the selected point indices from `ScatterPlotState`
+2. Reads the corresponding rows from the source `TensorData` via `TensorData::row(idx)`
+3. Creates a new `TensorData` with `TensorData::createOrdinal2D()` containing only the selected rows
+4. Stores it in `DataManager` with key `"<source_key>_selection"`
+5. Sets data focus via `SelectionContext::setDataFocus()` so `DataFocusAware` widgets pick it up
+6. Programmatically triggers the `mlcore.cluster_tensor` ContextAction to open the ML Workflow Clustering tab with the filtered data pre-loaded
+
+This provides a workflow where users can visually identify a cluster of interest in the scatter plot, select it with a polygon, and immediately run clustering on just those points.
+
+## Cluster Label Overlay
+
+When `ScatterPlotState::showClusterLabels()` is enabled, `drawClusterLabels()` renders text labels at group centroids using a `QPainter` overlay on top of the OpenGL rendering.
+
+**Implementation**: After all OpenGL draw calls complete in `paintGL()`, a `QPainter` is constructed on the widget. For each group in the `GroupManager`, the method:
+
+1. Accumulates the screen-space centroid (average X, average Y) of all scatter points belonging to that group
+2. Converts world coordinates to screen coordinates via `worldToScreen()`
+3. Renders `"GroupName (n=count)"` at the centroid position using the group's assigned color with a dark outline for readability
+
+**State**: The `show_cluster_labels` field is part of `ScatterPlotStateData` (serialized via reflect-cpp). A checkbox in the "Glyph Options" section of `ScatterPlotPropertiesWidget` toggles it. The `clusterLabelsChanged` signal triggers a repaint.
+
 # Axis System
 
 ## Horizontal Axis (X)
@@ -421,7 +461,8 @@ A "Reference Line" collapsible section contains:
 ## Glyph Options
 
 A "Glyph Options" collapsible section contains `GlyphStyleControls` (shape, size, color,
-alpha). Changes propagate immediately to the rendered scene via `glyphStyleChanged`. See
+alpha) and a **"Show cluster labels"** checkbox that toggles the [cluster label overlay](#cluster-label-overlay).
+Changes propagate immediately to the rendered scene via `glyphStyleChanged`. See
 [Visual Customization](#visual-customization) for the full architecture.
 
 ## Axis Range Controls
@@ -458,6 +499,9 @@ See the [roadmap](roadmap.qmd) for planned additions including:
 | Glyph customization | **Implemented** (`GlyphStyleData` / `GlyphStyleState` / `GlyphStyleControls`) | [EventPlotWidget](../EventPlotWidget/index.qmd) (Tick/Circle/Square), [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) (point glyphs) |
 | Selection → Group | Planned (`TimeFrameIndex` → entity group) | [LinePlotWidget](../LinePlotWidget/index.qmd) (trial indices → alignment event groups) |
 | TensorData integration | Planned (column as axis source) | [EventPlotWidget](../EventPlotWidget/roadmap.qmd) (per-trial feature coloring/sorting) |
+| ContextAction integration | **Implemented** (dynamic ContextAction menu from `SelectionContext`) | [MLCoreWidget](../../MLCore/widget.qmd) (`mlcore.cluster_tensor` action) |
+| Selective clustering | **Implemented** ("Cluster Selection..." → filtered `TensorData` → ML Workflow) | Unique to ScatterPlotWidget |
+| Cluster label overlay | **Implemented** (QPainter centroid labels from `GroupManager`) | Unique to ScatterPlotWidget |
 
 ## Key Architectural Distinction
 

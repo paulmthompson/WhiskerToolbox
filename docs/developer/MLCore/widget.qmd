@@ -258,3 +258,12 @@ Registered via `MLCoreWidgetRegistration` with:
 - **Zone**: Right
 - **Single instance**: `allow_multiple = false`
 - Receives `GroupManager*` from `MainWindow`
+
+### ContextAction: `mlcore.cluster_tensor`
+
+`MLCoreWidgetRegistration` registers a `ContextAction` with `action_id = "mlcore.cluster_tensor"`:
+
+- **Applicability**: The currently focused data key (via `SelectionContext::currentDataKey()`) must exist as a `TensorData` key in `DataManager`
+- **Execute**: Sets the clustering tensor key to the focused data key, switches the active tab to the Clustering tab (`setActiveTab(1)`), and opens the ML Workflow widget
+
+This action is consumed by `ScatterPlotWidget`'s context menu — when a user right-clicks on a scatter plot backed by `TensorData`, the "Cluster with ML Workflow" option appears. The "Cluster Selection..." action in `ScatterPlotOpenGLWidget` also programmatically triggers this action after creating a filtered subset of selected points. See the [ScatterPlotWidget documentation](../ui/Plots/ScatterPlotWidget/index.qmd#contextaction-integration) for the full workflow.
