@@ -73,7 +73,7 @@ auto tensorPCA(
     }
     ctx.reportProgress(80);
 
-    // Convert back: result is (n_components × observations) → transpose to row-major
+    // Convert back: result is (n_components × observations) → (observations × n_components)
     arma::fmat output_fmat = arma::conv_to<arma::fmat>::from(result.t());
 
     // Generate column names: PC1, PC2, ...
@@ -83,9 +83,14 @@ auto tensorPCA(
         col_names.push_back("PC" + std::to_string(i + 1));
     }
 
-    // Flatten to vector for TensorData factory
-    std::vector<float> const flat_data(output_fmat.memptr(),
-                                 output_fmat.memptr() + output_fmat.n_elem);
+    // Armadillo stores column-major, but TensorData factories expect row-major flat data.
+    // Extract elements in row-major order.
+    std::vector<float> flat_data(output_fmat.n_elem);
+    for (arma::uword r = 0; r < output_fmat.n_rows; ++r) {
+        for (arma::uword c = 0; c < output_fmat.n_cols; ++c) {
+            flat_data[r * n_components + c] = output_fmat(r, c);
+        }
+    }
 
     // Build output preserving RowDescriptor from input
     auto const & row_desc = input.rows();
