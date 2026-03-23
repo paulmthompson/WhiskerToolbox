@@ -96,10 +96,10 @@ WhiskerToolbox uses a docked-widget architecture where each widget is an indepen
 
 **Remaining friction:**
 - **Discoverability:** No visual cue that TransformsV2 can serve as a pipeline source.
-- **One-shot:** After delivery, the connection closes. No iteration without re-requesting.
-- **Unidirectional:** TransformsV2 sends *to* the column builder. No mechanism to *seed* TransformsV2 with an existing pipeline for editing.
+- ~~**One-shot:** After delivery, the connection closes. No iteration without re-requesting.~~ Resolved: `keep_open_for_iteration` keeps connections open for iterative refinement.
+- ~~**Unidirectional:** TransformsV2 sends *to* the column builder. No mechanism to *seed* TransformsV2 with an existing pipeline for editing.~~ Resolved: "Edit in Transforms V2" button with seed data.
 
-**Resolution:** Proposal 2 (Bidirectional OperationContext) — see below.
+**Resolution:** Proposal 2 (Bidirectional OperationContext) — ✅ implemented.
 
 ### Friction 2: Dimensionality Reduction → Scatter Plot (Resolved ✅)
 
@@ -141,24 +141,24 @@ Implemented as described in Layer 4 above. See `ContextAction.hpp`, `SelectionCo
 
 **Future enhancement:** If Commands gain a `canExecute(CommandContext)` predicate, pure-data commands could surface through ContextAction discovery via a thin adapter wrapping Command as ContextAction.
 
-### Proposal 2: Bidirectional OperationContext ("Edit and Return") — Pending
+### Proposal 2: Bidirectional OperationContext ("Edit and Return") — Complete
 
 **Problem addressed:** Friction 1 — one-shot delivery with no iteration or seeding.
 
 **Concept:** Extend `OperationContext` to support seeding the producer with initial state, and keeping the connection open for iterative refinement.
 
-**New `OperationRequestOptions` fields:**
+**`OperationRequestOptions` fields (implemented):**
 ```cpp
 struct OperationRequestOptions {
     DataChannel channel = DataChannels::TransformPipeline;
     bool close_on_selection_change = true;
-    bool close_after_delivery = false;     // NEW default: false for iteration
-    bool keep_open_for_iteration = false;  // NEW: don't close after delivery
-    std::optional<OperationResult> seed;   // NEW: initial state for producer
+    bool close_after_delivery = false;
+    bool keep_open_for_iteration = false;  // Keeps connection open after delivery
+    std::optional<OperationResult> seed;   // Initial state for producer
 };
 ```
 
-**Implementation cost:** Small — need `seed` on `OperationRequestOptions`, `initialSeed()` on `PendingOperation`, producer reads seed, add "Edit in Transforms V2" button alongside existing "Request from Transforms V2."
+**Implementation cost:** Small — `seed` on `OperationRequestOptions`, `initialSeed()` on `PendingOperation`, producer reads seed via `loadSeedFromOperation()`, "Edit in Transforms V2" button alongside existing "Request from Transforms V2" in `ColumnConfigDialog`. ✅ Implemented.
 
 ### Proposal 3: Workflow Pipeline Descriptors — Deferred
 
@@ -177,7 +177,7 @@ JSON-serializable workflow chaining operations across widgets. Architecturally s
 | "These entities are selected" | **Layer 2:** SelectionContext `setSelectedEntities` | Select points in scatter → highlight in table |
 | "Give me a pipeline config" | **Layer 3:** OperationContext request/response | Column builder ↔ TransformsV2 widget |
 | "What can I do with this?" | **Layer 4:** ContextActions | Right-click tensor → "Visualize in Scatter" |
-| "Edit this and send back" | **Proposal 2:** Bidirectional OperationContext | Edit existing pipeline JSON in TransformsV2 |
+| "Edit this and send back" | **Layer 3:** Bidirectional OperationContext | Edit existing pipeline JSON in TransformsV2 |
 | "Run this whole analysis" | **Proposal 3:** Workflow Pipelines | Encoder → PCA → Scatter → Cluster as one-click |
 
 ---
@@ -242,16 +242,16 @@ The three roadmaps — [Commands](DataManager/Commands/roadmap.qmd), [Tensor Tra
 | **Tier 1: Foundation** | Commands Phase 7 (CommandRegistry), Tensor Phase 1 (PCA) | ✅ Complete |
 | **Tier 2: Interactive Selection** | Tensor Phase 2 (scatter selection → groups), auto-focus output | ✅ Complete |
 | **Tier 3: ContextAction Framework** | `ContextAction` struct, `registerAction()`, `applicableActions()`, two registered actions | ✅ Complete |
-| **Tier 4: Integrated UI** | MLCore Dim Reduction tab (4a), clustering ↔ scatter loop (4b) | ✅ Complete (4a, 4b). **4c pending** (Bidirectional OperationContext) |
+| **Tier 4: Integrated UI** | MLCore Dim Reduction tab (4a), clustering ↔ scatter loop (4b), Bidirectional OperationContext (4c) | ✅ Complete |
 
 ### Remaining Tiers
 
-#### Tier 4c: Bidirectional OperationContext (Proposal 2)
+#### Tier 4c: Bidirectional OperationContext (Proposal 2) — ✅ Complete
 
 | Step | Description | Delivers |
 |------|-------------|----------|
-| Add `seed` + `keep_open_for_iteration` to `OperationRequestOptions` | Extend existing `OperationContext` infrastructure | Friction 1 fully resolved |
-| "Edit in Transforms V2" button in ColumnConfigDialog | Seeds TransformsV2_Widget with existing pipeline JSON | Bidirectional pipeline editing |
+| Add `seed` + `keep_open_for_iteration` to `OperationRequestOptions` | Extend existing `OperationContext` infrastructure | ✅ Friction 1 fully resolved |
+| "Edit in Transforms V2" button in ColumnConfigDialog | Seeds TransformsV2_Widget with existing pipeline JSON | ✅ Bidirectional pipeline editing |
 
 #### Tier 5: Commands Integration & Reproducibility
 
