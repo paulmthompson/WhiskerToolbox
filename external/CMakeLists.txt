@@ -161,7 +161,6 @@ FetchContent_Declare(
     GIT_TAG 1.9.5
 )
 
-set(CUDA OFF)
 #[[
 #Torch Stable URLs cpu
 https://https://download.pytorch.org/libtorch/cpu
@@ -171,7 +170,7 @@ https://download.pytorch.org/libtorch/cu126
 
 ]]
 if (LINUX)
-    if (CUDA)
+    if (ENABLE_NEURALYZER_CUDA)
         message(STATUS "Fetching libtorch with CUDA")
         FetchContent_Declare(
             Torch
@@ -192,7 +191,7 @@ elseif (APPLE)
        URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-2.9.0.zip
     )
 elseif (WIN32)
-    if (CUDA)
+    if (ENABLE_NEURALYZER_CUDA)
         FetchContent_Declare(
             Torch
             #URL https://download.pytorch.org/libtorch/cu121/libtorch-win-shared-with-deps-2.5.1%2Bcu121.zip
@@ -309,7 +308,6 @@ if (ENABLE_UI)
 endif()
 
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${torch_SOURCE_DIR}/share/cmake/Torch" PARENT_SCOPE)
-
 #I need to add the lib folder for ortools to be used when we find_package with ortools
 
 
