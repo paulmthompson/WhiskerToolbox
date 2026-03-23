@@ -6,18 +6,18 @@ title: "Command Architecture Roadmap"
 
 ## Progress Summary
 
-*Last updated: 2026-03-12*
+*Last updated: 2025-07-22*
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 1:** Command Foundation | **Complete** | 6 commands, factory, validation, variable substitution, recorder, mutation guard, golden traces |
+| **Phase 1:** Command Foundation | **Complete** | 7 commands, factory, validation, variable substitution, recorder, mutation guard, golden traces |
 | **Phase 2:** Triage Session | **Nearly Complete** | Core, widget, guided editor all done. Keyboard shortcuts (2.4) and tracked-regions overlay (2.5) remain. |
 | **Phase 3:** Persistence & Save Registry | **Complete** | SaverRegistry, 8 savers (CSV ×6, CapnProto, OpenCV), SaveData + LoadData commands, round-trip fuzz tests |
-| **Phase 3.5:** Command Recording & Test Generation | Not Started | Wire CommandRecorder into GUI, route widgets through executeSequence(), minimal Command Log UI |
-| **Phase 4:** Action Journal Integration | Not Started | Generalizes CommandRecorder into persistent, timestamped journal |
+| **Phase 3.5:** Command Recording & Test Generation | **Nearly Complete** | Steps 3.5.1–3.5.3 done (recorder wired, widgets routed, Command Log UI). Only end-to-end verification (3.5.4) remains. |
+| **Phase 4:** Action Journal Integration | Not Started | Generalizes CommandRecorder into persistent, timestamped journal. Depends on Phase 3.5. |
 | **Phase 5:** Undo/Redo | Not Started | CommandStack, memento-based EditorState undo, inverse commands |
 | **Phase 6:** CLI Batch & Macro Recording | Not Started | Headless command execution; generalizes golden trace tests |
-| **Phase 7:** Command Registration API | **In Progress** | Steps 7.1–7.6 complete. Domain library registration (7.3) and --whole-archive removal (7.7) N/A until domain commands exist. |
+| **Phase 7:** Command Registration API | **Complete** | `CommandRegistry` singleton, `register_core_commands()`, explicit dispatcher. All exit criteria met. |
 | **Widget Command-ification** | Ongoing | 9 new commands identified via audit; none yet implemented. See [GUI Verb Audit](gui_verb_audit.qmd). |
 
 For the full architectural design, types, and code examples, see the
@@ -25,7 +25,7 @@ For the full architectural design, types, and code examples, see the
 
 ## What Exists Today
 
-### Registered Commands (6)
+### Registered Commands (7)
 
 | Command | Category | Undoable | Description |
 |---------|----------|----------|-------------|
@@ -35,13 +35,17 @@ For the full architectural design, types, and code examples, see the
 | `ForEachKey` | meta | No | Iterate a list of values, execute sub-commands per item |
 | `SaveData` | persistence | No | Save a data object via `LoaderRegistry::trySave()` |
 | `LoadData` | persistence | Yes | Load a data object via `LoaderRegistry::tryLoad()` |
+| `SynthesizeData` | data_creation | No | Generate data via `GeneratorRegistry` |
 
 ### Infrastructure
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| `CommandFactory` | `src/Commands/Core/` | `createCommand()`, `createCommandFromJson()`, `getAvailableCommands()`, `getCommandInfo()` |
+| `CommandRegistry` | `src/Commands/Core/` | Singleton registry with `registerCommand()`, `isKnown()`, `create()`, `availableCommands()` |
+| `CommandFactory` | `src/Commands/Core/` | Thin wrappers delegating to `CommandRegistry::instance()` |
+| `register_core_commands()` | `src/Commands/Core/` | Explicit dispatcher registering all 7 built-in commands |
 | `CommandRecorder` | `src/Commands/Core/` | Records executed commands for replay; hook in `executeSequence()` |
+| `CommandLog_Widget` | `src/WhiskerToolbox/CommandLog_Widget/` | Real-time command log with "Copy as JSON" export |
 | `MutationGuard` | `src/DataManager/Commands/` | Debug-only: warns when `DataManager` is mutated outside a command |
 | `DataManagerSnapshot` | `src/DataManager/` | Lightweight state snapshot (type, entity count, content hash) for golden trace tests |
 | `ParameterSchema` | `src/ParameterSchema/` | Compile-time parameter schema extraction from reflect-cpp structs |
@@ -55,6 +59,7 @@ For the full architectural design, types, and code examples, see the
 
 - **Command unit tests**: 25+ test cases (factory, move, copy, interval, forEach, error handling)
 - **CommandRecorder tests**: 19 test cases (record/clear, JSON serialization, executeSequence integration, MutationGuard)
+- **CommandRegistry tests**: 10 test cases (registration, discovery, creation, all-commands-present check)
 - **Validation tests**: 10+ test cases (structural, deserialization, variable resolution, type compatibility)
 - **Variable substitution tests**: 10+ test cases (static/runtime variables, integer normalization)
 - **SaveData/LoadData tests**: 22 test cases (factory, execution, undo, serialization, round-trip)
@@ -65,38 +70,31 @@ For the full architectural design, types, and code examples, see the
 ## Dependency Graph (Remaining Work)
 
 ```
-Completed Foundation (Phases 1, 3)
+Completed Foundation (Phases 1, 3, 3.5 nearly done, 7)
    │
    ├──► Phase 2 Remaining: Keyboard shortcuts (2.4), tracked-regions viz (2.5)
    │
-   ├──► Phase 3.5: Command Recording & Test Generation
-   │       Wires CommandRecorder into GUI, routes widgets through executeSequence()
-   │       Enables: "do it in GUI → export JSON → write golden trace test"
+   ├──► Phase 3.5 Remaining: End-to-end verification (3.5.4)
+   │       Steps 3.5.1–3.5.3 done (recorder wired, widgets routed, Command Log UI)
    │
    ├──► Widget Command-ification (ongoing, on-demand)
    │       Uses: MutationGuard for gap detection, golden traces for verification
-   │       Blocked commands: CreateData, DeleteData, AddEvent, RemoveEvent, etc.
+   │       Needed: CreateData, DeleteData, AddEvent, RemoveEvent, etc.
    │
    ├──► Phase 4: Action Journal
-   │       Depends on: Phase 3.5 (recorder wired into app)
+   │       Depends on: Phase 3.5 completion
    │       Generalizes recorder into persistent timestamped log
    │
    ├──► Phase 5: Undo/Redo
-   │       Independent of Phases 2, 4, 6
+   │       Independent of other phases
    │       MoveByTimeRange already supports undo; needs CommandStack
    │
-   ├──► Phase 6: CLI Batch & Macro Recording
-   │       Depends on: Phases 3 (done), 4
-   │       Generalizes golden trace tests into CLI tool
-   │
-   └──► Phase 7: Command Registration API (Explicit Dispatcher)
-           Independent of all other phases
-           Replaces hardcoded if-else factory with explicit registration functions
-           Enables: domain libraries (TransformsV2, MLCore) to contribute commands
-           No --whole-archive required; linker errors on misconfiguration
+   └──► Phase 6: CLI Batch & Macro Recording
+           Depends on: Phase 4
+           Generalizes golden trace tests into CLI tool
 ```
 
-**Parallelizable:** Phases 3.5, 5, 7, and widget command-ification can proceed independently.
+**Parallelizable:** Phase 3.5.4, Phase 5, and widget command-ification can proceed independently.
 Phase 4 depends on Phase 3.5. Phase 6 requires Phase 4.
 
 ---
@@ -105,60 +103,32 @@ Phase 4 depends on Phase 3.5. Phase 6 requires Phase 4.
 
 ### Phase 1 — Command Foundation (Complete)
 
-All 14 steps complete. Delivered:
+All 14 steps complete. Delivered: core types (`CommandResult`, `CommandContext`, `CommandDescriptor`, `ICommand`), execution engine (two-pass variable substitution, `executeSequence()` with stop-on-error), query helpers (`getEntityIdsInRange()`), 4 initial commands (`MoveByTimeRange`, `CopyByTimeRange`, `AddInterval`, `ForEachKey`), validation (`validateSequence()`), GUI verb audit (on-demand strategy), `ParameterSchema` as standalone library, `CommandInfo` introspection, `CommandRecorder` + `MutationGuard`, `DataManagerSnapshot` + golden trace test pattern.
 
-- **Core types** (Steps 1.1–1.3): `CommandResult`, `CommandContext`, `CommandDescriptor`,
-  `CommandSequenceDescriptor`, `ICommand` base class, `CommandFactory` with
-  `createCommand()` / `createCommandFromJson()`.
-- **Execution engine** (Steps 1.4–1.5): Two-pass `${variable}` substitution,
-  `executeSequence()` with stop-on-error, `SequenceResult` for undo.
-- **Query helpers** (Step 1.6): `getEntityIdsInRange()` for `RaggedTimeSeries<T>`,
-  `DigitalEventSeries`, and `DigitalIntervalSeries`.
-- **First commands** (Step 1.7): `MoveByTimeRange`, `CopyByTimeRange`, `AddInterval`,
-  `ForEachKey`.
-- **Validation** (Step 1.9): `validateSequence()` with structural, deserialization,
-  variable, key existence, and type compatibility checks.
-- **GUI verb audit** (Step 1.10): On-demand hybrid strategy. DataManager_Widget and
-  DataInspector_Widget audited. See [GUI Verb Audit](gui_verb_audit.qmd).
-- **ParameterSchema** (Step 1.11): Extracted to `src/ParameterSchema/` as standalone library.
-- **CommandInfo** (Step 1.12): `getAvailableCommands()`, `getCommandInfo()`, per-command
-  `ParameterUIHints`.
-- **CommandRecorder + MutationGuard** (Step 1.13): Trace recording with `executeSequence()`
-  hook; debug-only strangulation pattern for runtime gap detection.
-- **DataManagerSnapshot + Golden Traces** (Step 1.14): Lightweight snapshot comparison;
-  golden trace test pattern for widget verification.
-
-**Known pitfall (resolved):** `rfl::Generic` stores integers as `double`, causing round-trip
-failures. Fixed via `normalizeJsonNumbers()` in `VariableSubstitution` and
-`createCommandFromJson()` in `CommandFactory`.
+**Known pitfall (resolved):** `rfl::Generic` stores integers as `double`. Fixed via `normalizeJsonNumbers()`.
 
 See the [design document](index.qmd) for architecture details.
 
 ### Phase 3 — Persistence Commands & Save Registry (Complete)
 
-All steps complete. Delivered:
+All steps complete. Delivered: `SaverInfo` metadata + `AtomicWrite` utility, 8 format savers (CSV ×6 data types, CapnProto LineData, OpenCV MaskData), all fuzz-tested. `SaveData` command (not undoable) and `LoadData` command (undoable via `deleteData()`).
 
-- **SaverRegistry infrastructure** (Step 3.1.1): `SaverInfo` metadata, `AtomicWrite` utility,
-  `getSupportedSaveFormats()` on `LoaderRegistry`.
-  See [SaverInfo & AtomicWrite](../../IO/saver_infrastructure.qmd).
-- **8 format savers** (Steps 3.1.2–3.1.9):
+See [SaverInfo & AtomicWrite](../../IO/saver_infrastructure.qmd), [SaveData](save_data.qmd), [LoadData](load_data.qmd).
 
-  | Format | Data Type | Fuzz Tested |
-  |--------|-----------|-------------|
-  | CSV | PointData | Yes (round-trip + delimiter) |
-  | CSV | LineData (single-file) | Yes (round-trip + delimiter) |
-  | CSV | LineData (multi-file) | Yes (round-trip) |
-  | CSV | AnalogTimeSeries | Yes (round-trip + delimiter) |
-  | CSV | DigitalEventSeries | Yes (round-trip + delimiter) |
-  | CSV | DigitalIntervalSeries | Yes (round-trip + delimiter) |
-  | CSV | MaskData (RLE) | Yes (round-trip + delimiter) |
-  | CapnProto | LineData | Yes (exact binary round-trip) |
-  | OpenCV (Image) | MaskData | Yes (robustness) |
+### Phase 7 — Command Registration API (Complete)
 
-- **SaveData command** (Step 3.2): Dispatches via `LoaderRegistry::trySave()`. Not undoable.
-  See [SaveData Command](save_data.qmd).
-- **LoadData command** (Step 3.3): Dispatches via `LoaderRegistry::tryLoad()`. Undoable
-  (undo calls `deleteData()`). See [LoadData Command](load_data.qmd).
+Replaced the hardcoded if-else chain in `CommandFactory` with `CommandRegistry` singleton + explicit dispatcher pattern. All exit criteria met:
+
+- `CommandFactory.cpp` contains zero if-else branches; delegates to `CommandRegistry::instance()`
+- `register_core_commands()` registers all 7 built-in commands
+- Called from `MainWindow` constructor (dedicated `register_all_commands.cpp` deferred until domain libraries contribute commands)
+- Reusable `tests/shared/RegisterCommandsListener.cpp` Catch2 listener for test setup
+- `CommandRegistry.test.cpp` verifies all commands registered (10 test cases)
+- No `--whole-archive` flags needed for Commands
+
+**Why Explicit Dispatcher over RAII:** Commands chose a different registration pattern than TransformsV2/DataSynthesizer (RAII + `--whole-archive`). The explicit dispatcher avoids silent registration failures, eliminates platform-specific `--whole-archive` linker flags, gives tests precise control over available commands, and works cleanly across shared library boundaries. See the [design document](index.qmd) for the detailed comparison table.
+
+**Next use:** When domain libraries (TransformsV2, MLCore) contribute commands, each defines a `register_*_commands()` function and the central dispatcher gains one line. See [Ownership & Registration Best Practices](../../inter_widget_communication_roadmap.md#ownership--registration-best-practices) for the full pattern.
 
 ---
 
@@ -166,21 +136,7 @@ All steps complete. Delivered:
 
 **Goal:** Mark/Commit/Recall workflow using command sequences.
 
-**Completed steps:**
-
-- **TriageSession core** (Step 2.1): `Idle ↔ Marking` state machine in `src/TriageSession/`.
-  `commit()` populates runtime variables (`mark_frame`, `current_frame`) and delegates to
-  `executeSequence()`. Retains last commit commands for undo support.
-- **TriageSessionState** (Step 2.2): EditorState subclass with pipeline/tracked-regions
-  serialization.
-- **TriageSessionWidget** (Step 2.3): Mark/Commit/Recall buttons, pipeline display,
-  tracked-regions summary.
-- **Unit tests** (Step 2.6): State machine transitions, runtime variable population,
-  full triage round-trip integration test.
-- **AutoParamWidget extraction** (Step 2.7): Extracted to `src/WhiskerToolbox/AutoParamWidget/`
-  with `Qt6::Widgets` + `ParameterSchema` dependencies only.
-- **Guided Pipeline Editor** (Step 2.8): Command picker dialog, editable command list with
-  `AutoParamWidget` rows, bidirectional sync with raw JSON editor.
+**Completed:** TriageSession core (state machine, `commit()` with runtime variables), TriageSessionState (EditorState subclass), TriageSessionWidget (UI), unit tests, AutoParamWidget extraction, Guided Pipeline Editor.
 
 ### Remaining Steps
 
@@ -193,6 +149,38 @@ All steps complete. Delivered:
 #### Step 2.5 — Tracked-Regions Visualization
 
 - [ ] Render tracked-regions `DigitalIntervalSeries` as shaded overlay on the timeline/scrubber
+
+---
+
+## Phase 3.5 — Command Recording & Test Generation (Nearly Complete)
+
+**Goal:** Wire `CommandRecorder` into the running application so GUI actions produce
+exportable `CommandSequenceDescriptor` JSON, enabling semi-automated golden trace test
+generation.
+
+**Completed:** Steps 3.5.1–3.5.3 all done:
+
+- **Step 3.5.1 (Centralized Recorder):** `CommandContext` has `CommandRecorder* recorder` field. `executeSequence()` falls back to `ctx.recorder`. `MainWindow` owns a `CommandRecorder` and exposes `commandRecorder()` getter.
+- **Step 3.5.2 (Route Widgets):** DataSynthesizer Generate, SaveData call sites, and TriageSession `commit()` all route through `executeSequence()` with the shared recorder.
+- **Step 3.5.3 (Command Log UI):** `CommandLog_Widget` displays recorded commands in real-time with "Copy as JSON" and "Clear" buttons. Accessible via Modules → Command Log.
+
+### Remaining: Step 3.5.4 — End-to-End Verification
+
+- [ ] Demo workflow: Open app → open Command Log → generate a SineWave via Data Synthesizer
+  → save as CSV via DataInspector → Command Log shows 2 entries (`SynthesizeData`, `SaveData`)
+  → "Copy as JSON" → paste into a Catch2 golden trace test with `DataManagerSnapshot`
+  assertions → test passes.
+- [ ] Debug build: exercising recorded workflows produces no `MutationGuard` warnings.
+- [ ] Round-trip: `executeSequence(recorded_json)` then `executeSequence(recorder.toSequence())`
+  produce identical `DataManagerSnapshot`s.
+
+### Exit Criteria
+
+1. All GUI command execution paths go through `executeSequence()` with a recorder.
+2. Command Log widget displays recorded commands in real-time.
+3. "Copy as JSON" produces a valid `CommandSequenceDescriptor` that, when pasted into a
+   Catch2 test and executed via `executeSequence()`, reproduces the same
+   `DataManagerSnapshot`.
 
 ---
 
@@ -237,93 +225,11 @@ touched. MutationGuard provides automated runtime gap detection.
 
 ---
 
-## Phase 3.5 — Command Recording & Test Generation
-
-**Goal:** Wire `CommandRecorder` into the running application so GUI actions produce
-exportable `CommandSequenceDescriptor` JSON, enabling semi-automated golden trace test
-generation.
-
-**Depends on:** Phase 1 (done)
-
-**Motivation:** All the infrastructure exists (`CommandRecorder`, `executeSequence()` hook,
-`DataManagerSnapshot`, golden trace tests) but nothing is connected in the running app.
-Widgets call `cmd.execute(ctx)` directly, bypassing `executeSequence()` and its recording
-hook. This phase wires everything together so a user can: *do actions in GUI → see recorded
-commands → copy JSON → paste into a Catch2 golden trace test*.
-
-### Current Gap
-
-| Component | Status |
-|-----------|--------|
-| `CommandRecorder` class | ✅ Implemented, tested (19 test cases) |
-| `executeSequence()` recording hook | ✅ Implemented (accepts `CommandRecorder*` param) |
-| `MutationGuard` | ✅ Active in debug builds |
-| Shared recorder instance in app | ✅ `MainWindow` owns `CommandRecorder`; `commandRecorder()` getter |
-| `ctx.recorder` fallback | ✅ `executeSequence()` falls back to `ctx.recorder` when no explicit recorder passed |
-| DataSynthesizer "Generate" | ✅ Routes through `executeSequence()` |
-| SaveData call sites | ✅ Routes through `executeSequence()` |
-| TriageSession `commit()` | ✅ Routes through `executeSequence()` with recorder |
-| UI to view/export recorded commands | ✅ CommandLog_Widget (Step 3.5.3) |
-
-### Step 3.5.1 — Centralized Recorder (Complete)
-
-- [x] Add `CommandRecorder*` field to `CommandContext` (`src/Commands/Core/CommandContext.hpp`).
-  Backwards-compatible default of `nullptr`.
-- [x] Update `executeSequence()` (`src/Commands/Core/SequenceExecution.cpp`) to use
-  `ctx.recorder` as fallback when the explicit `recorder` parameter is `nullptr`.
-- [x] Add `std::unique_ptr<commands::CommandRecorder>` to `MainWindow`
-  (`src/WhiskerToolbox/Main_Window/mainwindow.hpp`). Expose via `commandRecorder()` getter.
-  Populate `CommandContext::recorder` for all widget command execution.
-
-### Step 3.5.2 — Route Widgets Through executeSequence()
-
-- [x] **DataSynthesizer Generate** (`src/WhiskerToolbox/DataSynthesizer_Widget/UI/DataSynthesizerProperties_Widget.cpp`):
-  Build a `CommandDescriptor{.command_name = "SynthesizeData", .parameters = ...}` and call
-  `executeSequence()` instead of `cmd.execute(ctx)`.
-- [x] **SaveData call sites** (DataInspector savers, DataExport): Same pattern. See
-  [widget_save_refactoring_guide.qmd](widget_save_refactoring_guide.qmd).
-- [x] **TriageSession** (`src/TriageSession/TriageSession.cpp`): Accept `CommandRecorder*`
-  in `commit()`, forward to `executeSequence()`.
-
-### Step 3.5.3 — Command Log UI (Complete)
-
-- [x] Create a minimal "Command Log" dock widget showing the list of recorded
-  `CommandDescriptor` names and parameters from the shared recorder.
-  See [Command Log Widget](command_log_widget.qmd).
-- [x] "Copy as JSON" button: calls `recorder->toSequence("recorded_session")`, serializes
-  via `rfl::json::write()`, copies to clipboard.
-- [x] "Clear" button.
-- [x] Add "Modules → Command Log" menu item in MainWindow.
-
-**Note:** This is intentionally minimal — NOT the full Phase 4 Action Journal. No
-persistence, timestamps, filtering, or provenance. Just enough to see what happened and
-export it.
-
-### Step 3.5.4 — End-to-End Verification
-
-- [ ] Demo workflow: Open app → open Command Log → generate a SineWave via Data Synthesizer
-  → save as CSV via DataInspector → Command Log shows 2 entries (`SynthesizeData`, `SaveData`)
-  → "Copy as JSON" → paste into a Catch2 golden trace test with `DataManagerSnapshot`
-  assertions → test passes.
-- [ ] Debug build: exercising recorded workflows produces no `MutationGuard` warnings.
-- [ ] Round-trip: `executeSequence(recorded_json)` then `executeSequence(recorder.toSequence())`
-  produce identical `DataManagerSnapshot`s.
-
-### Exit Criteria
-
-1. All GUI command execution paths go through `executeSequence()` with a recorder.
-2. Command Log widget displays recorded commands in real-time.
-3. "Copy as JSON" produces a valid `CommandSequenceDescriptor` that, when pasted into a
-   Catch2 test and executed via `executeSequence()`, reproduces the same
-   `DataManagerSnapshot`.
-
----
-
 ## Phase 4 — Action Journal Integration
 
 **Goal:** Commands auto-record to journal; journal can replay command entries.
 
-**Depends on:** Phase 3.5 (recorder wired into app)
+**Depends on:** Phase 3.5 (nearly complete — only 3.5.4 verification remains)
 
 Generalizes the `CommandRecorder` into a persistent, timestamped, filterable log with
 workspace integration. The `executeSequence()` hook from Step 1.13 is reused — the change
@@ -366,15 +272,11 @@ See [CommandStack](index.qmd#commandstack) in the design document.
 - [ ] Captures before/after JSON snapshots
 - [ ] `mergeWith()` for coalescing rapid changes to the same widget
 
-See [WidgetStateChangeCommand](index.qmd#widgetstatechangecommand) in the design document.
-
 ### Step 5.3 — CommandSequenceCommand
 
 - [ ] Wraps `vector<unique_ptr<ICommand>>` for macro undo (e.g., triage commits)
 - [ ] `isUndoable()` returns true if any child is undoable
 - [ ] `undo()` reverses children in reverse order, skipping non-undoable ones
-
-See [CommandSequenceCommand](index.qmd#commandsequencecommand-triage-undo) in the design document.
 
 ### Step 5.4 — MoveByTimeRange Undo Verification
 
@@ -395,419 +297,27 @@ See [CommandSequenceCommand](index.qmd#commandsequencecommand-triage-undo) in th
 
 **Depends on:** Phases 3 (done), 4
 
-Generalizes the golden trace test pattern (load JSON → create `DataManager` →
-`executeSequence()` → check results) into a CLI tool. The macro recorder generalizes
-`CommandRecorder` from a test utility into a user-facing feature.
-
 ### Step 6.1 — CLI Executor
 
 - [ ] CLI tool or application mode: load a `.json` command sequence, create `DataManager`, execute, exit
-- [ ] Variable substitution for batch parameterization (reuses existing pipeline variable system)
+- [ ] Variable substitution for batch parameterization
 - [ ] Exit code reflects success/failure
 
 ### Step 6.2 — Macro Recorder
 
-- [ ] Intercept GUI actions (data loads, transforms, triage commits) and emit `CommandDescriptor`s
+- [ ] Intercept GUI actions and emit `CommandDescriptor`s
 - [ ] Record to an in-memory `CommandSequenceDescriptor` that can be saved to JSON
 
 ### Step 6.3 — ConfigExportToolbar
 
 - [ ] Reusable toolbar component: "Copy as JSON", "Save Configuration..."
-- [ ] Attach to widgets that produce command sequences (triage session, transform widget, etc.)
+- [ ] Attach to widgets that produce command sequences
 
 ### Step 6.4 — CommandSequenceWidget
 
-- [ ] Standalone Qt widget (`src/WhiskerToolbox/Commands/`) for building, editing, and running
-  command sequences outside the triage workflow
+- [ ] Standalone Qt widget for building, editing, and running command sequences
 - [ ] JSON editor with validation feedback
 - [ ] Command list view with run button
-
----
-
-## Phase 7 — Command Registration API (Explicit Dispatcher)
-
-**Goal:** Replace the hardcoded if-else chain in `CommandFactory` with an explicit-dispatcher
-registration pattern, enabling domain libraries to contribute commands without `--whole-archive`
-linker flags or silent registration failures.
-
-**Depends on:** Phase 1 (done). Independent of all other phases.
-
-**Motivation:** Today, `CommandFactory::createCommandFromJson()` is a 7-branch if-else chain,
-and `getAvailableCommands()` returns a hardcoded `std::vector<CommandInfo>`. Adding a command
-requires editing `CommandFactory.cpp`, adding `#include` directives for the new command header,
-and manually appending to both the creation chain and the info vector. This is fine for the
-current ~7 commands (and the ~9 CRUD commands from the [GUI Verb Audit](gui_verb_audit.qmd)),
-but it doesn't scale when domain libraries like TransformsV2 and MLCore need to contribute
-commands without creating circular dependencies.
-
-See [Inter-Widget Communication Roadmap — Ownership & Registration Best Practices](../../inter_widget_communication_roadmap.md#ownership--registration-best-practices)
-for the full motivation and command ownership tiers.
-
-### Why Explicit Dispatcher Over RAII
-
-The project's existing registries (TransformsV2 `RegisterTransform<>`, DataSynthesizer
-`RegisterGenerator<>`) use RAII static registration with `--whole-archive` linking. While
-this works, it has significant drawbacks that compound as libraries scale:
-
-| Concern | RAII + `--whole-archive` | Explicit Dispatcher |
-|---------|------------------------|---------------------|
-| **Failure mode** | **Silent** — missing `--whole-archive` → registrations vanish, no error | **Loud** — missing call → linker error (undefined reference) |
-| **Central file touch** | Build file (`CMakeLists.txt`) per new library | Source file (dispatcher `.cpp`) per new library |
-| **Binary size** | Forces linker to include every `.o` in the archive | Normal dead-code elimination applies |
-| **Platform boilerplate** | 3 platform-specific linker flag variants (Linux/macOS/MSVC) | None |
-| **Duplicated across consumers** | Every exe/test must repeat `--whole-archive` flags | Each test calls only the registration functions it needs |
-| **Shared library compatibility** | Singleton identity breaks across `.so` boundaries | Works with both static and shared libraries |
-
-The explicit dispatcher follows the Blender operator registration pattern: each module
-defines a `register_*_commands()` function, and a central dispatcher in the composition root
-calls them all. One line per module, loud failures, no linker magic.
-
-### Current State
-
-```cpp
-// CommandFactory.cpp — today
-bool isKnownCommandName(std::string const & name) {
-    return name == "MoveByTimeRange" || name == "CopyByTimeRange" ||
-           name == "AddInterval" || name == "ForEachKey" ||
-           name == "SaveData" || name == "LoadData" ||
-           name == "SynthesizeData";
-}
-
-std::unique_ptr<ICommand> createCommandFromJson(
-        std::string const & name, std::string const & params_json) {
-    auto const json = normalizeJsonNumbers(params_json);
-    if (name == "MoveByTimeRange") { /* deserialize + construct */ }
-    if (name == "CopyByTimeRange") { /* ... */ }
-    // ... 5 more branches
-    return nullptr;
-}
-```
-
-### Design
-
-#### Step 7.1 — CommandRegistry Singleton
-
-Replace the free functions in `CommandFactory` with a `CommandRegistry` singleton that stores
-a `std::unordered_map` from command name to a creator function + metadata:
-
-```cpp
-// src/Commands/Core/CommandRegistry.hpp
-namespace commands {
-
-/// Type-erased command creator: takes normalized JSON, returns ICommand.
-using CommandCreator = std::function<std::unique_ptr<ICommand>(std::string const &)>;
-
-class CommandRegistry {
-public:
-    static CommandRegistry & instance();
-
-    /// Register a command with its creator and metadata.
-    /// @pre name must not already be registered (asserts in debug).
-    void registerCommand(std::string name, CommandCreator creator, CommandInfo info);
-
-    /// Query
-    [[nodiscard]] bool isKnown(std::string const & name) const;
-    [[nodiscard]] std::unique_ptr<ICommand> create(std::string const & name,
-                                                    std::string const & params_json) const;
-    [[nodiscard]] std::vector<CommandInfo> availableCommands() const;
-    [[nodiscard]] std::optional<CommandInfo> commandInfo(std::string const & name) const;
-
-private:
-    struct Entry {
-        CommandCreator creator;
-        CommandInfo info;
-    };
-    std::unordered_map<std::string, Entry> _commands;
-};
-
-} // namespace commands
-```
-
-The existing free functions (`isKnownCommandName`, `createCommand`, `createCommandFromJson`,
-`getAvailableCommands`, `getCommandInfo`) become thin wrappers that delegate to
-`CommandRegistry::instance()`. This preserves backward compatibility — all existing callers
-continue to work unchanged.
-
-#### Step 7.2 — Per-Library Registration Functions
-
-Instead of RAII static objects (`RegisterCommand<>` in anonymous namespaces), each library
-defines an **explicit registration function** that imperatively registers its commands:
-
-```cpp
-// src/Commands/Core/register_core_commands.hpp
-namespace commands {
-/// Register all built-in commands (MoveByTimeRange, CopyByTimeRange, etc.)
-void register_core_commands();
-} // namespace commands
-
-// src/Commands/Core/register_core_commands.cpp
-#include "CommandRegistry.hpp"
-#include "commands/MoveByTimeRange.hpp"
-#include "commands/CopyByTimeRange.hpp"
-#include "commands/AddInterval.hpp"
-#include "commands/ForEachKey.hpp"
-#include "commands/SaveData.hpp"
-#include "commands/LoadData.hpp"
-#include "commands/SynthesizeData.hpp"
-
-namespace commands {
-
-void register_core_commands() {
-    auto & reg = CommandRegistry::instance();
-
-    reg.registerCommand(
-        "MoveByTimeRange",
-        [](std::string const & json) -> std::unique_ptr<ICommand> {
-            auto p = rfl::json::read<MoveByTimeRangeParams>(normalizeJsonNumbers(json));
-            if (!p) return nullptr;
-            return std::make_unique<MoveByTimeRange>(std::move(*p));
-        },
-        CommandInfo{
-            .name = "MoveByTimeRange",
-            .description = "Move entities in a time range between same-type data objects",
-            .category = "data_mutation",
-            .supports_undo = true,
-            .supported_data_types = {"LineData", "PointData", "MaskData", "DigitalEventSeries"},
-            .parameter_schema = extractParameterSchema<MoveByTimeRangeParams>(),
-        });
-
-    // ... repeat for each built-in command
-}
-
-} // namespace commands
-```
-
-A convenience helper template can reduce the boilerplate:
-
-```cpp
-// src/Commands/Core/CommandRegistry.hpp
-namespace commands {
-
-/// Helper: register a command with automatic JSON deserialization and schema extraction.
-template<typename CommandT, typename Params>
-void registerTypedCommand(CommandRegistry & reg, std::string name, CommandInfo info) {
-    info.parameter_schema = extractParameterSchema<Params>();
-    reg.registerCommand(
-        std::move(name),
-        [](std::string const & params_json) -> std::unique_ptr<ICommand> {
-            auto const json = normalizeJsonNumbers(params_json);
-            auto p = rfl::json::read<Params>(json);
-            if (!p) return nullptr;
-            return std::make_unique<CommandT>(std::move(*p));
-        },
-        std::move(info));
-}
-
-} // namespace commands
-```
-
-With this helper, each registration is a single call:
-
-```cpp
-void register_core_commands() {
-    auto & reg = CommandRegistry::instance();
-    registerTypedCommand<MoveByTimeRange, MoveByTimeRangeParams>(reg,
-        "MoveByTimeRange",
-        {.name = "MoveByTimeRange",
-         .description = "Move entities in a time range between same-type data objects",
-         .category = "data_mutation",
-         .supports_undo = true,
-         .supported_data_types = {"LineData", "PointData", "MaskData", "DigitalEventSeries"}});
-    // ...
-}
-```
-
-#### Step 7.3 — Domain Library Registration Functions
-
-Domain libraries define their own registration functions. The domain library links to
-`Commands` (upward dependency) — `Commands` never links to the domain library:
-
-```cpp
-// src/TransformsV2/commands/register_transform_commands.hpp
-namespace transforms {
-void register_transform_commands();
-}
-
-// src/TransformsV2/commands/register_transform_commands.cpp
-#include <Commands/Core/CommandRegistry.hpp>
-#include "RunTransform.hpp"
-
-namespace transforms {
-void register_transform_commands() {
-    commands::registerTypedCommand<RunTransformCommand, RunTransformParams>(
-        commands::CommandRegistry::instance(),
-        "RunTransform",
-        {.name = "RunTransform",
-         .description = "Execute a TransformsV2 pipeline on a data object",
-         .category = "transform",
-         .supports_undo = false});
-}
-}
-```
-
-The `RunTransform` command itself delegates to `ElementRegistry::instance()` at runtime —
-it doesn't need to know about individual transforms at compile time. See
-[Tier 2: Gateway Commands](../../inter_widget_communication_roadmap.md#ownership--registration-best-practices)
-for the full gateway pattern design.
-
-#### Step 7.4 — Central Dispatcher (Composition Root)
-
-The dispatcher lives in the executable — the **composition root** that knows about all
-concrete libraries. This is the only file that must be edited when a new library contributes
-commands:
-
-```cpp
-// src/WhiskerToolbox/register_all_commands.hpp
-void register_all_commands();
-
-// src/WhiskerToolbox/register_all_commands.cpp
-#include <Commands/Core/register_core_commands.hpp>
-// future: #include <TransformsV2/commands/register_transform_commands.hpp>
-// future: #include <MLCore/commands/register_mlcore_commands.hpp>
-
-void register_all_commands() {
-    commands::register_core_commands();
-    // future: transforms::register_transform_commands();
-    // future: mlcore::register_mlcore_commands();
-}
-```
-
-Called once at startup:
-
-```cpp
-// main.cpp (or MainWindow constructor)
-register_all_commands();  // before any command usage
-```
-
-**Failure modes:**
-
-- **Forget to add the call to the dispatcher:** Registration function exists but is never
-  called. The commands silently don't appear. However, unlike RAII, the function is a named
-  exported symbol easily detectable by grep or static analysis. A CI check can verify all
-  `register_*_commands()` functions are called somewhere.
-- **Forget to add the `#include` but add the call:** Compiler error (undeclared function).
-- **Add the `#include` and call, but the library doesn't define the function:** Linker error
-  (undefined reference). **This is the critical advantage** — the most common mistake
-  (misconfigured build) produces a loud failure instead of silent absence.
-
-#### Step 7.5 — Dependency Flow
-
-```
-CommandRegistry (in libCommands.a)
-       ↑ links to
-  MLCore (in libMLCore.a)
-       ↑ links to (normal, no --whole-archive)
-  WhiskerToolbox executable
-       │
-       ├── links libCommands.a     (normal linking)
-       ├── links libMLCore.a       (normal linking)
-       └── compiles register_all_commands.cpp
-               calls register_core_commands()    → pulls in Commands registrations
-               calls register_mlcore_commands()  → pulls in MLCore registrations
-```
-
-Because the dispatcher explicitly calls each registration function, the linker follows the
-call graph and pulls in the referenced command classes. No `--whole-archive` needed.
-
-#### Step 7.6 — Test Registration
-
-Tests register only the commands they need — no global dispatcher, no `--whole-archive`:
-
-```cpp
-// tests/Commands/test_setup.cpp
-#include <Commands/Core/register_core_commands.hpp>
-
-struct TestSetup {
-    TestSetup() { commands::register_core_commands(); }
-};
-static TestSetup const setup;  // or call in a Catch2 listener
-```
-
-Tests for domain commands include only that domain's registration:
-
-```cpp
-// tests/MLCore/test_mlcore_commands.cpp
-#include <MLCore/commands/register_mlcore_commands.hpp>
-static struct { /* constructor calls register */} setup;
-```
-
-This is simpler than the `--whole-archive` approach, eliminates the cross-platform linker
-flag conditional blocks, and gives tests precise control over which commands are available.
-
-#### Step 7.7 — Validation Compatibility
-
-The existing `validateSequence()` calls `isKnownCommandName()` for its structural check.
-Since this delegates to `CommandRegistry::instance().isKnown()`, it automatically recognizes
-domain-registered commands with no changes needed.
-
-`getAvailableCommands()` and `getCommandInfo()` similarly delegate to the registry, so
-AutoParamWidget-based UIs (Guided Pipeline Editor, future CommandSequenceWidget) automatically
-discover domain commands.
-
-### Migration Steps
-
-- [x] **Step 7.1:** Create `CommandRegistry` class with `registerCommand()`, `isKnown()`,
-  `create()`, `availableCommands()`, `commandInfo()`. Add `registerTypedCommand<>` helper.
-  *Done — see `src/Commands/Core/CommandRegistry.hpp/.cpp`.*
-- [x] **Step 7.2:** Create `register_core_commands()` in `src/Commands/Core/`, registering
-  all 7 existing commands.
-  *Done — see `src/Commands/Core/register_core_commands.hpp` and `src/Commands/register_core_commands.cpp`.*
-- [x] **Step 7.3:** Remove the if-else chain and hardcoded `CommandInfo` vector from
-  `CommandFactory.cpp`. Keep the free-function API as thin wrappers delegating to
-  `CommandRegistry::instance()`.
-  *Done — `CommandFactory.cpp` now contains zero if-else branches.*
-- [x] **Step 7.4:** Create `register_all_commands.cpp` in `src/WhiskerToolbox/`, calling
-  `register_core_commands()`. Wire into `main.cpp` or `MainWindow` constructor.
-  *Done — wired directly in `MainWindow` constructor. A dedicated `register_all_commands.cpp`
-  can be introduced when domain libraries start contributing commands.*
-- [x] **Step 7.5:** Run all existing command tests — factory, validation, golden traces,
-  recorder — to verify zero regressions. Update test setup to call
-  `register_core_commands()` instead of relying on static initialization.
-  *Done — reusable `tests/shared/RegisterCommandsListener.cpp` Catch2 listener added to
-  test_commands, test_data_manager, and test_triage_session. All 662 tests pass.*
-- [x] **Step 7.6:** Add a Catch2 test that calls `CommandRegistry::instance().availableCommands()`
-  and asserts all expected commands are present.
-  *Done — see `CommandRegistry.test.cpp` (10 test cases).*
-- [ ] **Step 7.7:** Remove any `--whole-archive` flags that were previously needed for
-  Commands (if any). Verify normal linking suffices.
-  *N/A — Commands never used `--whole-archive` (explicit dispatcher pattern avoids it).*
-
-### Exit Criteria
-
-1. `CommandFactory.cpp` contains zero if-else branches and zero `#include` of individual
-   command headers.
-2. All existing tests pass without modification (beyond registration setup changes).
-3. A new command can be added by: (a) creating the command class, (b) adding a
-   `registerTypedCommand<>` call in the library's registration function, and (c) if it's
-   a new library, adding one line to `register_all_commands.cpp`. No `--whole-archive`
-   flags needed.
-4. `getAvailableCommands()` reports all registered commands including any from domain
-   libraries.
-5. No `--whole-archive` / `-force_load` / `/WHOLEARCHIVE` flags in any CMakeLists.txt
-   for Commands.
-
-### Comparison with Existing Registries
-
-The explicit dispatcher approach diverges from the RAII pattern used by TransformsV2 and
-DataSynthesizer. This is a deliberate choice — the `--whole-archive` drawbacks are
-significant enough for Commands (which will span many domain libraries) to justify a
-different registration strategy.
-
-| Aspect | TransformsV2 (RAII) | DataSynthesizer (RAII) | Commands (Explicit Dispatcher) |
-|--------|---------------------|----------------------|-------------------------------|
-| Registration mechanism | `RegisterTransform<>` static object | `RegisterGenerator<>` static object | `register_*_commands()` function call |
-| Central file touch | CMakeLists.txt (`--whole-archive`) | CMakeLists.txt (`--whole-archive`) | `register_all_commands.cpp` (one line) |
-| `--whole-archive` | Required | Required | **Not needed** |
-| Failure on misconfiguration | Silent (missing registrations) | Silent (missing registrations) | **Linker error** (undefined reference) |
-| Binary size overhead | All `.o` files in archive forced in | All `.o` files in archive forced in | Only referenced code linked |
-| Platform-specific flags | 3 variants (Linux/macOS/MSVC) | 3 variants (Linux/macOS/MSVC) | None |
-| Test setup | `--whole-archive` in test CMakeLists | `--whole-archive` in test CMakeLists | Single function call per library |
-| Shared library compatible | Singleton identity risk | Singleton identity risk | Works with both static and shared |
-
-**Future consideration:** If the `--whole-archive` drawbacks become painful for TransformsV2
-or DataSynthesizer as they grow, the same explicit dispatcher pattern can be applied to those
-registries. The `CommandRegistry` singleton design (Step 7.1) is identical in both approaches —
-only the registration mechanism differs.
 
 ---
 
@@ -815,27 +325,12 @@ only the registration mechanism differs.
 
 This roadmap replaces Phases 4–6 of the
 [State Management Roadmap](../../STATE_MANAGEMENT_ROADMAP.md) with a more comprehensive
-command-first architecture. The key differences:
-
-| State Mgmt Roadmap (old) | Command Architecture (this doc) |
-|---|---|
-| Phase 4: Action Journal records ad-hoc action types | Phase 4 here: records `CommandDescriptor`s — standardized, replayable |
-| Phase 5: `Command` interface with `execute()`/`undo()` | Phases 1+5 here: `ICommand` base with factory, `CommandStack` layered on top |
-| Phase 6: `SessionReplayer` replays workspace provenance | Phase 6 here: CLI executor replays `CommandSequenceDescriptor` |
-| No concept of triage or batch operations | Triage Session (Phase 2) demonstrates the architecture |
-
-Ideas **carried forward** from the State Management Roadmap:
-
-- **Action Journal** (`ActionEntry`, append-only log, JSONL format, query/filter) — Phase 4
-- **CommandStack** (undo/redo, clean state, merge) — Phase 5
-- **Memento-based EditorState undo** (`WidgetStateChangeCommand`) — Phase 5
-- **Command merging** for sequential similar operations — Phase 5 (`ICommand::mergeWith()`)
-- **ConfigExportToolbar** ("Copy as JSON", "Save Configuration...") — Phase 6
-- **Session replay / batch processing** — Phase 6
-- **Incremental adoption** (not every operation needs to be a command immediately) — design principle
+command-first architecture. Ideas carried forward: Action Journal, CommandStack, memento-based EditorState undo, command merging, ConfigExportToolbar, session replay, and incremental adoption.
 
 ## See Also
 
 - [Command Architecture Design Document](index.qmd) — full architecture, types, and code examples
 - [GUI Verb Audit](gui_verb_audit.qmd) — widget audit tables and new command designs
+- [Inter-Widget Communication Roadmap](../../inter_widget_communication_roadmap.md) — ContextActions, OperationContext, cross-roadmap sequence
+- [Tensor Transforms Roadmap](../../tensor_transforms_roadmap.md) — PCA, t-SNE, scatter integration
 - [Data Manager](../data_manager.qmd) — core data management documentation
