@@ -49,17 +49,17 @@ std::shared_ptr<MaskData> mask_cleaning(
     }
 
     std::map<TimeFrameIndex, std::vector<Mask2D>> by_time;
-    for (auto const & [time, entity_id, mask] : mask_data->flattened_data()) {
+    for (auto const & [time, entity_id, mask]: mask_data->flattened_data()) {
         static_cast<void>(entity_id);
         by_time[time].push_back(mask);
     }
 
     size_t const total_times = by_time.size();
     size_t processed = 0;
-    for (auto const & [time, masks] : by_time) {
+    for (auto const & [time, masks]: by_time) {
         Image combined(image_size);
         bool any_foreground = false;
-        for (Mask2D const & m : masks) {
+        for (Mask2D const & m: masks) {
             if (m.empty()) {
                 continue;
             }
