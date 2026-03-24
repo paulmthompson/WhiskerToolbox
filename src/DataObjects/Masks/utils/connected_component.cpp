@@ -64,9 +64,9 @@ std::vector<uint8_t> remove_small_clusters(std::vector<uint8_t> const & image, I
 }
 
 Image remove_small_clusters(Image const & input_image, int threshold) {
-    // Delegate to the existing function  
+    // Delegate to the existing function
     auto result_data = remove_small_clusters(input_image.data, input_image.size, threshold);
-    
+
     // Return as Image struct
     return Image(std::move(result_data), input_image.size);
 }

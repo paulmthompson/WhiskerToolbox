@@ -35,8 +35,8 @@
 #include "DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.hpp"
-#include "DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskCleaning_Widget/MaskCleaning_Widget.hpp"
+#include "DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskMedianFilter_Widget/MaskMedianFilter_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.hpp"
@@ -868,7 +868,7 @@ void DataTransform_Widget::onDataFocusChanged(EditorLib::SelectedDataKey const &
         return;
     }
 
-    const QString& selected_key = data_key.toString();
+    QString const & selected_key = data_key.toString();
 
     if (selected_key.isEmpty()) {
         // Clear UI when nothing is selected

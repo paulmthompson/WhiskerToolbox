@@ -6,8 +6,10 @@
 #include "AnalogTimeSeries/Analog_Interval_Peak/analog_interval_peak.hpp"
 #include "AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp"
-#include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
+
 #include "DigitalIntervalSeries/Digital_Interval_Boolean/digital_interval_boolean.hpp"
+#include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
+
 #include "Lines/Line_Alignment/line_alignment.hpp"
 #include "Lines/Line_Angle/line_angle.hpp"
 #include "Lines/Line_Clip/line_clip.hpp"
@@ -18,11 +20,13 @@
 #include "Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Lines/Line_Subsegment/line_subsegment.hpp"
+
 #include "Masks/Mask_Cleaning/mask_cleaning.hpp"
 #include "Masks/Mask_Connected_Component/mask_connected_component.hpp"
 #include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
 #include "Masks/Mask_To_Line/mask_to_line.hpp"
+
 #include "Media/whisker_tracing.hpp"
 
 #include <iostream>
@@ -66,22 +70,22 @@ void ParameterFactory::initializeDefaultSetters() {
     // ==================================================
 
     // =============== Filter ===============
-    
+
     // Register filter_specification as a special nested JSON object
     registerParameterSetter("Filter", "filter_specification",
-        [](TransformParametersBase * param_obj, nlohmann::json const & json_value, DataManager *) -> bool {
-            auto * filterParams = static_cast<AnalogFilterParams *>(param_obj);
-            
-            try {
-                // Parse the filter specification from JSON
-                auto spec = FilterSpecification::fromJson(json_value);
-                filterParams->filter_specification = std::move(spec);
-                return true;
-            } catch (std::exception const& e) {
-                std::cerr << "Failed to parse filter specification: " << e.what() << std::endl;
-                return false;
-            }
-        });
+                            [](TransformParametersBase * param_obj, nlohmann::json const & json_value, DataManager *) -> bool {
+                                auto * filterParams = static_cast<AnalogFilterParams *>(param_obj);
+
+                                try {
+                                    // Parse the filter specification from JSON
+                                    auto spec = FilterSpecification::fromJson(json_value);
+                                    filterParams->filter_specification = std::move(spec);
+                                    return true;
+                                } catch (std::exception const & e) {
+                                    std::cerr << "Failed to parse filter specification: " << e.what() << std::endl;
+                                    return false;
+                                }
+                            });
 
     // =============== Threshold Event Detection ===============
 
@@ -202,9 +206,8 @@ void ParameterFactory::initializeDefaultSetters() {
             "Interval Peak Detection", "search_mode", &IntervalPeakParams::search_mode, search_mode_map);
 
     // Register interval_series as a special nested object
-   registerDataParameter<IntervalPeakParams, DigitalIntervalSeries>(
-           "Interval Peak Detection", "interval_series", &IntervalPeakParams::interval_series);
-
+    registerDataParameter<IntervalPeakParams, DigitalIntervalSeries>(
+            "Interval Peak Detection", "interval_series", &IntervalPeakParams::interval_series);
 
     // ====================================================
     // ============== Digital Interval Series =============

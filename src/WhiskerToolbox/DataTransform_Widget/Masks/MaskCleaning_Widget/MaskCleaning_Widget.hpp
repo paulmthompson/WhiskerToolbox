@@ -19,4 +19,4 @@ private:
     Ui::MaskCleaning_Widget * ui;
 };
 
-#endif // MASKCLEANING_WIDGET_HPP
+#endif// MASKCLEANING_WIDGET_HPP
