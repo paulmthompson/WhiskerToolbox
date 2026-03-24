@@ -1,16 +1,14 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "mask_cleaning.hpp"
-#include "Masks/Mask_Data.hpp"
-
 #include "DataManager.hpp"
 #include "IO/core/LoaderRegistry.hpp"
+#include "Masks/Mask_Data.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+#include "fixtures/scenarios/mask/connected_component_scenarios.hpp"
+#include "mask_cleaning.hpp"
 #include "transforms/ParameterFactory.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
-#include "TimeFrame/TimeFrame.hpp"
-
-#include "fixtures/scenarios/mask/connected_component_scenarios.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -59,7 +57,7 @@ TEST_CASE("MaskCleaning - two largest on mixed frame",
     auto const & result_masks = result->getAtTime(TimeFrameIndex(0));
     REQUIRE(result_masks.size() == 1);
     size_t total_pixels = 0;
-    for (auto const & m : result_masks) {
+    for (auto const & m: result_masks) {
         total_pixels += m.size();
     }
     REQUIRE(total_pixels == 13);
@@ -78,7 +76,7 @@ TEST_CASE("MaskCleaning - two smallest on mixed frame",
     auto const & result_masks = result->getAtTime(TimeFrameIndex(0));
     REQUIRE(result_masks.size() == 1);
     size_t total_pixels = 0;
-    for (auto const & m : result_masks) {
+    for (auto const & m: result_masks) {
         total_pixels += m.size();
     }
     REQUIRE(total_pixels == 5);
@@ -152,7 +150,7 @@ TEST_CASE("Data Transform: Mask Cleaning - JSON pipeline",
     auto const & result_masks = result_mask->getAtTime(TimeFrameIndex(0));
     REQUIRE(result_masks.size() == 1);
     size_t total_pixels = 0;
-    for (auto const & m : result_masks) {
+    for (auto const & m: result_masks) {
         total_pixels += m.size();
     }
     REQUIRE(total_pixels == 13);
