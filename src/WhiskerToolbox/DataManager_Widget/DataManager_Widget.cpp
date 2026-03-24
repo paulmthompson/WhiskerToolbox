@@ -1,13 +1,13 @@
 #include "DataManager_Widget.hpp"
 #include "ui_DataManager_Widget.h"
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
 #include "DataManagerWidgetState.hpp"
-#include "EditorState/SelectionContext.hpp"
-#include "EditorState/EditorRegistry.hpp"
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "EditorState/EditorRegistry.hpp"
+#include "EditorState/SelectionContext.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
@@ -24,12 +24,12 @@
 #include "OutputDirectoryWidget/OutputDirectoryWidget.hpp"
 #include "TimeFrame_Table_Widget/TimeFrame_Table_Widget.hpp"
 
+#include <QAction>
 #include <QFileDialog>
 #include <QMenu>
-#include <QAction>
-#include <QTimer>
 #include <QResizeEvent>
 #include <QTableWidgetItem>
+#include <QTimer>
 
 DataManager_Widget::DataManager_Widget(
         std::shared_ptr<DataManager> data_manager,
@@ -97,28 +97,28 @@ DataManager_Widget::DataManager_Widget(
         // When user selects a feature in the table, update the state
         connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected,
                 this, [this](QString const & key) {
-            _state->setSelectedDataKey(key);
-        });
+                    _state->setSelectedDataKey(key);
+                });
 
         // Connect state changes to SelectionContext for inter-widget communication
         // When state's selected data key changes, notify SelectionContext
         connect(_state.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                 this, [this](QString const & key) {
-            if (_selection_context) {
-                SelectionSource source{EditorInstanceId(_state->getInstanceId()), QStringLiteral("feature_table")};
-                _selection_context->setSelectedData(SelectedDataKey(key), source);
-            }
-        });
+                    if (_selection_context) {
+                        SelectionSource const source{EditorInstanceId(_state->getInstanceId()), QStringLiteral("feature_table")};
+                        _selection_context->setSelectedData(SelectedDataKey(key), source);
+                    }
+                });
 
         // Connect timeframe table selection to SelectionContext
         // TimeFrame keys are separate from data keys, so use the dedicated timeframe signal
         connect(ui->timeframe_table_widget, &TimeFrame_Table_Widget::timeFrameSelected,
                 this, [this](QString const & time_key) {
-            if (_selection_context) {
-                SelectionSource source{EditorInstanceId(_state->getInstanceId()), QStringLiteral("timeframe_table")};
-                _selection_context->setTimeFrameFocus(time_key, source);
-            }
-        });
+                    if (_selection_context) {
+                        SelectionSource const source{EditorInstanceId(_state->getInstanceId()), QStringLiteral("timeframe_table")};
+                        _selection_context->setTimeFrameFocus(time_key, source);
+                    }
+                });
     }
 }
 
@@ -188,16 +188,14 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             break;
         }
         case DM_DataType::Line: {
-
         }
         case DM_DataType::Analog: {
-
         }
         case DM_DataType::DigitalInterval: {
             break;
         }
         case DM_DataType::DigitalEvent: {
-           
+
             break;
         }
         case DM_DataType::Tensor: {
@@ -262,7 +260,7 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
     }
 }
 
-void DataManager_Widget::_changeOutputDir(QString dir_name) {
+void DataManager_Widget::_changeOutputDir(const QString& dir_name) {
 
 
     if (dir_name.isEmpty()) {
@@ -273,7 +271,7 @@ void DataManager_Widget::_changeOutputDir(QString dir_name) {
     ui->output_dir_widget->setDirLabel(dir_name);
 }
 
-void DataManager_Widget::_createNewData(std::string key, std::string type, std::string timeframe_key) {
+void DataManager_Widget::_createNewData(const std::string& key, const std::string& type, const std::string& timeframe_key) {
 
     if (key.empty()) {
         return;
@@ -334,7 +332,7 @@ void DataManager_Widget::_deleteData(QString const & feature) {
     if (_data_manager->deleteData(key)) {
         // Refresh the feature table to reflect the deletion
         ui->feature_table_widget->populateTable();
-        
+
         // If we had a feature selected for restoration, clear it since it's no longer valid
         if (!_highlighted_available_feature.isEmpty()) {
             _highlighted_available_feature.clear();
@@ -342,7 +340,7 @@ void DataManager_Widget::_deleteData(QString const & feature) {
     }
 }
 
-void DataManager_Widget::contextMenuEvent(QContextMenuEvent* event) {
+void DataManager_Widget::contextMenuEvent(QContextMenuEvent * event) {
     _showContextMenu(event->globalPos());
 }
 
@@ -355,19 +353,45 @@ void DataManager_Widget::_showContextMenu(QPoint const & pos) {
 
     // Create context menu
     QMenu contextMenu(this);
-    
+
     // Add delete action
     QAction * deleteAction = contextMenu.addAction("Delete");
     deleteAction->setIcon(QIcon::fromTheme("edit-delete"));
-    
+
+    // Add applicable context actions from SelectionContext
+    std::vector<ContextAction const *> actions;
+    if (_selection_context) {
+        actions = _selection_context->applicableActions();
+        if (!actions.empty()) {
+            contextMenu.addSeparator();
+            for (auto const * action: actions) {
+                auto * qaction = contextMenu.addAction(action->display_name);
+                if (!action->icon.isEmpty()) {
+                    qaction->setIcon(QIcon(action->icon));
+                }
+            }
+        }
+    }
+
     // Show the menu and handle the action
     QAction * selectedAction = contextMenu.exec(pos);
+    if (!selectedAction) {
+        return;
+    }
     if (selectedAction == deleteAction) {
         _deleteData(feature);
+        return;
+    }
+    // Check if a context action was selected
+    for (auto const * action: actions) {
+        if (selectedAction->text() == action->display_name) {
+            action->execute(*_selection_context);
+            return;
+        }
     }
 }
 
-void DataManager_Widget::resizeEvent(QResizeEvent* event) {
+void DataManager_Widget::resizeEvent(QResizeEvent * event) {
     QScrollArea::resizeEvent(event);
 
     // Ensure content widget fills the scroll area completely
@@ -382,7 +406,7 @@ void DataManager_Widget::resizeEvent(QResizeEvent* event) {
     }
 
     // Update child widgets to ensure they fit within the available width
-    int const availableWidth = viewport()->width() - 20; // Account for margins
+    int const availableWidth = viewport()->width() - 20;// Account for margins
 
     // Update the feature table width
     if (ui->feature_table_widget) {
@@ -407,7 +431,7 @@ void DataManager_Widget::resizeEvent(QResizeEvent* event) {
         ui->stackedWidget->updateGeometry();
 
         // Update the current widget in the stack
-        QWidget* currentWidget = ui->stackedWidget->currentWidget();
+        QWidget * currentWidget = ui->stackedWidget->currentWidget();
         if (currentWidget) {
             currentWidget->setMaximumWidth(availableWidth);
             currentWidget->updateGeometry();
@@ -415,7 +439,7 @@ void DataManager_Widget::resizeEvent(QResizeEvent* event) {
     }
 }
 
-void DataManager_Widget::showEvent(QShowEvent* event) {
+void DataManager_Widget::showEvent(QShowEvent * event) {
     QScrollArea::showEvent(event);
 
     // Delay the resize slightly to ensure it happens after the widget is visible
@@ -437,9 +461,9 @@ void DataManager_Widget::showEvent(QShowEvent* event) {
 }
 
 QSize DataManager_Widget::sizeHint() const {
-    return QSize(350, 600);
+    return {350, 600};
 }
 
 QSize DataManager_Widget::minimumSizeHint() const {
-    return QSize(250, 400);
+    return {250, 400};
 }

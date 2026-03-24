@@ -14,22 +14,27 @@
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CorePlotting/Selection/PolygonSelection.hpp"
 #include "DataManager/DataManager.hpp"
+#include "EditorState/ContextAction.hpp"
+#include "EditorState/SelectionContext.hpp"
 #include "GroupContextMenu/GroupContextMenuHandler.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
+#include "Tensors/TensorData.hpp"
 
 #include <QContextMenuEvent>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QMouseEvent>
+#include <QPainter>
 #include <QWheelEvent>
 
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <map>
 #include <utility>
 
 ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
@@ -109,6 +114,8 @@ void ScatterPlotOpenGLWidget::setState(std::shared_ptr<ScatterPlotState> state) 
                 this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &ScatterPlotState::colorByGroupChanged,
                 this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &ScatterPlotState::clusterLabelsChanged,
+                this, [this]() { update(); });
         connect(_state.get(), &ScatterPlotState::selectionChanged,
                 this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &ScatterPlotState::selectionModeChanged,
@@ -180,6 +187,11 @@ void ScatterPlotOpenGLWidget::paintGL() {
         if (preview.isValid()) {
             _preview_renderer->render(preview, _widget_width, _widget_height);
         }
+    }
+
+    // Cluster label overlay (QPainter on top of OpenGL)
+    if (_state && _state->showClusterLabels() && _group_manager && !_scatter_data.empty()) {
+        drawClusterLabels();
     }
 }
 
@@ -503,7 +515,7 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
         highlight_style.color = glm::vec4(1.0f, 0.8f, 0.0f, 1.0f);// Yellow highlight
 
         std::vector<CorePlotting::MappedElement> const highlight_elem{elements[*_navigated_index]};
-        builder.addGlyphs("scatter_highlight", std::move(highlight_elem), highlight_style);
+        builder.addGlyphs("scatter_highlight", highlight_elem, highlight_style);
     }
 
     // Add y=x reference line if enabled
@@ -624,6 +636,15 @@ void ScatterPlotOpenGLWidget::setGroupManager(GroupManager * group_manager) {
     }
 }
 
+void ScatterPlotOpenGLWidget::setSelectionContext(SelectionContext * selection_context) {
+    _selection_context = selection_context;
+
+    // Ensure context menu exists so ContextActions can be shown
+    if (!_context_menu) {
+        createContextMenu();
+    }
+}
+
 void ScatterPlotOpenGLWidget::createContextMenu() {
     _context_menu = new QMenu(this);
 
@@ -666,15 +687,57 @@ void ScatterPlotOpenGLWidget::createContextMenu() {
             _state->clearSelection();
         }
     });
+
+    // "Cluster Selection..." action — creates filtered tensor from selected points
+    _context_menu->addSeparator();
+    _cluster_selection_action = new QAction("Cluster Selection...", this);
+    _cluster_selection_action->setEnabled(false);
+    _context_menu->addAction(_cluster_selection_action);
+    connect(_cluster_selection_action, &QAction::triggered, this, [this]() {
+        _executeClusterSelection();
+    });
 }
 
 void ScatterPlotOpenGLWidget::contextMenuEvent(QContextMenuEvent * event) {
-    if (!_context_menu || !_group_manager) {
+    if (!_context_menu) {
         QOpenGLWidget::contextMenuEvent(event);
         return;
     }
 
-    _group_menu_handler->updateMenuState(_context_menu);
+    if (_group_menu_handler) {
+        _group_menu_handler->updateMenuState(_context_menu);
+    }
+
+    // Enable "Cluster Selection..." only when we have a selection and a tensor source
+    if (_cluster_selection_action) {
+        bool const has_selection = _state && !_state->selectedIndices().empty();
+        bool const has_tensor_source = !_scatter_data.source_data_key.empty() && _data_manager && _data_manager->getData<TensorData>(_scatter_data.source_data_key) != nullptr;
+        _cluster_selection_action->setEnabled(has_selection && has_tensor_source && _selection_context);
+    }
+
+    // Remove previously added dynamic ContextAction items
+    for (auto * action: _dynamic_context_actions) {
+        _context_menu->removeAction(action);
+        action->deleteLater();
+    }
+    _dynamic_context_actions.clear();
+
+    // Add applicable ContextActions from SelectionContext
+    if (_selection_context) {
+        auto const applicable = _selection_context->applicableActions();
+        if (!applicable.empty()) {
+            _dynamic_context_actions.push_back(_context_menu->addSeparator());
+            for (auto const * ctx_action: applicable) {
+                auto * menu_action = _context_menu->addAction(ctx_action->display_name);
+                auto const * action_ptr = ctx_action;
+                connect(menu_action, &QAction::triggered, this, [this, action_ptr]() {
+                    action_ptr->execute(*_selection_context);
+                });
+                _dynamic_context_actions.push_back(menu_action);
+            }
+        }
+    }
+
     _context_menu->popup(event->globalPos());
     event->accept();
 }
@@ -738,8 +801,18 @@ std::optional<EntityId> ScatterPlotOpenGLWidget::getEntityIdForPoint(std::size_t
         return std::nullopt;
     }
 
+    // Ordinal sources have no entity mapping
+    if (_scatter_data.source_row_type == ScatterSourceRowType::TensorOrdinal || _scatter_data.source_row_type == ScatterSourceRowType::Unknown) {
+        return std::nullopt;
+    }
+
+    if (_scatter_data.source_data_key.empty()) {
+        return std::nullopt;
+    }
+
     TimeFrameIndex const tfi = _scatter_data.time_indices[index];
-    return EntityId{static_cast<uint64_t>(tfi.getValue())};
+    auto const time_key = _data_manager->getTimeKey(_scatter_data.source_data_key);
+    return _data_manager->ensureTimeEntityId(time_key, tfi);
 }
 
 // === Single-point selection ===
@@ -826,4 +899,139 @@ void ScatterPlotOpenGLWidget::cancelPolygonSelection() {
     _polygon_controller->cancel();
     _polygon_vertices_world.clear();
     update();
+}
+
+void ScatterPlotOpenGLWidget::_executeClusterSelection() {
+    if (!_state || !_data_manager || !_selection_context) {
+        return;
+    }
+
+    auto const & selected = _state->selectedIndices();
+    if (selected.empty()) {
+        return;
+    }
+
+    auto const & source_key = _scatter_data.source_data_key;
+    auto source_tensor = _data_manager->getData<TensorData>(source_key);
+    if (!source_tensor) {
+        return;
+    }
+
+    auto const num_cols = source_tensor->numColumns();
+    if (num_cols == 0) {
+        return;
+    }
+
+    // Build flat row-major data for selected rows
+    std::vector<float> filtered_data;
+    filtered_data.reserve(selected.size() * num_cols);
+    for (auto const idx: selected) {
+        if (idx >= source_tensor->numRows()) {
+            continue;
+        }
+        auto row_data = source_tensor->row(idx);
+        filtered_data.insert(filtered_data.end(), row_data.begin(), row_data.end());
+    }
+
+    auto const actual_rows = filtered_data.size() / num_cols;
+    if (actual_rows == 0) {
+        return;
+    }
+
+    // Create filtered tensor (ordinal — no time semantics for the subset)
+    auto filtered_tensor = TensorData::createOrdinal2D(
+            filtered_data, actual_rows, num_cols,
+            source_tensor->columnNames());
+
+    // Store in DataManager with a derived key
+    std::string const selection_key = source_key + "_selection";
+    auto filtered_ptr = std::make_shared<TensorData>(std::move(filtered_tensor));
+    auto const time_key = _data_manager->getTimeKey(source_key);
+    _data_manager->setData<TensorData>(selection_key, filtered_ptr, time_key);
+
+    // Set data focus to the new selection tensor
+    SelectionSource const source{EditorLib::EditorInstanceId(QStringLiteral("scatter_cluster_selection")), QStringLiteral("ScatterPlotWidget")};
+    _selection_context->setDataFocus(
+            SelectedDataKey(QString::fromStdString(selection_key)),
+            QStringLiteral("TensorData"),
+            source);
+
+    // Find and execute the cluster ContextAction
+    auto const applicable = _selection_context->applicableActions();
+    for (auto const * action: applicable) {
+        if (action->action_id == QStringLiteral("mlcore.cluster_tensor")) {
+            action->execute(*_selection_context);
+            return;
+        }
+    }
+}
+
+void ScatterPlotOpenGLWidget::drawClusterLabels() {
+    // Accumulate centroid (sum_x, sum_y, count) per group
+    struct GroupAccum {
+        double sum_x = 0.0;
+        double sum_y = 0.0;
+        int count = 0;
+        QColor color;
+        QString name;
+    };
+    std::map<int, GroupAccum> groups;
+
+    for (std::size_t i = 0; i < _scatter_data.size(); ++i) {
+        auto const entity_id = getEntityIdForPoint(i);
+        if (!entity_id.has_value()) {
+            continue;
+        }
+        int const gid = _group_manager->getEntityGroup(*entity_id);
+        if (gid == -1) {
+            continue;
+        }
+        auto & accum = groups[gid];
+        accum.sum_x += static_cast<double>(_scatter_data.x_values[i]);
+        accum.sum_y += static_cast<double>(_scatter_data.y_values[i]);
+        accum.count++;
+    }
+
+    if (groups.empty()) {
+        return;
+    }
+
+    // Fill group metadata
+    for (auto & [gid, accum]: groups) {
+        auto const group_info = _group_manager->getGroup(gid);
+        if (group_info.has_value()) {
+            accum.color = group_info->color;
+            accum.name = group_info->name;
+        }
+    }
+
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    QFont label_font;
+    label_font.setPointSize(10);
+    label_font.setBold(true);
+    painter.setFont(label_font);
+
+    for (auto const & [gid, accum]: groups) {
+        if (accum.count == 0) {
+            continue;
+        }
+
+        auto const cx = static_cast<float>(accum.sum_x / accum.count);
+        auto const cy = static_cast<float>(accum.sum_y / accum.count);
+
+        QPoint const screen = WhiskerToolbox::Plots::worldToScreen(
+                _projection_matrix, _widget_width, _widget_height, cx, cy);
+
+        QString const label = QStringLiteral("%1 (n=%2)").arg(accum.name).arg(accum.count);
+
+        // Draw text with a dark outline for readability
+        QRect const text_rect(screen.x() + 6, screen.y() - 8, 200, 20);
+        painter.setPen(QPen(Qt::black, 2));
+        painter.drawText(text_rect, Qt::AlignLeft | Qt::AlignVCenter, label);
+        painter.setPen(accum.color.isValid() ? accum.color : Qt::white);
+        painter.drawText(text_rect, Qt::AlignLeft | Qt::AlignVCenter, label);
+    }
+
+    painter.end();
 }

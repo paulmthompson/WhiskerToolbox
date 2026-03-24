@@ -5,16 +5,16 @@
 namespace EditorLib {
 
 OperationContext::OperationContext(EditorRegistry * registry, QObject * parent)
-    : QObject(parent)
-    , _registry(registry) {
+    : QObject(parent),
+      _registry(registry) {
 }
 
 OperationContext::~OperationContext() = default;
 
 std::optional<PendingOperation> OperationContext::requestOperation(
-    EditorInstanceId requester,
-    EditorTypeId producer_type,
-    OperationRequestOptions options) {
+        EditorInstanceId requester,
+        const EditorTypeId& producer_type,
+        OperationRequestOptions options) {
 
     if (!requester.isValid()) {
         std::cerr << "OperationContext::requestOperation: Invalid requester ID" << std::endl;
@@ -33,12 +33,14 @@ std::optional<PendingOperation> OperationContext::requestOperation(
 
     // Create new operation
     PendingOperation op{
-        .id = OperationId::generate(),
-        .requester = std::move(requester),
-        .producer_type = producer_type,
-        .channel = std::move(options.channel),
-        .close_on_selection_change = options.close_on_selection_change,
-        .close_after_delivery = options.close_after_delivery};
+            .id = OperationId::generate(),
+            .requester = std::move(requester),
+            .producer_type = producer_type,
+            .channel = std::move(options.channel),
+            .close_on_selection_change = options.close_on_selection_change,
+            .close_after_delivery = options.close_after_delivery,
+            .keep_open_for_iteration = options.keep_open_for_iteration,
+            .seed = std::move(options.seed)};
 
     // Store operation
     _id_to_producer[op.id] = producer_type;
@@ -68,8 +70,8 @@ OperationContext::requesterFor(EditorTypeId const & producer_type) const {
     return std::nullopt;
 }
 
-bool OperationContext::deliverResult(EditorTypeId const & producer_type, 
-                                     OperationResult result) {
+bool OperationContext::deliverResult(EditorTypeId const & producer_type,
+                                     const OperationResult& result) {
     auto it = _pending_by_producer.find(producer_type);
     if (it == _pending_by_producer.end()) {
         std::cerr << "OperationContext::deliverResult: No pending operation for producer: "
@@ -82,8 +84,8 @@ bool OperationContext::deliverResult(EditorTypeId const & producer_type,
     // Emit delivery signal
     emit operationDelivered(op, result);
 
-    // Close if configured to do so
-    if (op.close_after_delivery) {
+    // Close if configured to do so (but not if keeping open for iteration)
+    if (op.close_after_delivery && !op.keep_open_for_iteration) {
         closeOperation(op.id, OperationCloseReason::Delivered);
     }
 
@@ -96,7 +98,7 @@ void OperationContext::closeOperation(OperationId const & id, OperationCloseReas
         return;
     }
 
-    EditorTypeId producer_type = id_it->second;
+    EditorTypeId const producer_type = id_it->second;
     removeOperation(producer_type);
 
     emit operationClosed(id, reason);
@@ -110,7 +112,7 @@ void OperationContext::closeOperationsFor(EditorTypeId const & producer_type,
         return;
     }
 
-    OperationId id = it->second.id;
+    OperationId const id = it->second.id;
     removeOperation(producer_type);
 
     emit operationClosed(id, reason);
@@ -121,17 +123,17 @@ void OperationContext::closeOperationsFrom(EditorInstanceId const & requester,
                                            OperationCloseReason reason) {
     // Find all operations from this requester
     std::vector<EditorTypeId> to_close;
-    for (auto const & [producer_type, op] : _pending_by_producer) {
+    for (auto const & [producer_type, op]: _pending_by_producer) {
         if (op.requester == requester) {
             to_close.push_back(producer_type);
         }
     }
 
     // Close them
-    for (auto const & producer_type : to_close) {
+    for (auto const & producer_type: to_close) {
         auto it = _pending_by_producer.find(producer_type);
         if (it != _pending_by_producer.end()) {
-            OperationId id = it->second.id;
+            OperationId const id = it->second.id;
             removeOperation(producer_type);
             emit operationClosed(id, reason);
             emit pendingOperationChanged(producer_type);
@@ -163,13 +165,13 @@ size_t OperationContext::pendingCount() const {
 void OperationContext::onSelectionChanged() {
     // Close operations that requested close on selection change
     std::vector<EditorTypeId> to_close;
-    for (auto const & [producer_type, op] : _pending_by_producer) {
+    for (auto const & [producer_type, op]: _pending_by_producer) {
         if (op.close_on_selection_change) {
             to_close.push_back(producer_type);
         }
     }
 
-    for (auto const & producer_type : to_close) {
+    for (auto const & producer_type: to_close) {
         closeOperationsFor(producer_type, OperationCloseReason::SelectionChanged);
     }
 }
@@ -191,4 +193,4 @@ void OperationContext::removeOperation(EditorTypeId const & producer_type) {
     }
 }
 
-}  // namespace EditorLib
+}// namespace EditorLib

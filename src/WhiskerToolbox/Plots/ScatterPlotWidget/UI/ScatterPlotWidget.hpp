@@ -21,6 +21,7 @@ class DataManager;
 class GroupManager;
 class ScatterPlotState;
 class ScatterPlotOpenGLWidget;
+class SelectionContext;
 class HorizontalAxisRangeControls;
 class HorizontalAxisWidget;
 class VerticalAxisRangeControls;
@@ -46,12 +47,18 @@ public:
     void setState(std::shared_ptr<ScatterPlotState> state);
     [[nodiscard]] std::shared_ptr<ScatterPlotState> state() const { return _state; }
     [[nodiscard]] ScatterPlotState * state();
-    
+
     /**
      * @brief Set the GroupManager for group-related context menu actions
      * @param group_manager Pointer to the GroupManager (not owned)
      */
     void setGroupManager(GroupManager * group_manager);
+
+    /**
+     * @brief Set the SelectionContext for ContextAction integration
+     * @param selection_context Pointer to the SelectionContext (not owned)
+     */
+    void setSelectionContext(SelectionContext * selection_context);
 
     [[nodiscard]] HorizontalAxisRangeControls * getHorizontalRangeControls() const;
     [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
@@ -85,4 +92,4 @@ private:
     VerticalAxisRangeControls * _vertical_range_controls;
 };
 
-#endif  // SCATTER_PLOT_WIDGET_HPP
+#endif// SCATTER_PLOT_WIDGET_HPP

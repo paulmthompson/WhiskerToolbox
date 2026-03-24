@@ -1,0 +1,96 @@
+---
+title: "Command Registry"
+---
+
+## Overview
+
+`CommandRegistry` is a singleton that maps command name strings to creator functions
+and `CommandInfo` metadata. It replaces the former hardcoded if-else chain in
+`CommandFactory.cpp`, enabling domain libraries to contribute commands without
+modifying a central switch statement.
+
+**Source files:**
+
+- `src/Commands/Core/CommandRegistry.hpp` — class declaration and `registerTypedCommand<>` helper
+- `src/Commands/Core/CommandRegistry.cpp` — singleton implementation
+- `src/Commands/Core/register_core_commands.hpp` — declaration of the built-in dispatcher
+- `src/Commands/register_core_commands.cpp` — registers all 7 core commands
+
+## Design
+
+The registry follows the **Explicit Dispatcher** pattern (see
+[Roadmap Phase 7](roadmap.qmd#phase-7-command-registration-api-explicit-dispatcher)):
+
+1. Each library defines a free function (e.g., `register_core_commands()`) that calls
+   `registerTypedCommand<>` for each command it owns.
+2. The application's composition root (`MainWindow` constructor) calls each library's
+   registration function once at startup.
+3. `CommandFactory.cpp` free functions (`isKnownCommandName`, `createCommandFromJson`,
+   `getAvailableCommands`, `getCommandInfo`) are thin wrappers delegating to
+   `CommandRegistry::instance()`.
+
+This avoids `--whole-archive` linker flags and keeps the dependency direction clean:
+domain libraries depend on `Commands`, and the executable depends on both.
+
+## API
+
+### CommandRegistry
+
+| Method | Description |
+|--------|-------------|
+| `instance()` | Static accessor for the singleton. |
+| `registerCommand(name, creator, info)` | Register a command. Asserts on empty or duplicate name. |
+| `isKnown(name)` | Check if a command name is registered. |
+| `create(name, params_json)` | Create a command from name + JSON params; returns `nullptr` on failure. |
+| `availableCommands()` | Return `vector<CommandInfo>` for all registered commands. |
+| `commandInfo(name)` | Return `optional<CommandInfo>` for one command. |
+| `size()` | Number of registered commands. |
+| `clear()` | Remove all registrations (test isolation only). |
+
+### registerTypedCommand\<CommandT, Params\>
+
+```cpp
+template<typename CommandT, typename Params>
+void registerTypedCommand(CommandRegistry & reg, std::string name, CommandInfo info);
+```
+
+Convenience template that:
+
+1. Extracts `parameter_schema` from `Params` via `extractParameterSchema<Params>()`.
+2. Wraps JSON deserialization (`rfl::json::read<Params>`) and `normalizeJsonNumbers` into a
+   `CommandCreator` lambda.
+3. Calls `reg.registerCommand(...)`.
+
+## Adding a New Command
+
+1. Create the command class (subclass of `ICommand`) and its `Params` struct.
+2. In the library's registration function, add one call:
+
+```cpp
+registerTypedCommand<MyNewCommand, MyNewCommand::Params>(
+    reg, "MyNewCommand",
+    CommandInfo{"MyNewCommand", "Category", "Description"});
+```
+
+3. If this is a new library that doesn't yet have a registration function, create one
+   and call it from `MainWindow` (or a future `register_all_commands.cpp` composition root).
+
+## Test Registration
+
+Test binaries that execute commands (via `createCommandFromJson`, `executeSequence`, etc.)
+must call `register_core_commands()` before tests run. A reusable Catch2 event listener
+is provided at `tests/shared/RegisterCommandsListener.cpp`. Add it to your test
+executable's source list in CMake:
+
+```cmake
+add_executable(my_test
+    ${CMAKE_SOURCE_DIR}/tests/shared/RegisterCommandsListener.cpp
+    # ... test sources ...
+)
+```
+
+## Thread Safety
+
+Registration is expected to happen once at startup before any concurrent access.
+After registration is complete, all query methods (`isKnown`, `create`,
+`availableCommands`, `commandInfo`, `size`) are safe for concurrent reads.

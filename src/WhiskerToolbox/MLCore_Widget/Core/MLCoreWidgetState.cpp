@@ -65,6 +65,12 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit clusteringWriteIntervalsChanged(_data.clustering_write_intervals);
         emit clusteringWriteProbabilitiesChanged(_data.clustering_write_probabilities);
         emit clusteringZscoreNormalizeChanged(_data.clustering_zscore_normalize);
+        emit dimReductionTensorKeyChanged(QString::fromStdString(_data.dim_reduction_tensor_key));
+        emit dimReductionModelNameChanged(QString::fromStdString(_data.dim_reduction_model_name));
+        emit dimReductionOutputKeyChanged(QString::fromStdString(_data.dim_reduction_output_key));
+        emit dimReductionNComponentsChanged(_data.dim_reduction_n_components);
+        emit dimReductionScaleChanged(_data.dim_reduction_scale);
+        emit dimReductionZscoreNormalizeChanged(_data.dim_reduction_zscore_normalize);
         return true;
     }
     return false;
@@ -420,4 +426,78 @@ void MLCoreWidgetState::setClusteringZscoreNormalize(bool enabled) {
 
 bool MLCoreWidgetState::clusteringZscoreNormalize() const {
     return _data.clustering_zscore_normalize;
+}
+
+// === Dim Reduction configuration ===
+
+void MLCoreWidgetState::setDimReductionTensorKey(std::string const & key) {
+    if (_data.dim_reduction_tensor_key != key) {
+        _data.dim_reduction_tensor_key = key;
+        markDirty();
+        emit dimReductionTensorKeyChanged(QString::fromStdString(key));
+    }
+}
+
+std::string const & MLCoreWidgetState::dimReductionTensorKey() const {
+    return _data.dim_reduction_tensor_key;
+}
+
+void MLCoreWidgetState::setDimReductionModelName(std::string const & name) {
+    if (_data.dim_reduction_model_name != name) {
+        _data.dim_reduction_model_name = name;
+        markDirty();
+        emit dimReductionModelNameChanged(QString::fromStdString(name));
+    }
+}
+
+std::string const & MLCoreWidgetState::dimReductionModelName() const {
+    return _data.dim_reduction_model_name;
+}
+
+void MLCoreWidgetState::setDimReductionOutputKey(std::string const & key) {
+    if (_data.dim_reduction_output_key != key) {
+        _data.dim_reduction_output_key = key;
+        markDirty();
+        emit dimReductionOutputKeyChanged(QString::fromStdString(key));
+    }
+}
+
+std::string const & MLCoreWidgetState::dimReductionOutputKey() const {
+    return _data.dim_reduction_output_key;
+}
+
+void MLCoreWidgetState::setDimReductionNComponents(int n) {
+    if (_data.dim_reduction_n_components != n) {
+        _data.dim_reduction_n_components = n;
+        markDirty();
+        emit dimReductionNComponentsChanged(n);
+    }
+}
+
+int MLCoreWidgetState::dimReductionNComponents() const {
+    return _data.dim_reduction_n_components;
+}
+
+void MLCoreWidgetState::setDimReductionScale(bool enabled) {
+    if (_data.dim_reduction_scale != enabled) {
+        _data.dim_reduction_scale = enabled;
+        markDirty();
+        emit dimReductionScaleChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::dimReductionScale() const {
+    return _data.dim_reduction_scale;
+}
+
+void MLCoreWidgetState::setDimReductionZscoreNormalize(bool enabled) {
+    if (_data.dim_reduction_zscore_normalize != enabled) {
+        _data.dim_reduction_zscore_normalize = enabled;
+        markDirty();
+        emit dimReductionZscoreNormalizeChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::dimReductionZscoreNormalize() const {
+    return _data.dim_reduction_zscore_normalize;
 }

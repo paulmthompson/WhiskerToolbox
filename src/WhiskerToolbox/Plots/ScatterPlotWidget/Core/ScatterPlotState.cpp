@@ -12,8 +12,7 @@ ScatterPlotState::ScatterPlotState(QObject * parent)
     : EditorState(parent),
       _horizontal_axis_state(std::make_unique<HorizontalAxisState>(this)),
       _vertical_axis_state(std::make_unique<VerticalAxisState>(this)),
-      _glyph_style_state(std::make_unique<GlyphStyleState>(this))
-{
+      _glyph_style_state(std::make_unique<GlyphStyleState>(this)) {
     _data.instance_id = getInstanceId().toStdString();
     _data.horizontal_axis = _horizontal_axis_state->data();
     _data.vertical_axis = _vertical_axis_state->data();
@@ -55,13 +54,11 @@ ScatterPlotState::ScatterPlotState(QObject * parent)
             });
 }
 
-QString ScatterPlotState::getDisplayName() const
-{
+QString ScatterPlotState::getDisplayName() const {
     return QString::fromStdString(_data.display_name);
 }
 
-void ScatterPlotState::setDisplayName(QString const & name)
-{
+void ScatterPlotState::setDisplayName(QString const & name) {
     if (_data.display_name != name.toStdString()) {
         _data.display_name = name.toStdString();
         markDirty();
@@ -69,8 +66,7 @@ void ScatterPlotState::setDisplayName(QString const & name)
     }
 }
 
-void ScatterPlotState::setXZoom(double zoom)
-{
+void ScatterPlotState::setXZoom(double zoom) {
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;
         markDirty();
@@ -78,8 +74,7 @@ void ScatterPlotState::setXZoom(double zoom)
     }
 }
 
-void ScatterPlotState::setYZoom(double zoom)
-{
+void ScatterPlotState::setYZoom(double zoom) {
     if (_data.view_state.y_zoom != zoom) {
         _data.view_state.y_zoom = zoom;
         markDirty();
@@ -87,8 +82,7 @@ void ScatterPlotState::setYZoom(double zoom)
     }
 }
 
-void ScatterPlotState::setPan(double x_pan, double y_pan)
-{
+void ScatterPlotState::setPan(double x_pan, double y_pan) {
     if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
         _data.view_state.x_pan = x_pan;
         _data.view_state.y_pan = y_pan;
@@ -97,8 +91,7 @@ void ScatterPlotState::setPan(double x_pan, double y_pan)
     }
 }
 
-void ScatterPlotState::setXBounds(double x_min, double x_max)
-{
+void ScatterPlotState::setXBounds(double x_min, double x_max) {
     if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
         _data.view_state.x_min = x_min;
         _data.view_state.x_max = x_max;
@@ -111,8 +104,7 @@ void ScatterPlotState::setXBounds(double x_min, double x_max)
     }
 }
 
-void ScatterPlotState::setYBounds(double y_min, double y_max)
-{
+void ScatterPlotState::setYBounds(double y_min, double y_max) {
     if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
         _data.view_state.y_min = y_min;
         _data.view_state.y_max = y_max;
@@ -125,24 +117,21 @@ void ScatterPlotState::setYBounds(double y_min, double y_max)
     }
 }
 
-void ScatterPlotState::setXSource(std::optional<ScatterAxisSource> source)
-{
+void ScatterPlotState::setXSource(std::optional<ScatterAxisSource> source) {
     _data.x_source = std::move(source);
     markDirty();
     emit xSourceChanged();
     emit stateChanged();
 }
 
-void ScatterPlotState::setYSource(std::optional<ScatterAxisSource> source)
-{
+void ScatterPlotState::setYSource(std::optional<ScatterAxisSource> source) {
     _data.y_source = std::move(source);
     markDirty();
     emit ySourceChanged();
     emit stateChanged();
 }
 
-void ScatterPlotState::setShowReferenceLine(bool show)
-{
+void ScatterPlotState::setShowReferenceLine(bool show) {
     if (_data.show_reference_line != show) {
         _data.show_reference_line = show;
         markDirty();
@@ -151,8 +140,7 @@ void ScatterPlotState::setShowReferenceLine(bool show)
     }
 }
 
-void ScatterPlotState::setColorByGroup(bool enabled)
-{
+void ScatterPlotState::setColorByGroup(bool enabled) {
     if (_data.color_by_group != enabled) {
         _data.color_by_group = enabled;
         markDirty();
@@ -161,16 +149,23 @@ void ScatterPlotState::setColorByGroup(bool enabled)
     }
 }
 
-ScatterSelectionMode ScatterPlotState::selectionMode() const
-{
+void ScatterPlotState::setShowClusterLabels(bool enabled) {
+    if (_data.show_cluster_labels != enabled) {
+        _data.show_cluster_labels = enabled;
+        markDirty();
+        emit clusterLabelsChanged();
+        emit stateChanged();
+    }
+}
+
+ScatterSelectionMode ScatterPlotState::selectionMode() const {
     if (_data.selection_mode == "polygon") {
         return ScatterSelectionMode::Polygon;
     }
     return ScatterSelectionMode::SinglePoint;
 }
 
-void ScatterPlotState::setSelectionMode(ScatterSelectionMode mode)
-{
+void ScatterPlotState::setSelectionMode(ScatterSelectionMode mode) {
     std::string const mode_str = (mode == ScatterSelectionMode::Polygon) ? "polygon" : "single_point";
     if (_data.selection_mode != mode_str) {
         _data.selection_mode = mode_str;
@@ -182,14 +177,12 @@ void ScatterPlotState::setSelectionMode(ScatterSelectionMode mode)
     }
 }
 
-void ScatterPlotState::setSelectedIndices(std::vector<std::size_t> indices)
-{
+void ScatterPlotState::setSelectedIndices(std::vector<std::size_t> indices) {
     _data.selected_indices.value() = std::move(indices);
     emit selectionChanged();
 }
 
-void ScatterPlotState::addSelectedIndex(std::size_t index)
-{
+void ScatterPlotState::addSelectedIndex(std::size_t index) {
     auto & sel = _data.selected_indices.value();
     if (std::find(sel.begin(), sel.end(), index) == sel.end()) {
         sel.push_back(index);
@@ -197,8 +190,7 @@ void ScatterPlotState::addSelectedIndex(std::size_t index)
     }
 }
 
-void ScatterPlotState::removeSelectedIndex(std::size_t index)
-{
+void ScatterPlotState::removeSelectedIndex(std::size_t index) {
     auto & sel = _data.selected_indices.value();
     auto it = std::find(sel.begin(), sel.end(), index);
     if (it != sel.end()) {
@@ -207,29 +199,25 @@ void ScatterPlotState::removeSelectedIndex(std::size_t index)
     }
 }
 
-void ScatterPlotState::clearSelection()
-{
+void ScatterPlotState::clearSelection() {
     if (!_data.selected_indices.value().empty()) {
         _data.selected_indices.value().clear();
         emit selectionChanged();
     }
 }
 
-bool ScatterPlotState::isSelected(std::size_t index) const
-{
+bool ScatterPlotState::isSelected(std::size_t index) const {
     auto const & sel = _data.selected_indices.value();
     return std::find(sel.begin(), sel.end(), index) != sel.end();
 }
 
-std::string ScatterPlotState::toJson() const
-{
+std::string ScatterPlotState::toJson() const {
     ScatterPlotStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();
     return rfl::json::write(data_to_serialize);
 }
 
-bool ScatterPlotState::fromJson(std::string const & json)
-{
+bool ScatterPlotState::fromJson(std::string const & json) {
     auto result = rfl::json::read<ScatterPlotStateData>(json);
     if (result) {
         _data = *result;

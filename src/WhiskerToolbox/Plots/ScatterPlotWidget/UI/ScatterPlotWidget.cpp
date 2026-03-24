@@ -14,20 +14,20 @@
 #include <QHBoxLayout>
 #include <QResizeEvent>
 #include <QVBoxLayout>
+#include <utility>
 
 #include "ui_ScatterPlotWidget.h"
 
 ScatterPlotWidget::ScatterPlotWidget(std::shared_ptr<DataManager> data_manager,
                                      QWidget * parent)
     : QWidget(parent),
-      _data_manager(data_manager),
+      _data_manager(std::move(std::move(data_manager))),
       ui(new Ui::ScatterPlotWidget),
       _opengl_widget(nullptr),
       _horizontal_axis_widget(nullptr),
       _horizontal_range_controls(nullptr),
       _vertical_axis_widget(nullptr),
-      _vertical_range_controls(nullptr)
-{
+      _vertical_range_controls(nullptr) {
     ui->setupUi(this);
 
     auto * horizontal_layout = new QHBoxLayout();
@@ -48,20 +48,18 @@ ScatterPlotWidget::ScatterPlotWidget(std::shared_ptr<DataManager> data_manager,
     vertical_layout->addLayout(horizontal_layout, 1);
 
     QLayout * old_layout = layout();
-    if (old_layout) {
+    
         delete old_layout;
-    }
+    
     setLayout(vertical_layout);
 }
 
-ScatterPlotWidget::~ScatterPlotWidget()
-{
+ScatterPlotWidget::~ScatterPlotWidget() {
     delete ui;
 }
 
-void ScatterPlotWidget::setState(std::shared_ptr<ScatterPlotState> state)
-{
-    _state = state;
+void ScatterPlotWidget::setState(std::shared_ptr<ScatterPlotState> state) {
+    _state = std::move(state);
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
     }
@@ -78,8 +76,7 @@ void ScatterPlotWidget::setState(std::shared_ptr<ScatterPlotState> state)
     syncVerticalAxisRange();
 }
 
-void ScatterPlotWidget::createVerticalAxisIfNeeded()
-{
+void ScatterPlotWidget::createVerticalAxisIfNeeded() {
     if (_vertical_axis_widget) {
         return;
     }
@@ -102,8 +99,7 @@ void ScatterPlotWidget::createVerticalAxisIfNeeded()
     }
 }
 
-void ScatterPlotWidget::createHorizontalAxisIfNeeded()
-{
+void ScatterPlotWidget::createHorizontalAxisIfNeeded() {
     if (_horizontal_axis_widget) {
         return;
     }
@@ -119,8 +115,7 @@ void ScatterPlotWidget::createHorizontalAxisIfNeeded()
     }
 }
 
-void ScatterPlotWidget::wireHorizontalAxis()
-{
+void ScatterPlotWidget::wireHorizontalAxis() {
     if (!_horizontal_axis_widget) {
         return;
     }
@@ -134,8 +129,7 @@ void ScatterPlotWidget::wireHorizontalAxis()
     });
 }
 
-void ScatterPlotWidget::wireVerticalAxis()
-{
+void ScatterPlotWidget::wireVerticalAxis() {
     if (!_vertical_axis_widget || !_state) {
         return;
     }
@@ -162,7 +156,7 @@ void ScatterPlotWidget::wireVerticalAxis()
                         _state->setYZoom(full_range / range);
                         _state->setPan(_state->viewState().x_pan,
                                        ((min_range + max_range) / 2.0) -
-                                           ((vs.y_min + vs.y_max) / 2.0));
+                                               ((vs.y_min + vs.y_max) / 2.0));
                     }
                 });
     }
@@ -180,15 +174,14 @@ void ScatterPlotWidget::wireVerticalAxis()
                         double const full_range = vs.x_max - vs.x_min;
                         _state->setXZoom(full_range / range);
                         _state->setPan(((min_range + max_range) / 2.0) -
-                                           ((vs.x_min + vs.x_max) / 2.0),
+                                               ((vs.x_min + vs.x_max) / 2.0),
                                        _state->viewState().y_pan);
                     }
                 });
     }
 }
 
-void ScatterPlotWidget::connectViewChangeSignals()
-{
+void ScatterPlotWidget::connectViewChangeSignals() {
     auto onViewChanged = [this]() {
         if (_horizontal_axis_widget) {
             _horizontal_axis_widget->update();
@@ -203,8 +196,7 @@ void ScatterPlotWidget::connectViewChangeSignals()
     connect(_opengl_widget, &ScatterPlotOpenGLWidget::viewBoundsChanged, this, onViewChanged);
 }
 
-void ScatterPlotWidget::syncHorizontalAxisRange()
-{
+void ScatterPlotWidget::syncHorizontalAxisRange() {
     auto * has = _state ? _state->horizontalAxisState() : nullptr;
     if (!has) {
         return;
@@ -213,8 +205,7 @@ void ScatterPlotWidget::syncHorizontalAxisRange()
     has->setRangeSilent(min, max);
 }
 
-void ScatterPlotWidget::syncVerticalAxisRange()
-{
+void ScatterPlotWidget::syncVerticalAxisRange() {
     auto * vas = _state ? _state->verticalAxisState() : nullptr;
     if (!vas) {
         return;
@@ -226,8 +217,7 @@ void ScatterPlotWidget::syncVerticalAxisRange()
     vas->setRangeSilent(min, max);
 }
 
-std::pair<double, double> ScatterPlotWidget::computeVisibleXRange() const
-{
+std::pair<double, double> ScatterPlotWidget::computeVisibleXRange() const {
     if (!_state) {
         return {0.0, 100.0};
     }
@@ -238,8 +228,7 @@ std::pair<double, double> ScatterPlotWidget::computeVisibleXRange() const
     return {x_center - half + vs.x_pan, x_center + half + vs.x_pan};
 }
 
-std::pair<double, double> ScatterPlotWidget::computeVisibleYRange() const
-{
+std::pair<double, double> ScatterPlotWidget::computeVisibleYRange() const {
     if (!_state) {
         return {0.0, 100.0};
     }
@@ -250,23 +239,19 @@ std::pair<double, double> ScatterPlotWidget::computeVisibleYRange() const
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }
 
-ScatterPlotState * ScatterPlotWidget::state()
-{
+ScatterPlotState * ScatterPlotWidget::state() {
     return _state.get();
 }
 
-HorizontalAxisRangeControls * ScatterPlotWidget::getHorizontalRangeControls() const
-{
+HorizontalAxisRangeControls * ScatterPlotWidget::getHorizontalRangeControls() const {
     return _horizontal_range_controls;
 }
 
-VerticalAxisRangeControls * ScatterPlotWidget::getVerticalRangeControls() const
-{
+VerticalAxisRangeControls * ScatterPlotWidget::getVerticalRangeControls() const {
     return _vertical_range_controls;
 }
 
-void ScatterPlotWidget::resizeEvent(QResizeEvent * event)
-{
+void ScatterPlotWidget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
     if (_horizontal_axis_widget) {
         _horizontal_axis_widget->update();
@@ -276,9 +261,14 @@ void ScatterPlotWidget::resizeEvent(QResizeEvent * event)
     }
 }
 
-void ScatterPlotWidget::setGroupManager(GroupManager * group_manager)
-{
+void ScatterPlotWidget::setGroupManager(GroupManager * group_manager) {
     if (_opengl_widget) {
         _opengl_widget->setGroupManager(group_manager);
+    }
+}
+
+void ScatterPlotWidget::setSelectionContext(SelectionContext * selection_context) {
+    if (_opengl_widget) {
+        _opengl_widget->setSelectionContext(selection_context);
     }
 }

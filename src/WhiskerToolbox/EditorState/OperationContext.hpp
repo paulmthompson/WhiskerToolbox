@@ -63,28 +63,40 @@ namespace EditorLib {
  * @brief Reason an operation was closed
  */
 enum class OperationCloseReason {
-    Explicit,          ///< User/code explicitly closed
-    SelectionChanged,  ///< User selected different data elsewhere
-    RequesterClosed,   ///< The requesting widget was closed
-    ProducerClosed,    ///< The producing widget was closed
-    Delivered,         ///< Result was delivered (for one-shot operations)
-    Superseded         ///< A new operation replaced this one
+    Explicit,        ///< User/code explicitly closed
+    SelectionChanged,///< User selected different data elsewhere
+    RequesterClosed, ///< The requesting widget was closed
+    ProducerClosed,  ///< The producing widget was closed
+    Delivered,       ///< Result was delivered (for one-shot operations)
+    Superseded       ///< A new operation replaced this one
 };
 
 /**
  * @brief A pending request for data from one widget to another
  */
 struct PendingOperation {
-    OperationId id;               ///< Unique identifier for this operation
-    EditorInstanceId requester;   ///< Who wants the result
-    EditorTypeId producer_type;   ///< What type of widget produces it
-    DataChannel channel;          ///< What kind of output expected
+    OperationId id;            ///< Unique identifier for this operation
+    EditorInstanceId requester;///< Who wants the result
+    EditorTypeId producer_type;///< What type of widget produces it
+    DataChannel channel;       ///< What kind of output expected
 
     /// If true, operation closes when user selects data elsewhere
     bool close_on_selection_change = true;
 
     /// If true, operation closes after first delivery
     bool close_after_delivery = false;
+
+    /// If true, keep the connection open after delivery for iterative refinement
+    bool keep_open_for_iteration = false;
+
+    /// Optional initial state for the producer to load (e.g. existing pipeline JSON)
+    std::optional<OperationResult> seed;
+
+    /// @brief Get initial seed data, if provided by the requester
+    /// @return Pointer to the seed result, or nullptr if no seed was set
+    [[nodiscard]] OperationResult const * initialSeed() const {
+        return seed.has_value() ? &seed.value() : nullptr;
+    }
 };
 
 /**
@@ -94,6 +106,8 @@ struct OperationRequestOptions {
     DataChannel channel = DataChannels::TransformPipeline;
     bool close_on_selection_change = true;
     bool close_after_delivery = false;
+    bool keep_open_for_iteration = false;
+    std::optional<OperationResult> seed;
 };
 
 /**
@@ -127,9 +141,9 @@ public:
      * @return The pending operation, or nullopt if request failed
      */
     [[nodiscard]] std::optional<PendingOperation> requestOperation(
-        EditorInstanceId requester,
-        EditorTypeId producer_type,
-        OperationRequestOptions options = {});
+            EditorInstanceId requester,
+            const EditorTypeId& producer_type,
+            OperationRequestOptions options = {});
 
     /**
      * @brief Check if there's a pending operation for a producer type
@@ -164,7 +178,7 @@ public:
      * @param result The result data
      * @return true if there was a pending operation and result was delivered
      */
-    bool deliverResult(EditorTypeId const & producer_type, OperationResult result);
+    bool deliverResult(EditorTypeId const & producer_type, const OperationResult& result);
 
     /**
      * @brief Explicitly close an operation by ID
@@ -285,11 +299,11 @@ private:
     void removeOperation(EditorTypeId const & producer_type);
 };
 
-}  // namespace EditorLib
+}// namespace EditorLib
 
 // Qt metatype registration for signal/slot use (types defined in this file)
 Q_DECLARE_METATYPE(EditorLib::PendingOperation)
 Q_DECLARE_METATYPE(EditorLib::OperationResult)
 Q_DECLARE_METATYPE(EditorLib::OperationCloseReason)
 
-#endif  // OPERATION_CONTEXT_HPP
+#endif// OPERATION_CONTEXT_HPP

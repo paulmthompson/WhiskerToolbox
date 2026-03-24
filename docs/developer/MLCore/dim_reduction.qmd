@@ -1,0 +1,85 @@
+---
+title: "Dimensionality Reduction"
+description: "MLCore dimensionality reduction operations (PCA, etc.)"
+---
+
+## Overview
+
+The dimensionality reduction module provides algorithms that project high-dimensional `TensorData` into a lower-dimensional space while preserving structure. These algorithms extend the `MLModelOperation` hierarchy via the `MLDimReductionOperation` abstract base class.
+
+## Architecture
+
+```
+models/
+├── MLDimReductionOperation.hpp   # Abstract base with fitTransform/transform
+└── unsupervised/
+    └── PCAOperation.hpp/.cpp     # Principal Component Analysis
+```
+
+### MLDimReductionOperation
+
+`MLDimReductionOperation` extends `MLModelOperation` with dimensionality-reduction-specific pure virtual methods:
+
+| Method | Purpose |
+|--------|---------|
+| `fitTransform(features, params, result)` | Fit model and project data in one call |
+| `transform(features, result)` | Re-project new data using fitted model |
+| `outputDimensions()` | Number of output dimensions after reduction |
+| `explainedVarianceRatio()` | Per-component variance explained (PCA-specific) |
+
+The base class overrides `getTaskType()` → `MLTaskType::DimensionalityReduction` and routes the standard `fit()` method to `fitTransform()`.
+
+### Data Convention
+
+MLCore uses the **mlpack convention**: matrices are `(features × observations)` — each column is one observation. `TensorData` uses the opposite: `(observations × features)`. The TransformsV2 wrapper handles the transpose.
+
+## PCAOperation
+
+Implements PCA via manual eigendecomposition on the covariance matrix:
+
+1. Center data by subtracting column means
+2. Optionally scale by dividing by column standard deviations
+3. Compute covariance matrix
+4. Eigendecomposition via `arma::eig_sym`
+5. Sort eigenvectors in descending eigenvalue order
+6. Truncate to `n_components`
+7. Project: `eigenvectors.t() * centered_data`
+
+### Parameters
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `n_components` | `size_t` | 2 | Number of principal components to retain |
+| `scale` | `bool` | `true` | Standardize features before PCA |
+
+### Save/Load
+
+Uses cereal binary serialization, matching the pattern established by `KMeansOperation`. Stores eigenvectors, eigenvalues, mean, standard deviation, and total variance.
+
+### Edge Cases
+
+- Empty data → returns `false`
+- Fewer than 2 observations → returns `false`
+- `n_components > features` → returns `false`
+- `n_components = 0` → returns `false`
+- Zero-variance features during scaling → stddev replaced with 1.0
+
+## TransformsV2 Integration
+
+The `TensorPCA` container transform (`src/TransformsV2/algorithms/TensorPCA/`) provides a thin wrapper registered in `RegisteredTransforms.cpp`:
+
+- **Input:** `TensorData` (2D, ≥2 rows)
+- **Output:** `TensorData` with `n_components` columns named "PC1", "PC2", ...
+- **RowDescriptor preservation:** Output inherits the input's `RowType` (TimeFrameIndex, Interval, or Ordinal)
+
+### TensorPCAParams (reflect-cpp)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `n_components` | `optional<size_t>` | 2 | Number of PCs |
+| `scale` | `optional<bool>` | `true` | Standardize first |
+
+## Tests
+
+- `tests/MLCore/PCAOperation.test.cpp` — Metadata, fitTransform correctness, explained variance, transform re-projection, edge cases, save/load round-trip, registry integration
+- `src/TransformsV2/algorithms/TensorPCA/TensorPCA.test.cpp` — Container registration, ordinal/TimeFrameIndex/Interval row preservation, default params, validation, progress, cancellation

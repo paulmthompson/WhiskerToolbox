@@ -56,7 +56,7 @@ namespace ScatterPlotWidgetModule {
  * @param group_manager Optional GroupManager for group-aware features (can be nullptr)
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
+                   const std::shared_ptr<DataManager>& data_manager,
                    GroupManager * group_manager = nullptr);
 
 }  // namespace ScatterPlotWidgetModule

@@ -41,6 +41,9 @@ set(MLCORE_WIDGET_SOURCES
     UI/ClusterOutputPanel/ClusterOutputPanel.hpp
     UI/ClusterOutputPanel/ClusterOutputPanel.cpp
     UI/ClusterOutputPanel/ClusterOutputPanel.ui
+    UI/DimReductionPanel/DimReductionPanel.hpp
+    UI/DimReductionPanel/DimReductionPanel.cpp
+    UI/DimReductionPanel/DimReductionPanel.ui
 )
 
 add_library(MLCore_Widget STATIC ${MLCORE_WIDGET_SOURCES})

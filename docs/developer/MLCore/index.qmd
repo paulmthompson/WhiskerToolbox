@@ -11,6 +11,7 @@ The library provides:
 
 - **Supervised classification**: Random Forest, Naive Bayes, Logistic Regression
 - **Unsupervised clustering**: K-Means, DBSCAN, Gaussian Mixture Model
+- **Dimensionality reduction**: PCA (with MLDimReductionOperation base class)
 - **End-to-end pipelines** that compose validation, conversion, training/fitting, prediction, metrics, and output writing into single entry points
 - **Feature validation and conversion** from `TensorData` to armadillo matrices
 - **Label assembly** from multiple sources (intervals, entity groups, data-entity groups)

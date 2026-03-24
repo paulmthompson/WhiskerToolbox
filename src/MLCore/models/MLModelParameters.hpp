@@ -108,6 +108,20 @@ struct GMMParameters : public MLModelParametersBase {
 };
 
 // ============================================================================
+// Dimensionality reduction parameters
+// ============================================================================
+
+/**
+ * @brief Parameters for PCA dimensionality reduction
+ *
+ * Wraps mlpack::PCA hyperparameters.
+ */
+struct PCAParameters : public MLModelParametersBase {
+    std::size_t n_components = 2;///< Number of principal components to retain
+    bool scale = true;           ///< Standardize features (zero mean, unit variance) before PCA
+};
+
+// ============================================================================
 // Sequence model parameters
 // ============================================================================
 

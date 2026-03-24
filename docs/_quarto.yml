@@ -92,6 +92,7 @@ website:
               href: developer/MLCore/index.qmd
               contents:
                 - developer/MLCore/models.qmd
+                - developer/MLCore/dim_reduction.qmd
                 - developer/MLCore/hmm.qmd
                 - developer/MLCore/features.qmd
                 - developer/MLCore/label_assembly.qmd
@@ -146,6 +147,7 @@ website:
                 - developer/DataManager/Commands/synthesize_data.qmd
                 - developer/DataManager/Commands/validation.qmd
                 - developer/DataManager/Commands/command_introspection.qmd
+                - developer/DataManager/Commands/command_registry.qmd
                 - developer/DataManager/Commands/gui_verb_audit.qmd
                 - developer/DataManager/Commands/widget_save_refactoring_guide.qmd
                 - developer/DataManager/Commands/data_manager_snapshot.qmd
@@ -153,6 +155,9 @@ website:
         - section: "Triage Session"
           contents:
             - developer/TriageSession/index.qmd
+        - section: "Architecture"
+          contents:
+            - developer/inter_widget_communication_roadmap.md
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd

@@ -149,7 +149,7 @@ void TransformsV2Properties_Widget::onPipelineChanged() {
 }
 
 void TransformsV2Properties_Widget::onStepParametersChanged(std::string const & params_json) {
-    int selected = _step_list->selectedStepIndex();
+    int const selected = _step_list->selectedStepIndex();
     if (selected >= 0) {
         _step_list->updateStepParams(selected, params_json);
     }
@@ -260,7 +260,7 @@ void TransformsV2Properties_Widget::setupUI() {
 
     // Restore saved execution mode
     auto const & saved_mode = _state->executionMode();
-    int mode_index = _execution_mode_combo->findData(QString::fromStdString(saved_mode));
+    int const mode_index = _execution_mode_combo->findData(QString::fromStdString(saved_mode));
     if (mode_index >= 0) {
         _execution_mode_combo->setCurrentIndex(mode_index);
     }
@@ -755,7 +755,7 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
 
     // Show progress
     auto const & steps = _step_list->steps();
-    int total_steps = static_cast<int>(steps.size());
+    int const total_steps = static_cast<int>(steps.size());
     _progress_bar->setRange(0, total_steps > 0 ? total_steps : 1);
     _progress_bar->setValue(0);
     _progress_bar->setVisible(true);
@@ -863,6 +863,16 @@ void TransformsV2Properties_Widget::onPendingOperationChanged(
     }
 
     updateDeliverButtonState();
+
+    // Check for seed data in the new pending operation
+    if (_operation_context) {
+        static auto const tv2_type = EditorLib::EditorTypeId(
+                QStringLiteral("TransformsV2Widget"));
+        auto pending = _operation_context->pendingOperationFor(tv2_type);
+        if (pending.has_value() && pending->initialSeed()) {
+            loadSeedFromOperation(*pending);
+        }
+    }
 }
 
 bool TransformsV2Properties_Widget::tryDeliverPipeline() {
@@ -928,4 +938,60 @@ void TransformsV2Properties_Widget::updateDeliverButtonState() {
 
     auto pending = _operation_context->pendingOperationFor(tv2_type);
     _deliver_pipeline_btn->setVisible(pending.has_value());
+}
+
+void TransformsV2Properties_Widget::loadSeedFromOperation(
+        EditorLib::PendingOperation const & op) {
+
+    auto const * seed = op.initialSeed();
+    if (!seed) {
+        return;
+    }
+
+    auto const * json_ptr = seed->peek<std::string>();
+    if (!json_ptr) {
+        return;
+    }
+
+    // Parse the envelope — same format as delivery: { pipeline, input_key, input_type }
+    try {
+        auto envelope = nlohmann::json::parse(*json_ptr);
+
+        std::string pipeline_json_str;
+        if (envelope.contains("pipeline")) {
+            auto const & pipe = envelope["pipeline"];
+            pipeline_json_str = pipe.is_string()
+                                        ? pipe.get<std::string>()
+                                        : pipe.dump();
+        } else {
+            // Fallback: treat entire string as pipeline JSON
+            pipeline_json_str = *json_ptr;
+        }
+
+        // Set input key and type if provided, before loading pipeline
+        // (loading pipeline pins the input)
+        if (envelope.contains("input_key")) {
+            auto input_key = envelope["input_key"].get<std::string>();
+            _input_data_key = input_key;
+            _state->setInputDataKey(input_key);
+
+            if (envelope.contains("input_type")) {
+                _input_data_type_name = envelope["input_type"].get<std::string>();
+            } else {
+                _input_data_type_name = resolveDataTypeFromManager(_input_data_key);
+            }
+
+            resolveInputTypes();
+            updateInputDisplay();
+            _step_list->setInputType(_input_element_type, _input_container_type);
+        }
+
+        // Load the pipeline into the UI
+        if (!pipeline_json_str.empty()) {
+            loadUIFromJson(pipeline_json_str);
+        }
+    } catch (...) {
+        // If envelope parsing fails, try loading as raw pipeline JSON
+        loadUIFromJson(*json_ptr);
+    }
 }

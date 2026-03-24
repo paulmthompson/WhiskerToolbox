@@ -200,3 +200,92 @@ prediction, then filters output back to the requested frames.
 | `mergeSpans(a, b)` | Returns the union span covering both inputs |
 | `filterRowsToSpan(features, times, span)` | Filters columns and times to span |
 | `filterPredictionsToIntervals(preds, probs, times, intervals)` | Keeps only frames within intervals |
+
+## Dimensionality Reduction Pipeline
+
+`DimReductionPipeline` (`pipelines/DimReductionPipeline.hpp`) orchestrates dimensionality reduction end-to-end.
+
+### Pipeline Stages
+
+```
+ValidatingFeatures → ConvertingFeatures → FittingAndTransforming → WritingOutput → Complete
+```
+
+### Configuration
+
+```cpp
+DimReductionPipelineConfig config;
+
+// Model
+config.model_name = "PCA";
+config.model_params = &pca_params;  // or nullptr for defaults
+
+// Features
+config.feature_tensor_key = "encoder_features";
+
+// Conversion
+config.conversion_config.drop_nan = true;
+config.conversion_config.zscore_normalize = false;
+
+// Output
+config.output_config.output_key = "encoder_features_pca";
+config.output_config.time_key_str = "camera";
+
+// Thread safety (defer writes for background execution)
+config.defer_dm_writes = true;
+```
+
+### Entry Point
+
+```cpp
+auto result = runDimReductionPipeline(dm, registry, config, progress_callback);
+
+if (result.success) {
+    // result.num_observations, result.num_input_features, result.num_output_components
+    // result.explained_variance_ratio — per-component (PCA only)
+    // result.output_key — DataManager key of new TensorData
+    // result.fitted_model — reusable for re-projection
+}
+```
+
+### Result Fields
+
+| Field | Description |
+|---|---|
+| `success` | Whether the pipeline completed |
+| `error_message` | Human-readable error (if failed) |
+| `num_observations` | Count after NaN dropping |
+| `num_input_features` / `num_output_components` | Dimensions |
+| `rows_dropped_nan` | Rows dropped due to NaN/Inf |
+| `explained_variance_ratio` | Per-component variance (PCA; empty for others) |
+| `output_key` | Created TensorData DataManager key |
+| `deferred_output` | `shared_ptr<TensorData>` for main-thread writing |
+| `fitted_model` | Ownership transferred — reusable |
+
+### Row Preservation
+
+The output `TensorData` preserves the input's `RowDescriptor` type:
+
+- **TimeFrameIndex**: Filtered time indices are stored using `SparseTimeIndexStorage`
+- **Interval**: Filtered intervals are carried through
+- **Ordinal**: Row count matches observation count after NaN dropping
+
+Column names are auto-generated: `"PC1"`, `"PC2"`, ... for PCA; `"Dim1"`, `"Dim2"`, ... for other algorithms.
+
+### Data Layout Convention
+
+::: {.callout-warning}
+## Armadillo ↔ TensorData layout mismatch
+
+Armadillo stores matrices in **column-major** order, while `TensorData` factories (`createTimeSeries2D`, `createOrdinal2D`, `createFromIntervals`) expect flat data in **row-major** order. When converting an `arma::fmat` to `TensorData`, you **must not** use `memptr()` directly — this produces column-major data that will be silently reinterpreted as row-major, scrambling all values across observations. Instead, extract elements in explicit row-major order:
+
+```cpp
+arma::fmat output_fmat = /* ... */;
+std::vector<float> flat_data(output_fmat.n_elem);
+for (arma::uword r = 0; r < output_fmat.n_rows; ++r) {
+    for (arma::uword c = 0; c < output_fmat.n_cols; ++c) {
+        flat_data[r * output_fmat.n_cols + c] = output_fmat(r, c);
+    }
+}
+```
+:::

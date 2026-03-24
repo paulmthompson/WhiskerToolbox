@@ -7,8 +7,8 @@
 #include "DataManager/transforms/TransformPipeline.hpp"
 #include "DataManager/transforms/TransformRegistry.hpp"
 #include "DataTransformWidgetState.hpp"
-#include "EditorState/SelectionContext.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/SelectionContext.hpp"
 
 #include "AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.hpp"
 #include "Collapsible_Widget/Section.hpp"
@@ -126,8 +126,8 @@ DataTransform_Widget::DataTransform_Widget(
         // Sync operation selection to state
         connect(ui->operationComboBox, &QComboBox::currentTextChanged,
                 this, [this](QString const & text) {
-            _state->setSelectedOperation(text);
-        });
+                    _state->setSelectedOperation(text);
+                });
     }
 }
 
@@ -408,7 +408,7 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
 void DataTransform_Widget::_updateProgress(int progress) {
     if (progress > _current_progress) {
         // Store current position before updating progress
-        int currentPos = verticalScrollBar()->value();
+        int const currentPos = verticalScrollBar()->value();
 
         ui->transform_progress_bar->setValue(progress);
         ui->transform_progress_bar->setFormat("%p%");// Show percentage text
@@ -481,6 +481,23 @@ void DataTransform_Widget::_doTransform() {
     auto input_time_key = _data_manager->getTimeKey(_highlighted_available_feature.toStdString());
     _data_manager->setData(new_data_key, result_any, input_time_key);
 
+    // Auto-focus the newly created output so other widgets can navigate to it
+    if (_selection_context) {
+        DM_DataType const dm_type = _data_manager->getType(new_data_key);
+        QString const type_str = QString::fromStdString(
+                convert_data_type_to_string(dm_type));
+
+        SelectionSource const source{
+                _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
+                       : EditorLib::EditorInstanceId{},
+                QStringLiteral("DataTransformWidget")};
+
+        _selection_context->setDataFocus(
+                EditorLib::SelectedDataKey(QString::fromStdString(new_data_key)),
+                type_str,
+                source);
+    }
+
     ui->transform_progress_bar->setValue(100);
     ui->do_transform_button->setEnabled(true);
 
@@ -492,7 +509,7 @@ void DataTransform_Widget::_doTransform() {
 QString DataTransform_Widget::_generateOutputName() const {
     // Return empty string if either feature or operation is not selected
     if (_highlighted_available_feature.isEmpty() || !_currentSelectedOperation) {
-        return QString();
+        return {};
     }
 
     QString const inputKey = _highlighted_available_feature;
@@ -559,11 +576,11 @@ void DataTransform_Widget::resizeEvent(QResizeEvent * event) {
 }
 
 QSize DataTransform_Widget::sizeHint() const {
-    return QSize(400, 900);
+    return {400, 900};
 }
 
 QSize DataTransform_Widget::minimumSizeHint() const {
-    return QSize(350, 700);
+    return {350, 700};
 }
 
 void DataTransform_Widget::_setupJsonPipelineUI() {
@@ -639,7 +656,7 @@ void DataTransform_Widget::_setupJsonPipelineUI() {
         auto * mainLayout = qobject_cast<QVBoxLayout *>(scrollWidget->layout());
         if (mainLayout) {
             // Insert the JSON pipeline section before the last spacer
-            int spacerIndex = mainLayout->count() - 1;
+            int const spacerIndex = mainLayout->count() - 1;
             mainLayout->insertWidget(spacerIndex, _jsonPipelineSection);
         }
     }
@@ -651,7 +668,7 @@ void DataTransform_Widget::_setupJsonPipelineUI() {
 }
 
 void DataTransform_Widget::_loadJsonPipeline() {
-    QString fileName = AppFileDialog::getOpenFileName(
+    QString const fileName = AppFileDialog::getOpenFileName(
             this,
             QStringLiteral("transform_json"),
             QStringLiteral("Load JSON Pipeline"),
@@ -670,7 +687,7 @@ void DataTransform_Widget::_updateJsonDisplay(QString const & jsonFilePath) {
     }
 
     QTextStream in(&file);
-    QString jsonContent = in.readAll();
+    QString const jsonContent = in.readAll();
     file.close();
 
     // Update the text editor
@@ -678,7 +695,7 @@ void DataTransform_Widget::_updateJsonDisplay(QString const & jsonFilePath) {
 
     // Update status and file path
     _currentJsonFile = jsonFilePath;
-    QFileInfo fileInfo(jsonFilePath);
+    QFileInfo const fileInfo(jsonFilePath);
     _jsonStatusLabel->setText("Loaded: " + fileInfo.fileName());
     _jsonStatusLabel->setStyleSheet("color: green;");
 
@@ -691,7 +708,7 @@ void DataTransform_Widget::_onJsonTextChanged() {
 }
 
 void DataTransform_Widget::_validateJsonSyntax() {
-    QString jsonText = _getCurrentJsonContent();
+    QString const jsonText = _getCurrentJsonContent();
     if (jsonText.isEmpty()) {
         _jsonStatusLabel->setText("No JSON content");
         _jsonStatusLabel->setStyleSheet("color: gray;");
@@ -700,7 +717,7 @@ void DataTransform_Widget::_validateJsonSyntax() {
     }
 
     QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(jsonText.toUtf8(), &error);
+    QJsonDocument const doc = QJsonDocument::fromJson(jsonText.toUtf8(), &error);
 
     if (error.error != QJsonParseError::NoError) {
         _jsonStatusLabel->setText("JSON Error: " + error.errorString());
@@ -755,7 +772,7 @@ void DataTransform_Widget::_executeJsonPipeline() {
     _preventScrolling = true;
 
     // Load the current JSON content
-    QString jsonText = _getCurrentJsonContent();
+    QString const jsonText = _getCurrentJsonContent();
     nlohmann::json config;
     try {
         config = nlohmann::json::parse(jsonText.toStdString());
@@ -839,15 +856,15 @@ QString DataTransform_Widget::_getCurrentJsonContent() const {
 // === Phase 4.2: DataFocusAware Implementation ===
 
 void DataTransform_Widget::onDataFocusChanged(EditorLib::SelectedDataKey const & data_key,
-                                               QString const & data_type) {
-    Q_UNUSED(data_type);  // We look up the type ourselves for more detailed info
-    
+                                              QString const & data_type) {
+    Q_UNUSED(data_type);// We look up the type ourselves for more detailed info
+
     if (!_state) {
         return;
     }
 
-    QString selected_key = data_key.toString();
-    
+    const QString& selected_key = data_key.toString();
+
     if (selected_key.isEmpty()) {
         // Clear UI when nothing is selected
         ui->selected_data_label->setText("No data selected");
@@ -882,8 +899,8 @@ void DataTransform_Widget::onDataFocusChanged(EditorLib::SelectedDataKey const &
 
     // Update UI labels with selected data info
     ui->selected_data_label->setText(selected_key);
-    DM_DataType dm_data_type = _data_manager->getType(selected_key.toStdString());
-    QString type_name = QString::fromStdString(convert_data_type_to_string(dm_data_type));
+    DM_DataType const dm_data_type = _data_manager->getType(selected_key.toStdString());
+    QString const type_name = QString::fromStdString(convert_data_type_to_string(dm_data_type));
     ui->data_type_label->setText(QString("Type: %1").arg(type_name));
 
     // Get available operations for this data type
@@ -896,7 +913,7 @@ void DataTransform_Widget::onDataFocusChanged(EditorLib::SelectedDataKey const &
         ui->operationComboBox->setEnabled(false);
         ui->do_transform_button->setEnabled(false);
     } else {
-        for (std::string const & op_name : operation_names) {
+        for (std::string const & op_name: operation_names) {
             ui->operationComboBox->addItem(QString::fromStdString(op_name));
         }
         ui->operationComboBox->setEnabled(true);
@@ -936,6 +953,6 @@ void DataTransform_Widget::_onExternalSelectionChanged(SelectionSource const & s
     }
 
     // Delegate to the new DataFocusAware implementation
-    QString selected_key = _selection_context->primarySelectedData().toString();
+    QString const selected_key = _selection_context->primarySelectedData().toString();
     onDataFocusChanged(EditorLib::SelectedDataKey(selected_key), QString{});
 }

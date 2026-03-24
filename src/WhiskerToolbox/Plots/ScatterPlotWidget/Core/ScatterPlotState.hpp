@@ -14,15 +14,15 @@
  * @see PSTHState, LinePlotState for the same pattern
  */
 
-#include "ScatterAxisSource.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/DataTypes/GlyphStyleData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
-#include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
-#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
+#include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
+#include "ScatterAxisSource.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -37,8 +37,8 @@
  * @brief Selection interaction mode for the scatter plot
  */
 enum class ScatterSelectionMode {
-    SinglePoint,   ///< Ctrl+Click to select/deselect individual points
-    Polygon        ///< Draw polygon to select multiple points
+    SinglePoint,///< Ctrl+Click to select/deselect individual points
+    Polygon     ///< Draw polygon to select multiple points
 };
 
 /**
@@ -51,10 +51,11 @@ struct ScatterPlotStateData {
     HorizontalAxisStateData horizontal_axis;
     VerticalAxisStateData vertical_axis;
 
-    std::optional<ScatterAxisSource> x_source;  ///< X-axis data source
-    std::optional<ScatterAxisSource> y_source;  ///< Y-axis data source
-    bool show_reference_line = false;           ///< Show y=x reference line
-    bool color_by_group = true;                  ///< Color points by their group assignment
+    std::optional<ScatterAxisSource> x_source;///< X-axis data source
+    std::optional<ScatterAxisSource> y_source;///< Y-axis data source
+    bool show_reference_line = false;         ///< Show y=x reference line
+    bool color_by_group = true;               ///< Color points by their group assignment
+    bool show_cluster_labels = false;         ///< Show cluster centroid labels as text overlay
 
     /// Glyph style for scatter points (shape, size, color, alpha)
     CorePlotting::GlyphStyleData glyph_style{CorePlotting::GlyphType::Circle, 5.0f, "#3388FF", 0.8f};
@@ -113,6 +114,10 @@ public:
     [[nodiscard]] bool colorByGroup() const { return _data.color_by_group; }
     void setColorByGroup(bool enabled);
 
+    // === Cluster labels ===
+    [[nodiscard]] bool showClusterLabels() const { return _data.show_cluster_labels; }
+    void setShowClusterLabels(bool enabled);
+
     // === Selection mode ===
     [[nodiscard]] ScatterSelectionMode selectionMode() const;
     void setSelectionMode(ScatterSelectionMode mode);
@@ -139,6 +144,7 @@ signals:
     void ySourceChanged();
     void referenceLineChanged();
     void colorByGroupChanged();
+    void clusterLabelsChanged();
     void glyphStyleChanged();
     void selectionModeChanged();
     void selectionChanged();
@@ -150,4 +156,4 @@ private:
     std::unique_ptr<GlyphStyleState> _glyph_style_state;
 };
 
-#endif  // SCATTER_PLOT_STATE_HPP
+#endif// SCATTER_PLOT_STATE_HPP

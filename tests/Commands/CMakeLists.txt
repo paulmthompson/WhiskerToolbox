@@ -14,7 +14,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_commands
 
+        ${CMAKE_SOURCE_DIR}/tests/shared/RegisterCommandsListener.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandFactory.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandRegistry.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Core/CommandInfo.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Core/VariableSubstitution.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/GetEntityIdsInRange.test.cpp
