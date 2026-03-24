@@ -51,4 +51,4 @@ public:
                             ProgressCallback progressCallback) override;
 };
 
-#endif // WHISKERTOOLBOX_MASK_CLEANING_HPP
+#endif//WHISKERTOOLBOX_MASK_CLEANING_HPP
