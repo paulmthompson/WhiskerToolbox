@@ -18,6 +18,7 @@
 #include "Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Lines/Line_Subsegment/line_subsegment.hpp"
+#include "Masks/Mask_Cleaning/mask_cleaning.hpp"
 #include "Masks/Mask_Connected_Component/mask_connected_component.hpp"
 #include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
@@ -389,6 +390,16 @@ void ParameterFactory::initializeDefaultSetters() {
     // ==================== Mask Connected Component ===============
     registerBasicParameter<MaskConnectedComponentParameters, int>(
             "Remove Small Connected Components", "threshold", &MaskConnectedComponentParameters::threshold);
+
+    // ==================== Mask Cleaning ===============
+    std::unordered_map<std::string, MaskCleaningSelection> mask_cleaning_selection_map = {
+            {"Largest", MaskCleaningSelection::Largest},
+            {"Smallest", MaskCleaningSelection::Smallest}};
+
+    registerEnumParameter<MaskCleaningParameters, MaskCleaningSelection>(
+            "Mask Cleaning", "selection", &MaskCleaningParameters::selection, mask_cleaning_selection_map);
+
+    registerBasicParameter<MaskCleaningParameters, int>("Mask Cleaning", "count", &MaskCleaningParameters::count);
 
     // ==================== Mask Hole Filling ===============
     // No parameters needed for mask hole filling calculation

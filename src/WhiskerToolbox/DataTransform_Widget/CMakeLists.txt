@@ -23,6 +23,9 @@ set(DATA_TRANSFORM_WIDGET_SOURCES
         Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.hpp
         Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.cpp
         Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.ui
+        Masks/MaskCleaning_Widget/MaskCleaning_Widget.hpp
+        Masks/MaskCleaning_Widget/MaskCleaning_Widget.cpp
+        Masks/MaskCleaning_Widget/MaskCleaning_Widget.ui
         Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.hpp
         Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.cpp
         Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.ui

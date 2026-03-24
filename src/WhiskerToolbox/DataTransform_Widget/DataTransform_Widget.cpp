@@ -36,6 +36,7 @@
 #include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.hpp"
+#include "DataTransform_Widget/Masks/MaskCleaning_Widget/MaskCleaning_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskMedianFilter_Widget/MaskMedianFilter_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.hpp"
@@ -155,6 +156,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Remove Small Connected Components"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new MaskConnectedComponent_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Mask Cleaning"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new MaskCleaning_Widget(parent);
     };
 
     _parameterWidgetFactories["Fill Mask Holes"] = [](QWidget * parent) -> TransformParameter_Widget * {

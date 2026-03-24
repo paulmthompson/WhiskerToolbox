@@ -400,4 +400,34 @@ TEST_CASE("remove_small_clusters Image interface tests", "[connected_component][
         int total_pixels = std::accumulate(result.data.begin(), result.data.end(), 0);
         REQUIRE(total_pixels == 3);
     }
-} 
+}
+
+TEST_CASE("keep_ranked_clusters selects largest and smallest K", "[connected_component][ranked]") {
+    ImageSize size = {10, 10};
+    Image img(size);
+    for (int row = 1; row < 4; ++row) {
+        for (int col = 1; col < 4; ++col) {
+            img.set(row, col, 255);
+        }
+    }
+    img.set(1, 7, 255);
+    img.set(1, 8, 255);
+    for (int row = 7; row < 9; ++row) {
+        for (int col = 1; col < 3; ++col) {
+            img.set(row, col, 255);
+        }
+    }
+    img.set(8, 8, 255);
+
+    Image largest1 = keep_ranked_clusters(img, 1, true);
+    REQUIRE(std::accumulate(largest1.data.begin(), largest1.data.end(), 0) == 9);
+
+    Image smallest1 = keep_ranked_clusters(img, 1, false);
+    REQUIRE(std::accumulate(smallest1.data.begin(), smallest1.data.end(), 0) == 1);
+
+    Image largest2 = keep_ranked_clusters(img, 2, true);
+    REQUIRE(std::accumulate(largest2.data.begin(), largest2.data.end(), 0) == 13);
+
+    Image smallest2 = keep_ranked_clusters(img, 2, false);
+    REQUIRE(std::accumulate(smallest2.data.begin(), smallest2.data.end(), 0) == 3);
+}

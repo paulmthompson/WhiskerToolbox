@@ -161,6 +161,8 @@ set(DATAMANAGER_SOURCES
         transforms/Masks/Mask_Centroid/mask_centroid.hpp
         transforms/Masks/Mask_Connected_Component/mask_connected_component.cpp
         transforms/Masks/Mask_Connected_Component/mask_connected_component.hpp
+        transforms/Masks/Mask_Cleaning/mask_cleaning.cpp
+        transforms/Masks/Mask_Cleaning/mask_cleaning.hpp
         transforms/Masks/Mask_Hole_Filling/mask_hole_filling.cpp
         transforms/Masks/Mask_Hole_Filling/mask_hole_filling.hpp
         transforms/Masks/Mask_Median_Filter/mask_median_filter.cpp

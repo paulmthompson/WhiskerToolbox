@@ -25,6 +25,7 @@
 #include "transforms/Points/Point_Particle_Filter/point_particle_filter.hpp"
 #include "transforms/Masks/Mask_Area/mask_area.hpp"
 #include "transforms/Masks/Mask_Centroid/mask_centroid.hpp"
+#include "transforms/Masks/Mask_Cleaning/mask_cleaning.hpp"
 #include "transforms/Masks/Mask_Connected_Component/mask_connected_component.hpp"
 #include "transforms/Masks/Mask_Hole_Filling/mask_hole_filling.hpp"
 #include "transforms/Masks/Mask_Median_Filter/mask_median_filter.hpp"
@@ -49,6 +50,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<MaskAreaOperation>());
     _registerOperation(std::make_unique<MaskCentroidOperation>());
     _registerOperation(std::make_unique<MaskConnectedComponentOperation>());
+    _registerOperation(std::make_unique<MaskCleaningOperation>());
     _registerOperation(std::make_unique<MaskHoleFillingOperation>());
     _registerOperation(std::make_unique<MaskMedianFilterOperation>());
     _registerOperation(std::make_unique<MaskPrincipalAxisOperation>());

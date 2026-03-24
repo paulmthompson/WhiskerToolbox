@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MaskCleaning_Widget</class>
+ <widget class="QWidget" name="MaskCleaning_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>390</width>
+    <height>420</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Mask Cleaning</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="styleSheet">
+      <string>font-weight: bold; font-size: 14px;</string>
+     </property>
+     <property name="text">
+      <string>Mask Cleaning</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+     <property name="margin">
+      <number>5</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="descriptionGroupBox">
+     <property name="title">
+      <string>Operation Description</string>
+     </property>
+     <layout class="QVBoxLayout" name="descriptionLayout">
+      <item>
+       <widget class="QLabel" name="descriptionLabel">
+        <property name="text">
+         <string>For each timestamp, all mask entries are merged onto the image canvas. Connected components (8-connectivity) are ranked by area; you can keep only the largest or smallest, or the K largest or K smallest.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="parametersGroupBox">
+     <property name="title">
+      <string>Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="parametersLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="selectionLabel">
+        <property name="text">
+         <string>Keep components:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="selectionComboBox">
+        <property name="toolTip">
+         <string>Largest or smallest by pixel count (per timestamp, after merging all masks at that time)</string>
+        </property>
+        <item>
+         <property name="text">
+          <string>Largest</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Smallest</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="countLabel">
+        <property name="text">
+         <string>How many to keep:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="countSpinBox">
+        <property name="toolTip">
+         <string>1 = single largest or smallest component; 2 = two largest or two smallest, etc.</string>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
