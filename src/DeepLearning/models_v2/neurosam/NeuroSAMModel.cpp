@@ -109,13 +109,17 @@ int NeuroSAMModel::preferredBatchSize() const {
 }
 
 int NeuroSAMModel::maxBatchSize() const {
-    // Feedback loop requires single-frame processing.
-    return 1;
+    // NeuroSAM supports dynamic batching — the static memory inputs
+    // are broadcast across batch elements, and the AOTI export
+    // allows flexible batch sizes.
+    return 0;// 0 = unlimited
 }
 
 BatchMode NeuroSAMModel::batchMode() const {
-    // NeuroSAM uses output→input feedback, requiring sequential single-frame inference.
-    return RecurrentOnlyBatch{};
+    // NeuroSAM supports batched inference. When used in recurrent
+    // sequence mode the constraint enforcer will lock batch=1 based
+    // on active recurrent bindings, so we don't need to force it here.
+    return DynamicBatch{1, 0};
 }
 
 // ---------------------------------------------------------------------------

@@ -36,6 +36,10 @@ message(STATUS "Found abseil from vcpkg - FuzzTest will use this version")
 # Tell FuzzTest not to build its own RE2 and googletest since we have them or don't need them
 set(FUZZTEST_BUILD_TESTING OFF CACHE BOOL "Disable FuzzTest's own tests" FORCE)
 
+# Disable antlr4's bundled tests (pulled in transitively by fuzztest's grammar_codegen).
+# These crash under AddressSanitizer during gtest_discover_tests.
+set(ANTLR_BUILD_CPP_TESTS OFF CACHE BOOL "Disable ANTLR4 C++ tests" FORCE)
+
 # Disable Riegeli dependency in Centipede (part of FuzzTest)
 add_compile_definitions(CENTIPEDE_DISABLE_RIEGELI)
 
@@ -82,6 +86,45 @@ set(CMAKE_C_FLAGS "${SAVED_CMAKE_C_FLAGS}")
 
 # Include fuzztest helpers
 include(GoogleTest)
+
+# ── Fuzz test registration ──
+# We cannot use gtest_discover_tests() for fuzz test executables because they
+# link an ASan-instrumented main against a non-ASan gtest library (fetched by
+# FuzzTest). Running the executable to enumerate tests (which both POST_BUILD
+# and PRE_TEST modes do) causes a SEGV in ParseGoogleTestFlagsOnly.
+#
+# Instead, register each fuzz executable as a single bundled ctest entry via
+# add_test(). This skips test enumeration entirely.
+#
+# Usage:
+#   add_fuzz_test(target_name)
+#   add_fuzz_test(target_name PROPERTIES ENVIRONMENT "ASAN_OPTIONS=...;VAR=val")
+function(add_fuzz_test target_name)
+    # Strip any trailing PROPERTIES / ENVIRONMENT that callers pass — we set our
+    # own properties below and honour the caller's ENVIRONMENT value.
+    set(_env "ASAN_OPTIONS=detect_leaks=0")
+
+    # Look for PROPERTIES ENVIRONMENT "value" in ARGN
+    list(FIND ARGN "PROPERTIES" _pidx)
+    if(NOT _pidx EQUAL -1)
+        math(EXPR _eidx "${_pidx} + 1")
+        list(GET ARGN ${_eidx} _ekey)
+        if(_ekey STREQUAL "ENVIRONMENT")
+            math(EXPR _vidx "${_pidx} + 2")
+            list(GET ARGN ${_vidx} _env)
+        endif()
+    endif()
+
+    add_test(
+        NAME ${target_name}_all
+        COMMAND ${target_name}
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:${target_name}>
+    )
+    set_tests_properties(${target_name}_all PROPERTIES
+        ENVIRONMENT "${_env}"
+        LABELS "fuzz"
+    )
+endfunction()
 
 # Add subdirectories for different types of fuzz tests
 add_subdirectory(unit)

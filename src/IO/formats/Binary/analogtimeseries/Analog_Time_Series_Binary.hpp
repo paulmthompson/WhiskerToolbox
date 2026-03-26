@@ -1,6 +1,8 @@
 #ifndef ANALOG_TIME_SERIES_LOADER_HPP
 #define ANALOG_TIME_SERIES_LOADER_HPP
 
+#include "datamanagerio_export.h"
+
 #include "IO/core/LoaderOptionsConcepts.hpp"
 
 #include <rfl.hpp>
@@ -81,6 +83,6 @@ struct BinaryAnalogLoaderOptions {
 static_assert(WhiskerToolbox::ValidLoaderOptions<BinaryAnalogLoaderOptions>,
     "BinaryAnalogLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
-std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions const & opts);
+DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions const & opts);
 
 #endif// ANALOG_TIME_SERIES_LOADER_HPP

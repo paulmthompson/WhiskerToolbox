@@ -29,4 +29,4 @@ target_link_options(fuzz_digital_event_series_json
 )
 
 # Register with gtest discovery
-gtest_discover_tests(fuzz_digital_event_series_json)
+add_fuzz_test(fuzz_digital_event_series_json)

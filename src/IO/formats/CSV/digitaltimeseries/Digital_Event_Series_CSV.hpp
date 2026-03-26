@@ -1,6 +1,8 @@
 #ifndef DIGITAL_EVENT_SERIES_CSV_HPP
 #define DIGITAL_EVENT_SERIES_CSV_HPP
 
+#include "datamanagerio_export.h"
+
 #include "ParameterSchema/ParameterSchema.hpp"
 
 #include <memory>
@@ -101,7 +103,7 @@ struct CSVEventSaverOptions {
  * @return Vector of shared pointers to DigitalEventSeries objects, one per unique identifier
  *         (or one total if no identifier column)
  */
-std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions const & options);
+DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions const & options);
 
 /**
  * @brief Save DigitalEventSeries to a CSV file.
@@ -115,7 +117,7 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions cons
  *
  * @pre event_data must not be null.
  */
-bool save(DigitalEventSeries const * event_data,
+DATAMANAGERIO_EXPORT bool save(DigitalEventSeries const * event_data,
           CSVEventSaverOptions const & opts);
 
 namespace WhiskerToolbox::Transforms::V2 {

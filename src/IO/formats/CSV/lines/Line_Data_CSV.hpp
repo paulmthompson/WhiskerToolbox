@@ -1,6 +1,8 @@
 #ifndef LINE_DATA_LOADER_HPP
 #define LINE_DATA_LOADER_HPP
 
+#include "datamanagerio_export.h"
+
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
@@ -168,7 +170,7 @@ void save_line_as_csv(Line2D const & line, std::string const & filename, int poi
  *
  * @pre line_data must not be null.
  */
-bool save(LineData const * line_data,
+DATAMANAGERIO_EXPORT bool save(LineData const * line_data,
           CSVSingleFileLineSaverOptions const & opts);
 
 /**
@@ -195,7 +197,7 @@ bool save(LineData const * line_data,
  *
  * @pre line_data must not be null.
  */
-bool save(LineData const * line_data,
+DATAMANAGERIO_EXPORT bool save(LineData const * line_data,
           CSVMultiFileLineSaverOptions const & opts);
 
 /**
@@ -208,7 +210,7 @@ bool save(LineData const * line_data,
  * @param opts Options controlling the load behavior
  * @return A map of timestamps to vectors of Line2D objects
  */
-std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & opts);
+DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & opts);
 
 /**
  * @brief Load LineData from a single CSV file containing all timestamps
@@ -220,7 +222,7 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
  * @param opts Options controlling the load behavior
  * @return A map of timestamps to vectors of Line2D objects
  */
-std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & opts);
+DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & opts);
 
 std::vector<float> parse_string_to_float_vector(std::string const & str, std::string const & delimiter = ",");
 

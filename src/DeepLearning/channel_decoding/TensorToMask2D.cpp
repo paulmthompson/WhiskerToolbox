@@ -18,7 +18,7 @@ std::string TensorToMask2D::outputTypeName() const {
 Mask2D TensorToMask2D::decode(at::Tensor const & tensor,
                               DecoderContext const & ctx,
                               MaskDecoderParams const & params) {
-    auto channel = tensor[ctx.batch_index][ctx.source_channel];
+    auto channel = tensor[ctx.batch_index][ctx.source_channel].cpu();
     auto const h = ctx.height;
     auto const w = ctx.width;
     auto accessor = channel.accessor<float, 2>();

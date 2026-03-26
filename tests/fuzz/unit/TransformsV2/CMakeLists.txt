@@ -47,4 +47,4 @@ target_link_options(fuzz_v2_parameter_io
 )
 
 # Register with gtest discovery
-gtest_discover_tests(fuzz_v2_parameter_io)
+add_fuzz_test(fuzz_v2_parameter_io)

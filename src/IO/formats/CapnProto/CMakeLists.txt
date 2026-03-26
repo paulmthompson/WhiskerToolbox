@@ -30,13 +30,34 @@ set(CAPNPROTO_PLUGIN_SOURCES
 # Create the CapnProto plugin library
 add_library(DataManagerIO_CapnProto SHARED ${CAPNPROTO_PLUGIN_SOURCES})
 
+include(GenerateExportHeader)
+
+set_target_properties(DataManagerIO_CapnProto
+    PROPERTIES
+    WINDOWS_EXPORT_ALL_SYMBOLS OFF
+)
+
+generate_export_header(DataManagerIO_CapnProto 
+                       EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/datamanagerio_capnproto_export.h)
+
 target_include_directories(DataManagerIO_CapnProto PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../..>"  # src/DataManager for IO/core/ headers
     ${CMAKE_CURRENT_BINARY_DIR}  # For generated CapnProto headers
+    PUBLIC
+    ${CMAKE_CURRENT_BINARY_DIR} #datamanagerio_capnproto_export.h
 )
 
+target_sources(
+  DataManagerIO_CapnProto PUBLIC
+    FILE_SET HEADERS
+    BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/datamanagerio_capnproto_export.h
+)
+
+
 target_link_libraries(DataManagerIO_CapnProto PRIVATE
+    DataManagerIO_Core        # For IFormatLoader interface
     WhiskerToolbox::LineData  # Link to LineData library instead of accessing headers
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
@@ -75,8 +96,14 @@ endif()
 # so we don't need to link them here - we'll use forward declarations and 
 # the parent will provide the implementations
 
+# Prevent static-archive symbols (e.g. TimeFrame) from leaking into the .so
+target_link_options(DataManagerIO_CapnProto PRIVATE
+    $<$<CXX_COMPILER_ID:Clang,GNU>:LINKER:--exclude-libs,ALL>)
+
 set_target_properties(DataManagerIO_CapnProto PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
 )
 enable_whiskertoolbox_pch(DataManagerIO_CapnProto)

@@ -1,6 +1,8 @@
 #ifndef MASK_DATA_IMAGE_HPP
 #define MASK_DATA_IMAGE_HPP
 
+#include "datamanagerio_opencv_export.h"
+
 #include "ParameterSchema/ParameterSchema.hpp"
 
 #include <memory>
@@ -106,7 +108,7 @@ struct ImageMaskSaverOptions {
  * @param opts Options controlling the load behavior
  * @return A shared pointer to the loaded MaskData object
  */
-std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts);
+DATAMANAGERIO_OPENCV_EXPORT std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts);
 
 /**
  * @brief Save MaskData to binary image files
@@ -119,7 +121,7 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts);
  * @param opts Options controlling the save behavior
  * @return true on success, false on error
  */
-bool save(MaskData const * mask_data, ImageMaskSaverOptions const & opts);
+DATAMANAGERIO_OPENCV_EXPORT bool save(MaskData const * mask_data, ImageMaskSaverOptions const & opts);
 
 namespace WhiskerToolbox::Transforms::V2 {
 

@@ -55,7 +55,7 @@ target_link_options(fuzz_registry
 )
 
 # Suppress LeakSanitizer (yyjson leaks) and use offscreen Qt platform
-gtest_discover_tests(fuzz_registry
+add_fuzz_test(fuzz_registry
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
 )
 
@@ -113,7 +113,7 @@ target_link_options(fuzz_workspace_placement
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_workspace_placement
+add_fuzz_test(fuzz_workspace_placement
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
 )
 
@@ -168,7 +168,7 @@ target_link_options(fuzz_workspace_file
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_workspace_file
+add_fuzz_test(fuzz_workspace_file
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
 )
 
@@ -254,6 +254,6 @@ target_link_options(fuzz_real_widget_roundtrip
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_real_widget_roundtrip
+add_fuzz_test(fuzz_real_widget_roundtrip
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
 )

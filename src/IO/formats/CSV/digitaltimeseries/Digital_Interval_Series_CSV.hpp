@@ -1,6 +1,8 @@
 #ifndef DIGITAL_INTERVAL_SERIES_CSV_HPP
 #define DIGITAL_INTERVAL_SERIES_CSV_HPP
 
+#include "datamanagerio_export.h"
+
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "TimeFrame/interval_data.hpp"
 
@@ -9,7 +11,7 @@
 
 class DigitalIntervalSeries;
 
-std::vector<Interval> load_digital_series_from_csv(std::string const & filename, char delimiter = ' ');
+DATAMANAGERIO_EXPORT std::vector<Interval> load_digital_series_from_csv(std::string const & filename, char delimiter = ' ');
 
 /**
  * @struct CSVIntervalLoaderOptions
@@ -46,7 +48,7 @@ struct CSVIntervalLoaderOptions {
  * @param options Configuration options for loading
  * @return Vector of Interval objects loaded from the CSV file
  */
-std::vector<Interval> load(CSVIntervalLoaderOptions const & options);
+DATAMANAGERIO_EXPORT std::vector<Interval> load(CSVIntervalLoaderOptions const & options);
 
 
 /**
@@ -95,7 +97,7 @@ struct CSVIntervalSaverOptions {
  *
  * @pre interval_data must not be null.
  */
-bool save(DigitalIntervalSeries const * interval_data,
+DATAMANAGERIO_EXPORT bool save(DigitalIntervalSeries const * interval_data,
           CSVIntervalSaverOptions const & opts);
 
 namespace WhiskerToolbox::Transforms::V2 {

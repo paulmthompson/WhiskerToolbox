@@ -271,3 +271,21 @@ The output `TensorData` preserves the input's `RowDescriptor` type:
 - **Ordinal**: Row count matches observation count after NaN dropping
 
 Column names are auto-generated: `"PC1"`, `"PC2"`, ... for PCA; `"Dim1"`, `"Dim2"`, ... for other algorithms.
+
+### Data Layout Convention
+
+::: {.callout-warning}
+## Armadillo ↔ TensorData layout mismatch
+
+Armadillo stores matrices in **column-major** order, while `TensorData` factories (`createTimeSeries2D`, `createOrdinal2D`, `createFromIntervals`) expect flat data in **row-major** order. When converting an `arma::fmat` to `TensorData`, you **must not** use `memptr()` directly — this produces column-major data that will be silently reinterpreted as row-major, scrambling all values across observations. Instead, extract elements in explicit row-major order:
+
+```cpp
+arma::fmat output_fmat = /* ... */;
+std::vector<float> flat_data(output_fmat.n_elem);
+for (arma::uword r = 0; r < output_fmat.n_rows; ++r) {
+    for (arma::uword c = 0; c < output_fmat.n_cols; ++c) {
+        flat_data[r * output_fmat.n_cols + c] = output_fmat(r, c);
+    }
+}
+```
+:::

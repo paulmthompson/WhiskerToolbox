@@ -30,7 +30,7 @@ target_link_options(fuzz_csv_point_roundtrip
 )
 
 # Register with gtest discovery
-gtest_discover_tests(fuzz_csv_point_roundtrip)
+add_fuzz_test(fuzz_csv_point_roundtrip)
 
 # CSV LineData single-file round-trip fuzz test
 
@@ -61,7 +61,7 @@ target_link_options(fuzz_csv_line_single_roundtrip
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_csv_line_single_roundtrip)
+add_fuzz_test(fuzz_csv_line_single_roundtrip)
 
 # CSV LineData multi-file round-trip fuzz test
 
@@ -92,7 +92,7 @@ target_link_options(fuzz_csv_line_multi_roundtrip
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_csv_line_multi_roundtrip)
+add_fuzz_test(fuzz_csv_line_multi_roundtrip)
 
 # CSV AnalogTimeSeries round-trip fuzz test
 
@@ -123,7 +123,7 @@ target_link_options(fuzz_csv_analog_roundtrip
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_csv_analog_roundtrip)
+add_fuzz_test(fuzz_csv_analog_roundtrip)
 
 # CSV DigitalEventSeries round-trip fuzz test
 
@@ -154,7 +154,7 @@ target_link_options(fuzz_csv_event_roundtrip
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_csv_event_roundtrip)
+add_fuzz_test(fuzz_csv_event_roundtrip)
 
 # CSV DigitalIntervalSeries round-trip fuzz test
 
@@ -185,7 +185,7 @@ target_link_options(fuzz_csv_interval_roundtrip
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_csv_interval_roundtrip)
+add_fuzz_test(fuzz_csv_interval_roundtrip)
 
 # CSV MaskData RLE round-trip fuzz test
 
@@ -216,7 +216,7 @@ target_link_options(fuzz_csv_mask_rle_roundtrip
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_csv_mask_rle_roundtrip)
+add_fuzz_test(fuzz_csv_mask_rle_roundtrip)
 
 # CapnProto LineData round-trip fuzz test
 
@@ -250,7 +250,7 @@ target_link_options(fuzz_capnproto_line_roundtrip
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_capnproto_line_roundtrip)
+add_fuzz_test(fuzz_capnproto_line_roundtrip)
 
 endif()
 
@@ -285,6 +285,6 @@ target_link_options(fuzz_opencv_mask_save
         -fsanitize=address
 )
 
-gtest_discover_tests(fuzz_opencv_mask_save)
+add_fuzz_test(fuzz_opencv_mask_save)
 
 endif()

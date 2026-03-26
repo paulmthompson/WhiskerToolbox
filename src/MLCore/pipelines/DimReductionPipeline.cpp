@@ -115,13 +115,20 @@ std::shared_ptr<TensorData> buildOutputTensor(
         std::size_t n_components,
         std::vector<std::string> const & col_names) {
 
-    // reduced is (n_components × observations) in mlpack convention — transpose to row-major
+    // reduced is (n_components × observations) in mlpack convention.
+    // Transpose to (observations × n_components) for the logical shape.
     arma::fmat output_fmat = arma::conv_to<arma::fmat>::from(reduced.t());
     auto const num_rows = static_cast<std::size_t>(output_fmat.n_rows);
 
-    std::vector<float> const flat_data(
-            output_fmat.memptr(),
-            output_fmat.memptr() + output_fmat.n_elem);
+    // Armadillo stores column-major, but TensorData factories expect row-major flat data.
+    // Extract elements in row-major order.
+    auto const n_cols = static_cast<std::size_t>(output_fmat.n_cols);
+    std::vector<float> flat_data(output_fmat.n_elem);
+    for (arma::uword r = 0; r < output_fmat.n_rows; ++r) {
+        for (arma::uword c = 0; c < output_fmat.n_cols; ++c) {
+            flat_data[r * n_cols + c] = output_fmat(r, c);
+        }
+    }
 
     auto const & row_desc = input.rows();
 

@@ -5,6 +5,8 @@
 #ifndef DATAMANAGER_IO_ATOMIC_WRITE_HPP
 #define DATAMANAGER_IO_ATOMIC_WRITE_HPP
 
+#include "datamanagerio_export.h"
+
 #include <filesystem>
 #include <functional>
 #include <ostream>
@@ -26,7 +28,7 @@
  *
  * @pre write_callback must be a valid callable.
  */
-bool atomicWriteFile(
+DATAMANAGERIO_EXPORT bool atomicWriteFile(
         std::filesystem::path const & target_path,
         std::function<bool(std::ostream &)> const & write_callback);
 
