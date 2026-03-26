@@ -35,9 +35,9 @@ TEST_CASE("NeuroSAMModel - preferredBatchSize is 1", "[NeuroSAMModel]") {
     CHECK(model.preferredBatchSize() == 1);
 }
 
-TEST_CASE("NeuroSAMModel - maxBatchSize is 1", "[NeuroSAMModel]") {
+TEST_CASE("NeuroSAMModel - maxBatchSize is unlimited", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
-    CHECK(model.maxBatchSize() == 1);
+    CHECK(model.maxBatchSize() == 0);
 }
 
 // ─── Input Slot Tests ───────────────────────────────────────────
@@ -263,23 +263,25 @@ TEST_CASE("NeuroSAMModel - ModelInfo from registry", "[NeuroSAMModel][ModelRegis
     CHECK(info->inputs.size() == 3);
     CHECK(info->outputs.size() == 1);
     CHECK(info->preferred_batch_size == 1);
-    CHECK(info->max_batch_size == 1);
+    CHECK(info->max_batch_size == 0);
 }
 
-TEST_CASE("NeuroSAMModel - batchMode is RecurrentOnly", "[NeuroSAMModel]") {
+TEST_CASE("NeuroSAMModel - batchMode is DynamicBatch", "[NeuroSAMModel]") {
     dl::NeuroSAMModel model;
     auto mode = model.batchMode();
-    CHECK(std::holds_alternative<dl::RecurrentOnlyBatch>(mode));
-    CHECK(dl::isBatchLocked(mode));
-    CHECK(dl::maxBatchSizeFromMode(mode) == 1);
+    CHECK(std::holds_alternative<dl::DynamicBatch>(mode));
+    CHECK_FALSE(dl::isBatchLocked(mode));
+    auto const & dyn = std::get<dl::DynamicBatch>(mode);
+    CHECK(dyn.min_size == 1);
+    CHECK(dyn.max_size == 0);
 }
 
-TEST_CASE("NeuroSAMModel - registry ModelInfo has RecurrentOnly batch_mode",
+TEST_CASE("NeuroSAMModel - registry ModelInfo has DynamicBatch batch_mode",
           "[NeuroSAMModel][ModelRegistry]") {
     auto & registry = dl::ModelRegistry::instance();
     auto info = registry.getModelInfo("neurosam");
     REQUIRE(info.has_value());
-    CHECK(std::holds_alternative<dl::RecurrentOnlyBatch>(info->batch_mode));
+    CHECK(std::holds_alternative<dl::DynamicBatch>(info->batch_mode));
 }
 
 TEST_CASE("NeuroSAMModel - registry slot lookup", "[NeuroSAMModel][ModelRegistry]") {
