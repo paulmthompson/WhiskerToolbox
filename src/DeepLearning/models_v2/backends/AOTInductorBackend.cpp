@@ -63,7 +63,7 @@ bool AOTInductorBackend::load(std::filesystem::path const & path)
             path.string(),
             /*model_name=*/"model",
             /*run_single_threaded=*/false,
-            /*num_runners=*/1,
+            /*num_runners=*/2,
             device_idx);
 
         _impl->loader = std::move(loader);

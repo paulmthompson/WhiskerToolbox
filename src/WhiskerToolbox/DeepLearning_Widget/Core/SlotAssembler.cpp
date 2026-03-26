@@ -32,6 +32,8 @@
 #include "post_encoder/SpatialPointExtractModule.hpp"
 #include "registry/ModelRegistry.hpp"
 
+#include "device/DeviceManager.hpp"
+
 #include <torch/torch.h>
 
 #include <algorithm>
@@ -917,6 +919,19 @@ void SlotAssembler::resetModel() {
     _impl->model_id.clear();
     _impl->static_cache.clear();
     _impl->recurrent_cache.clear();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Device context initialization
+// ════════════════════════════════════════════════════════════════════════════
+
+void SlotAssembler::initDeviceForCurrentThread() {
+    auto const & dev = dl::DeviceManager::instance().device();
+    if (dev.type() != torch::kCPU) {
+        // Allocating a small tensor on the target device forces the CUDA
+        // runtime to initialize its per-thread context.
+        (void)torch::zeros({1}, torch::TensorOptions().device(dev));
+    }
 }
 
 // ════════════════════════════════════════════════════════════════════════════

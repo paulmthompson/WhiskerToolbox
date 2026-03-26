@@ -227,6 +227,19 @@ public:
             ImageSize source_image_size,
             ProgressCallback const & progress = nullptr);
 
+    // ── Instance: device context ─────────────────────────────────────────
+
+    /// Initialize the deep-learning device context on the calling thread.
+    ///
+    /// On CUDA builds this ensures the CUDA runtime context is set for the
+    /// current thread — required on Windows where CUDA per-thread state is
+    /// not inherited from the main thread. Safe to call from any thread;
+    /// no-op when the active device is CPU.
+    ///
+    /// Call at the start of worker thread `run()` methods before any
+    /// libtorch operations.
+    static void initDeviceForCurrentThread();
+
     // ── Instance: static tensor cache ──────────────────────────────────────
 
     /// Capture a static input at a specific frame and store in the cache.
