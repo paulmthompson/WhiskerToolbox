@@ -38,16 +38,6 @@ else()
     catch_discover_tests(test_triage_session)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_triage_session PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_triage_session PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_triage_session PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_triage_session)
 
 enable_whiskertoolbox_shared_test_pch(test_triage_session)

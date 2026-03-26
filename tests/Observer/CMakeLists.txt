@@ -32,16 +32,6 @@ else()
     catch_discover_tests(test_observer)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_observer PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_observer PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_observer PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_observer)
 
 enable_whiskertoolbox_shared_test_pch(test_observer)
