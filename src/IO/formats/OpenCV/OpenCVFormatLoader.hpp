@@ -1,7 +1,9 @@
 #ifndef OPENCV_FORMAT_LOADER_HPP
 #define OPENCV_FORMAT_LOADER_HPP
 
-#include "../../core/LoaderRegistry.hpp"
+#include "datamanagerio_opencv_export.h"
+
+#include "../../core/IFormatLoader.hpp"
 
 /**
  * @brief OpenCV format loader
@@ -9,7 +11,7 @@
  * This loader provides OpenCV-based image loading capability for MaskData.
  * It wraps the existing OpenCV loading functionality.
  */
-class OpenCVFormatLoader : public IFormatLoader {
+class DATAMANAGERIO_OPENCV_EXPORT OpenCVFormatLoader : public IFormatLoader {
 public:
     OpenCVFormatLoader() = default;
     ~OpenCVFormatLoader() override = default;

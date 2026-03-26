@@ -1,6 +1,8 @@
 #ifndef DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
 #define DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
 
+#include "datamanagerio_capnproto_export.h"
+
 #include "DataTypeEnum/DM_DataType.hpp"
 #include "IO/core/DataLoader.hpp"
 #include <capnp/common.h>
@@ -18,7 +20,7 @@ struct ReaderOptions;
  * This loader handles loading data stored in CapnProto format.
  * Currently supports LineData, with extensibility for other data types.
  */
-class CapnProtoLoader : public DataLoader {
+class DATAMANAGERIO_CAPNPROTO_EXPORT CapnProtoLoader : public DataLoader {
 public:
     CapnProtoLoader();
 

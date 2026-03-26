@@ -1,6 +1,8 @@
 #ifndef MULTI_COLUMN_BINARY_CSV_HPP
 #define MULTI_COLUMN_BINARY_CSV_HPP
 
+#include "datamanagerio_export.h"
+
 #include "IO/core/LoaderOptionsConcepts.hpp"
 #include "TimeFrame/interval_data.hpp"
 
@@ -142,7 +144,7 @@ static_assert(WhiskerToolbox::ValidLoaderOptions<MultiColumnBinaryCSVTimeFrameOp
  * @param opts Configuration options for loading
  * @return Shared pointer to DigitalIntervalSeries, or nullptr on error
  */
-std::shared_ptr<DigitalIntervalSeries> load(MultiColumnBinaryCSVLoaderOptions const & opts);
+DATAMANAGERIO_EXPORT std::shared_ptr<DigitalIntervalSeries> load(MultiColumnBinaryCSVLoaderOptions const & opts);
 
 /**
  * @brief Load TimeFrame from a multi-column binary CSV file
@@ -153,7 +155,7 @@ std::shared_ptr<DigitalIntervalSeries> load(MultiColumnBinaryCSVLoaderOptions co
  * @param opts Configuration options for loading
  * @return Shared pointer to TimeFrame, or nullptr on error
  */
-std::shared_ptr<TimeFrame> load(MultiColumnBinaryCSVTimeFrameOptions const & opts);
+DATAMANAGERIO_EXPORT std::shared_ptr<TimeFrame> load(MultiColumnBinaryCSVTimeFrameOptions const & opts);
 
 /**
  * @brief Extract column names from a multi-column binary CSV file
@@ -165,7 +167,7 @@ std::shared_ptr<TimeFrame> load(MultiColumnBinaryCSVTimeFrameOptions const & opt
  * @param delimiter Column delimiter
  * @return Vector of column names, empty on error
  */
-std::vector<std::string> getColumnNames(
+DATAMANAGERIO_EXPORT std::vector<std::string> getColumnNames(
     std::string const & filepath,
     int header_lines_to_skip = 5,
     std::string const & delimiter = "\t"

@@ -1,7 +1,9 @@
 #ifndef NUMPY_FORMAT_LOADER_HPP
 #define NUMPY_FORMAT_LOADER_HPP
 
-#include "../../core/LoaderRegistry.hpp"
+#include "datamanagerio_numpy_export.h"
+
+#include "../../core/IFormatLoader.hpp"
 
 /**
  * @brief Numpy format loader
@@ -9,7 +11,7 @@
  * This loader provides numpy (.npy) loading capability for TensorData.
  * It wraps the existing numpy loading functionality.
  */
-class NumpyFormatLoader : public IFormatLoader {
+class DATAMANAGERIO_NUMPY_EXPORT NumpyFormatLoader : public IFormatLoader {
 public:
     NumpyFormatLoader() = default;
     ~NumpyFormatLoader() override = default;

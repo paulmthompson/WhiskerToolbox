@@ -1,6 +1,8 @@
 #ifndef DATAMANAGER_IO_OPENCVLOADER_HPP
 #define DATAMANAGER_IO_OPENCVLOADER_HPP
 
+#include "datamanagerio_opencv_export.h"
+
 #include "DataTypeEnum/DM_DataType.hpp"
 #include "IO/core/DataLoader.hpp"
 
@@ -11,7 +13,7 @@
  * Currently supports:
  * - MaskData from binary images (PNG, JPG, BMP, TIFF, etc.)
  */
-class OpenCVLoader : public DataLoader {
+class DATAMANAGERIO_OPENCV_EXPORT OpenCVLoader : public DataLoader {
 public:
     /**
      * @brief Get the format identifier

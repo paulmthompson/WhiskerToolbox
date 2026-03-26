@@ -119,6 +119,7 @@ target_link_libraries(DataImport_Widget
     PRIVATE
         DataManagerNumpy  # For TensorImport numpy loading
         WhiskerToolbox::StateManagement
+        DataManagerIO #Loader registry
 )
 
 target_link_libraries(DataImport_Widget PRIVATE WhiskerToolbox::AnalogTimeSeries)

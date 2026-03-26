@@ -37,6 +37,7 @@ target_link_libraries(test_commands PRIVATE WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(test_commands PRIVATE WhiskerToolbox::PointData)
 target_link_libraries(test_commands PRIVATE WhiskerToolbox::LineData)
 target_link_libraries(test_commands PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(test_commands PRIVATE DataManagerIO)
 
 # DataSynthesizer uses static registration — whole-archive required
 if(APPLE)

@@ -1,6 +1,8 @@
 #ifndef WHISKERTOOLBOX_TENSOR_DATA_NUMPY_HPP
 #define WHISKERTOOLBOX_TENSOR_DATA_NUMPY_HPP
 
+#include "datamanagerio_numpy_export.h"
+
 #include <string>
 
 class TensorData;
@@ -15,6 +17,6 @@ class TensorData;
  * @param filepath Path to the .npy file
  * @param tensor_data TensorData instance to populate (will be replaced with new data)
  */
-void loadNpyToTensorData(std::string const & filepath, TensorData & tensor_data);
+DATAMANAGERIO_NUMPY_EXPORT void loadNpyToTensorData(std::string const & filepath, TensorData & tensor_data);
 
 #endif//WHISKERTOOLBOX_TENSOR_DATA_NUMPY_HPP

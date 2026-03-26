@@ -1,6 +1,8 @@
 #ifndef LINE_DATA_BINARY_HPP
 #define LINE_DATA_BINARY_HPP
 
+#include "datamanagerio_capnproto_export.h"
+
 #include "ParameterSchema/ParameterSchema.hpp"
 
 #include <memory>// For std::shared_ptr
@@ -13,14 +15,14 @@ struct BinaryLineLoaderOptions {
     std::string file_path;
 };
 
-std::shared_ptr<LineData> load(BinaryLineLoaderOptions & opts);
+DATAMANAGERIO_CAPNPROTO_EXPORT std::shared_ptr<LineData> load(BinaryLineLoaderOptions & opts);
 
 struct BinaryLineSaverOptions {
     std::string filename;
     std::string parent_dir = ".";
 };
 
-bool save(LineData const & data, BinaryLineSaverOptions const & opts);
+DATAMANAGERIO_CAPNPROTO_EXPORT bool save(LineData const & data, BinaryLineSaverOptions const & opts);
 
 namespace WhiskerToolbox::Transforms::V2 {
 

@@ -36,6 +36,10 @@ message(STATUS "Found abseil from vcpkg - FuzzTest will use this version")
 # Tell FuzzTest not to build its own RE2 and googletest since we have them or don't need them
 set(FUZZTEST_BUILD_TESTING OFF CACHE BOOL "Disable FuzzTest's own tests" FORCE)
 
+# Disable antlr4's bundled tests (pulled in transitively by fuzztest's grammar_codegen).
+# These crash under AddressSanitizer during gtest_discover_tests.
+set(ANTLR_BUILD_CPP_TESTS OFF CACHE BOOL "Disable ANTLR4 C++ tests" FORCE)
+
 # Disable Riegeli dependency in Centipede (part of FuzzTest)
 add_compile_definitions(CENTIPEDE_DISABLE_RIEGELI)
 
@@ -82,6 +86,11 @@ set(CMAKE_C_FLAGS "${SAVED_CMAKE_C_FLAGS}")
 
 # Include fuzztest helpers
 include(GoogleTest)
+
+# Use PRE_TEST discovery so the executable is not run at build time.
+# Under AddressSanitizer, POST_BUILD discovery segfaults because fuzztest's
+# gtest is compiled without ASan while our test binaries are compiled with it.
+set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
 
 # Add subdirectories for different types of fuzz tests
 add_subdirectory(unit)

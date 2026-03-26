@@ -1,6 +1,8 @@
 #ifndef DATAMANAGER_IO_HDF5LOADER_HPP
 #define DATAMANAGER_IO_HDF5LOADER_HPP
 
+#include "datamanagerio_hdf5_export.h"
+
 #include "DataTypeEnum/DM_DataType.hpp"
 #include "IO/core/DataLoader.hpp"
 
@@ -14,7 +16,7 @@
  * - DigitalEventSeries
  * - AnalogTimeSeries
  */
-class HDF5Loader : public DataLoader {
+class DATAMANAGERIO_HDF5_EXPORT HDF5Loader : public DataLoader {
 public:
     /**
      * @brief Get the format identifier
