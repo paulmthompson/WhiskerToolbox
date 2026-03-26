@@ -1,6 +1,8 @@
 #ifndef LOADER_REGISTRATION_HPP
 #define LOADER_REGISTRATION_HPP
 
+#include "datamanagerio_export.h"
+
 class LoaderRegistry;
 
 /**
@@ -14,15 +16,15 @@ class LoaderRegistry;
  * - CapnProto loader (if ENABLE_CAPNPROTO is set)
  * - Future loaders can be added here
  */
-void registerAllLoaders();
+DATAMANAGERIO_EXPORT void registerAllLoaders();
 
 /**
  * @brief Register internal loaders (no external dependencies)
  */
-void registerInternalLoaders();
+DATAMANAGERIO_EXPORT void registerInternalLoaders();
 
 /// @overload Register internal loaders into a specific registry (for testing).
-void registerInternalLoaders(LoaderRegistry & registry);
+DATAMANAGERIO_EXPORT void registerInternalLoaders(LoaderRegistry & registry);
 
 /**
  * @brief Register external loaders (with dependencies)

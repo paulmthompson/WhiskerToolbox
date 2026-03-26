@@ -51,6 +51,7 @@ target_include_directories(Commands PUBLIC
 )
 
 target_link_libraries(Commands PRIVATE DataManager)
+target_link_libraries(Commands PRIVATE DataManagerIO)
 target_link_libraries(Commands PRIVATE WhiskerToolbox::DataSynthesizer)
 target_link_libraries(Commands PUBLIC reflectcpp::reflectcpp)
 

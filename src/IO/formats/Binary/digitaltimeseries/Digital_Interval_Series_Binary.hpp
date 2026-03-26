@@ -1,6 +1,8 @@
 #ifndef DIGITAL_INTERVAL_SERIES_BINARY_HPP
 #define DIGITAL_INTERVAL_SERIES_BINARY_HPP
 
+#include "datamanagerio_export.h"
+
 #include "TimeFrame/interval_data.hpp"
 
 #include <string>
@@ -47,7 +49,7 @@ struct BinaryIntervalLoaderOptions {
  * @param options Configuration options for loading
  * @return Vector of Interval objects loaded from the binary file
  */
-std::vector<Interval> load(BinaryIntervalLoaderOptions const & options);
+DATAMANAGERIO_EXPORT std::vector<Interval> load(BinaryIntervalLoaderOptions const & options);
 
 /**
  * @brief Load digital interval series data into a DigitalIntervalSeries object
@@ -55,6 +57,6 @@ std::vector<Interval> load(BinaryIntervalLoaderOptions const & options);
  * @param options Configuration options for loading
  * @return Shared pointer to DigitalIntervalSeries object
  */
-std::shared_ptr<DigitalIntervalSeries> loadIntoDigitalIntervalSeries(BinaryIntervalLoaderOptions const & options);
+DATAMANAGERIO_EXPORT std::shared_ptr<DigitalIntervalSeries> loadIntoDigitalIntervalSeries(BinaryIntervalLoaderOptions const & options);
 
 #endif// DIGITAL_INTERVAL_SERIES_BINARY_HPP

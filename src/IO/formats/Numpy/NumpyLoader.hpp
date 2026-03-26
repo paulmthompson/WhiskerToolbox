@@ -1,6 +1,8 @@
 #ifndef DATAMANAGER_IO_NUMPYLOADER_HPP
 #define DATAMANAGER_IO_NUMPYLOADER_HPP
 
+#include "datamanagerio_numpy_export.h"
+
 #include "DataTypeEnum/DM_DataType.hpp"
 #include "IO/core/DataLoader.hpp"
 
@@ -11,7 +13,7 @@
  * Currently supports:
  * - TensorData (multi-dimensional arrays)
  */
-class NumpyLoader : public DataLoader {
+class DATAMANAGERIO_NUMPY_EXPORT NumpyLoader : public DataLoader {
 public:
     /**
      * @brief Get the format identifier

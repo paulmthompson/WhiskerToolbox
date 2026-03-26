@@ -210,7 +210,7 @@ Point2D<float> scale_to_target(float const x, float const y,
 Line2D TensorToLine2D::decode(at::Tensor const & tensor,
                               DecoderContext const & ctx,
                               LineDecoderParams const & params) {
-    auto channel = tensor[ctx.batch_index][ctx.source_channel];
+    auto channel = tensor[ctx.batch_index][ctx.source_channel].cpu();
     auto const h = ctx.height;
     auto const w = ctx.width;
     auto accessor = channel.accessor<float, 2>();

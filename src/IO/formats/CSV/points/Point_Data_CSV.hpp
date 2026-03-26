@@ -1,6 +1,8 @@
 #ifndef POINT_DATA_CSV_HPP
 #define POINT_DATA_CSV_HPP
 
+#include "datamanagerio_export.h"
+
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "IO/core/LoaderOptionsConcepts.hpp"
@@ -45,7 +47,7 @@ struct CSVPointLoaderOptions {
 static_assert(WhiskerToolbox::ValidLoaderOptions<CSVPointLoaderOptions>,
               "CSVPointLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
-std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts);
+DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts);
 
 /**
  * @struct CSVPointSaverOptions
@@ -92,7 +94,7 @@ struct CSVPointSaverOptions {
  *
  * @pre point_data must not be null.
  */
-bool save(PointData const * point_data, CSVPointSaverOptions const & opts);
+DATAMANAGERIO_EXPORT bool save(PointData const * point_data, CSVPointSaverOptions const & opts);
 
 std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
 
@@ -121,7 +123,7 @@ struct DLCPointLoaderOptions {
 static_assert(WhiskerToolbox::ValidLoaderOptions<DLCPointLoaderOptions>,
               "DLCPointLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
-std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts);
+DATAMANAGERIO_EXPORT std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts);
 
 /**
  * @brief Load multiple PointData objects from DLC CSV format
@@ -134,6 +136,6 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
  * @param item JSON configuration with DLC-specific options
  * @return Map of bodypart name to PointData
  */
-std::map<std::string, std::shared_ptr<PointData>> load_multiple_PointData_from_dlc(std::string const & file_path, nlohmann::basic_json<> const & item);
+DATAMANAGERIO_EXPORT std::map<std::string, std::shared_ptr<PointData>> load_multiple_PointData_from_dlc(std::string const & file_path, nlohmann::basic_json<> const & item);
 
 #endif// POINT_DATA_CSV_HPP

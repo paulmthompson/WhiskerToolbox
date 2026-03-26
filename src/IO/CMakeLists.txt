@@ -2,6 +2,23 @@
 
 find_package(nlohmann_json CONFIG REQUIRED)
 
+# ── Interface library for headers shared between DataManagerIO and format plugins ──
+# This provides IFormatLoader, DataLoader, SaverInfo, IOFormats without any
+# export macros, breaking the circular dependency between DataManagerIO and its
+# plugin shared libraries.
+add_library(DataManagerIO_Core INTERFACE)
+
+target_include_directories(DataManagerIO_Core INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/core>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+)
+
+target_link_libraries(DataManagerIO_Core INTERFACE
+    nlohmann_json::nlohmann_json
+    DataTypeEnum
+    ParameterSchema
+)
+
 # Core plugin interface
 set(IO_CORE_SOURCES
     core/DataLoader.hpp
@@ -42,14 +59,35 @@ set(IO_CORE_SOURCES
     formats/CSV/lines/Line_Data_CSV.cpp
 )
 
-# Create the core IO library
+
 add_library(DataManagerIO SHARED ${IO_CORE_SOURCES})
+
+include(GenerateExportHeader)
+
+set_target_properties(DataManagerIO
+    PROPERTIES
+    WINDOWS_EXPORT_ALL_SYMBOLS OFF
+)
+
+generate_export_header(DataManagerIO
+                       EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/datamanagerio_export.h)
 
 target_include_directories(DataManagerIO PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/..
+    PUBLIC
+    ${CMAKE_CURRENT_BINARY_DIR} # For generated export header
 )
 
+target_sources(
+  DataManagerIO PUBLIC
+    FILE_SET HEADERS
+    BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/datamanagerio_export.h
+)
+
+
 target_link_libraries(DataManagerIO PUBLIC
+    DataManagerIO_Core
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
     ParameterSchema
@@ -99,6 +137,10 @@ if (MSVC)
     target_compile_options(DataManagerIO PRIVATE ${MSVC_WARNINGS})
 endif()
 
+# Prevent static-archive symbols (e.g. TimeFrame) from leaking into the .so
+target_link_options(DataManagerIO PRIVATE
+    $<$<CXX_COMPILER_ID:Clang,GNU>:LINKER:--exclude-libs,ALL>)
+
 # Conditionally define preprocessor macros based on actual library availability
 if(ENABLE_CAPNPROTO)
 
@@ -117,6 +159,8 @@ endif()
 set_target_properties(DataManagerIO PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
 )
 
 enable_whiskertoolbox_pch(DataManagerIO)

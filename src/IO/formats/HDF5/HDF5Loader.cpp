@@ -1,5 +1,4 @@
 #include "HDF5Loader.hpp"
-#include "../../core/LoaderRegistry.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"

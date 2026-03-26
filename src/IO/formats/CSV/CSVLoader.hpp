@@ -1,6 +1,8 @@
 #ifndef CSV_FORMAT_LOADER_HPP
 #define CSV_FORMAT_LOADER_HPP
 
+#include "datamanagerio_export.h"
+
 #include "../../core/LoaderRegistry.hpp"
 
 /**
@@ -30,7 +32,7 @@
  * Configuration options vary by data type - see individual load methods
  * for required and optional JSON configuration fields.
  */
-class CSVLoader : public IFormatLoader {
+class DATAMANAGERIO_EXPORT CSVLoader : public IFormatLoader {
 public:
     CSVLoader() = default;
     ~CSVLoader() override = default;

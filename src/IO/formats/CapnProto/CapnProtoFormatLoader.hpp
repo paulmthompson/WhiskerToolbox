@@ -1,7 +1,9 @@
 #ifndef CAPNPROTO_FORMAT_LOADER_HPP
 #define CAPNPROTO_FORMAT_LOADER_HPP
 
-#include "../../core/LoaderRegistry.hpp"
+#include "datamanagerio_capnproto_export.h"
+
+#include "../../core/IFormatLoader.hpp"
 
 /**
  * @brief CapnProto format loader
@@ -9,7 +11,7 @@
  * This loader provides CapnProto/binary loading capability for LineData and other data types.
  * It wraps the existing CapnProto loading functionality.
  */
-class CapnProtoFormatLoader : public IFormatLoader {
+class DATAMANAGERIO_CAPNPROTO_EXPORT CapnProtoFormatLoader : public IFormatLoader {
 public:
     CapnProtoFormatLoader() = default;
     ~CapnProtoFormatLoader() override = default;

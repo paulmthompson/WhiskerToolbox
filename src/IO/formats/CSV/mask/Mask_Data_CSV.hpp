@@ -15,6 +15,8 @@
 #ifndef MASK_DATA_CSV_HPP
 #define MASK_DATA_CSV_HPP
 
+#include "datamanagerio_export.h"
+
 #include "CoreGeometry/masks.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -90,7 +92,7 @@ struct CSVMaskRLESaverOptions {
  * @param rle_delimiter Delimiter between values in the RLE string
  * @return RLE-encoded string
  */
-std::string encode_mask_rle(Mask2D const & mask, std::string const & rle_delimiter = ",");
+DATAMANAGERIO_EXPORT std::string encode_mask_rle(Mask2D const & mask, std::string const & rle_delimiter = ",");
 
 /**
  * @brief Decode an RLE triplets string into a Mask2D
@@ -102,7 +104,7 @@ std::string encode_mask_rle(Mask2D const & mask, std::string const & rle_delimit
  * @param rle_delimiter Delimiter between values in the RLE string
  * @return Decoded Mask2D
  */
-Mask2D decode_mask_rle(std::string const & rle_str, std::string const & rle_delimiter = ",");
+DATAMANAGERIO_EXPORT Mask2D decode_mask_rle(std::string const & rle_str, std::string const & rle_delimiter = ",");
 
 /**
  * @brief Load MaskData from a single CSV file with RLE encoding
@@ -110,7 +112,7 @@ Mask2D decode_mask_rle(std::string const & rle_str, std::string const & rle_deli
  * @param opts Options controlling the load behavior
  * @return A map of timestamps to vectors of Mask2D objects
  */
-std::map<TimeFrameIndex, std::vector<Mask2D>> load(CSVMaskRLELoaderOptions const & opts);
+DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Mask2D>> load(CSVMaskRLELoaderOptions const & opts);
 
 /**
  * @brief Save MaskData to a single CSV file with RLE encoding
@@ -124,7 +126,7 @@ std::map<TimeFrameIndex, std::vector<Mask2D>> load(CSVMaskRLELoaderOptions const
  *
  * @pre mask_data must not be null.
  */
-bool save(MaskData const * mask_data, CSVMaskRLESaverOptions const & opts);
+DATAMANAGERIO_EXPORT bool save(MaskData const * mask_data, CSVMaskRLESaverOptions const & opts);
 
 namespace WhiskerToolbox::Transforms::V2 {
 

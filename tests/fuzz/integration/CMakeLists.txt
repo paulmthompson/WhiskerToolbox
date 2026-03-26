@@ -32,4 +32,4 @@ target_link_options(fuzz_transform_pipeline
 )
 
 # Register with gtest discovery
-gtest_discover_tests(fuzz_transform_pipeline)
+add_fuzz_test(fuzz_transform_pipeline)

@@ -1,6 +1,8 @@
 #ifndef BINARY_FORMAT_LOADER_HPP
 #define BINARY_FORMAT_LOADER_HPP
 
+#include "datamanagerio_export.h"
+
 #include "../../core/LoaderRegistry.hpp"
 
 /**
@@ -20,7 +22,7 @@
  * Configuration options vary by data type - see individual load methods
  * for required and optional JSON configuration fields.
  */
-class BinaryFormatLoader : public IFormatLoader {
+class DATAMANAGERIO_EXPORT BinaryFormatLoader : public IFormatLoader {
 public:
     BinaryFormatLoader() = default;
     ~BinaryFormatLoader() override = default;

@@ -1,7 +1,9 @@
 #ifndef HDF5_FORMAT_LOADER_HPP
 #define HDF5_FORMAT_LOADER_HPP
 
-#include "../../core/LoaderRegistry.hpp"
+#include "datamanagerio_hdf5_export.h"
+
+#include "../../core/IFormatLoader.hpp"
 
 /**
  * @brief HDF5 format loader
@@ -9,7 +11,7 @@
  * This loader provides HDF5 loading capability for MaskData and LineData.
  * It wraps the existing HDF5 loading functionality.
  */
-class HDF5FormatLoader : public IFormatLoader {
+class DATAMANAGERIO_HDF5_EXPORT HDF5FormatLoader : public IFormatLoader {
 public:
     HDF5FormatLoader() = default;
     ~HDF5FormatLoader() override = default;

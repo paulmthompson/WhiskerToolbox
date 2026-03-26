@@ -91,7 +91,7 @@ bool is_local_maximum(torch::TensorAccessor<float, 2> const & accessor,
 Point2D<float> TensorToPoint2D::decode(at::Tensor const & tensor,
                                        DecoderContext const & ctx,
                                        PointDecoderParams const & params) {
-    auto channel = tensor[ctx.batch_index][ctx.source_channel];
+    auto channel = tensor[ctx.batch_index][ctx.source_channel].cpu();
     auto const h = ctx.height;
     auto const w = ctx.width;
 
@@ -120,7 +120,7 @@ std::vector<Point2D<float>> TensorToPoint2D::decodeMultiple(
         at::Tensor const & tensor,
         DecoderContext const & ctx,
         PointDecoderParams const & params) {
-    auto channel = tensor[ctx.batch_index][ctx.source_channel];
+    auto channel = tensor[ctx.batch_index][ctx.source_channel].cpu();
     auto const h = ctx.height;
     auto const w = ctx.width;
     auto accessor = channel.accessor<float, 2>();

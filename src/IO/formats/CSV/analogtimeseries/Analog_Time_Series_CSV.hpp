@@ -1,6 +1,8 @@
 #ifndef ANALOG_TIME_SERIES_CSV_HPP
 #define ANALOG_TIME_SERIES_CSV_HPP
 
+#include "datamanagerio_export.h"
+
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "IO/core/LoaderOptionsConcepts.hpp"
 
@@ -56,7 +58,7 @@ static_assert(WhiskerToolbox::ValidLoaderOptions<CSVAnalogLoaderOptions>,
  * @param filename - the name of the file to load
  * @return a vector of floats representing the analog time series
  */
-std::vector<float> load_analog_series_from_csv(std::string const & filename);
+DATAMANAGERIO_EXPORT std::vector<float> load_analog_series_from_csv(std::string const & filename);
 
 /**
  * @brief Load analog time series data from CSV using specified options
@@ -64,7 +66,7 @@ std::vector<float> load_analog_series_from_csv(std::string const & filename);
  * @param options Configuration options for loading
  * @return Shared pointer to AnalogTimeSeries object
  */
-std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options);
+DATAMANAGERIO_EXPORT std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options);
 
 
 /**
@@ -116,7 +118,7 @@ struct CSVAnalogSaverOptions {
  *
  * @pre analog_data must not be null.
  */
-bool save(AnalogTimeSeries const * analog_data,
+DATAMANAGERIO_EXPORT bool save(AnalogTimeSeries const * analog_data,
           CSVAnalogSaverOptions const & opts);
 
 namespace WhiskerToolbox::Transforms::V2 {

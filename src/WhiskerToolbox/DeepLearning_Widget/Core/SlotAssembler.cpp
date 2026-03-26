@@ -32,6 +32,8 @@
 #include "post_encoder/SpatialPointExtractModule.hpp"
 #include "registry/ModelRegistry.hpp"
 
+#include "device/DeviceManager.hpp"
+
 #include <torch/torch.h>
 
 #include <algorithm>
@@ -920,6 +922,19 @@ void SlotAssembler::resetModel() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// Device context initialization
+// ════════════════════════════════════════════════════════════════════════════
+
+void SlotAssembler::initDeviceForCurrentThread() {
+    auto const & dev = dl::DeviceManager::instance().device();
+    if (dev.type() != torch::kCPU) {
+        // Allocating a small tensor on the target device forces the CUDA
+        // runtime to initialize its per-thread context.
+        (void)torch::zeros({1}, torch::TensorOptions().device(dev));
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // Instance: static tensor cache
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -1024,6 +1039,8 @@ void SlotAssembler::runSingleFrame(
                                  "model not loaded or weights missing");
     }
 
+    torch::NoGradGuard const no_grad;
+
     // Update spatial-point query for the current frame if applicable
     if (!_impl->spatial_point_key.empty()) {
         updateSpatialPoint(dm, _impl->spatial_point_key, current_frame);
@@ -1062,6 +1079,9 @@ void SlotAssembler::runBatchRange(
         throw std::runtime_error("SlotAssembler::runBatchRange: "
                                  "model not loaded or weights missing");
     }
+
+    torch::NoGradGuard const no_grad;
+
     if (end_frame < start_frame) {
         throw std::runtime_error("SlotAssembler::runBatchRange: "
                                  "end_frame must be >= start_frame");
@@ -1143,6 +1163,9 @@ BatchInferenceResult SlotAssembler::runBatchRangeOffline(
                 "model not loaded or weights missing";
         return batch_result;
     }
+
+    torch::NoGradGuard const no_grad;
+
     if (end_frame < start_frame) {
         batch_result.success = false;
         batch_result.error_message =
@@ -1249,6 +1272,9 @@ void SlotAssembler::runRecurrentSequence(
         throw std::runtime_error("SlotAssembler::runRecurrentSequence: "
                                  "model not loaded or weights missing");
     }
+
+    torch::NoGradGuard const no_grad;
+
     if (recurrent_bindings.empty()) {
         throw std::runtime_error("SlotAssembler::runRecurrentSequence: "
                                  "no recurrent bindings provided");

@@ -1,5 +1,4 @@
 #include "OpenCVLoader.hpp"
-#include "../../core/LoaderRegistry.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"

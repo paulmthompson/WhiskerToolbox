@@ -45,7 +45,7 @@ target_link_options(fuzz_state_data
 # Register with gtest discovery
 # Suppress LeakSanitizer — yyjson (reflect-cpp's JSON backend) has benign leaks
 # in yyjson_mut_doc_new that are outside our control.
-gtest_discover_tests(fuzz_state_data
+add_fuzz_test(fuzz_state_data
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
 )
 
@@ -114,6 +114,6 @@ target_link_options(fuzz_editor_state
 )
 
 # Suppress LeakSanitizer (yyjson leaks) and use offscreen Qt platform
-gtest_discover_tests(fuzz_editor_state
+add_fuzz_test(fuzz_editor_state
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
 )
