@@ -87,10 +87,44 @@ set(CMAKE_C_FLAGS "${SAVED_CMAKE_C_FLAGS}")
 # Include fuzztest helpers
 include(GoogleTest)
 
-# Use PRE_TEST discovery so the executable is not run at build time.
-# Under AddressSanitizer, POST_BUILD discovery segfaults because fuzztest's
-# gtest is compiled without ASan while our test binaries are compiled with it.
-set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
+# ── Fuzz test registration ──
+# We cannot use gtest_discover_tests() for fuzz test executables because they
+# link an ASan-instrumented main against a non-ASan gtest library (fetched by
+# FuzzTest). Running the executable to enumerate tests (which both POST_BUILD
+# and PRE_TEST modes do) causes a SEGV in ParseGoogleTestFlagsOnly.
+#
+# Instead, register each fuzz executable as a single bundled ctest entry via
+# add_test(). This skips test enumeration entirely.
+#
+# Usage:
+#   add_fuzz_test(target_name)
+#   add_fuzz_test(target_name PROPERTIES ENVIRONMENT "ASAN_OPTIONS=...;VAR=val")
+function(add_fuzz_test target_name)
+    # Strip any trailing PROPERTIES / ENVIRONMENT that callers pass — we set our
+    # own properties below and honour the caller's ENVIRONMENT value.
+    set(_env "ASAN_OPTIONS=detect_leaks=0")
+
+    # Look for PROPERTIES ENVIRONMENT "value" in ARGN
+    list(FIND ARGN "PROPERTIES" _pidx)
+    if(NOT _pidx EQUAL -1)
+        math(EXPR _eidx "${_pidx} + 1")
+        list(GET ARGN ${_eidx} _ekey)
+        if(_ekey STREQUAL "ENVIRONMENT")
+            math(EXPR _vidx "${_pidx} + 2")
+            list(GET ARGN ${_vidx} _env)
+        endif()
+    endif()
+
+    add_test(
+        NAME ${target_name}_all
+        COMMAND ${target_name}
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:${target_name}>
+    )
+    set_tests_properties(${target_name}_all PROPERTIES
+        ENVIRONMENT "${_env}"
+        LABELS "fuzz"
+    )
+endfunction()
 
 # Add subdirectories for different types of fuzz tests
 add_subdirectory(unit)
