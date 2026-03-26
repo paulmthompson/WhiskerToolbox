@@ -238,7 +238,7 @@ public:
     ///
     /// Call at the start of worker thread `run()` methods before any
     /// libtorch operations.
-    static void initDeviceForCurrentThread();
+    //static void initDeviceForCurrentThread();
 
     // ── Instance: static tensor cache ──────────────────────────────────────
 

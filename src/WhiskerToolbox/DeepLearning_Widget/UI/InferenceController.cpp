@@ -71,7 +71,7 @@ protected:
         // Ensure the CUDA runtime context is initialized on this worker
         // thread. On Windows, CUDA per-thread state is not inherited
         // from the main thread.
-        SlotAssembler::initDeviceForCurrentThread();
+        //SlotAssembler::initDeviceForCurrentThread();
 
         auto result = _assembler->runBatchRangeOffline(
                 *_dm,
@@ -156,7 +156,7 @@ signals:
 protected:
     void run() override {
         // Ensure CUDA context on this worker thread (see BatchInferenceWorker).
-        SlotAssembler::initDeviceForCurrentThread();
+        //SlotAssembler::initDeviceForCurrentThread();
 
         // Compute total frame count across all intervals
         int total_frames = 0;
