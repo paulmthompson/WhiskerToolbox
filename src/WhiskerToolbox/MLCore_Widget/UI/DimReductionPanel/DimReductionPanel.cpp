@@ -38,6 +38,9 @@ DimReductionPanel::DimReductionPanel(
     _setupConnections();
     _registerDataManagerObserver();
 
+    // Default: show PCA params, hide t-SNE params
+    ui->tsneParamsWidget->setVisible(false);
+
     refreshTensorList();
     _restoreFromState();
 }
@@ -98,11 +101,18 @@ bool DimReductionPanel::hasValidConfiguration() const {
 std::unique_ptr<MLCore::MLModelParametersBase> DimReductionPanel::currentParameters() const {
     auto const name = selectedAlgorithmName();
 
-    // Currently only PCA is supported
     if (name == "PCA") {
         auto params = std::make_unique<MLCore::PCAParameters>();
         params->n_components = static_cast<std::size_t>(nComponents());
         params->scale = scaleFeatures();
+        return params;
+    }
+
+    if (name == "t-SNE") {
+        auto params = std::make_unique<MLCore::TSNEParameters>();
+        params->n_components = static_cast<std::size_t>(ui->tsneComponentsSpinBox->value());
+        params->perplexity = ui->perplexitySpinBox->value();
+        params->theta = ui->thetaSpinBox->value();
         return params;
     }
 
@@ -188,9 +198,9 @@ void DimReductionPanel::refreshTensorList() {
         auto tensor = _data_manager->getData<TensorData>(key);
         if (tensor) {
             QString const display = QStringLiteral("%1 (%2x%3)")
-                                      .arg(QString::fromStdString(key))
-                                      .arg(tensor->numRows())
-                                      .arg(tensor->numColumns());
+                                            .arg(QString::fromStdString(key))
+                                            .arg(tensor->numRows())
+                                            .arg(tensor->numColumns());
             ui->tensorComboBox->addItem(display, QString::fromStdString(key));
         } else {
             ui->tensorComboBox->addItem(QString::fromStdString(key),
@@ -258,6 +268,14 @@ void DimReductionPanel::_onAlgorithmChanged(int index) {
     if (_state) {
         _state->setDimReductionModelName(name);
     }
+
+    // Toggle algorithm-specific parameter widgets
+    bool const is_pca = (name == "PCA");
+    bool const is_tsne = (name == "t-SNE");
+    ui->pcaParamsWidget->setVisible(is_pca);
+    ui->tsneParamsWidget->setVisible(is_tsne);
+
+    _updateOutputKeyFromInput();
 }
 
 void DimReductionPanel::_onRunClicked() {
@@ -354,6 +372,11 @@ void DimReductionPanel::_populateAlgorithms() {
 
     if (ui->algorithmComboBox->count() > 0) {
         ui->algorithmComboBox->setCurrentIndex(0);
+
+        // Set initial parameter widget visibility
+        auto const first_name = ui->algorithmComboBox->currentData().toString().toStdString();
+        ui->pcaParamsWidget->setVisible(first_name == "PCA");
+        ui->tsneParamsWidget->setVisible(first_name == "t-SNE");
     }
 
     _updating = false;
@@ -478,11 +501,13 @@ void DimReductionPanel::_updateOutputKeyFromInput() {
         return;
     }
 
-    // Auto-generate output key: "{input_key}_pca"
+    // Auto-generate output key: "{input_key}_{algorithm}"
     std::string const algo = selectedAlgorithmName();
     std::string suffix = "reduced";
     if (algo == "PCA") {
         suffix = "pca";
+    } else if (algo == "t-SNE") {
+        suffix = "tsne";
     }
 
     ui->outputKeyLineEdit->setText(

@@ -71,6 +71,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/MaskCentroid/MaskCentroid.cpp
         algorithms/TensorPCA/TensorPCA.hpp
         algorithms/TensorPCA/TensorPCA.cpp
+        algorithms/TensorTSNE/TensorTSNE.hpp
+        algorithms/TensorTSNE/TensorTSNE.cpp
         algorithms/RangeReductions/EventRangeReductions.hpp
         algorithms/RangeReductions/IntervalRangeReductions.hpp
         algorithms/RangeReductions/ValueRangeReductions.hpp

@@ -13,6 +13,7 @@
 #include "unsupervised/GaussianMixtureOperation.hpp"
 #include "unsupervised/KMeansOperation.hpp"
 #include "unsupervised/PCAOperation.hpp"
+#include "unsupervised/TSNEOperation.hpp"
 
 #include <algorithm>
 
@@ -32,6 +33,7 @@ MLModelRegistry::MLModelRegistry() {
     registerModel<DBSCANOperation>();
     registerModel<GaussianMixtureOperation>();
     registerModel<PCAOperation>();
+    registerModel<TSNEOperation>();
 }
 
 // ============================================================================

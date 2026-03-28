@@ -121,6 +121,21 @@ struct PCAParameters : public MLModelParametersBase {
     bool scale = true;           ///< Standardize features (zero mean, unit variance) before PCA
 };
 
+/**
+ * @brief Parameters for t-SNE dimensionality reduction
+ *
+ * Wraps tapkee's t-SNE implementation. t-SNE is a non-linear, stochastic
+ * method suited for 2D/3D visualization of high-dimensional data.
+ *
+ * @note t-SNE does not support projecting new data (transform is unsupported).
+ */
+struct TSNEParameters : public MLModelParametersBase {
+    std::size_t n_components = 2;///< Number of output dimensions (usually 2 or 3)
+    double perplexity = 30.0;    ///< Perplexity (effective number of neighbors; typical range 5–50)
+    double theta = 0.5;          ///< Barnes-Hut approximation angle (0 = exact, >0 = faster)
+};
+
+
 // ============================================================================
 // Sequence model parameters
 // ============================================================================

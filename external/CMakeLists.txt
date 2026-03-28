@@ -54,6 +54,7 @@ if(ENABLE_ORTOOLS)
         set(BUILD_CXX_SAMPLES OFF)
         set(BUILD_CXX_EXAMPLES OFF)
     elseif (APPLE)
+
         find_package(absl REQUIRED)
         find_package(Protobuf REQUIRED)
         
@@ -292,6 +293,34 @@ endif()
 if(FETCHCONTENT_TARGETS)
     FetchContent_MakeAvailable(${FETCHCONTENT_TARGETS})
 endif()
+
+# ============================================================================
+# Tapkee (header-only dimensionality reduction library)
+# ============================================================================
+# Tapkee's top-level CMakeLists.txt modifies global CMAKE_CXX_FLAGS and runs
+# several find_package calls we don't need.  We only want the headers under
+# include/, so we download with FetchContent_Populate and create our own
+# INTERFACE target instead of running their build system.
+FetchContent_Declare(
+    tapkee
+    GIT_REPOSITORY https://github.com/lisitsyn/tapkee.git
+    GIT_TAG v1.3.4
+    GIT_SHALLOW 1
+)
+FetchContent_GetProperties(tapkee)
+if(NOT tapkee_POPULATED)
+    FetchContent_Populate(tapkee)
+endif()
+
+find_package(Eigen3 CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+
+add_library(tapkee_headers INTERFACE)
+target_include_directories(tapkee_headers SYSTEM INTERFACE "${tapkee_SOURCE_DIR}/include")
+target_link_libraries(tapkee_headers INTERFACE Eigen3::Eigen fmt::fmt-header-only)
+# Build without LGPL-licensed CoverTree (stay BSD-compatible)
+target_compile_definitions(tapkee_headers INTERFACE GPL_FREE)
+add_library(tapkee::tapkee ALIAS tapkee_headers)
 
 # Conditionally set ffmpeg_wrapper properties if it was built
 if(ENABLE_FFMPEG)
