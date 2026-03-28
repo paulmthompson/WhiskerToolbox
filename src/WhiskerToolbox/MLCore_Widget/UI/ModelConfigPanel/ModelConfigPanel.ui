@@ -633,6 +633,51 @@
             </property>
            </widget>
           </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QCheckBox" name="hmmGMMEmissionsCheckBox">
+            <property name="text">
+             <string>GMM emissions (mixture of Gaussians)</string>
+            </property>
+            <property name="toolTip">
+             <string>Use a Gaussian Mixture Model for each state's emission distribution. Allows each hidden state to model multi-modal observation distributions.</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="hmmNumGaussiansLabel">
+            <property name="text">
+             <string>Gaussians per State:</string>
+            </property>
+            <property name="toolTip">
+             <string>Number of Gaussian components in each state's mixture (only used with GMM emissions)</string>
+            </property>
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="hmmNumGaussiansSpinBox">
+            <property name="toolTip">
+             <string>Number of Gaussian mixture components per hidden state</string>
+            </property>
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="minimum">
+             <number>2</number>
+            </property>
+            <property name="maximum">
+             <number>50</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </widget>

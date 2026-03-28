@@ -74,6 +74,12 @@ public:
     void setHmmDiagonalCovariance(bool enabled);
     [[nodiscard]] bool hmmDiagonalCovariance() const;
 
+    void setHmmGMMEmissions(bool enabled);
+    [[nodiscard]] bool hmmGMMEmissions() const;
+
+    void setHmmNumGaussians(int n);
+    [[nodiscard]] int hmmNumGaussians() const;
+
     // === Label configuration ===
 
     void setLabelSourceType(std::string const & type);
@@ -181,6 +187,8 @@ signals:
     void predictionRegionKeyChanged(QString const & key);
     void constrainedDecodingChanged(bool enabled);
     void hmmDiagonalCovarianceChanged(bool enabled);
+    void hmmGMMEmissionsChanged(bool enabled);
+    void hmmNumGaussiansChanged(int n);
     void labelSourceTypeChanged(QString const & type);
     void labelIntervalKeyChanged(QString const & key);
     void labelPositiveClassNameChanged(QString const & name);

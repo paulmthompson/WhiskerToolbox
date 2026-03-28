@@ -122,6 +122,8 @@ std::unique_ptr<MLCore::MLModelParametersBase> ModelConfigPanel::currentParamete
             params->num_states = static_cast<std::size_t>(ui->hmmNumStatesSpinBox->value());
             params->tolerance = ui->hmmToleranceSpinBox->value();
             params->use_diagonal_covariance = ui->hmmDiagonalCovCheckBox->isChecked();
+            params->use_gmm_emissions = ui->hmmGMMEmissionsCheckBox->isChecked();
+            params->num_gaussians = static_cast<std::size_t>(ui->hmmNumGaussiansSpinBox->value());
             return params;
         }
         default:
@@ -289,6 +291,15 @@ void ModelConfigPanel::_setupConnections() {
             this, &ModelConfigPanel::_onParameterValueChanged);
     connect(ui->hmmDiagonalCovCheckBox, &QCheckBox::toggled,
             this, &ModelConfigPanel::_onParameterValueChanged);
+    connect(ui->hmmGMMEmissionsCheckBox, &QCheckBox::toggled,
+            this, &ModelConfigPanel::_onParameterValueChanged);
+    connect(ui->hmmGMMEmissionsCheckBox, &QCheckBox::toggled,
+            this, [this](bool checked) {
+                ui->hmmNumGaussiansLabel->setEnabled(checked);
+                ui->hmmNumGaussiansSpinBox->setEnabled(checked);
+            });
+    connect(ui->hmmNumGaussiansSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &ModelConfigPanel::_onParameterValueChanged);
 
     // Bidirectional sync: state → checkbox for diagonal covariance
     if (_state) {
@@ -402,6 +413,8 @@ void ModelConfigPanel::_syncToState() {
 
     // Sync HMM-specific settings
     _state->setHmmDiagonalCovariance(ui->hmmDiagonalCovCheckBox->isChecked());
+    _state->setHmmGMMEmissions(ui->hmmGMMEmissionsCheckBox->isChecked());
+    _state->setHmmNumGaussians(ui->hmmNumGaussiansSpinBox->value());
 
     // Serialize current parameters to JSON for state persistence
     // (reserved for future implementation — the individual spin box values
@@ -455,6 +468,10 @@ void ModelConfigPanel::_restoreFromState() {
 
     // Restore HMM-specific settings
     ui->hmmDiagonalCovCheckBox->setChecked(_state->hmmDiagonalCovariance());
+    ui->hmmGMMEmissionsCheckBox->setChecked(_state->hmmGMMEmissions());
+    ui->hmmNumGaussiansSpinBox->setValue(_state->hmmNumGaussians());
+    ui->hmmNumGaussiansLabel->setEnabled(_state->hmmGMMEmissions());
+    ui->hmmNumGaussiansSpinBox->setEnabled(_state->hmmGMMEmissions());
 
     _updating = false;
 

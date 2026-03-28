@@ -3,8 +3,12 @@
 
 #include <pybind11/stl.h>
 
+#include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
+#include "TimeFrame/TimeIndexStorage.hpp"
 
+#include <optional>
 #include <string>
 
 void init_tensor(py::module_ & m) {
@@ -77,6 +81,48 @@ void init_tensor(py::module_ & m) {
             // --- TimeFrame ---
             .def("setTimeFrame", &TensorData::setTimeFrame, py::arg("time_frame"))
             .def("getTimeFrame", &TensorData::getTimeFrame)
+
+            // --- Row-to-TimeFrameIndex mapping ---
+            .def("rowType", [](TensorData const & self) -> std::string {
+                switch (self.rows().type()) {
+                    case RowType::TimeFrameIndex: return "TimeFrameIndex";
+                    case RowType::Interval: return "Interval";
+                    case RowType::Ordinal: return "Ordinal";
+                }
+                return "Unknown"; }, "Row type: 'TimeFrameIndex', 'Interval', or 'Ordinal'")
+
+            .def("rowTimeIndices", [](TensorData const & self) -> std::vector<TimeFrameIndex> {
+                auto const & rd = self.rows();
+                if (rd.type() != RowType::TimeFrameIndex) {
+                    throw std::logic_error(
+                        "rowTimeIndices() requires RowType::TimeFrameIndex rows");
+                }
+                auto const & ts = rd.timeStorage();
+                return ts.getAllTimeIndices(); }, "Get TimeFrameIndex for every row (only for TimeFrameIndex-typed rows)")
+
+            .def("findRowForTime", [](TensorData const & self, TimeFrameIndex time_index) -> std::optional<std::size_t> {
+                auto const & rd = self.rows();
+                if (rd.type() != RowType::TimeFrameIndex) {
+                    throw std::logic_error(
+                        "findRowForTime() requires RowType::TimeFrameIndex rows");
+                }
+                return rd.timeStorage().findArrayPositionForTimeIndex(time_index); }, py::arg("time_index"), "Find the row index for a given TimeFrameIndex, or None if not found")
+
+            .def("findRowGreaterOrEqual", [](TensorData const & self, TimeFrameIndex time_index) -> std::optional<std::size_t> {
+                auto const & rd = self.rows();
+                if (rd.type() != RowType::TimeFrameIndex) {
+                    throw std::logic_error(
+                        "findRowGreaterOrEqual() requires RowType::TimeFrameIndex rows");
+                }
+                return rd.timeStorage().findArrayPositionGreaterOrEqual(time_index); }, py::arg("time_index"), "Find the row for the smallest TimeFrameIndex >= the given value, or None")
+
+            .def("findRowLessOrEqual", [](TensorData const & self, TimeFrameIndex time_index) -> std::optional<std::size_t> {
+                auto const & rd = self.rows();
+                if (rd.type() != RowType::TimeFrameIndex) {
+                    throw std::logic_error(
+                        "findRowLessOrEqual() requires RowType::TimeFrameIndex rows");
+                }
+                return rd.timeStorage().findArrayPositionLessOrEqual(time_index); }, py::arg("time_index"), "Find the row for the largest TimeFrameIndex <= the given value, or None")
 
             .def("__repr__", [](TensorData const & self) {
             auto s = self.shape();

@@ -142,6 +142,8 @@ struct HMMParameters : public MLModelParametersBase {
     std::size_t num_states = 2;          ///< Number of hidden states
     double tolerance = 1e-5;             ///< Convergence tolerance for training
     bool use_diagonal_covariance = false;///< Use diagonal covariance emissions
+    bool use_gmm_emissions = false;      ///< Use Gaussian Mixture Model emissions per state
+    std::size_t num_gaussians = 3;       ///< Number of Gaussian components per state (when use_gmm_emissions is true)
 };
 
 }// namespace MLCore

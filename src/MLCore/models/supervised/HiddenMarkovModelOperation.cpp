@@ -22,15 +22,21 @@ namespace MLCore {
 
 using GaussianHMM = mlpack::HMM<mlpack::GaussianDistribution<>>;
 using DiagonalGaussianHMM = mlpack::HMM<mlpack::DiagonalGaussianDistribution<>>;
+using GMMEmissionHMM = mlpack::HMM<mlpack::GMM>;
+using DiagonalGMMEmissionHMM = mlpack::HMM<mlpack::DiagonalGMM>;
 
 struct HiddenMarkovModelOperation::Impl {
     std::variant<std::unique_ptr<GaussianHMM>,
-                 std::unique_ptr<DiagonalGaussianHMM>>
+                 std::unique_ptr<DiagonalGaussianHMM>,
+                 std::unique_ptr<GMMEmissionHMM>,
+                 std::unique_ptr<DiagonalGMMEmissionHMM>>
             model;
     std::size_t num_states = 0;
     std::size_t num_features = 0;
+    std::size_t num_gaussians = 0;
     bool trained = false;
     bool diagonal = false;
+    bool gmm_emissions = false;
 
     /// @brief Visit the active HMM variant and apply a callable
     template<typename Fn>
@@ -134,8 +140,27 @@ bool HiddenMarkovModelOperation::trainSequences(
 
     try {
         bool const use_diagonal = hmm_params->use_diagonal_covariance;
+        bool const use_gmm = hmm_params->use_gmm_emissions;
+        std::size_t const num_gaussians_per_state =
+                std::max(hmm_params->num_gaussians, std::size_t{2});
 
-        if (use_diagonal) {
+        if (use_gmm && use_diagonal) {
+            // HMM with DiagonalGMM emissions
+            auto hmm = std::make_unique<DiagonalGMMEmissionHMM>(
+                    num_states,
+                    mlpack::DiagonalGMM(num_gaussians_per_state, dim));
+            hmm->Tolerance() = hmm_params->tolerance;
+            hmm->Train(featureSequences, labelSequences);
+            _impl->model = std::move(hmm);
+        } else if (use_gmm) {
+            // HMM with full-covariance GMM emissions
+            auto hmm = std::make_unique<GMMEmissionHMM>(
+                    num_states,
+                    mlpack::GMM(num_gaussians_per_state, dim));
+            hmm->Tolerance() = hmm_params->tolerance;
+            hmm->Train(featureSequences, labelSequences);
+            _impl->model = std::move(hmm);
+        } else if (use_diagonal) {
             auto hmm = std::make_unique<DiagonalGaussianHMM>(
                     num_states,
                     mlpack::DiagonalGaussianDistribution<>(dim));
@@ -175,8 +200,10 @@ bool HiddenMarkovModelOperation::trainSequences(
 
         _impl->num_states = num_states;
         _impl->num_features = dim;
+        _impl->num_gaussians = use_gmm ? num_gaussians_per_state : 0;
         _impl->trained = true;
         _impl->diagonal = use_diagonal;
+        _impl->gmm_emissions = use_gmm;
         return true;
 
     } catch (std::exception const & e) {
@@ -391,6 +418,8 @@ bool HiddenMarkovModelOperation::save(std::ostream & out) const {
         ar(cereal::make_nvp("num_states", _impl->num_states));
         ar(cereal::make_nvp("num_features", _impl->num_features));
         ar(cereal::make_nvp("diagonal", _impl->diagonal));
+        ar(cereal::make_nvp("gmm_emissions", _impl->gmm_emissions));
+        ar(cereal::make_nvp("num_gaussians", _impl->num_gaussians));
         _impl->visit([&](auto const & hmm) {
             ar(cereal::make_nvp("model", hmm));
         });
@@ -408,11 +437,23 @@ bool HiddenMarkovModelOperation::load(std::istream & in) {
         std::size_t num_states = 0;
         std::size_t num_features = 0;
         bool diagonal = false;
+        bool gmm_emissions = false;
+        std::size_t num_gaussians = 0;
         ar(cereal::make_nvp("num_states", num_states));
         ar(cereal::make_nvp("num_features", num_features));
         ar(cereal::make_nvp("diagonal", diagonal));
+        ar(cereal::make_nvp("gmm_emissions", gmm_emissions));
+        ar(cereal::make_nvp("num_gaussians", num_gaussians));
 
-        if (diagonal) {
+        if (gmm_emissions && diagonal) {
+            auto model = std::make_unique<DiagonalGMMEmissionHMM>();
+            ar(cereal::make_nvp("model", *model));
+            _impl->model = std::move(model);
+        } else if (gmm_emissions) {
+            auto model = std::make_unique<GMMEmissionHMM>();
+            ar(cereal::make_nvp("model", *model));
+            _impl->model = std::move(model);
+        } else if (diagonal) {
             auto model = std::make_unique<DiagonalGaussianHMM>();
             ar(cereal::make_nvp("model", *model));
             _impl->model = std::move(model);
@@ -424,7 +465,9 @@ bool HiddenMarkovModelOperation::load(std::istream & in) {
 
         _impl->num_states = num_states;
         _impl->num_features = num_features;
+        _impl->num_gaussians = num_gaussians;
         _impl->diagonal = diagonal;
+        _impl->gmm_emissions = gmm_emissions;
         _impl->trained = true;
         return true;
     } catch (std::exception const & e) {
@@ -479,6 +522,14 @@ double HiddenMarkovModelOperation::logLikelihood(arma::mat const & features) con
 
 bool HiddenMarkovModelOperation::isDiagonalCovariance() const {
     return _impl->diagonal;
+}
+
+bool HiddenMarkovModelOperation::isGMMEmissions() const {
+    return _impl->gmm_emissions;
+}
+
+std::size_t HiddenMarkovModelOperation::numGaussiansPerState() const {
+    return _impl->gmm_emissions ? _impl->num_gaussians : 0;
 }
 
 }// namespace MLCore
