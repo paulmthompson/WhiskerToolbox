@@ -52,7 +52,7 @@ navigate highlight > selected > group > **feature** > default glyph style.
 | Step | Component | Location | Description |
 |------|-----------|----------|-------------|
 | **7.1** | `ScatterColorConfigData` | `ScatterPlotWidget/Core/` | ✅ Done |
-| **7.2** | Properties panel UI | `ScatterPlotWidget/UI/` | "Point Coloring" section with all controls |
+| **7.2** | Properties panel UI | `ScatterPlotWidget/UI/` | ✅ Done |
 | **7.3** | Rendering integration | `ScatterPlotWidget/Rendering/` | Wire into `rebuildScene()` |
 | **7.4** | Tooltip extension | `ScatterPlotWidget/Rendering/` | Show feature value in hover tooltip |
 | **7.5** | Unit tests | `tests/ScatterPlotWidget/` | State serialization, rendering integration |
