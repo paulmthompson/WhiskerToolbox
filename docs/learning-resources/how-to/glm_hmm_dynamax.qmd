@@ -1,0 +1,1033 @@
+---
+title: "Input-Output HMM for Whisker Contact Detection Using dynamax"
+---
+
+## Overview
+
+This guide walks through fitting an **Input-Output HMM (IOHMM)** to classify
+whisker contact frames using deep-learning encoder features and the
+[dynamax](https://github.com/probml/dynamax) library (JAX-based).
+
+A **standard HMM** models contact/no-contact as hidden states with a **fixed**
+transition matrix. At high frame rates this struggles because (1) the transition
+matrix is overwhelmingly self-transitioning, (2) the transition dynamics cannot
+adapt to the behavioral context — e.g., whether the animal is actively whisking
+or quiescent.
+
+A standard **GLM-HMM** (Ashwood et al., 2022) improves emissions by making them
+input-dependent, but it still uses a **fixed transition matrix**. This means the
+probability of switching between behavioral regimes is constant regardless of
+what the animal is doing — which is the core limitation.
+
+An **Input-Output HMM** solves this by making **both** transitions and emissions
+depend on the input features:
+
+**Input-driven transitions (IOHMM):**
+$$
+P(z_t = j \mid z_{t-1} = i,\; \mathbf{u}_t) =
+\text{softmax}(\mathbf{V}_i \mathbf{u}_t + \mathbf{c}_i)_j
+$$
+
+**Input-driven emissions (GLM):**
+$$
+P(y_t = \text{contact} \mid z_t = k,\; \mathbf{u}_t) =
+\text{softmax}(\mathbf{W}_k \mathbf{u}_t + \mathbf{b}_k)
+$$
+
+Each state $k$ has its own transition weights $\mathbf{V}_k$ and emission
+weights $\mathbf{W}_k$, so both **when** the model transitions between states
+and **how** each state maps features to contact labels are learned from data.
+
+**Why input-dependent transitions matter:** When the animal starts whisking
+vigorously, the input-dependent transition model can increase the probability
+of switching to a "contact-prone" state. When it stops whisking, transitions
+toward a "quiet" state become more likely. This context-sensitivity is
+impossible with a fixed transition matrix.
+
+**Why dynamax?** The `ssm` library does not install on Python 3.12 (required for
+neuralyzer). `dynamax` is the JAX-based successor from the same group (probml).
+While dynamax provides `CategoricalRegressionHMM` (input-dependent emissions
+with fixed transitions), we build a custom IOHMM by subclassing its modular
+`HMMTransitions` component — following the
+[custom HMM pattern](https://github.com/probml/dynamax/blob/main/docs/notebooks/hmm/custom_hmm.ipynb).
+
+## Prerequisites
+
+| Requirement | Details |
+|---|---|
+| WhiskerToolbox | Built with Python bindings enabled |
+| Python | 3.12 (required for neuralyzer compatibility) |
+| dynamax | `pip install dynamax` |
+| JAX | **Pin to 0.4.30** — see Step 0 |
+| IPython | `pip install ipython` (required by `fastprogress` progress bars) |
+| numpy | Standard scientific Python stack |
+| Encoder features | Extracted via Deep Learning widget → stored as `TensorData` |
+| Labeled intervals | Contact labels created via [Label Video Intervals](label_video_intervals.qmd) |
+
+::: {.callout-note}
+dynamax uses JAX under the hood. If you encounter GPU memory issues, force CPU
+mode by setting `JAX_PLATFORMS=cpu` **before** importing JAX:
+
+```python
+import os
+os.environ["JAX_PLATFORMS"] = "cpu"
+```
+:::
+
+## Step 0: Environment Setup {#sec-step0}
+
+Create a dedicated conda environment with Python 3.12, then install the
+dependencies in the correct order. This step only needs to be done once.
+
+::: {.callout-warning}
+**Why the version pins?** dynamax has **no version constraints** on its core
+dependencies (`tensorflow_probability`, `jax`, `numpy` are all unpinned). Running
+`pip install dynamax` pulls the latest of everything, but the latest releases are
+mutually incompatible:
+
+- **JAX 0.5+** removes `jax.interpreters.xla.pytype_aval_mappings` (used by TFP).
+- **NumPy 2.0+** renames `np.reshape(newshape=...)` to `shape=` (used by TFP).
+
+The pins below are a [known-working combination](https://github.com/probml/dynamax/issues) for dynamax.
+:::
+
+```bash
+# 1. Create the environment (Python 3.12 is required for neuralyzer)
+conda create -n dynamax python=3.12 -y
+conda activate dynamax
+
+# 2. Install dynamax
+pip install dynamax
+
+# 3. Pin dependencies to a known-working combination
+pip install jax==0.4.30 jaxlib==0.4.30 numpy==1.26.4 scipy==1.13.0 tensorflow-probability==0.24.0
+
+# 4. Install IPython — required by fastprogress (a dynamax transitive dep)
+#    for progress-bar display during EM fitting.
+pip install ipython
+```
+
+::: {.callout-tip}
+**GPU users:** Replace step 3 with `pip install "jax[cuda12]==0.4.30" jaxlib==0.4.30 ...`
+to use an NVIDIA GPU.
+:::
+
+Verify the environment is set up correctly:
+
+```python
+from dynamax.hidden_markov_model import CategoricalRegressionHMM  # for reference
+from dynamax.hidden_markov_model.models.abstractions import HMM, HMMTransitions
+import jax, numpy as np
+print(f"JAX {jax.__version__}, NumPy {np.__version__}")  # 0.4.30, 1.26.4
+print("Environment OK")
+```
+
+## Data Contract
+
+Both training and prediction rely on three objects in a single `DataManager`
+session:
+
+| Key | Type | Description |
+|---|---|---|
+| `features` | `TensorData` (2D) | Shape $[T, D]$ — encoder features per frame |
+| `train` | `DigitalIntervalSeries` | Training block intervals (in video time coordinates) |
+| `contact` | `DigitalIntervalSeries` | Contact intervals (in video time coordinates) |
+
+::: {.callout-important}
+**Time base mismatch:** Intervals use **TimeFrameIndex** values (e.g., 37000)
+but the feature array is indexed by **row** (e.g., row 0). Each TensorData row
+has an associated TimeFrameIndex; we use `findRowGreaterOrEqual()` and
+`findRowLessOrEqual()` to convert interval boundaries to row indices.
+This follows the same pattern as the C++ MLCore classification pipeline.
+:::
+
+**Output:** A new `DigitalIntervalSeries` written back to `DataManager` with
+predicted contact intervals from the GLM-HMM.
+
+## Pipeline
+
+```
+Encoder Features (TensorData)       Contact Labels (DigitalIntervalSeries)
+        │                                         │
+        │  inputs u_t ∈ ℝ^D                       │  observations y_t ∈ {0,1}
+        ▼                                         ▼
+  ┌───────────────────────────────────────────────────┐
+  │            IOHMM (custom dynamax model)           │
+  │                                                   │
+  │  Input-driven transitions (IOHMM):                │
+  │  P(z_t|z_{t-1}=i, u_t) = softmax(V_i u_t + c_i) │
+  │                                                   │
+  │  Input-driven emissions (GLM):                    │
+  │  P(y_t|z_t=k, u_t) = softmax(W_k u_t + b_k)     │
+  │                                                   │
+  │  Training: EM on labeled blocks                   │
+  └──────────────────────┬────────────────────────────┘
+                         │
+                         ▼
+  ┌───────────────────────────────────────────────────┐
+  │  Labeled data:   smoother (conditions on labels)  │
+  │  Unlabeled data: forward propagation via          │
+  │                  input-driven transitions          │
+  └──────────────────────┬────────────────────────────┘
+                         │
+                         ▼
+           DigitalIntervalSeries (predicted contact)
+```
+
+## Step 1: Extract Data from DataManager {#sec-step1}
+
+```python
+import numpy as np
+
+# --- Encoder features: shape (T, D) ---
+features_td = dm.getData("features")          # TensorData
+X_all = np.array(features_td.values, copy=True)  # writable copy
+T_total, D = X_all.shape
+print(f"Feature matrix: {T_total} frames × {D} dimensions")
+print(f"Row type: {features_td.rowType()}")  # should be 'TimeFrameIndex'
+
+# --- Row ↔ TimeFrameIndex conversion helpers ---
+# Each TensorData row has an associated TimeFrameIndex (a plain int in Python).
+# We use the TensorData row-index API (same pattern as MLCore's ClassificationPipeline).
+row_time_indices = features_td.rowTimeIndices()  # list of int, one per row
+print(f"  Row 0 → TimeFrameIndex {int(row_time_indices[0])}")
+print(f"  Row {T_total-1} → TimeFrameIndex {int(row_time_indices[-1])}")
+
+def time_to_row(time_val):
+    """Convert a TimeFrameIndex value to a feature-array row index (inclusive start)."""
+    row = features_td.findRowGreaterOrEqual(int(time_val))
+    return row if row is not None else T_total  # past end
+
+def time_to_row_end(time_val):
+    """Convert a TimeFrameIndex to the exclusive-end row index for an interval."""
+    row = features_td.findRowLessOrEqual(int(time_val) - 1)
+    return (row + 1) if row is not None else 0  # before start
+
+def row_to_time(row_idx):
+    """Convert a feature-array row index back to a TimeFrameIndex value."""
+    return int(row_time_indices[row_idx])
+
+# --- Training block intervals ---
+train_intervals = dm.getData("train").toList()
+print(f"Training blocks: {len(train_intervals)}")
+for iv in train_intervals:
+    r_s = time_to_row(iv.start)
+    r_e = time_to_row_end(iv.end)
+    print(f"  TimeFrameIndex [{iv.start}, {iv.end}) → rows [{r_s}, {r_e})  ({r_e - r_s} frames)")
+
+# --- Contact intervals ---
+contact_intervals = dm.getData("contact").toList()
+print(f"Contact intervals: {len(contact_intervals)}")
+```
+
+## Step 2: Build Binary Labels from Intervals {#sec-step2}
+
+We need a frame-level binary label $y_t \in \{0, 1\}$ for each training block.
+dynamax expects a **batch dimension**: emissions shape is `(num_batches, T, ...)`
+and inputs shape is `(num_batches, T, D)`.
+
+```python
+import jax.numpy as jnp
+
+def intervals_to_binary(total_frames, intervals):
+    """Convert contact intervals to a binary array in feature-row space.
+
+    Each interval's start/end is converted from TimeFrameIndex values to
+    feature-array row indices using the TensorData row-index API.
+    """
+    labels = np.zeros(total_frames, dtype=np.int32)
+    for iv in intervals:
+        r_s = time_to_row(iv.start)
+        r_e = time_to_row_end(iv.end)
+        labels[r_s:r_e] = 1
+    return labels
+
+# Build per-frame binary contact labels over the entire session (in row space)
+y_all = intervals_to_binary(T_total, contact_intervals)
+print(f"Total contact frames (row space): {y_all.sum()} / {T_total}")
+
+# Standardise features (important for logistic regression convergence)
+X_mean = X_all.mean(axis=0)
+X_std = X_all.std(axis=0) + 1e-8
+X_all_normed = (X_all - X_mean) / X_std
+
+# Split into per-block arrays (converting TimeFrameIndex → row indices)
+X_blocks = []  # list of (T_block, D) arrays — inputs
+y_blocks = []  # list of (T_block,) arrays — integer class labels
+
+for iv in train_intervals:
+    s = time_to_row(iv.start)
+    e = time_to_row_end(iv.end)
+    assert e > s, (
+        f"Empty block after conversion: TimeFrameIndex [{iv.start},{iv.end}) → rows [{s},{e}). "
+        f"Feature rows span TimeFrameIndex [{int(row_time_indices[0])}, {int(row_time_indices[-1])}]. "
+        f"Check that the training interval overlaps the feature range."
+    )
+    X_blocks.append(X_all_normed[s:e])
+    y_blocks.append(y_all[s:e])
+
+print(f"Prepared {len(X_blocks)} training blocks")
+for i, (xb, yb) in enumerate(zip(X_blocks, y_blocks)):
+    n_contact = int(yb.sum())
+    pct = 100 * n_contact / len(yb) if len(yb) > 0 else 0.0
+    print(f"  Block {i}: {len(yb)} frames, {n_contact} contact ({pct:.1f}%)")
+```
+
+::: {.callout-important}
+**Padding for batched EM**: dynamax's `fit_em` requires all sequences in a batch
+to have the same length. If your training blocks differ in length, either:
+
+1. Pad shorter blocks (shown below), or
+2. Fit on each block separately with `fit_sgd`.
+
+We show the padding approach here.
+:::
+
+```python
+def pad_sequences(arrays, pad_value=0):
+    """Pad a list of variable-length arrays to the same length along axis 0."""
+    max_len = max(a.shape[0] for a in arrays)
+    padded = []
+    for a in arrays:
+        pad_width = [(0, max_len - a.shape[0])] + [(0, 0)] * (a.ndim - 1)
+        padded.append(np.pad(a, pad_width, constant_values=pad_value))
+    return np.stack(padded)
+
+# Pad and convert to JAX arrays
+batch_emissions = jnp.array(pad_sequences(y_blocks, pad_value=0))   # (B, T_max)
+batch_inputs = jnp.array(pad_sequences(X_blocks, pad_value=0.0))    # (B, T_max, D)
+
+print(f"Batched emissions shape: {batch_emissions.shape}")
+print(f"Batched inputs shape:    {batch_inputs.shape}")
+```
+
+## Step 3: Create the Input-Output HMM {#sec-step3}
+
+dynamax does not include an IOHMM out of the box, but its modular architecture
+makes it straightforward to build one. We create a custom `InputDrivenHMMTransitions`
+class (following the
+[custom HMM pattern](https://github.com/probml/dynamax/blob/main/docs/notebooks/hmm/custom_hmm.ipynb))
+and combine it with the existing `CategoricalRegressionHMMEmissions`.
+
+::: {.callout-note}
+**How dynamax handles input-dependent transitions internally:**
+The base `HMMTransitions` class already supports inputs in its API — the
+`_compute_transition_matrices()` method vmaps over time steps when inputs are
+provided, producing a `(T-1, K, K)` tensor of time-varying transition matrices.
+The gradient-based M-step also passes inputs through. We just need to
+implement `distribution()` so it actually *uses* the inputs.
+:::
+
+```python
+import jax.numpy as jnp
+import jax.random as jr
+import optax
+import tensorflow_probability.substrates.jax.distributions as tfd
+
+from typing import NamedTuple, Optional, Tuple, Union
+from jaxtyping import Float, Array
+
+from dynamax.parameters import ParameterProperties
+from dynamax.hidden_markov_model.models.abstractions import (
+    HMM, HMMTransitions, HMMParameterSet, HMMPropertySet
+)
+from dynamax.hidden_markov_model.models.initial import (
+    StandardHMMInitialState, ParamsStandardHMMInitialState
+)
+from dynamax.hidden_markov_model.models.categorical_glm_hmm import (
+    CategoricalRegressionHMMEmissions, ParamsCategoricalRegressionHMMEmissions
+)
+from dynamax.types import IntScalar, Scalar
+
+
+# ── Input-Driven Transition Parameters ──────────────────────────────
+class ParamsInputDrivenTransitions(NamedTuple):
+    """Parameters for input-driven transitions.
+
+    weights[i, j, :] are the feature weights for transitioning
+    from state i to state j.
+    """
+    weights: Union[Float[Array, "num_states num_states input_dim"],
+                   ParameterProperties]
+    biases: Union[Float[Array, "num_states num_states"],
+                  ParameterProperties]
+
+
+# ── Input-Driven Transition Model ───────────────────────────────────
+class InputDrivenHMMTransitions(HMMTransitions):
+    r"""Transitions whose probabilities depend on external inputs.
+
+    $$P(z_t = j \mid z_{t-1} = i, \mathbf{u}_t) =
+      \text{softmax}(\mathbf{V}_i \mathbf{u}_t + \mathbf{c}_i)_j$$
+
+    where $\mathbf{V}_i \in \mathbb{R}^{K \times M}$ and
+    $\mathbf{c}_i \in \mathbb{R}^K$.
+
+    The base class `_compute_transition_matrices` and gradient-based
+    `m_step` handle all the heavy lifting — we only implement
+    `distribution`, `initialize`, and `log_prior`.
+    """
+
+    def __init__(self, num_states, input_dim,
+                 m_step_optimizer=optax.adam(1e-2),
+                 m_step_num_iters=50):
+        super().__init__(m_step_optimizer=m_step_optimizer,
+                         m_step_num_iters=m_step_num_iters)
+        self.num_states = num_states
+        self.input_dim = input_dim
+
+    def distribution(self, params, state, inputs=None):
+        logits = params.weights[state] @ inputs + params.biases[state]
+        return tfd.Categorical(logits=logits)
+
+    def initialize(self, key=None, method="prior",
+                   transition_weights=None, transition_biases=None):
+        if key is None:
+            raise ValueError("key must be provided")
+
+        key1, key2 = jr.split(key)
+
+        if transition_weights is None:
+            # Small random weights — features start with weak influence
+            transition_weights = 0.01 * jr.normal(
+                key1, (self.num_states, self.num_states, self.input_dim))
+
+        if transition_biases is None:
+            # Sticky initialisation: self-transitions are initially preferred
+            transition_biases = 2.0 * jnp.eye(self.num_states)
+
+        params = ParamsInputDrivenTransitions(
+            weights=transition_weights, biases=transition_biases)
+        props = ParamsInputDrivenTransitions(
+            weights=ParameterProperties(),
+            biases=ParameterProperties())
+        return params, props
+
+    def collect_suff_stats(self, params, posterior, inputs=None):
+        # Override: pass full inputs to M-step. The base class slices
+        # inputs[1:] here, but _compute_transition_matrices also slices
+        # inputs[1:] internally — causing a double-slice shape mismatch.
+        return posterior.trans_probs, inputs
+
+    def log_prior(self, params):
+        """Gaussian prior on weights (L2 regularisation)."""
+        return -0.5 * jnp.sum(params.weights ** 2)
+
+
+# ── Full IOHMM Parameter Set ───────────────────────────────────────
+class ParamsIOHMM(NamedTuple):
+    initial: ParamsStandardHMMInitialState
+    transitions: ParamsInputDrivenTransitions
+    emissions: ParamsCategoricalRegressionHMMEmissions
+
+
+# ── Input-Output HMM ───────────────────────────────────────────────
+class InputDrivenCategoricalRegressionHMM(HMM):
+    r"""HMM with input-driven transitions AND input-driven emissions.
+
+    **Transitions (IOHMM):**
+    $$P(z_t = j \mid z_{t-1} = i, \mathbf{u}_t) =
+      \text{softmax}(\mathbf{V}_i \mathbf{u}_t + \mathbf{c}_i)_j$$
+
+    **Emissions (Categorical GLM):**
+    $$P(y_t \mid z_t = k, \mathbf{u}_t) =
+      \text{Cat}(\text{softmax}(\mathbf{W}_k \mathbf{u}_t + \mathbf{b}_k))$$
+
+    Unlike `CategoricalRegressionHMM`, the transitions are **not** a fixed
+    matrix — they depend on the input features at each time step.
+    """
+
+    def __init__(self, num_states, num_classes, input_dim,
+                 initial_probs_concentration=1.1,
+                 transition_m_step_optimizer=optax.adam(1e-2),
+                 transition_m_step_num_iters=50,
+                 emission_m_step_optimizer=optax.adam(1e-2),
+                 emission_m_step_num_iters=50):
+        self.input_dim = input_dim
+
+        initial_component = StandardHMMInitialState(
+            num_states,
+            initial_probs_concentration=initial_probs_concentration)
+
+        transition_component = InputDrivenHMMTransitions(
+            num_states, input_dim,
+            m_step_optimizer=transition_m_step_optimizer,
+            m_step_num_iters=transition_m_step_num_iters)
+
+        emission_component = CategoricalRegressionHMMEmissions(
+            num_states, num_classes, input_dim,
+            m_step_optimizer=emission_m_step_optimizer,
+            m_step_num_iters=emission_m_step_num_iters)
+
+        super().__init__(num_states, initial_component,
+                         transition_component, emission_component)
+
+    @property
+    def inputs_shape(self):
+        return (self.input_dim,)
+
+    def initialize(self, key=jr.PRNGKey(0), method="prior",
+                   initial_probs=None,
+                   transition_weights=None, transition_biases=None,
+                   emission_weights=None, emission_biases=None):
+        key1, key2, key3 = jr.split(key, 3)
+        params, props = dict(), dict()
+
+        params["initial"], props["initial"] = \
+            self.initial_component.initialize(
+                key1, method=method, initial_probs=initial_probs)
+        params["transitions"], props["transitions"] = \
+            self.transition_component.initialize(
+                key2, method=method,
+                transition_weights=transition_weights,
+                transition_biases=transition_biases)
+        params["emissions"], props["emissions"] = \
+            self.emission_component.initialize(
+                key=key3, method=method,
+                emission_weights=emission_weights,
+                emission_biases=emission_biases)
+
+        return ParamsIOHMM(**params), ParamsIOHMM(**props)
+
+
+num_states = 3     # K: number of hidden behavioral states
+num_classes = 2    # binary outcome: contact / no-contact
+input_dim = D      # encoder feature dimensionality
+
+model = InputDrivenCategoricalRegressionHMM(
+    num_states=num_states,
+    num_classes=num_classes,
+    input_dim=input_dim,
+)
+
+# Initialize parameters
+params, props = model.initialize(key=jr.PRNGKey(0))
+print(f"IOHMM: {num_states} states, {input_dim}-dim inputs, {num_classes} categories")
+print(f"Transition weights shape: {params.transitions.weights.shape}")
+print(f"Transition biases shape:  {params.transitions.biases.shape}")
+print(f"Emission weights shape:   {params.emissions.weights.shape}")
+print(f"Emission biases shape:    {params.emissions.biases.shape}")
+```
+
+### Choosing the number of states
+
+- **K=2** is the minimum: one state for "contact-responsive" frames and one for
+  "non-responsive".
+- **K=3** is recommended: adds a transition/ambiguous state that absorbs
+  boundary uncertainty.
+- Higher K may overfit; use cross-validation (see [Cross-Validation](#sec-cv)) to select.
+
+### Tuning the M-step
+
+The transition and emission components each use gradient descent for their
+M-step. You can tune the optimizer and number of iterations independently:
+
+```python
+model_tuned = InputDrivenCategoricalRegressionHMM(
+    num_states=num_states,
+    num_classes=num_classes,
+    input_dim=input_dim,
+    transition_m_step_optimizer=optax.adam(1e-3),  # slower LR for transitions
+    transition_m_step_num_iters=100,                # more iterations
+    emission_m_step_optimizer=optax.adam(1e-2),
+    emission_m_step_num_iters=50,
+)
+```
+
+## Step 4: Fit the Model with EM {#sec-step4}
+
+```python
+num_iters = 100
+
+params, log_probs = model.fit_em(
+    params,
+    props,
+    emissions=batch_emissions,
+    inputs=batch_inputs,
+    num_iters=num_iters,
+)
+print(f"Final log-probability: {log_probs[-1]:.2f}")
+```
+
+### Multiple initialisations
+
+EM finds a local optimum. Run several random initialisations and keep the best:
+
+```python
+best_lp = -jnp.inf
+best_params = None
+
+for seed in range(5):
+    cand_params, cand_props = model.initialize(key=jr.PRNGKey(seed))
+    cand_params, lps = model.fit_em(
+        cand_params, cand_props,
+        emissions=batch_emissions,
+        inputs=batch_inputs,
+        num_iters=num_iters,
+    )
+    if lps[-1] > best_lp:
+        best_lp = lps[-1]
+        best_params = cand_params
+
+params = best_params
+print(f"Best log-probability across initialisations: {best_lp:.2f}")
+```
+
+### Alternative: SGD fitting
+
+If EM is slow or you want mini-batch training, use SGD instead:
+
+```python
+import optax
+
+params_sgd, losses = model.fit_sgd(
+    params,
+    props,
+    emissions=batch_emissions,
+    inputs=batch_inputs,
+    optimizer=optax.adam(1e-3),
+    num_epochs=100,
+)
+```
+
+### Print convergence
+
+```python
+lps = np.array(log_probs)
+print(f"Log-probability: {lps[0]:.2f} → {lps[-1]:.2f} over {len(lps)} iterations")
+if len(lps) > 5 and abs(lps[-1] - lps[-5]) < 0.1:
+    print("  ✓ Converged (last 5 iterations changed < 0.1)")
+else:
+    print("  ⚠ May not have converged — consider increasing num_iters")
+```
+
+## Step 5: Inspect the Fitted Model {#sec-step5}
+
+### Viterbi decoding (most likely state sequence)
+
+Decode each training block using its unpadded data:
+
+```python
+for i, (yb, xb) in enumerate(zip(y_blocks, X_blocks)):
+    emissions_i = jnp.array(yb)      # (T_block,)
+    inputs_i = jnp.array(xb)         # (T_block, D)
+    states = model.most_likely_states(params, emissions_i, inputs=inputs_i)
+    states_np = np.array(states)
+    unique, counts = np.unique(states_np, return_counts=True)
+    print(f"Block {i}: states = {dict(zip(unique, counts))}")
+```
+
+### Inspect learned transition weights
+
+Unlike a standard HMM, the IOHMM has no single transition matrix — transitions
+are **recomputed at every time step** from the features. To understand the
+learned dynamics, inspect the transition weight norms and biases:
+
+```python
+trans_W = np.array(params.transitions.weights)   # (K, K, D)
+trans_b = np.array(params.transitions.biases)     # (K, K)
+
+print("Transition biases (act as baseline log-odds for each transition):")
+print(np.around(trans_b, decimals=3))
+print()
+for i in range(num_states):
+    for j in range(num_states):
+        w = trans_W[i, j, :]
+        print(f"  State {i+1}→{j+1}: ||w|| = {np.linalg.norm(w):.3f}, "
+              f"bias = {trans_b[i,j]:.3f}")
+```
+
+### Evaluate mean transition matrix on training data
+
+To get an intuitive summary, compute the average transition matrix over
+the training features:
+
+```python
+def mean_transition_matrix(params, X_normed):
+    """Average the input-dependent transition matrix over all frames."""
+    W = np.array(params.transitions.weights)   # (K, K, D)
+    b = np.array(params.transitions.biases)     # (K, K)
+    logits = np.einsum("ijd,td->tij", W, X_normed) + b[None, :, :]  # (T, K, K)
+    exp_logits = np.exp(logits - logits.max(axis=-1, keepdims=True))
+    trans_mats = exp_logits / exp_logits.sum(axis=-1, keepdims=True)
+    return trans_mats.mean(axis=0)
+
+avg_A = mean_transition_matrix(params, X_all_normed)
+print("Mean transition matrix (averaged over all features):")
+print(np.around(avg_A, decimals=3))
+```
+
+### Inspect per-state GLM weights
+
+```python
+weights = np.array(params.emissions.weights)   # (K, C, D)
+biases = np.array(params.emissions.biases)     # (K, C)
+for k in range(num_states):
+    # For binary classification, the "contact" class weight is weights[k, 1, :]
+    w = weights[k, 1, :] - weights[k, 0, :]   # contrast: contact vs no-contact
+    print(f"State {k+1}: ||Δw|| = {np.linalg.norm(w):.3f}, "
+          f"top-5 features = {np.argsort(np.abs(w))[-5:][::-1]}")
+```
+
+## Step 6: Apply Model to Training Data {#sec-step6}
+
+We compute per-frame contact probability on the training region and write the
+results back to `DataManager` as two objects:
+
+- **`AnalogTimeSeries`** — continuous P(contact) for each frame (viewable in DataViewer)
+- **`DigitalIntervalSeries`** — thresholded contact intervals (viewable in DataViewer)
+
+This lets you visually compare the model's output against the ground-truth
+`contact` intervals directly in WhiskerToolbox.
+
+```python
+import whisker_toolbox as wt
+
+
+def emission_probs(params, X_normed):
+    """Compute P(y=c | z=k, u_t) for all frames, states, and classes.
+
+    Returns
+    -------
+    probs_all : np.ndarray, shape (T, K, C)
+    """
+    W = np.array(params.emissions.weights)   # (K, C, D)
+    b = np.array(params.emissions.biases)    # (K, C)
+    logits = np.einsum("kcd,td->tkc", W, X_normed) + b[None, :, :]  # (T, K, C)
+    exp_logits = np.exp(logits - logits.max(axis=-1, keepdims=True))
+    return exp_logits / exp_logits.sum(axis=-1, keepdims=True)
+
+
+def transition_matrix_at(params, u_t):
+    """Compute the K×K transition matrix for a single input vector.
+
+    Returns
+    -------
+    A_t : np.ndarray, shape (K, K) — row i is P(z_next | z_prev=i, u_t)
+    """
+    W = np.array(params.transitions.weights)  # (K, K, D)
+    b = np.array(params.transitions.biases)   # (K, K)
+    logits = np.einsum("ijd,d->ij", W, u_t) + b  # (K, K)
+    exp_logits = np.exp(logits - logits.max(axis=1, keepdims=True))
+    return exp_logits / exp_logits.sum(axis=1, keepdims=True)
+
+
+def predict_contact_labeled(model, params, y_block, X_block):
+    """Evaluate P(contact) on data where labels are available.
+
+    Uses the smoother to get posterior state probabilities
+    P(z_t | y_{1:T}, u_{1:T}), then marginalises:
+    P(y_t=1) = sum_k P(y_t=1 | z_t=k, u_t) * P(z_t=k | all data).
+
+    This conditions on the observed labels to infer the hidden state.
+    """
+    posterior = model.smoother(params, jnp.array(y_block), inputs=jnp.array(X_block))
+    state_probs = np.array(posterior.smoothed_probs)               # (T, K)
+    p_contact = emission_probs(params, X_block)[:, :, 1]           # (T, K)
+    return np.sum(p_contact * state_probs, axis=1)                 # (T,)
+
+
+def predict_contact_unlabeled(params, X_normed):
+    """Predict P(contact) on data without labels using input-driven transitions.
+
+    Forward-propagates the state belief using the input-dependent transition
+    model. At each frame:
+
+      1. Marginalise over states to get P(y_t=1).
+      2. Propagate state belief to the next frame via the input-dependent
+         transition matrix A(u_{t+1}).
+
+    No pseudo-observations or autoregressive feedback is needed because the
+    input-driven transitions naturally track the behavioral context through
+    the features. With a fixed transition matrix, the state belief would
+    collapse to the stationary distribution; with input-dependent transitions,
+    it adapts at every time step.
+    """
+    K = len(np.array(params.initial.probs))
+    T = X_normed.shape[0]
+
+    pi0 = np.array(params.initial.probs)
+    probs_all = emission_probs(params, X_normed)  # (T, K, C)
+
+    alpha = pi0.copy()
+    contact_prob = np.zeros(T)
+
+    for t in range(T):
+        alpha /= alpha.sum()
+        contact_prob[t] = np.dot(probs_all[t, :, 1], alpha)
+
+        if t + 1 < T:
+            A_t = transition_matrix_at(params, X_normed[t + 1])
+            alpha = alpha @ A_t
+
+    return contact_prob
+
+
+def prob_to_intervals(contact_prob, threshold=0.5):
+    """Threshold a probability array into contiguous (start_row, end_row) pairs."""
+    binary = (contact_prob >= threshold).astype(int)
+    intervals = []
+    in_iv = False
+    start = 0
+    for t in range(len(binary)):
+        if binary[t] == 1 and not in_iv:
+            start = t; in_iv = True
+        elif binary[t] == 0 and in_iv:
+            intervals.append((start, t)); in_iv = False
+    if in_iv:
+        intervals.append((start, len(binary)))
+    return intervals
+
+
+def predict_full_session(model, params, X_all_normed, y_all, train_intervals,
+                         time_to_row, time_to_row_end):
+    """Predict P(contact) for the full session (hybrid approach).
+
+    The timeline is split into labeled segments (covered by training
+    intervals) and unlabeled gaps between them:
+
+    - **Labeled segments** use the smoother conditioned on actual labels,
+      giving high-quality state inference.
+    - **Unlabeled gaps** use forward propagation with input-dependent
+      transitions — no pseudo-observations needed because the features
+      drive the state evolution directly.
+    """
+    T = X_all_normed.shape[0]
+    contact_prob = np.zeros(T)
+
+    pi0 = np.array(params.initial.probs)
+    probs_all = emission_probs(params, X_all_normed)  # (T, K, C)
+
+    # Convert intervals to sorted row ranges
+    labeled_ranges = []
+    for iv in train_intervals:
+        s = time_to_row(iv.start)
+        e = time_to_row_end(iv.end)
+        if e > s:
+            labeled_ranges.append((s, e))
+    labeled_ranges.sort()
+
+    def fill_unlabeled(start, end, alpha_init):
+        """Forward propagation for an unlabeled gap."""
+        alpha = alpha_init.copy()
+        for t in range(start, end):
+            alpha /= alpha.sum()
+            contact_prob[t] = np.dot(probs_all[t, :, 1], alpha)
+            if t + 1 < end:
+                A_t = transition_matrix_at(params, X_all_normed[t + 1])
+                alpha = alpha @ A_t
+        return alpha
+
+    def fill_labeled(start, end):
+        """Smoother-based prediction for a labeled segment."""
+        posterior = model.smoother(
+            params, jnp.array(y_all[start:end]),
+            inputs=jnp.array(X_all_normed[start:end]),
+        )
+        state_probs = np.array(posterior.smoothed_probs)  # (T_block, K)
+        p_contact = probs_all[start:end, :, 1]            # (T_block, K)
+        contact_prob[start:end] = np.sum(p_contact * state_probs, axis=1)
+        return state_probs[-1]  # terminal state distribution
+
+    # Process the timeline in order: gap → labeled → gap → labeled → ...
+    alpha = pi0.copy()
+    cursor = 0
+
+    for (s, e) in labeled_ranges:
+        if cursor < s:
+            alpha = fill_unlabeled(cursor, s, alpha)
+        terminal_state = fill_labeled(s, e)
+        if e < T:
+            A_next = transition_matrix_at(params, X_all_normed[e])
+            alpha = terminal_state @ A_next
+        cursor = e
+
+    # Trailing unlabeled segment
+    if cursor < T:
+        fill_unlabeled(cursor, T, alpha)
+
+    return contact_prob
+```
+
+### Apply to training blocks
+
+On training data we have labels, so we use the **smoother** to condition the
+state inference on the actual observations — matching how a standard HMM
+evaluates its training fit.
+
+```python
+# Evaluate contact probability on training blocks (using labels)
+for iv in train_intervals:
+    s = time_to_row(iv.start)
+    e = time_to_row_end(iv.end)
+    X_block = X_all_normed[s:e]
+    y_block = y_all[s:e]
+    contact_prob = predict_contact_labeled(model, params, y_block, X_block)
+
+    # --- AnalogTimeSeries: P(contact) per frame ---
+    times = [row_time_indices[r] for r in range(s, e)]
+    prob_analog = wt.AnalogTimeSeries(contact_prob.tolist(), times)
+
+    time_key = dm.getTimeKey("features")
+    dm.setData("glm_hmm_prob", prob_analog, time_key)
+    print(f"Wrote 'glm_hmm_prob': {len(contact_prob)} frames, "
+          f"mean P(contact) = {contact_prob.mean():.3f}")
+
+    # --- DigitalIntervalSeries: thresholded predictions ---
+    threshold = 0.5
+    pred_intervals_rows = prob_to_intervals(contact_prob, threshold)
+    result = wt.DigitalIntervalSeries()
+    for s_row, e_row in pred_intervals_rows:
+        s_time = int(row_time_indices[s + s_row])
+        e_time = int(row_time_indices[s + min(e_row, e - s) - 1])
+        result.addInterval(s_time, e_time)
+
+    dm.setData("glm_hmm_contact", result, time_key)
+    print(f"Wrote 'glm_hmm_contact': {len(pred_intervals_rows)} intervals "
+          f"(threshold={threshold})")
+```
+
+::: {.callout-tip}
+**Visualise in WhiskerToolbox:** Open the **DataViewer** widget and add:
+
+- `glm_hmm_prob` as an analog channel — shows the continuous P(contact) curve
+- `glm_hmm_contact` as a digital channel — shows predicted contact intervals
+- `contact` as a digital channel — shows ground-truth contact intervals
+
+Overlaying these lets you see where the model agrees/disagrees with your labels.
+:::
+
+## Step 7: Predict on Full Session {#sec-step7}
+
+The full session is a mix of labeled training regions and unlabeled gaps.
+With a standard HMM (fixed transitions), the state belief would collapse to
+the stationary distribution in unlabeled regions, making predictions
+meaningless. With the IOHMM, the input-dependent transitions naturally track
+the behavioral context through the features, so forward propagation alone
+produces informative predictions.
+
+`predict_full_session` uses a **hybrid** strategy:
+
+1. **Labeled segments** (training intervals) → smoother conditioned on actual
+   labels, identical to Step 6.
+2. **Unlabeled gaps** → forward propagation with input-dependent transitions,
+   initialised from the terminal state distribution of the preceding labeled
+   block. No pseudo-observations needed.
+
+```python
+# Predict on the full session (hybrid: smoother on labeled, forward on gaps)
+contact_prob_all = predict_full_session(
+    model, params, X_all_normed, y_all, train_intervals,
+    time_to_row, time_to_row_end,
+)
+
+# --- Write full-session probability ---
+all_times = [int(t) for t in row_time_indices]
+prob_analog_all = wt.AnalogTimeSeries(contact_prob_all.tolist(), all_times)
+
+time_key = dm.getTimeKey("features")
+dm.setData("glm_hmm_prob", prob_analog_all, time_key)
+print(f"Updated 'glm_hmm_prob': {T_total} frames (full session)")
+
+# --- Write full-session thresholded intervals ---
+threshold = 0.5
+pred_intervals_rows = prob_to_intervals(contact_prob_all, threshold)
+result_all = wt.DigitalIntervalSeries()
+for s_row, e_row in pred_intervals_rows:
+    s_time = int(row_time_indices[s_row])
+    e_time = int(row_time_indices[min(e_row, T_total) - 1])
+    result_all.addInterval(s_time, e_time)
+
+dm.setData("glm_hmm_contact", result_all, time_key)
+print(f"Updated 'glm_hmm_contact': {len(pred_intervals_rows)} intervals (full session)")
+```
+
+## Cross-Validation {#sec-cv}
+
+To select $K$ and evaluate prediction quality, hold out one training block at a
+time:
+
+```python
+from sklearn.metrics import f1_score
+
+
+def cross_validate(K, X_blocks, y_blocks, input_dim, n_init=5, n_iters=100):
+    """Leave-one-block-out cross-validation for IOHMM."""
+    cv_model = InputDrivenCategoricalRegressionHMM(
+        num_states=K,
+        num_classes=2,
+        input_dim=input_dim,
+    )
+
+    f1_scores = []
+    for held_out in range(len(X_blocks)):
+        X_train = [X_blocks[i] for i in range(len(X_blocks)) if i != held_out]
+        y_train = [y_blocks[i] for i in range(len(y_blocks)) if i != held_out]
+
+        # Pad training sequences
+        train_emissions = jnp.array(pad_sequences(y_train, pad_value=0))
+        train_inputs = jnp.array(pad_sequences(X_train, pad_value=0.0))
+
+        best_lp = -jnp.inf
+        best_p = None
+        for seed in range(n_init):
+            p, pr = cv_model.initialize(key=jr.PRNGKey(seed * 100 + held_out))
+            p, lps = cv_model.fit_em(
+                p, pr,
+                emissions=train_emissions,
+                inputs=train_inputs,
+                num_iters=n_iters,
+            )
+            if lps[-1] > best_lp:
+                best_lp = lps[-1]
+                best_p = p
+
+        # Predict on held-out block (use unlabeled predictor for honest eval)
+        prob = predict_contact_unlabeled(best_p, X_blocks[held_out])
+        y_pred = (prob >= 0.5).astype(int)
+        y_true = y_blocks[held_out]
+        f1_scores.append(f1_score(y_true, y_pred))
+
+    return np.mean(f1_scores), np.std(f1_scores)
+
+
+for K in [2, 3, 4]:
+    mean_f1, std_f1 = cross_validate(K, X_blocks, y_blocks, D)
+    print(f"K={K}: F1 = {mean_f1:.3f} ± {std_f1:.3f}")
+```
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| EM converges but states are degenerate (one state used 99%) | Bad initialisation | Run more random initialisations (`n_init ≥ 10`) |
+| NaN in log-probability | Numerical overflow in logistic regression | Standardise features: `X = (X - X.mean(0)) / X.std(0)` |
+| Fit is very slow | Gradient M-step for transitions + emissions | Reduce D via PCA; or decrease `m_step_num_iters` |
+| `fit_em` fails with shape error | Training blocks have different lengths | Pad sequences to equal length (see Step 2) |
+| Poor F1 on held-out blocks | Too few/many states, or insufficient data | Try different K; increase bias initialisation for stickiness |
+| JAX out-of-memory on GPU | Large feature dimension × many frames | Set `JAX_PLATFORMS=cpu` |
+| Empty block: rows [0,0) | Training intervals don't overlap feature range | Check `features_td.rowTimeIndices()` — intervals must fall within feature TimeFrameIndex range |
+| Transition weights all near zero | Under-fitting transitions | Increase `transition_m_step_num_iters`; check feature normalisation |
+
+## Comparison with ssm
+
+| Feature | ssm | dynamax (this tutorial) |
+|---|---|---|
+| Python version | ≤ 3.10 | 3.10+ (including 3.12) |
+| Backend | NumPy/Autograd | JAX |
+| Model class | `ssm.HMM(..., observations="input_driven_obs")` | `InputDrivenCategoricalRegressionHMM` (custom) |
+| Transition model | Fixed or input-driven (built-in) | Custom `InputDrivenHMMTransitions` |
+| Parameter style | Mutable model object | Immutable `(params, props)` tuples |
+| Fitting | `model.fit(y, inputs=X, method="em")` | `model.fit_em(params, props, emissions, inputs)` |
+| Viterbi | `model.most_likely_states(y, input=x)` | `model.most_likely_states(params, y, inputs=x)` |
+| Smoothing | `model.expected_states(data=y, input=x)` | `model.smoother(params, y, inputs=x)` |
+| JIT compilation | No | Yes (automatic via JAX) |
+| GPU support | No | Yes |
+
+## References
+
+- Ashwood, Z. C. et al. (2022). Mice alternate between discrete strategies
+  during perceptual decision-making. *Nature Neuroscience*, 25, 201–212.
+- [dynamax documentation](https://probml.github.io/dynamax/)
+- [dynamax HMM inference notebook](https://github.com/probml/dynamax/blob/main/docs/notebooks/hmm/casino_hmm_inference.ipynb)
+- [GLM-HMM Roadmap](../../../docs/developer/MLCore/GLM_HMM_Roadmap.md) (internal)

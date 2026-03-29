@@ -1,6 +1,6 @@
 ---
 title: "Dimensionality Reduction"
-description: "MLCore dimensionality reduction operations (PCA, etc.)"
+description: "MLCore dimensionality reduction operations (PCA, t-SNE, Robust PCA)"
 ---
 
 ## Overview
@@ -11,9 +11,12 @@ The dimensionality reduction module provides algorithms that project high-dimens
 
 ```
 models/
-├── MLDimReductionOperation.hpp   # Abstract base with fitTransform/transform
+├── MLDimReductionOperation.hpp      # Abstract base with fitTransform/transform
 └── unsupervised/
-    └── PCAOperation.hpp/.cpp     # Principal Component Analysis
+    ├── PCAOperation.hpp/.cpp        # Principal Component Analysis (manual eigendecomp)
+    ├── RobustPCAOperation.hpp/.cpp  # Robust PCA via ROSL (Armadillo)
+    ├── rosl.hpp                     # Third-party ROSL algorithm (GPL3)
+    └── TSNEOperation.hpp/.cpp       # t-SNE (tapkee)
 ```
 
 ### MLDimReductionOperation
@@ -79,7 +82,143 @@ The `TensorPCA` container transform (`src/TransformsV2/algorithms/TensorPCA/`) p
 | `n_components` | `optional<size_t>` | 2 | Number of PCs |
 | `scale` | `optional<bool>` | `true` | Standardize first |
 
+## TSNEOperation
+
+Implements t-distributed Stochastic Neighbor Embedding via the [tapkee](https://github.com/lisitsyn/tapkee) library. t-SNE is a non-linear, stochastic method well suited for 2D/3D visualization of high-dimensional data.
+
+### Backend
+
+Tapkee is a header-only C++ dimensionality reduction library. It is fetched via `FetchContent` in `external/CMakeLists.txt` but **its own CMakeLists.txt is not processed** — instead, a lightweight `tapkee_headers` INTERFACE target is created manually, linking `Eigen3::Eigen` and `fmt::fmt-header-only`.
+
+### Implementation
+
+1. Convert Armadillo matrix (features × observations) → Eigen matrix (same layout, both column-major)
+2. Call `tapkee::with(...).embedUsing(eigen_data)` with `tDistributedStochasticNeighborEmbedding` method
+3. Convert Eigen output → Armadillo result (n_components × observations)
+
+The `sne_theta` parameter controls Barnes-Hut approximation: `theta > 0` enables the O(N log N) approximation, `theta == 0` uses exact O(N²) computation.
+
+### Parameters
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `n_components` | `size_t` | 2 | Output dimensions (usually 2 or 3) |
+| `perplexity` | `double` | 30.0 | Effective neighborhood size (5–50 typical) |
+| `theta` | `double` | 0.5 | Barnes-Hut angle (0 = exact, >0 = faster) |
+
+### Limitations
+
+- **No out-of-sample projection:** `transform()` always returns `false`. t-SNE is transductive — it embeds only the data it was fit on.
+- **No explained variance:** `explainedVarianceRatio()` returns empty (not meaningful for t-SNE).
+- **Stochastic:** Results vary between runs (no seed parameter exposed yet).
+- **Perplexity auto-clamping:** If `perplexity ≥ n_observations / 3`, it is clamped internally.
+
+### Edge Cases
+
+- Empty data → returns `false`
+- Fewer than 4 observations → returns `false`
+- `n_components = 0` → returns `false`
+- Excessive perplexity → automatically clamped
+
+## TransformsV2 Integration: TensorTSNE
+
+The `TensorTSNE` container transform (`src/TransformsV2/algorithms/TensorTSNE/`) provides a thin wrapper registered in `RegisteredTransforms.cpp`:
+
+- **Input:** `TensorData` (2D, ≥4 rows)
+- **Output:** `TensorData` with `n_components` columns named "tSNE1", "tSNE2", ...
+- **RowDescriptor preservation:** Output inherits the input's `RowType` (TimeFrameIndex, Interval, or Ordinal)
+- **Non-deterministic:** `is_deterministic = false` in the registration metadata
+
+### TensorTSNEParams (reflect-cpp)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `n_components` | `optional<size_t>` | 2 | Output dimensions |
+| `perplexity` | `optional<double>` | 30.0 | SNE perplexity |
+| `theta` | `optional<double>` | 0.5 | Barnes-Hut angle |
+
+## RobustPCAOperation
+
+Implements Robust PCA via the ROSL (Robust Online Subspace Learning) algorithm. Unlike standard PCA, Robust PCA decomposes the data matrix into a low-rank component and a sparse error component: `X = A + E`. This makes it resilient to sparse outliers and gross corruptions that would distort standard PCA.
+
+### Backend
+
+Uses the header-only `rosl.hpp` by Tom Furnival (GPL3 license), which depends only on Armadillo. No additional external dependencies are needed.
+
+### Implementation
+
+1. Center data by subtracting feature means
+2. Run ROSL to decompose: `centered = A + E` (low-rank + sparse error)
+3. SVD on the low-rank component `A` to get orthogonal principal directions
+4. Take the top `n_components` left-singular vectors as eigenvectors
+5. Project: `eigenvectors.t() * centered_data`
+
+The `lambda` parameter controls the sparsity penalty on the error matrix. When set to 0 (default), it is auto-computed as `1 / sqrt(max(m, n))`, which is the theoretically optimal value for Robust PCA.
+
+### Parameters
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `n_components` | `size_t` | 2 | Number of components to retain |
+| `lambda` | `double` | 0.0 | Sparsity regularization (0 = auto: `1/sqrt(max(m,n))`) |
+| `tol` | `double` | 1e-5 | Convergence tolerance for ALM iterations |
+| `max_iter` | `size_t` | 100 | Maximum ALM iterations |
+
+### Capabilities
+
+- **Out-of-sample projection:** `transform()` is supported — new data is centered and projected via the learned eigenvectors.
+- **Explained variance:** `explainedVarianceRatio()` returns per-component variance from the SVD singular values of the low-rank component.
+- **Deterministic:** Fixed seed (42) for reproducibility.
+
+### Edge Cases
+
+- Empty data → returns `false`
+- Fewer than 2 observations → returns `false`
+- `n_components > features` → returns `false`
+- `n_components = 0` → returns `false`
+
+### Save/Load
+
+Uses cereal binary serialization storing eigenvectors, eigenvalues, mean, total variance, and component count.
+
+## TransformsV2 Integration: TensorRobustPCA
+
+The `TensorRobustPCA` container transform (`src/TransformsV2/algorithms/TensorRobustPCA/`) provides a thin wrapper registered in `RegisteredTransforms.cpp`:
+
+- **Input:** `TensorData` (2D, ≥2 rows)
+- **Output:** `TensorData` with `n_components` columns named "RPCA1", "RPCA2", ...
+- **RowDescriptor preservation:** Output inherits the input's `RowType` (TimeFrameIndex, Interval, or Ordinal)
+- **Deterministic:** `is_deterministic = true` in the registration metadata
+
+### TensorRobustPCAParams (reflect-cpp)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `n_components` | `optional<size_t>` | 2 | Number of output components |
+| `lambda` | `optional<double>` | 0.0 | Sparsity regularization (0 = auto) |
+| `tol` | `optional<double>` | 1e-5 | Convergence tolerance |
+| `max_iter` | `optional<size_t>` | 100 | Maximum iterations |
+
+## TransformsV2 Integration: TensorPCA
+
+The `TensorPCA` container transform (`src/TransformsV2/algorithms/TensorPCA/`) provides a thin wrapper registered in `RegisteredTransforms.cpp`:
+
+- **Input:** `TensorData` (2D, ≥2 rows)
+- **Output:** `TensorData` with `n_components` columns named "PC1", "PC2", ...
+- **RowDescriptor preservation:** Output inherits the input's `RowType` (TimeFrameIndex, Interval, or Ordinal)
+
+### TensorPCAParams (reflect-cpp)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `n_components` | `optional<size_t>` | 2 | Number of PCs |
+| `scale` | `optional<bool>` | `true` | Standardize first |
+
 ## Tests
 
 - `tests/MLCore/PCAOperation.test.cpp` — Metadata, fitTransform correctness, explained variance, transform re-projection, edge cases, save/load round-trip, registry integration
+- `tests/MLCore/TSNEOperation.test.cpp` — Metadata, fitTransform shape, transform unsupported, edge cases (empty, too few, zero n_components, excessive perplexity), default parameters
+- `tests/MLCore/RobustPCAOperation.test.cpp` — Metadata, fitTransform shape (clean and outlier data), explained variance ordering, transform re-projection, dimension mismatch rejection, edge cases (empty, too few, zero/excessive n_components), default parameters, save/load round-trip
 - `src/TransformsV2/algorithms/TensorPCA/TensorPCA.test.cpp` — Container registration, ordinal/TimeFrameIndex/Interval row preservation, default params, validation, progress, cancellation
+- `src/TransformsV2/algorithms/TensorTSNE/TensorTSNE.test.cpp` — Container registration, ordinal/TimeFrameIndex row preservation, validation, progress, cancellation
+- `src/TransformsV2/algorithms/TensorRobustPCA/TensorRobustPCA.test.cpp` — Container registration, ordinal/TimeFrameIndex row preservation, validation (too few rows, excessive components), progress, cancellation

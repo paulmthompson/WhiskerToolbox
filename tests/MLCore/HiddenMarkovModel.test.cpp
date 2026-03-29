@@ -1268,3 +1268,309 @@ TEST_CASE("HiddenMarkovModelOperation - high-dim save/load diagonal",
                 "absdiff", 0.0));
     }
 }
+
+// ============================================================================
+// GMM emission HMM tests
+// ============================================================================
+
+namespace {
+
+/**
+ * @brief Generate 2-state data where each state has a multi-modal distribution
+ *
+ * State 0: bimodal emission around -3.0 and -1.0
+ * State 1: bimodal emission around +1.0 and +3.0
+ *
+ * This data is specifically designed to benefit from GMM emissions
+ * because a single Gaussian per state cannot capture the bimodality.
+ */
+SyntheticSequenceData makeMultiModalBlockSequence(
+        std::size_t block_size = 60,
+        std::size_t num_blocks = 4,
+        int seed = 42) {
+    arma::arma_rng::set_seed(seed);
+
+    std::size_t const total = block_size * num_blocks * 2;
+    SyntheticSequenceData data;
+    data.features.set_size(1, total);
+    data.labels.set_size(total);
+
+    std::size_t col = 0;
+    for (std::size_t b = 0; b < num_blocks; ++b) {
+        // State 0 block — bimodal around -3 and -1
+        for (std::size_t i = 0; i < block_size; ++i) {
+            double const center = (i % 2 == 0) ? -3.0 : -1.0;
+            data.features(0, col) = center + arma::randn() * 0.2;
+            data.labels(col) = 0;
+            ++col;
+        }
+        // State 1 block — bimodal around +1 and +3
+        for (std::size_t i = 0; i < block_size; ++i) {
+            double const center = (i % 2 == 0) ? +1.0 : +3.0;
+            data.features(0, col) = center + arma::randn() * 0.2;
+            data.labels(col) = 1;
+            ++col;
+        }
+    }
+
+    return data;
+}
+
+}// anonymous namespace
+
+TEST_CASE("HiddenMarkovModelOperation - GMM emissions training", "[MLCore][HMM][GMM]") {
+    HiddenMarkovModelOperation hmm;
+    auto data = makeBlockSequence(50, 4, 42);
+
+    HMMParameters params;
+    params.num_states = 2;
+    params.use_gmm_emissions = true;
+    params.num_gaussians = 2;
+
+    std::vector<arma::mat> seqs{data.features};
+    std::vector<arma::Row<std::size_t>> labelSeqs{data.labels};
+
+    SECTION("trains successfully with GMM emissions") {
+        bool ok = hmm.trainSequences(seqs, labelSeqs, &params);
+        CHECK(ok);
+        CHECK(hmm.isTrained());
+        CHECK(hmm.numClasses() == 2);
+        CHECK(hmm.numFeatures() == 1);
+        CHECK(hmm.isGMMEmissions());
+        CHECK(hmm.numGaussiansPerState() == 2);
+    }
+
+    SECTION("non-GMM model reports isGMMEmissions == false") {
+        params.use_gmm_emissions = false;
+        hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(hmm.isTrained());
+        CHECK_FALSE(hmm.isGMMEmissions());
+        CHECK(hmm.numGaussiansPerState() == 0);
+    }
+
+    SECTION("Viterbi decoding recovers states with high accuracy") {
+        hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(hmm.isTrained());
+
+        std::vector<arma::Row<std::size_t>> predSeqs;
+        bool ok = hmm.predictSequences(seqs, predSeqs);
+        REQUIRE(ok);
+        REQUIRE(predSeqs.size() == 1);
+
+        std::size_t correct = arma::accu(predSeqs[0] == data.labels);
+        double accuracy = static_cast<double>(correct) / data.labels.n_elem;
+        CHECK(accuracy > 0.90);
+    }
+
+    SECTION("Forward-Backward probabilities have correct shape") {
+        hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(hmm.isTrained());
+
+        arma::mat probs;
+        bool ok = hmm.predictProbabilities(data.features, probs);
+        REQUIRE(ok);
+        CHECK(probs.n_rows == 2);
+        CHECK(probs.n_cols == data.features.n_cols);
+
+        // Columns should sum to approximately 1.0
+        arma::rowvec col_sums = arma::sum(probs, 0);
+        for (std::size_t c = 0; c < col_sums.n_elem; ++c) {
+            CHECK_THAT(col_sums(c), Catch::Matchers::WithinAbs(1.0, 0.01));
+        }
+    }
+
+    SECTION("transition matrix is valid") {
+        hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(hmm.isTrained());
+
+        arma::mat trans = hmm.getTransitionMatrix();
+        CHECK(trans.n_rows == 2);
+        CHECK(trans.n_cols == 2);
+        arma::rowvec col_sums = arma::sum(trans, 0);
+        CHECK_THAT(col_sums(0), Catch::Matchers::WithinAbs(1.0, 0.01));
+        CHECK_THAT(col_sums(1), Catch::Matchers::WithinAbs(1.0, 0.01));
+    }
+
+    SECTION("log-likelihood is finite") {
+        hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(hmm.isTrained());
+
+        double ll = hmm.logLikelihood(data.features);
+        CHECK(std::isfinite(ll));
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - GMM emissions multi-modal data",
+          "[MLCore][HMM][GMM]") {
+    auto data = makeMultiModalBlockSequence(60, 4, 42);
+
+    std::vector<arma::mat> seqs{data.features};
+    std::vector<arma::Row<std::size_t>> labelSeqs{data.labels};
+
+    SECTION("GMM model trains on multi-modal data") {
+        HiddenMarkovModelOperation hmm;
+        HMMParameters params;
+        params.num_states = 2;
+        params.use_gmm_emissions = true;
+        params.num_gaussians = 2;
+
+        bool ok = hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(ok);
+
+        arma::Row<std::size_t> predictions;
+        ok = hmm.predict(data.features, predictions);
+        REQUIRE(ok);
+
+        std::size_t correct = arma::accu(predictions == data.labels);
+        double accuracy = static_cast<double>(correct) / data.labels.n_elem;
+        CHECK(accuracy > 0.85);
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - diagonal GMM emissions",
+          "[MLCore][HMM][GMM]") {
+    auto data = makeMultiDimBlockSequence(40, 3, 42);
+
+    HMMParameters params;
+    params.num_states = 2;
+    params.use_gmm_emissions = true;
+    params.use_diagonal_covariance = true;
+    params.num_gaussians = 2;
+
+    std::vector<arma::mat> seqs{data.features};
+    std::vector<arma::Row<std::size_t>> labelSeqs{data.labels};
+
+    SECTION("trains and predicts with diagonal GMM emissions") {
+        HiddenMarkovModelOperation hmm;
+        bool ok = hmm.trainSequences(seqs, labelSeqs, &params);
+        REQUIRE(ok);
+        CHECK(hmm.isGMMEmissions());
+        CHECK(hmm.isDiagonalCovariance());
+        CHECK(hmm.numGaussiansPerState() == 2);
+        CHECK(hmm.numFeatures() == 2);
+
+        arma::Row<std::size_t> predictions;
+        ok = hmm.predict(data.features, predictions);
+        REQUIRE(ok);
+
+        std::size_t correct = arma::accu(predictions == data.labels);
+        double accuracy = static_cast<double>(correct) / data.labels.n_elem;
+        CHECK(accuracy > 0.85);
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - GMM emissions save/load",
+          "[MLCore][HMM][GMM]") {
+    auto data = makeBlockSequence(50, 4, 42);
+
+    SECTION("round-trip preserves GMM model") {
+        HiddenMarkovModelOperation original;
+        HMMParameters params;
+        params.num_states = 2;
+        params.use_gmm_emissions = true;
+        params.num_gaussians = 2;
+
+        original.train(data.features, data.labels, &params);
+        REQUIRE(original.isTrained());
+        REQUIRE(original.isGMMEmissions());
+
+        arma::Row<std::size_t> original_preds;
+        original.predict(data.features, original_preds);
+
+        std::stringstream ss;
+        REQUIRE(original.save(ss));
+
+        HiddenMarkovModelOperation loaded;
+        REQUIRE(loaded.load(ss));
+        CHECK(loaded.isTrained());
+        CHECK(loaded.isGMMEmissions());
+        CHECK(loaded.numGaussiansPerState() == 2);
+        CHECK(loaded.numClasses() == original.numClasses());
+        CHECK(loaded.numFeatures() == original.numFeatures());
+
+        arma::Row<std::size_t> loaded_preds;
+        loaded.predict(data.features, loaded_preds);
+        CHECK(arma::approx_equal(
+                arma::conv_to<arma::mat>::from(original_preds),
+                arma::conv_to<arma::mat>::from(loaded_preds),
+                "absdiff", 0.0));
+    }
+
+    SECTION("round-trip preserves diagonal GMM model") {
+        HiddenMarkovModelOperation original;
+        HMMParameters params;
+        params.num_states = 2;
+        params.use_gmm_emissions = true;
+        params.use_diagonal_covariance = true;
+        params.num_gaussians = 3;
+
+        original.train(data.features, data.labels, &params);
+        REQUIRE(original.isTrained());
+        REQUIRE(original.isGMMEmissions());
+        REQUIRE(original.isDiagonalCovariance());
+
+        arma::Row<std::size_t> original_preds;
+        original.predict(data.features, original_preds);
+
+        std::stringstream ss;
+        REQUIRE(original.save(ss));
+
+        HiddenMarkovModelOperation loaded;
+        REQUIRE(loaded.load(ss));
+        CHECK(loaded.isTrained());
+        CHECK(loaded.isGMMEmissions());
+        CHECK(loaded.isDiagonalCovariance());
+        CHECK(loaded.numGaussiansPerState() == 3);
+
+        arma::Row<std::size_t> loaded_preds;
+        loaded.predict(data.features, loaded_preds);
+        CHECK(arma::approx_equal(
+                arma::conv_to<arma::mat>::from(original_preds),
+                arma::conv_to<arma::mat>::from(loaded_preds),
+                "absdiff", 0.0));
+    }
+}
+
+TEST_CASE("HiddenMarkovModelOperation - GMM constrained Viterbi",
+          "[MLCore][HMM][GMM]") {
+    HiddenMarkovModelOperation hmm;
+    auto data = makeBlockSequence(50, 4, 42);
+
+    HMMParameters params;
+    params.num_states = 2;
+    params.use_gmm_emissions = true;
+    params.num_gaussians = 2;
+
+    std::vector<arma::mat> seqs{data.features};
+    std::vector<arma::Row<std::size_t>> labelSeqs{data.labels};
+    REQUIRE(hmm.trainSequences(seqs, labelSeqs, &params));
+
+    SECTION("constrained prediction works with GMM model") {
+        std::vector<std::optional<std::size_t>> constraints{std::size_t{0}};
+        std::vector<arma::Row<std::size_t>> preds;
+        bool ok = hmm.predictSequencesConstrained(seqs, preds, constraints);
+        REQUIRE(ok);
+        REQUIRE(preds.size() == 1);
+
+        std::size_t correct = arma::accu(preds[0] == data.labels);
+        double accuracy = static_cast<double>(correct) / data.labels.n_elem;
+        CHECK(accuracy > 0.90);
+    }
+
+    SECTION("initial distribution is restored after constrained prediction") {
+        std::vector<arma::Row<std::size_t>> before_preds;
+        REQUIRE(hmm.predictSequences(seqs, before_preds));
+
+        std::vector<std::optional<std::size_t>> constraints{std::size_t{1}};
+        std::vector<arma::Row<std::size_t>> constrained_preds;
+        REQUIRE(hmm.predictSequencesConstrained(seqs, constrained_preds, constraints));
+
+        std::vector<arma::Row<std::size_t>> after_preds;
+        REQUIRE(hmm.predictSequences(seqs, after_preds));
+
+        CHECK(arma::approx_equal(
+                arma::conv_to<arma::mat>::from(after_preds[0]),
+                arma::conv_to<arma::mat>::from(before_preds[0]),
+                "absdiff", 0.0));
+    }
+}

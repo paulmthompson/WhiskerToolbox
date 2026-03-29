@@ -44,6 +44,8 @@ add_executable(test_coreplotting
     LineBatch/LineBatchData.test.cpp
     LineBatch/CpuLineBatchIntersector.test.cpp
     LineBatch/LineBatchBuilder.test.cpp
+    # FeatureColor
+    FeatureColor.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 

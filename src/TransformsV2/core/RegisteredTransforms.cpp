@@ -6,8 +6,8 @@
 #include "algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "algorithms/IntervalReduction/IntervalReduction.hpp"
 #include "algorithms/LineAngle/LineAngle.hpp"
-#include "algorithms/LineClip/LineClip.hpp"
 #include "algorithms/LineBaseFlip/LineBaseFlip.hpp"
+#include "algorithms/LineClip/LineClip.hpp"
 #include "algorithms/LineCurvature/LineCurvature.hpp"
 #include "algorithms/LineLength/LineLength.hpp"
 #include "algorithms/LineMinPointDist/LineMinPointDist.hpp"
@@ -18,13 +18,16 @@
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
 #include "algorithms/TensorPCA/TensorPCA.hpp"
+#include "algorithms/TensorRobustPCA/TensorRobustPCA.hpp"
+#include "algorithms/TensorTSNE/TensorTSNE.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
+#include "core/PipelineLoader.hpp"  // registerPipelineStepFactoryFor
 
-#include "CoreGeometry/masks.hpp"
-#include "CoreGeometry/points.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
+#include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/points.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Tensors/TensorData.hpp"
@@ -66,6 +69,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<IntervalReductionParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     registerPipelineStepFactoryFor<TensorPCAParams>();
+    registerPipelineStepFactoryFor<TensorRobustPCAParams>();
     return true;
 }();
 
@@ -654,6 +658,34 @@ auto const register_tensor_pca = RegisterContainerTransform<TensorData, TensorDa
                 .input_type_name = "TensorData",
                 .output_type_name = "TensorData",
                 .params_type_name = "TensorPCAParams",
+                .is_expensive = true,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register TensorTSNE (Container Transform: TensorData → TensorData)
+auto const register_tensor_tsne = RegisterContainerTransform<TensorData, TensorData, TensorTSNEParams>(
+        "TensorTSNE",
+        tensorTSNE,
+        ContainerTransformMetadata{
+                .description = "Apply t-SNE dimensionality reduction to a TensorData",
+                .category = "Dimensionality Reduction",
+                .input_type_name = "TensorData",
+                .output_type_name = "TensorData",
+                .params_type_name = "TensorTSNEParams",
+                .is_expensive = true,
+                .is_deterministic = false,
+                .supports_cancellation = true});
+
+// Register TensorRobustPCA (Container Transform: TensorData → TensorData)
+auto const register_tensor_robust_pca = RegisterContainerTransform<TensorData, TensorData, TensorRobustPCAParams>(
+        "TensorRobustPCA",
+        tensorRobustPCA,
+        ContainerTransformMetadata{
+                .description = "Apply Robust PCA (ROSL) dimensionality reduction to a TensorData",
+                .category = "Dimensionality Reduction",
+                .input_type_name = "TensorData",
+                .output_type_name = "TensorData",
+                .params_type_name = "TensorRobustPCAParams",
                 .is_expensive = true,
                 .is_deterministic = true,
                 .supports_cancellation = true});

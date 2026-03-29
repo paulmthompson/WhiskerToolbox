@@ -8,153 +8,205 @@ format: html
 This document tracks remaining development tasks for the Scatter Plot Widget. For documentation
 of completed features and current architecture, see the [main developer documentation](index.qmd).
 
-## Completed Work Summary
-
-The following features are complete and documented in [index.qmd](index.qmd):
-
-- **Widget skeleton**: EditorState pattern, registration, state/view/properties factories
-- **State management**: `ScatterPlotState` with `HorizontalAxisState`, `VerticalAxisState` composition; `ScatterPlotStateData` serializable struct
-- **Axis system**: `HorizontalAxisWidget` (X) and `VerticalAxisWidget` (Y) with bidirectional sync, including the "silent update" pattern
-- **Interaction**: Separated X/Y zoom, pan via shared `PlotInteractionHelpers`
-- **Properties panel**: Axis range controls in collapsible `Section` widgets; data source selection UI (key, column, offset per axis); reference line toggle; compatibility status label
-- **OpenGL lifecycle**: `ScatterPlotOpenGLWidget` initialization, projection/view matrix management, pan/zoom mouse handlers
-- **State serialization**: Full round-trip JSON via `rfl::json`
-- **Registration wiring**: `timePositionSelected` → `EditorRegistry::setCurrentTime()` connection
-- **Data source descriptor**: `ScatterAxisSource` struct defining data key, tensor column, and temporal offset
-- **Row type compatibility validation**: `resolveSourceRowType()` and `checkSourceCompatibility()` functions in `Core/SourceCompatibility.hpp/.cpp` with full test coverage (21 test cases, 52 assertions)
-- **Data source UI**: Key/column/offset combo boxes per axis with DataManager observer, compatibility label displaying `checkSourceCompatibility()` results
-- **Point pair computation**: `buildScatterPoints()` factory function in `Core/BuildScatterPoints.hpp/.cpp` supporting all compatible source type combinations (ATS×ATS, ATS×TensorTFI, TensorTFI×ATS, TensorTFI×TensorTFI, Ordinal×Ordinal, Interval×Interval) with temporal offset and TimeFrameIndex join. Tested in `BuildScatterPoints.test.cpp`.
-- **Point rendering**: SceneBuilder→SceneRenderer pipeline using `addGlyphs()` for points with single instanced draw call
-- **Auto-fit bounds**: Automatic X/Y bounds detection from data with 5% padding on first data load (when bounds are at defaults)
-- **Reference line rendering**: $y = x$ diagonal via `addPolyLine()` with show/hide toggle in properties panel; endpoints update on pan/zoom
-- **DataManager observer**: Observer registration/removal in properties widget for combo box synchronization; stale key handling clears axis source when selected data key is deleted from DataManager; tested in `ScatterPlotPropertiesWidget.test.cpp`
-- **Double-click-to-navigate**: Point hit testing via shared `SceneHitTester` + `QuadTree<EntityId>` spatial index, `pointDoubleClicked` → `timePositionSelected` → `EditorRegistry::setCurrentTime()` signal chain, yellow highlight glyph for navigated-to point
-- **Glyph customization**: `GlyphStyleData` in `ScatterPlotStateData` with default blue circle style (`#3388FF`, size 5, alpha 0.8); `GlyphStyleState` owned by `ScatterPlotState` with `glyphStyleChanged` signal; `GlyphStyleControls` embedded in properties panel "Glyph Options" collapsible section; rendering uses `toRenderableGlyphType()` and `hexColorToVec4()` from `GlyphStyleConversion.hpp`; full round-trip JSON serialization
-- **Point selection**: Dual selection modes (SinglePoint/Polygon) via combo box in properties panel; SinglePoint mode: Ctrl+Click toggles selection, Shift+Click removes; Polygon mode: Ctrl+Click adds vertices, Enter closes polygon, Backspace undoes, Escape cancels; `selectPointsInPolygon()` utility in `CorePlotting/Selection/`; selected points rendered with distinct style (orange, +4 size); integration with `GroupContextMenuHandler` for right-click group operations; fully tested
-- **Temporal offset for outlier detection**: Per-axis `time_offset` field in `ScatterAxisSource` enables lag-plots ($x(t)$ vs $x(t-1)$); `buildScatterPoints()` applies offsets for all source type combinations; offset spinboxes (-10000 to 10000) in properties panel per axis; points where offset pushes index outside valid range are excluded; tested in `BuildScatterPoints.test.cpp`
-
-- **Hover tooltip**: `PlotTooltipManager` integration showing X/Y values and `TimeFrameIndex` on dwell; pan/zoom suppression; text provider with 3-decimal precision
-- **ContextAction integration**: Right-click context menu dynamically populates applicable ContextActions from `SelectionContext`; `setSelectionContext()` wired in registration; enables cross-widget ML workflows
-- **Selective clustering ("Cluster Selection...")**: Context menu action extracts selected point rows from source `TensorData`, creates a filtered `TensorData` stored as `"<key>_selection"`, sets data focus, and programmatically triggers the `mlcore.cluster_tensor` ContextAction
-- **Cluster label overlay**: QPainter text overlay showing group name + count at per-group centroids over the OpenGL scatter; `show_cluster_labels` state field with checkbox in properties panel
-
-**Not yet implemented**:
-feature coloring (Phase 7), stale key handling (Phase 6.3).
+**Not yet implemented**: Stale key handling (Phase 6.3).
 
 ---
 
-## Phase 7: Feature Coloring via TensorData
+## Phase 7: External Feature Coloring (Widget Integration)
 
-**Status**: Design phase. Depends on point rendering and the shared colormap infrastructure.
+**Status**: Complete. All widget integration steps finished.
 
-**Goal**: Color scatter points by an external feature value from a `TensorData` column, enabling
-visual grouping by continuous or categorical features.
+**Goal**: Color scatter points by an external data source (e.g., velocity colored by acceleration,
+points colored by whether they fall inside a DigitalIntervalSeries interval).
 
-### 7.1 Color Configuration
+### Completed Infrastructure
+
+The shared `CorePlotting/FeatureColor/` library is fully implemented and tested (24 test cases,
+74 assertions). See the [FeatureColor module docs](../../../coreplotting/feature_color.qmd) for
+the full API reference. Key components:
+
+- `FeatureColorSourceDescriptor` — serializable pointer to a DataManager key + optional column
+- `resolveFeatureColors()` — per-point float lookup via ATS, TensorData (TFI hash join / ordinal positional), or DIS containment
+- `checkFeatureColorCompatibility()` — validates key existence, column existence, row-type compatibility
+- `applyFeatureColorsToScene()` — mutates `RenderableGlyphBatch::colors[]` via `ContinuousMapping` (colormap) or `ThresholdMapping` (binary)
+- `computeEffectiveColorRange()` — Auto/Manual/Symmetric vmin/vmax from resolved values
+- `PlotSourceRowType` — shared enum (replaces the earlier `ScatterSourceRowType`)
+
+### Rendering Pipeline
+
+Feature coloring is a **post-`buildScatterPoints()` color override** inserted before group colors:
+
+```
+buildScatterPoints()          → ScatterPointData with time_indices
+    → addGlyphs()             → uniform color from GlyphStyleData
+    → applyFeatureColorsToScene()  → per-point color override (NEW)
+    → applyGroupColorsToScene()    → group colors override feature colors
+    → uploadScene()
+```
+
+No changes needed to `SceneBuilder`, `GlyphRenderer`, or shaders. Color priority (highest wins):
+navigate highlight > selected > group > **feature** > default glyph style.
+
+### Remaining Implementation Steps
+
+| Step | Component | Location | Description |
+|------|-----------|----------|-------------|
+| **7.1** | `ScatterColorConfigData` | `ScatterPlotWidget/Core/` | ✅ Done |
+| **7.2** | Properties panel UI | `ScatterPlotWidget/UI/` | ✅ Done |
+| **7.3** | Rendering integration | `ScatterPlotWidget/Rendering/` | ✅ Done |
+| **7.4** | Tooltip extension | `ScatterPlotWidget/Rendering/` | ✅ Done |
+| **7.5** | Unit tests | `tests/ScatterPlotWidget/` | ✅ Done |
+
+---
+
+#### 7.1 `ScatterColorConfigData`
+
+Create `ScatterPlotWidget/Core/ScatterColorConfig.hpp`:
 
 ```cpp
-struct ScatterColorConfig {
-    std::string color_mode = "fixed";    ///< "fixed" or "by_feature"
+struct ScatterColorConfigData {
+    std::string color_mode = "fixed";              ///< "fixed" or "by_feature"
 
-    // For feature-based coloring
-    std::string tensor_key;              ///< DataManager key for the color TensorData
-    std::string column_name;             ///< Column within the TensorData
-    std::string colormap = "viridis";    ///< Colormap name
-    double color_min = 0.0;
-    double color_max = 1.0;
-    bool use_auto_range = true;
+    std::optional<FeatureColorSourceDescriptor> color_source;
+
+    std::string mapping_mode = "continuous";        ///< "continuous" or "threshold"
+
+    // Continuous mode
+    std::string colormap_preset = "viridis";
+    ColorRangeConfig color_range;
+
+    // Threshold mode
+    double threshold = 0.5;
+    std::string above_color = "#FF4444";
+    std::string below_color = "#3388FF";
+    float above_alpha = 0.9f;
+    float below_alpha = 0.9f;
 };
 ```
 
-### 7.2 Shared Colormap Infrastructure
+Add `ScatterColorConfigData color_config` to `ScatterPlotStateData`.
 
-This depends on the colormap infrastructure proposed in the [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd)
-and referenced across multiple widget roadmaps:
+Add to `ScatterPlotState`: `colorConfigChanged()` signal, `colorConfig()` getter,
+`setColorConfig()` setter. Connect the signal to `_scene_dirty = true` in
+`ScatterPlotOpenGLWidget::setState()`.
 
-```cpp
-namespace CorePlotting::Colormaps {
-    using ColormapFunction = std::function<glm::vec4(float t)>;
-    ColormapFunction getColormap(ColormapPreset preset);
-    glm::vec4 mapValue(ColormapFunction const & cmap, float value, float vmin, float vmax);
-}
+#### 7.2 Properties Panel: "Point Coloring" Section
+
+Add a collapsible `Section` to `ScatterPlotPropertiesWidget` between "Glyph Options" and
+"Selection Mode":
+
+```
+┌─ Point Coloring ─────────────────────────────┐
+│  Color Mode:  [ Fixed ▾ ]                    │  ← "Fixed" / "By Feature"
+│                                               │
+│  ── (visible only when "By Feature") ──       │
+│  Data Key:    [ velocity ▾ ]                  │  ← DM keys (ATS, TensorData, DIS)
+│  Column:      [ col_0 ▾ ]                     │  ← TensorData only; hidden for ATS/DIS
+│  Status:      ✓ Compatible (ATS→ATS join)     │  ← checkFeatureColorCompatibility() result
+│                                               │
+│  Mapping:     [ Continuous ▾ ]                │  ← "Continuous" / "Threshold"
+│                                               │
+│  ── Continuous mode ─────────────────────     │
+│  [ColormapControls widget]                    │  ← Reuse existing ColormapControls
+│                                               │
+│  ── Threshold mode ──────────────────────     │
+│  Threshold:   [ 0.500    ]                    │
+│  Above color: [■ #FF4444 ]                    │  ← QColorDialog
+│  Below color: [■ #3388FF ]                    │  ← QColorDialog
+└───────────────────────────────────────────────┘
 ```
 
-The colormap system in `CorePlotting/Colormaps/` is shared across:
+**Behaviors**:
 
-| Widget | Usage |
-|--------|-------|
-| **ScatterPlotWidget** | Per-point color from feature value |
-| **[LinePlotWidget](../LinePlotWidget/roadmap.qmd)** | Per-trial line color from feature value |
-| **[EventPlotWidget](../EventPlotWidget/roadmap.qmd)** | Per-trial event color |
-| **[HeatmapWidget](../HeatmapWidget/roadmap.qmd)** | Heatmap cell color |
+- Data Key combo lists all DM keys of type ATS, TensorData, or DIS
+- Column combo shown only for TensorData keys; hidden otherwise
+- Selecting a `DigitalIntervalSeries` key auto-switches to Threshold mode (threshold=0.5)
+- Compatibility label updates dynamically on key/column change
 
-### 7.3 Properties Panel
+#### 7.3 Rendering Integration
 
-Add to `ScatterPlotPropertiesWidget` in a "Point Coloring" collapsible section:
+In `ScatterPlotOpenGLWidget::rebuildScene()`, after `builder.build()` and before
+`applyGroupColorsToScene()`:
 
-1. **Color mode combo** — Fixed / By Feature
-2. **TensorData combo box** — lists `TensorData` keys from DataManager
-3. **Column combo box** — shows columns of the selected `TensorData`
-4. **Colormap combo** — colormap preset selection
-5. **Range controls** — auto/manual min/max spinboxes
+```cpp
+auto const & cc = _state->colorConfig();
+if (cc.color_mode == "by_feature" && cc.color_source.has_value()) {
+    auto const feature_values = resolveFeatureColors(
+        *_data_manager, *cc.color_source,
+        _scatter_data.time_indices, _scatter_data.time_frame);
+
+    FeatureColorMapping mapping;
+    if (cc.mapping_mode == "threshold") {
+        mapping = ThresholdMapping{
+            static_cast<float>(cc.threshold),
+            hexColorToVec4(cc.above_color, cc.above_alpha),
+            hexColorToVec4(cc.below_color, cc.below_alpha)};
+    } else {
+        auto const range = computeEffectiveColorRange(feature_values, cc.color_range);
+        if (range.has_value()) {
+            auto const preset = colormapPresetFromString(cc.colormap_preset);
+            mapping = ContinuousMapping{preset, range->first, range->second};
+        }
+    }
+
+    applyFeatureColorsToScene(*_scene, feature_values, mapping, point_count);
+}
+
+applyGroupColorsToScene();  // Group colors override feature colors
+```
+
+Cache `feature_values` as a member for tooltip access (step 7.4).
+
+#### 7.4 Tooltip Extension
+
+When feature coloring is active, append the feature value to the hover tooltip:
+
+```
+X: 1.234  Y: 5.678
+TFI: 42
+Color: 0.891 (velocity)           ← continuous mode
+```
+
+```
+X: 1.234  Y: 5.678
+TFI: 42
+Color: 25.3 (velocity) [above]    ← threshold mode
+```
+
+Extend the `PlotTooltipManager` text provider to query the cached `feature_values` vector.
 
 ---
 
-## Shared Components Summary
+### Design Decisions
 
-Components that have been factored into shared locations or are candidates for sharing:
+1. **Post-build color override**: Feature colors mutate `RenderableGlyphBatch::colors[]` after
+   `addGlyphs()`, matching the existing `applyGroupColorsToScene()` pattern. No `SceneBuilder`
+   or `GlyphRenderer` changes needed.
 
-| Component | Status | Location | Used By |
-|-----------|--------|----------|---------|
-| `selectPointsInPolygon` | ✅ **Implemented** | `CorePlotting/Selection/` | ScatterPlotWidget; available for [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
-| `SelectionInstructions` | ✅ **Implemented** | `Plots/Common/SelectionInstructions.hpp` | ScatterPlotWidget, TemporalProjectionViewWidget |
-| `GroupManagementPanel` | ⏸️ **Deferred** | N/A | ScatterPlotWidget uses existing `GroupContextMenuHandler` via right-click; dedicated panel not needed yet |
-| `Colormaps` | ⏳ **Planned** | `CorePlotting/Colormaps/` | ScatterPlotWidget (Phase 7), [HeatmapWidget](../HeatmapWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd), [LinePlotWidget](../LinePlotWidget/roadmap.qmd) |
+2. **Threshold mode as generalized binary coloring**: A single threshold mapping handles DIS
+   (0/1 at threshold=0.5), binary classifier output, and continuous cutoffs (e.g., "velocity > 20").
+   It is a peer of continuous colormap mode, not a special case.
 
-
----
-
-## Phase 8: Hover Tooltip
-
-**Status**: ✅ **Implemented**. See [index.qmd](index.qmd) § Hover Tooltip for documentation.
+3. **Shared `CorePlotting/FeatureColor/` library**: Resolution and rendering logic is shared with
+   [EventPlotWidget](../EventPlotWidget/roadmap.qmd) (Phase 5) and
+   [LinePlotWidget](../LinePlotWidget/roadmap.qmd) (Phase 3). Each widget provides its own
+   `time_indices` and integrates the color config into its `EditorState`.
 
 ---
 
-## Design Decisions
+## Other Remaining Work
 
-1. **Point count scalability**: The `SceneBuilder::addGlyphs()` → `GlyphRenderer` pipeline uses
-   instanced rendering (single GPU draw call for all points in a batch). This is the same path
-   EventPlotWidget uses for large spike counts and scales well to tens of thousands of points.
-   No dedicated `PointBatchRenderer` is needed.
+| Item | Description |
+|------|-------------|
+| **Phase 6.3** | Stale key handling for color source (clear `color_source` when DM key is deleted) |
 
-2. **Polygon interaction**: Uses the existing `PolygonInteractionController` from
-   `CorePlotting/Interaction/`. This shared controller handles click-based polygon creation,
-   vertex drag modification, cursor preview, and auto-close detection.
-
-3. **Reference line**: Only $y = x$ reference line for now. Can be generalized to
-   arbitrary linear reference lines ($y = ax + b$) in a future phase if needed.
-
-4. **Hit testing via shared QuadTree**: Point hit testing uses the existing `SceneHitTester`
-   (`CorePlotting/Interaction/SceneHitTester.hpp`) which queries the `QuadTree<EntityId>`
-   spatial index built automatically by `SceneBuilder::addGlyphs()`. This is the same
-   infrastructure used by [EventPlotWidget](../EventPlotWidget/index.qmd) for double-click
-   navigation and click-to-select. The QuadTree provides `O(log n)` nearest-neighbor lookup,
-   scaling well to large point counts without widget-specific spatial indexing code. Navigation
-   uses `mouseDoubleClickEvent`, matching EventPlotWidget. Hover tooltips (Phase 8) use the
-   shared [PlotTooltipManager](../Common/TooltipManager/index.qmd) for dwell timer and
-   lifecycle management.
-
-5. **Two-batch rendering for selection/highlight**: `GlyphRenderer` renders each `RenderableGlyphBatch` in order, with its own `u_point_size` / `u_glyph_size` uniform. Per-instance color is already supported by the shader (`a_instance_color` / `a_color` VBO attribute), but per-instance size is not — size is a per-batch uniform. Therefore, rendering selected/highlighted points at a different size requires a second `addGlyphs()` call. This results in exactly two GPU draw calls (one for unselected, one for selected) regardless of the selection count, with no shader changes needed.
-
-6. **Single dataset per plot**: Each ScatterPlotWidget displays a single X/Y data source pair.
-   Users can open multiple scatter plot instances via the Analysis Dashboard for side-by-side
-   comparison of different variable pairs.
+---
 
 # See Also
 
 - [ScatterPlotWidget Documentation](index.qmd) — Full architecture and feature documentation
+- [FeatureColor Module Docs](../../../coreplotting/feature_color.qmd) — Shared library API reference
 - [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
-- [LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) — Group integration pattern (Phase 1), feature coloring (Phase 3)
-- [EventPlotWidget Roadmap](../EventPlotWidget/roadmap.qmd) — TensorData feature coloring/sorting (Phase 5)
+- [LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) — Feature coloring (Phase 3)
+- [EventPlotWidget Roadmap](../EventPlotWidget/roadmap.qmd) — Feature coloring/sorting (Phase 5)
 - [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd) — Colormap infrastructure (Phase 2)
-- [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) — Polygon selection with PointData, shared rendering

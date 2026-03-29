@@ -1,0 +1,198 @@
+---
+title: "Logit Projection Operation"
+description: "Supervised dimensionality reduction via softmax logit extraction"
+---
+
+## Overview
+
+`LogitProjectionOperation` is a supervised dimensionality reduction technique that trains a softmax
+regression classifier on labeled feature data and extracts the raw pre-softmax logit activations as
+a discriminative $C$-dimensional projection. The output is a $(C \times N)$ matrix where each
+column holds the class logit scores for one observation.
+
+Since logits represent the linear decision boundary in feature space, this is equivalent to a
+supervised linear projection — a data-driven counterpart to PCA that maximizes class separation
+rather than variance.
+
+**Task type:** `SupervisedDimensionalityReduction`
+
+**Source files:**
+
+- Header: `src/MLCore/models/supervised/LogitProjectionOperation.hpp`
+- Implementation: `src/MLCore/models/supervised/LogitProjectionOperation.cpp`
+- Abstract base: `src/MLCore/models/MLSupervisedDimReductionOperation.hpp`
+- Tests: `tests/MLCore/LogitProjectionOperation.test.cpp`
+
+## Parameters
+
+`LogitProjectionParameters` in `MLModelParameters.hpp`:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `lambda` | `double` | 0.0001 | L2 regularization strength. |
+| `max_iterations` | `std::size_t` | 10000 | Maximum L-BFGS optimizer iterations. |
+| `scale_features` | `bool` | `false` | Standardize features before training (zero mean, unit variance). |
+
+## Architecture
+
+### Class Hierarchy
+
+```
+MLModelOperation (interface)
+  └── MLSupervisedDimReductionOperation (abstract base)
+        └── LogitProjectionOperation (concrete)
+```
+
+`MLSupervisedDimReductionOperation` parallels `MLDimReductionOperation` for unsupervised
+reduction. It adds a labeled `fitTransform()` method while routing `train()` to `fitTransform()`
+(discarding the output) so the operation is compatible with the standard registry workflow.
+
+### Pimpl Pattern
+
+The implementation uses the pimpl idiom to isolate `mlpack.hpp` from consumers:
+
+```
+LogitProjectionOperation.hpp  →  MLSupervisedDimReductionOperation (public API)
+LogitProjectionOperation.cpp  →  mlpack::SoftmaxRegression<arma::mat> (hidden)
+```
+
+The `Impl` struct holds:
+
+- `std::unique_ptr<mlpack::SoftmaxRegression<arma::mat>>` — the trained model (used only during `fitTransform`)
+- `arma::mat weight_matrix` — extracted weight matrix $W$ of shape $(C \times D)$
+- `arma::vec bias` — extracted bias vector $b$ of shape $(C)$
+- `num_classes`, `num_features`, `col_names` — metadata
+- `trained` — readiness flag
+
+After `fitTransform()`, the mlpack model is retained in memory. After `load()`, the model pointer
+is null — `transform()` works without mlpack in both cases because it uses the extracted $W$ and
+$b$ directly.
+
+### Training and Weight Extraction
+
+Training uses `fitIntercept=true` for better model expressiveness:
+
+```cpp
+ens::L_BFGS optimizer;
+optimizer.MaxIterations() = max_iterations;
+
+model = std::make_unique<SRModel>(
+    features, labels, num_classes, optimizer, lambda, true);  // fitIntercept=true
+```
+
+With `fitIntercept=true`, `Parameters()` returns a $(C \times (D+1))$ matrix:
+
+- **Column 0**: bias vector
+- **Columns 1..D**: weight matrix
+
+Extraction:
+
+```cpp
+bias = model->Parameters().col(0);           // (C,)
+weight_matrix = model->Parameters().cols(1, D);  // (C, D)
+```
+
+### Feature Scaling Absorption
+
+When `scale_features=true`, features are standardized before training, but rather than storing the
+scaling parameters separately, the scaling is **absorbed into $W$ and $b$** at training time:
+
+$$W_{\text{eff}} = W \oslash \sigma^T, \quad b_{\text{eff}} = b - W_{\text{eff}} \cdot \mu$$
+
+where $\mu$ and $\sigma$ are the per-feature mean and standard deviation. This means `transform()`
+is always simply:
+
+$$\text{result} = W \cdot X + b_{\text{broadcast}}$$
+
+with no scaling logic at inference time, regardless of whether `scale_features` was set.
+
+### Logit Computation
+
+The forward pass for new data $X \in \mathbb{R}^{D \times N}$:
+
+```cpp
+result = weight_matrix * features;   // (C, N)
+result.each_col() += bias;           // broadcast add bias
+```
+
+### Serialization
+
+Save/load stores only $W$ and $b$ (not the mlpack model), using `cereal::BinaryOutputArchive`:
+
+```
+[num_classes][num_features][col_names][weight_matrix][bias]
+```
+
+This makes the serialized artifact self-contained for inference without mlpack dependencies.
+
+## Output Column Names
+
+Column names follow the convention `"Logit:0"`, `"Logit:1"`, ..., `"Logit:C-1"`. These can be
+overridden downstream (e.g., replaced with actual interval or class names).
+
+## Usage Example
+
+```cpp
+#include "models/supervised/LogitProjectionOperation.hpp"
+#include "models/MLModelParameters.hpp"
+
+using namespace MLCore;
+
+// Training
+LogitProjectionOperation lp;
+LogitProjectionParameters params;
+params.lambda = 0.001;
+params.scale_features = true;
+
+arma::mat logits;  // (C × N) output
+lp.fitTransform(features, labels, &params, logits);
+
+// Inference on new data
+arma::mat new_logits;
+lp.transform(new_features, new_logits);
+
+// Query metadata
+std::size_t C = lp.outputDimensions();      // number of classes
+auto names = lp.outputColumnNames();        // ["Logit:0", ...]
+
+// Save/load
+std::ostringstream oss;
+lp.save(oss);
+LogitProjectionOperation loaded;
+std::istringstream iss(oss.str());
+loaded.load(iss);  // can call transform() immediately
+
+// Via Registry
+MLModelRegistry registry;
+auto model = registry.create("Logit Projection");
+model->train(features, labels, &params);
+```
+
+## Error Handling
+
+| Condition | `fitTransform` | `transform` |
+|---|---|---|
+| Empty features | Returns `false` | Returns `false` |
+| Empty labels | Returns `false` | — |
+| Column count mismatch | Returns `false` | — |
+| Single class (< 2 classes) | Returns `false` | — |
+| Feature dimension mismatch | — | Returns `false` |
+| Untrained model | — | Returns `false` |
+| Save while untrained | Returns `false` | — |
+
+All errors are logged to `std::cerr` with function name and details.
+
+## Tests
+
+The test file `tests/MLCore/LogitProjectionOperation.test.cpp` covers:
+
+- **Metadata**: name, task type, default parameters, untrained state
+- **Binary (2-class) fitTransform**: output shape, training state, column names
+- **Multi-class (3-class) fitTransform**: output shape, class separation >95%
+- **transform consistency**: logits from `transform()` are numerically identical to `fitTransform()` output
+- **Error handling**: all failure modes above
+- **scale_features**: succeeds and `transform()` is consistent
+- **Save/load round-trip**: identical transforms after reload
+- **Registry integration**: create by name, use via `train()`
+
+All 79 assertions pass across 9 test cases.

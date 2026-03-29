@@ -7,12 +7,16 @@
 
 #include "supervised/HiddenMarkovModelOperation.hpp"
 #include "supervised/LogisticRegressionOperation.hpp"
+#include "supervised/LogitProjectionOperation.hpp"
 #include "supervised/NaiveBayesOperation.hpp"
 #include "supervised/RandomForestOperation.hpp"
+#include "supervised/SoftmaxRegressionOperation.hpp"
 #include "unsupervised/DBSCANOperation.hpp"
 #include "unsupervised/GaussianMixtureOperation.hpp"
 #include "unsupervised/KMeansOperation.hpp"
 #include "unsupervised/PCAOperation.hpp"
+#include "unsupervised/RobustPCAOperation.hpp"
+#include "unsupervised/TSNEOperation.hpp"
 
 #include <algorithm>
 
@@ -27,11 +31,15 @@ MLModelRegistry::MLModelRegistry() {
     registerModel<RandomForestOperation>();
     registerModel<NaiveBayesOperation>();
     registerModel<LogisticRegressionOperation>();
+    registerModel<LogitProjectionOperation>();
+    registerModel<SoftmaxRegressionOperation>();
     registerModel<HiddenMarkovModelOperation>();
     registerModel<KMeansOperation>();
     registerModel<DBSCANOperation>();
     registerModel<GaussianMixtureOperation>();
     registerModel<PCAOperation>();
+    registerModel<RobustPCAOperation>();
+    registerModel<TSNEOperation>();
 }
 
 // ============================================================================

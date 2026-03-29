@@ -5,6 +5,7 @@ set(SCATTER_PLOT_WIDGET_SOURCES
         Core/BuildScatterPoints.cpp
         Core/BuildScatterPoints.hpp
         Core/ScatterAxisSource.hpp
+        Core/ScatterColorConfig.hpp
         Core/ScatterPlotState.cpp
         Core/ScatterPlotState.hpp
         Core/ScatterPointData.hpp
@@ -48,11 +49,13 @@ target_link_libraries(ScatterPlotWidget PUBLIC EditorState)
 target_link_libraries(ScatterPlotWidget PRIVATE DataManager)
 target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::TensorData)
+target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::DigitalTimeSeries)
 
 target_link_libraries(ScatterPlotWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE Collapsible_Widget)
 target_link_libraries(ScatterPlotWidget PRIVATE GlyphStyleWidget)
+target_link_libraries(ScatterPlotWidget PRIVATE ColormapControls)
 target_link_libraries(ScatterPlotWidget PRIVATE CorePlotting)
 target_link_libraries(ScatterPlotWidget PRIVATE PlottingOpenGL)
 target_link_libraries(ScatterPlotWidget PRIVATE TooltipManager)

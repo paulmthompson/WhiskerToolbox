@@ -1,0 +1,481 @@
+---
+title: "GLM-HMM for Whisker Contact Detection Using ssm"
+---
+
+## Overview
+
+This guide walks through fitting a **GLM-HMM** (Generalized Linear Model–Hidden Markov
+Model) to classify whisker contact frames using deep-learning encoder features and the
+[ssm](https://github.com/lindermanlab/ssm) library.
+
+A **standard HMM** models contact/no-contact as hidden states emitting
+high-dimensional features from a Gaussian distribution. At high frame rates this
+struggles because (1) the transition matrix is overwhelmingly self-transitioning,
+(2) full covariance in 192 dimensions is underdetermined without enormous data,
+and (3) the transition dynamics cannot adapt to the feature context.
+
+A **GLM-HMM with input-driven observations** (Ashwood et al., 2022) solves these
+problems. Instead of modelling the features as emissions, it treats them as
+**inputs** to a per-state logistic regression that predicts a **binary contact
+label**:
+
+$$
+P(y_t = \text{contact} \mid z_t = k,\; \mathbf{u}_t) =
+\sigma(\mathbf{w}_k^\top \mathbf{u}_t)
+$$
+
+Each state $k$ has its own weight vector $\mathbf{w}_k$, so different states
+capture different feature→contact relationships (e.g., pole-present vs.
+pole-absent dynamics). The hidden states are discovered by EM.
+
+## Prerequisites
+
+| Requirement | Details |
+|---|---|
+| WhiskerToolbox | Built with Python bindings enabled |
+| ssm | `pip install ssm` (see [ssm install guide](https://github.com/lindermanlab/ssm#installation)) |
+| numpy, matplotlib | Standard scientific Python stack |
+| Encoder features | Extracted via Deep Learning widget → stored as `TensorData` |
+| Labeled intervals | Contact labels created via [Label Video Intervals](label_video_intervals.qmd) |
+
+## Data Contract
+
+Both training and prediction rely on three objects in a single `DataManager`
+session:
+
+| Key | Type | Description |
+|---|---|---|
+| `features` | `TensorData` (2D) | Shape $[T, D]$ — encoder features per frame |
+| `train` | `DigitalIntervalSeries` | Training block intervals (start/end frames) |
+| `contact` | `DigitalIntervalSeries` | Contact intervals within training blocks |
+
+**Output:** A new `DigitalIntervalSeries` written back to `DataManager` with
+predicted contact intervals from the GLM-HMM.
+
+## Pipeline
+
+```
+Encoder Features (TensorData)       Contact Labels (DigitalIntervalSeries)
+        │                                         │
+        │  inputs u_t ∈ ℝ^D                       │  observations y_t ∈ {0,1}
+        ▼                                         ▼
+  ┌───────────────────────────────────────────────────┐
+  │                   GLM-HMM (ssm)                   │
+  │                                                   │
+  │  K states, each with weight vector w_k            │
+  │  P(y_t = 1 | z_t=k, u_t) = σ(w_k^T u_t)         │
+  │  Transitions: P(z_t | z_{t-1}) standard or sticky │
+  │                                                   │
+  │  Training: EM on labeled blocks                   │
+  └──────────────────────┬────────────────────────────┘
+                         │
+                         ▼
+  ┌───────────────────────────────────────────────────┐
+  │  Viterbi decode on labeled data OR                │
+  │  Forward-predict on unlabeled data                │
+  └──────────────────────┬────────────────────────────┘
+                         │
+                         ▼
+           DigitalIntervalSeries (predicted contact)
+```
+
+## Step 1: Extract Data from DataManager {#sec-step1}
+
+```python
+import numpy as np
+import whisker_toolbox as wt
+
+dm = wt.DataManager()
+
+# --- Encoder features: shape (T, D) ---
+features_td = dm.getData("features")          # TensorData
+X_all = np.array(features_td.values, copy=True)  # writable copy
+T_total, D = X_all.shape
+print(f"Feature matrix: {T_total} frames × {D} dimensions")
+
+# --- Training block intervals ---
+train_intervals = dm.getData("train").toList()
+print(f"Training blocks: {len(train_intervals)}")
+for iv in train_intervals:
+    print(f"  [{iv.start}, {iv.end})")
+
+# --- Contact intervals ---
+contact_intervals = dm.getData("contact").toList()
+print(f"Contact intervals: {len(contact_intervals)}")
+```
+
+## Step 2: Build Binary Labels from Intervals {#sec-step2}
+
+We need a frame-level binary label vector $y_t \in \{0, 1\}$ for each training
+block. ssm expects a **list of sessions** (one array per training block).
+
+```python
+def intervals_to_binary(total_frames, intervals):
+    """Convert a list of Interval objects to a binary array of shape (total_frames,)."""
+    labels = np.zeros(total_frames, dtype=int)
+    for iv in intervals:
+        labels[iv.start:iv.end] = 1
+    return labels
+
+# Build per-frame binary contact labels over the entire session
+y_all = intervals_to_binary(T_total, contact_intervals)
+
+# Split into per-block arrays (ssm expects a list of sessions)
+X_blocks = []  # list of (T_block, D) arrays — inputs
+y_blocks = []  # list of (T_block, 1) arrays — observations
+
+for iv in train_intervals:
+    s, e = int(iv.start), int(iv.end)
+    X_blocks.append(X_all[s:e])
+    # ssm requires observations shape (T, obs_dim) with obs_dim=1
+    y_blocks.append(y_all[s:e].reshape(-1, 1))
+
+print(f"Prepared {len(X_blocks)} training blocks")
+for i, (xb, yb) in enumerate(zip(X_blocks, y_blocks)):
+    n_contact = yb.sum()
+    print(f"  Block {i}: {len(yb)} frames, {n_contact} contact ({100*n_contact/len(yb):.1f}%)")
+```
+
+## Step 3: Create the GLM-HMM {#sec-step3}
+
+```python
+import ssm
+
+num_states = 3         # K: number of hidden behavioral states
+obs_dim = 1            # y_t is scalar (binary contact label)
+num_categories = 2     # binary outcome: contact / no-contact
+input_dim = D          # encoder feature dimensionality
+
+glmhmm = ssm.HMM(
+    num_states,
+    obs_dim,
+    input_dim,
+    observations="input_driven_obs",
+    observation_kwargs=dict(C=num_categories),
+    transitions="standard",
+)
+print(f"GLM-HMM: {num_states} states, {input_dim}-dim inputs, {num_categories} categories")
+```
+
+### Choosing the number of states
+
+- **K=2** is the minimum: one state for "contact-responsive" frames and one for
+  "non-responsive".
+- **K=3** is recommended: adds a transition/ambiguous state that absorbs
+  boundary uncertainty.
+- Higher K may overfit; use cross-validation (see [Step 6](#sec-step6)) to select.
+
+### MAP estimation (optional)
+
+If data is limited, add a prior to regularise the GLM weights:
+
+```python
+prior_sigma = 2    # Gaussian prior σ on GLM weights
+prior_alpha = 2    # Dirichlet prior α on transition rows
+
+glmhmm_map = ssm.HMM(
+    num_states,
+    obs_dim,
+    input_dim,
+    observations="input_driven_obs",
+    observation_kwargs=dict(C=num_categories, prior_sigma=prior_sigma),
+    transitions="sticky",
+    transition_kwargs=dict(alpha=prior_alpha, kappa=0),
+)
+```
+
+## Step 4: Fit the Model with EM {#sec-step4}
+
+```python
+N_iters = 200      # max EM iterations
+tolerance = 1e-4   # stop early if LL improvement < tolerance
+
+fit_ll = glmhmm.fit(
+    y_blocks,
+    inputs=X_blocks,
+    method="em",
+    num_iters=N_iters,
+    tolerance=tolerance,
+)
+print(f"Final log-likelihood: {fit_ll[-1]:.2f}")
+```
+
+### Multiple initialisations
+
+EM finds a local optimum. Run several random initialisations and keep the best:
+
+```python
+best_ll = -np.inf
+best_model = None
+
+for init in range(5):
+    candidate = ssm.HMM(
+        num_states, obs_dim, input_dim,
+        observations="input_driven_obs",
+        observation_kwargs=dict(C=num_categories),
+        transitions="standard",
+    )
+    ll = candidate.fit(y_blocks, inputs=X_blocks, method="em",
+                       num_iters=N_iters, tolerance=tolerance)
+    if ll[-1] > best_ll:
+        best_ll = ll[-1]
+        best_model = candidate
+
+glmhmm = best_model
+print(f"Best log-likelihood across initialisations: {best_ll:.2f}")
+```
+
+### Plot convergence
+
+```python
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(5, 3))
+ax.plot(fit_ll)
+ax.set_xlabel("EM Iteration")
+ax.set_ylabel("Log Probability")
+ax.set_title("GLM-HMM Training Convergence")
+plt.tight_layout()
+plt.show()
+```
+
+## Step 5: Decode and Inspect {#sec-step5}
+
+### Viterbi decoding (most likely state sequence)
+
+```python
+# Decode each training block
+for i, (yb, xb) in enumerate(zip(y_blocks, X_blocks)):
+    states = glmhmm.most_likely_states(yb, input=xb)
+    print(f"Block {i}: states = {np.unique(states, return_counts=True)}")
+```
+
+### Posterior state probabilities
+
+```python
+posterior_probs = [
+    glmhmm.expected_states(data=yb, input=xb)[0]
+    for yb, xb in zip(y_blocks, X_blocks)
+]
+
+# Plot posterior for the first block
+fig, axes = plt.subplots(num_states + 1, 1, figsize=(10, 2 * (num_states + 1)),
+                         sharex=True)
+block_idx = 0
+for k in range(num_states):
+    axes[k].plot(posterior_probs[block_idx][:, k], label=f"State {k+1}")
+    axes[k].set_ylabel(f"P(z={k+1})")
+    axes[k].set_ylim(-0.05, 1.05)
+
+axes[-1].plot(y_blocks[block_idx], color="black", alpha=0.5)
+axes[-1].set_ylabel("Contact label")
+axes[-1].set_xlabel("Frame (within block)")
+plt.tight_layout()
+plt.show()
+```
+
+### Inspect learned transition matrix
+
+```python
+trans_mat = np.exp(glmhmm.transitions.log_Ps)
+print("Transition matrix:")
+print(np.around(trans_mat, decimals=3))
+```
+
+### Inspect per-state GLM weights
+
+```python
+weights = glmhmm.observations.params  # shape (K, C-1, input_dim)
+for k in range(num_states):
+    w = weights[k, 0, :]  # weight vector for state k (C-1 = 1 for binary)
+    print(f"State {k+1}: ||w|| = {np.linalg.norm(w):.3f}, "
+          f"top-5 features = {np.argsort(np.abs(w))[-5:][::-1]}")
+```
+
+## Step 6: Predict Contact on Unlabeled Data {#sec-step6}
+
+After training, we can predict frame-level contact probability on **new data
+where labels are unavailable**. The key insight is that the per-state GLM weights
+give $P(y=1 \mid z_t=k,\; \mathbf{u}_t)$ and the transition model gives
+$P(z_t \mid z_{t-1})$.
+
+We use **forward filtering** to compute $P(z_t \mid \mathbf{u}_{1:t})$ and then
+marginalise over states:
+
+$$
+P(y_t = 1 \mid \mathbf{u}_{1:t}) = \sum_{k=1}^{K}
+P(y_t = 1 \mid z_t = k, \mathbf{u}_t)\;
+P(z_t = k \mid \mathbf{u}_{1:t})
+$$
+
+```python
+from scipy.special import expit  # sigmoid function
+
+
+def predict_contact(glmhmm, X_new):
+    """Predict per-frame contact probability on unlabeled data.
+
+    Parameters
+    ----------
+    glmhmm : ssm.HMM
+        Fitted GLM-HMM with input_driven_obs observations.
+    X_new : np.ndarray, shape (T, D)
+        Encoder features for the prediction segment.
+
+    Returns
+    -------
+    contact_prob : np.ndarray, shape (T,)
+        P(contact) per frame.
+    state_probs : np.ndarray, shape (T, K)
+        Forward-filtered state probabilities.
+    """
+    K = glmhmm.K
+    T_pred = X_new.shape[0]
+
+    # Extract model parameters
+    log_pi0 = glmhmm.init_state_distn.log_initial_state_distn(X_new)  # (K,)
+    log_A = glmhmm.transitions.log_Ps  # (K, K)
+    A = np.exp(log_A)
+    weights = glmhmm.observations.params  # (K, C-1, D)
+
+    # Per-state contact probability: P(y=1 | z=k, u_t) = sigmoid(w_k^T u_t)
+    # weights shape: (K, 1, D) for binary case
+    logits = X_new @ weights[:, 0, :].T  # (T, K)
+    p_contact_given_state = expit(logits)  # (T, K)
+
+    # Forward filtering (no observation updates — we don't have labels)
+    alpha = np.exp(log_pi0)  # (K,)
+    alpha = alpha / alpha.sum()
+
+    state_probs = np.zeros((T_pred, K))
+    state_probs[0] = alpha
+
+    for t in range(1, T_pred):
+        alpha = alpha @ A  # predict: (K,) @ (K,K) = (K,)
+        alpha = alpha / alpha.sum()
+        state_probs[t] = alpha
+
+    # Marginalise: P(y=1 | u_{1:t}) = sum_k P(y=1|z=k, u_t) * P(z=k)
+    contact_prob = np.sum(p_contact_given_state * state_probs, axis=1)
+
+    return contact_prob, state_probs
+```
+
+### Apply to a validation segment
+
+```python
+# Use frames outside training blocks as validation
+val_start = int(train_intervals[-1].end)  # after last training block
+val_end = min(val_start + 5000, T_total)  # up to 5000 frames
+X_val = X_all[val_start:val_end]
+
+contact_prob, state_probs = predict_contact(glmhmm, X_val)
+
+# Threshold to get binary predictions
+threshold = 0.5
+y_pred = (contact_prob >= threshold).astype(int)
+print(f"Predicted {y_pred.sum()} contact frames out of {len(y_pred)}")
+```
+
+## Step 7: Convert Predictions to Intervals and Write Back {#sec-step7}
+
+```python
+def binary_to_intervals(y_pred, offset=0):
+    """Convert a binary prediction array to a list of (start, end) tuples.
+
+    Parameters
+    ----------
+    y_pred : np.ndarray, shape (T,)
+        Binary predictions (0 or 1).
+    offset : int
+        Frame offset to add (e.g., if y_pred starts from frame val_start).
+
+    Returns
+    -------
+    intervals : list of (int, int)
+        Each tuple is (start_frame, end_frame) of a contiguous contact block.
+    """
+    intervals = []
+    in_interval = False
+    start = 0
+    for t in range(len(y_pred)):
+        if y_pred[t] == 1 and not in_interval:
+            start = t + offset
+            in_interval = True
+        elif y_pred[t] == 0 and in_interval:
+            intervals.append((start, t + offset))
+            in_interval = False
+    if in_interval:
+        intervals.append((start, len(y_pred) + offset))
+    return intervals
+
+# Convert to intervals
+pred_intervals = binary_to_intervals(y_pred, offset=val_start)
+print(f"Predicted {len(pred_intervals)} contact intervals")
+
+# Write back to DataManager
+result = wt.DigitalIntervalSeries()
+for s, e in pred_intervals:
+    result.addInterval(s, e)
+
+time_key = dm.getTimeKey("features")
+dm.setData("glm_hmm_contact", result, time_key)
+print("Wrote 'glm_hmm_contact' to DataManager")
+```
+
+## Cross-Validation {#sec-cv}
+
+To select $K$ and evaluate prediction quality, hold out one training block at a
+time:
+
+```python
+from sklearn.metrics import accuracy_score, f1_score
+
+def cross_validate(K, X_blocks, y_blocks, n_init=5, n_iters=200, tol=1e-4):
+    """Leave-one-block-out cross-validation for GLM-HMM."""
+    f1_scores = []
+    for held_out in range(len(X_blocks)):
+        X_train = [X_blocks[i] for i in range(len(X_blocks)) if i != held_out]
+        y_train = [y_blocks[i] for i in range(len(y_blocks)) if i != held_out]
+
+        best_ll = -np.inf
+        best_m = None
+        for _ in range(n_init):
+            m = ssm.HMM(K, 1, D,
+                        observations="input_driven_obs",
+                        observation_kwargs=dict(C=2),
+                        transitions="standard")
+            ll = m.fit(y_train, inputs=X_train, method="em",
+                       num_iters=n_iters, tolerance=tol)
+            if ll[-1] > best_ll:
+                best_ll = ll[-1]
+                best_m = m
+
+        # Predict on held-out block
+        prob, _ = predict_contact(best_m, X_blocks[held_out])
+        y_pred = (prob >= 0.5).astype(int)
+        y_true = y_blocks[held_out].ravel()
+        f1_scores.append(f1_score(y_true, y_pred))
+
+    return np.mean(f1_scores), np.std(f1_scores)
+
+for K in [2, 3, 4]:
+    mean_f1, std_f1 = cross_validate(K, X_blocks, y_blocks)
+    print(f"K={K}: F1 = {mean_f1:.3f} ± {std_f1:.3f}")
+```
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| EM converges but states are degenerate (one state used 99%) | Bad initialisation | Run more random initialisations (`n_init ≥ 10`) |
+| Log-likelihood decreases | Numerical overflow in 192-dim logistic regression | Standardise features: `X = (X - X.mean(0)) / X.std(0)` |
+| Fit is very slow | Too many features for the GLM | Reduce D via PCA before fitting |
+| Poor F1 on held-out blocks | Too few/many states, or insufficient data | Try different K; use MAP estimation with `prior_sigma=2` |
+
+## References
+
+- Ashwood, Z. C. et al. (2022). Mice alternate between discrete strategies
+  during perceptual decision-making. *Nature Neuroscience*, 25, 201–212.
+- [ssm GLM-HMM tutorial notebook](https://github.com/lindermanlab/ssm/blob/master/notebooks/2b-Input-Driven-Observations-(GLM-HMM).ipynb)
+- [GLM-HMM Roadmap](../../../docs/developer/MLCore/GLM_HMM_Roadmap.md) (internal)

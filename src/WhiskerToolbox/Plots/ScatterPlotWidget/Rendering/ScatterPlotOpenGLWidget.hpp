@@ -31,6 +31,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_set>
+#include <vector>
 
 namespace WhiskerToolbox::Plots {
 class PlotTooltipManager;
@@ -138,6 +139,9 @@ private:
     bool _opengl_initialized{false};
     ScatterPointData _scatter_data;
 
+    /// Cached per-point feature color values (parallel to _scatter_data), for tooltip display
+    std::vector<std::optional<float>> _feature_values;
+
     // Tooltip manager
     std::unique_ptr<WhiskerToolbox::Plots::PlotTooltipManager> _tooltip_mgr;
 
@@ -191,6 +195,15 @@ private:
      * @return EntityId if the point has an associated entity
      */
     [[nodiscard]] std::optional<EntityId> getEntityIdForPoint(std::size_t index) const;
+
+    /**
+     * @brief Apply feature-based coloring to glyph batches
+     *
+     * When the color config has mode "by_feature", resolves per-point float values
+     * from the configured data source and applies colormap or threshold colors.
+     * Caches resolved values in _feature_values for tooltip display.
+     */
+    void applyFeatureColorsToSceneImpl();
 
     /**
      * @brief Apply group colors to the glyph batch after scene construction

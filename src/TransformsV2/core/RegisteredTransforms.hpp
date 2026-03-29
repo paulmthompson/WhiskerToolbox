@@ -29,8 +29,6 @@
  * See PipelineValueStore.hpp and ParameterBinding.hpp for the V2 mechanisms.
  */
 
-#include "core/PipelineLoader.hpp"
-
 namespace WhiskerToolbox::Transforms::V2 {
 
 // V2 transforms use pre-reductions and parameter bindings instead of preprocessing.

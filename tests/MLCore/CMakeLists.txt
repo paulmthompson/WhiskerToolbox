@@ -27,7 +27,12 @@ add_executable(test_MLCore
     LabelAssembler.test.cpp
     PCA_HMM_Equivalence.test.cpp
     PCAOperation.test.cpp
+    RobustPCAOperation.test.cpp
+    TSNEOperation.test.cpp
     LogisticRegressionOperation.test.cpp
+    LogitProjectionOperation.test.cpp
+    SoftmaxRegressionOperation.test.cpp
+    SupervisedDimReductionPipeline.test.cpp
     MLModelOperation.test.cpp
     NaiveBayesOperation.test.cpp
     PredictionWriter.test.cpp

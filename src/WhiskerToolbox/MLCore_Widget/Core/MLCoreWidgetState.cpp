@@ -58,6 +58,8 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit outputPredictionsChanged(_data.output_predictions);
         emit constrainedDecodingChanged(_data.constrained_decoding);
         emit hmmDiagonalCovarianceChanged(_data.hmm_diagonal_covariance);
+        emit hmmGMMEmissionsChanged(_data.hmm_gmm_emissions);
+        emit hmmNumGaussiansChanged(_data.hmm_num_gaussians);
         emit activeTabChanged(_data.active_tab);
         emit clusteringTensorKeyChanged(QString::fromStdString(_data.clustering_tensor_key));
         emit clusteringModelNameChanged(QString::fromStdString(_data.clustering_model_name));
@@ -138,6 +140,30 @@ void MLCoreWidgetState::setHmmDiagonalCovariance(bool enabled) {
 
 bool MLCoreWidgetState::hmmDiagonalCovariance() const {
     return _data.hmm_diagonal_covariance;
+}
+
+void MLCoreWidgetState::setHmmGMMEmissions(bool enabled) {
+    if (_data.hmm_gmm_emissions != enabled) {
+        _data.hmm_gmm_emissions = enabled;
+        markDirty();
+        emit hmmGMMEmissionsChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::hmmGMMEmissions() const {
+    return _data.hmm_gmm_emissions;
+}
+
+void MLCoreWidgetState::setHmmNumGaussians(int n) {
+    if (_data.hmm_num_gaussians != n) {
+        _data.hmm_num_gaussians = n;
+        markDirty();
+        emit hmmNumGaussiansChanged(n);
+    }
+}
+
+int MLCoreWidgetState::hmmNumGaussians() const {
+    return _data.hmm_num_gaussians;
 }
 
 // === Label configuration ===

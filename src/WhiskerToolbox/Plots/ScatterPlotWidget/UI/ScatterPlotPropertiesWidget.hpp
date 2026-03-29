@@ -18,12 +18,15 @@
 
 #include <memory>
 
+class ColormapControls;
 class DataManager;
 class GlyphStyleControls;
 class HorizontalAxisRangeControls;
 class QCheckBox;
 class QComboBox;
+class QDoubleSpinBox;
 class QLabel;
+class QPushButton;
 class QSpinBox;
 class ScatterPlotWidget;
 class Section;
@@ -76,6 +79,19 @@ private:
     void _onSelectionModeChanged(int index);
     void _updateSelectionInstructions();
 
+    // Point coloring methods
+    void _createPointColoringUI();
+    void _populateColorKeyCombo();
+    void _populateColorColumnCombo(std::string const & data_key);
+    void _onColorModeChanged(int index);
+    void _onColorKeyChanged();
+    void _onColorColumnChanged();
+    void _onMappingModeChanged(int index);
+    void _applyColorConfigToState();
+    void _updateColorCompatibilityLabel();
+    void _updateColorUIFromState();
+    void _updateColorUIVisibility();
+
     Ui::ScatterPlotPropertiesWidget * ui;
     std::shared_ptr<ScatterPlotState> _state;
     std::shared_ptr<DataManager> _data_manager;
@@ -116,6 +132,22 @@ private:
     Section * _horizontal_range_controls_section{nullptr};
     VerticalAxisRangeControls * _vertical_range_controls{nullptr};
     Section * _vertical_range_controls_section{nullptr};
+
+    // Point coloring
+    Section * _color_section{nullptr};
+    QComboBox * _color_mode_combo{nullptr};
+    QComboBox * _color_key_combo{nullptr};
+    QComboBox * _color_column_combo{nullptr};
+    QLabel * _color_column_label{nullptr};
+    QLabel * _color_compat_label{nullptr};
+    QComboBox * _mapping_mode_combo{nullptr};
+    ColormapControls * _colormap_controls{nullptr};
+    QDoubleSpinBox * _threshold_spin{nullptr};
+    QPushButton * _above_color_button{nullptr};
+    QPushButton * _below_color_button{nullptr};
+    QLabel * _threshold_label{nullptr};
+    QLabel * _above_color_label{nullptr};
+    QLabel * _below_color_label{nullptr};
 
     // Guard to prevent feedback loops during combo box population
     bool _updating_combos{false};
