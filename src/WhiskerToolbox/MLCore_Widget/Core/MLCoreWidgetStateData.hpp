@@ -162,6 +162,30 @@ struct MLCoreWidgetStateData {
     /// Whether to z-score normalize features before reduction
     bool dim_reduction_zscore_normalize = false;
 
+    /// Whether the dim reduction panel is in supervised mode
+    bool dim_reduction_supervised = false;
+
+    /// Label source type for supervised dim reduction: "intervals", "groups", "entity_groups", "events"
+    std::string dim_reduction_label_source_type = "intervals";
+
+    /// DigitalIntervalSeries key for interval-based labels (supervised mode)
+    std::string dim_reduction_label_interval_key;
+
+    /// Positive class name for binary label modes (supervised mode)
+    std::string dim_reduction_label_positive_class = "Inside";
+
+    /// Negative class name for binary label modes (supervised mode)
+    std::string dim_reduction_label_negative_class = "Outside";
+
+    /// DigitalEventSeries key for event-based labels (supervised mode)
+    std::string dim_reduction_label_event_key;
+
+    /// EntityGroupManager group IDs for group-based labels (supervised mode)
+    std::vector<uint64_t> dim_reduction_label_group_ids;
+
+    /// DataManager key for data-entity group labeling (supervised mode)
+    std::string dim_reduction_label_data_key;
+
     // === UI state ===
 
     /// Active workflow tab index (0 = classification, 1 = clustering)

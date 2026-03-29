@@ -81,6 +81,8 @@ struct ClusteringPipelineConfig;
 struct ClusteringPipelineResult;
 struct DimReductionPipelineConfig;
 struct DimReductionPipelineResult;
+struct SupervisedDimReductionPipelineConfig;
+struct SupervisedDimReductionPipelineResult;
 }// namespace MLCore
 
 class MLCoreWidget : public QWidget, public DataFocusAware {
@@ -153,6 +155,16 @@ signals:
      */
     void _dimReductionPipelineFinished();
 
+    /**
+     * @brief Emitted from the worker thread to report supervised dim reduction progress
+     */
+    void _supervisedDimReductionProgressReported(int stage_index, QString message);
+
+    /**
+     * @brief Emitted when the supervised dim reduction pipeline finishes
+     */
+    void _supervisedDimReductionPipelineFinished();
+
 private slots:
     void _onTrainRequested();
     void _onPredictRequested();
@@ -166,6 +178,10 @@ private slots:
     void _onDimReductionRunRequested();
     void _onDimReductionProgress(int stage_index, QString const & message);
     void _onDimReductionPipelineComplete();
+
+    void _onSupervisedDimReductionRunRequested();
+    void _onSupervisedDimReductionProgress(int stage_index, QString const & message);
+    void _onSupervisedDimReductionPipelineComplete();
 
 private:
     void _setupUi();
@@ -185,6 +201,13 @@ private:
     [[nodiscard]] MLCore::DimReductionPipelineConfig _buildDimReductionPipelineConfig() const;
     void _runDimReductionPipelineAsync(MLCore::DimReductionPipelineConfig config);
     void _setDimReductionPipelineRunning(bool running);
+
+    [[nodiscard]] bool _validateSupervisedDimReductionPanels() const;
+    [[nodiscard]] MLCore::SupervisedDimReductionPipelineConfig
+    _buildSupervisedDimReductionPipelineConfig() const;
+    void _runSupervisedDimReductionPipelineAsync(
+            MLCore::SupervisedDimReductionPipelineConfig config);
+    void _setSupervisedDimReductionPipelineRunning(bool running);
 
     /**
      * @brief Select all entities in a group via SelectionContext
@@ -234,9 +257,12 @@ private:
     std::unique_ptr<MLCore::ClassificationPipelineResult> _last_result;
     std::unique_ptr<MLCore::ClusteringPipelineResult> _last_clustering_result;
     std::unique_ptr<MLCore::DimReductionPipelineResult> _last_dim_reduction_result;
+    std::unique_ptr<MLCore::SupervisedDimReductionPipelineResult>
+            _last_supervised_dim_reduction_result;
     bool _pipeline_running = false;
     bool _clustering_pipeline_running = false;
     bool _dim_reduction_pipeline_running = false;
+    bool _supervised_dim_reduction_pipeline_running = false;
 };
 
 #endif// MLCORE_WIDGET_HPP

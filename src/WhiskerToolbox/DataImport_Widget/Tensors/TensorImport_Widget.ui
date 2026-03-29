@@ -7,13 +7,13 @@
                 <x>0</x>
                 <y>0</y>
                 <width>400</width>
-                <height>200</height>
+                <height>400</height>
             </rect>
         </property>
         <property name="windowTitle">
             <string>Tensor Import</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
+        <layout class="QVBoxLayout" name="mainVerticalLayout">
             <item>
                 <layout class="QHBoxLayout" name="dataNameLayout">
                     <item>
@@ -33,10 +33,73 @@
                 </layout>
             </item>
             <item>
-                <widget class="QPushButton" name="load_numpy_button">
-                    <property name="text">
-                        <string>Load Numpy Array (.npy)</string>
+                <layout class="QHBoxLayout" name="loaderTypeLayout">
+                    <item>
+                        <widget class="QLabel" name="label_loader_type">
+                            <property name="text">
+                                <string>Format:</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QComboBox" name="loader_type_combo">
+                            <item>
+                                <property name="text">
+                                    <string>NumPy</string>
+                                </property>
+                            </item>
+                            <item>
+                                <property name="text">
+                                    <string>CSV</string>
+                                </property>
+                            </item>
+                        </widget>
+                    </item>
+                    <item>
+                        <spacer name="loaderTypeSpacer">
+                            <property name="orientation">
+                                <enum>Qt::Orientation::Horizontal</enum>
+                            </property>
+                            <property name="sizeHint" stdset="0">
+                                <size>
+                                    <width>40</width>
+                                    <height>20</height>
+                                </size>
+                            </property>
+                        </spacer>
+                    </item>
+                </layout>
+            </item>
+            <item>
+                <widget class="QStackedWidget" name="stacked_loader_options">
+                    <property name="currentIndex">
+                        <number>0</number>
                     </property>
+                    <widget class="QWidget" name="numpy_page">
+                        <layout class="QVBoxLayout" name="numpyPageLayout">
+                            <item>
+                                <widget class="QPushButton" name="load_numpy_button">
+                                    <property name="text">
+                                        <string>Load Numpy Array (.npy)</string>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <spacer name="numpySpacer">
+                                    <property name="orientation">
+                                        <enum>Qt::Orientation::Vertical</enum>
+                                    </property>
+                                    <property name="sizeHint" stdset="0">
+                                        <size>
+                                            <width>20</width>
+                                            <height>40</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                            </item>
+                        </layout>
+                    </widget>
+                    <widget class="CSVTensorImport_Widget" name="csv_tensor_import_widget"/>
                 </widget>
             </item>
             <item>
@@ -54,6 +117,14 @@
             </item>
         </layout>
     </widget>
+    <customwidgets>
+        <customwidget>
+            <class>CSVTensorImport_Widget</class>
+            <extends>QWidget</extends>
+            <header>Tensors/CSV/CSVTensorImport_Widget.hpp</header>
+            <container>1</container>
+        </customwidget>
+    </customwidgets>
     <resources/>
     <connections/>
 </ui>

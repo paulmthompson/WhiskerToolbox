@@ -31,8 +31,10 @@
 
 #include <QWidget>
 
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 class DataManager;
 class MLCoreWidgetState;
@@ -74,18 +76,54 @@ public:
     /// Get the output key for the reduced TensorData
     [[nodiscard]] std::string outputKey() const;
 
+    /// Whether the panel is in supervised mode
+    [[nodiscard]] bool isSupervisedMode() const;
+
     /// Whether the panel has valid configuration for running
     [[nodiscard]] bool hasValidConfiguration() const;
 
     /// Create parameters for the selected algorithm
     [[nodiscard]] std::unique_ptr<MLCore::MLModelParametersBase> currentParameters() const;
 
-    /// Show results after a successful pipeline run
+    // === Supervised mode accessors ===
+
+    /// Get the label source type ("intervals", "groups", "entity_groups", "events")
+    [[nodiscard]] std::string labelSourceType() const;
+
+    /// Get the selected interval key (for interval label mode)
+    [[nodiscard]] std::string labelIntervalKey() const;
+
+    /// Get the positive class name (for interval/event modes)
+    [[nodiscard]] std::string labelPositiveClassName() const;
+
+    /// Get the negative class name (for interval/event modes)
+    [[nodiscard]] std::string labelNegativeClassName() const;
+
+    /// Get the selected event key (for event label mode)
+    [[nodiscard]] std::string labelEventKey() const;
+
+    /// Get the selected group IDs (for group label modes)
+    [[nodiscard]] std::vector<uint64_t> selectedGroupIds() const;
+
+    /// Get the selected data key (for data entity group mode)
+    [[nodiscard]] std::string labelDataKey() const;
+
+    /// Show results after a successful unsupervised pipeline run
     void showResults(std::size_t num_observations,
                      std::size_t num_input_features,
                      std::size_t num_output_components,
                      std::size_t rows_dropped,
                      std::vector<double> const & explained_variance);
+
+    /// Show results after a successful supervised pipeline run
+    void showSupervisedResults(std::size_t num_observations,
+                               std::size_t num_training_observations,
+                               std::size_t num_input_features,
+                               std::size_t num_output_dimensions,
+                               std::size_t rows_dropped,
+                               std::size_t unlabeled_count,
+                               std::size_t num_classes,
+                               std::vector<std::string> const & class_names);
 
     /// Clear any displayed results
     void clearResults();
@@ -94,9 +132,15 @@ public slots:
     /// Refresh TensorData key list from DataManager
     void refreshTensorList();
 
+    /// Refresh label source combos from DataManager
+    void refreshLabelSources();
+
 signals:
-    /// Emitted when the user clicks "Run Reduction"
+    /// Emitted when the user clicks "Run Reduction" in unsupervised mode
     void runRequested();
+
+    /// Emitted when the user clicks "Run Reduction" in supervised mode
+    void supervisedRunRequested();
 
     /// Emitted when the selected tensor changes
     void tensorSelectionChanged(QString const & key);
@@ -105,6 +149,12 @@ private slots:
     void _onTensorComboChanged(int index);
     void _onAlgorithmChanged(int index);
     void _onRunClicked();
+    void _onModeToggled(bool supervised);
+    void _onLabelSourceChanged(int index);
+    void _onAddGroupClicked();
+    void _onRemoveGroupClicked();
+    void _onAddDataGroupClicked();
+    void _onRemoveDataGroupClicked();
 
 private:
     void _setupConnections();
@@ -114,13 +164,30 @@ private:
     void _restoreFromState();
     void _syncToState();
     void _updateOutputKeyFromInput();
+    void _updateSupervisedVisibility(bool supervised);
+    void _populateLabelSourceCombo();
+    void _refreshIntervalCombo();
+    void _refreshGroupCombo();
+    void _refreshDataKeyCombo();
+    void _refreshDataGroupCombo();
+    void _refreshEventCombo();
+    void _rebuildGroupClassList();
+    void _rebuildDataGroupClassList();
+    void _syncGroupIdsToState();
 
     Ui::DimReductionPanel * ui;
     std::shared_ptr<MLCoreWidgetState> _state;
     std::shared_ptr<DataManager> _data_manager;
     std::unique_ptr<MLCore::MLModelRegistry> _registry;
     int _dm_observer_id = -1;
+    int _group_observer_id = -1;
     bool _updating = false;
+
+    /// Currently selected group IDs for entity groups mode
+    std::vector<uint64_t> _selected_group_ids;
+
+    /// Currently selected group IDs for data entity groups mode
+    std::vector<uint64_t> _selected_data_group_ids;
 };
 
 #endif// DIM_REDUCTION_PANEL_HPP

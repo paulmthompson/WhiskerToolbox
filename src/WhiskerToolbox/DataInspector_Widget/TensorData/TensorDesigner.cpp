@@ -12,9 +12,9 @@
 #include "TransformsV2/core/TensorColumnBuilders.hpp"
 #define slots Q_SLOTS
 
+#include "DataManager/utils/TimeIndexExtractor.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/utils/TimeIndexExtractor.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
@@ -150,8 +150,8 @@ bool TensorDesigner::fromJson(std::string const & json) {
         // Parse row source
         if (j.contains("row_source")) {
             auto const & rs = j["row_source"];
-            std::string row_type_str = rs.value("row_type", "none");
-            std::string data_key = rs.value("data_key", "");
+            std::string const row_type_str = rs.value("row_type", "none");
+            std::string const data_key = rs.value("data_key", "");
 
             // Set row type combo
             if (row_type_str == "interval") {
@@ -212,83 +212,6 @@ bool TensorDesigner::fromJson(std::string const & json) {
 }
 
 // =============================================================================
-// CSV Export
-// =============================================================================
-
-bool TensorDesigner::exportToCsv(
-        std::string const & file_path,
-        char delimiter,
-        int precision) const {
-
-    if (_tensor_key.empty() || !_data_manager) {
-        return false;
-    }
-
-    auto tensor = _data_manager->getData<TensorData>(_tensor_key);
-    if (!tensor) {
-        return false;
-    }
-
-    std::ofstream ofs(file_path);
-    if (!ofs.is_open()) {
-        return false;
-    }
-
-    auto const & dims = tensor->dimensions();
-    auto const shape = tensor->shape();
-
-    if (shape.size() < 2) {
-        return false;
-    }
-
-    auto const num_rows = shape[0];
-    auto const num_cols = shape[1];
-
-    // Write header: row_label, col0, col1, ...
-    ofs << "row";
-    if (dims.hasColumnNames()) {
-        for (auto const & cn: dims.columnNames()) {
-            ofs << delimiter << cn;
-        }
-    } else {
-        for (std::size_t c = 0; c < num_cols; ++c) {
-            ofs << delimiter << "col_" << c;
-        }
-    }
-    ofs << "\n";
-
-    // Write data rows
-    ofs << std::fixed;
-    ofs.precision(precision);
-
-    auto const & rows = tensor->rows();
-    for (std::size_t r = 0; r < num_rows; ++r) {
-        // Row label
-        auto label = rows.labelAt(r);
-        if (auto const * ordinal = std::get_if<std::size_t>(&label)) {
-            ofs << *ordinal;
-        } else if (auto const * tfi = std::get_if<TimeFrameIndex>(&label)) {
-            ofs << tfi->getValue();
-        } else if (auto const * interval = std::get_if<TimeFrameInterval>(&label)) {
-            ofs << interval->start.getValue() << "-" << interval->end.getValue();
-        } else {
-            ofs << r;
-        }
-
-        // Column values
-        std::vector<std::size_t> indices(shape.size(), 0);
-        indices[0] = r;
-        for (std::size_t c = 0; c < num_cols; ++c) {
-            indices[1] = c;
-            float val = tensor->at(std::span<std::size_t const>{indices});
-            ofs << delimiter << val;
-        }
-        ofs << "\n";
-    }
-
-    return true;
-}
-
 // =============================================================================
 // Slots
 // =============================================================================
@@ -438,29 +361,8 @@ void TensorDesigner::_onBuildClicked() {
     _buildTensor();
 }
 
-void TensorDesigner::_onExportCsvClicked() {
-    if (_tensor_key.empty()) {
-        QMessageBox::warning(this, QStringLiteral("No Tensor"),
-                             QStringLiteral("Please build the tensor first."));
-        return;
-    }
-
-    QString file_path = QFileDialog::getSaveFileName(
-            this, QStringLiteral("Export CSV"), QString(), QStringLiteral("CSV Files (*.csv)"));
-
-    if (file_path.isEmpty()) {
-        return;
-    }
-
-    if (exportToCsv(file_path.toStdString())) {
-        _updateStatus(QStringLiteral("Exported to: %1").arg(file_path));
-    } else {
-        _updateStatus(QStringLiteral("Export failed"));
-    }
-}
-
 void TensorDesigner::_onSaveJsonClicked() {
-    QString file_path = QFileDialog::getSaveFileName(
+    QString const file_path = QFileDialog::getSaveFileName(
             this, QStringLiteral("Save Configuration"),
             QString(), QStringLiteral("JSON Files (*.json)"));
 
@@ -478,7 +380,7 @@ void TensorDesigner::_onSaveJsonClicked() {
 }
 
 void TensorDesigner::_onLoadJsonClicked() {
-    QString file_path = QFileDialog::getOpenFileName(
+    QString const file_path = QFileDialog::getOpenFileName(
             this, QStringLiteral("Load Configuration"),
             QString(), QStringLiteral("JSON Files (*.json)"));
 
@@ -488,7 +390,7 @@ void TensorDesigner::_onLoadJsonClicked() {
 
     std::ifstream ifs(file_path.toStdString());
     if (ifs.is_open()) {
-        std::string content((std::istreambuf_iterator<char>(ifs)),
+        std::string const content((std::istreambuf_iterator<char>(ifs)),
                             std::istreambuf_iterator<char>());
         fromJson(content);
     } else {
@@ -570,18 +472,16 @@ void TensorDesigner::_setupUi() {
 
     _main_layout->addLayout(_col_button_layout);
 
-    // === Build / Export Section ===
+    // === Build / Config Section ===
     _action_layout = new QHBoxLayout();
     _action_layout->setSpacing(4);
 
     _build_btn = new QPushButton(QStringLiteral("Build Tensor"), this);
     _build_btn->setStyleSheet(QStringLiteral("font-weight: bold;"));
-    _export_csv_btn = new QPushButton(QStringLiteral("Export CSV"), this);
     _save_json_btn = new QPushButton(QStringLiteral("Save Config"), this);
     _load_json_btn = new QPushButton(QStringLiteral("Load Config"), this);
 
     _action_layout->addWidget(_build_btn);
-    _action_layout->addWidget(_export_csv_btn);
     _action_layout->addWidget(_save_json_btn);
     _action_layout->addWidget(_load_json_btn);
 
@@ -611,8 +511,6 @@ void TensorDesigner::_connectSignals() {
             this, &TensorDesigner::_onColumnDoubleClicked);
     connect(_build_btn, &QPushButton::clicked,
             this, &TensorDesigner::_onBuildClicked);
-    connect(_export_csv_btn, &QPushButton::clicked,
-            this, &TensorDesigner::_onExportCsvClicked);
     connect(_save_json_btn, &QPushButton::clicked,
             this, &TensorDesigner::_onSaveJsonClicked);
     connect(_load_json_btn, &QPushButton::clicked,
@@ -646,7 +544,7 @@ void TensorDesigner::_populateRowSourceKeys() {
         auto all_keys = _data_manager->getAllKeys();
         for (auto const & key: all_keys) {
             auto const type = _data_manager->getType(key);
-            bool has_timestamps = (type == DM_DataType::Analog ||
+            bool const has_timestamps = (type == DM_DataType::Analog ||
                                    type == DM_DataType::DigitalEvent ||
                                    type == DM_DataType::DigitalInterval ||
                                    type == DM_DataType::Mask ||
@@ -691,8 +589,7 @@ void TensorDesigner::_refreshColumnList() {
         } else if (!recipe.source_key.empty() && _data_manager) {
             auto const src_type = _data_manager->getType(recipe.source_key);
             if (src_type != DM_DataType::Unknown) {
-                text += QStringLiteral(" \u2192 %1").arg(
-                        QString::fromStdString(convert_data_type_to_string(src_type)));
+                text += QStringLiteral(" \u2192 %1").arg(QString::fromStdString(convert_data_type_to_string(src_type)));
             }
         }
         _column_list->addItem(text);
@@ -819,7 +716,7 @@ void TensorDesigner::_buildTensor() {
 
         // Create TensorData
         auto tensor = TensorData::createFromLazyColumns(
-                num_rows, std::move(column_sources), std::move(row_desc), std::move(wiring));
+                num_rows, std::move(column_sources), std::move(row_desc), wiring);
 
         // Generate a unique key
         if (_tensor_key.empty()) {

@@ -181,6 +181,32 @@ public:
     void setDimReductionZscoreNormalize(bool enabled);
     [[nodiscard]] bool dimReductionZscoreNormalize() const;
 
+    // === Dim Reduction supervised configuration ===
+
+    void setDimReductionSupervised(bool enabled);
+    [[nodiscard]] bool dimReductionSupervised() const;
+
+    void setDimReductionLabelSourceType(std::string const & type);
+    [[nodiscard]] std::string const & dimReductionLabelSourceType() const;
+
+    void setDimReductionLabelIntervalKey(std::string const & key);
+    [[nodiscard]] std::string const & dimReductionLabelIntervalKey() const;
+
+    void setDimReductionLabelPositiveClass(std::string const & name);
+    [[nodiscard]] std::string const & dimReductionLabelPositiveClass() const;
+
+    void setDimReductionLabelNegativeClass(std::string const & name);
+    [[nodiscard]] std::string const & dimReductionLabelNegativeClass() const;
+
+    void setDimReductionLabelEventKey(std::string const & key);
+    [[nodiscard]] std::string const & dimReductionLabelEventKey() const;
+
+    void setDimReductionLabelGroupIds(std::vector<uint64_t> const & ids);
+    [[nodiscard]] std::vector<uint64_t> const & dimReductionLabelGroupIds() const;
+
+    void setDimReductionLabelDataKey(std::string const & key);
+    [[nodiscard]] std::string const & dimReductionLabelDataKey() const;
+
 signals:
     void featureTensorKeyChanged(QString const & key);
     void trainingRegionKeyChanged(QString const & key);
@@ -218,6 +244,14 @@ signals:
     void dimReductionNComponentsChanged(int n);
     void dimReductionScaleChanged(bool enabled);
     void dimReductionZscoreNormalizeChanged(bool enabled);
+    void dimReductionSupervisedChanged(bool enabled);
+    void dimReductionLabelSourceTypeChanged(QString const & type);
+    void dimReductionLabelIntervalKeyChanged(QString const & key);
+    void dimReductionLabelPositiveClassChanged(QString const & name);
+    void dimReductionLabelNegativeClassChanged(QString const & name);
+    void dimReductionLabelEventKeyChanged(QString const & key);
+    void dimReductionLabelGroupIdsChanged();
+    void dimReductionLabelDataKeyChanged(QString const & key);
 
 private:
     MLCoreWidgetStateData _data;
