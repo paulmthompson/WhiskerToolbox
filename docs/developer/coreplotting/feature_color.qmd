@@ -1,0 +1,151 @@
+---
+title: "FeatureColor Module"
+format: html
+---
+
+## Overview
+
+The `CorePlotting::FeatureColor` module provides a shared, widget-agnostic pipeline for
+coloring plot points based on external data sources. It sits inside `CorePlotting` and has
+no Qt dependency, making it reusable across ScatterPlotWidget, EventPlotWidget, and any
+future plot widget.
+
+**Location:** `src/CorePlotting/FeatureColor/`
+
+## Pipeline
+
+The coloring pipeline has four stages:
+
+```
+Descriptor → Resolve → Range → Apply
+```
+
+1. **Describe** (`FeatureColorSourceDescriptor`) — Specify *which* DataManager key (and
+   optionally which TensorData column) provides the color values.
+2. **Resolve** (`resolveFeatureColors()`) — Join the plot's per-point `TimeFrameIndex` array
+   with the external data source, producing a parallel `vector<optional<float>>`.
+3. **Range** (`computeEffectiveColorRange()`) — Determine vmin/vmax from the resolved values
+   (Auto, Manual, or Symmetric mode).
+4. **Apply** (`applyFeatureColorsToScene()`) — Overwrite glyph colors in a `RenderableScene`
+   using a `FeatureColorMapping` (Continuous or Threshold).
+
+## Supported Data Sources
+
+| Source Type              | Join Strategy                        | Output |
+|--------------------------|--------------------------------------|--------|
+| `AnalogTimeSeries`       | Per-point `getAtTime(tfi)` lookup    | float  |
+| `TensorData` (TFI rows) | Hash-join on `TimeFrameIndex`        | float  |
+| `TensorData` (Ordinal)  | Positional: row *i* → point *i*      | float  |
+| `DigitalIntervalSeries`  | `hasIntervalAtTime()` → 1.0 / 0.0   | float  |
+
+The join strategy is selected automatically based on the source's data type and (for
+TensorData) its `RowType`.
+
+## Mapping Modes
+
+### ContinuousMapping
+
+Maps values through a colormap preset (Viridis, Plasma, etc.). Values are clamped to
+`[vmin, vmax]` then normalized.
+
+```cpp
+ContinuousMapping{
+    .preset = Colormaps::ColormapPreset::Viridis,
+    .vmin = 0.0f,
+    .vmax = 1.0f
+};
+```
+
+### ThresholdMapping
+
+Binary/cutoff coloring: values ≥ threshold get `above_color`, otherwise `below_color`.
+
+```cpp
+ThresholdMapping{
+    .threshold = 0.5f,
+    .above_color = {1.0f, 0.27f, 0.27f, 0.9f},
+    .below_color = {0.2f, 0.53f, 1.0f, 0.9f}
+};
+```
+
+Use cases: DigitalIntervalSeries overlays, classifier outputs, velocity cutoffs.
+
+## Color Range Modes
+
+`computeEffectiveColorRange()` supports three modes:
+
+- **Auto**: `[min(data), max(data)]`
+- **Manual**: User-specified `[vmin, vmax]`
+- **Symmetric**: `[-v, +v]` where `v = max(|min|, |max|)` — useful for diverging colormaps
+
+Returns `nullopt` for Auto/Symmetric when no valid (non-nullopt) values exist.
+
+## Compatibility Checking
+
+`checkFeatureColorCompatibility()` validates a descriptor against the DataManager before
+resolution:
+
+- Key exists and resolves to a supported type
+- For TensorData: the specified column name or index exists
+- Row types are compatible
+
+Returns a `FeatureColorCompatibilityResult` with a human-readable `reason` on failure.
+
+## Key API
+
+### `resolveFeatureColors()`
+
+```cpp
+std::vector<std::optional<float>> resolveFeatureColors(
+    DataManager & dm,
+    FeatureColorSourceDescriptor const & descriptor,
+    std::span<TimeFrameIndex const> point_times,
+    std::shared_ptr<TimeFrame> const & point_time_frame);
+```
+
+### `applyFeatureColorsToScene()`
+
+```cpp
+void applyFeatureColorsToScene(
+    RenderableScene & scene,
+    std::span<std::optional<float> const> resolved_values,
+    FeatureColorMapping const & mapping,
+    std::size_t point_count,
+    std::unordered_set<std::size_t> const & skip_indices = {});
+```
+
+### `computeEffectiveColorRange()`
+
+```cpp
+std::optional<std::pair<float, float>> computeEffectiveColorRange(
+    std::span<std::optional<float> const> resolved_values,
+    ColorRangeConfig const & config);
+```
+
+### `checkFeatureColorCompatibility()`
+
+```cpp
+FeatureColorCompatibilityResult checkFeatureColorCompatibility(
+    DataManager & dm,
+    FeatureColorSourceDescriptor const & descriptor,
+    PlotSourceRowType source_type,
+    std::size_t point_count);
+```
+
+## File Map
+
+| File | Purpose |
+|------|---------|
+| `FeatureColorSourceDescriptor.hpp` | Serializable descriptor struct |
+| `FeatureColorMapping.hpp` | ContinuousMapping, ThresholdMapping, variant |
+| `PlotSourceRowType.hpp` | Shared row-type classification enum |
+| `FeatureColorCompatibility.hpp/.cpp` | Compatibility validation |
+| `ResolveFeatureColors.hpp/.cpp` | Join + resolve pipeline |
+| `ApplyFeatureColors.hpp/.cpp` | Scene mutation |
+| `FeatureColorRange.hpp/.cpp` | Range computation |
+
+## Tests
+
+24 test cases with 74 assertions in `tests/CorePlotting/FeatureColor.test.cpp`, tagged
+`[FeatureColor]`. Coverage includes all join strategies, both mapping modes, all range
+modes, skip indices, nullopt handling, and compatibility edge cases.

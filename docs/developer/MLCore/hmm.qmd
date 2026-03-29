@@ -1,16 +1,24 @@
 ---
-title: "Hidden Markov Model (Gaussian)"
-description: "2-state Gaussian HMM for temporal sequence classification via mlpack"
+title: "Hidden Markov Model (Gaussian / GMM)"
+description: "Gaussian HMM for temporal sequence classification via mlpack, with optional mixture-of-Gaussians emissions"
 ---
 
 ## Overview
 
-`HiddenMarkovModelOperation` wraps `mlpack::HMM<mlpack::GaussianDistribution<>>` (full
-covariance) or `mlpack::HMM<mlpack::DiagonalGaussianDistribution<>>` (diagonal covariance)
-to provide sequence-aware classification within the MLCore framework. Unlike frame-based
+`HiddenMarkovModelOperation` wraps `mlpack::HMM<Distribution>` to provide
+sequence-aware classification within the MLCore framework. Unlike frame-based
 classifiers (Random Forest, Logistic Regression) that treat each observation independently,
 the HMM exploits **temporal continuity** — the probability of being in state $s_t$ depends
 on $s_{t-1}$.
+
+Four emission distribution variants are supported:
+
+| Variant | mlpack type | Use case |
+|---|---|---|
+| Full Gaussian (default) | `HMM<GaussianDistribution<>>` | Unimodal emissions with full covariance |
+| Diagonal Gaussian | `HMM<DiagonalGaussianDistribution<>>` | Unimodal with diagonal covariance (fewer parameters) |
+| GMM | `HMM<GMM>` | Multi-modal emissions with full covariance per component |
+| Diagonal GMM | `HMM<DiagonalGMM>` | Multi-modal with diagonal covariance per component |
 
 **Files:**
 
@@ -36,17 +44,21 @@ Non-sequence models (Random Forest, etc.) inherit the default concatenation beha
 ### Pimpl Pattern
 
 The implementation follows the project-standard Pimpl pattern to keep `mlpack.hpp` out of the header.
-A `std::variant` holds either the full or diagonal covariance HMM, with all operations dispatched
+A `std::variant` holds one of the four HMM types, with all operations dispatched
 via a visitor:
 
 ```cpp
 struct HiddenMarkovModelOperation::Impl {
     std::variant<std::unique_ptr<GaussianHMM>,
-                 std::unique_ptr<DiagonalGaussianHMM>> model;
+                 std::unique_ptr<DiagonalGaussianHMM>,
+                 std::unique_ptr<GMMEmissionHMM>,
+                 std::unique_ptr<DiagonalGMMEmissionHMM>> model;
     std::size_t num_states = 0;
     std::size_t num_features = 0;
+    std::size_t num_gaussians = 0;
     bool trained = false;
     bool diagonal = false;
+    bool gmm_emissions = false;
 };
 ```
 
@@ -148,6 +160,36 @@ double ll = hmm.logLikelihood(features);
 | `num_states` | 2 | Number of hidden states (minimum 2) |
 | `tolerance` | 1e-5 | Convergence tolerance for training |
 | `use_diagonal_covariance` | false | Use diagonal covariance matrices for emissions |
+| `use_gmm_emissions` | false | Use Gaussian Mixture Model emissions per state |
+| `num_gaussians` | 3 | Number of Gaussian components per state (when `use_gmm_emissions` is true, minimum 2) |
+
+### Emission Type Selection
+
+The `use_diagonal_covariance` and `use_gmm_emissions` flags combine orthogonally:
+
+| `use_gmm_emissions` | `use_diagonal_covariance` | Emission type |
+|---|---|---|
+| false | false | Single Gaussian (full covariance) |
+| false | true | Single Gaussian (diagonal covariance) |
+| true | false | GMM (full covariance per component) |
+| true | true | Diagonal GMM (diagonal covariance per component) |
+
+### GMM Emissions
+
+When `use_gmm_emissions` is `true`, each hidden state uses an `mlpack::GMM` (or
+`mlpack::DiagonalGMM`) as its emission distribution instead of a single Gaussian.
+This allows each state to model **multi-modal** observation distributions \u2014 useful
+when a single hidden state actually encompasses multiple sub-states with distinct
+emission characteristics.
+
+Each state\u2019s GMM has `num_gaussians` components. During supervised training,
+mlpack fits the mixture via EM on the observations assigned to that state.
+Prediction (Viterbi, Forward-Backward) works identically to the single-Gaussian
+case; only the emission probability computation changes.
+
+The `isGMMEmissions()` and `numGaussiansPerState()` methods report the active
+configuration after training. Serialization includes the GMM flag and component
+count, so loaded models correctly reconstruct the matching HMM variant.
 
 ### Diagonal Covariance
 
@@ -254,6 +296,8 @@ switches to the HMM parameter page. Controls:
 | `QSpinBox` | Number of states | 2–100 |
 | `QDoubleSpinBox` | Tolerance | 1e-10 – 1.0 |
 | `QCheckBox` | Diagonal covariance | on/off |
+| `QCheckBox` | GMM emissions | on/off |
+| `QSpinBox` | Gaussians per state | 2–50 (enabled only when GMM is checked) |
 
 ### Label Configuration (LabelConfigPanel)
 
@@ -272,9 +316,8 @@ shows $P(\text{next state} \mid \text{current state})$ with columns summing to 1
 
 - **Supervised only:** The current implementation requires labeled sequences. Unsupervised
   Baum-Welch training (EM) is not exposed, though mlpack supports it.
-- **Gaussian emissions:** Only `GaussianDistribution<>` (full covariance) and
-  `DiagonalGaussianDistribution<>` (diagonal covariance) emissions are supported.
-  Discrete or mixture emissions would require a different template specialization.
+- **Gaussian / GMM emissions:** Four emission variants are supported (full/diagonal
+  Gaussian, full/diagonal GMM). Discrete emissions are not supported.
 - **Fixed state count:** The number of states must be specified before training. Model
   selection (choosing the optimal state count) must be done manually.
 - **No warm-starting:** Each `train()` / `trainSequences()` call initializes a fresh HMM.
@@ -284,8 +327,7 @@ shows $P(\text{next state} \mid \text{current state})$ with columns summing to 1
 
 ## Test Coverage
 
-13 test cases with 513 assertions in `tests/MLCore/HiddenMarkovModel.test.cpp`, plus
-4 diagonal covariance test cases:
+Test cases in `tests/MLCore/HiddenMarkovModel.test.cpp`:
 
 | Category | Tests |
 |---|---|
@@ -306,6 +348,11 @@ shows $P(\text{next state} \mid \text{current state})$ with columns summing to 1
 | Diagonal multi-dim | 2D diagonal covariance training and prediction accuracy |
 | Diagonal save/load | Round-trip preserves diagonal model and predictions |
 | Diagonal constrained | Constrained Viterbi decoding with diagonal covariance |
+| GMM emissions | Training, isGMMEmissions/numGaussiansPerState, Viterbi accuracy, Forward-Backward, transition matrix, log-likelihood |
+| GMM multi-modal | Synthetic bimodal data with multi-modal block sequences |
+| Diagonal GMM | Training with diagonal + GMM flags, prediction accuracy |
+| GMM save/load | Round-trip for both full and diagonal GMM variants |
+| GMM constrained | Constrained Viterbi decoding with GMM emissions, initial distribution restoration |
 
 Pipeline integration is covered by 4 additional test cases in `tests/MLCore/ClassificationPipeline.test.cpp`:
 sequence mode with interval labels, sequence mode with event labels, SegmentingSequences stage

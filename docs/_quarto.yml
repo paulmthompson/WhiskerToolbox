@@ -56,7 +56,10 @@ website:
         - section: "Core Libraries"
           contents:
             - developer/CoreGeometry/index.qmd
-            - developer/coreplotting/index.qmd
+            - section: "CorePlotting"
+              href: developer/coreplotting/index.qmd
+              contents:
+                - developer/coreplotting/feature_color.qmd
             - developer/Entity/index.qmd
             - section: "Deep Learning"
               href: developer/DeepLearning/index.qmd
@@ -92,6 +95,7 @@ website:
               href: developer/MLCore/index.qmd
               contents:
                 - developer/MLCore/models.qmd
+                - developer/MLCore/softmax_regression.qmd
                 - developer/MLCore/dim_reduction.qmd
                 - developer/MLCore/hmm.qmd
                 - developer/MLCore/features.qmd
@@ -225,6 +229,10 @@ website:
               href: learning-resources/how-to/label_video_intervals.qmd
             - text: "Export an AOTI Encoder Model"
               href: learning-resources/how-to/exporting_aoti_encoder.qmd
+            - text: "GLM-HMM Contact Detection (ssm)"
+              href: learning-resources/how-to/glm_hmm_ssm.qmd
+            - text: "GLM-HMM Contact Detection (dynamax)"
+              href: learning-resources/how-to/glm_hmm_dynamax.qmd
 
     - title: "User Guide"
       style: "docked"

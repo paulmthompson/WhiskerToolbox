@@ -1,0 +1,126 @@
+---
+title: "Softmax Regression Operation"
+description: "Multi-class softmax regression classifier wrapping mlpack::SoftmaxRegression"
+---
+
+## Overview
+
+`SoftmaxRegressionOperation` is a supervised multi-class classifier that wraps `mlpack::SoftmaxRegression<arma::mat>`. Unlike `LogisticRegressionOperation` (binary-only), it handles any number of classes $C \geq 2$ using L2-regularized softmax regression optimized with L-BFGS.
+
+The operation produces calibrated per-class probability estimates via the softmax function, making it suitable as both a classifier and a dimensionality reduction technique that projects features into a $C$-dimensional probability simplex.
+
+**Source files:**
+
+- Header: `src/MLCore/models/supervised/SoftmaxRegressionOperation.hpp`
+- Implementation: `src/MLCore/models/supervised/SoftmaxRegressionOperation.cpp`
+- Tests: `tests/MLCore/SoftmaxRegressionOperation.test.cpp`
+
+## Parameters
+
+`SoftmaxRegressionParameters` in `MLModelParameters.hpp`:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `lambda` | `double` | 0.0001 | L2 regularization strength. Higher values penalize large weights more. |
+| `max_iterations` | `std::size_t` | 10000 | Maximum L-BFGS optimizer iterations. |
+
+## Architecture
+
+### Pimpl Pattern
+
+The implementation uses the pimpl idiom to isolate `mlpack.hpp` from consumers:
+
+```
+SoftmaxRegressionOperation.hpp  →  MLModelOperation (public API)
+SoftmaxRegressionOperation.cpp  →  mlpack::SoftmaxRegression<arma::mat> (hidden)
+```
+
+The `Impl` struct holds:
+
+- `std::unique_ptr<mlpack::SoftmaxRegression<arma::mat>>` — the trained model
+- `num_classes`, `num_features` — cached training metadata
+- `trained` — readiness flag
+
+### Training
+
+Training uses the constructor-based API:
+
+```cpp
+ens::L_BFGS optimizer;
+optimizer.MaxIterations() = max_iterations;
+
+model = std::make_unique<SRModel>(
+    features, labels, num_classes, optimizer, lambda, false);
+```
+
+The number of classes is detected automatically from `arma::max(labels) + 1`.
+
+### Prediction
+
+- `predict()` calls `model->Classify(features, predictions)` for hard labels.
+- `predictProbabilities()` calls `model->Classify(features, predictions, probabilities)` for a `(num_classes × num_observations)` matrix where each column sums to 1.0.
+
+### Serialization
+
+Uses cereal binary archives. The serialization format stores:
+
+1. `num_classes` (size_t)
+2. `num_features` (size_t)
+3. The mlpack model (via mlpack's built-in cereal support)
+
+## Registry Integration
+
+Registered as `"Softmax Regression"` with `MLTaskType::MultiClassClassification` in `MLModelRegistry`.
+
+```cpp
+auto registry = MLModelRegistry{};
+auto model = registry.create("Softmax Regression");
+```
+
+## Usage Example
+
+```cpp
+#include "MLCore/models/supervised/SoftmaxRegressionOperation.hpp"
+
+MLCore::SoftmaxRegressionOperation sr;
+MLCore::SoftmaxRegressionParameters params;
+params.lambda = 0.001;
+params.max_iterations = 5000;
+
+// features: (D × N), labels: (1 × N) with values in [0, C)
+sr.train(features, labels, &params);
+
+// Hard predictions
+arma::Row<std::size_t> predictions;
+sr.predict(test_features, predictions);
+
+// Probability estimates (C × N matrix, columns sum to 1)
+arma::mat probs;
+sr.predictProbabilities(test_features, probs);
+```
+
+## Comparison with LogisticRegression
+
+| Feature | LogisticRegression | SoftmaxRegression |
+|---|---|---|
+| Classes | Binary only (0/1) | $C \geq 2$ |
+| Task type | `BinaryClassification` | `MultiClassClassification` |
+| Probabilities | Single probability per sample | $C$ probabilities per sample |
+| Backend | `mlpack::LogisticRegression<arma::mat>` | `mlpack::SoftmaxRegression<arma::mat>` |
+| Parameters | `lambda`, `step_size`, `max_iterations` | `lambda`, `max_iterations` |
+
+## Test Coverage
+
+11 test cases covering:
+
+- Metadata (name, task type, default parameters)
+- Multi-class training (3, 4, and 5 classes)
+- Binary training via softmax (2 classes)
+- Training error handling (empty features, empty labels, column mismatch, single class)
+- Multi-class prediction accuracy
+- Binary prediction accuracy via softmax
+- Prediction error handling (untrained, empty features, dimension mismatch)
+- Probability output (dimensions, sum-to-one, range, confidence)
+- Save/load round-trip with prediction consistency
+- Parameter variations (different lambda/iteration values)
+- Registry integration (create via name)
