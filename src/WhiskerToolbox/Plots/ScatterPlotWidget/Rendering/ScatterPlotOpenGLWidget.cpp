@@ -4,8 +4,14 @@
 #include "Core/ScatterPlotState.hpp"
 #include "Core/SourceCompatibility.hpp"
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CoreGeometry/boundingbox.hpp"
+#include "CorePlotting/Colormaps/Colormap.hpp"
 #include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
+#include "CorePlotting/FeatureColor/ApplyFeatureColors.hpp"
+#include "CorePlotting/FeatureColor/FeatureColorMapping.hpp"
+#include "CorePlotting/FeatureColor/FeatureColorRange.hpp"
+#include "CorePlotting/FeatureColor/ResolveFeatureColors.hpp"
 #include "CorePlotting/Interaction/HitTestResult.hpp"
 #include "CorePlotting/Interaction/PolygonInteractionController.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
@@ -539,8 +545,78 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
 
     auto scene = builder.build();
     _scene = std::make_unique<CorePlotting::RenderableScene>(std::move(scene));
+    applyFeatureColorsToSceneImpl();
     applyGroupColorsToScene();
     _scene_renderer->uploadScene(*_scene);
+}
+
+void ScatterPlotOpenGLWidget::applyFeatureColorsToSceneImpl() {
+    _feature_values.clear();
+
+    if (!_state || !_data_manager || !_scene || _scatter_data.empty()) {
+        return;
+    }
+
+    auto const & cc = _state->colorConfig();
+    if (cc.color_mode != "by_feature" || !cc.color_source.has_value()) {
+        return;
+    }
+
+    // Obtain the time frame from the X-axis source
+    std::shared_ptr<TimeFrame> point_time_frame;
+    auto const & x_src = _state->xSource();
+    if (x_src.has_value() && !x_src->data_key.empty()) {
+        if (auto ats = _data_manager->getData<AnalogTimeSeries>(x_src->data_key)) {
+            point_time_frame = ats->getTimeFrame();
+        } else if (auto td = _data_manager->getData<TensorData>(x_src->data_key)) {
+            point_time_frame = td->getTimeFrame();
+        }
+    }
+
+    // Resolve per-point float values from the feature source
+    _feature_values = CorePlotting::FeatureColor::resolveFeatureColors(
+            *_data_manager, *cc.color_source,
+            _scatter_data.time_indices, point_time_frame);
+
+    // Build the mapping
+    CorePlotting::FeatureColor::FeatureColorMapping mapping;
+    if (cc.mapping_mode == "threshold") {
+        mapping = CorePlotting::FeatureColor::ThresholdMapping{
+                static_cast<float>(cc.threshold),
+                CorePlotting::hexColorToVec4(cc.above_color, cc.above_alpha),
+                CorePlotting::hexColorToVec4(cc.below_color, cc.below_alpha)};
+    } else {
+        CorePlotting::FeatureColor::ColorRangeConfig range_config;
+        if (cc.color_range_mode == "manual") {
+            range_config.mode = CorePlotting::FeatureColor::ColorRangeMode::Manual;
+        } else if (cc.color_range_mode == "symmetric") {
+            range_config.mode = CorePlotting::FeatureColor::ColorRangeMode::Symmetric;
+        } else {
+            range_config.mode = CorePlotting::FeatureColor::ColorRangeMode::Auto;
+        }
+        range_config.manual_vmin = cc.color_range_vmin;
+        range_config.manual_vmax = cc.color_range_vmax;
+
+        auto const range = CorePlotting::FeatureColor::computeEffectiveColorRange(
+                _feature_values, range_config);
+        if (!range.has_value()) {
+            return;// No valid values — cannot compute range
+        }
+
+        auto const preset = CorePlotting::Colormaps::presetFromName(cc.colormap_preset);
+        mapping = CorePlotting::FeatureColor::ContinuousMapping{
+                preset, range->first, range->second};
+    }
+
+    // Build skip set (selected + navigated points keep their dedicated colors)
+    auto const & selected_indices = _state->selectedIndices();
+    std::unordered_set<std::size_t> skip_set(selected_indices.begin(), selected_indices.end());
+    if (_navigated_index.has_value()) {
+        skip_set.insert(*_navigated_index);
+    }
+
+    CorePlotting::FeatureColor::applyFeatureColorsToScene(
+            *_scene, _feature_values, mapping, _scatter_data.size(), skip_set);
 }
 
 void ScatterPlotOpenGLWidget::applyGroupColorsToScene() {
