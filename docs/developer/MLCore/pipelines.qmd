@@ -289,3 +289,116 @@ for (arma::uword r = 0; r < output_fmat.n_rows; ++r) {
 }
 ```
 :::
+## Supervised Dimensionality Reduction Pipeline
+
+`SupervisedDimReductionPipeline` (`pipelines/SupervisedDimReductionPipeline.hpp`) combines
+label assembly with supervised projection to produce a logit-space `TensorData` output.
+
+The pipeline trains on labeled observations only, then transforms **all valid rows** (labeled
+and unlabeled) to produce a complete output tensor. This enables scatter visualization where
+both labeled clusters and unlabeled context points are visible.
+
+### Pipeline Stages
+
+```
+ValidatingFeatures → ConvertingFeatures → AssemblingLabels →
+FittingAndTransforming → WritingOutput → Complete
+```
+
+### Configuration
+
+```cpp
+SupervisedDimReductionPipelineConfig config;
+
+// Model
+config.model_name = "Logit Projection";        // must be SupervisedDimensionalityReduction
+config.model_params = &logit_params;            // or nullptr for defaults
+
+// Features
+config.feature_tensor_key = "encoder_features"; // must have RowType::TimeFrameIndex
+
+// Labels (variant — choose one mode)
+config.label_config = LabelFromIntervals{"Contact", "NoContact"};
+config.label_interval_key = "contact_intervals";
+
+// Conversion
+config.conversion_config.drop_nan = true;
+config.conversion_config.zscore_normalize = false;
+
+// Output
+config.output_key = "logit_projection";
+config.time_key_str = "camera";
+config.defer_dm_writes = false;                 // set true for background thread
+```
+
+### Label Modes
+
+The pipeline supports the same 4 label modes as `ClassificationPipeline`:
+
+| Mode | Type | Notes |
+|---|---|---|
+| `LabelFromIntervals` | `DigitalIntervalSeries` key | Binary: inside/outside interval |
+| `LabelFromTimeEntityGroups` | `EntityGroupManager` group IDs | Per-group class assignment |
+| `LabelFromDataEntityGroups` | `EntityGroupManager` group IDs | Per-entity group membership |
+| `LabelFromEvents` | `DigitalEventSeries` key | Event proximity labeling |
+
+Group-based modes produce **unlabeled rows** (rows with no group assignment), marked with
+sentinel value `num_classes`. These rows are excluded from training but still projected by
+the fitted model into the output tensor.
+
+### Column Naming
+
+Output columns are named `"Logit:<ClassName>"` using the actual class names from label
+assembly, not generic indices. For `LabelFromIntervals{"Contact", "NoContact"}`:
+
+- Class 0 (negative/outside) → `"Logit:NoContact"`
+- Class 1 (positive/inside) → `"Logit:Contact"`
+
+**Note:** Class 0 is always the negative/outside class for interval-based labeling. Use the
+actual class names to identify columns — do not rely on column order.
+
+### Entry Point
+
+```cpp
+auto result = runSupervisedDimReductionPipeline(dm, registry, config, progress_callback);
+
+if (result.success) {
+    // result.num_observations — all valid rows (NaN-dropped)
+    // result.num_training_observations — labeled subset used for fitting
+    // result.unlabeled_count — rows projected but excluded from training
+    // result.num_classes, result.class_names
+    // result.output_key — DataManager key of new TensorData
+    // result.fitted_model — reusable for re-projection
+}
+```
+
+### Result Fields
+
+| Field | Description |
+|---|---|
+| `success` | Whether the pipeline completed |
+| `error_message` | Human-readable error (if failed) |
+| `failed_stage` | Which stage failed |
+| `num_observations` | All valid rows after NaN dropping |
+| `num_training_observations` | Labeled rows used for fitting |
+| `num_input_features` | Number of input tensor columns |
+| `num_output_dimensions` | Number of classes (output columns) |
+| `rows_dropped_nan` | Rows dropped due to NaN/Inf |
+| `unlabeled_count` | Rows excluded from training (group modes) |
+| `num_classes` | Number of classes discovered |
+| `class_names` | Class name per output column (no "Logit:" prefix) |
+| `output_key` | Created TensorData DataManager key |
+| `deferred_output` | `shared_ptr<TensorData>` for main-thread writing |
+| `fitted_model` | Ownership transferred — reusable |
+
+### Relationship to Other Pipelines
+
+| Pipeline | Labels | Transforms | Output |
+|---|---|---|---|
+| `DimReductionPipeline` | None (unsupervised) | All rows | TensorData: reduced space |
+| `ClassificationPipeline` | Required | Labeled rows | Predictions + metrics |
+| `SupervisedDimReductionPipeline` | Required for training | **All rows** | TensorData: logit space |
+
+The `SupervisedDimReductionPipeline` is unique in that it trains on a labeled subset but
+produces output that covers all valid inputs — filling in logit-space projections even for
+rows with no label.

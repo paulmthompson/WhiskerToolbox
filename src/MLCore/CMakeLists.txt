@@ -72,6 +72,9 @@ set(MLCore_SOURCES
     pipelines/DimReductionPipeline.cpp
     pipelines/DimReductionPipeline.hpp
 
+    pipelines/SupervisedDimReductionPipeline.cpp
+    pipelines/SupervisedDimReductionPipeline.hpp
+
     pipelines/SequenceAssembler.cpp
     pipelines/SequenceAssembler.hpp
 
