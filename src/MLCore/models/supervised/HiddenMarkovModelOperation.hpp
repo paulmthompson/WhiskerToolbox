@@ -151,6 +151,18 @@ public:
      */
     [[nodiscard]] bool isDiagonalCovariance() const;
 
+    /**
+     * @brief Whether the model uses GMM (mixture of Gaussians) emissions
+     * @return true if trained with use_gmm_emissions, false otherwise
+     */
+    [[nodiscard]] bool isGMMEmissions() const;
+
+    /**
+     * @brief Number of Gaussian components per state (GMM emissions only)
+     * @return Number of Gaussians per state, or 0 if not using GMM emissions
+     */
+    [[nodiscard]] std::size_t numGaussiansPerState() const;
+
 private:
     /// Pimpl to keep mlpack HMM headers out of this header
     struct Impl;

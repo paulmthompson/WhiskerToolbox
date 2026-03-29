@@ -211,6 +211,13 @@ bool ScatterPlotState::isSelected(std::size_t index) const {
     return std::find(sel.begin(), sel.end(), index) != sel.end();
 }
 
+void ScatterPlotState::setColorConfig(ScatterColorConfigData config) {
+    _data.color_config = std::move(config);
+    markDirty();
+    emit colorConfigChanged();
+    emit stateChanged();
+}
+
 std::string ScatterPlotState::toJson() const {
     ScatterPlotStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();

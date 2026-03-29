@@ -60,6 +60,12 @@ struct MLCoreWidgetStateData {
     /// Use diagonal covariance for HMM emissions (reduces parameters per state)
     bool hmm_diagonal_covariance = false;
 
+    /// Use Gaussian Mixture Model emissions for HMM (multi-modal per state)
+    bool hmm_gmm_emissions = false;
+
+    /// Number of Gaussian components per state when using GMM emissions
+    int hmm_num_gaussians = 3;
+
     // === Label configuration ===
 
     /// Label source type: "intervals", "groups", or "entity_groups"

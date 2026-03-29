@@ -121,6 +121,37 @@ struct PCAParameters : public MLModelParametersBase {
     bool scale = true;           ///< Standardize features (zero mean, unit variance) before PCA
 };
 
+/**
+ * @brief Parameters for t-SNE dimensionality reduction
+ *
+ * Wraps tapkee's t-SNE implementation. t-SNE is a non-linear, stochastic
+ * method suited for 2D/3D visualization of high-dimensional data.
+ *
+ * @note t-SNE does not support projecting new data (transform is unsupported).
+ */
+struct TSNEParameters : public MLModelParametersBase {
+    std::size_t n_components = 2;///< Number of output dimensions (usually 2 or 3)
+    double perplexity = 30.0;    ///< Perplexity (effective number of neighbors; typical range 5–50)
+    double theta = 0.5;          ///< Barnes-Hut approximation angle (0 = exact, >0 = faster)
+};
+
+/**
+ * @brief Parameters for Robust PCA (ROSL) dimensionality reduction
+ *
+ * Wraps the ROSL (Robust Online Subspace Learning) algorithm which
+ * decomposes a matrix into a low-rank component and sparse errors:
+ * X = A + E, where A = D * B is the low-rank approximation.
+ *
+ * Robust PCA supports projecting new data via the learned dictionary.
+ */
+struct RobustPCAParameters : public MLModelParametersBase {
+    std::size_t n_components = 2;///< Number of output dimensions (max rank for ROSL)
+    double lambda = 0.0;         ///< Regularization (0 = auto-compute from data)
+    double tol = 1e-5;           ///< Convergence tolerance
+    std::size_t max_iter = 100;  ///< Maximum ALM iterations
+};
+
+
 // ============================================================================
 // Sequence model parameters
 // ============================================================================
@@ -142,6 +173,8 @@ struct HMMParameters : public MLModelParametersBase {
     std::size_t num_states = 2;          ///< Number of hidden states
     double tolerance = 1e-5;             ///< Convergence tolerance for training
     bool use_diagonal_covariance = false;///< Use diagonal covariance emissions
+    bool use_gmm_emissions = false;      ///< Use Gaussian Mixture Model emissions per state
+    std::size_t num_gaussians = 3;       ///< Number of Gaussian components per state (when use_gmm_emissions is true)
 };
 
 }// namespace MLCore

@@ -94,6 +94,18 @@ set(COREPLOTTING_SOURCES
     LineBatch/CpuLineBatchIntersector.cpp
     LineBatch/LineBatchBuilder.hpp
     LineBatch/LineBatchBuilder.cpp
+    # FeatureColor (shared feature-based point coloring)
+    FeatureColor/FeatureColorSourceDescriptor.hpp
+    FeatureColor/FeatureColorMapping.hpp
+    FeatureColor/PlotSourceRowType.hpp
+    FeatureColor/FeatureColorCompatibility.hpp
+    FeatureColor/FeatureColorCompatibility.cpp
+    FeatureColor/ResolveFeatureColors.hpp
+    FeatureColor/ResolveFeatureColors.cpp
+    FeatureColor/ApplyFeatureColors.hpp
+    FeatureColor/ApplyFeatureColors.cpp
+    FeatureColor/FeatureColorRange.hpp
+    FeatureColor/FeatureColorRange.cpp
 )
 
 add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}
