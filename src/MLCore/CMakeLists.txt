@@ -28,9 +28,12 @@ set(MLCore_SOURCES
     models/MLTaskType.hpp
 
     models/MLDimReductionOperation.hpp
+    models/MLSupervisedDimReductionOperation.hpp
 
     models/supervised/LogisticRegressionOperation.cpp
     models/supervised/LogisticRegressionOperation.hpp
+    models/supervised/LogitProjectionOperation.cpp
+    models/supervised/LogitProjectionOperation.hpp
     models/supervised/SoftmaxRegressionOperation.cpp
     models/supervised/SoftmaxRegressionOperation.hpp
     models/supervised/NaiveBayesOperation.cpp

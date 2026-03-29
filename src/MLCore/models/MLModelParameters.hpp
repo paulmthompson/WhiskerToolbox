@@ -165,6 +165,23 @@ struct RobustPCAParameters : public MLModelParametersBase {
 
 
 // ============================================================================
+// Supervised dimensionality reduction parameters
+// ============================================================================
+
+/**
+ * @brief Parameters for Logit Projection (supervised dimensionality reduction)
+ *
+ * LogitProjectionOperation trains a softmax regression classifier on labeled
+ * data and extracts the pre-softmax logit activations as a C-dimensional
+ * discriminative projection. Uses L2-regularized L-BFGS optimization.
+ */
+struct LogitProjectionParameters : public MLModelParametersBase {
+    double lambda = 0.0001;            ///< L2 regularization strength (same as SoftmaxRegressionParameters)
+    std::size_t max_iterations = 10000;///< Maximum L-BFGS optimizer iterations
+    bool scale_features = false;       ///< Standardize features (zero mean, unit variance) before fitting
+};
+
+// ============================================================================
 // Sequence model parameters
 // ============================================================================
 

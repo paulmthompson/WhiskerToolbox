@@ -96,6 +96,7 @@ website:
               contents:
                 - developer/MLCore/models.qmd
                 - developer/MLCore/softmax_regression.qmd
+                - developer/MLCore/logit_projection.qmd
                 - developer/MLCore/dim_reduction.qmd
                 - developer/MLCore/hmm.qmd
                 - developer/MLCore/features.qmd

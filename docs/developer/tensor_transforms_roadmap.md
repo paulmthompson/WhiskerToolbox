@@ -47,7 +47,7 @@ EntityGroupManager → downstream analysis
 | Propagate groups to other widgets | SelectionContext + DataFocusAware | ✅ Exists |
 | Dim reduction UI | MLCore_Widget Dim Reduction tab | ✅ Phase 4 complete |
 | Scatter ↔ clustering loop | ContextActions + selective clustering + label overlay | ✅ Phase 5 complete |
-| Supervised dim reduction (logit projection) | MLCore LogitProjectionOp + SupervisedDimReductionPipeline | Phase 8 (8a complete) |
+| Supervised dim reduction (logit projection) | MLCore LogitProjectionOp + SupervisedDimReductionPipeline | Phase 8 (8a, 8b complete) |
 
 ---
 
@@ -180,7 +180,7 @@ MLCore (algorithms)                TransformsV2 (pipeline wrappers)
 3. **3D embedding visualization** — OpenGL 3D scatter for 3-component embeddings
 4. **Benchmarks** — Google Benchmark suite for PCA/t-SNE at various matrix sizes
 
-### Phase 8: Supervised Dimensionality Reduction (Logit Projection) — IN PROGRESS (8a complete)
+### Phase 8: Supervised Dimensionality Reduction (Logit Projection) — IN PROGRESS (8a, 8b complete)
 
 **Goal:** Use logistic / softmax regression as a supervised dimensionality reduction method. Given a high-dimensional TensorData (N×D) and class labels, the model learns a linear projection that maximally separates the classes. The output is a **logits TensorData** (N×C) where C is the number of classes — a C-dimensional space optimized for class discrimination.
 
@@ -215,7 +215,25 @@ Scatter visualization showing class separation in logit space
 
 **Implementation note:** `mlpack::SoftmaxRegression` requires template argument `<arma::mat>`. The constructor argument order is `(data, labels, numClasses, optimizer, lambda, fitIntercept)` — optimizer precedes lambda.
 
-#### Phase 8b: Supervised Dim Reduction Operation (MLCore interface + algorithm)
+#### Phase 8b: Supervised Dim Reduction Operation (MLCore interface + algorithm) ✅
+
+**Delivered:** Abstract base class `MLSupervisedDimReductionOperation` and concrete `LogitProjectionOperation`, with `LogitProjectionParameters` and `SupervisedDimensionalityReduction` task type. 9 test cases, 79 assertions.
+
+- `MLSupervisedDimReductionOperation` — new abstract base in `src/MLCore/models/MLSupervisedDimReductionOperation.hpp`. Adds `fitTransform()`, `transform()`, `outputDimensions()`, `outputColumnNames()` pure virtuals. Routes `train()` to `fitTransform()` for registry compatibility.
+- `LogitProjectionOperation` — concrete implementation in `src/MLCore/models/supervised/LogitProjectionOperation.hpp/.cpp`. Uses `mlpack::SoftmaxRegression<arma::mat>` with `fitIntercept=true`. Extracts weight matrix $W$ (C×D) and bias $b$ (C) from `Parameters()` (column 0 = bias, columns 1..D = weights). Inference: `result = W * X; result.each_col() += b`.
+- `LogitProjectionParameters` — `lambda` (0.0001), `max_iterations` (10000), `scale_features` (false). When `scale_features=true`, scaling is absorbed into $W$ and $b$ at training time for transparent inference.
+- `SupervisedDimensionalityReduction` added to `MLTaskType` enum in `src/MLCore/models/MLTaskType.hpp`.
+- Registered in `src/MLCore/models/MLModelRegistry.cpp` as `"Logit Projection"`.
+- Save/load serializes only $W$ and $b$ (not the mlpack model) — inference works without mlpack after `load()`.
+- Tests in `tests/MLCore/LogitProjectionOperation.test.cpp` cover: metadata, binary/3-class fitTransform output shape, class separation accuracy >95%, transform consistency, all error cases, scale_features, save/load round-trip, registry integration.
+- Developer documentation: `docs/developer/MLCore/logit_projection.qmd`.
+
+**Implementation notes:**
+- `fitIntercept=true` gives better expressiveness; `Parameters()` layout is `(C, D+1)` with bias in column 0.
+- Scaling absorption: when `scale_features=true`, `W_eff = W / σ.T()`, `b_eff = b - W_eff * μ`. Thereafter `transform()` is always just `W*X + b`.
+- Uses pimpl pattern to isolate `mlpack.hpp` from consumers.
+
+#### Phase 8b was planned (original notes below, superseded by delivered implementation)
 
 **Goal:** Abstract base class for supervised dimensionality reduction, plus `LogitProjectionOperation` concrete implementation.
 
