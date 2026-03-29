@@ -31,6 +31,8 @@ set(MLCore_SOURCES
 
     models/supervised/LogisticRegressionOperation.cpp
     models/supervised/LogisticRegressionOperation.hpp
+    models/supervised/SoftmaxRegressionOperation.cpp
+    models/supervised/SoftmaxRegressionOperation.hpp
     models/supervised/NaiveBayesOperation.cpp
     models/supervised/NaiveBayesOperation.hpp
     models/supervised/HiddenMarkovModelOperation.cpp

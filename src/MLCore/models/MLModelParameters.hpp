@@ -71,6 +71,18 @@ struct LogisticRegressionParameters : public MLModelParametersBase {
     std::size_t max_iterations = 10000;///< Maximum optimizer iterations (0 = unlimited)
 };
 
+/**
+ * @brief Parameters for Softmax Regression (multi-class logistic regression)
+ *
+ * Maps to mlpack::SoftmaxRegression hyperparameters.
+ * Generalizes binary logistic regression to C ≥ 2 classes.
+ * Produces calibrated per-class probability estimates via softmax.
+ */
+struct SoftmaxRegressionParameters : public MLModelParametersBase {
+    double lambda = 0.0001;            ///< L2 regularization parameter
+    std::size_t max_iterations = 10000;///< Maximum L-BFGS iterations (0 = unlimited)
+};
+
 // ============================================================================
 // Unsupervised clustering parameters
 // ============================================================================

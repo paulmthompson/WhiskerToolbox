@@ -30,6 +30,7 @@ add_executable(test_MLCore
     RobustPCAOperation.test.cpp
     TSNEOperation.test.cpp
     LogisticRegressionOperation.test.cpp
+    SoftmaxRegressionOperation.test.cpp
     MLModelOperation.test.cpp
     NaiveBayesOperation.test.cpp
     PredictionWriter.test.cpp
