@@ -21,7 +21,8 @@ enum class MLTaskType {
     BinaryClassification,    ///< Two-class supervised classification
     MultiClassClassification,///< N-class supervised classification (N ≥ 2)
     Clustering,              ///< Unsupervised clustering (assign to K groups)
-    DimensionalityReduction, ///< Unsupervised dimensionality reduction (PCA, t-SNE, etc.)
+    DimensionalityReduction,           ///< Unsupervised dimensionality reduction (PCA, t-SNE, etc.)
+    SupervisedDimensionalityReduction, ///< Supervised projection using class labels (Logit Projection, LDA, etc.)
     // Future:
     // Regression,              ///< Continuous value prediction
     // SequenceLabeling,        ///< HMM / sequence-to-sequence labeling
@@ -40,6 +41,8 @@ enum class MLTaskType {
             return "Clustering";
         case MLTaskType::DimensionalityReduction:
             return "Dimensionality Reduction";
+        case MLTaskType::SupervisedDimensionalityReduction:
+            return "Supervised Dimensionality Reduction";
     }
     return "Unknown";
 }

@@ -71,6 +71,18 @@ struct LogisticRegressionParameters : public MLModelParametersBase {
     std::size_t max_iterations = 10000;///< Maximum optimizer iterations (0 = unlimited)
 };
 
+/**
+ * @brief Parameters for Softmax Regression (multi-class logistic regression)
+ *
+ * Maps to mlpack::SoftmaxRegression hyperparameters.
+ * Generalizes binary logistic regression to C ≥ 2 classes.
+ * Produces calibrated per-class probability estimates via softmax.
+ */
+struct SoftmaxRegressionParameters : public MLModelParametersBase {
+    double lambda = 0.0001;            ///< L2 regularization parameter
+    std::size_t max_iterations = 10000;///< Maximum L-BFGS iterations (0 = unlimited)
+};
+
 // ============================================================================
 // Unsupervised clustering parameters
 // ============================================================================
@@ -151,6 +163,23 @@ struct RobustPCAParameters : public MLModelParametersBase {
     std::size_t max_iter = 100;  ///< Maximum ALM iterations
 };
 
+
+// ============================================================================
+// Supervised dimensionality reduction parameters
+// ============================================================================
+
+/**
+ * @brief Parameters for Logit Projection (supervised dimensionality reduction)
+ *
+ * LogitProjectionOperation trains a softmax regression classifier on labeled
+ * data and extracts the pre-softmax logit activations as a C-dimensional
+ * discriminative projection. Uses L2-regularized L-BFGS optimization.
+ */
+struct LogitProjectionParameters : public MLModelParametersBase {
+    double lambda = 0.0001;            ///< L2 regularization strength (same as SoftmaxRegressionParameters)
+    std::size_t max_iterations = 10000;///< Maximum L-BFGS optimizer iterations
+    bool scale_features = false;       ///< Standardize features (zero mean, unit variance) before fitting
+};
 
 // ============================================================================
 // Sequence model parameters

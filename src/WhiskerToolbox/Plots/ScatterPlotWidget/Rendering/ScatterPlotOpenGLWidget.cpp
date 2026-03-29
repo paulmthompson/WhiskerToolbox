@@ -76,10 +76,34 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
                     return {};
                 }
                 auto const tfi = _scatter_data.time_indices[idx];
-                return QString("X: %1\nY: %2\nIndex: %3")
-                        .arg(static_cast<double>(hit.world_x), 0, 'f', 3)
-                        .arg(static_cast<double>(hit.world_y), 0, 'f', 3)
-                        .arg(tfi.getValue());
+                auto text = QString("X: %1\nY: %2\nIndex: %3")
+                                    .arg(static_cast<double>(hit.world_x), 0, 'f', 3)
+                                    .arg(static_cast<double>(hit.world_y), 0, 'f', 3)
+                                    .arg(tfi.getValue());
+
+                // Append feature color value when coloring is active
+                if (_state && idx < _feature_values.size() && _feature_values[idx].has_value()) {
+                    auto const & cc = _state->colorConfig();
+                    auto const val = *_feature_values[idx];
+                    auto const key = cc.color_source.has_value()
+                                             ? QString::fromStdString(cc.color_source->data_key)
+                                             : QString();
+
+                    if (cc.mapping_mode == "threshold") {
+                        auto const label = (static_cast<double>(val) >= cc.threshold)
+                                                   ? QStringLiteral("above")
+                                                   : QStringLiteral("below");
+                        text += QString("\nColor: %1 (%2) [%3]")
+                                        .arg(static_cast<double>(val), 0, 'f', 3)
+                                        .arg(key, label);
+                    } else {
+                        text += QString("\nColor: %1 (%2)")
+                                        .arg(static_cast<double>(val), 0, 'f', 3)
+                                        .arg(key);
+                    }
+                }
+
+                return text;
             });
 
     setAttribute(Qt::WA_AlwaysStackOnTop);

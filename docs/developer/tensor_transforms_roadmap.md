@@ -1,6 +1,6 @@
 # Tensor Transform Library — Design Roadmap
 
-**Last updated:** 2025-07-22
+**Last updated:** 2026-03-29
 
 ## Motivation
 
@@ -39,7 +39,7 @@ EntityGroupManager → downstream analysis
 |------|-----------|--------|
 | Encode video → TensorData | DeepLearning_Widget + ResultProcessor | ✅ Exists |
 | PCA on TensorData | MLCore PCAOperation + TensorPCA TransformsV2 wrapper | ✅ Phase 1 complete |
-| t-SNE / manifold methods | tapkee integration | Phase 3 (next) |
+| t-SNE / manifold methods | tapkee integration | Phase 3 (t-SNE complete, others pending) |
 | Scatter plot of reduced features | ScatterPlotWidget (TensorData columns) | ✅ Exists |
 | Color points by group | ScatterPlotWidget (`colorByGroup` + GroupManager) | ✅ Exists |
 | Select points → create group | ScatterPlotWidget → EntityGroupManager | ✅ Phase 2 complete |
@@ -47,6 +47,7 @@ EntityGroupManager → downstream analysis
 | Propagate groups to other widgets | SelectionContext + DataFocusAware | ✅ Exists |
 | Dim reduction UI | MLCore_Widget Dim Reduction tab | ✅ Phase 4 complete |
 | Scatter ↔ clustering loop | ContextActions + selective clustering + label overlay | ✅ Phase 5 complete |
+| Supervised dim reduction (logit projection) | MLCore LogitProjectionOp + SupervisedDimReductionPipeline | Phase 8 (8a, 8b complete) |
 
 ---
 
@@ -57,9 +58,13 @@ EntityGroupManager → downstream analysis
 ```
 MLCore (algorithms)                TransformsV2 (pipeline wrappers)
 ├── MLDimReductionOperation        ├── TensorPCA (container transform)
-├── PCAOperation (mlpack)          ├── TensorTSNE (Phase 3)
-├── TSNEOperation (Phase 3)        └── TensorIsomap (Phase 3)
-├── DimReductionPipeline           
+├── MLSupervisedDimRedOp (P8)      ├── TensorTSNE (Phase 3)
+├── PCAOperation (mlpack)          ├── TensorIsomap (Phase 3)
+├── TSNEOperation (Phase 3)        ├── TensorLogitProjection (P8)
+├── LogitProjectionOperation (P8)  │
+├── SoftmaxRegressionOp ✅         │
+├── DimReductionPipeline           │
+├── SupervisedDimRedPipeline (P8)  │
 └── ClusteringPipeline             Widget Communication
                                    ├── SelectionContext (setDataFocus)
                                    ├── ContextActions (2 registered)
@@ -92,11 +97,15 @@ MLCore (algorithms)                TransformsV2 (pipeline wrappers)
 
 **Future extension:** Once interval-row support for non-analog types lands, entity preservation should generalize to interval-row TensorData.
 
-### Phase 3: Tapkee Integration — NEXT
+### Phase 3: Tapkee Integration — IN PROGRESS
 
 **Goal:** Non-linear dimensionality reduction (t-SNE, manifold methods).
 
-**Note:** `DimReductionPipeline` already exists from Phase 4 — only tapkee-specific operations and TransformsV2 wrappers need to be added.
+**t-SNE: Complete.** Tapkee integrated via FetchContent (header-only, own CMakeLists.txt bypassed). `TSNEOperation` in MLCore wraps tapkee's `tDistributedStochasticNeighborEmbedding`. `TensorTSNE` registered as TransformsV2 container transform. Full test coverage.
+
+**Remaining:** Isomap, Laplacian Eigenmaps, and other manifold methods.
+
+**Note:** `DimReductionPipeline` already exists from Phase 4 — only tapkee-specific operations and TransformsV2 wrappers need to be added for the remaining methods.
 
 **Steps:**
 
@@ -171,6 +180,259 @@ MLCore (algorithms)                TransformsV2 (pipeline wrappers)
 3. **3D embedding visualization** — OpenGL 3D scatter for 3-component embeddings
 4. **Benchmarks** — Google Benchmark suite for PCA/t-SNE at various matrix sizes
 
+### Phase 8: Supervised Dimensionality Reduction (Logit Projection) — IN PROGRESS (8a, 8b complete)
+
+**Goal:** Use logistic / softmax regression as a supervised dimensionality reduction method. Given a high-dimensional TensorData (N×D) and class labels, the model learns a linear projection that maximally separates the classes. The output is a **logits TensorData** (N×C) where C is the number of classes — a C-dimensional space optimized for class discrimination.
+
+**Mathematical basis:** Logistic regression learns a weight matrix $W \in \mathbb{R}^{C \times D}$ and bias $b$. The logits $z = Wx + b$ form a C-dimensional linear subspace that is optimally discriminative under the cross-entropy loss. This is closely related to Fisher's Linear Discriminant Analysis (LDA) and can be viewed as a supervised counterpart to PCA.
+
+**Key differences from unsupervised dim reduction:**
+- Requires **class labels** in addition to features → must integrate `LabelAssembler`
+- Output dimensionality is **determined by the number of classes**, not a user parameter
+- Uses the existing `LogisticRegressionOperation` (binary) and new `SoftmaxRegressionOperation` (multi-class) as training backends
+- Extracts raw **logits** (pre-sigmoid/softmax activations) rather than predictions or probabilities
+
+**Primary use case:** The encoder → logit projection → scatter plot workflow:
+```
+TensorData  (N×192, "encoder_features")
+  │  Supervised dim reduction: labels from DigitalIntervalSeries / EntityGroups
+  ▼
+TensorData  (N×C, logit columns "Logit:ClassName1" / "Logit:ClassName2" / ...)
+  │  ScatterPlotWidget: X=Logit:Class0, Y=Logit:Class1, color-by-group
+  ▼
+Scatter visualization showing class separation in logit space
+```
+
+#### Phase 8a: SoftmaxRegressionOperation (MLCore algorithm) ✅
+
+**Delivered:** Multi-class logistic regression via `mlpack::SoftmaxRegression<arma::mat>`, registered as `"Softmax Regression"` with task type `MultiClassClassification`. 11 test cases, 434 assertions.
+
+- `SoftmaxRegressionOperation` — `MLModelOperation` subclass with pimpl, L-BFGS optimizer, cereal serialization. See `src/MLCore/models/supervised/SoftmaxRegressionOperation.hpp/.cpp`.
+- `SoftmaxRegressionParameters` — `lambda` (0.0001), `max_iterations` (10000). Added to `src/MLCore/models/MLModelParameters.hpp`.
+- Registered in `src/MLCore/models/MLModelRegistry.cpp`.
+- Tests in `tests/MLCore/SoftmaxRegressionOperation.test.cpp` cover: metadata, 3/4/5-class training, binary training, error handling, prediction accuracy, probability output (sum-to-one, range), save/load round-trip, parameter variations, registry integration.
+- Developer documentation: `docs/developer/MLCore/softmax_regression.qmd`.
+
+**Implementation note:** `mlpack::SoftmaxRegression` requires template argument `<arma::mat>`. The constructor argument order is `(data, labels, numClasses, optimizer, lambda, fitIntercept)` — optimizer precedes lambda.
+
+#### Phase 8b: Supervised Dim Reduction Operation (MLCore interface + algorithm) ✅
+
+**Delivered:** Abstract base class `MLSupervisedDimReductionOperation` and concrete `LogitProjectionOperation`, with `LogitProjectionParameters` and `SupervisedDimensionalityReduction` task type. 9 test cases, 79 assertions.
+
+- `MLSupervisedDimReductionOperation` — new abstract base in `src/MLCore/models/MLSupervisedDimReductionOperation.hpp`. Adds `fitTransform()`, `transform()`, `outputDimensions()`, `outputColumnNames()` pure virtuals. Routes `train()` to `fitTransform()` for registry compatibility.
+- `LogitProjectionOperation` — concrete implementation in `src/MLCore/models/supervised/LogitProjectionOperation.hpp/.cpp`. Uses `mlpack::SoftmaxRegression<arma::mat>` with `fitIntercept=true`. Extracts weight matrix $W$ (C×D) and bias $b$ (C) from `Parameters()` (column 0 = bias, columns 1..D = weights). Inference: `result = W * X; result.each_col() += b`.
+- `LogitProjectionParameters` — `lambda` (0.0001), `max_iterations` (10000), `scale_features` (false). When `scale_features=true`, scaling is absorbed into $W$ and $b$ at training time for transparent inference.
+- `SupervisedDimensionalityReduction` added to `MLTaskType` enum in `src/MLCore/models/MLTaskType.hpp`.
+- Registered in `src/MLCore/models/MLModelRegistry.cpp` as `"Logit Projection"`.
+- Save/load serializes only $W$ and $b$ (not the mlpack model) — inference works without mlpack after `load()`.
+- Tests in `tests/MLCore/LogitProjectionOperation.test.cpp` cover: metadata, binary/3-class fitTransform output shape, class separation accuracy >95%, transform consistency, all error cases, scale_features, save/load round-trip, registry integration.
+- Developer documentation: `docs/developer/MLCore/logit_projection.qmd`.
+
+**Implementation notes:**
+- `fitIntercept=true` gives better expressiveness; `Parameters()` layout is `(C, D+1)` with bias in column 0.
+- Scaling absorption: when `scale_features=true`, `W_eff = W / σ.T()`, `b_eff = b - W_eff * μ`. Thereafter `transform()` is always just `W*X + b`.
+- Uses pimpl pattern to isolate `mlpack.hpp` from consumers.
+
+#### Phase 8b was planned (original notes below, superseded by delivered implementation)
+
+**Goal:** Abstract base class for supervised dimensionality reduction, plus `LogitProjectionOperation` concrete implementation.
+
+**Steps:**
+
+1. **Create `MLSupervisedDimReductionOperation`** — new abstract base class extending `MLModelOperation`
+   ```cpp
+   class MLSupervisedDimReductionOperation : public MLModelOperation {
+   public:
+       /// Fit on labeled data and project to reduced space
+       /// @param features  (D × N) input features in mlpack convention
+       /// @param labels    (N,) class label per observation
+       /// @param params    Algorithm-specific parameters
+       /// @param result    Output: (C × N) reduced representation
+       virtual bool fitTransform(
+           arma::mat const & features,
+           arma::Row<std::size_t> const & labels,
+           MLModelParametersBase const * params,
+           arma::mat & result) = 0;
+
+       /// Project new unlabeled data using the fitted model
+       virtual bool transform(
+           arma::mat const & features,
+           arma::mat & result) = 0;
+
+       /// Number of output dimensions (= num_classes for logit projection)
+       virtual std::size_t outputDimensions() const = 0;
+
+       /// Class names corresponding to each output column
+       virtual std::vector<std::string> outputColumnNames() const = 0;
+   };
+   ```
+
+2. **Create `LogitProjectionOperation`** — concrete supervised dim reduction
+   - Internally trains `LogisticRegressionOperation` (if 2 classes) or `SoftmaxRegressionOperation` (if C≥2)
+   - Extracts model parameter matrix: `W = model.Parameters()` from mlpack
+     - Binary: weight vector $w$ (D,) + bias scalar → logit $z = w^T x + b$ → 1D output (or 2D: [z, -z])
+     - Softmax: weight matrix $W$ (C × (D+1)) → logits $Z = W_{[:,:D]} \cdot X + W_{[:,D]}$ → C-D output
+   - `fitTransform()`: train then compute logits
+   - `transform()`: project new data using stored $W$, $b$
+   - `outputColumnNames()`: returns `["Logit:ClassName0", "Logit:ClassName1", ...]`
+
+3. **Create `LogitProjectionParameters`** — parameter struct
+   - `double lambda` — L2 regularization (default 0.0001)
+   - `int max_iterations` — L-BFGS iterations (default 10000)
+   - `bool scale_features` — optional feature standardization before fitting (default false)
+
+4. **Register in `MLModelRegistry`** — new task type `SupervisedDimensionalityReduction` in `MLTaskType` enum, or reuse `DimensionalityReduction` with supervised handling
+
+5. **Unit tests** — logit shape correctness, class separation quality, transform consistency, binary/multi-class paths
+
+**Design decision: `MLTaskType` extension**
+
+Add `SupervisedDimensionalityReduction` to the `MLTaskType` enum. This keeps supervised and unsupervised dim reduction discoverable via separate registry queries, which matters for the `DimReductionPanel` UI (Phase 8d) to show the correct algorithm list per mode.
+
+**Files to create/edit:**
+
+| File | Action |
+|------|--------|
+| `src/MLCore/models/MLSupervisedDimReductionOperation.hpp` | Create: abstract base |
+| `src/MLCore/models/supervised/LogitProjectionOperation.hpp` | Create |
+| `src/MLCore/models/supervised/LogitProjectionOperation.cpp` | Create |
+| `src/MLCore/models/MLModelParameters.hpp` | Add `LogitProjectionParameters` |
+| `src/MLCore/models/MLTaskType.hpp` | Add `SupervisedDimensionalityReduction` |
+| `src/MLCore/models/MLModelRegistry.cpp` | Register `"Logit Projection"` |
+| `tests/MLCore/test_LogitProjectionOperation.cpp` | Create |
+
+#### Phase 8c: Supervised Dim Reduction Pipeline
+
+**Goal:** End-to-end pipeline combining label assembly with dim reduction TensorData output.
+
+This merges `DimReductionPipeline`'s TensorData output workflow with `ClassificationPipeline`'s label assembly stage from `LabelAssembler`.
+
+**Steps:**
+
+1. **Create `SupervisedDimReductionPipelineConfig`** — pipeline configuration
+   ```cpp
+   struct SupervisedDimReductionPipelineConfig {
+       // -- Model --
+       std::string model_name;                      // "Logit Projection"
+       MLModelParametersBase const * model_params;  // LogitProjectionParameters
+
+       // -- Features --
+       std::string feature_tensor_key;              // input TensorData DM key
+
+       // -- Labels --
+       LabelAssemblyConfig label_config;            // same 4-mode variant from ClassificationPipeline
+       std::string label_interval_key;              // DM key for DigitalIntervalSeries (if LabelFromIntervals)
+       std::string label_event_key;                 // DM key for DigitalEventSeries (if LabelFromEvents)
+
+       // -- Feature conversion --
+       ConversionConfig conversion_config;          // NaN dropping, z-score
+
+       // -- Output --
+       DimReductionOutputConfig output_config;      // output_key, time_key_str
+       std::string time_key_str = "time";
+       bool defer_dm_writes = false;
+   };
+   ```
+
+2. **Create `SupervisedDimReductionPipelineResult`** — extends dim reduction result with label metadata
+   - All fields from `DimReductionPipelineResult`
+   - `std::vector<std::string> class_names` — discovered class labels
+   - `std::size_t num_classes` — number of classes
+   - `std::size_t unlabeled_count` — rows without labels (group-based modes)
+
+3. **Create `runSupervisedDimReductionPipeline()`** — orchestration function
+   - **Pipeline stages:** ValidatingFeatures → ConvertingFeatures → AssemblingLabels → FittingAndTransforming → WritingOutput → Complete
+   - Reuses `FeatureValidator`, `FeatureConverter`, `LabelAssembler` from existing pipelines
+   - Calls `MLSupervisedDimReductionOperation::fitTransform()` with features + labels
+   - Output column names from `outputColumnNames()` (e.g., "Logit:Contact", "Logit:NoContact")
+   - Preserves `RowDescriptor` (TimeFrameIndex rows) from input tensor, filtering for valid indices after NaN/label dropping
+
+4. **Unit tests** — full pipeline integration (labels + features → logit TensorData), row preservation, NaN handling, column naming
+
+**Files to create/edit:**
+
+| File | Action |
+|------|--------|
+| `src/MLCore/pipelines/SupervisedDimReductionPipeline.hpp` | Create |
+| `src/MLCore/pipelines/SupervisedDimReductionPipeline.cpp` | Create |
+| `tests/MLCore/test_SupervisedDimReductionPipeline.cpp` | Create |
+
+#### Phase 8d: DimReductionPanel UI — Supervised Mode
+
+**Goal:** Extend the existing `DimReductionPanel` to support supervised algorithms with label source selection.
+
+**Steps:**
+
+1. **Add supervised/unsupervised toggle** — radio buttons or combo at the top of `DimReductionPanel`
+   - When "Unsupervised" is selected: show current algorithm list (PCA, t-SNE, Robust PCA)
+   - When "Supervised" is selected: show supervised algorithms (Logit Projection, future: LDA)
+
+2. **Add label source configuration** — visible only in supervised mode
+   - **Label source type** combo: "Intervals", "Events", "Time Entity Groups", "Data Entity Groups"
+   - **Label key** combo: populated dynamically via `updateAllowedValues()` from DataManager
+     - "Intervals" → `dm.getKeys<DigitalIntervalSeries>()`
+     - "Events" → `dm.getKeys<DigitalEventSeries>()`
+     - "Time Entity Groups" / "Data Entity Groups" → group selector from `EntityGroupManager`
+   - Uses existing `dynamic_combo` + `include_none_sentinel` pattern from `ParameterSchema`
+
+3. **Wire up `SupervisedDimReductionPipelineWorker`** — background thread execution
+   - Same pattern as existing `DimReductionPipelineWorker` but calls `runSupervisedDimReductionPipeline()`
+   - Deferred main-thread writes for thread safety
+
+4. **Display class-specific results** — after completion, show:
+   - Number of classes and class names discovered
+   - Unlabeled row count (for group-based modes)
+   - Output tensor shape (N×C)
+
+5. **Auto-focus output** — call `SelectionContext::setDataFocus()` on the output logit tensor
+   - Existing `scatter_plot.visualize_2d_tensor` ContextAction handles scatter visualization
+
+**Files to edit:**
+
+| File | Action |
+|------|--------|
+| `src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.hpp` | Edit: add supervised controls |
+| `src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.cpp` | Edit: add supervised logic |
+| `src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.ui` | Edit: add supervised UI elements (if .ui exists) |
+| `src/WhiskerToolbox/MLCore_Widget/MLCore_Widget.cpp` | Edit: wire supervised pipeline worker |
+
+#### Phase 8e: TransformsV2 Wrapper
+
+**Goal:** Register `TensorLogitProjection` as a container transform for pipeline composability.
+
+**Steps:**
+
+1. **Create `TensorLogitProjection`** — TransformsV2 container transform
+   - Input: TensorData (features) + parameter specifying label source key
+   - Output: TensorData (logits) with `RowDescriptor` preserved
+   - Reflect-cpp parameter struct with `dynamic_combo` for label key selection
+   - Static registration via RAII pattern (same as `TensorPCA`, `TensorTSNE`)
+
+2. **`ParameterUIHints` specialization** — annotate `label_key` field as `dynamic_combo`
+
+**Note:** The TransformsV2 wrapper for supervised transforms is more complex than unsupervised wrappers because it needs to specify label source configuration. Consider whether the TransformsV2 parameter struct should embed the full `LabelAssemblyConfig` variant or use a simpler "label_key + label_type" pair. The simpler pair is recommended for TransformsV2 to keep the pipeline JSON format clean.
+
+**Files to create:**
+
+| File | Action |
+|------|--------|
+| `src/TransformsV2/algorithms/TensorLogitProjection/TensorLogitProjection.hpp` | Create |
+| `src/TransformsV2/algorithms/TensorLogitProjection/TensorLogitProjection.cpp` | Create |
+| `tests/TransformsV2/test_TensorLogitProjection.cpp` | Create |
+
+#### Phase 8 Design Decisions
+
+| Question | Decision | Rationale |
+|----------|----------|-----------|
+| Where does the supervised dim reduction base live? | `MLCore/models/MLSupervisedDimReductionOperation.hpp` | Parallel to `MLDimReductionOperation`; same directory |
+| Binary vs multi-class handling? | `LogitProjectionOperation` auto-selects: 2 classes → `LogisticRegression`, ≥2 → `SoftmaxRegression` | Single entry point for users; algorithm detail is hidden |
+| How are logits extracted from mlpack? | `model.Parameters()` returns weight matrix; logits = $Wx + b$ | Both `LogisticRegression::Parameters()` and `SoftmaxRegression::Parameters()` expose this |
+| New `MLTaskType` or reuse? | Add `SupervisedDimensionalityReduction` | Keeps registry queries clean; DimReductionPanel can filter by unsupervised vs supervised |
+| How does label key reach the pipeline? | `SupervisedDimReductionPipelineConfig` embeds full `LabelAssemblyConfig` | Reuses proven 4-mode variant from ClassificationPipeline |
+| How does label key reach the UI? | `dynamic_combo` + `updateAllowedValues()` on DimReductionPanel | Existing pattern used by DeepLearning_Widget and AutoParamWidget |
+| New pipeline or extend existing? | New `SupervisedDimReductionPipeline` | DimReductionPipeline has no label stage; adding one would complicate the unsupervised path |
+| Output column naming? | `"Logit:ClassName"` per class | Descriptive; avoids collision with PCA's `"PC1"` naming |
+
 ---
 
 ## Cross-Widget Communication Patterns (Reference)
@@ -207,6 +469,27 @@ MLCore_Widget → runs K-Means → ClusteringPipeline → EntityGroupManager
   → scene dirty → applyGroupColorsToScene() → points colored by cluster
 ```
 
+### Pattern 4: Supervised Dim Reduction → Logit Scatter (Phase 8)
+
+```
+DimReductionPanel (supervised mode)
+  │ User selects: features="encoder_features", algorithm="Logit Projection"
+  │ User selects: label source="Intervals", label_key="contact_labels"
+  │ → SupervisedDimReductionPipelineWorker (background thread)
+  │    → LabelAssembler: DigitalIntervalSeries → arma::Row<size_t> labels
+  │    → LogitProjectionOperation::fitTransform(features, labels, params, logits)
+  │    → Creates TensorData (N×C) with columns "Logit:Contact", "Logit:NoContact"
+  │    → (deferred write) DataManager::setData("encoder_features_logit", tensor)
+  │ → SelectionContext::setDataFocus("encoder_features_logit", "TensorData")
+  ▼
+ScatterPlotPropertiesWidget (DataFocusAware)
+  → onDataFocusChanged → refreshes columns
+  → User selects X="Logit:Contact", Y="Logit:NoContact"
+  ▼
+ScatterPlotOpenGLWidget → class separation visible in logit space
+  → Color by entity group shows labeled vs unlabeled
+```
+
 ---
 
 ## Dependency Graph
@@ -218,18 +501,23 @@ MLCore_Widget → runs K-Means → ClusteringPipeline → EntityGroupManager
                     └──────────┬─────────────────┘
                                │ reads TensorData, writes EntityGroups
                                ▼
-┌─────────────────┐     ┌──────────────┐     ┌───────────────────┐
-│   TransformsV2  │────▶│   MLCore     │     │ EntityGroupManager│
-│ TensorPCA       │     │ PCAOperation │     │ createGroup()     │
-│ TensorTSNE (P3) │     │ TSNEOp (P3)  │     │ notifyObservers() │
-│ (thin wrappers) │     │ Clustering   │────▶│                   │
-└────────┬────────┘     └──────┬───────┘     └────────┬──────────┘
-         │                     │                      │
-         ▼                     ▼                      ▼
-┌─────────────────┐     ┌──────────────┐     ┌───────────────────┐
-│   TensorData    │     │ Tapkee (P3)  │     │ SelectionContext   │
-│   (DataObjects) │     │ (header-only)│     │ + ContextActions   │
-└─────────────────┘     └──────────────┘     └───────────────────┘
+┌─────────────────┐     ┌──────────────────┐     ┌───────────────────┐
+│   TransformsV2  │────▶│   MLCore           │     │ EntityGroupManager│
+│ TensorPCA       │     │ PCAOperation       │     │ createGroup()     │
+│ TensorTSNE (P3) │     │ TSNEOp (P3)        │     │ notifyObservers() │
+│ TensorLogit(P8) │     │ LogitProjection(P8)│────▶│                   │
+│ (thin wrappers) │     │ SoftmaxRegression ✅│     └────────┬──────────┘
+└────────┬────────┘     │  (P8a done)        │              │
+         │              │ Clustering         │              ▼
+         ▼              └──────┬─────────────┘     ┌───────────────────┐
+┌─────────────────┐            │                   │ SelectionContext   │
+│   TensorData    │            ▼                   │ + ContextActions   │
+│   (DataObjects) │     ┌──────────────┐           └───────────────────┘
+└─────────────────┘     │ Tapkee (P3)  │     ┌───────────────────┐
+                        └──────────────┘     │ LabelAssembler    │
+                                             │ (Intervals/Events/│
+                                             │  Groups) ← P8     │
+                                             └───────────────────┘
 ```
 
 Widget interaction is mediated entirely through DataManager (transforms write output; widgets observe), SelectionContext (`setDataFocus()` broadcasts; `DataFocusAware` auto-updates), and EntityGroupManager (scatter selection creates groups; observers notify all widgets). No widget holds a pointer to any other widget.
@@ -242,11 +530,12 @@ Widget interaction is mediated entirely through DataManager (transforms write ou
 |---|-------|----------|--------|-----------------|
 | 1 | PCA Foundation | **High** | ✅ Complete | TensorData → TensorData; row preservation |
 | 2 | Scatter Selection → Groups | **High** | ✅ Complete | "Create Group from Selection" in scatter |
-| 3 | Tapkee (t-SNE, manifold) | **Medium** | **Next** | Non-linear dim reduction |
+| 3 | Tapkee (t-SNE, manifold) | **Medium** | **t-SNE complete** | Non-linear dim reduction |
 | 4 | MLCore Dim Reduction Tab | **High** | ✅ Complete | Integrated UI; auto-focus output |
 | 5 | Clustering ↔ Scatter Loop | **High** | ✅ Complete | ContextAction clustering; selective clustering; label overlay |
 | 6 | Elemental Tensor Transforms | Low | Not started | Row-level element transforms |
 | 7 | Advanced Features | Low | Not started | Fit/project, scree plot, 3D scatter, benchmarks |
+| 8 | Supervised Dim Reduction (Logit Projection) | **High** | **8a complete** | Supervised TensorData → logit TensorData; label integration |
 
 ---
 
@@ -262,6 +551,9 @@ Widget interaction is mediated entirely through DataManager (transforms write ou
 | How do scatter selections become groups? | **Context menu → EntityGroupManager** | Scatter already has selection + GroupManager; add write path |
 | Elemental tensor transforms? | **Phase 6** (deferred) | Requires ContainerTraits work for TensorData |
 | Separate TensorTransforms library? | **No** | Hybrid approach avoids new infrastructure |
+| Supervised dim reduction: new pipeline or extend existing? | **New `SupervisedDimReductionPipeline`** | DimReductionPipeline is unsupervised-only; label assembly doesn't belong there |
+| Logit projection: binary vs softmax handling? | **Auto-select in `LogitProjectionOperation`** | 2 classes → `LogisticRegression`, ≥2 → `SoftmaxRegression`; single user-facing entry |
+| Label key in UI? | **`dynamic_combo` + `updateAllowedValues()`** | Proven pattern from DeepLearning_Widget; populates from DataManager at runtime |
 
 ## See Also
 

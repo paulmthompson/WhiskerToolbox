@@ -57,7 +57,7 @@ target_link_libraries(DataManagerOpenCV PRIVATE
     DataTypeEnum
     WhiskerToolbox::MaskData
     opencv_core opencv_imgproc opencv_imgcodecs  # OpenCV components
-    spdlog::spdlog
+    spdlog::spdlog_header_only
 )
 
 target_link_libraries(DataManagerOpenCV PRIVATE CoreUtilities)

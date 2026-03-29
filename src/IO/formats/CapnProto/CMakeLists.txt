@@ -63,7 +63,7 @@ target_link_libraries(DataManagerIO_CapnProto PRIVATE
     NEURALYZER_GEOMETRY
     ParameterSchema
     DataTypeEnum
-    spdlog::spdlog
+    spdlog::spdlog_header_only
 )
 
 if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")

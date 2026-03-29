@@ -28,9 +28,14 @@ set(MLCore_SOURCES
     models/MLTaskType.hpp
 
     models/MLDimReductionOperation.hpp
+    models/MLSupervisedDimReductionOperation.hpp
 
     models/supervised/LogisticRegressionOperation.cpp
     models/supervised/LogisticRegressionOperation.hpp
+    models/supervised/LogitProjectionOperation.cpp
+    models/supervised/LogitProjectionOperation.hpp
+    models/supervised/SoftmaxRegressionOperation.cpp
+    models/supervised/SoftmaxRegressionOperation.hpp
     models/supervised/NaiveBayesOperation.cpp
     models/supervised/NaiveBayesOperation.hpp
     models/supervised/HiddenMarkovModelOperation.cpp
@@ -66,6 +71,9 @@ set(MLCore_SOURCES
 
     pipelines/DimReductionPipeline.cpp
     pipelines/DimReductionPipeline.hpp
+
+    pipelines/SupervisedDimReductionPipeline.cpp
+    pipelines/SupervisedDimReductionPipeline.hpp
 
     pipelines/SequenceAssembler.cpp
     pipelines/SequenceAssembler.hpp
