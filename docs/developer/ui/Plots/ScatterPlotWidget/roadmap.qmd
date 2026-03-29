@@ -8,13 +8,13 @@ format: html
 This document tracks remaining development tasks for the Scatter Plot Widget. For documentation
 of completed features and current architecture, see the [main developer documentation](index.qmd).
 
-**Not yet implemented**: Feature coloring widget integration (Phase 7), stale key handling (Phase 6.3).
+**Not yet implemented**: Stale key handling (Phase 6.3).
 
 ---
 
 ## Phase 7: External Feature Coloring (Widget Integration)
 
-**Status**: Shared infrastructure complete. Widget integration not started.
+**Status**: Complete. All widget integration steps finished.
 
 **Goal**: Color scatter points by an external data source (e.g., velocity colored by acceleration,
 points colored by whether they fall inside a DigitalIntervalSeries interval).
@@ -54,8 +54,8 @@ navigate highlight > selected > group > **feature** > default glyph style.
 | **7.1** | `ScatterColorConfigData` | `ScatterPlotWidget/Core/` | ✅ Done |
 | **7.2** | Properties panel UI | `ScatterPlotWidget/UI/` | ✅ Done |
 | **7.3** | Rendering integration | `ScatterPlotWidget/Rendering/` | ✅ Done |
-| **7.4** | Tooltip extension | `ScatterPlotWidget/Rendering/` | Show feature value in hover tooltip |
-| **7.5** | Unit tests | `tests/ScatterPlotWidget/` | State serialization, rendering integration |
+| **7.4** | Tooltip extension | `ScatterPlotWidget/Rendering/` | ✅ Done |
+| **7.5** | Unit tests | `tests/ScatterPlotWidget/` | ✅ Done |
 
 ---
 
