@@ -46,6 +46,9 @@ set(MLCore_SOURCES
     models/unsupervised/KMeansOperation.hpp
     models/unsupervised/PCAOperation.cpp
     models/unsupervised/PCAOperation.hpp
+    models/unsupervised/RobustPCAOperation.cpp
+    models/unsupervised/RobustPCAOperation.hpp
+    models/unsupervised/rosl.hpp
     models/unsupervised/TSNEOperation.cpp
     models/unsupervised/TSNEOperation.hpp
 

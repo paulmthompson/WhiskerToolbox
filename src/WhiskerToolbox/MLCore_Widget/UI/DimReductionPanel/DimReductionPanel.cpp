@@ -38,8 +38,9 @@ DimReductionPanel::DimReductionPanel(
     _setupConnections();
     _registerDataManagerObserver();
 
-    // Default: show PCA params, hide t-SNE params
+    // Default: show PCA params, hide t-SNE and Robust PCA params
     ui->tsneParamsWidget->setVisible(false);
+    ui->robustPcaParamsWidget->setVisible(false);
 
     refreshTensorList();
     _restoreFromState();
@@ -113,6 +114,14 @@ std::unique_ptr<MLCore::MLModelParametersBase> DimReductionPanel::currentParamet
         params->n_components = static_cast<std::size_t>(ui->tsneComponentsSpinBox->value());
         params->perplexity = ui->perplexitySpinBox->value();
         params->theta = ui->thetaSpinBox->value();
+        return params;
+    }
+
+    if (name == "Robust PCA") {
+        auto params = std::make_unique<MLCore::RobustPCAParameters>();
+        params->n_components = static_cast<std::size_t>(ui->rpcaComponentsSpinBox->value());
+        params->lambda = ui->rpcaLambdaSpinBox->value();
+        params->max_iter = static_cast<std::size_t>(ui->rpcaMaxIterSpinBox->value());
         return params;
     }
 
@@ -272,8 +281,10 @@ void DimReductionPanel::_onAlgorithmChanged(int index) {
     // Toggle algorithm-specific parameter widgets
     bool const is_pca = (name == "PCA");
     bool const is_tsne = (name == "t-SNE");
+    bool const is_rpca = (name == "Robust PCA");
     ui->pcaParamsWidget->setVisible(is_pca);
     ui->tsneParamsWidget->setVisible(is_tsne);
+    ui->robustPcaParamsWidget->setVisible(is_rpca);
 
     _updateOutputKeyFromInput();
 }
@@ -377,6 +388,7 @@ void DimReductionPanel::_populateAlgorithms() {
         auto const first_name = ui->algorithmComboBox->currentData().toString().toStdString();
         ui->pcaParamsWidget->setVisible(first_name == "PCA");
         ui->tsneParamsWidget->setVisible(first_name == "t-SNE");
+        ui->robustPcaParamsWidget->setVisible(first_name == "Robust PCA");
     }
 
     _updating = false;
@@ -508,6 +520,8 @@ void DimReductionPanel::_updateOutputKeyFromInput() {
         suffix = "pca";
     } else if (algo == "t-SNE") {
         suffix = "tsne";
+    } else if (algo == "Robust PCA") {
+        suffix = "rpca";
     }
 
     ui->outputKeyLineEdit->setText(

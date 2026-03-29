@@ -18,6 +18,7 @@
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
 #include "algorithms/TensorPCA/TensorPCA.hpp"
+#include "algorithms/TensorRobustPCA/TensorRobustPCA.hpp"
 #include "algorithms/TensorTSNE/TensorTSNE.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
@@ -67,6 +68,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<IntervalReductionParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     registerPipelineStepFactoryFor<TensorPCAParams>();
+    registerPipelineStepFactoryFor<TensorRobustPCAParams>();
     return true;
 }();
 
@@ -671,6 +673,20 @@ auto const register_tensor_tsne = RegisterContainerTransform<TensorData, TensorD
                 .params_type_name = "TensorTSNEParams",
                 .is_expensive = true,
                 .is_deterministic = false,
+                .supports_cancellation = true});
+
+// Register TensorRobustPCA (Container Transform: TensorData → TensorData)
+auto const register_tensor_robust_pca = RegisterContainerTransform<TensorData, TensorData, TensorRobustPCAParams>(
+        "TensorRobustPCA",
+        tensorRobustPCA,
+        ContainerTransformMetadata{
+                .description = "Apply Robust PCA (ROSL) dimensionality reduction to a TensorData",
+                .category = "Dimensionality Reduction",
+                .input_type_name = "TensorData",
+                .output_type_name = "TensorData",
+                .params_type_name = "TensorRobustPCAParams",
+                .is_expensive = true,
+                .is_deterministic = true,
                 .supports_cancellation = true});
 
 auto const container_transform_registration = []() {
