@@ -132,6 +132,7 @@ add_executable(test_data_manager
         IO/batch_loading.test.cpp
         IO/atomic_write.test.cpp
         IO/saver_registry.test.cpp
+        IO/loader_registry.test.cpp
         
         # IO Integration tests (format-centric organization)
         IO/formats/CSV/analog/analog_csv_integration.test.cpp

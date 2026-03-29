@@ -194,9 +194,10 @@ When pointing an LLM at a specific function, use this prompt:
 > 5. Write `@pre` tags with `(enforcement: X)` classification
 > 6. Find all callers transitively and check precondition propagation
 >
-> Output:
+> **Deliverables** (in your response only; do **not** add the analysis or caller table to this
+> protocol document or to any other file in the repo):
 >
-> - The updated Doxygen comment block with `@pre` tags
+> - The updated Doxygen comment block with `@pre` tags (applied by editing the header file)
 > - A caller propagation table:
 >
 >   | Caller | File:Line | Precondition Status | Action Needed |
