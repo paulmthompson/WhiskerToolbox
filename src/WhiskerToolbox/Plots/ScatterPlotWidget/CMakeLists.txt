@@ -5,6 +5,7 @@ set(SCATTER_PLOT_WIDGET_SOURCES
         Core/BuildScatterPoints.cpp
         Core/BuildScatterPoints.hpp
         Core/ScatterAxisSource.hpp
+        Core/ScatterColorConfig.hpp
         Core/ScatterPlotState.cpp
         Core/ScatterPlotState.hpp
         Core/ScatterPointData.hpp

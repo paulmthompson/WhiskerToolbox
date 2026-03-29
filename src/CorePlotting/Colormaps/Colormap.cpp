@@ -11,30 +11,44 @@ namespace CorePlotting::Colormaps {
 // Preset names
 // =============================================================================
 
-std::string presetName(ColormapPreset preset)
-{
+std::string presetName(ColormapPreset preset) {
     switch (preset) {
-        case ColormapPreset::Inferno:   return "Inferno";
-        case ColormapPreset::Viridis:   return "Viridis";
-        case ColormapPreset::Magma:     return "Magma";
-        case ColormapPreset::Plasma:    return "Plasma";
-        case ColormapPreset::Coolwarm:  return "Coolwarm";
-        case ColormapPreset::Grayscale: return "Grayscale";
-        case ColormapPreset::Hot:       return "Hot";
+        case ColormapPreset::Inferno:
+            return "Inferno";
+        case ColormapPreset::Viridis:
+            return "Viridis";
+        case ColormapPreset::Magma:
+            return "Magma";
+        case ColormapPreset::Plasma:
+            return "Plasma";
+        case ColormapPreset::Coolwarm:
+            return "Coolwarm";
+        case ColormapPreset::Grayscale:
+            return "Grayscale";
+        case ColormapPreset::Hot:
+            return "Hot";
     }
     return "Unknown";
 }
 
-std::vector<ColormapPreset> allPresets()
-{
+ColormapPreset presetFromName(std::string const & name) {
+    for (auto const preset: allPresets()) {
+        if (presetName(preset) == name) {
+            return preset;
+        }
+    }
+    return ColormapPreset::Viridis;
+}
+
+std::vector<ColormapPreset> allPresets() {
     return {
-        ColormapPreset::Inferno,
-        ColormapPreset::Viridis,
-        ColormapPreset::Magma,
-        ColormapPreset::Plasma,
-        ColormapPreset::Coolwarm,
-        ColormapPreset::Grayscale,
-        ColormapPreset::Hot,
+            ColormapPreset::Inferno,
+            ColormapPreset::Viridis,
+            ColormapPreset::Magma,
+            ColormapPreset::Plasma,
+            ColormapPreset::Coolwarm,
+            ColormapPreset::Grayscale,
+            ColormapPreset::Hot,
     };
 }
 
@@ -42,8 +56,7 @@ std::vector<ColormapPreset> allPresets()
 // LUT-based colormap function
 // =============================================================================
 
-ColormapFunction fromLUT(ColormapLUT const & lut)
-{
+ColormapFunction fromLUT(ColormapLUT const & lut) {
     // Capture a pointer to the static LUT (avoids copying the 256-entry array)
     return [&lut](float t) -> glm::vec4 {
         // Clamp to [0, 1]
@@ -67,16 +80,22 @@ ColormapFunction fromLUT(ColormapLUT const & lut)
 // Preset → ColormapFunction
 // =============================================================================
 
-ColormapFunction getColormap(ColormapPreset preset)
-{
+ColormapFunction getColormap(ColormapPreset preset) {
     switch (preset) {
-        case ColormapPreset::Inferno:   return fromLUT(detail::infernoLUT());
-        case ColormapPreset::Viridis:   return fromLUT(detail::viridisLUT());
-        case ColormapPreset::Magma:     return fromLUT(detail::magmaLUT());
-        case ColormapPreset::Plasma:    return fromLUT(detail::plasmaLUT());
-        case ColormapPreset::Coolwarm:  return fromLUT(detail::coolwarmLUT());
-        case ColormapPreset::Grayscale: return fromLUT(detail::grayscaleLUT());
-        case ColormapPreset::Hot:       return fromLUT(detail::hotLUT());
+        case ColormapPreset::Inferno:
+            return fromLUT(detail::infernoLUT());
+        case ColormapPreset::Viridis:
+            return fromLUT(detail::viridisLUT());
+        case ColormapPreset::Magma:
+            return fromLUT(detail::magmaLUT());
+        case ColormapPreset::Plasma:
+            return fromLUT(detail::plasmaLUT());
+        case ColormapPreset::Coolwarm:
+            return fromLUT(detail::coolwarmLUT());
+        case ColormapPreset::Grayscale:
+            return fromLUT(detail::grayscaleLUT());
+        case ColormapPreset::Hot:
+            return fromLUT(detail::hotLUT());
     }
     return fromLUT(detail::infernoLUT());
 }
@@ -85,16 +104,22 @@ ColormapFunction getColormap(ColormapPreset preset)
 // LUT access
 // =============================================================================
 
-ColormapLUT const & getLUT(ColormapPreset preset)
-{
+ColormapLUT const & getLUT(ColormapPreset preset) {
     switch (preset) {
-        case ColormapPreset::Inferno:   return detail::infernoLUT();
-        case ColormapPreset::Viridis:   return detail::viridisLUT();
-        case ColormapPreset::Magma:     return detail::magmaLUT();
-        case ColormapPreset::Plasma:    return detail::plasmaLUT();
-        case ColormapPreset::Coolwarm:  return detail::coolwarmLUT();
-        case ColormapPreset::Grayscale: return detail::grayscaleLUT();
-        case ColormapPreset::Hot:       return detail::hotLUT();
+        case ColormapPreset::Inferno:
+            return detail::infernoLUT();
+        case ColormapPreset::Viridis:
+            return detail::viridisLUT();
+        case ColormapPreset::Magma:
+            return detail::magmaLUT();
+        case ColormapPreset::Plasma:
+            return detail::plasmaLUT();
+        case ColormapPreset::Coolwarm:
+            return detail::coolwarmLUT();
+        case ColormapPreset::Grayscale:
+            return detail::grayscaleLUT();
+        case ColormapPreset::Hot:
+            return detail::hotLUT();
     }
     return detail::infernoLUT();
 }
@@ -104,11 +129,10 @@ ColormapLUT const & getLUT(ColormapPreset preset)
 // =============================================================================
 
 glm::vec4 mapValue(
-    ColormapFunction const & cmap,
-    float value,
-    float vmin,
-    float vmax)
-{
+        ColormapFunction const & cmap,
+        float value,
+        float vmin,
+        float vmax) {
     if (vmax <= vmin) {
         return cmap(0.5f);
     }
@@ -117,15 +141,14 @@ glm::vec4 mapValue(
 }
 
 std::vector<glm::vec4> mapValues(
-    ColormapFunction const & cmap,
-    std::span<double const> values,
-    float vmin,
-    float vmax)
-{
+        ColormapFunction const & cmap,
+        std::span<double const> values,
+        float vmin,
+        float vmax) {
     std::vector<glm::vec4> result;
     result.reserve(values.size());
 
-    for (double const v : values) {
+    for (double const v: values) {
         result.push_back(mapValue(cmap, static_cast<float>(v), vmin, vmax));
     }
 
@@ -133,14 +156,13 @@ std::vector<glm::vec4> mapValues(
 }
 
 std::vector<glm::vec4> mapMatrix(
-    ColormapFunction const & cmap,
-    std::span<double const> values,
-    [[maybe_unused]] std::size_t num_rows,
-    [[maybe_unused]] std::size_t num_cols,
-    float vmin,
-    float vmax)
-{
+        ColormapFunction const & cmap,
+        std::span<double const> values,
+        [[maybe_unused]] std::size_t num_rows,
+        [[maybe_unused]] std::size_t num_cols,
+        float vmin,
+        float vmax) {
     return mapValues(cmap, values, vmin, vmax);
 }
 
-} // namespace CorePlotting::Colormaps
+}// namespace CorePlotting::Colormaps

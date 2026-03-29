@@ -23,6 +23,7 @@
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
 #include "ScatterAxisSource.hpp"
+#include "ScatterColorConfig.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -59,6 +60,9 @@ struct ScatterPlotStateData {
 
     /// Glyph style for scatter points (shape, size, color, alpha)
     CorePlotting::GlyphStyleData glyph_style{CorePlotting::GlyphType::Circle, 5.0f, "#3388FF", 0.8f};
+
+    /// Feature coloring configuration
+    ScatterColorConfigData color_config;
 
     /// Selection mode
     std::string selection_mode = "single_point";
@@ -134,6 +138,10 @@ public:
     /** @brief Get glyph style state (for GlyphStyleControls binding) */
     [[nodiscard]] GlyphStyleState * glyphStyleState() { return _glyph_style_state.get(); }
 
+    // === Feature color config ===
+    [[nodiscard]] ScatterColorConfigData const & colorConfig() const { return _data.color_config; }
+    void setColorConfig(ScatterColorConfigData config);
+
     // === Serialization ===
     [[nodiscard]] std::string toJson() const override;
     bool fromJson(std::string const & json) override;
@@ -148,6 +156,7 @@ signals:
     void glyphStyleChanged();
     void selectionModeChanged();
     void selectionChanged();
+    void colorConfigChanged();
 
 private:
     ScatterPlotStateData _data;

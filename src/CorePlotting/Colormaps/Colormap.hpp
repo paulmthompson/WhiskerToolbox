@@ -79,13 +79,13 @@ using ColormapLUT = std::array<glm::vec3, LUT_SIZE>;
  * suitable for signed data (e.g., z-scores).
  */
 enum class ColormapPreset {
-    Inferno,    ///< Dark-to-bright, perceptually uniform (default for heatmaps)
-    Viridis,    ///< Blue-green-yellow, perceptually uniform (default for spectrograms)
-    Magma,      ///< Dark-to-pink, perceptually uniform
-    Plasma,     ///< Blue-to-yellow, perceptually uniform
-    Coolwarm,   ///< Diverging blue-white-red (for z-scores)
-    Grayscale,  ///< Simple black-to-white
-    Hot,        ///< Black-red-yellow-white (high contrast)
+    Inferno,  ///< Dark-to-bright, perceptually uniform (default for heatmaps)
+    Viridis,  ///< Blue-green-yellow, perceptually uniform (default for spectrograms)
+    Magma,    ///< Dark-to-pink, perceptually uniform
+    Plasma,   ///< Blue-to-yellow, perceptually uniform
+    Coolwarm, ///< Diverging blue-white-red (for z-scores)
+    Grayscale,///< Simple black-to-white
+    Hot,      ///< Black-red-yellow-white (high contrast)
 };
 
 /**
@@ -94,6 +94,13 @@ enum class ColormapPreset {
  * @return Name string (e.g. "Inferno", "Viridis")
  */
 [[nodiscard]] std::string presetName(ColormapPreset preset);
+
+/**
+ * @brief Get a colormap preset from its name string
+ * @param name Preset name (e.g. "Viridis", "Inferno") — case-sensitive
+ * @return Matching preset, or Viridis if the name is not recognized
+ */
+[[nodiscard]] ColormapPreset presetFromName(std::string const & name);
 
 /**
  * @brief Get all available colormap presets
@@ -141,10 +148,10 @@ enum class ColormapPreset {
  * @return RGBA color
  */
 [[nodiscard]] glm::vec4 mapValue(
-    ColormapFunction const & cmap,
-    float value,
-    float vmin,
-    float vmax);
+        ColormapFunction const & cmap,
+        float value,
+        float vmin,
+        float vmax);
 
 /**
  * @brief Map a flat array of scalar values to RGBA colors
@@ -156,10 +163,10 @@ enum class ColormapPreset {
  * @return Vector of RGBA colors, same length as `values`
  */
 [[nodiscard]] std::vector<glm::vec4> mapValues(
-    ColormapFunction const & cmap,
-    std::span<double const> values,
-    float vmin,
-    float vmax);
+        ColormapFunction const & cmap,
+        std::span<double const> values,
+        float vmin,
+        float vmax);
 
 /**
  * @brief Map a row-major matrix of scalar values to RGBA colors
@@ -177,12 +184,12 @@ enum class ColormapPreset {
  * @return Vector of RGBA colors, size = num_rows × num_cols
  */
 [[nodiscard]] std::vector<glm::vec4> mapMatrix(
-    ColormapFunction const & cmap,
-    std::span<double const> values,
-    std::size_t num_rows,
-    std::size_t num_cols,
-    float vmin,
-    float vmax);
+        ColormapFunction const & cmap,
+        std::span<double const> values,
+        std::size_t num_rows,
+        std::size_t num_cols,
+        float vmin,
+        float vmax);
 
 // =============================================================================
 // LUT access (for custom rendering or preview)
@@ -198,6 +205,6 @@ enum class ColormapPreset {
  */
 [[nodiscard]] ColormapLUT const & getLUT(ColormapPreset preset);
 
-} // namespace CorePlotting::Colormaps
+}// namespace CorePlotting::Colormaps
 
-#endif // COREPLOTTING_COLORMAPS_COLORMAP_HPP
+#endif// COREPLOTTING_COLORMAPS_COLORMAP_HPP

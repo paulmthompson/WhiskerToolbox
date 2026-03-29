@@ -114,6 +114,8 @@ void ScatterPlotOpenGLWidget::setState(std::shared_ptr<ScatterPlotState> state) 
                 this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &ScatterPlotState::colorByGroupChanged,
                 this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &ScatterPlotState::colorConfigChanged,
+                this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &ScatterPlotState::clusterLabelsChanged,
                 this, [this]() { update(); });
         connect(_state.get(), &ScatterPlotState::selectionChanged,
