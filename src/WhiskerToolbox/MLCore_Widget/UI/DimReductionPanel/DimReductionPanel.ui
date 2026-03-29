@@ -99,6 +99,43 @@
      </layout>
     </widget>
    </item>
+   <!-- Mode section (Unsupervised / Supervised) -->
+   <item>
+    <widget class="QGroupBox" name="modeGroupBox">
+     <property name="title">
+      <string>Mode</string>
+     </property>
+     <layout class="QVBoxLayout" name="modeLayout">
+      <item>
+       <layout class="QHBoxLayout" name="modeSelectorLayout">
+        <item>
+         <widget class="QRadioButton" name="unsupervisedRadio">
+          <property name="text">
+           <string>Unsupervised</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="toolTip">
+           <string>Unsupervised algorithms (PCA, t-SNE, Robust PCA)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="supervisedRadio">
+          <property name="text">
+           <string>Supervised</string>
+          </property>
+          <property name="toolTip">
+           <string>Supervised algorithms (Logit Projection) — requires labels</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <!-- Algorithm section -->
    <item>
     <widget class="QGroupBox" name="algorithmGroupBox">
@@ -377,6 +414,267 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Labels section (visible only in supervised mode) -->
+   <item>
+    <widget class="QGroupBox" name="labelsGroupBox">
+     <property name="title">
+      <string>Labels</string>
+     </property>
+     <property name="visible">
+      <bool>false</bool>
+     </property>
+     <layout class="QVBoxLayout" name="labelsLayout">
+      <!-- Label source type selector -->
+      <item>
+       <layout class="QHBoxLayout" name="labelSourceLayout">
+        <item>
+         <widget class="QLabel" name="labelSourceLabel">
+          <property name="text">
+           <string>Source:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="labelSourceCombo">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>How to assign labels to each row of the tensor</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <!-- Stacked widget for label-source-specific controls -->
+      <item>
+       <widget class="QStackedWidget" name="labelStack">
+        <!-- Page 0: Intervals -->
+        <widget class="QWidget" name="intervalPage">
+         <layout class="QVBoxLayout" name="intervalPageLayout">
+          <item>
+           <layout class="QHBoxLayout" name="intervalKeyLayout">
+            <item>
+             <widget class="QLabel" name="intervalKeyLabel">
+              <property name="text">
+               <string>Interval Series:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="intervalKeyCombo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>DigitalIntervalSeries for binary labeling (inside = positive, outside = negative)</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="classnameLayout">
+            <item>
+             <widget class="QLabel" name="positiveClassLabel">
+              <property name="text">
+               <string>Positive:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="positiveClassEdit">
+              <property name="text">
+               <string>Inside</string>
+              </property>
+              <property name="toolTip">
+               <string>Class name for frames inside intervals</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="negativeClassLabel">
+              <property name="text">
+               <string>Negative:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="negativeClassEdit">
+              <property name="text">
+               <string>Outside</string>
+              </property>
+              <property name="toolTip">
+               <string>Class name for frames outside intervals</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 1: Entity Groups -->
+        <widget class="QWidget" name="groupPage">
+         <layout class="QVBoxLayout" name="groupPageLayout">
+          <item>
+           <layout class="QHBoxLayout" name="groupSelectLayout">
+            <item>
+             <widget class="QComboBox" name="groupCombo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select an entity group to add as a class</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="addGroupButton">
+              <property name="text">
+               <string>Add</string>
+              </property>
+              <property name="toolTip">
+               <string>Add the selected group as a class label</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="removeGroupButton">
+              <property name="text">
+               <string>Remove</string>
+              </property>
+              <property name="toolTip">
+               <string>Remove the selected class label</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QListWidget" name="groupClassList">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>80</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Groups added as class labels (order = class index)</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 2: Data Entity Groups -->
+        <widget class="QWidget" name="dataGroupPage">
+         <layout class="QVBoxLayout" name="dataGroupPageLayout">
+          <item>
+           <layout class="QHBoxLayout" name="dataKeyLayout">
+            <item>
+             <widget class="QLabel" name="dataKeyLabel">
+              <property name="text">
+               <string>Data key:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="dataKeyCombo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>DataManager key for entity group matching</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="dataGroupSelectLayout">
+            <item>
+             <widget class="QComboBox" name="dataGroupCombo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="addDataGroupButton">
+              <property name="text">
+               <string>Add</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="removeDataGroupButton">
+              <property name="text">
+               <string>Remove</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QListWidget" name="dataGroupClassList">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>80</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 3: Events -->
+        <widget class="QWidget" name="eventPage">
+         <layout class="QVBoxLayout" name="eventPageLayout">
+          <item>
+           <layout class="QHBoxLayout" name="eventKeyLayout">
+            <item>
+             <widget class="QLabel" name="eventKeyLabel">
+              <property name="text">
+               <string>Event Series:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="eventKeyCombo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>DigitalEventSeries for binary labeling (event present = positive)</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </item>
      </layout>

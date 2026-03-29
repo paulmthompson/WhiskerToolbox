@@ -9,11 +9,17 @@
 #include "ui_DimReductionPanel.h"
 
 #include "DataManager/DataManager.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Entity/EntityGroupManager.hpp"
 #include "MLCore/models/MLModelParameters.hpp"
 #include "MLCore/models/MLModelRegistry.hpp"
 #include "MLCore/models/MLTaskType.hpp"
 #include "Tensors/TensorData.hpp"
 
+#include <QListWidget>
+#include <QRadioButton>
+#include <QStackedWidget>
 #include <QVariant>
 
 #include <algorithm>
@@ -35,12 +41,16 @@ DimReductionPanel::DimReductionPanel(
       _registry(std::make_unique<MLCore::MLModelRegistry>()) {
     ui->setupUi(this);
     _populateAlgorithms();
+    _populateLabelSourceCombo();
     _setupConnections();
     _registerDataManagerObserver();
 
     // Default: show PCA params, hide t-SNE and Robust PCA params
     ui->tsneParamsWidget->setVisible(false);
     ui->robustPcaParamsWidget->setVisible(false);
+
+    // Default: unsupervised mode — labels hidden
+    ui->labelsGroupBox->setVisible(false);
 
     refreshTensorList();
     _restoreFromState();
@@ -49,6 +59,12 @@ DimReductionPanel::DimReductionPanel(
 DimReductionPanel::~DimReductionPanel() {
     if (_dm_observer_id >= 0 && _data_manager) {
         _data_manager->removeObserver(_dm_observer_id);
+    }
+    if (_group_observer_id >= 0 && _data_manager) {
+        auto * group_mgr = _data_manager->getEntityGroupManager();
+        if (group_mgr) {
+            group_mgr->getGroupObservers().removeObserver(_group_observer_id);
+        }
     }
     delete ui;
 }
@@ -93,10 +109,38 @@ std::string DimReductionPanel::outputKey() const {
     return ui->outputKeyLineEdit->text().toStdString();
 }
 
+bool DimReductionPanel::isSupervisedMode() const {
+    return ui->supervisedRadio->isChecked();
+}
+
 bool DimReductionPanel::hasValidConfiguration() const {
-    return !selectedTensorKey().empty() &&
-           !selectedAlgorithmName().empty() &&
-           !outputKey().empty();
+    if (selectedTensorKey().empty() || outputKey().empty()) {
+        return false;
+    }
+
+    if (isSupervisedMode()) {
+        // Supervised: need a valid algorithm + label config
+        if (selectedAlgorithmName().empty()) {
+            return false;
+        }
+        auto const source = labelSourceType();
+        if (source == "intervals") {
+            return !labelIntervalKey().empty();
+        }
+        if (source == "groups") {
+            return _selected_group_ids.size() >= 2;
+        }
+        if (source == "entity_groups") {
+            return _selected_data_group_ids.size() >= 2 && !labelDataKey().empty();
+        }
+        if (source == "events") {
+            return !labelEventKey().empty();
+        }
+        return false;
+    }
+
+    // Unsupervised: just need an algorithm
+    return !selectedAlgorithmName().empty();
 }
 
 std::unique_ptr<MLCore::MLModelParametersBase> DimReductionPanel::currentParameters() const {
@@ -126,6 +170,72 @@ std::unique_ptr<MLCore::MLModelParametersBase> DimReductionPanel::currentParamet
     }
 
     return nullptr;
+}
+
+// =============================================================================
+// Supervised mode accessors
+// =============================================================================
+
+std::string DimReductionPanel::labelSourceType() const {
+    int const idx = ui->labelSourceCombo->currentIndex();
+    if (idx < 0) {
+        return "intervals";
+    }
+    return ui->labelSourceCombo->currentData().toString().toStdString();
+}
+
+std::string DimReductionPanel::labelIntervalKey() const {
+    int const idx = ui->intervalKeyCombo->currentIndex();
+    if (idx < 0) {
+        return {};
+    }
+    QVariant const data = ui->intervalKeyCombo->itemData(idx);
+    if (data.isValid() && !data.toString().isEmpty()) {
+        return data.toString().toStdString();
+    }
+    return {};
+}
+
+std::string DimReductionPanel::labelPositiveClassName() const {
+    return ui->positiveClassEdit->text().toStdString();
+}
+
+std::string DimReductionPanel::labelNegativeClassName() const {
+    return ui->negativeClassEdit->text().toStdString();
+}
+
+std::string DimReductionPanel::labelEventKey() const {
+    int const idx = ui->eventKeyCombo->currentIndex();
+    if (idx < 0) {
+        return {};
+    }
+    QVariant const data = ui->eventKeyCombo->itemData(idx);
+    if (data.isValid() && !data.toString().isEmpty()) {
+        return data.toString().toStdString();
+    }
+    return {};
+}
+
+std::vector<uint64_t> DimReductionPanel::selectedGroupIds() const {
+    if (labelSourceType() == "groups") {
+        return _selected_group_ids;
+    }
+    if (labelSourceType() == "entity_groups") {
+        return _selected_data_group_ids;
+    }
+    return {};
+}
+
+std::string DimReductionPanel::labelDataKey() const {
+    int const idx = ui->dataKeyCombo->currentIndex();
+    if (idx < 0) {
+        return {};
+    }
+    QVariant const data = ui->dataKeyCombo->itemData(idx);
+    if (data.isValid() && !data.toString().isEmpty()) {
+        return data.toString().toStdString();
+    }
+    return {};
 }
 
 void DimReductionPanel::showResults(
@@ -162,6 +272,54 @@ void DimReductionPanel::showResults(
                                 .arg(cumulative * 100.0, 0, 'f', 1);
         }
         ui->varianceLabel->setText(var_text);
+    } else {
+        ui->varianceLabel->setText(QString{});
+    }
+}
+
+void DimReductionPanel::showSupervisedResults(
+        std::size_t num_observations,
+        std::size_t num_training_observations,
+        std::size_t num_input_features,
+        std::size_t num_output_dimensions,
+        std::size_t rows_dropped,
+        std::size_t unlabeled_count,
+        std::size_t num_classes,
+        std::vector<std::string> const & class_names) {
+
+    QString results_text = QStringLiteral(
+                                   "<b>Total observations:</b> %1<br>"
+                                   "<b>Training observations:</b> %2<br>"
+                                   "<b>Input features:</b> %3<br>"
+                                   "<b>Output dimensions:</b> %4<br>"
+                                   "<b>Classes:</b> %5")
+                                   .arg(num_observations)
+                                   .arg(num_training_observations)
+                                   .arg(num_input_features)
+                                   .arg(num_output_dimensions)
+                                   .arg(num_classes);
+
+    if (rows_dropped > 0) {
+        results_text += QStringLiteral("<br><b>Rows dropped (NaN):</b> %1")
+                                .arg(rows_dropped);
+    }
+
+    if (unlabeled_count > 0) {
+        results_text += QStringLiteral("<br><b>Unlabeled rows:</b> %1")
+                                .arg(unlabeled_count);
+    }
+
+    ui->resultsLabel->setStyleSheet(QString{});
+    ui->resultsLabel->setText(results_text);
+
+    if (!class_names.empty()) {
+        QString class_text = QStringLiteral("<b>Class names:</b><br>");
+        for (std::size_t i = 0; i < class_names.size(); ++i) {
+            class_text += QStringLiteral("  %1: %2<br>")
+                                  .arg(i)
+                                  .arg(QString::fromStdString(class_names[i]));
+        }
+        ui->varianceLabel->setText(class_text);
     } else {
         ui->varianceLabel->setText(QString{});
     }
@@ -238,6 +396,18 @@ void DimReductionPanel::refreshTensorList() {
 }
 
 // =============================================================================
+// Public slots — label sources
+// =============================================================================
+
+void DimReductionPanel::refreshLabelSources() {
+    _refreshIntervalCombo();
+    _refreshGroupCombo();
+    _refreshDataKeyCombo();
+    _refreshDataGroupCombo();
+    _refreshEventCombo();
+}
+
+// =============================================================================
 // Private slots
 // =============================================================================
 
@@ -278,20 +448,120 @@ void DimReductionPanel::_onAlgorithmChanged(int index) {
         _state->setDimReductionModelName(name);
     }
 
-    // Toggle algorithm-specific parameter widgets
-    bool const is_pca = (name == "PCA");
-    bool const is_tsne = (name == "t-SNE");
-    bool const is_rpca = (name == "Robust PCA");
-    ui->pcaParamsWidget->setVisible(is_pca);
-    ui->tsneParamsWidget->setVisible(is_tsne);
-    ui->robustPcaParamsWidget->setVisible(is_rpca);
+    // Toggle algorithm-specific parameter widgets (unsupervised only)
+    if (!isSupervisedMode()) {
+        bool const is_pca = (name == "PCA");
+        bool const is_tsne = (name == "t-SNE");
+        bool const is_rpca = (name == "Robust PCA");
+        ui->pcaParamsWidget->setVisible(is_pca);
+        ui->tsneParamsWidget->setVisible(is_tsne);
+        ui->robustPcaParamsWidget->setVisible(is_rpca);
+    }
 
     _updateOutputKeyFromInput();
 }
 
+void DimReductionPanel::_onModeToggled(bool supervised) {
+    _updateSupervisedVisibility(supervised);
+
+    if (_state) {
+        _state->setDimReductionSupervised(supervised);
+    }
+
+    // Repopulate algorithm list for the new mode
+    _populateAlgorithms();
+
+    // Refresh label combos if switching to supervised
+    if (supervised) {
+        refreshLabelSources();
+    }
+
+    _updateOutputKeyFromInput();
+}
+
+void DimReductionPanel::_onLabelSourceChanged(int index) {
+    if (index < 0) {
+        return;
+    }
+
+    ui->labelStack->setCurrentIndex(index);
+
+    auto const type = ui->labelSourceCombo->currentData().toString().toStdString();
+    if (_state) {
+        _state->setDimReductionLabelSourceType(type);
+    }
+}
+
+void DimReductionPanel::_onAddGroupClicked() {
+    int const idx = ui->groupCombo->currentIndex();
+    if (idx < 0) {
+        return;
+    }
+    auto const group_id = ui->groupCombo->currentData().toULongLong();
+
+    // Don't add duplicates
+    if (std::find(_selected_group_ids.begin(), _selected_group_ids.end(), group_id) !=
+        _selected_group_ids.end()) {
+        return;
+    }
+
+    _selected_group_ids.push_back(group_id);
+    _rebuildGroupClassList();
+    _syncGroupIdsToState();
+}
+
+void DimReductionPanel::_onRemoveGroupClicked() {
+    auto const selected_items = ui->groupClassList->selectedItems();
+    if (selected_items.isEmpty()) {
+        return;
+    }
+
+    auto const group_id = selected_items.first()->data(Qt::UserRole).toULongLong();
+    _selected_group_ids.erase(
+            std::remove(_selected_group_ids.begin(), _selected_group_ids.end(), group_id),
+            _selected_group_ids.end());
+    _rebuildGroupClassList();
+    _syncGroupIdsToState();
+}
+
+void DimReductionPanel::_onAddDataGroupClicked() {
+    int const idx = ui->dataGroupCombo->currentIndex();
+    if (idx < 0) {
+        return;
+    }
+    auto const group_id = ui->dataGroupCombo->currentData().toULongLong();
+
+    if (std::find(_selected_data_group_ids.begin(), _selected_data_group_ids.end(), group_id) !=
+        _selected_data_group_ids.end()) {
+        return;
+    }
+
+    _selected_data_group_ids.push_back(group_id);
+    _rebuildDataGroupClassList();
+    _syncGroupIdsToState();
+}
+
+void DimReductionPanel::_onRemoveDataGroupClicked() {
+    auto const selected_items = ui->dataGroupClassList->selectedItems();
+    if (selected_items.isEmpty()) {
+        return;
+    }
+
+    auto const group_id = selected_items.first()->data(Qt::UserRole).toULongLong();
+    _selected_data_group_ids.erase(
+            std::remove(_selected_data_group_ids.begin(), _selected_data_group_ids.end(), group_id),
+            _selected_data_group_ids.end());
+    _rebuildDataGroupClassList();
+    _syncGroupIdsToState();
+}
+
 void DimReductionPanel::_onRunClicked() {
     _syncToState();
-    emit runRequested();
+    if (isSupervisedMode()) {
+        emit supervisedRunRequested();
+    } else {
+        emit runRequested();
+    }
 }
 
 // =============================================================================
@@ -339,6 +609,60 @@ void DimReductionPanel::_setupConnections() {
                 }
             });
 
+    // Mode radio buttons
+    connect(ui->supervisedRadio, &QRadioButton::toggled,
+            this, &DimReductionPanel::_onModeToggled);
+
+    // Label source combo
+    connect(ui->labelSourceCombo, &QComboBox::currentIndexChanged,
+            this, &DimReductionPanel::_onLabelSourceChanged);
+
+    // Interval mode
+    connect(ui->intervalKeyCombo, &QComboBox::currentIndexChanged,
+            this, [this](int /*index*/) {
+                if (!_updating && _state) {
+                    _state->setDimReductionLabelIntervalKey(labelIntervalKey());
+                }
+            });
+    connect(ui->positiveClassEdit, &QLineEdit::textChanged,
+            this, [this](QString const & text) {
+                if (!_updating && _state) {
+                    _state->setDimReductionLabelPositiveClass(text.toStdString());
+                }
+            });
+    connect(ui->negativeClassEdit, &QLineEdit::textChanged,
+            this, [this](QString const & text) {
+                if (!_updating && _state) {
+                    _state->setDimReductionLabelNegativeClass(text.toStdString());
+                }
+            });
+
+    // Group mode
+    connect(ui->addGroupButton, &QPushButton::clicked,
+            this, &DimReductionPanel::_onAddGroupClicked);
+    connect(ui->removeGroupButton, &QPushButton::clicked,
+            this, &DimReductionPanel::_onRemoveGroupClicked);
+
+    // Data group mode
+    connect(ui->dataKeyCombo, &QComboBox::currentIndexChanged,
+            this, [this](int /*index*/) {
+                if (!_updating && _state) {
+                    _state->setDimReductionLabelDataKey(labelDataKey());
+                }
+            });
+    connect(ui->addDataGroupButton, &QPushButton::clicked,
+            this, &DimReductionPanel::_onAddDataGroupClicked);
+    connect(ui->removeDataGroupButton, &QPushButton::clicked,
+            this, &DimReductionPanel::_onRemoveDataGroupClicked);
+
+    // Event mode
+    connect(ui->eventKeyCombo, &QComboBox::currentIndexChanged,
+            this, [this](int /*index*/) {
+                if (!_updating && _state) {
+                    _state->setDimReductionLabelEventKey(labelEventKey());
+                }
+            });
+
     // React to external state changes
     if (_state) {
         connect(_state.get(), &MLCoreWidgetState::dimReductionTensorKeyChanged,
@@ -374,21 +698,42 @@ void DimReductionPanel::_populateAlgorithms() {
     _updating = true;
     ui->algorithmComboBox->clear();
 
-    auto const names = _registry->getModelNames(MLCore::MLTaskType::DimensionalityReduction);
-    for (auto const & name: names) {
-        ui->algorithmComboBox->addItem(
-                QString::fromStdString(name),
-                QString::fromStdString(name));
+    if (isSupervisedMode()) {
+        // Supervised algorithms
+        auto const names = _registry->getModelNames(
+                MLCore::MLTaskType::SupervisedDimensionalityReduction);
+        for (auto const & name: names) {
+            ui->algorithmComboBox->addItem(
+                    QString::fromStdString(name),
+                    QString::fromStdString(name));
+        }
+
+        // Hide unsupervised param widgets
+        ui->pcaParamsWidget->setVisible(false);
+        ui->tsneParamsWidget->setVisible(false);
+        ui->robustPcaParamsWidget->setVisible(false);
+    } else {
+        // Unsupervised algorithms
+        auto const names = _registry->getModelNames(
+                MLCore::MLTaskType::DimensionalityReduction);
+        for (auto const & name: names) {
+            ui->algorithmComboBox->addItem(
+                    QString::fromStdString(name),
+                    QString::fromStdString(name));
+        }
+
+        if (ui->algorithmComboBox->count() > 0) {
+            // Set initial parameter widget visibility
+            auto const first_name =
+                    ui->algorithmComboBox->currentData().toString().toStdString();
+            ui->pcaParamsWidget->setVisible(first_name == "PCA");
+            ui->tsneParamsWidget->setVisible(first_name == "t-SNE");
+            ui->robustPcaParamsWidget->setVisible(first_name == "Robust PCA");
+        }
     }
 
     if (ui->algorithmComboBox->count() > 0) {
         ui->algorithmComboBox->setCurrentIndex(0);
-
-        // Set initial parameter widget visibility
-        auto const first_name = ui->algorithmComboBox->currentData().toString().toStdString();
-        ui->pcaParamsWidget->setVisible(first_name == "PCA");
-        ui->tsneParamsWidget->setVisible(first_name == "t-SNE");
-        ui->robustPcaParamsWidget->setVisible(first_name == "Robust PCA");
     }
 
     _updating = false;
@@ -443,7 +788,24 @@ void DimReductionPanel::_registerDataManagerObserver() {
         return;
     }
     _dm_observer_id = _data_manager->addObserver(
-            [this]() { refreshTensorList(); });
+            [this]() {
+                refreshTensorList();
+                if (isSupervisedMode()) {
+                    refreshLabelSources();
+                }
+            });
+
+    // Register group observer for group-based label modes
+    auto * group_mgr = _data_manager->getEntityGroupManager();
+    if (group_mgr) {
+        _group_observer_id = group_mgr->getGroupObservers().addObserver(
+                [this]() {
+                    if (isSupervisedMode()) {
+                        _refreshGroupCombo();
+                        _refreshDataGroupCombo();
+                    }
+                });
+    }
 }
 
 void DimReductionPanel::_restoreFromState() {
@@ -452,6 +814,13 @@ void DimReductionPanel::_restoreFromState() {
     }
 
     _updating = true;
+
+    // Restore supervised mode first (affects algorithm list)
+    bool const supervised = _state->dimReductionSupervised();
+    ui->supervisedRadio->setChecked(supervised);
+    ui->unsupervisedRadio->setChecked(!supervised);
+    _updateSupervisedVisibility(supervised);
+    _populateAlgorithms();
 
     // Restore tensor key
     auto const & key = _state->dimReductionTensorKey();
@@ -486,6 +855,64 @@ void DimReductionPanel::_restoreFromState() {
         ui->outputKeyLineEdit->setText(QString::fromStdString(output_key));
     }
 
+    // Restore supervised label config
+    if (supervised) {
+        refreshLabelSources();
+
+        auto const & src_type = _state->dimReductionLabelSourceType();
+        for (int i = 0; i < ui->labelSourceCombo->count(); ++i) {
+            if (ui->labelSourceCombo->itemData(i).toString().toStdString() == src_type) {
+                ui->labelSourceCombo->setCurrentIndex(i);
+                ui->labelStack->setCurrentIndex(i);
+                break;
+            }
+        }
+
+        // Interval mode
+        auto const & interval_key = _state->dimReductionLabelIntervalKey();
+        if (!interval_key.empty()) {
+            for (int i = 0; i < ui->intervalKeyCombo->count(); ++i) {
+                if (ui->intervalKeyCombo->itemData(i).toString().toStdString() == interval_key) {
+                    ui->intervalKeyCombo->setCurrentIndex(i);
+                    break;
+                }
+            }
+        }
+        ui->positiveClassEdit->setText(
+                QString::fromStdString(_state->dimReductionLabelPositiveClass()));
+        ui->negativeClassEdit->setText(
+                QString::fromStdString(_state->dimReductionLabelNegativeClass()));
+
+        // Event mode
+        auto const & event_key = _state->dimReductionLabelEventKey();
+        if (!event_key.empty()) {
+            for (int i = 0; i < ui->eventKeyCombo->count(); ++i) {
+                if (ui->eventKeyCombo->itemData(i).toString().toStdString() == event_key) {
+                    ui->eventKeyCombo->setCurrentIndex(i);
+                    break;
+                }
+            }
+        }
+
+        // Group mode
+        _selected_group_ids.clear();
+        for (auto const gid: _state->dimReductionLabelGroupIds()) {
+            _selected_group_ids.push_back(gid);
+        }
+        _rebuildGroupClassList();
+
+        // Data key
+        auto const & data_key = _state->dimReductionLabelDataKey();
+        if (!data_key.empty()) {
+            for (int i = 0; i < ui->dataKeyCombo->count(); ++i) {
+                if (ui->dataKeyCombo->itemData(i).toString().toStdString() == data_key) {
+                    ui->dataKeyCombo->setCurrentIndex(i);
+                    break;
+                }
+            }
+        }
+    }
+
     _updating = false;
     _updateTensorInfo();
 }
@@ -501,6 +928,17 @@ void DimReductionPanel::_syncToState() {
     _state->setDimReductionNComponents(nComponents());
     _state->setDimReductionScale(scaleFeatures());
     _state->setDimReductionZscoreNormalize(zscoreNormalize());
+    _state->setDimReductionSupervised(isSupervisedMode());
+
+    if (isSupervisedMode()) {
+        _state->setDimReductionLabelSourceType(labelSourceType());
+        _state->setDimReductionLabelIntervalKey(labelIntervalKey());
+        _state->setDimReductionLabelPositiveClass(labelPositiveClassName());
+        _state->setDimReductionLabelNegativeClass(labelNegativeClassName());
+        _state->setDimReductionLabelEventKey(labelEventKey());
+        _state->setDimReductionLabelDataKey(labelDataKey());
+        _syncGroupIdsToState();
+    }
 }
 
 void DimReductionPanel::_updateOutputKeyFromInput() {
@@ -513,10 +951,12 @@ void DimReductionPanel::_updateOutputKeyFromInput() {
         return;
     }
 
-    // Auto-generate output key: "{input_key}_{algorithm}"
     std::string const algo = selectedAlgorithmName();
     std::string suffix = "reduced";
-    if (algo == "PCA") {
+
+    if (isSupervisedMode()) {
+        suffix = "logit";
+    } else if (algo == "PCA") {
         suffix = "pca";
     } else if (algo == "t-SNE") {
         suffix = "tsne";
@@ -526,4 +966,248 @@ void DimReductionPanel::_updateOutputKeyFromInput() {
 
     ui->outputKeyLineEdit->setText(
             QString::fromStdString(key + "_" + suffix));
+}
+
+// =============================================================================
+// Supervised mode helpers
+// =============================================================================
+
+void DimReductionPanel::_updateSupervisedVisibility(bool supervised) {
+    ui->labelsGroupBox->setVisible(supervised);
+
+    // In supervised mode, hide unsupervised-specific param widgets
+    if (supervised) {
+        ui->pcaParamsWidget->setVisible(false);
+        ui->tsneParamsWidget->setVisible(false);
+        ui->robustPcaParamsWidget->setVisible(false);
+    }
+}
+
+void DimReductionPanel::_populateLabelSourceCombo() {
+    ui->labelSourceCombo->clear();
+    ui->labelSourceCombo->addItem(QStringLiteral("Interval Series"),
+                                  QStringLiteral("intervals"));
+    ui->labelSourceCombo->addItem(QStringLiteral("Entity Groups"),
+                                  QStringLiteral("groups"));
+    ui->labelSourceCombo->addItem(QStringLiteral("Data Entity Groups"),
+                                  QStringLiteral("entity_groups"));
+    ui->labelSourceCombo->addItem(QStringLiteral("Event Series"),
+                                  QStringLiteral("events"));
+    ui->labelStack->setCurrentIndex(0);
+}
+
+void DimReductionPanel::_refreshIntervalCombo() {
+    if (!_data_manager) {
+        return;
+    }
+
+    QString current;
+    if (ui->intervalKeyCombo->currentIndex() >= 0) {
+        QVariant const d = ui->intervalKeyCombo->itemData(ui->intervalKeyCombo->currentIndex());
+        if (d.isValid()) {
+            current = d.toString();
+        }
+    }
+
+    ui->intervalKeyCombo->blockSignals(true);
+    ui->intervalKeyCombo->clear();
+    ui->intervalKeyCombo->addItem(QString{});// empty sentinel
+
+    auto keys = _data_manager->getKeys<DigitalIntervalSeries>();
+    std::sort(keys.begin(), keys.end());
+    for (auto const & k: keys) {
+        ui->intervalKeyCombo->addItem(
+                QString::fromStdString(k), QString::fromStdString(k));
+    }
+
+    // Restore
+    for (int i = 0; i < ui->intervalKeyCombo->count(); ++i) {
+        if (ui->intervalKeyCombo->itemData(i).toString() == current) {
+            ui->intervalKeyCombo->setCurrentIndex(i);
+            break;
+        }
+    }
+    ui->intervalKeyCombo->blockSignals(false);
+}
+
+void DimReductionPanel::_refreshGroupCombo() {
+    if (!_data_manager) {
+        return;
+    }
+
+    ui->groupCombo->blockSignals(true);
+    ui->groupCombo->clear();
+
+    auto * group_mgr = _data_manager->getEntityGroupManager();
+    if (group_mgr) {
+        auto const descriptors = group_mgr->getAllGroupDescriptors();
+        for (auto const & desc: descriptors) {
+            QString const display = QStringLiteral("%1 (%2 entities)")
+                                            .arg(QString::fromStdString(desc.name))
+                                            .arg(desc.entity_count);
+            ui->groupCombo->addItem(
+                    display,
+                    QVariant::fromValue(static_cast<qulonglong>(desc.id)));
+        }
+    }
+    ui->groupCombo->blockSignals(false);
+}
+
+void DimReductionPanel::_refreshDataKeyCombo() {
+    if (!_data_manager) {
+        return;
+    }
+
+    QString current;
+    if (ui->dataKeyCombo->currentIndex() >= 0) {
+        current = ui->dataKeyCombo->currentData().toString();
+    }
+
+    ui->dataKeyCombo->blockSignals(true);
+    ui->dataKeyCombo->clear();
+    ui->dataKeyCombo->addItem(QString{});
+
+    auto const all_keys = _data_manager->getAllKeys();
+    for (auto const & k: all_keys) {
+        ui->dataKeyCombo->addItem(
+                QString::fromStdString(k), QString::fromStdString(k));
+    }
+
+    for (int i = 0; i < ui->dataKeyCombo->count(); ++i) {
+        if (ui->dataKeyCombo->itemData(i).toString() == current) {
+            ui->dataKeyCombo->setCurrentIndex(i);
+            break;
+        }
+    }
+    ui->dataKeyCombo->blockSignals(false);
+}
+
+void DimReductionPanel::_refreshDataGroupCombo() {
+    // Same as group combo for now
+    if (!_data_manager) {
+        return;
+    }
+
+    ui->dataGroupCombo->blockSignals(true);
+    ui->dataGroupCombo->clear();
+
+    auto * group_mgr = _data_manager->getEntityGroupManager();
+    if (group_mgr) {
+        auto const descriptors = group_mgr->getAllGroupDescriptors();
+        for (auto const & desc: descriptors) {
+            QString const display = QStringLiteral("%1 (%2 entities)")
+                                            .arg(QString::fromStdString(desc.name))
+                                            .arg(desc.entity_count);
+            ui->dataGroupCombo->addItem(
+                    display,
+                    QVariant::fromValue(static_cast<qulonglong>(desc.id)));
+        }
+    }
+    ui->dataGroupCombo->blockSignals(false);
+}
+
+void DimReductionPanel::_refreshEventCombo() {
+    if (!_data_manager) {
+        return;
+    }
+
+    QString current;
+    if (ui->eventKeyCombo->currentIndex() >= 0) {
+        QVariant const d = ui->eventKeyCombo->itemData(ui->eventKeyCombo->currentIndex());
+        if (d.isValid()) {
+            current = d.toString();
+        }
+    }
+
+    ui->eventKeyCombo->blockSignals(true);
+    ui->eventKeyCombo->clear();
+    ui->eventKeyCombo->addItem(QString{});
+
+    auto keys = _data_manager->getKeys<DigitalEventSeries>();
+    std::sort(keys.begin(), keys.end());
+    for (auto const & k: keys) {
+        ui->eventKeyCombo->addItem(
+                QString::fromStdString(k), QString::fromStdString(k));
+    }
+
+    for (int i = 0; i < ui->eventKeyCombo->count(); ++i) {
+        if (ui->eventKeyCombo->itemData(i).toString() == current) {
+            ui->eventKeyCombo->setCurrentIndex(i);
+            break;
+        }
+    }
+    ui->eventKeyCombo->blockSignals(false);
+}
+
+void DimReductionPanel::_rebuildGroupClassList() {
+    ui->groupClassList->clear();
+
+    if (!_data_manager) {
+        return;
+    }
+    auto * group_mgr = _data_manager->getEntityGroupManager();
+    if (!group_mgr) {
+        return;
+    }
+
+    for (auto const gid: _selected_group_ids) {
+        auto const desc = group_mgr->getGroupDescriptor(gid);
+        QString text;
+        if (desc) {
+            text = QStringLiteral("Class %1: \"%2\" (%3 entities)")
+                           .arg(ui->groupClassList->count())
+                           .arg(QString::fromStdString(desc->name))
+                           .arg(desc->entity_count);
+        } else {
+            text = QStringLiteral("Class %1: <deleted group %2>")
+                           .arg(ui->groupClassList->count())
+                           .arg(gid);
+        }
+        auto * item = new QListWidgetItem(text);
+        item->setData(Qt::UserRole, QVariant::fromValue(static_cast<qulonglong>(gid)));
+        ui->groupClassList->addItem(item);
+    }
+}
+
+void DimReductionPanel::_rebuildDataGroupClassList() {
+    ui->dataGroupClassList->clear();
+
+    if (!_data_manager) {
+        return;
+    }
+    auto * group_mgr = _data_manager->getEntityGroupManager();
+    if (!group_mgr) {
+        return;
+    }
+
+    for (auto const gid: _selected_data_group_ids) {
+        auto const desc = group_mgr->getGroupDescriptor(gid);
+        QString text;
+        if (desc) {
+            text = QStringLiteral("Class %1: \"%2\" (%3 entities)")
+                           .arg(ui->dataGroupClassList->count())
+                           .arg(QString::fromStdString(desc->name))
+                           .arg(desc->entity_count);
+        } else {
+            text = QStringLiteral("Class %1: <deleted group %2>")
+                           .arg(ui->dataGroupClassList->count())
+                           .arg(gid);
+        }
+        auto * item = new QListWidgetItem(text);
+        item->setData(Qt::UserRole, QVariant::fromValue(static_cast<qulonglong>(gid)));
+        ui->dataGroupClassList->addItem(item);
+    }
+}
+
+void DimReductionPanel::_syncGroupIdsToState() {
+    if (!_state) {
+        return;
+    }
+
+    auto const source = labelSourceType();
+    if (source == "groups") {
+        _state->setDimReductionLabelGroupIds(_selected_group_ids);
+    } else if (source == "entity_groups") {
+        _state->setDimReductionLabelGroupIds(_selected_data_group_ids);
+    }
 }

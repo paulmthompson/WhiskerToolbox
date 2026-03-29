@@ -73,6 +73,14 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit dimReductionNComponentsChanged(_data.dim_reduction_n_components);
         emit dimReductionScaleChanged(_data.dim_reduction_scale);
         emit dimReductionZscoreNormalizeChanged(_data.dim_reduction_zscore_normalize);
+        emit dimReductionSupervisedChanged(_data.dim_reduction_supervised);
+        emit dimReductionLabelSourceTypeChanged(QString::fromStdString(_data.dim_reduction_label_source_type));
+        emit dimReductionLabelIntervalKeyChanged(QString::fromStdString(_data.dim_reduction_label_interval_key));
+        emit dimReductionLabelPositiveClassChanged(QString::fromStdString(_data.dim_reduction_label_positive_class));
+        emit dimReductionLabelNegativeClassChanged(QString::fromStdString(_data.dim_reduction_label_negative_class));
+        emit dimReductionLabelEventKeyChanged(QString::fromStdString(_data.dim_reduction_label_event_key));
+        emit dimReductionLabelGroupIdsChanged();
+        emit dimReductionLabelDataKeyChanged(QString::fromStdString(_data.dim_reduction_label_data_key));
         return true;
     }
     return false;
@@ -526,4 +534,102 @@ void MLCoreWidgetState::setDimReductionZscoreNormalize(bool enabled) {
 
 bool MLCoreWidgetState::dimReductionZscoreNormalize() const {
     return _data.dim_reduction_zscore_normalize;
+}
+
+// === Dim Reduction supervised configuration ===
+
+void MLCoreWidgetState::setDimReductionSupervised(bool enabled) {
+    if (_data.dim_reduction_supervised != enabled) {
+        _data.dim_reduction_supervised = enabled;
+        markDirty();
+        emit dimReductionSupervisedChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::dimReductionSupervised() const {
+    return _data.dim_reduction_supervised;
+}
+
+void MLCoreWidgetState::setDimReductionLabelSourceType(std::string const & type) {
+    if (_data.dim_reduction_label_source_type != type) {
+        _data.dim_reduction_label_source_type = type;
+        markDirty();
+        emit dimReductionLabelSourceTypeChanged(QString::fromStdString(type));
+    }
+}
+
+std::string const & MLCoreWidgetState::dimReductionLabelSourceType() const {
+    return _data.dim_reduction_label_source_type;
+}
+
+void MLCoreWidgetState::setDimReductionLabelIntervalKey(std::string const & key) {
+    if (_data.dim_reduction_label_interval_key != key) {
+        _data.dim_reduction_label_interval_key = key;
+        markDirty();
+        emit dimReductionLabelIntervalKeyChanged(QString::fromStdString(key));
+    }
+}
+
+std::string const & MLCoreWidgetState::dimReductionLabelIntervalKey() const {
+    return _data.dim_reduction_label_interval_key;
+}
+
+void MLCoreWidgetState::setDimReductionLabelPositiveClass(std::string const & name) {
+    if (_data.dim_reduction_label_positive_class != name) {
+        _data.dim_reduction_label_positive_class = name;
+        markDirty();
+        emit dimReductionLabelPositiveClassChanged(QString::fromStdString(name));
+    }
+}
+
+std::string const & MLCoreWidgetState::dimReductionLabelPositiveClass() const {
+    return _data.dim_reduction_label_positive_class;
+}
+
+void MLCoreWidgetState::setDimReductionLabelNegativeClass(std::string const & name) {
+    if (_data.dim_reduction_label_negative_class != name) {
+        _data.dim_reduction_label_negative_class = name;
+        markDirty();
+        emit dimReductionLabelNegativeClassChanged(QString::fromStdString(name));
+    }
+}
+
+std::string const & MLCoreWidgetState::dimReductionLabelNegativeClass() const {
+    return _data.dim_reduction_label_negative_class;
+}
+
+void MLCoreWidgetState::setDimReductionLabelEventKey(std::string const & key) {
+    if (_data.dim_reduction_label_event_key != key) {
+        _data.dim_reduction_label_event_key = key;
+        markDirty();
+        emit dimReductionLabelEventKeyChanged(QString::fromStdString(key));
+    }
+}
+
+std::string const & MLCoreWidgetState::dimReductionLabelEventKey() const {
+    return _data.dim_reduction_label_event_key;
+}
+
+void MLCoreWidgetState::setDimReductionLabelGroupIds(std::vector<uint64_t> const & ids) {
+    if (_data.dim_reduction_label_group_ids != ids) {
+        _data.dim_reduction_label_group_ids = ids;
+        markDirty();
+        emit dimReductionLabelGroupIdsChanged();
+    }
+}
+
+std::vector<uint64_t> const & MLCoreWidgetState::dimReductionLabelGroupIds() const {
+    return _data.dim_reduction_label_group_ids;
+}
+
+void MLCoreWidgetState::setDimReductionLabelDataKey(std::string const & key) {
+    if (_data.dim_reduction_label_data_key != key) {
+        _data.dim_reduction_label_data_key = key;
+        markDirty();
+        emit dimReductionLabelDataKeyChanged(QString::fromStdString(key));
+    }
+}
+
+std::string const & MLCoreWidgetState::dimReductionLabelDataKey() const {
+    return _data.dim_reduction_label_data_key;
 }

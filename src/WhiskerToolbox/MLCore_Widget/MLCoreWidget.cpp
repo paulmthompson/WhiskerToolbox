@@ -21,6 +21,7 @@
 #include "MLCore/pipelines/ClassificationPipeline.hpp"
 #include "MLCore/pipelines/ClusteringPipeline.hpp"
 #include "MLCore/pipelines/DimReductionPipeline.hpp"
+#include "MLCore/pipelines/SupervisedDimReductionPipeline.hpp"
 #include "MLCore/preprocessing/ClassBalancing.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
@@ -167,6 +168,51 @@ private:
     MLCore::MLModelRegistry const * _registry;
     MLCore::DimReductionPipelineConfig _config;
     MLCore::DimReductionPipelineResult _result;
+};
+
+/**
+ * @brief Worker that runs the SupervisedDimReductionPipeline on a background thread
+ *
+ * Owns the pipeline config and result. Emits progress via a signal connected
+ * to the main thread with Qt::QueuedConnection (handled by MLCoreWidget).
+ */
+class SupervisedDimReductionPipelineWorker : public QThread {
+    Q_OBJECT
+
+public:
+    SupervisedDimReductionPipelineWorker(
+            DataManager * dm,
+            MLCore::MLModelRegistry const * registry,
+            MLCore::SupervisedDimReductionPipelineConfig config,
+            QObject * parent = nullptr)
+        : QThread(parent),
+          _dm(dm),
+          _registry(registry),
+          _config(std::move(config)) {}
+
+    [[nodiscard]] MLCore::SupervisedDimReductionPipelineResult takeResult() {
+        return std::move(_result);
+    }
+
+signals:
+    void progressUpdate(int _t1, QString _t2);
+
+protected:
+    void run() override {
+        auto progress_cb = [this](MLCore::SupervisedDimReductionStage stage,
+                                  std::string const & msg) {
+            emit progressUpdate(static_cast<int>(stage), QString::fromStdString(msg));
+        };
+
+        _result = MLCore::runSupervisedDimReductionPipeline(
+                *_dm, *_registry, _config, progress_cb);
+    }
+
+private:
+    DataManager * _dm;
+    MLCore::MLModelRegistry const * _registry;
+    MLCore::SupervisedDimReductionPipelineConfig _config;
+    MLCore::SupervisedDimReductionPipelineResult _result;
 };
 
 }// namespace
@@ -401,6 +447,15 @@ void MLCoreWidget::_connectSignals() {
     // Dim Reduction pipeline progress (cross-thread signal → main-thread slot)
     connect(this, &MLCoreWidget::_dimReductionProgressReported,
             this, &MLCoreWidget::_onDimReductionProgress,
+            Qt::QueuedConnection);
+
+    // "Run Reduction" button (supervised mode) → supervised dim reduction pipeline
+    connect(_dim_reduction_panel, &DimReductionPanel::supervisedRunRequested,
+            this, &MLCoreWidget::_onSupervisedDimReductionRunRequested);
+
+    // Supervised Dim Reduction pipeline progress (cross-thread signal → main-thread slot)
+    connect(this, &MLCoreWidget::_supervisedDimReductionProgressReported,
+            this, &MLCoreWidget::_onSupervisedDimReductionProgress,
             Qt::QueuedConnection);
 
     // Output key clicked in ResultsPanel → emit data focus via SelectionContext (task 4.9)
@@ -1175,6 +1230,239 @@ void MLCoreWidget::_setDimReductionPipelineRunning(bool running) {
     }
 
     // Disable the dim reduction panel during pipeline execution
+    _dim_reduction_panel->setEnabled(!running);
+}
+
+// =============================================================================
+// Supervised Dim Reduction — Slot
+// =============================================================================
+
+void MLCoreWidget::_onSupervisedDimReductionRunRequested() {
+    if (_supervised_dim_reduction_pipeline_running) {
+        return;
+    }
+
+    if (!_validateSupervisedDimReductionPanels()) {
+        return;
+    }
+
+    auto config = _buildSupervisedDimReductionPipelineConfig();
+    _runSupervisedDimReductionPipelineAsync(std::move(config));
+}
+
+// =============================================================================
+// Supervised Dim Reduction — Validation
+// =============================================================================
+
+bool MLCoreWidget::_validateSupervisedDimReductionPanels() const {
+    QStringList issues;
+
+    if (!_dim_reduction_panel->hasValidConfiguration()) {
+        issues << QStringLiteral("Supervised dim reduction panel configuration is incomplete "
+                                 "(select a tensor, algorithm, and label source)");
+    }
+
+    if (!issues.isEmpty()) {
+        QMessageBox::warning(
+                const_cast<MLCoreWidget *>(this),
+                QStringLiteral("Cannot Run Supervised Dim Reduction Pipeline"),
+                QStringLiteral("Please fix the following issues before running:\n\n• ") +
+                        issues.join(QStringLiteral("\n• ")));
+        return false;
+    }
+
+    return true;
+}
+
+// =============================================================================
+// Supervised Dim Reduction — Pipeline config assembly
+// =============================================================================
+
+MLCore::SupervisedDimReductionPipelineConfig
+MLCoreWidget::_buildSupervisedDimReductionPipelineConfig() const {
+    MLCore::SupervisedDimReductionPipelineConfig config;
+
+    // -- Model --
+    config.model_name = _dim_reduction_panel->selectedAlgorithmName();
+    config.model_params = nullptr;// set in _runSupervisedDimReductionPipelineAsync
+
+    // -- Features --
+    config.feature_tensor_key = _dim_reduction_panel->selectedTensorKey();
+
+    // -- Time key --
+    if (_data_manager) {
+        TimeKey const tk = _data_manager->getTimeKey(config.feature_tensor_key);
+        if (!tk.empty()) {
+            config.time_key_str = tk.str();
+        }
+    }
+
+    // -- Feature conversion --
+    config.conversion_config.drop_nan = true;
+    config.conversion_config.zscore_normalize = _dim_reduction_panel->zscoreNormalize();
+
+    // -- Labels (same pattern as Classification pipeline) --
+    std::string const source_type = _dim_reduction_panel->labelSourceType();
+
+    if (source_type == "intervals") {
+        MLCore::LabelFromIntervals label_cfg;
+        label_cfg.positive_class_name = _dim_reduction_panel->labelPositiveClassName();
+        label_cfg.negative_class_name = _dim_reduction_panel->labelNegativeClassName();
+        config.label_config = label_cfg;
+        config.label_interval_key = _dim_reduction_panel->labelIntervalKey();
+    } else if (source_type == "groups") {
+        MLCore::LabelFromTimeEntityGroups label_cfg;
+        auto const group_ids = _dim_reduction_panel->selectedGroupIds();
+        label_cfg.class_groups.assign(group_ids.begin(), group_ids.end());
+        label_cfg.time_key = config.time_key_str;
+        config.label_config = label_cfg;
+    } else if (source_type == "entity_groups") {
+        MLCore::LabelFromDataEntityGroups label_cfg;
+        auto const group_ids = _dim_reduction_panel->selectedGroupIds();
+        label_cfg.class_groups.assign(group_ids.begin(), group_ids.end());
+        label_cfg.data_key = _dim_reduction_panel->labelDataKey();
+        config.label_config = label_cfg;
+    } else if (source_type == "events") {
+        MLCore::LabelFromEvents const label_cfg;
+        config.label_config = label_cfg;
+        config.label_event_key = _dim_reduction_panel->labelEventKey();
+    }
+
+    // -- Output --
+    config.output_key = _dim_reduction_panel->outputKey();
+
+    // -- Thread safety --
+    config.defer_dm_writes = true;
+
+    return config;
+}
+
+// =============================================================================
+// Supervised Dim Reduction — Async execution
+// =============================================================================
+
+void MLCoreWidget::_runSupervisedDimReductionPipelineAsync(
+        MLCore::SupervisedDimReductionPipelineConfig config) {
+    _setSupervisedDimReductionPipelineRunning(true);
+    _dim_reduction_panel->clearResults();
+
+    // Retrieve user-configured model parameters and bind to config
+    auto params = _dim_reduction_panel->currentParameters();
+    config.model_params = params.get();
+
+    auto * worker = new SupervisedDimReductionPipelineWorker(
+            _data_manager.get(), _registry.get(), std::move(config), this);
+
+    // Forward worker progress signal → our cross-thread signal
+    connect(worker, &SupervisedDimReductionPipelineWorker::progressUpdate,
+            this, &MLCoreWidget::_supervisedDimReductionProgressReported);
+
+    // On completion, harvest result and clean up
+    connect(worker, &QThread::finished, this, [this, worker, p = std::move(params)]() mutable {
+        _last_supervised_dim_reduction_result =
+                std::make_unique<MLCore::SupervisedDimReductionPipelineResult>(
+                        worker->takeResult());
+        worker->deleteLater();
+        p.reset();
+        _onSupervisedDimReductionPipelineComplete();
+    });
+
+    worker->start();
+}
+
+// =============================================================================
+// Supervised Dim Reduction — Progress and completion
+// =============================================================================
+
+void MLCoreWidget::_onSupervisedDimReductionProgress(
+        int stage_index, QString const & message) {
+    auto const stage = static_cast<MLCore::SupervisedDimReductionStage>(stage_index);
+    QString const stage_name = QString::fromStdString(MLCore::toString(stage));
+
+    _dim_reduction_status_label->setText(
+            QStringLiteral("<b>%1:</b> %2").arg(stage_name, message));
+}
+
+void MLCoreWidget::_onSupervisedDimReductionPipelineComplete() {
+    _setSupervisedDimReductionPipelineRunning(false);
+
+    if (!_last_supervised_dim_reduction_result) {
+        _dim_reduction_status_label->setText(
+                QStringLiteral("<span style='color: red;'>Pipeline returned no result</span>"));
+        return;
+    }
+
+    if (!_last_supervised_dim_reduction_result->success) {
+        auto const stage_name = QString::fromStdString(
+                MLCore::toString(_last_supervised_dim_reduction_result->failed_stage));
+        _dim_reduction_status_label->setText(
+                QStringLiteral("<span style='color: red;'>Failed at %1: %2</span>")
+                        .arg(stage_name,
+                             QString::fromStdString(
+                                     _last_supervised_dim_reduction_result->error_message)));
+        return;
+    }
+
+    // Write deferred output on the main thread (thread-safe)
+    if (_last_supervised_dim_reduction_result->deferred_output && _data_manager) {
+        std::string const & out_key =
+                _last_supervised_dim_reduction_result->deferred_output_key;
+        std::string const & time_key =
+                _last_supervised_dim_reduction_result->deferred_time_key;
+        _data_manager->setData(out_key,
+                               _last_supervised_dim_reduction_result->deferred_output,
+                               TimeKey(time_key));
+        _last_supervised_dim_reduction_result->output_key = out_key;
+        _last_supervised_dim_reduction_result->deferred_output.reset();
+    }
+
+    // Success — show supervised results
+    _dim_reduction_status_label->setText(
+            QStringLiteral("<span style='color: green;'>Supervised dim reduction completed "
+                           "successfully</span>"));
+
+    _dim_reduction_panel->showSupervisedResults(
+            _last_supervised_dim_reduction_result->num_observations,
+            _last_supervised_dim_reduction_result->num_training_observations,
+            _last_supervised_dim_reduction_result->num_input_features,
+            _last_supervised_dim_reduction_result->num_output_dimensions,
+            _last_supervised_dim_reduction_result->rows_dropped_nan,
+            _last_supervised_dim_reduction_result->unlabeled_count,
+            _last_supervised_dim_reduction_result->num_classes,
+            _last_supervised_dim_reduction_result->class_names);
+
+    // Auto-focus the output tensor
+    if (_selection_context && !_last_supervised_dim_reduction_result->output_key.empty()) {
+        SelectionSource const source{
+                _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
+                       : EditorLib::EditorInstanceId{},
+                QStringLiteral("DimReductionPanel")};
+
+        _selection_context->setDataFocus(
+                EditorLib::SelectedDataKey(
+                        QString::fromStdString(
+                                _last_supervised_dim_reduction_result->output_key)),
+                QStringLiteral("TensorData"),
+                source);
+    }
+
+    // Refresh tensor list in the panel so the new output appears
+    _dim_reduction_panel->refreshTensorList();
+}
+
+// =============================================================================
+// Supervised Dim Reduction — UI state management
+// =============================================================================
+
+void MLCoreWidget::_setSupervisedDimReductionPipelineRunning(bool running) {
+    _supervised_dim_reduction_pipeline_running = running;
+    _dim_reduction_progress_bar->setVisible(running);
+
+    if (running) {
+        _dim_reduction_status_label->setText(
+                QStringLiteral("Starting supervised dim reduction pipeline..."));
+    }
+
     _dim_reduction_panel->setEnabled(!running);
 }
 
