@@ -335,6 +335,289 @@ bool HiddenMarkovModelOperation::isSequenceModel() const {
 }
 
 // ============================================================================
+// Bidirectional constrained Viterbi (custom implementation)
+// ============================================================================
+
+bool HiddenMarkovModelOperation::predictSequencesBidirectionalConstrained(
+        std::vector<arma::mat> const & featureSequences,
+        std::vector<arma::Row<std::size_t>> & predictionSequences,
+        std::vector<std::optional<std::size_t>> const & initial_state_constraints,
+        std::vector<std::optional<std::size_t>> const & terminal_state_constraints) {
+    if (!_impl->trained) {
+        std::cerr << "HiddenMarkovModelOperation::predictSequencesBidirectionalConstrained: "
+                  << "Model not trained.\n";
+        return false;
+    }
+    if (featureSequences.empty()) {
+        std::cerr << "HiddenMarkovModelOperation::predictSequencesBidirectionalConstrained: "
+                  << "No sequences provided.\n";
+        return false;
+    }
+    if (initial_state_constraints.size() != featureSequences.size() ||
+        terminal_state_constraints.size() != featureSequences.size()) {
+        std::cerr << "HiddenMarkovModelOperation::predictSequencesBidirectionalConstrained: "
+                  << "Constraint vector sizes don't match sequence count.\n";
+        return false;
+    }
+
+    try {
+        predictionSequences.clear();
+        predictionSequences.reserve(featureSequences.size());
+
+        auto const num_states = _impl->num_states;
+
+        for (std::size_t i = 0; i < featureSequences.size(); ++i) {
+            auto const & seq = featureSequences[i];
+            auto const T = seq.n_cols;
+
+            if (seq.n_rows != _impl->num_features) {
+                std::cerr << "HiddenMarkovModelOperation::predictSequencesBidirectionalConstrained: "
+                          << "Feature dimension mismatch.\n";
+                return false;
+            }
+
+            // If neither end is constrained, delegate to standard Viterbi
+            if (!initial_state_constraints[i].has_value() &&
+                !terminal_state_constraints[i].has_value()) {
+                arma::Row<std::size_t> stateSeq;
+                _impl->visit([&](auto & hmm) { hmm.Predict(seq, stateSeq); });
+                predictionSequences.push_back(std::move(stateSeq));
+                continue;
+            }
+
+            // --- Custom Viterbi with bidirectional constraints ---
+
+            // Get log-space model parameters
+            arma::mat logTransition = _impl->visit([](auto & hmm) -> arma::mat {
+                return arma::mat(arma::log(hmm.Transition()));
+            });
+            arma::vec logInitial = _impl->visit([](auto & hmm) -> arma::vec {
+                return arma::vec(arma::log(hmm.Initial()));
+            });
+
+            // Override initial distribution if constrained
+            if (initial_state_constraints[i].has_value()) {
+                auto const state = *initial_state_constraints[i];
+                assert(state < num_states);
+                logInitial.fill(-std::numeric_limits<double>::infinity());
+                logInitial[state] = 0.0;
+            }
+
+            // Compute emission log-probabilities: logProbs(t, s)
+            arma::mat logProbs(T, num_states);
+            _impl->visit([&](auto & hmm) {
+                for (std::size_t s = 0; s < num_states; ++s) {
+                    arma::vec alias(logProbs.colptr(s), T, false, true);
+                    hmm.Emission()[s].LogProbability(seq, alias);
+                }
+            });
+
+            // Forward pass: logStateProb(s, t), stateSeqBack(s, t)
+            arma::mat logStateProb(num_states, T);
+            arma::Mat<std::size_t> stateSeqBack(num_states, T);
+
+            // t = 0
+            for (std::size_t s = 0; s < num_states; ++s) {
+                logStateProb(s, 0) = logInitial[s] + logProbs(0, s);
+                stateSeqBack(s, 0) = s;
+            }
+
+            // t = 1..T-1
+            for (std::size_t t = 1; t < T; ++t) {
+                for (std::size_t j = 0; j < num_states; ++j) {
+                    arma::vec prob(num_states);
+                    for (std::size_t k = 0; k < num_states; ++k) {
+                        // logTransition(j, k) = log P(to j | from k)
+                        prob[k] = logStateProb(k, t - 1) + logTransition(j, k);
+                    }
+                    auto const best = prob.index_max();
+                    logStateProb(j, t) = prob[best] + logProbs(t, j);
+                    stateSeqBack(j, t) = best;
+                }
+            }
+
+            // Backtrace: start from terminal constraint if specified
+            arma::Row<std::size_t> stateSeq(T);
+            if (terminal_state_constraints[i].has_value()) {
+                stateSeq[T - 1] = *terminal_state_constraints[i];
+            } else {
+                stateSeq[T - 1] = logStateProb.col(T - 1).index_max();
+            }
+            for (std::size_t t = T - 1; t > 0; --t) {
+                stateSeq[t - 1] = stateSeqBack(stateSeq[t], t);
+            }
+
+            predictionSequences.push_back(std::move(stateSeq));
+        }
+        return true;
+
+    } catch (std::exception const & e) {
+        std::cerr << "HiddenMarkovModelOperation::predictSequencesBidirectionalConstrained failed: "
+                  << e.what() << "\n";
+        return false;
+    }
+}
+
+// ============================================================================
+// Per-sequence Forward-Backward with boundary constraints
+// ============================================================================
+
+bool HiddenMarkovModelOperation::predictProbabilitiesPerSequence(
+        std::vector<arma::mat> const & featureSequences,
+        std::vector<arma::mat> & probabilitySequences,
+        std::vector<std::optional<std::size_t>> const & initial_state_constraints,
+        std::vector<std::optional<std::size_t>> const & terminal_state_constraints) {
+    if (!_impl->trained) {
+        std::cerr << "HiddenMarkovModelOperation::predictProbabilitiesPerSequence: "
+                  << "Model not trained.\n";
+        return false;
+    }
+    if (featureSequences.empty()) {
+        std::cerr << "HiddenMarkovModelOperation::predictProbabilitiesPerSequence: "
+                  << "No sequences provided.\n";
+        return false;
+    }
+    if (initial_state_constraints.size() != featureSequences.size() ||
+        terminal_state_constraints.size() != featureSequences.size()) {
+        std::cerr << "HiddenMarkovModelOperation::predictProbabilitiesPerSequence: "
+                  << "Constraint vector sizes don't match sequence count.\n";
+        return false;
+    }
+
+    try {
+        probabilitySequences.clear();
+        probabilitySequences.reserve(featureSequences.size());
+
+        auto const num_states = _impl->num_states;
+
+        // Get log-space model parameters (shared across all sequences)
+        arma::mat logTransition = _impl->visit([](auto & hmm) -> arma::mat {
+            return arma::mat(arma::log(hmm.Transition()));
+        });
+        arma::vec logInitial = _impl->visit([](auto & hmm) -> arma::vec {
+            return arma::vec(arma::log(hmm.Initial()));
+        });
+
+        for (std::size_t i = 0; i < featureSequences.size(); ++i) {
+            auto const & seq = featureSequences[i];
+            auto const T = seq.n_cols;
+
+            if (seq.n_rows != _impl->num_features) {
+                std::cerr << "HiddenMarkovModelOperation::predictProbabilitiesPerSequence: "
+                          << "Feature dimension mismatch.\n";
+                return false;
+            }
+
+            // Emission log-probabilities: logProbs(t, s)
+            arma::mat logProbs(T, num_states);
+            _impl->visit([&](auto & hmm) {
+                for (std::size_t s = 0; s < num_states; ++s) {
+                    arma::vec alias(logProbs.colptr(s), T, false, true);
+                    hmm.Emission()[s].LogProbability(seq, alias);
+                }
+            });
+
+            // Override initial if constrained
+            arma::vec seqLogInitial = logInitial;
+            if (initial_state_constraints[i].has_value()) {
+                auto const state = *initial_state_constraints[i];
+                assert(state < num_states);
+                seqLogInitial.fill(-std::numeric_limits<double>::infinity());
+                seqLogInitial[state] = 0.0;
+            }
+
+            // --- Forward pass (scaled log-space) ---
+            // forwardLog(s, t) = log P(s_t, o_1..t) (scaled)
+            // logScales(t) = log normalizer at time t
+            arma::mat forwardLog(num_states, T);
+            arma::vec logScales(T);
+
+            // t = 0
+            forwardLog.col(0) = seqLogInitial + logProbs.row(0).t();
+            {
+                double const mx0 = forwardLog.col(0).max();
+                logScales[0] = std::log(arma::accu(arma::exp(forwardLog.col(0) - mx0))) + mx0;
+            }
+            if (std::isfinite(logScales[0])) {
+                forwardLog.col(0) -= logScales[0];
+            }
+
+            // t = 1..T-1
+            for (std::size_t t = 1; t < T; ++t) {
+                for (std::size_t j = 0; j < num_states; ++j) {
+                    arma::vec tmp = forwardLog.col(t - 1) + logTransition.row(j).t();
+                    double const mx = tmp.max();
+                    forwardLog(j, t) = std::log(arma::accu(arma::exp(tmp - mx))) + mx +
+                                       logProbs(t, j);
+                }
+                {
+                    double const mxt = forwardLog.col(t).max();
+                    logScales[t] = std::log(arma::accu(arma::exp(forwardLog.col(t) - mxt))) + mxt;
+                }
+                if (std::isfinite(logScales[t])) {
+                    forwardLog.col(t) -= logScales[t];
+                }
+            }
+
+            // --- Backward pass (scaled log-space) ---
+            arma::mat backwardLog(num_states, T);
+
+            // t = T-1 (terminal)
+            if (terminal_state_constraints[i].has_value()) {
+                auto const state = *terminal_state_constraints[i];
+                assert(state < num_states);
+                backwardLog.col(T - 1).fill(-std::numeric_limits<double>::infinity());
+                backwardLog(state, T - 1) = 0.0;
+            } else {
+                backwardLog.col(T - 1).fill(0.0);
+            }
+
+            // t = T-2 .. 0
+            for (std::size_t t = T - 2; t + 1 > 0; --t) {
+                for (std::size_t j = 0; j < num_states; ++j) {
+                    arma::vec tmp(num_states);
+                    for (std::size_t k = 0; k < num_states; ++k) {
+                        // logTransition(k, j) = log P(to k | from j)
+                        tmp[k] = logTransition(k, j) + logProbs(t + 1, k) +
+                                 backwardLog(k, t + 1);
+                    }
+                    double const mx = tmp.max();
+                    backwardLog(j, t) = std::log(arma::accu(arma::exp(tmp - mx))) + mx;
+                }
+                if (std::isfinite(logScales[t + 1])) {
+                    backwardLog.col(t) -= logScales[t + 1];
+                }
+            }
+
+            // --- Posterior: stateLogProb = forward + backward ---
+            arma::mat stateLogProb = forwardLog + backwardLog;
+
+            // Convert to probabilities, normalizing each column
+            arma::mat posterior(num_states, T);
+            for (std::size_t t = 0; t < T; ++t) {
+                arma::vec col = stateLogProb.col(t);
+                double const mx = col.max();
+                arma::vec expCol = arma::exp(col - mx);
+                double const Z = arma::accu(expCol);
+                if (Z > 0.0) {
+                    posterior.col(t) = expCol / Z;
+                } else {
+                    posterior.col(t).fill(1.0 / static_cast<double>(num_states));
+                }
+            }
+
+            probabilitySequences.push_back(std::move(posterior));
+        }
+        return true;
+
+    } catch (std::exception const & e) {
+        std::cerr << "HiddenMarkovModelOperation::predictProbabilitiesPerSequence failed: "
+                  << e.what() << "\n";
+        return false;
+    }
+}
+
+// ============================================================================
 // Frame-based fallbacks (treat entire input as one sequence)
 // ============================================================================
 

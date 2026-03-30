@@ -775,27 +775,45 @@ ClassificationPipelineResult runClassificationPipeline(
 
             std::vector<arma::Row<std::size_t>> pred_sequences;
 
+            // Constraint vectors — populated only when constrained decoding
+            // is active, but declared here so they remain in scope for the
+            // per-segment probability pass below.
+            std::vector<std::optional<std::size_t>> initial_constraints;
+            std::vector<std::optional<std::size_t>> terminal_constraints;
+
             if (use_constrained) {
-                // For each prediction segment, determine initial state constraint
-                std::vector<std::optional<std::size_t>> constraints;
-                constraints.reserve(pred_segments.size());
+                // For each prediction segment, determine initial and terminal
+                // state constraints from the label map
+                initial_constraints.reserve(pred_segments.size());
+                terminal_constraints.reserve(pred_segments.size());
+
                 for (auto const & seg: pred_segments) {
+                    // --- Initial constraint ---
                     auto const first_time = seg.times.front().getValue();
-                    // Check if the segment's first frame has a known label
                     if (auto it = label_map.find(first_time); it != label_map.end()) {
-                        constraints.emplace_back(it->second);
-                    }
-                    // Otherwise check the frame immediately before
-                    else if (auto it2 = label_map.find(first_time - 1);
-                             it2 != label_map.end()) {
-                        constraints.emplace_back(it2->second);
+                        initial_constraints.emplace_back(it->second);
+                    } else if (auto it2 = label_map.find(first_time - 1);
+                               it2 != label_map.end()) {
+                        initial_constraints.emplace_back(it2->second);
                     } else {
-                        constraints.emplace_back(std::nullopt);
+                        initial_constraints.emplace_back(std::nullopt);
+                    }
+
+                    // --- Terminal constraint ---
+                    auto const last_time = seg.times.back().getValue();
+                    if (auto it = label_map.find(last_time); it != label_map.end()) {
+                        terminal_constraints.emplace_back(it->second);
+                    } else if (auto it2 = label_map.find(last_time + 1);
+                               it2 != label_map.end()) {
+                        terminal_constraints.emplace_back(it2->second);
+                    } else {
+                        terminal_constraints.emplace_back(std::nullopt);
                     }
                 }
 
-                pred_ok = model->predictSequencesConstrained(
-                        pred_feature_seqs, pred_sequences, constraints);
+                pred_ok = model->predictSequencesBidirectionalConstrained(
+                        pred_feature_seqs, pred_sequences,
+                        initial_constraints, terminal_constraints);
             } else {
                 pred_ok = model->predictSequences(pred_feature_seqs, pred_sequences);
             }
@@ -821,6 +839,47 @@ ClassificationPipelineResult runClassificationPipeline(
                     offset += seq_preds.n_elem;
                 }
                 predict_row_times = std::move(reassembled_times);
+
+                // Ground-truth substitution: overwrite predictions for
+                // labeled frames with their known labels so the final
+                // output is exact on training data.
+                for (std::size_t i = 0; i < predict_row_times.size(); ++i) {
+                    if (auto it = label_map.find(predict_row_times[i].getValue());
+                        it != label_map.end()) {
+                        predictions[i] = it->second;
+                    }
+                }
+
+                // Per-segment constrained probability estimates
+                if (use_constrained) {
+                    std::vector<arma::mat> prob_seqs;
+                    if (model->predictProbabilitiesPerSequence(
+                                pred_feature_seqs, prob_seqs,
+                                initial_constraints, terminal_constraints)) {
+                        // Reassemble per-segment probability matrices into a
+                        // single (num_states × total_obs) matrix in segment order
+                        std::size_t const num_states =
+                                prob_seqs.empty() ? 0 : prob_seqs.front().n_rows;
+                        arma::mat full_prob(num_states, predictions.n_elem);
+                        std::size_t col_offset = 0;
+                        for (auto const & pm: prob_seqs) {
+                            full_prob.cols(col_offset, col_offset + pm.n_cols - 1) = pm;
+                            col_offset += pm.n_cols;
+                        }
+
+                        // Set delta probabilities for ground-truth frames
+                        for (std::size_t i = 0; i < predict_row_times.size(); ++i) {
+                            if (auto it = label_map.find(
+                                        predict_row_times[i].getValue());
+                                it != label_map.end()) {
+                                full_prob.col(i).zeros();
+                                full_prob(it->second, i) = 1.0;
+                            }
+                        }
+
+                        probabilities = std::move(full_prob);
+                    }
+                }
             }
         } else {
             pred_ok = model->predict(predict_features, predictions);
@@ -832,10 +891,13 @@ ClassificationPipelineResult runClassificationPipeline(
         }
         prediction_count = predictions.n_elem;
 
-        // Try to get probability estimates
-        arma::mat prob_mat;
-        if (model->predictProbabilities(predict_features, prob_mat)) {
-            probabilities = std::move(prob_mat);
+        // Try to get probability estimates (fallback for non-sequence models
+        // or when per-segment probabilities were not computed above)
+        if (!probabilities.has_value()) {
+            arma::mat prob_mat;
+            if (model->predictProbabilities(predict_features, prob_mat)) {
+                probabilities = std::move(prob_mat);
+            }
         }
     }
 
