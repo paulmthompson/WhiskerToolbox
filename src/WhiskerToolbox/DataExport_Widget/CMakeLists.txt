@@ -31,6 +31,10 @@ set(DATAEXPORT_WIDGET_SOURCES
         DigitalTimeSeries/CSV/CSVEventSaver_Widget.cpp
         DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp
         DigitalTimeSeries/CSV/CSVEventSaver_Widget.ui
+
+        Tensors/CSV/CSVTensorSaver_Widget.cpp
+        Tensors/CSV/CSVTensorSaver_Widget.hpp
+        Tensors/CSV/CSVTensorSaver_Widget.ui
 )
 
 # Conditionally add CapnProto-dependent Binary widget sources

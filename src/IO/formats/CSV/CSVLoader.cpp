@@ -14,8 +14,10 @@
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "Tensors/TensorData.hpp"
 #include "lines/Line_Data_CSV.hpp"
 #include "mask/Mask_Data_CSV.hpp"
+#include "tensors/Tensor_Data_CSV.hpp"
 
 #include "CoreUtilities/json_reflection.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
@@ -54,6 +56,8 @@ LoadResult CSVLoader::load(std::string const & filepath,
             }
             return loadDigitalIntervalCSV(filepath, config);
         }
+        case DM_DataType::Tensor:
+            return loadTensorDataCSV(filepath, config);
         default:
             return LoadResult("CSVLoader does not support data type: " +
                               std::to_string(static_cast<int>(dataType)));
@@ -68,7 +72,8 @@ bool CSVLoader::supportsFormat(std::string const & format, DM_DataType dataType)
                dataType == DM_DataType::Mask ||
                dataType == DM_DataType::Analog ||
                dataType == DM_DataType::DigitalEvent ||
-               dataType == DM_DataType::DigitalInterval;
+               dataType == DM_DataType::DigitalInterval ||
+               dataType == DM_DataType::Tensor;
     }
 
     // Support dlc_csv format for Points (legacy compatibility)
@@ -163,6 +168,8 @@ LoadResult CSVLoader::save(std::string const & filepath,
             return saveDigitalIntervalCSV(filepath, config, data);
         case DM_DataType::Mask:
             return saveMaskDataCSV(filepath, config, data);
+        case DM_DataType::Tensor:
+            return saveTensorDataCSV(filepath, config, data);
         default:
             return LoadResult("CSVLoader does not support saving data type: " +
                               std::to_string(static_cast<int>(dataType)));
@@ -911,5 +918,66 @@ std::vector<SaverInfo> CSVLoader::getSaverInfo() const {
              extractParameterSchema<CSVMaskRLESaverOptions>()},
             {"csv", DM_DataType::Line, "CSV line data (single file)",
              extractParameterSchema<CSVSingleFileLineSaverOptions>()},
+            {"csv", DM_DataType::Tensor, "CSV tensor data (2D matrix)",
+             extractParameterSchema<CSVTensorSaverOptions>()},
     };
+}
+
+// ============================================================================
+// TensorData Loading/Saving
+// ============================================================================
+
+LoadResult CSVLoader::loadTensorDataCSV(std::string const & filepath,
+                                        nlohmann::json const & config) {
+    try {
+        CSVTensorLoaderOptions opts;
+        opts.filepath = filepath;
+
+        if (config.contains("delimiter")) opts.delimiter = config["delimiter"];
+        if (config.contains("has_header")) opts.has_header = config["has_header"];
+
+        auto tensor = ::load(opts);
+        if (!tensor) {
+            return LoadResult("No data loaded from CSV file: " + filepath);
+        }
+
+        std::cout << "CSVLoader: Loaded tensor data from " << filepath << std::endl;
+
+        return LoadResult(std::move(tensor));
+
+    } catch (std::exception const & e) {
+        return LoadResult("CSV tensor loading failed: " + std::string(e.what()));
+    }
+}
+
+LoadResult CSVLoader::saveTensorDataCSV(std::string const & filepath,
+                                        nlohmann::json const & config,
+                                        void const * data) {
+    try {
+        auto const * tensor = static_cast<TensorData const *>(data);
+
+        CSVTensorSaverOptions save_opts;
+
+        std::filesystem::path const path(filepath);
+        save_opts.parent_dir = path.parent_path().string();
+        save_opts.filename = path.filename().string();
+
+        if (config.contains("parent_dir")) save_opts.parent_dir = config["parent_dir"];
+        if (config.contains("filename")) save_opts.filename = config["filename"];
+        if (config.contains("delimiter")) save_opts.delimiter = config["delimiter"];
+        if (config.contains("save_header")) save_opts.save_header = config["save_header"];
+        if (config.contains("precision")) save_opts.precision = config["precision"];
+
+        bool const ok = ::save(tensor, save_opts);
+        if (!ok) {
+            return LoadResult("CSV tensor save failed: I/O error writing file");
+        }
+
+        LoadResult result;
+        result.success = true;
+        return result;
+
+    } catch (std::exception const & e) {
+        return LoadResult("CSV tensor save failed: " + std::string(e.what()));
+    }
 }

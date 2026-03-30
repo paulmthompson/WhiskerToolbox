@@ -24,6 +24,9 @@
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
 
+class CSVTensorSaver_Widget;
+class QLineEdit;
+class Section;
 class SelectionContext;
 class TensorDesigner;
 
@@ -113,7 +116,21 @@ private:
     void _setupDesignerUi();
     void _assignCallbacks();
 
+    /**
+     * @brief Generate filename for export based on active key
+     * @return Filename with .csv extension
+     */
+    [[nodiscard]] std::string _generateFilename() const;
+
+    /**
+     * @brief Update the filename line edit based on active key
+     */
+    void _updateFilename();
+
     TensorDesigner * _designer{nullptr};
+    Section * _export_section{nullptr};
+    QLineEdit * _filename_edit{nullptr};
+    CSVTensorSaver_Widget * _csv_saver_widget{nullptr};
 };
 
 #endif// TENSOR_INSPECTOR_HPP

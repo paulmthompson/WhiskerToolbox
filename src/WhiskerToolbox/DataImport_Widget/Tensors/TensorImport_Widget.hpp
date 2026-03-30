@@ -4,13 +4,17 @@
 /**
  * @file TensorImport_Widget.hpp
  * @brief Widget for importing tensor data into DataManager
- * 
- * This widget provides an interface for loading tensor data from
- * NumPy (.npy) files.
+ *
+ * This widget provides a unified interface for importing tensor data
+ * from multiple file formats (NumPy .npy and CSV).
+ * Uses a format selector combo box and stacked widget to switch between
+ * format-specific import sub-widgets.
  */
 
 #include <QWidget>
 #include <memory>
+
+#include "IO/formats/CSV/tensors/Tensor_Data_CSV.hpp"
 
 class DataManager;
 
@@ -19,11 +23,12 @@ class TensorImport_Widget;
 }
 
 /**
- * @brief Widget for importing tensor data
- * 
+ * @brief Widget for importing tensor data from multiple formats
+ *
  * Provides:
  * - Data name input
- * - NumPy file loading
+ * - Format selector (NumPy, CSV)
+ * - Format-specific import options via stacked widget
  */
 class TensorImport_Widget : public QWidget {
     Q_OBJECT
@@ -49,10 +54,9 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
 private slots:
-    /**
-     * @brief Handle numpy array loading
-     */
+    void _onLoaderTypeChanged(int index);
     void _loadNumpyArray();
+    void _handleCSVLoadRequested(const CSVTensorLoaderOptions& options);
 };
 
-#endif // TENSOR_IMPORT_WIDGET_HPP
+#endif// TENSOR_IMPORT_WIDGET_HPP

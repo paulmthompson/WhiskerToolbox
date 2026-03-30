@@ -41,6 +41,9 @@ set(DATA_IMPORT_WIDGET_SOURCES
     Tensors/TensorImport_Widget.cpp
     Tensors/TensorImport_Widget.hpp
     Tensors/TensorImport_Widget.ui
+    Tensors/CSV/CSVTensorImport_Widget.cpp
+    Tensors/CSV/CSVTensorImport_Widget.hpp
+    Tensors/CSV/CSVTensorImport_Widget.ui
     
     # DigitalTimeSeries import widgets
     DigitalTimeSeries/DigitalEventImport_Widget.cpp

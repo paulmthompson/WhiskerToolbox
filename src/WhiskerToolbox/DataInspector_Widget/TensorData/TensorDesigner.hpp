@@ -59,11 +59,11 @@ enum class IntervalProperty : std::uint8_t;
  * @brief Row source type for the tensor designer
  */
 enum class DesignerRowType {
-    None,             ///< No row source selected
-    Interval,         ///< Rows from DigitalIntervalSeries
-    Timestamp,        ///< Rows from DigitalEventSeries
-    Ordinal,          ///< Manual ordinal rows
-    DerivedFromSource ///< Derive row timestamps from any data source's timestamps
+    None,            ///< No row source selected
+    Interval,        ///< Rows from DigitalIntervalSeries
+    Timestamp,       ///< Rows from DigitalEventSeries
+    Ordinal,         ///< Manual ordinal rows
+    DerivedFromSource///< Derive row timestamps from any data source's timestamps
 };
 
 /**
@@ -140,21 +140,6 @@ public:
      */
     bool fromJson(std::string const & json);
 
-    // =========================================================================
-    // CSV Export
-    // =========================================================================
-
-    /**
-     * @brief Export the current tensor to CSV
-     * @param file_path Output file path
-     * @param delimiter Column delimiter (default comma)
-     * @param precision Floating-point precision (default 6)
-     * @return true if export succeeded
-     */
-    bool exportToCsv(std::string const & file_path,
-                     char delimiter = ',',
-                     int precision = 6) const;
-
 signals:
     /**
      * @brief Emitted when the tensor has been created or updated
@@ -176,7 +161,6 @@ private slots:
     void _onEditColumnClicked();
     void _onColumnDoubleClicked(QListWidgetItem * item);
     void _onBuildClicked();
-    void _onExportCsvClicked();
     void _onSaveJsonClicked();
     void _onLoadJsonClicked();
     void _onDataFocusChanged(
@@ -211,8 +195,8 @@ private:
     std::string _tensor_key;
 
     // Dialog tracking
-    QPointer<ColumnConfigDialog> _active_dialog;  ///< Active modeless dialog (if any)
-    bool _was_pinned_before_dialog{false};          ///< Pin state before dialog opened
+    QPointer<ColumnConfigDialog> _active_dialog;///< Active modeless dialog (if any)
+    bool _was_pinned_before_dialog{false};      ///< Pin state before dialog opened
 
     // --- Row configuration ---
     DesignerRowType _row_type{DesignerRowType::None};
@@ -238,10 +222,9 @@ private:
     QPushButton * _edit_col_btn{nullptr};
     QPushButton * _remove_col_btn{nullptr};
 
-    // Build / Export section
+    // Build / Config section
     QHBoxLayout * _action_layout{nullptr};
     QPushButton * _build_btn{nullptr};
-    QPushButton * _export_csv_btn{nullptr};
     QPushButton * _save_json_btn{nullptr};
     QPushButton * _load_json_btn{nullptr};
 

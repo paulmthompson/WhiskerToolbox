@@ -58,6 +58,8 @@ set(IO_CORE_SOURCES
     formats/CSV/points/Point_Data_CSV.cpp
     formats/CSV/lines/Line_Data_CSV.hpp
     formats/CSV/lines/Line_Data_CSV.cpp
+    formats/CSV/tensors/Tensor_Data_CSV.hpp
+    formats/CSV/tensors/Tensor_Data_CSV.cpp
 )
 
 
@@ -98,6 +100,7 @@ target_link_libraries(DataManagerIO PUBLIC
     MaskData # Needed for Mask RLE CSV loaders
     AnalogTimeSeries # Needed for Analog loaders
     DigitalTimeSeries # Needed for Digital loaders
+    TensorData # Needed for Tensor CSV loaders
 )
 
 target_link_libraries(DataManagerIO PRIVATE CoreUtilities)

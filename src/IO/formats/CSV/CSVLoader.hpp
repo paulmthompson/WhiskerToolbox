@@ -225,6 +225,19 @@ private:
     static LoadResult saveMaskDataCSV(std::string const & filepath,
                                       nlohmann::json const & config,
                                       void const * data);
+
+    /**
+     * @brief Load TensorData from CSV
+     */
+    static LoadResult loadTensorDataCSV(std::string const & filepath,
+                                        nlohmann::json const & config);
+
+    /**
+     * @brief Save TensorData to CSV
+     */
+    static LoadResult saveTensorDataCSV(std::string const & filepath,
+                                        nlohmann::json const & config,
+                                        void const * data);
 };
 
 #endif// CSV_FORMAT_LOADER_HPP
