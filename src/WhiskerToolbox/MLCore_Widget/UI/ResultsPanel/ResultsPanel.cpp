@@ -7,9 +7,12 @@
 #include "output/PredictionWriter.hpp"
 #include "pipelines/ClassificationPipeline.hpp"
 
+#include <QFrame>
+#include <QLabel>
 #include <QListWidgetItem>
 #include <QPixmap>
 #include <QString>
+#include <QVBoxLayout>
 #include <armadillo>
 
 #include <algorithm>
@@ -61,11 +64,34 @@ void ResultsPanel::showClassificationResult(
                         result.was_balanced);
 
     // Metrics display
+    bool const has_validation = result.binary_validation_metrics.has_value() ||
+                                result.multi_class_validation_metrics.has_value();
+
     if (result.binary_train_metrics.has_value()) {
+        if (has_validation) {
+            ui->metricsHeaderLabel->setText(
+                    QStringLiteral("Training Metrics (%1 obs)")
+                            .arg(result.training_observations));
+        }
         _updateBinaryMetricsDisplay(result.binary_train_metrics.value());
     } else if (result.multi_class_train_metrics.has_value()) {
+        if (has_validation) {
+            ui->metricsHeaderLabel->setText(
+                    QStringLiteral("Training Metrics (%1 obs)")
+                            .arg(result.training_observations));
+        }
         _updateMultiClassMetricsDisplay(result.multi_class_train_metrics.value(),
                                         result.class_names);
+    }
+
+    // Validation metrics (shown when training region restricts training data)
+    if (result.binary_validation_metrics.has_value()) {
+        _showValidationMetrics(result.binary_validation_metrics.value(),
+                               result.validation_observations);
+    } else if (result.multi_class_validation_metrics.has_value()) {
+        _showValidationMultiClassMetrics(result.multi_class_validation_metrics.value(),
+                                         result.class_names,
+                                         result.validation_observations);
     }
 
     // Output keys
@@ -139,7 +165,7 @@ void ResultsPanel::setOutputKeys(
     }
 
     // Add interval series keys
-    for (const auto & key : interval_keys) {
+    for (auto const & key: interval_keys) {
         QString const label = QStringLiteral("Intervals: %1").arg(QString::fromStdString(key));
         auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
         item->setData(Qt::UserRole, QString::fromStdString(key));
@@ -147,7 +173,7 @@ void ResultsPanel::setOutputKeys(
     }
 
     // Add probability series keys
-    for (const auto & key : probability_keys) {
+    for (auto const & key: probability_keys) {
         QString const label = QStringLiteral("Probabilities: %1").arg(QString::fromStdString(key));
         auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
         item->setData(Qt::UserRole, QString::fromStdString(key));
@@ -156,6 +182,7 @@ void ResultsPanel::setOutputKeys(
 }
 
 void ResultsPanel::clearResults() {
+    _clearValidationWidgets();
     _showNoResultsState();
     _last_putative_group_ids.clear();
     _has_results = false;
@@ -309,6 +336,142 @@ void ResultsPanel::_updateModelSummary(
                     .arg(training_observations)
                     .arg(num_features)
                     .arg(num_classes));
+}
+
+void ResultsPanel::_clearValidationWidgets() {
+    for (auto * w: _validation_widgets) {
+        w->setParent(nullptr);
+        delete w;
+    }
+    _validation_widgets.clear();
+}
+
+void ResultsPanel::_showValidationMetrics(
+        MLCore::BinaryClassificationMetrics const & metrics,
+        std::size_t validation_observations) {
+    _clearValidationWidgets();
+
+    // Find the confusion matrix label in the results layout to insert after it
+    auto * layout = ui->resultsPage->layout();
+    if (!layout) {
+        return;
+    }
+
+    // Find insertion point: after the confusion matrix label
+    int insert_idx = -1;
+    for (int i = 0; i < layout->count(); ++i) {
+        auto * item = layout->itemAt(i);
+        if (item && item->widget() == ui->confusionMatrixLabel) {
+            insert_idx = i + 1;
+            break;
+        }
+    }
+    if (insert_idx < 0) {
+        return;
+    }
+
+    auto * vbox = qobject_cast<QVBoxLayout *>(layout);
+    if (!vbox) {
+        return;
+    }
+
+    // Separator line
+    auto * separator = new QFrame(ui->resultsPage);
+    separator->setFrameShape(QFrame::HLine);
+    separator->setFrameShadow(QFrame::Sunken);
+    vbox->insertWidget(insert_idx++, separator);
+    _validation_widgets.push_back(separator);
+
+    // Validation header
+    auto * header = new QLabel(
+            QStringLiteral("Validation Metrics (%1 obs)").arg(validation_observations),
+            ui->resultsPage);
+    header->setStyleSheet(QStringLiteral("QLabel { font-weight: bold; color: #2E6BB5; }"));
+    vbox->insertWidget(insert_idx++, header);
+    _validation_widgets.push_back(header);
+
+    // Metrics as formatted text
+    auto * metricsLabel = new QLabel(ui->resultsPage);
+    metricsLabel->setWordWrap(true);
+    metricsLabel->setText(
+            QStringLiteral("Accuracy: %1%  |  Sensitivity: %2%  |  Specificity: %3%  |  Dice/F1: %4%")
+                    .arg(metrics.accuracy * 100.0, 0, 'f', 2)
+                    .arg(metrics.sensitivity * 100.0, 0, 'f', 2)
+                    .arg(metrics.specificity * 100.0, 0, 'f', 2)
+                    .arg(metrics.dice_score * 100.0, 0, 'f', 2));
+    vbox->insertWidget(insert_idx++, metricsLabel);
+    _validation_widgets.push_back(metricsLabel);
+
+    // Confusion matrix
+    auto * cmLabel = new QLabel(ui->resultsPage);
+    cmLabel->setWordWrap(true);
+    cmLabel->setAlignment(Qt::AlignCenter);
+    cmLabel->setStyleSheet(QStringLiteral(
+            "QLabel { font-family: 'Courier New', monospace; "
+            "background-color: #f0f5ff; border: 1px solid #bcd; "
+            "padding: 8px; border-radius: 4px; }"));
+    cmLabel->setText(_formatConfusionMatrix(metrics));
+    vbox->insertWidget(insert_idx++, cmLabel);
+    _validation_widgets.push_back(cmLabel);
+}
+
+void ResultsPanel::_showValidationMultiClassMetrics(
+        MLCore::MultiClassMetrics const & metrics,
+        std::vector<std::string> const & class_names,
+        std::size_t validation_observations) {
+    _clearValidationWidgets();
+
+    auto * layout = ui->resultsPage->layout();
+    if (!layout) {
+        return;
+    }
+
+    int insert_idx = -1;
+    for (int i = 0; i < layout->count(); ++i) {
+        auto * item = layout->itemAt(i);
+        if (item && item->widget() == ui->confusionMatrixLabel) {
+            insert_idx = i + 1;
+            break;
+        }
+    }
+    if (insert_idx < 0) {
+        return;
+    }
+
+    auto * vbox = qobject_cast<QVBoxLayout *>(layout);
+    if (!vbox) {
+        return;
+    }
+
+    auto * separator = new QFrame(ui->resultsPage);
+    separator->setFrameShape(QFrame::HLine);
+    separator->setFrameShadow(QFrame::Sunken);
+    vbox->insertWidget(insert_idx++, separator);
+    _validation_widgets.push_back(separator);
+
+    auto * header = new QLabel(
+            QStringLiteral("Validation Metrics (%1 obs)").arg(validation_observations),
+            ui->resultsPage);
+    header->setStyleSheet(QStringLiteral("QLabel { font-weight: bold; color: #2E6BB5; }"));
+    vbox->insertWidget(insert_idx++, header);
+    _validation_widgets.push_back(header);
+
+    auto * accLabel = new QLabel(
+            QStringLiteral("Accuracy: %1%").arg(metrics.overall_accuracy * 100.0, 0, 'f', 2),
+            ui->resultsPage);
+    vbox->insertWidget(insert_idx++, accLabel);
+    _validation_widgets.push_back(accLabel);
+
+    auto * cmLabel = new QLabel(ui->resultsPage);
+    cmLabel->setWordWrap(true);
+    cmLabel->setAlignment(Qt::AlignCenter);
+    cmLabel->setStyleSheet(QStringLiteral(
+            "QLabel { font-family: 'Courier New', monospace; "
+            "background-color: #f0f5ff; border: 1px solid #bcd; "
+            "padding: 8px; border-radius: 4px; }"));
+    cmLabel->setText(_formatMultiClassConfusionMatrix(metrics, class_names));
+    vbox->insertWidget(insert_idx++, cmLabel);
+    _validation_widgets.push_back(cmLabel);
 }
 
 // =============================================================================

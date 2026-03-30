@@ -140,4 +140,63 @@ FilteredPredictions filterPredictionsToIntervals(
     return result;
 }
 
+FilteredTrainingRows filterTrainingRowsToIntervals(
+        arma::mat const & features,
+        arma::Row<std::size_t> const & labels,
+        std::vector<TimeFrameIndex> const & times,
+        DigitalIntervalSeries const & intervals) {
+    assert(features.n_cols == times.size() && "features columns must match times size");
+    assert(labels.n_elem == times.size() && "labels size must match times size");
+
+    // Collect all intervals into a sorted vector for efficient lookup
+    std::vector<Interval> sorted_intervals;
+    sorted_intervals.reserve(intervals.size());
+    for (auto const & iwid: intervals.view()) {
+        sorted_intervals.push_back(iwid.interval);
+    }
+    std::sort(sorted_intervals.begin(), sorted_intervals.end());
+
+    // For each time, check if it falls within any interval
+    std::vector<arma::uword> keep_indices;
+    keep_indices.reserve(times.size());
+
+    for (std::size_t i = 0; i < times.size(); ++i) {
+        auto const t = times[i].getValue();
+        for (auto const & iv: sorted_intervals) {
+            if (t >= iv.start && t <= iv.end) {
+                keep_indices.push_back(static_cast<arma::uword>(i));
+                break;
+            }
+            if (iv.start > t) {
+                break;
+            }
+        }
+    }
+
+    if (keep_indices.empty()) {
+        return FilteredTrainingRows{
+                arma::mat(features.n_rows, 0),
+                arma::Row<std::size_t>(),
+                {}};
+    }
+
+    arma::uvec col_indices(keep_indices.size());
+    for (std::size_t i = 0; i < keep_indices.size(); ++i) {
+        col_indices[i] = keep_indices[i];
+    }
+
+    arma::Row<std::size_t> filtered_labels(keep_indices.size());
+    std::vector<TimeFrameIndex> filtered_times;
+    filtered_times.reserve(keep_indices.size());
+    for (std::size_t i = 0; i < keep_indices.size(); ++i) {
+        filtered_labels[i] = labels[keep_indices[i]];
+        filtered_times.push_back(times[keep_indices[i]]);
+    }
+
+    return FilteredTrainingRows{
+            features.cols(col_indices),
+            std::move(filtered_labels),
+            std::move(filtered_times)};
+}
+
 }// namespace MLCore

@@ -154,6 +154,20 @@ struct ClassificationPipelineConfig {
      */
     std::string label_event_key;
 
+    // -- Training region --
+
+    /**
+     * @brief DataManager key of a DigitalIntervalSeries defining the training region
+     *
+     * When non-empty, only feature rows whose TimeFrameIndex falls within one
+     * of the intervals in this series are used for training. Rows outside the
+     * training region are excluded from label assembly, class balancing, and
+     * model fitting, but may still be used for prediction.
+     *
+     * When empty, all rows in the feature tensor are used for training.
+     */
+    std::string training_interval_key;
+
     // -- Feature conversion --
 
     /**
@@ -296,13 +310,14 @@ struct ClassificationPipelineResult {
      */
     bool was_balanced = false;
 
-    // -- Metrics (training set, or prediction set if different) --
+    // -- Metrics (training set) --
 
     /**
      * @brief Training-set metrics (evaluated on training data, may be overfit)
      *
      * Present when the model was successfully trained and predict_all_rows
-     * was used on the training tensor.
+     * was used on the training tensor. When a training region is specified,
+     * these are computed only on frames within the training region.
      */
     std::optional<BinaryClassificationMetrics> binary_train_metrics;
 
@@ -310,6 +325,28 @@ struct ClassificationPipelineResult {
      * @brief Multi-class training metrics (if num_classes > 2)
      */
     std::optional<MultiClassMetrics> multi_class_train_metrics;
+
+    // -- Metrics (validation set) --
+
+    /**
+     * @brief Validation-set metrics (evaluated on frames outside training region)
+     *
+     * Present when a training region is specified and the prediction covers
+     * additional frames with ground-truth labels outside the training region.
+     * These metrics are not affected by training data and reflect true
+     * generalization performance.
+     */
+    std::optional<BinaryClassificationMetrics> binary_validation_metrics;
+
+    /**
+     * @brief Multi-class validation metrics
+     */
+    std::optional<MultiClassMetrics> multi_class_validation_metrics;
+
+    /**
+     * @brief Number of validation observations used for validation metrics
+     */
+    std::size_t validation_observations = 0;
 
     // -- Prediction output --
 

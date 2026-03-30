@@ -80,6 +80,34 @@ struct FilteredRows {
         BoundingSpan span);
 
 /**
+ * @brief Result of filtering feature rows + labels to a set of intervals
+ */
+struct FilteredTrainingRows {
+    arma::mat features;
+    arma::Row<std::size_t> labels;
+    std::vector<TimeFrameIndex> times;
+};
+
+/**
+ * @brief Filter training features, labels, and times to only rows within intervals
+ *
+ * Keeps only columns (observations) whose corresponding time is contained
+ * in at least one interval (start <= time <= end).
+ *
+ * @pre features.n_cols == labels.n_elem == times.size()
+ * @param features  Feature matrix (rows = features, cols = observations)
+ * @param labels    Per-observation class label
+ * @param times     Time index for each observation column
+ * @param intervals The interval series to filter against
+ * @return Filtered features, labels, and times (may be empty)
+ */
+[[nodiscard]] FilteredTrainingRows filterTrainingRowsToIntervals(
+        arma::mat const & features,
+        arma::Row<std::size_t> const & labels,
+        std::vector<TimeFrameIndex> const & times,
+        DigitalIntervalSeries const & intervals);
+
+/**
  * @brief Result of filtering predictions to a set of intervals
  */
 struct FilteredPredictions {

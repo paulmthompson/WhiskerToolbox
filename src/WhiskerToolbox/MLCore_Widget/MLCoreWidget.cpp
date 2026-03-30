@@ -755,6 +755,11 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
     config.conversion_config.drop_nan = true;
     config.conversion_config.zscore_normalize = false;
 
+    // -- Training region --
+    if (_training_region_panel && !_training_region_panel->isAllFramesChecked()) {
+        config.training_interval_key = _training_region_panel->selectedRegionKey();
+    }
+
     // -- Class balancing --
     config.balance_classes = _model_config_panel->isBalancingEnabled();
     if (config.balance_classes) {

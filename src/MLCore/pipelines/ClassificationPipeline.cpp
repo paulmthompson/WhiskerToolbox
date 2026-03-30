@@ -341,6 +341,51 @@ ClassificationPipelineResult runClassificationPipeline(
     }
 
     // ========================================================================
+    // Stage 3b: Filter to training region (optional)
+    // ========================================================================
+    // When a training interval key is specified, restrict training data to
+    // only the rows whose times fall within the training intervals. Rows
+    // outside the training region are excluded from model fitting but may
+    // still be predicted on later (Stage 6).
+    if (!config.training_interval_key.empty()) {
+        auto training_intervals = dm.getData<DigitalIntervalSeries>(
+                config.training_interval_key);
+        if (!training_intervals) {
+            return makeFailure(ClassificationStage::AssemblingLabels,
+                               "Training interval series '" +
+                                       config.training_interval_key +
+                                       "' not found in DataManager");
+        }
+        if (training_intervals->size() == 0) {
+            return makeFailure(ClassificationStage::AssemblingLabels,
+                               "Training interval series '" +
+                                       config.training_interval_key +
+                                       "' is empty — no training region defined");
+        }
+
+        auto filtered = filterTrainingRowsToIntervals(
+                train_features, train_labels, train_row_times,
+                *training_intervals);
+
+        if (filtered.features.n_cols == 0) {
+            return makeFailure(ClassificationStage::AssemblingLabels,
+                               "No training observations remain after filtering "
+                               "to training region '" +
+                                       config.training_interval_key + "'");
+        }
+
+        reportProgress(progress, ClassificationStage::AssemblingLabels,
+                       "Filtered to training region: " +
+                               std::to_string(filtered.features.n_cols) +
+                               " of " + std::to_string(train_features.n_cols) +
+                               " observations");
+
+        train_features = std::move(filtered.features);
+        train_labels = std::move(filtered.labels);
+        train_row_times = std::move(filtered.times);
+    }
+
+    // ========================================================================
     // Stage 4: Class balancing (optional)
     // ========================================================================
     bool was_balanced = false;
@@ -717,7 +762,7 @@ ClassificationPipelineResult runClassificationPipeline(
 
         // Compute metrics when predicting on training data (for training-set score)
         if (config.prediction_region.predict_all_rows) {
-            // Assemble ground-truth labels on the valid rows for comparison
+            // Assemble ground-truth labels on the predicted rows for comparison
             try {
                 AssembledLabels const pred_labels = std::visit(
                         [&](auto const & label_cfg) -> AssembledLabels {
@@ -755,12 +800,91 @@ ClassificationPipelineResult runClassificationPipeline(
                         },
                         config.label_config);
 
-                if (labels.num_classes == 2) {
-                    result.binary_train_metrics = computeBinaryMetrics(
-                            predictions, pred_labels.labels);
+                // When a training region is specified, split metrics into
+                // train (in-region) and validation (out-of-region) sets.
+                if (!config.training_interval_key.empty()) {
+                    auto training_intervals = dm.getData<DigitalIntervalSeries>(
+                            config.training_interval_key);
+
+                    if (training_intervals && training_intervals->size() > 0) {
+                        // Build sorted intervals for lookup
+                        std::vector<Interval> sorted_ivs;
+                        sorted_ivs.reserve(training_intervals->size());
+                        for (auto const & iwid: training_intervals->view()) {
+                            sorted_ivs.push_back(iwid.interval);
+                        }
+                        std::sort(sorted_ivs.begin(), sorted_ivs.end());
+
+                        // Partition prediction indices into train/validation
+                        std::vector<arma::uword> train_indices;
+                        std::vector<arma::uword> val_indices;
+                        train_indices.reserve(predict_row_times.size());
+                        val_indices.reserve(predict_row_times.size());
+
+                        for (std::size_t i = 0; i < predict_row_times.size(); ++i) {
+                            auto const t = predict_row_times[i].getValue();
+                            bool in_region = false;
+                            for (auto const & iv: sorted_ivs) {
+                                if (t >= iv.start && t <= iv.end) {
+                                    in_region = true;
+                                    break;
+                                }
+                                if (iv.start > t) {
+                                    break;
+                                }
+                            }
+                            if (in_region) {
+                                train_indices.push_back(static_cast<arma::uword>(i));
+                            } else {
+                                val_indices.push_back(static_cast<arma::uword>(i));
+                            }
+                        }
+
+                        // Train metrics: predictions within training region
+                        if (!train_indices.empty()) {
+                            arma::uvec train_col_idx(train_indices.size());
+                            for (std::size_t i = 0; i < train_indices.size(); ++i) {
+                                train_col_idx[i] = train_indices[i];
+                            }
+                            arma::Row<std::size_t> const train_preds = predictions.cols(train_col_idx);
+                            arma::Row<std::size_t> const train_truth = pred_labels.labels.cols(train_col_idx);
+
+                            if (labels.num_classes == 2) {
+                                result.binary_train_metrics = computeBinaryMetrics(
+                                        train_preds, train_truth);
+                            }
+                            result.multi_class_train_metrics = computeMultiClassMetrics(
+                                    train_preds, train_truth, labels.num_classes);
+                        }
+
+                        // Validation metrics: predictions outside training region
+                        if (!val_indices.empty()) {
+                            arma::uvec val_col_idx(val_indices.size());
+                            for (std::size_t i = 0; i < val_indices.size(); ++i) {
+                                val_col_idx[i] = val_indices[i];
+                            }
+                            arma::Row<std::size_t> const val_preds = predictions.cols(val_col_idx);
+                            arma::Row<std::size_t> const val_truth = pred_labels.labels.cols(val_col_idx);
+
+                            result.validation_observations = val_indices.size();
+
+                            if (labels.num_classes == 2) {
+                                result.binary_validation_metrics = computeBinaryMetrics(
+                                        val_preds, val_truth);
+                            }
+                            result.multi_class_validation_metrics = computeMultiClassMetrics(
+                                    val_preds, val_truth, labels.num_classes);
+                        }
+                    }
+                } else {
+                    // No training region — compute metrics on all predicted frames
+                    if (labels.num_classes == 2) {
+                        result.binary_train_metrics = computeBinaryMetrics(
+                                predictions, pred_labels.labels);
+                    }
+                    result.multi_class_train_metrics = computeMultiClassMetrics(
+                            predictions, pred_labels.labels, labels.num_classes);
                 }
-                result.multi_class_train_metrics = computeMultiClassMetrics(
-                        predictions, pred_labels.labels, labels.num_classes);
 
             } catch (...) {
                 // Metrics are best-effort — don't fail the pipeline
