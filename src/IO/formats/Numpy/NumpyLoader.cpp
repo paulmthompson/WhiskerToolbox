@@ -1,5 +1,4 @@
 #include "NumpyLoader.hpp"
-#include "Tensors/TensorData.hpp"
 #include "tensordata/Tensor_Data_numpy.hpp"
 
 #include <iostream>
@@ -36,10 +35,11 @@ LoadResult NumpyLoader::loadData(
 
 LoadResult NumpyLoader::loadTensorData(
         std::string const & file_path,
-        [[maybe_unused]] nlohmann::json const & config) const {
+        [[maybe_unused]] nlohmann::json const & config) {
     try {
-        auto tensor_data = std::make_shared<TensorData>();
-        loadNpyToTensorData(file_path, *tensor_data);
+        NpyTensorLoaderOptions opts;
+        opts.filepath = file_path;
+        auto tensor_data = load(opts);
 
         return LoadResult(LoadedDataVariant{std::move(tensor_data)});
 

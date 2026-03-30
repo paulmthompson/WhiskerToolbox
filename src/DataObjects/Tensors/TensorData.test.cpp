@@ -203,12 +203,12 @@ TEST_CASE("TensorData createTimeSeries2D error: null time_storage", "[TensorData
             std::invalid_argument);
 }
 
-TEST_CASE("TensorData createTimeSeries2D error: null time_frame", "[TensorData]") {
+TEST_CASE("TensorData createTimeSeries2D accepts null time_frame", "[TensorData]") {
     std::vector<float> data = {1.0f, 2.0f};
     auto ts = makeDenseTimeStorage(1);
-    CHECK_THROWS_AS(
-            TensorData::createTimeSeries2D(data, 1, 2, ts, nullptr),
-            std::invalid_argument);
+    auto tensor = TensorData::createTimeSeries2D(data, 1, 2, ts, nullptr);
+    CHECK(tensor.rowType() == RowType::TimeFrameIndex);
+    CHECK(tensor.getTimeFrame() == nullptr);
 }
 
 TEST_CASE("TensorData createTimeSeries2D error: time_storage size mismatch", "[TensorData]") {

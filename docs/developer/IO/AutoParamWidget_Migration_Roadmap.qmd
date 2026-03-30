@@ -94,7 +94,7 @@ Added `virtual std::vector<LoaderInfo> getLoaderInfo() const { return {}; }` to 
 
 Added `getSupportedLoadFormats()` and `getSupportedLoadFormats(DM_DataType)` to `LoaderRegistry` in `src/IO/core/LoaderRegistry.hpp` and `src/IO/core/LoaderRegistry.cpp`. Added 8 test cases (59 assertions) in `tests/DataManager/IO/loader_registry.test.cpp` covering empty registry, stub loaders, data-type filtering, multi-loader aggregation, and batch flag preservation.
 
-#### Step 0.4: Add `ParameterUIHints` specializations for loader options
+#### Step 0.4: Add `ParameterUIHints` specializations for loader options ✅ DONE
 
 For each loader Options struct that uses `rfl::Validator`, add tooltips and display hints. These are optional but improve the auto-generated UI quality significantly.
 

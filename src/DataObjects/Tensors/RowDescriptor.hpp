@@ -77,8 +77,9 @@ public:
     /**
      * @brief Create a time-indexed row descriptor
      * @param storage TimeIndexStorage mapping array positions to TimeFrameIndex values
-     * @param time_frame The TimeFrame providing absolute time reference
-     * @throws std::invalid_argument if storage or time_frame is null
+     * @param time_frame The TimeFrame providing absolute time reference (may be nullptr;
+     *        DataManager will assign the correct TimeFrame when the tensor is registered)
+     * @throws std::invalid_argument if storage is null
      */
     static RowDescriptor fromTimeIndices(
             std::shared_ptr<TimeIndexStorage> storage,
@@ -87,8 +88,8 @@ public:
     /**
      * @brief Create an interval-based row descriptor
      * @param intervals Vector of TimeFrameInterval, one per row
-     * @param time_frame The TimeFrame providing absolute time reference
-     * @throws std::invalid_argument if time_frame is null
+     * @param time_frame The TimeFrame providing absolute time reference (may be nullptr;
+     *        DataManager will assign the correct TimeFrame when the tensor is registered)
      */
     static RowDescriptor fromIntervals(
             std::vector<TimeFrameInterval> intervals,

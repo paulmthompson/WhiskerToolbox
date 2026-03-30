@@ -144,9 +144,12 @@ TEST_CASE("RowDescriptor fromTimeIndices null arguments", "[RowDescriptor]") {
     CHECK_THROWS_AS(
         RowDescriptor::fromTimeIndices(nullptr, tf),
         std::invalid_argument);
-    CHECK_THROWS_AS(
-        RowDescriptor::fromTimeIndices(storage, nullptr),
-        std::invalid_argument);
+
+    // nullptr TimeFrame is allowed — DataManager assigns it later
+    auto rd = RowDescriptor::fromTimeIndices(storage, nullptr);
+    CHECK(rd.type() == RowType::TimeFrameIndex);
+    CHECK(rd.count() == 10);
+    CHECK(rd.timeFrame() == nullptr);
 }
 
 TEST_CASE("RowDescriptor fromTimeIndices rejects interval access", "[RowDescriptor]") {
@@ -220,9 +223,12 @@ TEST_CASE("RowDescriptor fromIntervals empty", "[RowDescriptor]") {
 }
 
 TEST_CASE("RowDescriptor fromIntervals null time_frame", "[RowDescriptor]") {
-    CHECK_THROWS_AS(
-        RowDescriptor::fromIntervals({{TimeFrameIndex{0}, TimeFrameIndex{10}}}, nullptr),
-        std::invalid_argument);
+    // nullptr TimeFrame is allowed — DataManager assigns it later
+    auto rd = RowDescriptor::fromIntervals(
+        {{TimeFrameIndex{0}, TimeFrameIndex{10}}}, nullptr);
+    CHECK(rd.type() == RowType::Interval);
+    CHECK(rd.count() == 1);
+    CHECK(rd.timeFrame() == nullptr);
 }
 
 TEST_CASE("RowDescriptor fromIntervals rejects time storage access", "[RowDescriptor]") {
