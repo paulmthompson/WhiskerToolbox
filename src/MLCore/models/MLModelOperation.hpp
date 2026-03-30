@@ -264,6 +264,68 @@ public:
     }
 
     /**
+     * @brief Predict labels with both initial and terminal state constraints
+     *
+     * For sequence models (e.g., HMM), constraining both ends of a Viterbi
+     * path produces tighter predictions in unlabeled gaps between labeled
+     * blocks. The terminal constraint changes the backtrace start from
+     * argmax to a forced state.
+     *
+     * @param featureSequences         Vector of feature matrices, one per segment
+     * @param predictionSequences      [out] Predicted labels per segment
+     * @param initial_state_constraints Per-sequence initial state override (nullopt = unconstrained)
+     * @param terminal_state_constraints Per-sequence terminal state override (nullopt = unconstrained)
+     * @return true if prediction succeeded
+     *
+     * The default implementation ignores terminal constraints and delegates to
+     * predictSequencesConstrained().
+     */
+    virtual bool predictSequencesBidirectionalConstrained(
+            std::vector<arma::mat> const & featureSequences,
+            std::vector<arma::Row<std::size_t>> & predictionSequences,
+            std::vector<std::optional<std::size_t>> const & initial_state_constraints,
+            std::vector<std::optional<std::size_t>> const & terminal_state_constraints) {
+        static_cast<void>(terminal_state_constraints);
+        return predictSequencesConstrained(
+                featureSequences, predictionSequences, initial_state_constraints);
+    }
+
+    /**
+     * @brief Compute per-sequence state probabilities with boundary constraints
+     *
+     * For sequence models, runs Forward-Backward per segment with clamped
+     * initial and terminal state distributions.
+     *
+     * @param featureSequences          Vector of feature matrices, one per segment
+     * @param probabilitySequences      [out] Vector of probability matrices
+     *                                  (num_states × segment_length), one per segment
+     * @param initial_state_constraints Per-sequence initial state override (nullopt = unconstrained)
+     * @param terminal_state_constraints Per-sequence terminal state override (nullopt = unconstrained)
+     * @return true if estimation succeeded
+     *
+     * The default implementation calls predictProbabilities() on each segment
+     * independently without constraints.
+     */
+    virtual bool predictProbabilitiesPerSequence(
+            std::vector<arma::mat> const & featureSequences,
+            std::vector<arma::mat> & probabilitySequences,
+            std::vector<std::optional<std::size_t>> const & initial_state_constraints,
+            std::vector<std::optional<std::size_t>> const & terminal_state_constraints) {
+        static_cast<void>(initial_state_constraints);
+        static_cast<void>(terminal_state_constraints);
+        probabilitySequences.clear();
+        probabilitySequences.reserve(featureSequences.size());
+        for (auto const & seq: featureSequences) {
+            arma::mat probs;
+            if (!predictProbabilities(seq, probs)) {
+                return false;
+            }
+            probabilitySequences.push_back(std::move(probs));
+        }
+        return true;
+    }
+
+    /**
      * @brief Whether this model natively handles temporal sequences
      *
      * Models that override trainSequences/predictSequences to exploit
