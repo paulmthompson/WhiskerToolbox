@@ -206,6 +206,29 @@ std::vector<SaverInfo> LoaderRegistry::getSupportedSaveFormats(DM_DataType dataT
     return filtered;
 }
 
+std::vector<LoaderInfo> LoaderRegistry::getSupportedLoadFormats() const {
+    std::vector<LoaderInfo> all;
+    for (auto const & loader: m_loaders) {
+        auto infos = loader->getLoaderInfo();
+        all.insert(all.end(),
+                   std::make_move_iterator(infos.begin()),
+                   std::make_move_iterator(infos.end()));
+    }
+    return all;
+}
+
+std::vector<LoaderInfo> LoaderRegistry::getSupportedLoadFormats(DM_DataType dataType) const {
+    std::vector<LoaderInfo> filtered;
+    for (auto const & loader: m_loaders) {
+        for (auto info: loader->getLoaderInfo()) {
+            if (info.data_type == dataType) {
+                filtered.push_back(std::move(info));
+            }
+        }
+    }
+    return filtered;
+}
+
 LoaderRegistry & LoaderRegistry::getInstance() {
     static LoaderRegistry instance;
     return instance;

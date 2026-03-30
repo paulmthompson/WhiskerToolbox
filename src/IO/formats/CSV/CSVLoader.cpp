@@ -905,7 +905,6 @@ LoadResult CSVLoader::saveMaskDataCSV(std::string const & filepath,
 // ============================================================================
 
 std::vector<SaverInfo> CSVLoader::getSaverInfo() const {
-    using WhiskerToolbox::Transforms::V2::extractParameterSchema;
     return {
             {"csv", DM_DataType::Points, "CSV point data (frame, x, y)",
              extractParameterSchema<CSVPointSaverOptions>()},

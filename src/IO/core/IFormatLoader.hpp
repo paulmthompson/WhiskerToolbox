@@ -10,6 +10,7 @@
 #define DATAMANAGER_IO_IFORMATLOADER_HPP
 
 #include "DataLoader.hpp"
+#include "LoaderInfo.hpp"
 #include "SaverInfo.hpp"
 
 #include "nlohmann/json.hpp"
@@ -185,6 +186,18 @@ public:
      *         Empty by default.
      */
     virtual std::vector<SaverInfo> getSaverInfo() const { return {}; }
+
+    /**
+     * @brief Return metadata for all load operations this loader supports
+     *
+     * Subclasses should override this to advertise their loading capabilities
+     * with typed parameter schemas, enabling automatic UI generation via
+     * AutoParamWidget.
+     *
+     * @return Vector of LoaderInfo (one per supported format/dataType load combination).
+     *         Empty by default.
+     */
+    virtual std::vector<LoaderInfo> getLoaderInfo() const { return {}; }
 };
 
 #endif// DATAMANAGER_IO_IFORMATLOADER_HPP

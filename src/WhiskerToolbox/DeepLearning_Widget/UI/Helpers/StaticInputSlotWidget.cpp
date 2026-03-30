@@ -81,7 +81,7 @@ StaticInputSlotWidget::StaticInputSlotWidget(
     group_layout->addWidget(_auto_param);
 
     auto schema =
-            WhiskerToolbox::Transforms::V2::extractParameterSchema<StaticInputSlotParams>();
+            extractParameterSchema<StaticInputSlotParams>();
     _auto_param->setSchema(schema);
 
     // Capture row — shown only in Absolute mode

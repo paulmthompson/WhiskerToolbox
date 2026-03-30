@@ -15,7 +15,6 @@
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<commands::MoveByTimeRangeParams> {
@@ -127,7 +126,5 @@ struct ParameterUIHints<commands::LoadDataParams> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// COMMAND_UI_HINTS_HPP

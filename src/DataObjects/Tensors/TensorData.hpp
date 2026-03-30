@@ -135,9 +135,10 @@ public:
      * @param num_rows Number of rows (time points)
      * @param num_cols Number of columns (features / frequency bins / channels)
      * @param time_storage TimeIndexStorage mapping row indices to TimeFrameIndex
-     * @param time_frame Shared TimeFrame for absolute time reference
+     * @param time_frame Shared TimeFrame for absolute time reference (may be nullptr;
+     *        DataManager assigns the correct TimeFrame when registered)
      * @param column_names Optional column labels (size must match num_cols if provided)
-     * @throws std::invalid_argument on size mismatches or null pointers
+     * @throws std::invalid_argument on size mismatches or null time_storage
      */
     [[nodiscard]] static TensorData createTimeSeries2D(
             std::vector<float> const & data,
@@ -156,7 +157,8 @@ public:
      * @param num_rows Number of rows (intervals)
      * @param num_cols Number of columns
      * @param intervals One TimeFrameInterval per row
-     * @param time_frame Shared TimeFrame for time reference
+     * @param time_frame Shared TimeFrame for time reference (may be nullptr;
+     *        DataManager assigns the correct TimeFrame when registered)
      * @param column_names Optional column labels
      * @throws std::invalid_argument on size mismatches
      */

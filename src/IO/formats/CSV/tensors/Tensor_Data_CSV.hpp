@@ -17,6 +17,7 @@
 #include "datamanagerio_export.h"
 
 #include "IO/core/LoaderOptionsConcepts.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
 
 #include <memory>
 #include <string>
@@ -63,6 +64,23 @@ struct CSVTensorSaverOptions {
  */
 DATAMANAGERIO_EXPORT std::shared_ptr<TensorData> load(CSVTensorLoaderOptions const & options);
 
+template<>
+struct ParameterUIHints<CSVTensorLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to CSV with a row-label column and one column per tensor dimension";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating columns";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("has_header")) {
+            f->tooltip = "Whether the first row lists column names (including the row-label column)";
+        }
+    }
+};
+
 /**
  * @brief Save a TensorData to a CSV file
  * @pre tensor must not be null
@@ -72,5 +90,30 @@ DATAMANAGERIO_EXPORT std::shared_ptr<TensorData> load(CSVTensorLoaderOptions con
  * @return true on success
  */
 DATAMANAGERIO_EXPORT bool save(TensorData const * tensor, CSVTensorSaverOptions const & opts);
+
+template<>
+struct ParameterUIHints<CSVTensorSaverOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (export UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filename")) {
+            f->tooltip = "Output filename (combined with parent_dir)";
+        }
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory in which to create the output file";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating columns";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("save_header")) {
+            f->tooltip = "Whether to write a header row as the first line";
+        }
+        if (auto * f = schema.field("precision")) {
+            f->tooltip = "Number of decimal places for floating-point tensor values";
+            f->min_value = 0.0;
+            f->max_value = 15.0;
+        }
+    }
+};
 
 #endif// TENSOR_DATA_CSV_HPP

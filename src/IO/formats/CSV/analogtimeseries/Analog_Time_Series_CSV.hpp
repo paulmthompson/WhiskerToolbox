@@ -3,8 +3,8 @@
 
 #include "datamanagerio_export.h"
 
-#include "ParameterSchema/ParameterSchema.hpp"
 #include "IO/core/LoaderOptionsConcepts.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -68,6 +68,32 @@ DATAMANAGERIO_EXPORT std::vector<float> load_analog_series_from_csv(std::string 
  */
 DATAMANAGERIO_EXPORT std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options);
 
+template<>
+struct ParameterUIHints<CSVAnalogLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to the CSV file containing analog samples";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating columns";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("has_header")) {
+            f->tooltip = "Whether the first row is a header line to skip when parsing";
+        }
+        if (auto * f = schema.field("single_column_format")) {
+            f->tooltip =
+                    "If true, values are read from one column and time is the row index; if false, use time_column and data_column";
+        }
+        if (auto * f = schema.field("time_column")) {
+            f->tooltip = "0-based column index for time values when single_column_format is false";
+        }
+        if (auto * f = schema.field("data_column")) {
+            f->tooltip = "0-based column index for analog values when single_column_format is false";
+        }
+    }
+};
 
 /**
  * @struct CSVAnalogSaverOptions
@@ -119,9 +145,7 @@ struct CSVAnalogSaverOptions {
  * @pre analog_data must not be null.
  */
 DATAMANAGERIO_EXPORT bool save(AnalogTimeSeries const * analog_data,
-          CSVAnalogSaverOptions const & opts);
-
-namespace WhiskerToolbox::Transforms::V2 {
+                               CSVAnalogSaverOptions const & opts);
 
 template<>
 struct ParameterUIHints<CSVAnalogSaverOptions> {
@@ -151,7 +175,5 @@ struct ParameterUIHints<CSVAnalogSaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// ANALOG_TIME_SERIES_CSV_HPP

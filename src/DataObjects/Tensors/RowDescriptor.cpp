@@ -23,9 +23,6 @@ RowDescriptor RowDescriptor::fromTimeIndices(
     if (!storage) {
         throw std::invalid_argument("RowDescriptor::fromTimeIndices: storage must not be null");
     }
-    if (!time_frame) {
-        throw std::invalid_argument("RowDescriptor::fromTimeIndices: time_frame must not be null");
-    }
     RowDescriptor rd;
     rd._type = RowType::TimeFrameIndex;
     rd._time_storage = std::move(storage);
@@ -36,9 +33,6 @@ RowDescriptor RowDescriptor::fromTimeIndices(
 RowDescriptor RowDescriptor::fromIntervals(
         std::vector<TimeFrameInterval> intervals,
         std::shared_ptr<TimeFrame> time_frame) {
-    if (!time_frame) {
-        throw std::invalid_argument("RowDescriptor::fromIntervals: time_frame must not be null");
-    }
     RowDescriptor rd;
     rd._type = RowType::Interval;
     rd._intervals = std::move(intervals);

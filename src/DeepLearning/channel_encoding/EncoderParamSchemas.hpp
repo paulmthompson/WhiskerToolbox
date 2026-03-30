@@ -7,7 +7,6 @@
 #include "ChannelEncoder.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<dl::ImageEncoderParams> {
@@ -69,6 +68,5 @@ struct ParameterUIHints<dl::Line2DEncoderParams> {
     }
 };
 
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// WHISKERTOOLBOX_ENCODER_PARAM_SCHEMAS_HPP

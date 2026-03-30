@@ -90,7 +90,7 @@ public:
      * @param name The generator name
      * @return The ParameterSchema, or std::nullopt if not found
      */
-    [[nodiscard]] std::optional<Transforms::V2::ParameterSchema> getSchema(
+    [[nodiscard]] std::optional<ParameterSchema> getSchema(
             std::string const & name) const;
 
     /**

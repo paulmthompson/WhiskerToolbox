@@ -37,6 +37,8 @@ struct LineSubsegmentParameters : public TransformParametersBase {
  * @param line_data The LineData to extract from
  * @param params The extraction parameters
  * @return A new LineData containing the extracted subsegments
+ *
+ * @pre When method is Parametric, params.polynomial_order >= 0 and params.output_points >= 2 (enforcement: none)
  */
 std::shared_ptr<LineData> extract_line_subsegment(
         LineData const * line_data,
@@ -48,6 +50,8 @@ std::shared_ptr<LineData> extract_line_subsegment(
  * @param params The extraction parameters
  * @param progressCallback Progress reporting callback
  * @return A new LineData containing the extracted subsegments
+ *
+ * @pre When method is Parametric, params.polynomial_order >= 0 and params.output_points >= 2 (enforcement: none)
  */
 std::shared_ptr<LineData> extract_line_subsegment(
         LineData const * line_data,

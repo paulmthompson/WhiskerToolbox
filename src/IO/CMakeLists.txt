@@ -23,6 +23,7 @@ target_link_libraries(DataManagerIO_Core INTERFACE
 set(IO_CORE_SOURCES
     core/DataLoader.hpp
     core/IOFormats.hpp
+    core/LoaderInfo.hpp
     core/SaverInfo.hpp
     core/AtomicWrite.hpp
     core/AtomicWrite.cpp

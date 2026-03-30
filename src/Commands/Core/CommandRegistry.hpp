@@ -103,7 +103,7 @@ private:
 /// @param info  Metadata — parameter_schema will be overwritten
 template<typename CommandT, typename Params>
 void registerTypedCommand(CommandRegistry & reg, std::string name, CommandInfo info) {
-    info.parameter_schema = WhiskerToolbox::Transforms::V2::extractParameterSchema<Params>();
+    info.parameter_schema = extractParameterSchema<Params>();
     reg.registerCommand(
             std::move(name),
             [](std::string const & params_json) -> std::unique_ptr<ICommand> {

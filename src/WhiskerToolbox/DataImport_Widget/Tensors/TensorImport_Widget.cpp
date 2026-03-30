@@ -72,10 +72,11 @@ void TensorImport_Widget::_loadNumpyArray() {
     }
 
     try {
-        TensorData tensor_data;
-        loadNpyToTensorData(numpy_filename.toStdString(), tensor_data);
+        NpyTensorLoaderOptions opts;
+        opts.filepath = numpy_filename.toStdString();
+        auto tensor_data = load(opts);
 
-        _data_manager->setData<TensorData>(tensor_key, std::make_shared<TensorData>(tensor_data), TimeKey("time"));
+        _data_manager->setData<TensorData>(tensor_key, std::move(tensor_data), TimeKey("time"));
 
         //auto loaded_size = _data_manager->getData<TensorData>(tensor_key)->size();
         //std::cout << "Loaded tensor with " << loaded_size << " elements" << std::endl;
@@ -94,7 +95,7 @@ void TensorImport_Widget::_loadNumpyArray() {
     }
 }
 
-void TensorImport_Widget::_handleCSVLoadRequested(const CSVTensorLoaderOptions& options) {
+void TensorImport_Widget::_handleCSVLoadRequested(CSVTensorLoaderOptions const & options) {
     auto const tensor_key = ui->data_name_text->text().toStdString();
     if (tensor_key.empty()) {
         QMessageBox::warning(this, tr("Import Error"), tr("Tensor name cannot be empty!"));

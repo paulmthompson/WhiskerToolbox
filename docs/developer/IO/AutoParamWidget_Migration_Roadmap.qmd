@@ -1,0 +1,480 @@
+---
+title: "Migration Roadmap: AutoParamWidget for IO Widgets"
+---
+
+# Migration Roadmap: Replacing Boilerplate IO Widgets with AutoParamWidget
+
+## Problem Statement
+
+The `DataImport_Widget` (68 files, ~25 format-specific sub-widgets) and `DataExport_Widget` (28 files, ~9 format-specific sub-widgets) contain extensive boilerplate UI code. Each format/data-type combination has:
+
+- A hand-written `.ui` XML file defining QSpinBoxes, QComboBoxes, QCheckBoxes, etc.
+- A hand-written `.hpp`/`.cpp` class that manually reads widget values and constructs either an Options struct or a `nlohmann::json` config object.
+- Manual signal wiring between parent container widgets and child format widgets.
+
+Meanwhile, the project already has:
+
+- **ParameterSchema** (`src/ParameterSchema/`): Compile-time schema extraction from reflect-cpp structs.
+- **AutoParamWidget** (`src/WhiskerToolbox/AutoParamWidget/`): Generates a complete Qt form from a `ParameterSchema`, with JSON serialization/deserialization.
+- **Existing IO Options structs** that already use reflect-cpp (e.g., `CSVPointLoaderOptions`, `BinaryAnalogLoaderOptions`).
+- **SaverInfo** with a `ParameterSchema schema` field that is already populated at registration time but **never consumed by the export UI**.
+
+This roadmap describes how to systematically replace hand-written format widgets with `AutoParamWidget`, making the UI self-updating when new formats or options are added.
+
+## Current Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ DataImport_Widget (top-level)                            │
+│  ├── DataImportTypeRegistry (factory map)                │
+│  ├── PointImport_Widget (container)                      │
+│  │    └── CSVPointImport_Widget (hand-written .ui)       │
+│  ├── AnalogImport_Widget (container)                     │
+│  │    ├── CSVAnalogImport_Widget (hand-written .ui)      │
+│  │    └── BinaryAnalogImport_Widget (hand-written .ui)   │
+│  ├── LineImport_Widget (container)                       │
+│  │    ├── CSVLineImport_Widget (hand-written .ui)        │
+│  │    ├── BinaryLineImport_Widget (hand-written .ui)     │
+│  │    ├── HDF5LineImport_Widget (hand-written .ui)       │
+│  │    └── LMDBLineImport_Widget (hand-written .ui)       │
+│  ├── MaskImport_Widget (container)                       │
+│  │    ├── HDF5MaskImport_Widget (hand-written .ui)       │
+│  │    └── ImageMaskImport_Widget (hand-written .ui)      │
+│  ├── DigitalEventImport_Widget (container)               │
+│  │    └── CSVDigitalEventImport_Widget (hand-written .ui)│
+│  ├── DigitalIntervalImport_Widget (container)            │
+│  │    ├── CSVDigitalIntervalImport_Widget                │
+│  │    └── BinaryDigitalIntervalImport_Widget             │
+│  └── TensorImport_Widget (container)                     │
+│       └── (Numpy sub-widget)                             │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Key asymmetry**: Savers already have `SaverInfo` with `ParameterSchema` populated via `extractParameterSchema<T>()`. Loaders have **no equivalent** `LoaderInfo` struct.
+
+## Target Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ DataImport_Widget (top-level)                            │
+│  ├── Queries LoaderRegistry for LoaderInfo               │
+│  ├── Data type combo → filters LoaderInfos by type       │
+│  ├── Format combo → populated from LoaderInfos           │
+│  └── AutoParamWidget → setSchema(selected_loader.schema) │
+│       ├── File path field (from Options struct)           │
+│       ├── Format-specific fields (auto-generated)        │
+│       └── [Load] button → toJson() → registry.tryLoad()  │
+│                                                          │
+│ DataExport_Widget (top-level)                            │
+│  ├── Queries LoaderRegistry.getSupportedSaveFormats()    │
+│  ├── Data type combo → filters SaverInfos                │
+│  ├── Format combo → populated from SaverInfos            │
+│  └── AutoParamWidget → setSchema(selected_saver.schema)  │
+│       ├── Filename/directory fields (auto-generated)     │
+│       ├── Format-specific fields (auto-generated)        │
+│       └── [Save] button → toJson() → registry.trySave()  │
+└──────────────────────────────────────────────────────────┘
+```
+
+## Migration Phases
+
+### Phase 0: Infrastructure — Add `LoaderInfo` to IO Layer
+
+**Goal**: Create parity between loaders and savers so both can be discovered and auto-generate UI.
+
+#### Step 0.1: Create `LoaderInfo` struct ✅ DONE
+
+Created `src/IO/core/LoaderInfo.hpp` with `format`, `data_type`, `description`, `supports_batch`, and `ParameterSchema schema` fields. Added to `src/IO/CMakeLists.txt`.
+
+#### Step 0.2: Add `getLoaderInfo()` to `IFormatLoader` ✅ DONE
+
+Added `virtual std::vector<LoaderInfo> getLoaderInfo() const { return {}; }` to `IFormatLoader` in `src/IO/core/IFormatLoader.hpp`, mirroring `getSaverInfo()`.
+
+#### Step 0.3: Add `LoaderInfo` query methods to `LoaderRegistry` ✅ DONE
+
+Added `getSupportedLoadFormats()` and `getSupportedLoadFormats(DM_DataType)` to `LoaderRegistry` in `src/IO/core/LoaderRegistry.hpp` and `src/IO/core/LoaderRegistry.cpp`. Added 8 test cases (59 assertions) in `tests/DataManager/IO/loader_registry.test.cpp` covering empty registry, stub loaders, data-type filtering, multi-loader aggregation, and batch flag preservation.
+
+#### Step 0.4: Add `ParameterUIHints` specializations for loader options ✅ DONE
+
+For each loader Options struct that uses `rfl::Validator`, add tooltips and display hints. These are optional but improve the auto-generated UI quality significantly.
+
+Priority order (by complexity of the Options struct):
+
+1. `BinaryAnalogLoaderOptions` — 10+ fields, prime candidate
+2. `CSVAnalogLoaderOptions` — 6 fields
+3. `CSVPointLoaderOptions` — 5 fields
+4. `CSVEventLoaderOptions` — 7 fields
+5. `CSVIntervalLoaderOptions` — 5 fields
+6. `CSVLineLoaderOptions` — (if exists)
+7. Others (HDF5, Image, etc.)
+
+Example for `BinaryAnalogLoaderOptions`:
+
+```cpp
+template<>
+struct ParameterUIHints<BinaryAnalogLoaderOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("header_size")) {
+            f->tooltip = "Number of bytes to skip at the start of the file";
+        }
+        if (auto * f = schema.field("num_channels")) {
+            f->tooltip = "Number of interleaved channels in the binary file";
+        }
+        if (auto * f = schema.field("binary_data_type")) {
+            f->tooltip = "Binary encoding of each sample";
+            f->allowed_values = {"int8", "int16", "uint16", "float32", "float64"};
+        }
+        if (auto * f = schema.field("use_memory_mapped")) {
+            f->tooltip = "Use memory-mapped I/O for large files";
+        }
+        if (auto * f = schema.field("scale_factor")) {
+            f->tooltip = "Multiply each sample by this value after loading";
+        }
+        if (auto * f = schema.field("offset_value")) {
+            f->tooltip = "Add this value to each sample after scaling";
+        }
+    }
+};
+```
+
+- **Files to modify**: Each `*Options` header in `src/IO/formats/*/` (add `ParameterUIHints` specialization).
+- **Depends on**: These headers already include `ParameterSchema/ParameterSchema.hpp` for the saver side; reuse for loaders.
+
+#### Step 0.5: Implement `getLoaderInfo()` in each format loader
+
+For each `IFormatLoader` subclass, add `getLoaderInfo()` returning one `LoaderInfo` per supported data-type/format combination with `extractParameterSchema<OptionsType>()`.
+
+**CSVLoader** example:
+
+```cpp
+std::vector<LoaderInfo> CSVLoader::getLoaderInfo() const {
+    using WhiskerToolbox::Transforms::V2::extractParameterSchema;
+    return {
+        {"csv", DM_DataType::Points, "CSV point data (frame, x, y)", false,
+         extractParameterSchema<CSVPointLoaderOptions>()},
+        {"csv", DM_DataType::Analog, "CSV analog time series", false,
+         extractParameterSchema<CSVAnalogLoaderOptions>()},
+        {"csv", DM_DataType::DigitalEvent, "CSV digital events", true,
+         extractParameterSchema<CSVEventLoaderOptions>()},
+        {"csv", DM_DataType::DigitalInterval, "CSV digital intervals", false,
+         extractParameterSchema<CSVIntervalLoaderOptions>()},
+        // ... etc
+    };
+}
+```
+
+Do this for all format loaders:
+
+1. `CSVLoader` — largest, ~6 loader infos
+2. `BinaryFormatLoader` — ~3 loader infos
+3. `CapnProtoFormatLoader` — 1 loader info
+4. `HDF5FormatLoader` — ~2 loader infos
+5. `OpenCVFormatLoader` — 1 loader info
+6. `NumpyFormatLoader` — 1 loader info
+
+- **Files to modify**: Each format loader `.hpp`/`.cpp` in `src/IO/formats/`
+- **Tests**: Extend the Step 0.3 test to verify schema field counts match expected values for key loaders (e.g., `BinaryAnalogLoaderOptions` should have 10+ fields).
+
+### Phase 1: Export Widget Migration (Easier — SaverInfo Already Exists)
+
+**Goal**: Replace all 9 hand-written export sub-widgets with a single `AutoParamWidget`-based export panel.
+
+#### Step 1.1: Create `GenericSaverPanel` widget
+
+Create a new widget `src/WhiskerToolbox/DataExport_Widget/GenericSaverPanel.hpp/cpp`:
+
+```cpp
+class GenericSaverPanel : public QWidget {
+    Q_OBJECT
+public:
+    explicit GenericSaverPanel(QWidget * parent = nullptr);
+
+    /// Set the saver info and rebuild the form
+    void setSaverInfo(SaverInfo const & info);
+
+    /// Get the current options as JSON
+    [[nodiscard]] std::string toJson() const;
+
+signals:
+    void saveRequested(QString format, nlohmann::json config);
+
+private:
+    AutoParamWidget * _param_widget = nullptr;
+    QPushButton * _save_button = nullptr;
+    QLabel * _description_label = nullptr;
+    SaverInfo _current_info;
+};
+```
+
+The implementation:
+
+1. When `setSaverInfo()` is called, call `_param_widget->setSchema(info.schema)`.
+2. When the Save button is clicked, call `_param_widget->toJson()`, parse to `nlohmann::json`, and emit `saveRequested(format, config)`.
+3. Add a "Browse" button that opens a `QFileDialog` for filename/directory fields.
+
+- **Files to create**: `GenericSaverPanel.hpp`, `GenericSaverPanel.cpp`
+- **Files to modify**: `DataExport_Widget/CMakeLists.txt`
+- **Tests**: Layout constraint test via `LayoutTesting` — verify no zero-dimension widgets.
+
+#### Step 1.2: Add file/directory browsing support to `AutoParamWidget` or `GenericSaverPanel`
+
+The loader/saver Options structs have fields like `filepath`, `filename`, `parent_dir`, `directory_path`. These should get a browse button rather than a plain `QLineEdit`.
+
+**Option A**: Add a `ParameterFieldDescriptor` flag (`bool is_file_path = false; bool is_directory_path = false;`) and teach `AutoParamWidget` to create a `QLineEdit + QPushButton("Browse...")` combo for these fields.
+
+**Option B**: Handle this in `GenericSaverPanel` / `GenericLoaderPanel` by detecting field names containing "filepath", "filename", "directory", "parent_dir" and overlaying browse buttons.
+
+**Recommendation**: Option A is cleaner and reusable. Add the flags to `ParameterFieldDescriptor` and handle them in `AutoParamWidget`. Use `ParameterUIHints` specializations to mark which fields are file/directory paths:
+
+```cpp
+template<>
+struct ParameterUIHints<CSVPointSaverOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filename")) {
+            f->is_file_path = true;
+            f->tooltip = "Output filename";
+        }
+        if (auto * f = schema.field("parent_dir")) {
+            f->is_directory_path = true;
+            f->tooltip = "Output directory";
+        }
+    }
+};
+```
+
+- **Files to modify**: `ParameterSchema.hpp` (add `is_file_path`, `is_directory_path` to `ParameterFieldDescriptor`), `AutoParamWidget.cpp` (create browse button layout for these fields).
+- **Tests**: Unit test that `extractParameterSchema` preserves the flags after annotation.
+
+#### Step 1.3: Refactor `DataExport_Widget` to use registry-driven discovery
+
+Replace the current stacked-widget approach with:
+
+1. Query `LoaderRegistry::getInstance().getSupportedSaveFormats()` to get all `SaverInfo` entries.
+2. Populate a data-type combo from the unique `data_type` values.
+3. When data type is selected, populate a format combo from matching `SaverInfo` entries.
+4. When format is selected, call `GenericSaverPanel::setSaverInfo(selectedInfo)`.
+
+```
+DataExport_Widget
+├── QComboBox (data key selector — pick which data object to export)
+├── QComboBox (format selector — populated from SaverInfos matching data type)
+├── GenericSaverPanel (AutoParamWidget + Save button)
+└── QLabel (status/error messages)
+```
+
+- **Files to modify**: `DataExport_Widget.hpp`, `DataExport_Widget.cpp`, `DataExport_Widget.ui`
+- **Files to delete** (after migration is complete and tested): All 9 format-specific saver sub-widgets and their `.ui` files.
+- **Tests**: Integration test — verify that saving a PointData to CSV with the new widget produces the same output as the old widget.
+
+#### Step 1.4: Migrate DataInspector export sections
+
+DataInspectors (e.g., `LineInspector`) currently embed hand-written saver widgets. Replace these with `GenericSaverPanel` instances populated from `SaverInfo`.
+
+For each Inspector that has export functionality:
+
+1. Remove the `#include` of the old saver widget.
+2. Create a `GenericSaverPanel`, query `getSupportedSaveFormats(data_type)`, and let the user pick format + configure options.
+3. Wire the `saveRequested` signal to the existing save logic.
+
+- **Files to modify**: Each DataInspector that includes saver widgets (search for `Saver_Widget` includes).
+- **Tests**: Manual smoke test — export from inspector, verify file correctness.
+
+#### Step 1.5: Add `ParameterUIHints` for all saver Options structs
+
+Many saver Options structs are plain structs without hints. Add `ParameterUIHints` specializations for each to improve the generated UI:
+
+1. `CSVPointSaverOptions`
+2. `CSVAnalogSaverOptions`
+3. `CSVEventSaverOptions`
+4. `CSVIntervalSaverOptions`
+5. `CSVMaskRLESaverOptions`
+6. `CSVSingleFileLineSaverOptions`
+7. `BinaryLineSaverOptions`
+8. `ImageMaskSaverOptions`
+
+For each, add tooltips, mark file/directory fields, set reasonable min/max for numeric fields (e.g., `precision` 0–15).
+
+- **Files to modify**: Each Options header in `src/IO/formats/`.
+- **Tests**: None required (cosmetic).
+
+### Phase 2: Import Widget Migration (Requires Phase 0)
+
+**Goal**: Replace all 12+ hand-written import sub-widgets with a single `AutoParamWidget`-based import panel.
+
+#### Step 2.1: Create `GenericLoaderPanel` widget
+
+Create `src/WhiskerToolbox/DataImport_Widget/GenericLoaderPanel.hpp/cpp`:
+
+```cpp
+class GenericLoaderPanel : public QWidget {
+    Q_OBJECT
+public:
+    explicit GenericLoaderPanel(QWidget * parent = nullptr);
+
+    /// Set the loader info and rebuild the form
+    void setLoaderInfo(LoaderInfo const & info);
+
+    /// Get the current options as JSON
+    [[nodiscard]] std::string toJson() const;
+
+signals:
+    void loadRequested(QString format, DM_DataType data_type, nlohmann::json config);
+
+private:
+    AutoParamWidget * _param_widget = nullptr;
+    QPushButton * _load_button = nullptr;
+    QLabel * _description_label = nullptr;
+    LoaderInfo _current_info;
+};
+```
+
+- **Files to create**: `GenericLoaderPanel.hpp`, `GenericLoaderPanel.cpp`
+- **Files to modify**: `DataImport_Widget/CMakeLists.txt`
+
+#### Step 2.2: Refactor `DataImport_Widget` to use registry-driven discovery
+
+Replace `DataImportTypeRegistry` + per-type container widgets with:
+
+1. Query `LoaderRegistry::getInstance().getSupportedLoadFormats()` to get all `LoaderInfo` entries.
+2. Data type combo populated from unique `data_type` values in the LoaderInfos.
+3. Format combo populated from `LoaderInfo` entries matching selected data type.
+4. `GenericLoaderPanel` rendered for the selected format.
+
+```
+DataImport_Widget
+├── QLineEdit + Browse (data name for DataManager)
+├── QComboBox (data type — from LoaderInfos)
+├── QComboBox (format — from LoaderInfos matching type)
+├── GenericLoaderPanel (AutoParamWidget + Load button)
+└── QLabel (status/error messages)
+```
+
+- **Files to modify**: `DataImport_Widget.hpp`, `DataImport_Widget.cpp`, `DataImport_Widget.ui`
+
+#### Step 2.3: Handle special cases
+
+Some import widgets have behavior that plain AutoParamWidget cannot handle:
+
+1. **Batch loading** (DLC points, multi-file CSVs): The `LoaderInfo.supports_batch` flag indicates this. When true, add a "Load All" button that calls `loadBatch()` instead of `load()`. The JSON config is still generated the same way.
+
+2. **Scaling widget** (MaskImport, used for coordinate rescaling): This is orthogonal to format-specific options. Add a collapsible "Post-Import Options" section below the `GenericLoaderPanel` with a `Scaling_Widget`. This section is shown when the data type supports scaling (Mask, Line, Point).
+
+3. **Preview** (some widgets show a data preview after file selection): This can be deferred — the old behavior was inconsistent anyway.
+
+4. **Multi-file vs single-file modes** (CSVLineImport has radio buttons for this): Model this as a variant or an enum field in the loader Options struct (e.g., `std::optional<std::string> load_mode` with `allowed_values = {"single_file", "multi_file"}`). The `ParameterUIHints` annotation can set this up.
+
+For each special case, document it as a `ParameterUIHints` annotation or a small wrapper around `GenericLoaderPanel`, rather than creating a custom widget.
+
+- **Files to modify**: Various loader Options structs may need new fields. `GenericLoaderPanel` may need optional slots for auxiliary widgets (scaling, preview).
+
+#### Step 2.4: Migrate one data type at a time
+
+Migrate import widgets in order from simplest to most complex. For each:
+
+1. Verify the `LoaderInfo` is returned by the registry with correct schema.
+2. Verify `AutoParamWidget` renders the schema correctly.
+3. Verify `toJson()` output matches what the loader expects.
+4. Verify loading works end-to-end.
+5. Mark the old widget as deprecated (comment only — do not delete yet).
+
+**Migration order**:
+
+| Order | Data Type | Format | Old Widget | Complexity |
+|-------|-----------|--------|------------|------------|
+| 1 | Points | CSV | `CSVPointImport_Widget` | Low (4 fields) |
+| 2 | DigitalInterval | CSV | `CSVDigitalIntervalImport_Widget` | Low (5 fields) |
+| 3 | DigitalEvent | CSV | `CSVDigitalEventImport_Widget` | Low (7 fields) |
+| 4 | Analog | CSV | `CSVAnalogImport_Widget` | Medium (6 fields) |
+| 5 | Analog | Binary | `BinaryAnalogImport_Widget` | High (10+ fields) |
+| 6 | Lines | CSV | `CSVLineImport_Widget` | Medium (has single/multi mode) |
+| 7 | Lines | Binary | `BinaryLineImport_Widget` | Low (1 field) |
+| 8 | Lines | HDF5 | `HDF5LineImport_Widget` | Low (few fields) |
+| 9 | Masks | HDF5 | `HDF5MaskImport_Widget` | Low-Medium |
+| 10 | Masks | Image | `ImageMaskImport_Widget` | Medium (6 fields) |
+| 11 | Tensors | Numpy | `TensorImport_Widget` | Low |
+| 12 | DigitalInterval | Binary | `BinaryDigitalIntervalImport_Widget` | Low |
+
+For each migration step, the concrete actions are:
+
+1. Open the old widget's `.cpp` file and the corresponding `*LoaderOptions` struct.
+2. Verify the Options struct has all fields the old widget exposes. If not, add missing fields.
+3. Add `ParameterUIHints` specialization if not present.
+4. Implement `getLoaderInfo()` entry in the format loader (if not done in Phase 0).
+5. Test: `auto schema = extractParameterSchema<OptionsType>(); auto w = AutoParamWidget(); w.setSchema(schema);` — visually verify the form matches the old widget.
+6. Test: Fill the form, call `toJson()`, pass to `registry.tryLoad()` — verify data loads correctly.
+7. If the old widget had custom behavior (e.g., file preview, batch discovery), implement it in `GenericLoaderPanel` or as a `ParameterUIHints` annotation.
+
+#### Step 2.5: Delete old widgets and `DataImportTypeRegistry`
+
+After all data types are migrated and tested:
+
+1. Remove all format-specific import sub-widgets (`.hpp`, `.cpp`, `.ui` files).
+2. Remove all container widgets (e.g., `PointImport_Widget`, `AnalogImport_Widget`, etc.).
+3. Remove `DataImportTypeRegistry` and `DataImportWidgetRegistration`.
+4. Update `DataImport_Widget/CMakeLists.txt` to remove old sources.
+5. Update `DataExport_Widget/CMakeLists.txt` similarly.
+
+- **Files to delete**: ~60 files in `DataImport_Widget/`, ~25 files in `DataExport_Widget/`.
+- **Tests**: Full regression test — load and save each data type/format combination.
+
+### Phase 3: DataInspector Integration
+
+**Goal**: DataInspectors that embed import/export functionality should use the new generic panels.
+
+#### Step 3.1: Replace embedded saver widgets in Inspectors
+
+Search for all Inspector files that include `DataExport_Widget/` headers. Replace the embedded format-specific saver widget with a `GenericSaverPanel` configured from `SaverInfo`.
+
+#### Step 3.2: Add import capability to Inspectors (optional)
+
+If desired, Inspectors could also embed a `GenericLoaderPanel` for quick re-loading or format conversion. This follows the same pattern.
+
+### Phase 4: Cleanup and Documentation
+
+#### Step 4.1: Remove `DataImportTypeRegistry` if no longer needed
+
+If `DataImport_Widget` now discovers loaders entirely from `LoaderRegistry`, the `DataImportTypeRegistry` factory map is redundant.
+
+#### Step 4.2: Update developer documentation
+
+- Update `docs/developer/IO/` docs to describe the new `LoaderInfo` and registry discovery flow.
+- Update widget documentation to describe the `GenericLoaderPanel` / `GenericSaverPanel` pattern.
+- Update `copilot-instructions.md` to add the new libraries/widgets to the architecture section.
+
+#### Step 4.3: Update user documentation
+
+- Update `docs/user_guide/` import/export articles to reflect the simplified UI.
+
+## Summary of File Impact
+
+| Phase | Files Created | Files Modified | Files Deleted (eventual) |
+|-------|--------------|----------------|--------------------------|
+| 0 | 1 (LoaderInfo.hpp) | ~15 (IFormatLoader, Registry, all format loaders) | 0 |
+| 1 | 2 (GenericSaverPanel) | ~5 (DataExport_Widget, ParameterSchema, AutoParamWidget) | ~25 (old saver widgets) |
+| 2 | 2 (GenericLoaderPanel) | ~3 (DataImport_Widget) | ~60 (old import widgets) |
+| 3 | 0 | ~5 (Inspectors) | 0 |
+| 4 | 0 | ~5 (docs) | ~3 (TypeRegistry) |
+
+## Key Design Decisions
+
+1. **`filepath` handling**: Loader Options structs have a `filepath` field. In the auto-generated UI, this needs a browse button. Add `is_file_path` / `is_directory_path` flags to `ParameterFieldDescriptor` and teach `AutoParamWidget` to create browse buttons for these.
+
+2. **Saver `parent_dir` + `filename` pattern**: Many savers split the output path into `parent_dir` and `filename`. The auto-generated UI will show both as browseable fields. This is actually cleaner than the current approach where some widgets combine them.
+
+3. **Batch loading**: Handled by a flag on `LoaderInfo`, with a secondary "Load All" button when supported. The JSON config is identical for single and batch loading.
+
+4. **Post-import transforms** (scaling, coordinate maps): These are orthogonal to format-specific options. Model them as an optional auxiliary section below the `GenericLoaderPanel`, not as part of the `AutoParamWidget` form.
+
+5. **Backward compatibility**: The `LoaderRegistry.tryLoad()` and `trySave()` methods already accept `nlohmann::json` config. The `AutoParamWidget.toJson()` output is compatible. No changes needed to the IO dispatch layer.
+
+6. **Incremental migration**: Each data type can be migrated independently. The old Type Registry and new Registry-driven discovery can coexist during migration. Old widgets can remain alongside new ones until fully tested.
+
+## Risk Assessment
+
+| Risk | Mitigation |
+|------|-----------|
+| AutoParamWidget doesn't support a field type used in an Options struct | The `rfl::Validator` types are already proven. Only risk is custom validators like `ValidBinaryDataType` — add `ParameterUIHints` to map these to combo boxes. |
+| File browse UX is worse than hand-written | Add `is_file_path` / `is_directory_path` to `ParameterFieldDescriptor` (Step 1.2) to get proper browse dialogs. |
+| Batch loading UI needs custom logic | Keep batch handling in `GenericLoaderPanel` as a flag, not in `AutoParamWidget`. The param widget only handles the schema. |
+| Some import widgets have validation logic (e.g., "column X must be different from column Y") | Use `PostEditHook` on the `AutoParamWidget` for cross-field validation. |
+| Performance of extractParameterSchema at startup | Negligible — these are small structs. Schema extraction is already used for all savers. |

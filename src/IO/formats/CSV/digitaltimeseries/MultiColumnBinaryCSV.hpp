@@ -4,6 +4,7 @@
 #include "datamanagerio_export.h"
 
 #include "IO/core/LoaderOptionsConcepts.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
 #include "TimeFrame/interval_data.hpp"
 
 #include <rfl.hpp>
@@ -41,54 +42,54 @@ class TimeFrame;
 struct MultiColumnBinaryCSVLoaderOptions {
     /// Path to the CSV file (required)
     std::string filepath;
-    
+
     /// Number of header lines to skip before reaching column headers (default: 5)
     /// This includes date, time, and any blank lines before the header row
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> header_lines_to_skip;
-    
+
     /// Column index (0-based) containing time values (default: 0)
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> time_column;
-    
+
     /// Column index (0-based) containing binary event data to extract (default: 1)
     /// This is the column that will be converted to intervals
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> data_column;
-    
+
     /// Delimiter between columns (default: "\t" for tab-separated)
     std::optional<std::string> delimiter;
-    
+
     /// Sampling rate in Hz for converting fractional time to integer indices
     /// If provided, time values are multiplied by this rate to get integer indices
     /// If not provided (or 0), row indices are used directly as TimeFrameIndex values
     std::optional<rfl::Validator<double, rfl::Minimum<0.0>>> sampling_rate;
-    
+
     /// Threshold for considering a value as "on" (default: 0.5)
     /// Values >= threshold are considered 1, values < threshold are considered 0
     std::optional<double> binary_threshold;
-    
+
     // Helper methods to get values with defaults
-    int getHeaderLinesToSkip() const { 
-        return header_lines_to_skip.has_value() ? header_lines_to_skip.value().value() : 5; 
+    int getHeaderLinesToSkip() const {
+        return header_lines_to_skip.has_value() ? header_lines_to_skip.value().value() : 5;
     }
-    int getTimeColumn() const { 
-        return time_column.has_value() ? time_column.value().value() : 0; 
+    int getTimeColumn() const {
+        return time_column.has_value() ? time_column.value().value() : 0;
     }
-    int getDataColumn() const { 
-        return data_column.has_value() ? data_column.value().value() : 1; 
+    int getDataColumn() const {
+        return data_column.has_value() ? data_column.value().value() : 1;
     }
-    std::string getDelimiter() const { 
-        return delimiter.value_or("\t"); 
+    std::string getDelimiter() const {
+        return delimiter.value_or("\t");
     }
-    double getSamplingRate() const { 
-        return sampling_rate.has_value() ? sampling_rate.value().value() : 0.0; 
+    double getSamplingRate() const {
+        return sampling_rate.has_value() ? sampling_rate.value().value() : 0.0;
     }
-    double getBinaryThreshold() const { 
-        return binary_threshold.value_or(0.5); 
+    double getBinaryThreshold() const {
+        return binary_threshold.value_or(0.5);
     }
 };
 
 // Compile-time validation
 static_assert(WhiskerToolbox::ValidLoaderOptions<MultiColumnBinaryCSVLoaderOptions>,
-    "MultiColumnBinaryCSVLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
+              "MultiColumnBinaryCSVLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 
 /**
@@ -100,38 +101,38 @@ static_assert(WhiskerToolbox::ValidLoaderOptions<MultiColumnBinaryCSVLoaderOptio
 struct MultiColumnBinaryCSVTimeFrameOptions {
     /// Path to the CSV file (required)
     std::string filepath;
-    
+
     /// Number of header lines to skip before reaching column headers (default: 5)
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> header_lines_to_skip;
-    
+
     /// Column index (0-based) containing time values (default: 0)
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> time_column;
-    
+
     /// Delimiter between columns (default: "\t" for tab-separated)
     std::optional<std::string> delimiter;
-    
+
     /// Sampling rate in Hz for converting fractional time to integer indices
     /// Time values are multiplied by this rate to get integer time values
     std::optional<rfl::Validator<double, rfl::Minimum<0.0>>> sampling_rate;
-    
+
     // Helper methods to get values with defaults
-    int getHeaderLinesToSkip() const { 
-        return header_lines_to_skip.has_value() ? header_lines_to_skip.value().value() : 5; 
+    int getHeaderLinesToSkip() const {
+        return header_lines_to_skip.has_value() ? header_lines_to_skip.value().value() : 5;
     }
-    int getTimeColumn() const { 
-        return time_column.has_value() ? time_column.value().value() : 0; 
+    int getTimeColumn() const {
+        return time_column.has_value() ? time_column.value().value() : 0;
     }
-    std::string getDelimiter() const { 
-        return delimiter.value_or("\t"); 
+    std::string getDelimiter() const {
+        return delimiter.value_or("\t");
     }
-    double getSamplingRate() const { 
-        return sampling_rate.has_value() ? sampling_rate.value().value() : 1.0; 
+    double getSamplingRate() const {
+        return sampling_rate.has_value() ? sampling_rate.value().value() : 1.0;
     }
 };
 
 // Compile-time validation
 static_assert(WhiskerToolbox::ValidLoaderOptions<MultiColumnBinaryCSVTimeFrameOptions>,
-    "MultiColumnBinaryCSVTimeFrameOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
+              "MultiColumnBinaryCSVTimeFrameOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 
 /**
@@ -157,6 +158,59 @@ DATAMANAGERIO_EXPORT std::shared_ptr<DigitalIntervalSeries> load(MultiColumnBina
  */
 DATAMANAGERIO_EXPORT std::shared_ptr<TimeFrame> load(MultiColumnBinaryCSVTimeFrameOptions const & opts);
 
+template<>
+struct ParameterUIHints<MultiColumnBinaryCSVLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to the file with preamble lines, a column header row, then time and binary columns";
+        }
+        if (auto * f = schema.field("header_lines_to_skip")) {
+            f->tooltip = "Lines to skip before the column header row (e.g. date, time, blank lines)";
+        }
+        if (auto * f = schema.field("time_column")) {
+            f->tooltip = "0-based column index for fractional time values used with sampling_rate";
+        }
+        if (auto * f = schema.field("data_column")) {
+            f->tooltip = "0-based column index for the binary trace converted to on/off intervals";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating columns";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("sampling_rate")) {
+            f->tooltip =
+                    "Hz: time column is multiplied by this to get integer indices; 0 or omitted uses row index as time";
+        }
+        if (auto * f = schema.field("binary_threshold")) {
+            f->tooltip = "Values greater than or equal to this are treated as on; below as off (default 0.5)";
+        }
+    }
+};
+
+template<>
+struct ParameterUIHints<MultiColumnBinaryCSVTimeFrameOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to the file with preamble lines, a column header row, then numeric rows";
+        }
+        if (auto * f = schema.field("header_lines_to_skip")) {
+            f->tooltip = "Lines to skip before the column header row (e.g. date, time, blank lines)";
+        }
+        if (auto * f = schema.field("time_column")) {
+            f->tooltip = "0-based column index for fractional time values";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating columns";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("sampling_rate")) {
+            f->tooltip = "Hz: time values are multiplied by this rate to produce integer time indices";
+        }
+    }
+};
+
 /**
  * @brief Extract column names from a multi-column binary CSV file
  * 
@@ -168,9 +222,8 @@ DATAMANAGERIO_EXPORT std::shared_ptr<TimeFrame> load(MultiColumnBinaryCSVTimeFra
  * @return Vector of column names, empty on error
  */
 DATAMANAGERIO_EXPORT std::vector<std::string> getColumnNames(
-    std::string const & filepath,
-    int header_lines_to_skip = 5,
-    std::string const & delimiter = "\t"
-);
+        std::string const & filepath,
+        int header_lines_to_skip = 5,
+        std::string const & delimiter = "\t");
 
-#endif // MULTI_COLUMN_BINARY_CSV_HPP
+#endif// MULTI_COLUMN_BINARY_CSV_HPP

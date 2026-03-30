@@ -98,7 +98,7 @@ OutputSlotWidget::OutputSlotWidget(
     group_layout->addWidget(_auto_param);
 
     auto schema =
-            WhiskerToolbox::Transforms::V2::extractParameterSchema<OutputSlotParams>();
+            extractParameterSchema<OutputSlotParams>();
     _auto_param->setSchema(schema);
 
     if (!_recommended_decoder.empty()) {

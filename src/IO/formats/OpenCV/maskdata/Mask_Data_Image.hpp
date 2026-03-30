@@ -110,6 +110,35 @@ struct ImageMaskSaverOptions {
  */
 DATAMANAGERIO_OPENCV_EXPORT std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts);
 
+template<>
+struct ParameterUIHints<ImageMaskLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("directory_path")) {
+            f->tooltip = "Directory containing one image per frame; filenames encode the frame index";
+        }
+        if (auto * f = schema.field("file_pattern")) {
+            f->tooltip = "Glob to match files under directory_path (e.g. *.png, *.jpg; formats supported by Qt QImage)";
+        }
+        if (auto * f = schema.field("filename_prefix")) {
+            f->tooltip = "Optional text before the frame number in each filename (e.g. mask_ for mask_0001.png)";
+        }
+        if (auto * f = schema.field("frame_number_padding")) {
+            f->tooltip = "Expected digit count for frame numbers in filenames; 0 allows unpadded numbers";
+            f->min_value = 0.0;
+            f->max_value = 12.0;
+        }
+        if (auto * f = schema.field("threshold_value")) {
+            f->tooltip = "Grayscale threshold (0-255); pixels at or above this value count as mask";
+            f->min_value = 0.0;
+            f->max_value = 255.0;
+        }
+        if (auto * f = schema.field("invert_mask")) {
+            f->tooltip = "If true, swap which intensities are treated as foreground mask";
+        }
+    }
+};
+
 /**
  * @brief Save MaskData to binary image files
  *
@@ -123,7 +152,6 @@ DATAMANAGERIO_OPENCV_EXPORT std::shared_ptr<MaskData> load(ImageMaskLoaderOption
  */
 DATAMANAGERIO_OPENCV_EXPORT bool save(MaskData const * mask_data, ImageMaskSaverOptions const & opts);
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<ImageMaskSaverOptions> {
@@ -157,7 +185,5 @@ struct ParameterUIHints<ImageMaskSaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// MASK_DATA_IMAGE_HPP

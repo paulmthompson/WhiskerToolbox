@@ -55,7 +55,7 @@ struct RegisterStep {
             std::string display_name,
             std::string chain_key,
             std::function<void(cv::Mat &, Params const &)> typed_apply) {
-        auto schema = Transforms::V2::extractParameterSchema<Params>();
+        auto schema = extractParameterSchema<Params>();
 
         ProcessingStep step;
         step.display_name = std::move(display_name);

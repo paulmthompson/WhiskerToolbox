@@ -7,7 +7,6 @@
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "PostEncoderModuleFactory.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 // GlobalAvgPoolModuleParams has no user-configurable fields — no hints needed.
 
@@ -28,6 +27,5 @@ struct ParameterUIHints<dl::SpatialPointModuleParams> {
     }
 };
 
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// WHISKERTOOLBOX_POST_ENCODER_PARAM_SCHEMAS_HPP

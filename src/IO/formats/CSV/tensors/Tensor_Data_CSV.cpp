@@ -7,7 +7,6 @@
 
 #include "IO/core/AtomicWrite.hpp"
 #include "Tensors/TensorData.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
 
 #include <cassert>
@@ -142,52 +141,25 @@ std::shared_ptr<TensorData> load(CSVTensorLoaderOptions const & options) {
                 time_indices.emplace_back(std::stoll(label));
             }
 
-            // Determine max time index for TimeFrame
-            int64_t max_val = 0;
-            for (auto const & ti: time_indices) {
-                if (ti.getValue() > max_val) {
-                    max_val = ti.getValue();
-                }
-            }
-
-            // Create a simple dense TimeFrame covering [0, max_val]
-            std::vector<int> frame_times;
-            frame_times.reserve(static_cast<std::size_t>(max_val + 1));
-            for (int i = 0; i <= static_cast<int>(max_val); ++i) {
-                frame_times.push_back(i);
-            }
-
             auto time_storage = TimeIndexStorageFactory::createFromTimeIndices(time_indices);
-            auto time_frame = std::make_shared<TimeFrame>(frame_times);
 
             auto tensor = TensorData::createTimeSeries2D(
                     flat_data, num_rows, num_cols,
-                    std::move(time_storage), std::move(time_frame),
+                    std::move(time_storage), nullptr,
                     column_names);
             return std::make_shared<TensorData>(std::move(tensor));
         }
         case RowType::Interval: {
             std::vector<TimeFrameInterval> intervals;
             intervals.reserve(num_rows);
-            int64_t max_val = 0;
             for (auto const & label: row_labels) {
                 auto interval = parseInterval(label);
-                if (interval.end.getValue() > max_val) {
-                    max_val = interval.end.getValue();
-                }
                 intervals.push_back(interval);
             }
 
-            std::vector<int> frame_times;
-            frame_times.reserve(static_cast<std::size_t>(max_val + 1));
-            for (int i = 0; i <= static_cast<int>(max_val); ++i) {
-                frame_times.push_back(i);
-            }
-            auto time_frame = std::make_shared<TimeFrame>(frame_times);
-
             auto tensor = TensorData::createFromIntervals(
                     flat_data, num_rows, num_cols,
-                    std::move(intervals), std::move(time_frame),
+                    std::move(intervals), nullptr,
                     column_names);
             return std::make_shared<TensorData>(std::move(tensor));
         }

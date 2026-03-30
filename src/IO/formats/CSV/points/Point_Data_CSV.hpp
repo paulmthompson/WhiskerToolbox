@@ -4,8 +4,9 @@
 #include "datamanagerio_export.h"
 
 #include "CoreGeometry/points.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "IO/core/LoaderOptionsConcepts.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <nlohmann/json.hpp>
 #include <rfl.hpp>
@@ -48,6 +49,29 @@ static_assert(WhiskerToolbox::ValidLoaderOptions<CSVPointLoaderOptions>,
               "CSVPointLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts);
+
+template<>
+struct ParameterUIHints<CSVPointLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to the CSV file with frame, x, and y columns";
+        }
+        if (auto * f = schema.field("frame_column")) {
+            f->tooltip = "0-based column index for frame number";
+        }
+        if (auto * f = schema.field("x_column")) {
+            f->tooltip = "0-based column index for x coordinate";
+        }
+        if (auto * f = schema.field("y_column")) {
+            f->tooltip = "0-based column index for y coordinate";
+        }
+        if (auto * f = schema.field("column_delim")) {
+            f->tooltip = "Column separator; only the first character is used if the string is non-empty";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+    }
+};
 
 /**
  * @struct CSVPointSaverOptions
@@ -96,6 +120,32 @@ struct CSVPointSaverOptions {
  */
 DATAMANAGERIO_EXPORT bool save(PointData const * point_data, CSVPointSaverOptions const & opts);
 
+template<>
+struct ParameterUIHints<CSVPointSaverOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (export UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filename")) {
+            f->tooltip = "Output filename (combined with parent_dir)";
+        }
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory in which to create the output file";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Delimiter between frame, x, and y columns";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("line_delim")) {
+            f->tooltip = "Line delimiter (newline character)";
+        }
+        if (auto * f = schema.field("save_header")) {
+            f->tooltip = "Whether to write a header row as the first line";
+        }
+        if (auto * f = schema.field("header")) {
+            f->tooltip = "Header text to write when save_header is true";
+        }
+    }
+};
+
 std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
 
 /**
@@ -124,6 +174,23 @@ static_assert(WhiskerToolbox::ValidLoaderOptions<DLCPointLoaderOptions>,
               "DLCPointLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 DATAMANAGERIO_EXPORT std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts);
+
+template<>
+struct ParameterUIHints<DLCPointLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to the DeepLabCut-style CSV with multi-bodypart coordinates";
+        }
+        if (auto * f = schema.field("frame_column")) {
+            f->tooltip = "0-based column index for the frame number column";
+        }
+        if (auto * f = schema.field("likelihood_threshold")) {
+            f->tooltip =
+                    "Minimum likelihood to keep a sample when likelihood columns exist; bodyparts without likelihood are still loaded";
+        }
+    }
+};
 
 /**
  * @brief Load multiple PointData objects from DLC CSV format

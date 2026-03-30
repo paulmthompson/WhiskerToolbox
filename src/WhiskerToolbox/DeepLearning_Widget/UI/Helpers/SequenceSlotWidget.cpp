@@ -134,7 +134,7 @@ void SequenceSlotWidget::_addEntryRow(int memory_index) {
     auto * row_layout = new QVBoxLayout(row.group);
 
     row.auto_param = new AutoParamWidget(row.group);
-    auto schema = WhiskerToolbox::Transforms::V2::extractParameterSchema<
+    auto schema = extractParameterSchema<
             SequenceEntryParams>();
     row.auto_param->setSchema(schema);
     row_layout->addWidget(row.auto_param);

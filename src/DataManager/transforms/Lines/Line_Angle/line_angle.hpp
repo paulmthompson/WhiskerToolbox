@@ -18,7 +18,7 @@ enum class AngleCalculationMethod {
 struct LineAngleParameters : public TransformParametersBase {
     float position = 0.2f;                                               // Default 20% along the line
     AngleCalculationMethod method = AngleCalculationMethod::DirectPoints;// Default method
-    int polynomial_order = 3;                                            // Default polynomial order
+    int polynomial_order = 3;  // Default; must be >= 0 when method is PolynomialFit (enforcement: none)
 
     // Reference vector parameters (what direction is 0 degrees)
     // Default is (1,0) which corresponds to the positive x-axis
@@ -34,10 +34,17 @@ struct LineAngleParameters : public TransformParametersBase {
  * @param line_data The line data to calculate angles from
  * @param params Parameters including the position along the line (0.0-1.0)
  * @return A new AnalogTimeSeries containing angle values at each timestamp
+ *
+ * @pre When method is PolynomialFit, params->polynomial_order >= 0 (enforcement: none)
  */
 std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
                                              LineAngleParameters const * params);
 
+/**
+ * @brief Calculate the angle at a specified position along a line at each timestamp
+ *
+ * @pre When method is PolynomialFit, params->polynomial_order >= 0 (enforcement: none)
+ */
 std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
                                              LineAngleParameters const * params,
                                              ProgressCallback progressCallback);

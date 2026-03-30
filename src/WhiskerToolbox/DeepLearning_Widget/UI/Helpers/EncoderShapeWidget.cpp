@@ -75,7 +75,7 @@ EncoderShapeWidget::EncoderShapeWidget(
     group_layout->addWidget(_auto_param);
 
     auto schema =
-            WhiskerToolbox::Transforms::V2::extractParameterSchema<
+            extractParameterSchema<
                     EncoderShapeParams>();
     _auto_param->setSchema(schema);
 

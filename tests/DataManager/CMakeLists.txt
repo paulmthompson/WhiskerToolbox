@@ -132,6 +132,7 @@ add_executable(test_data_manager
         IO/batch_loading.test.cpp
         IO/atomic_write.test.cpp
         IO/saver_registry.test.cpp
+        IO/loader_registry.test.cpp
         
         # IO Integration tests (format-centric organization)
         IO/formats/CSV/analog/analog_csv_integration.test.cpp
@@ -148,6 +149,7 @@ add_executable(test_data_manager
         IO/formats/CSV/masks/mask_csv_rle.test.cpp
         IO/formats/CSV/masks/mask_csv_rle_unit.test.cpp
         IO/formats/CSV/tensors/tensor_csv_roundtrip.test.cpp
+        IO/formats/Numpy/tensordata/tensor_npy_roundtrip.test.cpp
         IO/formats/Binary/analog/analog_binary_integration.test.cpp
         IO/formats/Binary/analog/analog_binary_unit.test.cpp
         IO/formats/Binary/digitalintervals/digital_interval_binary_integration.test.cpp
@@ -196,6 +198,7 @@ endif()
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager Commands)
 target_link_libraries(test_data_manager PRIVATE DataManagerIO)
+target_link_libraries(test_data_manager PRIVATE DataManagerNumpy)
 target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)
 target_link_libraries(test_data_manager PRIVATE TensorData)
 target_link_libraries(test_data_manager PRIVATE DataTypeTraits)

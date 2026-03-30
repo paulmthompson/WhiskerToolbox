@@ -207,7 +207,6 @@ struct TestHintParams {
 
 }// anonymous namespace
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<TestHintParams> {
@@ -227,7 +226,6 @@ struct ParameterUIHints<TestHintParams> {
     }
 };
 
-}// namespace WhiskerToolbox::Transforms::V2
 
 TEST_CASE("extractParameterSchema - ParameterUIHints applied", "[transforms][v2][schema][hints]") {
     auto schema = extractParameterSchema<TestHintParams>();

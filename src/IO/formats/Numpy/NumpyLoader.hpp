@@ -37,9 +37,9 @@ private:
     /**
      * @brief Load TensorData from .npy file
      */
-    LoadResult loadTensorData(
+    static LoadResult loadTensorData(
             std::string const & file_path,
-            nlohmann::json const & config) const;
+            nlohmann::json const & config) ;
 };
 
 #endif// DATAMANAGER_IO_NUMPYLOADER_HPP

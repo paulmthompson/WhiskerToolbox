@@ -30,10 +30,8 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
 struct ParameterSchema;
 struct ParameterFieldDescriptor;
-}// namespace WhiskerToolbox::Transforms::V2
 
 class QCheckBox;
 class QComboBox;
@@ -63,7 +61,7 @@ public:
      * @brief Set the schema and rebuild the form
      * @param schema The parameter schema to generate UI from
      */
-    void setSchema(WhiskerToolbox::Transforms::V2::ParameterSchema const & schema);
+    void setSchema(ParameterSchema const & schema);
 
     /**
      * @brief Serialize current widget values to a JSON string
@@ -163,9 +161,9 @@ private:
         std::vector<std::string> variant_all_tags;          ///< All variant tags from schema
     };
 
-    void buildFieldRow(WhiskerToolbox::Transforms::V2::ParameterFieldDescriptor const & desc,
+    void buildFieldRow(ParameterFieldDescriptor const & desc,
                        QFormLayout * layout);
-    void buildVariantRow(WhiskerToolbox::Transforms::V2::ParameterFieldDescriptor const & desc,
+    void buildVariantRow(ParameterFieldDescriptor const & desc,
                          QFormLayout * layout);
     static std::string variantSubRowsToJson(FieldRow const & row);
     static void variantSubRowsFromJson(FieldRow & row, std::string const & json_obj_str);

@@ -18,9 +18,9 @@
 #include "datamanagerio_export.h"
 
 #include "CoreGeometry/masks.hpp"
+#include "IO/core/LoaderOptionsConcepts.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "IO/core/LoaderOptionsConcepts.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -114,6 +114,30 @@ DATAMANAGERIO_EXPORT Mask2D decode_mask_rle(std::string const & rle_str, std::st
  */
 DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Mask2D>> load(CSVMaskRLELoaderOptions const & opts);
 
+template<>
+struct ParameterUIHints<CSVMaskRLELoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to CSV with a frame column and quoted RLE strings (y, x_start, length triplets)";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating the frame column from the RLE column";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("rle_delimiter")) {
+            f->tooltip = "Separator between numbers inside the quoted RLE triplet list";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("has_header")) {
+            f->tooltip = "Whether the first row is a header line to skip when parsing";
+        }
+        if (auto * f = schema.field("header_identifier")) {
+            f->tooltip = "Expected name of the frame column in the header row (default Frame)";
+        }
+    }
+};
+
 /**
  * @brief Save MaskData to a single CSV file with RLE encoding
  *
@@ -127,8 +151,6 @@ DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Mask2D>> load(CSVMaskR
  * @pre mask_data must not be null.
  */
 DATAMANAGERIO_EXPORT bool save(MaskData const * mask_data, CSVMaskRLESaverOptions const & opts);
-
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<CSVMaskRLESaverOptions> {
@@ -153,7 +175,5 @@ struct ParameterUIHints<CSVMaskRLESaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// MASK_DATA_CSV_HPP

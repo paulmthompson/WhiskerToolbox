@@ -52,6 +52,7 @@ target_link_libraries(DataManagerNumpy PRIVATE
     nlohmann_json::nlohmann_json  # For JSON config parsing
     WhiskerToolbox::TensorData    # For TensorData
     DataTypeEnum
+    ParameterSchema               # For ParameterUIHints
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

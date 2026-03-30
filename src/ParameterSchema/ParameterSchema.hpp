@@ -20,8 +20,6 @@
 #include <type_traits>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
-
 // ============================================================================
 // ParameterFieldDescriptor — Runtime schema for a single parameter field
 // ============================================================================
@@ -393,7 +391,5 @@ ParameterSchema extractParameterSchema() {
 
     return schema;
 }
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// WHISKERTOOLBOX_V2_PARAMETER_SCHEMA_HPP

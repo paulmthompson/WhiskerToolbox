@@ -71,7 +71,7 @@ PostEncoderWidget::PostEncoderWidget(
     group_layout->addWidget(_auto_param);
 
     auto schema =
-            WhiskerToolbox::Transforms::V2::extractParameterSchema<
+            extractParameterSchema<
                     PostEncoderSlotParams>();
     _auto_param->setSchema(schema);
 

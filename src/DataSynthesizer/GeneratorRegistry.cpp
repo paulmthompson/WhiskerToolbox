@@ -83,7 +83,7 @@ std::vector<std::string> GeneratorRegistry::listOutputTypes() const {
     return types;
 }
 
-std::optional<Transforms::V2::ParameterSchema> GeneratorRegistry::getSchema(
+std::optional<ParameterSchema> GeneratorRegistry::getSchema(
         std::string const & name) const {
     auto const it = entries_.find(name);
     if (it == entries_.end()) {

@@ -104,6 +104,8 @@ struct LineAngleParams {
  * @param line The line to calculate angle from
  * @param params Parameters controlling the calculation (call validate() first for batch)
  * @return float Angle in degrees (-180 to 180)
+ *
+ * @pre When method is PolynomialFit, params.getPolynomialOrder() >= 0 (enforcement: none)
  */
 float calculateLineAngle(
         Line2D const & line,

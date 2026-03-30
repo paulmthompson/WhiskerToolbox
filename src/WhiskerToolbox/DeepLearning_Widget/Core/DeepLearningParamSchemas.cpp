@@ -4,7 +4,6 @@
 
 #include "DeepLearningParamSchemas.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 void ParameterUIHints<dl::widget::RelativeCaptureParams>::annotate(
         ParameterSchema & schema) {
@@ -165,5 +164,3 @@ void ParameterUIHints<dl::widget::PostEncoderSlotParams>::annotate(
                 "• Spatial Point Extraction: extract features at a 2D point location";
     }
 }
-
-}// namespace WhiskerToolbox::Transforms::V2

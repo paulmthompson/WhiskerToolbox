@@ -148,10 +148,6 @@ TensorData TensorData::createTimeSeries2D(
         throw std::invalid_argument(
                 "TensorData::createTimeSeries2D: time_storage must not be null");
     }
-    if (!time_frame) {
-        throw std::invalid_argument(
-                "TensorData::createTimeSeries2D: time_frame must not be null");
-    }
     if (time_storage->size() != num_rows) {
         throw std::invalid_argument(
                 "TensorData::createTimeSeries2D: time_storage size (" +
@@ -186,10 +182,6 @@ TensorData TensorData::createFromIntervals(
         std::vector<TimeFrameInterval> intervals,
         std::shared_ptr<TimeFrame> time_frame,
         std::vector<std::string> column_names) {
-    if (!time_frame) {
-        throw std::invalid_argument(
-                "TensorData::createFromIntervals: time_frame must not be null");
-    }
     if (intervals.size() != num_rows) {
         throw std::invalid_argument(
                 "TensorData::createFromIntervals: intervals size (" +

@@ -50,6 +50,28 @@ struct CSVIntervalLoaderOptions {
  */
 DATAMANAGERIO_EXPORT std::vector<Interval> load(CSVIntervalLoaderOptions const & options);
 
+template<>
+struct ParameterUIHints<CSVIntervalLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to the CSV file with start and end columns for each interval";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating columns";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("has_header")) {
+            f->tooltip = "Whether the first row is a header line to skip when parsing";
+        }
+        if (auto * f = schema.field("start_column")) {
+            f->tooltip = "0-based column index for interval start values";
+        }
+        if (auto * f = schema.field("end_column")) {
+            f->tooltip = "0-based column index for interval end values";
+        }
+    }
+};
 
 /**
  * @struct CSVIntervalSaverOptions
@@ -98,9 +120,8 @@ struct CSVIntervalSaverOptions {
  * @pre interval_data must not be null.
  */
 DATAMANAGERIO_EXPORT bool save(DigitalIntervalSeries const * interval_data,
-          CSVIntervalSaverOptions const & opts);
+                               CSVIntervalSaverOptions const & opts);
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<CSVIntervalSaverOptions> {
@@ -125,7 +146,5 @@ struct ParameterUIHints<CSVIntervalSaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// DIGITAL_INTERVAL_SERIES_CSV_HPP

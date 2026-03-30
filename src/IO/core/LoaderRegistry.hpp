@@ -114,6 +114,19 @@ public:
     std::vector<std::string> getSupportedFormats(DM_DataType dataType) const;
 
     /**
+     * @brief Query all registered loader capabilities
+     * @return Vector of LoaderInfo from all registered loaders
+     */
+    [[nodiscard]] std::vector<LoaderInfo> getSupportedLoadFormats() const;
+
+    /**
+     * @brief Query registered loader capabilities filtered by data type
+     * @param dataType Only return loaders that handle this data type
+     * @return Filtered vector of LoaderInfo
+     */
+    [[nodiscard]] std::vector<LoaderInfo> getSupportedLoadFormats(DM_DataType dataType) const;
+
+    /**
      * @brief Query all registered saver capabilities
      * @return Vector of SaverInfo from all registered loaders
      */
