@@ -598,6 +598,354 @@ ClassificationPipelineResult runClassificationPipeline(
     }
 
     // ========================================================================
+    // Stage 5c: Leave-one-interval-out cross-validation (optional)
+    // ========================================================================
+    // When max_cv_folds > 0 and training intervals are available, evaluate
+    // generalization by holding out one training interval per fold.
+    // The main model (trained above on ALL data) is kept — CV only produces
+    // metrics and does not alter the final trained model.
+    std::optional<BinaryClassificationMetrics> cv_binary_metrics;
+    std::optional<MultiClassMetrics> cv_multi_metrics;
+    std::size_t cv_folds_run = 0;
+    std::vector<double> cv_per_fold_accuracy;
+
+    if (config.max_cv_folds > 0 && !config.training_interval_key.empty() &&
+        is_sequence_model) {
+        auto cv_train_intervals = dm.getData<DigitalIntervalSeries>(
+                config.training_interval_key);
+
+        if (cv_train_intervals && cv_train_intervals->size() > 1) {
+            // Collect all training intervals
+            std::vector<Interval> all_train_ivs;
+            all_train_ivs.reserve(cv_train_intervals->size());
+            for (auto const & iwid: cv_train_intervals->view()) {
+                all_train_ivs.push_back(iwid.interval);
+            }
+            std::sort(all_train_ivs.begin(), all_train_ivs.end());
+
+            std::size_t const num_folds =
+                    std::min(config.max_cv_folds, all_train_ivs.size());
+
+            reportProgress(progress, ClassificationStage::Training,
+                           "Running " + std::to_string(num_folds) +
+                                   "-fold leave-one-interval-out CV");
+
+            // Accumulators for averaging metrics
+            std::vector<double> fold_accuracies;
+            fold_accuracies.reserve(num_folds);
+
+            // For averaging binary metrics
+            double sum_accuracy = 0.0;
+            double sum_sensitivity = 0.0;
+            double sum_specificity = 0.0;
+            double sum_dice = 0.0;
+            std::size_t binary_folds_counted = 0;
+
+            // For averaging multi-class metrics
+            double sum_mc_accuracy = 0.0;
+            std::size_t mc_folds_counted = 0;
+            // Per-class accumulators (sized on first successful fold)
+            std::vector<double> sum_precision;
+            std::vector<double> sum_recall;
+            std::vector<double> sum_f1;
+
+            // Use labeled pre-balance data for CV (same as main segmentation)
+            auto const & cv_features = (was_balanced) ? converted.matrix : train_features;
+            auto const & cv_labels_row = (was_balanced) ? labels.labels : train_labels;
+            auto const & cv_times = (was_balanced) ? valid_row_times : train_row_times;
+
+            // Filter to labeled only (same logic as main path)
+            arma::mat cv_labeled_feats;
+            arma::Row<std::size_t> cv_labeled_labels;
+            std::vector<TimeFrameIndex> cv_labeled_times;
+
+            if (labels.unlabeled_count > 0) {
+                std::vector<arma::uword> labeled_cols;
+                for (arma::uword i = 0; i < cv_labels_row.n_elem; ++i) {
+                    if (cv_labels_row[i] < labels.num_classes) {
+                        labeled_cols.push_back(i);
+                    }
+                }
+                arma::uvec col_idx(labeled_cols.size());
+                for (std::size_t i = 0; i < labeled_cols.size(); ++i) {
+                    col_idx[i] = labeled_cols[i];
+                }
+                cv_labeled_feats = cv_features.cols(col_idx);
+                cv_labeled_labels.set_size(labeled_cols.size());
+                cv_labeled_times.reserve(labeled_cols.size());
+                for (std::size_t i = 0; i < labeled_cols.size(); ++i) {
+                    cv_labeled_labels[i] = cv_labels_row[labeled_cols[i]];
+                    cv_labeled_times.push_back(cv_times[labeled_cols[i]]);
+                }
+            } else {
+                cv_labeled_feats = cv_features;
+                cv_labeled_labels = cv_labels_row;
+                cv_labeled_times = cv_times;
+            }
+
+            for (std::size_t fold = 0; fold < num_folds; ++fold) {
+                auto const & held_out_iv = all_train_ivs[fold];
+
+                // --- Split data: fold-train vs held-out ---
+                std::vector<arma::uword> fold_train_cols;
+                std::vector<arma::uword> fold_test_cols;
+                fold_train_cols.reserve(cv_labeled_times.size());
+                fold_test_cols.reserve(cv_labeled_times.size());
+
+                for (std::size_t i = 0; i < cv_labeled_times.size(); ++i) {
+                    auto const t = cv_labeled_times[i].getValue();
+                    bool const in_held_out =
+                            (t >= held_out_iv.start && t <= held_out_iv.end);
+
+                    // Only include in fold-train if in one of the other
+                    // training intervals (not just "not held out")
+                    if (in_held_out) {
+                        fold_test_cols.push_back(static_cast<arma::uword>(i));
+                    } else {
+                        // Check that this time is in one of the training intervals
+                        for (auto const & iv: all_train_ivs) {
+                            if (&iv == &held_out_iv) continue;
+                            if (t >= iv.start && t <= iv.end) {
+                                fold_train_cols.push_back(
+                                        static_cast<arma::uword>(i));
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (fold_train_cols.empty() || fold_test_cols.empty()) {
+                    continue;// Skip degenerate fold
+                }
+
+                // Extract fold subsets
+                arma::uvec ft_idx(fold_train_cols.size());
+                for (std::size_t i = 0; i < fold_train_cols.size(); ++i) {
+                    ft_idx[i] = fold_train_cols[i];
+                }
+                arma::mat const fold_feats = cv_labeled_feats.cols(ft_idx);
+                arma::Row<std::size_t> fold_labels(fold_train_cols.size());
+                std::vector<TimeFrameIndex> fold_times;
+                fold_times.reserve(fold_train_cols.size());
+                for (std::size_t i = 0; i < fold_train_cols.size(); ++i) {
+                    fold_labels[i] = cv_labeled_labels[fold_train_cols[i]];
+                    fold_times.push_back(cv_labeled_times[fold_train_cols[i]]);
+                }
+
+                arma::uvec ftest_idx(fold_test_cols.size());
+                for (std::size_t i = 0; i < fold_test_cols.size(); ++i) {
+                    ftest_idx[i] = fold_test_cols[i];
+                }
+                arma::mat const test_feats = cv_labeled_feats.cols(ftest_idx);
+                arma::Row<std::size_t> test_labels(fold_test_cols.size());
+                std::vector<TimeFrameIndex> test_times;
+                test_times.reserve(fold_test_cols.size());
+                for (std::size_t i = 0; i < fold_test_cols.size(); ++i) {
+                    test_labels[i] = cv_labeled_labels[fold_test_cols[i]];
+                    test_times.push_back(cv_labeled_times[fold_test_cols[i]]);
+                }
+
+                // --- Segment fold-train data ---
+                auto fold_segments = SequenceAssembler::segment(
+                        fold_feats, fold_labels, fold_times);
+                if (fold_segments.empty()) continue;
+
+                // --- Train fold model ---
+                auto fold_model = registry.create(config.model_name);
+                if (!fold_model) continue;
+
+                std::vector<arma::mat> fold_feat_seqs;
+                std::vector<arma::Row<std::size_t>> fold_label_seqs;
+                fold_feat_seqs.reserve(fold_segments.size());
+                fold_label_seqs.reserve(fold_segments.size());
+                for (auto const & seg: fold_segments) {
+                    fold_feat_seqs.push_back(seg.features);
+                    fold_label_seqs.push_back(seg.labels);
+                }
+
+                bool const fold_train_ok = fold_model->trainSequences(
+                        fold_feat_seqs, fold_label_seqs, config.model_params);
+                if (!fold_train_ok || !fold_model->isTrained()) continue;
+
+                // --- Predict held-out interval ---
+                // Segment held-out test data, then predict with boundary
+                // constraints from the fold-train label map
+                auto test_segments = SequenceAssembler::segment(
+                        test_feats, test_times);
+                if (test_segments.empty()) continue;
+
+                // Build label map from fold-train data for constraints
+                std::unordered_map<std::int64_t, std::size_t> fold_label_map;
+                fold_label_map.reserve(fold_times.size());
+                for (std::size_t i = 0; i < fold_times.size(); ++i) {
+                    fold_label_map[fold_times[i].getValue()] = fold_labels[i];
+                }
+
+                // Split test segments at label boundaries (using fold-train labels)
+                if (config.prediction_region.constrained_decoding) {
+                    test_segments = splitSegmentsAtLabelBoundaries(
+                            test_segments, fold_label_map);
+                    if (test_segments.empty()) continue;
+                }
+
+                std::vector<arma::mat> test_feat_seqs;
+                test_feat_seqs.reserve(test_segments.size());
+                for (auto const & seg: test_segments) {
+                    test_feat_seqs.push_back(seg.features);
+                }
+
+                std::vector<arma::Row<std::size_t>> test_pred_seqs;
+                bool fold_pred_ok = false;
+
+                if (config.prediction_region.constrained_decoding) {
+                    // Build initial/terminal constraints from fold labels
+                    std::vector<std::optional<std::size_t>> init_c;
+                    std::vector<std::optional<std::size_t>> term_c;
+                    init_c.reserve(test_segments.size());
+                    term_c.reserve(test_segments.size());
+
+                    for (auto const & seg: test_segments) {
+                        auto const ft = seg.times.front().getValue();
+                        if (auto it = fold_label_map.find(ft);
+                            it != fold_label_map.end()) {
+                            init_c.emplace_back(it->second);
+                        } else if (auto it2 = fold_label_map.find(ft - 1);
+                                   it2 != fold_label_map.end()) {
+                            init_c.emplace_back(it2->second);
+                        } else {
+                            init_c.emplace_back(std::nullopt);
+                        }
+
+                        auto const lt = seg.times.back().getValue();
+                        if (auto it = fold_label_map.find(lt);
+                            it != fold_label_map.end()) {
+                            term_c.emplace_back(it->second);
+                        } else if (auto it2 = fold_label_map.find(lt + 1);
+                                   it2 != fold_label_map.end()) {
+                            term_c.emplace_back(it2->second);
+                        } else {
+                            term_c.emplace_back(std::nullopt);
+                        }
+                    }
+
+                    fold_pred_ok =
+                            fold_model->predictSequencesBidirectionalConstrained(
+                                    test_feat_seqs, test_pred_seqs, init_c, term_c);
+                } else {
+                    fold_pred_ok = fold_model->predictSequences(
+                            test_feat_seqs, test_pred_seqs);
+                }
+
+                if (!fold_pred_ok) continue;
+
+                // Reassemble fold predictions
+                std::size_t total_fold_preds = 0;
+                for (auto const & seq: test_pred_seqs) {
+                    total_fold_preds += seq.n_elem;
+                }
+
+                // Build time→label lookup for held-out ground truth
+                std::unordered_map<std::int64_t, std::size_t> test_truth_map;
+                test_truth_map.reserve(test_times.size());
+                for (std::size_t i = 0; i < test_times.size(); ++i) {
+                    test_truth_map[test_times[i].getValue()] = test_labels[i];
+                }
+
+                arma::Row<std::size_t> fold_preds(total_fold_preds);
+                arma::Row<std::size_t> fold_truth(total_fold_preds);
+                std::size_t off = 0;
+                for (std::size_t s = 0; s < test_pred_seqs.size(); ++s) {
+                    auto const & sp = test_pred_seqs[s];
+                    auto const & st = test_segments[s];
+                    for (std::size_t j = 0; j < sp.n_elem; ++j) {
+                        fold_preds[off + j] = sp[j];
+                        auto const t_val = st.times[j].getValue();
+                        if (auto it = test_truth_map.find(t_val);
+                            it != test_truth_map.end()) {
+                            fold_truth[off + j] = it->second;
+                        } else {
+                            fold_truth[off + j] = sp[j];// fallback
+                        }
+                    }
+                    off += sp.n_elem;
+                }
+
+                // Compute fold accuracy
+                std::size_t correct = 0;
+                for (std::size_t i = 0; i < fold_preds.n_elem; ++i) {
+                    if (fold_preds[i] == fold_truth[i]) ++correct;
+                }
+                double const fold_acc =
+                        static_cast<double>(correct) /
+                        static_cast<double>(fold_preds.n_elem);
+                fold_accuracies.push_back(fold_acc);
+
+                // Binary metrics
+                if (labels.num_classes == 2) {
+                    auto bm = computeBinaryMetrics(fold_preds, fold_truth);
+                    sum_accuracy += bm.accuracy;
+                    sum_sensitivity += bm.sensitivity;
+                    sum_specificity += bm.specificity;
+                    sum_dice += bm.dice_score;
+                    ++binary_folds_counted;
+                }
+
+                // Multi-class metrics
+                auto mcm = computeMultiClassMetrics(
+                        fold_preds, fold_truth, labels.num_classes);
+                sum_mc_accuracy += mcm.overall_accuracy;
+                if (sum_precision.empty()) {
+                    sum_precision.resize(labels.num_classes, 0.0);
+                    sum_recall.resize(labels.num_classes, 0.0);
+                    sum_f1.resize(labels.num_classes, 0.0);
+                }
+                for (std::size_t c = 0; c < labels.num_classes; ++c) {
+                    sum_precision[c] += mcm.per_class_precision[c];
+                    sum_recall[c] += mcm.per_class_recall[c];
+                    sum_f1[c] += mcm.per_class_f1[c];
+                }
+                ++mc_folds_counted;
+
+                ++cv_folds_run;
+            }// end fold loop
+
+            cv_per_fold_accuracy = std::move(fold_accuracies);
+
+            // Average binary metrics
+            if (binary_folds_counted > 0) {
+                BinaryClassificationMetrics avg_bin;
+                auto const n = static_cast<double>(binary_folds_counted);
+                avg_bin.accuracy = sum_accuracy / n;
+                avg_bin.sensitivity = sum_sensitivity / n;
+                avg_bin.specificity = sum_specificity / n;
+                avg_bin.dice_score = sum_dice / n;
+                cv_binary_metrics = avg_bin;
+            }
+
+            // Average multi-class metrics
+            if (mc_folds_counted > 0) {
+                MultiClassMetrics avg_mc;
+                auto const n = static_cast<double>(mc_folds_counted);
+                avg_mc.overall_accuracy = sum_mc_accuracy / n;
+                avg_mc.num_classes = labels.num_classes;
+                avg_mc.per_class_precision.resize(labels.num_classes);
+                avg_mc.per_class_recall.resize(labels.num_classes);
+                avg_mc.per_class_f1.resize(labels.num_classes);
+                for (std::size_t c = 0; c < labels.num_classes; ++c) {
+                    avg_mc.per_class_precision[c] = sum_precision[c] / n;
+                    avg_mc.per_class_recall[c] = sum_recall[c] / n;
+                    avg_mc.per_class_f1[c] = sum_f1[c] / n;
+                }
+                cv_multi_metrics = avg_mc;
+            }
+
+            reportProgress(progress, ClassificationStage::Training,
+                           "CV complete: " + std::to_string(cv_folds_run) +
+                                   " folds");
+        }
+    }
+
+    // ========================================================================
     // Stage 6: Predict
     // ========================================================================
     // Determine prediction features and times
@@ -647,6 +995,7 @@ ClassificationPipelineResult runClassificationPipeline(
     }
 
     arma::Row<std::size_t> predictions;
+    arma::Row<std::size_t> raw_predictions;// Before GT substitution — used for metrics
     std::optional<arma::mat> probabilities;
     std::size_t prediction_count = 0;
 
@@ -840,6 +1189,11 @@ ClassificationPipelineResult runClassificationPipeline(
                 }
                 predict_row_times = std::move(reassembled_times);
 
+                // Save raw model predictions before GT substitution.
+                // Metrics are always computed on raw_predictions so they
+                // reflect actual model performance rather than 100%.
+                raw_predictions = predictions;
+
                 // Ground-truth substitution: overwrite predictions for
                 // labeled frames with their known labels so the final
                 // output is exact on training data.
@@ -891,6 +1245,12 @@ ClassificationPipelineResult runClassificationPipeline(
         }
         prediction_count = predictions.n_elem;
 
+        // For non-sequence or unconstrained paths, raw_predictions wasn't set
+        // above (GT substitution only happens in the constrained sequence path).
+        if (raw_predictions.is_empty()) {
+            raw_predictions = predictions;
+        }
+
         // Try to get probability estimates (fallback for non-sequence models
         // or when per-segment probabilities were not computed above)
         if (!probabilities.has_value()) {
@@ -915,12 +1275,19 @@ ClassificationPipelineResult runClassificationPipeline(
     result.prediction_observations = prediction_count;
     result.trained_model = std::move(model);
 
+    // Attach cross-validation results (computed in Stage 5c)
+    result.binary_cv_metrics = cv_binary_metrics;
+    result.multi_class_cv_metrics = cv_multi_metrics;
+    result.cv_folds_run = cv_folds_run;
+    result.cv_per_fold_accuracy = std::move(cv_per_fold_accuracy);
+
     if (do_prediction && prediction_count > 0) {
         reportProgress(progress, ClassificationStage::ComputingMetrics,
                        "Computing metrics on " + std::to_string(prediction_count) +
                                " predictions");
 
-        // Compute metrics when predicting on training data (for training-set score)
+        // Metrics use raw_predictions (before GT substitution) so they
+        // reflect actual model performance rather than artificial 100%.
         if (config.prediction_region.predict_all_rows) {
             // Assemble ground-truth labels on the predicted rows for comparison
             try {
@@ -960,90 +1327,116 @@ ClassificationPipelineResult runClassificationPipeline(
                         },
                         config.label_config);
 
-                // When a training region is specified, split metrics into
-                // train (in-region) and validation (out-of-region) sets.
+                // Helper: check if time t falls within any of the sorted intervals
+                auto const isInIntervals =
+                        [](std::int64_t t,
+                           std::vector<Interval> const & sorted_ivs) -> bool {
+                    for (auto const & iv: sorted_ivs) {
+                        if (t >= iv.start && t <= iv.end) {
+                            return true;
+                        }
+                        if (iv.start > t) {
+                            break;
+                        }
+                    }
+                    return false;
+                };
+
+                // Build sorted training intervals (for partitioning)
+                std::vector<Interval> sorted_train_ivs;
                 if (!config.training_interval_key.empty()) {
                     auto training_intervals = dm.getData<DigitalIntervalSeries>(
                             config.training_interval_key);
-
                     if (training_intervals && training_intervals->size() > 0) {
-                        // Build sorted intervals for lookup
-                        std::vector<Interval> sorted_ivs;
-                        sorted_ivs.reserve(training_intervals->size());
+                        sorted_train_ivs.reserve(training_intervals->size());
                         for (auto const & iwid: training_intervals->view()) {
-                            sorted_ivs.push_back(iwid.interval);
+                            sorted_train_ivs.push_back(iwid.interval);
                         }
-                        std::sort(sorted_ivs.begin(), sorted_ivs.end());
+                        std::sort(sorted_train_ivs.begin(), sorted_train_ivs.end());
+                    }
+                }
 
-                        // Partition prediction indices into train/validation
-                        std::vector<arma::uword> train_indices;
-                        std::vector<arma::uword> val_indices;
-                        train_indices.reserve(predict_row_times.size());
-                        val_indices.reserve(predict_row_times.size());
-
-                        for (std::size_t i = 0; i < predict_row_times.size(); ++i) {
-                            auto const t = predict_row_times[i].getValue();
-                            bool in_region = false;
-                            for (auto const & iv: sorted_ivs) {
-                                if (t >= iv.start && t <= iv.end) {
-                                    in_region = true;
-                                    break;
-                                }
-                                if (iv.start > t) {
-                                    break;
-                                }
-                            }
-                            if (in_region) {
-                                train_indices.push_back(static_cast<arma::uword>(i));
-                            } else {
-                                val_indices.push_back(static_cast<arma::uword>(i));
-                            }
+                // Build sorted validation intervals (for partitioning)
+                std::vector<Interval> sorted_val_ivs;
+                if (!config.validation_interval_key.empty()) {
+                    auto validation_intervals = dm.getData<DigitalIntervalSeries>(
+                            config.validation_interval_key);
+                    if (validation_intervals && validation_intervals->size() > 0) {
+                        sorted_val_ivs.reserve(validation_intervals->size());
+                        for (auto const & iwid: validation_intervals->view()) {
+                            sorted_val_ivs.push_back(iwid.interval);
                         }
+                        std::sort(sorted_val_ivs.begin(), sorted_val_ivs.end());
+                    }
+                }
 
-                        // Train metrics: predictions within training region
-                        if (!train_indices.empty()) {
-                            arma::uvec train_col_idx(train_indices.size());
-                            for (std::size_t i = 0; i < train_indices.size(); ++i) {
-                                train_col_idx[i] = train_indices[i];
-                            }
-                            arma::Row<std::size_t> const train_preds = predictions.cols(train_col_idx);
-                            arma::Row<std::size_t> const train_truth = pred_labels.labels.cols(train_col_idx);
+                if (!sorted_train_ivs.empty()) {
+                    // Partition frames into training / validation / other
+                    std::vector<arma::uword> train_indices;
+                    std::vector<arma::uword> val_indices;
+                    train_indices.reserve(predict_row_times.size());
+                    val_indices.reserve(predict_row_times.size());
 
-                            if (labels.num_classes == 2) {
-                                result.binary_train_metrics = computeBinaryMetrics(
-                                        train_preds, train_truth);
-                            }
-                            result.multi_class_train_metrics = computeMultiClassMetrics(
-                                    train_preds, train_truth, labels.num_classes);
+                    for (std::size_t i = 0; i < predict_row_times.size(); ++i) {
+                        auto const t = predict_row_times[i].getValue();
+                        if (isInIntervals(t, sorted_train_ivs)) {
+                            train_indices.push_back(static_cast<arma::uword>(i));
+                        } else if (!sorted_val_ivs.empty() &&
+                                   isInIntervals(t, sorted_val_ivs)) {
+                            val_indices.push_back(static_cast<arma::uword>(i));
                         }
+                        // else: frame is in neither region — no metrics
+                    }
 
-                        // Validation metrics: predictions outside training region
-                        if (!val_indices.empty()) {
-                            arma::uvec val_col_idx(val_indices.size());
-                            for (std::size_t i = 0; i < val_indices.size(); ++i) {
-                                val_col_idx[i] = val_indices[i];
-                            }
-                            arma::Row<std::size_t> const val_preds = predictions.cols(val_col_idx);
-                            arma::Row<std::size_t> const val_truth = pred_labels.labels.cols(val_col_idx);
-
-                            result.validation_observations = val_indices.size();
-
-                            if (labels.num_classes == 2) {
-                                result.binary_validation_metrics = computeBinaryMetrics(
-                                        val_preds, val_truth);
-                            }
-                            result.multi_class_validation_metrics = computeMultiClassMetrics(
-                                    val_preds, val_truth, labels.num_classes);
+                    // Train metrics on raw predictions within training region
+                    if (!train_indices.empty()) {
+                        arma::uvec train_col_idx(train_indices.size());
+                        for (std::size_t i = 0; i < train_indices.size(); ++i) {
+                            train_col_idx[i] = train_indices[i];
                         }
+                        arma::Row<std::size_t> const train_preds =
+                                raw_predictions.cols(train_col_idx);
+                        arma::Row<std::size_t> const train_truth =
+                                pred_labels.labels.cols(train_col_idx);
+
+                        if (labels.num_classes == 2) {
+                            result.binary_train_metrics =
+                                    computeBinaryMetrics(train_preds, train_truth);
+                        }
+                        result.multi_class_train_metrics =
+                                computeMultiClassMetrics(train_preds, train_truth,
+                                                         labels.num_classes);
+                    }
+
+                    // Validation metrics on raw predictions within validation region
+                    if (!val_indices.empty()) {
+                        arma::uvec val_col_idx(val_indices.size());
+                        for (std::size_t i = 0; i < val_indices.size(); ++i) {
+                            val_col_idx[i] = val_indices[i];
+                        }
+                        arma::Row<std::size_t> const val_preds =
+                                raw_predictions.cols(val_col_idx);
+                        arma::Row<std::size_t> const val_truth =
+                                pred_labels.labels.cols(val_col_idx);
+
+                        result.validation_observations = val_indices.size();
+
+                        if (labels.num_classes == 2) {
+                            result.binary_validation_metrics =
+                                    computeBinaryMetrics(val_preds, val_truth);
+                        }
+                        result.multi_class_validation_metrics =
+                                computeMultiClassMetrics(val_preds, val_truth,
+                                                         labels.num_classes);
                     }
                 } else {
                     // No training region — compute metrics on all predicted frames
                     if (labels.num_classes == 2) {
                         result.binary_train_metrics = computeBinaryMetrics(
-                                predictions, pred_labels.labels);
+                                raw_predictions, pred_labels.labels);
                     }
                     result.multi_class_train_metrics = computeMultiClassMetrics(
-                            predictions, pred_labels.labels, labels.num_classes);
+                            raw_predictions, pred_labels.labels, labels.num_classes);
                 }
 
             } catch (...) {

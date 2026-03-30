@@ -10,6 +10,12 @@
 
 #include <QVariant>
 
+#include <QCheckBox>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QSpinBox>
+
 #include <optional>
 
 // =============================================================================
@@ -47,6 +53,7 @@ ModelConfigPanel::ModelConfigPanel(
     _populateTaskTypes();
     _populateBalancingStrategies();
     _populateAlgorithms();
+    _setupCvControls();
     _setupConnections();
     _updateBalancingVisibility();
     _restoreFromState();
@@ -473,6 +480,15 @@ void ModelConfigPanel::_restoreFromState() {
     ui->hmmNumGaussiansLabel->setEnabled(_state->hmmGMMEmissions());
     ui->hmmNumGaussiansSpinBox->setEnabled(_state->hmmGMMEmissions());
 
+    // Restore CV settings
+    if (_cv_checkbox) {
+        _cv_checkbox->setChecked(_state->cvEnabled());
+    }
+    if (_cv_folds_spinbox) {
+        _cv_folds_spinbox->setValue(_state->maxCvFolds());
+        _cv_folds_spinbox->setEnabled(_state->cvEnabled());
+    }
+
     _updating = false;
 
     // Update balancing UI enabled state
@@ -503,4 +519,61 @@ int ModelConfigPanel::_pageIndexForModel(std::string const & name) {
         return kPageHMM;
     }
     return kPageEmpty;
+}
+
+void ModelConfigPanel::_setupCvControls() {
+    // Insert a CV group box between the balancing group box and the train button
+    auto * parent_layout = qobject_cast<QVBoxLayout *>(ui->modelGroupBox->layout());
+    if (!parent_layout) return;
+
+    // Find the balancing group box index
+    int insert_idx = -1;
+    for (int i = 0; i < parent_layout->count(); ++i) {
+        auto * item = parent_layout->itemAt(i);
+        if (item && item->widget() == ui->balancingGroupBox) {
+            insert_idx = i + 1;
+            break;
+        }
+    }
+    if (insert_idx < 0) return;
+
+    auto * cv_box = new QGroupBox(QStringLiteral("Cross-Validation"), ui->modelGroupBox);
+    auto * cv_layout = new QVBoxLayout(cv_box);
+
+    _cv_checkbox = new QCheckBox(QStringLiteral("Enable Leave-One-Interval-Out CV"), cv_box);
+    _cv_checkbox->setToolTip(
+            QStringLiteral("Hold out one training interval per fold, retrain, "
+                           "and compute validation metrics"));
+    cv_layout->addWidget(_cv_checkbox);
+
+    auto * folds_row = new QHBoxLayout();
+    auto * folds_label = new QLabel(QStringLiteral("Max Folds:"), cv_box);
+    folds_label->setToolTip(QStringLiteral("Maximum number of CV folds to run"));
+    folds_row->addWidget(folds_label);
+
+    _cv_folds_spinbox = new QSpinBox(cv_box);
+    _cv_folds_spinbox->setRange(2, 100);
+    _cv_folds_spinbox->setValue(5);
+    _cv_folds_spinbox->setEnabled(false);
+    _cv_folds_spinbox->setToolTip(
+            QStringLiteral("Number of folds (up to the number of training intervals)"));
+    folds_row->addWidget(_cv_folds_spinbox);
+    folds_row->addStretch();
+
+    cv_layout->addLayout(folds_row);
+
+    parent_layout->insertWidget(insert_idx, cv_box);
+
+    // Wire signals
+    connect(_cv_checkbox, &QCheckBox::toggled, this, [this](bool checked) {
+        _cv_folds_spinbox->setEnabled(checked);
+        if (_state) {
+            _state->setCvEnabled(checked);
+        }
+    });
+    connect(_cv_folds_spinbox, &QSpinBox::valueChanged, this, [this](int val) {
+        if (_state) {
+            _state->setMaxCvFolds(val);
+        }
+    });
 }

@@ -12,20 +12,22 @@
 #include <numeric>
 
 RegionSelectionPanel::RegionSelectionPanel(
-    std::shared_ptr<MLCoreWidgetState> state,
-    std::shared_ptr<DataManager> data_manager,
-    RegionMode mode,
-    QWidget * parent)
-    : QWidget(parent)
-    , ui(new Ui::RegionSelectionPanel)
-    , _state(std::move(state))
-    , _data_manager(std::move(data_manager))
-    , _mode(mode) {
+        std::shared_ptr<MLCoreWidgetState> state,
+        std::shared_ptr<DataManager> data_manager,
+        RegionMode mode,
+        QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::RegionSelectionPanel),
+      _state(std::move(state)),
+      _data_manager(std::move(data_manager)),
+      _mode(mode) {
     ui->setupUi(this);
 
     // Set title based on mode
     if (_mode == RegionMode::Training) {
         ui->regionGroupBox->setTitle(QStringLiteral("Training Region"));
+    } else if (_mode == RegionMode::Validation) {
+        ui->regionGroupBox->setTitle(QStringLiteral("Validation Region"));
     } else {
         ui->regionGroupBox->setTitle(QStringLiteral("Prediction Region"));
     }
@@ -37,7 +39,7 @@ RegionSelectionPanel::RegionSelectionPanel(
     refreshRegionList();
 
     // Restore selection from state
-    std::string saved_key = _readKeyFromState();
+    std::string const saved_key = _readKeyFromState();
     if (saved_key.empty()) {
         // Empty key means "all frames"
         ui->allFramesCheckBox->setChecked(true);
@@ -46,7 +48,7 @@ RegionSelectionPanel::RegionSelectionPanel(
         ui->allFramesCheckBox->setChecked(false);
         ui->regionComboBox->setEnabled(true);
         for (int i = 0; i < ui->regionComboBox->count(); ++i) {
-            QVariant data = ui->regionComboBox->itemData(i);
+            QVariant const data = ui->regionComboBox->itemData(i);
             if (data.isValid() && data.toString() == QString::fromStdString(saved_key)) {
                 ui->regionComboBox->setCurrentIndex(i);
                 break;
@@ -70,14 +72,14 @@ std::string RegionSelectionPanel::selectedRegionKey() const {
     if (ui->allFramesCheckBox->isChecked()) {
         return {};
     }
-    QString text = ui->regionComboBox->currentText();
+    QString const text = ui->regionComboBox->currentText();
     if (text.isEmpty()) {
         return {};
     }
     // Get the actual key from item data (display text may include count info)
-    int idx = ui->regionComboBox->currentIndex();
+    int const idx = ui->regionComboBox->currentIndex();
     if (idx >= 0) {
-        QVariant data = ui->regionComboBox->itemData(idx);
+        QVariant const data = ui->regionComboBox->itemData(idx);
         if (data.isValid()) {
             return data.toString().toStdString();
         }
@@ -95,9 +97,9 @@ void RegionSelectionPanel::refreshRegionList() {
     }
 
     QString current_selection;
-    int current_idx = ui->regionComboBox->currentIndex();
+    int const current_idx = ui->regionComboBox->currentIndex();
     if (current_idx >= 0) {
-        QVariant data = ui->regionComboBox->itemData(current_idx);
+        QVariant const data = ui->regionComboBox->itemData(current_idx);
         if (data.isValid()) {
             current_selection = data.toString();
         } else {
@@ -114,12 +116,12 @@ void RegionSelectionPanel::refreshRegionList() {
     auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
     std::sort(interval_keys.begin(), interval_keys.end());
 
-    for (auto const & key : interval_keys) {
+    for (auto const & key: interval_keys) {
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);
         if (series) {
-            QString display = QStringLiteral("%1 (%2 intervals)")
-                                  .arg(QString::fromStdString(key))
-                                  .arg(series->size());
+            QString const display = QStringLiteral("%1 (%2 intervals)")
+                                            .arg(QString::fromStdString(key))
+                                            .arg(series->size());
             ui->regionComboBox->addItem(display, QString::fromStdString(key));
         } else {
             ui->regionComboBox->addItem(QString::fromStdString(key),
@@ -130,7 +132,7 @@ void RegionSelectionPanel::refreshRegionList() {
     // Restore previous selection if still available
     int idx = -1;
     for (int i = 0; i < ui->regionComboBox->count(); ++i) {
-        QVariant data = ui->regionComboBox->itemData(i);
+        QVariant const data = ui->regionComboBox->itemData(i);
         if (data.isValid() && data.toString() == current_selection) {
             idx = i;
             break;
@@ -155,7 +157,7 @@ void RegionSelectionPanel::refreshRegionList() {
 void RegionSelectionPanel::_onRegionComboChanged(int index) {
     QString key_str;
     if (index >= 0) {
-        QVariant data = ui->regionComboBox->itemData(index);
+        QVariant const data = ui->regionComboBox->itemData(index);
         if (data.isValid()) {
             key_str = data.toString();
         } else {
@@ -163,7 +165,7 @@ void RegionSelectionPanel::_onRegionComboChanged(int index) {
         }
     }
 
-    std::string key = key_str.toStdString();
+    std::string const key = key_str.toStdString();
     _syncToState(key);
     _updateRegionInfo();
     emit regionSelectionChanged(key_str);
@@ -197,10 +199,15 @@ void RegionSelectionPanel::_setupConnections() {
 
     // React to external state changes (e.g., from JSON restore)
     if (_state) {
-        auto state_changed_signal =
-            (_mode == RegionMode::Training)
-                ? &MLCoreWidgetState::trainingRegionKeyChanged
-                : &MLCoreWidgetState::predictionRegionKeyChanged;
+        // Pick the right signal for this panel's mode
+        void (MLCoreWidgetState::*state_changed_signal)(QString const &) = nullptr;
+        if (_mode == RegionMode::Training) {
+            state_changed_signal = &MLCoreWidgetState::trainingRegionKeyChanged;
+        } else if (_mode == RegionMode::Validation) {
+            state_changed_signal = &MLCoreWidgetState::validationRegionKeyChanged;
+        } else {
+            state_changed_signal = &MLCoreWidgetState::predictionRegionKeyChanged;
+        }
 
         connect(_state.get(), state_changed_signal,
                 this, [this](QString const & key) {
@@ -220,7 +227,7 @@ void RegionSelectionPanel::_setupConnections() {
 
                     // Find and select the matching item
                     for (int i = 0; i < ui->regionComboBox->count(); ++i) {
-                        QVariant data = ui->regionComboBox->itemData(i);
+                        QVariant const data = ui->regionComboBox->itemData(i);
                         if (data.isValid() && data.toString() == key) {
                             ui->regionComboBox->blockSignals(true);
                             ui->regionComboBox->setCurrentIndex(i);
@@ -239,10 +246,10 @@ void RegionSelectionPanel::_updateRegionInfo() {
     // "All frames" mode
     if (ui->allFramesCheckBox->isChecked()) {
         ui->regionInfoLabel->setText(
-            QStringLiteral("<b>All frames</b> will be used"));
+                QStringLiteral("<b>All frames</b> will be used"));
         ui->validationLabel->setText(QString{});
 
-        bool was_valid = _valid;
+        bool const was_valid = _valid;
         _valid = true;
         if (!was_valid) {
             emit validityChanged(true);
@@ -250,13 +257,13 @@ void RegionSelectionPanel::_updateRegionInfo() {
         return;
     }
 
-    std::string key = selectedRegionKey();
+    std::string const key = selectedRegionKey();
 
     if (key.empty() || !_data_manager) {
         ui->regionInfoLabel->setText(QStringLiteral("No region selected"));
         ui->validationLabel->setText(QString{});
 
-        bool was_valid = _valid;
+        bool const was_valid = _valid;
         _valid = false;
         if (was_valid) {
             emit validityChanged(false);
@@ -267,11 +274,11 @@ void RegionSelectionPanel::_updateRegionInfo() {
     auto series = _data_manager->getData<DigitalIntervalSeries>(key);
     if (!series) {
         ui->regionInfoLabel->setText(
-            QStringLiteral("<span style='color: red;'>Interval series \"%1\" not found</span>")
-                .arg(QString::fromStdString(key)));
+                QStringLiteral("<span style='color: red;'>Interval series \"%1\" not found</span>")
+                        .arg(QString::fromStdString(key)));
         ui->validationLabel->setText(QString{});
 
-        bool was_valid = _valid;
+        bool const was_valid = _valid;
         _valid = false;
         if (was_valid) {
             emit validityChanged(false);
@@ -280,12 +287,12 @@ void RegionSelectionPanel::_updateRegionInfo() {
     }
 
     // --- Build info text ---
-    size_t interval_count = series->size();
+    size_t const interval_count = series->size();
 
     // Compute total frame count across all intervals
     int64_t total_frames = 0;
-    for (auto const & iwid : series->view()) {
-        int64_t span = iwid.interval.end - iwid.interval.start + 1;
+    for (auto const & iwid: series->view()) {
+        int64_t const span = iwid.interval.end - iwid.interval.start + 1;
         if (span > 0) {
             total_frames += span;
         }
@@ -293,18 +300,18 @@ void RegionSelectionPanel::_updateRegionInfo() {
 
     QString info = QStringLiteral("<b>Intervals:</b> %1<br>"
                                   "<b>Frames:</b> %2 across %1 intervals")
-                       .arg(interval_count)
-                       .arg(total_frames);
+                           .arg(interval_count)
+                           .arg(total_frames);
 
     // Time frame info
-    TimeKey time_key = _data_manager->getTimeKey(key);
+    TimeKey const time_key = _data_manager->getTimeKey(key);
     if (!time_key.empty()) {
         auto time_frame = _data_manager->getTime(time_key);
         QString tf_info = QStringLiteral("<br><b>Time frame:</b> %1")
-                              .arg(QString::fromStdString(time_key.str()));
+                                  .arg(QString::fromStdString(time_key.str()));
         if (time_frame) {
             tf_info += QStringLiteral(" (%1 total frames)")
-                           .arg(time_frame->getTotalFrameCount());
+                               .arg(time_frame->getTotalFrameCount());
         }
         info += tf_info;
     }
@@ -312,12 +319,12 @@ void RegionSelectionPanel::_updateRegionInfo() {
     ui->regionInfoLabel->setText(info);
 
     // --- Validation ---
-    bool new_valid = (interval_count > 0);
+    bool const new_valid = (interval_count > 0);
     QString validation_msg;
 
     if (interval_count == 0) {
         validation_msg = QStringLiteral(
-            "<span style='color: orange;'>Warning: interval series has 0 intervals</span>");
+                "<span style='color: orange;'>Warning: interval series has 0 intervals</span>");
     }
 
     ui->validationLabel->setText(validation_msg);
@@ -346,6 +353,8 @@ void RegionSelectionPanel::_syncToState(std::string const & key) {
 
     if (_mode == RegionMode::Training) {
         _state->setTrainingRegionKey(key);
+    } else if (_mode == RegionMode::Validation) {
+        _state->setValidationRegionKey(key);
     } else {
         _state->setPredictionRegionKey(key);
     }
@@ -358,6 +367,9 @@ std::string RegionSelectionPanel::_readKeyFromState() const {
 
     if (_mode == RegionMode::Training) {
         return _state->trainingRegionKey();
+    }
+    if (_mode == RegionMode::Validation) {
+        return _state->validationRegionKey();
     }
     return _state->predictionRegionKey();
 }

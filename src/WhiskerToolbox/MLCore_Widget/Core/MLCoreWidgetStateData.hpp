@@ -54,6 +54,9 @@ struct MLCoreWidgetStateData {
     /// DigitalIntervalSeries key defining the prediction region (empty = all frames)
     std::string prediction_region_key;
 
+    /// DigitalIntervalSeries key defining the validation region (empty = no validation)
+    std::string validation_region_key;
+
     /// For sequence models (HMM), clamp initial state to ground truth at boundaries
     bool constrained_decoding = true;
 
@@ -107,6 +110,12 @@ struct MLCoreWidgetStateData {
 
     /// Maximum ratio of majority to minority class samples
     double balancing_max_ratio = 1.0;
+
+    /// Whether leave-one-interval-out cross-validation is enabled
+    bool cv_enabled = false;
+
+    /// Maximum number of CV folds (0 = disabled, default 5)
+    int max_cv_folds = 5;
 
     // === Output configuration ===
 

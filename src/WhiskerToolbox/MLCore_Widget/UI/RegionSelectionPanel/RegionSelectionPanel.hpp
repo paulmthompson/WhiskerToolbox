@@ -51,8 +51,9 @@ class RegionSelectionPanel;
  * @brief Determines which state field the panel binds to
  */
 enum class RegionMode {
-    Training, ///< Binds to MLCoreWidgetState::trainingRegionKey
-    Prediction///< Binds to MLCoreWidgetState::predictionRegionKey
+    Training,  ///< Binds to MLCoreWidgetState::trainingRegionKey
+    Prediction,///< Binds to MLCoreWidgetState::predictionRegionKey
+    Validation ///< Binds to MLCoreWidgetState::validationRegionKey
 };
 
 class RegionSelectionPanel : public QWidget {
