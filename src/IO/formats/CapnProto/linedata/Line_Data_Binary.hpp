@@ -24,7 +24,6 @@ struct BinaryLineSaverOptions {
 
 DATAMANAGERIO_CAPNPROTO_EXPORT bool save(LineData const & data, BinaryLineSaverOptions const & opts);
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<BinaryLineSaverOptions> {
@@ -37,7 +36,5 @@ struct ParameterUIHints<BinaryLineSaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// LINE_DATA_BINARY_HPP

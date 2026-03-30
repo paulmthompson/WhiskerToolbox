@@ -20,8 +20,6 @@
 #include <limits>
 #include <sstream>
 
-using namespace WhiskerToolbox::Transforms::V2;
-
 // ============================================================================
 // Construction / Destruction
 // ============================================================================

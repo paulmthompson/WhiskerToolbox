@@ -28,7 +28,7 @@ struct ProcessingStep {
     std::string chain_key;   ///< Key used with MediaData processing chain (e.g. "1__lineartransform")
 
     /// Schema describing the parameters (for AutoParamWidget)
-    Transforms::V2::ParameterSchema schema;
+    ParameterSchema schema;
 
     /// Type-erased apply function: applies this step to an image given JSON-serialized params
     std::function<void(cv::Mat &, nlohmann::json const &)> apply;

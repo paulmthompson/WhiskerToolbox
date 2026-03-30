@@ -27,7 +27,7 @@ struct LoaderInfo {
     DM_DataType data_type;                                 ///< Data type this loader produces
     std::string description;                               ///< Human-readable description (e.g., "CSV point data (frame, x, y)")
     bool supports_batch = false;                           ///< Whether batch loading is available for this combination
-    WhiskerToolbox::Transforms::V2::ParameterSchema schema;///< Parameter schema for the loader options
+    ParameterSchema schema;                                ///< Parameter schema for the loader options
 };
 
 #endif// DATAMANAGER_IO_LOADER_INFO_HPP

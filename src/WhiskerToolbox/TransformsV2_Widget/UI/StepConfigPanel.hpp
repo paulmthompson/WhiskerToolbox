@@ -20,10 +20,8 @@ class QVBoxLayout;
 class QScrollArea;
 class AutoParamWidget;
 
-namespace WhiskerToolbox::Transforms::V2 {
 struct ParameterSchema;
 struct TransformMetadata;
-}// namespace WhiskerToolbox::Transforms::V2
 
 /**
  * @brief Configuration panel for a single transform step's parameters

@@ -183,8 +183,6 @@ struct EncoderShapeParams {
 // ParameterUIHints specializations
 // ============================================================================
 
-namespace WhiskerToolbox::Transforms::V2 {
-
 template<>
 struct ParameterUIHints<dl::widget::RelativeCaptureParams> {
     static void annotate(ParameterSchema & schema);
@@ -239,7 +237,5 @@ template<>
 struct ParameterUIHints<dl::widget::PostEncoderSlotParams> {
     static void annotate(ParameterSchema & schema);
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// DEEP_LEARNING_PARAM_SCHEMAS_HPP

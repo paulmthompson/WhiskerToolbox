@@ -21,7 +21,7 @@ struct SaverInfo {
     std::string format;                                    ///< Format identifier (e.g., "csv", "capnproto", "opencv")
     DM_DataType data_type;                                 ///< Data type this saver handles
     std::string description;                               ///< Human-readable description (e.g., "CSV point data (frame, x, y)")
-    WhiskerToolbox::Transforms::V2::ParameterSchema schema;///< Parameter schema for the saver options
+    ParameterSchema schema;                                ///< Parameter schema for the saver options
 };
 
 #endif// DATAMANAGER_IO_SAVER_INFO_HPP

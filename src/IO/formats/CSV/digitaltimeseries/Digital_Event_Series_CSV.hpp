@@ -120,7 +120,6 @@ DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEv
 DATAMANAGERIO_EXPORT bool save(DigitalEventSeries const * event_data,
           CSVEventSaverOptions const & opts);
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<CSVEventSaverOptions> {
@@ -150,7 +149,5 @@ struct ParameterUIHints<CSVEventSaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// DIGITAL_EVENT_SERIES_CSV_HPP

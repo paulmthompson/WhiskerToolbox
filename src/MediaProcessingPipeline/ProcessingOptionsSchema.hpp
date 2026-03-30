@@ -13,7 +13,6 @@
 #include "ImageProcessing/ProcessingOptions.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<ContrastOptions> {
@@ -146,7 +145,5 @@ struct ParameterUIHints<ColormapOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// MEDIA_PROCESSING_PIPELINE_PROCESSING_OPTIONS_SCHEMA_HPP

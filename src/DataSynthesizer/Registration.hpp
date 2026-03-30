@@ -76,7 +76,7 @@ public:
         };
 
         // Extract parameter schema from the Params type
-        metadata.parameter_schema = Transforms::V2::extractParameterSchema<Params>();
+        metadata.parameter_schema = extractParameterSchema<Params>();
 
         GeneratorRegistry::instance().registerGenerator(
                 name,
@@ -103,7 +103,7 @@ public:
         };
 
         // Extract parameter schema from the Params type
-        metadata.parameter_schema = Transforms::V2::extractParameterSchema<Params>();
+        metadata.parameter_schema = extractParameterSchema<Params>();
 
         GeneratorRegistry::instance().registerGenerator(
                 name,

@@ -22,8 +22,6 @@
 
 #include <memory>
 
-using namespace WhiskerToolbox::Transforms::V2;
-
 // ============================================================================
 // QApplication guard — ensures a QApplication exists for widget construction
 // ============================================================================
@@ -99,8 +97,6 @@ struct NestedDynamicParams {
 // ParameterUIHints specializations
 // ============================================================================
 
-namespace WhiskerToolbox::Transforms::V2 {
-
 template<>
 struct ParameterUIHints<test_dynamic::DynamicSourceParams> {
     static void annotate(ParameterSchema & schema) {
@@ -122,8 +118,6 @@ struct ParameterUIHints<test_dynamic::InnerDynamic> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 // ============================================================================
 // Tests: dynamic_combo creates QComboBox instead of QLineEdit

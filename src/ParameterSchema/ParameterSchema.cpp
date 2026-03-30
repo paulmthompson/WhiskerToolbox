@@ -14,8 +14,6 @@
 #include <stdexcept>
 #include <string_view>
 
-namespace WhiskerToolbox::Transforms::V2 {
-
 // ============================================================================
 // snakeCaseToDisplay — "scale_factor" → "Scale Factor"
 // ============================================================================
@@ -247,13 +245,9 @@ ConstraintInfo extractConstraints(std::string const & type_str) {
     return info;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
-
 // ============================================================================
 // VariantAlternative special member functions
 // ============================================================================
-
-namespace WhiskerToolbox::Transforms::V2 {
 
 VariantAlternative::VariantAlternative()
     : schema(std::make_unique<ParameterSchema>()) {}
@@ -275,4 +269,3 @@ VariantAlternative & VariantAlternative::operator=(VariantAlternative const & ot
 VariantAlternative::VariantAlternative(VariantAlternative && other) noexcept = default;
 VariantAlternative & VariantAlternative::operator=(VariantAlternative && other) noexcept = default;
 
-}// namespace WhiskerToolbox::Transforms::V2

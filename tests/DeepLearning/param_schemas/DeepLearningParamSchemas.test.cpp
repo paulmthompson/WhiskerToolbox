@@ -11,7 +11,6 @@
 
 #include <rfl/json.hpp>
 
-using WhiskerToolbox::Transforms::V2::extractParameterSchema;
 
 // ============================================================================
 // CaptureModeVariant

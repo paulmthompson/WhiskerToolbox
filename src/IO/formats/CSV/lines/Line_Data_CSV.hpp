@@ -230,7 +230,6 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load_line_csv(std::string const & 
 
 Line2D load_line_from_csv(std::string const & filename);
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<CSVSingleFileLineSaverOptions> {
@@ -288,7 +287,5 @@ struct ParameterUIHints<CSVMultiFileLineSaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// LINE_DATA_LOADER_HPP

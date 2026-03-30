@@ -73,7 +73,6 @@ std::string OpenCVFormatLoader::getLoaderName() const {
 }
 
 std::vector<SaverInfo> OpenCVFormatLoader::getSaverInfo() const {
-    using WhiskerToolbox::Transforms::V2::extractParameterSchema;
     return {
             {"image", DM_DataType::Mask, "OpenCV binary image masks (one file per frame)",
              extractParameterSchema<ImageMaskSaverOptions>()},

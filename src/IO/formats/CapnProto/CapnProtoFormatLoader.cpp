@@ -67,7 +67,6 @@ std::string CapnProtoFormatLoader::getLoaderName() const {
 }
 
 std::vector<SaverInfo> CapnProtoFormatLoader::getSaverInfo() const {
-    using WhiskerToolbox::Transforms::V2::extractParameterSchema;
     return {
             {"capnp", DM_DataType::Line, "CapnProto binary line data",
              extractParameterSchema<BinaryLineSaverOptions>()},

@@ -123,7 +123,6 @@ DATAMANAGERIO_OPENCV_EXPORT std::shared_ptr<MaskData> load(ImageMaskLoaderOption
  */
 DATAMANAGERIO_OPENCV_EXPORT bool save(MaskData const * mask_data, ImageMaskSaverOptions const & opts);
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<ImageMaskSaverOptions> {
@@ -157,7 +156,5 @@ struct ParameterUIHints<ImageMaskSaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// MASK_DATA_IMAGE_HPP

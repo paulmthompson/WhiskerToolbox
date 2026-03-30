@@ -9,8 +9,6 @@
 #include <QScrollArea>
 #include <QVBoxLayout>
 
-using namespace WhiskerToolbox::Transforms::V2;
-
 // ============================================================================
 // Construction / Destruction
 // ============================================================================
@@ -61,7 +59,7 @@ void StepConfigPanel::showStepConfig(std::string const & transform_name,
     _current_transform_name = transform_name;
 
     // Look up metadata for display — try element first, then container
-    auto const * meta = ElementRegistry::instance().getMetadata(transform_name);
+    auto const * meta = WhiskerToolbox::Transforms::V2::ElementRegistry::instance().getMetadata(transform_name);
     std::string display_name = transform_name;
     std::string description;
     std::type_index params_type = typeid(void);
@@ -71,7 +69,7 @@ void StepConfigPanel::showStepConfig(std::string const & transform_name,
         description = meta->description;
         params_type = meta->params_type;
     } else {
-        auto const * cmeta = ElementRegistry::instance().getContainerMetadata(transform_name);
+        auto const * cmeta = WhiskerToolbox::Transforms::V2::ElementRegistry::instance().getContainerMetadata(transform_name);
         if (cmeta) {
             display_name = cmeta->name;
             description = cmeta->description;
@@ -90,7 +88,7 @@ void StepConfigPanel::showStepConfig(std::string const & transform_name,
     }
 
     // Check for custom widget override first
-    if (params_type != typeid(void) && params_type != typeid(NoParams)) {
+    if (params_type != typeid(void) && params_type != typeid(WhiskerToolbox::Transforms::V2::NoParams)) {
         auto & widget_registry = ParamWidgetRegistry::instance();
         if (widget_registry.hasCustomWidget(params_type)) {
             setupCustomWidget(transform_name, params_json);
@@ -123,7 +121,7 @@ std::string StepConfigPanel::currentParamsJson() const {
 
 void StepConfigPanel::setupAutoParamWidget(std::string const & transform_name,
                                            std::string const & params_json) {
-    auto const * schema = ElementRegistry::instance().getParameterSchema(transform_name);
+    auto const * schema = WhiskerToolbox::Transforms::V2::ElementRegistry::instance().getParameterSchema(transform_name);
     if (!schema || schema->fields.empty()) {
         // Transform has no parameters (NoParams)
         auto * label = new QLabel(tr("This transform has no configurable parameters."), _scroll_content);
@@ -154,7 +152,7 @@ void StepConfigPanel::setupAutoParamWidget(std::string const & transform_name,
 
 void StepConfigPanel::setupCustomWidget(std::string const & transform_name,
                                         std::string const & /* params_json */) {
-    auto const * meta = ElementRegistry::instance().getMetadata(transform_name);
+    auto const * meta = WhiskerToolbox::Transforms::V2::ElementRegistry::instance().getMetadata(transform_name);
     if (!meta) {
         return;
     }

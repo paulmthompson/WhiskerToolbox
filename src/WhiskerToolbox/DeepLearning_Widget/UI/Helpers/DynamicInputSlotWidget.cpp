@@ -100,7 +100,7 @@ DynamicInputSlotWidget::DynamicInputSlotWidget(
     _auto_param = new AutoParamWidget(group);
     group_layout->addWidget(_auto_param);
 
-    auto schema = WhiskerToolbox::Transforms::V2::extractParameterSchema<DynamicInputSlotParams>();
+    auto schema = extractParameterSchema<DynamicInputSlotParams>();
     _auto_param->setSchema(schema);
 
     // Set initial encoder from recommended_encoder hint

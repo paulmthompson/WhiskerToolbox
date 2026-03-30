@@ -67,7 +67,7 @@ RecurrentBindingWidget::RecurrentBindingWidget(
     _auto_param = new AutoParamWidget(group);
     group_layout->addWidget(_auto_param);
 
-    auto schema = WhiskerToolbox::Transforms::V2::extractParameterSchema<
+    auto schema = extractParameterSchema<
             RecurrentBindingSlotParams>();
     _auto_param->setSchema(schema);
 

@@ -43,7 +43,7 @@ struct GeneratorMetadata {
     std::string category;   ///< Grouping category (e.g., "Periodic", "Noise")
     std::string output_type;///< DataManager type string (e.g., "AnalogTimeSeries")
 
-    Transforms::V2::ParameterSchema parameter_schema;///< Schema for AutoParamWidget
+    ParameterSchema parameter_schema;///< Schema for AutoParamWidget
 };
 
 /**

@@ -100,7 +100,6 @@ struct CSVIntervalSaverOptions {
 DATAMANAGERIO_EXPORT bool save(DigitalIntervalSeries const * interval_data,
           CSVIntervalSaverOptions const & opts);
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<CSVIntervalSaverOptions> {
@@ -125,7 +124,5 @@ struct ParameterUIHints<CSVIntervalSaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// DIGITAL_INTERVAL_SERIES_CSV_HPP

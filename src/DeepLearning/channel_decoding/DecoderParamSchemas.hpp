@@ -7,7 +7,6 @@
 #include "ChannelDecoder.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
 
 template<>
 struct ParameterUIHints<dl::MaskDecoderParams> {
@@ -50,6 +49,5 @@ struct ParameterUIHints<dl::LineDecoderParams> {
 
 // FeatureVectorDecoderParams has no user-configurable fields — no hints needed.
 
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// WHISKERTOOLBOX_DECODER_PARAM_SCHEMAS_HPP

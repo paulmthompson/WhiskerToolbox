@@ -121,8 +121,6 @@ struct CSVAnalogSaverOptions {
 DATAMANAGERIO_EXPORT bool save(AnalogTimeSeries const * analog_data,
           CSVAnalogSaverOptions const & opts);
 
-namespace WhiskerToolbox::Transforms::V2 {
-
 template<>
 struct ParameterUIHints<CSVAnalogSaverOptions> {
     static void annotate(ParameterSchema & schema) {
@@ -151,7 +149,5 @@ struct ParameterUIHints<CSVAnalogSaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// ANALOG_TIME_SERIES_CSV_HPP

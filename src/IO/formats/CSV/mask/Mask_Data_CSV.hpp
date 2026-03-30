@@ -128,8 +128,6 @@ DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Mask2D>> load(CSVMaskR
  */
 DATAMANAGERIO_EXPORT bool save(MaskData const * mask_data, CSVMaskRLESaverOptions const & opts);
 
-namespace WhiskerToolbox::Transforms::V2 {
-
 template<>
 struct ParameterUIHints<CSVMaskRLESaverOptions> {
     static void annotate(ParameterSchema & schema) {
@@ -153,7 +151,5 @@ struct ParameterUIHints<CSVMaskRLESaverOptions> {
         }
     }
 };
-
-}// namespace WhiskerToolbox::Transforms::V2
 
 #endif// MASK_DATA_CSV_HPP

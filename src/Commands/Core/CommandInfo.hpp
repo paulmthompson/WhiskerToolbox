@@ -23,7 +23,7 @@ struct CommandInfo {
     std::string category;///< "data_mutation", "meta", "persistence", etc.
     bool supports_undo = false;
     std::vector<std::string> supported_data_types;
-    WhiskerToolbox::Transforms::V2::ParameterSchema parameter_schema;
+    ParameterSchema parameter_schema;
 };
 
 }// namespace commands
