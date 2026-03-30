@@ -105,6 +105,40 @@ struct CSVEventSaverOptions {
  */
 DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions const & options);
 
+template<>
+struct ParameterUIHints<CSVEventLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to the CSV file with event timestamps (and optional identifier column)";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating columns";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("has_header")) {
+            f->tooltip = "Whether the first row is a header line to skip when parsing";
+        }
+        if (auto * f = schema.field("event_column")) {
+            f->tooltip = "0-based column index for event time values";
+        }
+        if (auto * f = schema.field("identifier_column")) {
+            f->tooltip = "0-based column index for event identifiers; use -1 if there is no identifier column";
+        }
+        if (auto * f = schema.field("base_name")) {
+            f->tooltip =
+                    "Prefix for series names; with an identifier column, each series is base_name + '_' + identifier";
+        }
+        if (auto * f = schema.field("scale")) {
+            f->tooltip =
+                    "Factor applied to timestamps before conversion to integer indices (multiply unless scale_divide is true)";
+        }
+        if (auto * f = schema.field("scale_divide")) {
+            f->tooltip = "If true, divide timestamps by scale instead of multiplying";
+        }
+    }
+};
+
 /**
  * @brief Save DigitalEventSeries to a CSV file.
  *
@@ -118,7 +152,7 @@ DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEv
  * @pre event_data must not be null.
  */
 DATAMANAGERIO_EXPORT bool save(DigitalEventSeries const * event_data,
-          CSVEventSaverOptions const & opts);
+                               CSVEventSaverOptions const & opts);
 
 
 template<>

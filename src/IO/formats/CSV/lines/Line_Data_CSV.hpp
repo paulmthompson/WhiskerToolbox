@@ -5,9 +5,9 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "IO/core/LoaderOptionsConcepts.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "IO/core/LoaderOptionsConcepts.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -171,7 +171,7 @@ void save_line_as_csv(Line2D const & line, std::string const & filename, int poi
  * @pre line_data must not be null.
  */
 DATAMANAGERIO_EXPORT bool save(LineData const * line_data,
-          CSVSingleFileLineSaverOptions const & opts);
+                               CSVSingleFileLineSaverOptions const & opts);
 
 /**
  * @brief Save LineData to multiple CSV files, one per timestamp
@@ -198,7 +198,7 @@ DATAMANAGERIO_EXPORT bool save(LineData const * line_data,
  * @pre line_data must not be null.
  */
 DATAMANAGERIO_EXPORT bool save(LineData const * line_data,
-          CSVMultiFileLineSaverOptions const & opts);
+                               CSVMultiFileLineSaverOptions const & opts);
 
 /**
  * @brief Load LineData from multiple CSV files, one per timestamp
@@ -223,6 +223,56 @@ DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMulti
  * @return A map of timestamps to vectors of Line2D objects
  */
 DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & opts);
+
+template<>
+struct ParameterUIHints<CSVMultiFileLineLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory of per-frame CSV files (filenames encode frame index, e.g. zero-padded numbers)";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating the X and Y columns in each file";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("x_column")) {
+            f->tooltip = "0-based column index for X coordinates";
+        }
+        if (auto * f = schema.field("y_column")) {
+            f->tooltip = "0-based column index for Y coordinates";
+        }
+        if (auto * f = schema.field("has_header")) {
+            f->tooltip = "Whether each file begins with a header row to skip";
+        }
+        if (auto * f = schema.field("file_pattern")) {
+            f->tooltip = "Glob pattern to select CSV files under parent_dir (default *.csv)";
+        }
+    }
+};
+
+template<>
+struct ParameterUIHints<CSVSingleFileLineLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("filepath")) {
+            f->tooltip = "Path to one CSV with a frame column and quoted/comma-separated X and Y coordinate lists";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating columns in each row";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("coordinate_delimiter")) {
+            f->tooltip = "Separator between values inside the X and Y coordinate lists";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("has_header")) {
+            f->tooltip = "Whether the first row is a header line to skip when parsing";
+        }
+        if (auto * f = schema.field("header_identifier")) {
+            f->tooltip = "Expected name of the frame column in the header row (default Frame)";
+        }
+    }
+};
 
 std::vector<float> parse_string_to_float_vector(std::string const & str, std::string const & delimiter = ",");
 

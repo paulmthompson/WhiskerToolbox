@@ -17,6 +17,16 @@ struct BinaryLineLoaderOptions {
 
 DATAMANAGERIO_CAPNPROTO_EXPORT std::shared_ptr<LineData> load(BinaryLineLoaderOptions & opts);
 
+template<>
+struct ParameterUIHints<BinaryLineLoaderOptions> {
+    /// @brief Annotate schema fields for AutoParamWidget (import UI).
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("file_path")) {
+            f->tooltip = "Path to the CapnProto-encoded binary line data file";
+        }
+    }
+};
+
 struct BinaryLineSaverOptions {
     std::string filename;
     std::string parent_dir = ".";
