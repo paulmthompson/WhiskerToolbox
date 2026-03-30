@@ -165,13 +165,18 @@ private:
     void _updateBalancingVisibility();
     void _syncToState();
     void _restoreFromState();
+    void _setupCvControls();
 
     /// Map model name → parameter stack page index
-    [[nodiscard]] static int _pageIndexForModel(std::string const & name) ;
+    [[nodiscard]] static int _pageIndexForModel(std::string const & name);
 
     Ui::ModelConfigPanel * ui;
     std::shared_ptr<MLCoreWidgetState> _state;
     std::shared_ptr<DataManager> _data_manager;
+
+    // Cross-validation controls (created programmatically)
+    class QCheckBox * _cv_checkbox = nullptr;
+    class QSpinBox * _cv_folds_spinbox = nullptr;
 
     /// Cached registry instance for model enumeration
     std::unique_ptr<MLCore::MLModelRegistry> _registry;

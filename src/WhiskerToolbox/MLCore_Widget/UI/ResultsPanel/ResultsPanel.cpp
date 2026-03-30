@@ -94,6 +94,18 @@ void ResultsPanel::showClassificationResult(
                                          result.validation_observations);
     }
 
+    // Cross-validation metrics (shown when CV was run)
+    if (result.binary_cv_metrics.has_value()) {
+        _showCVMetrics(result.binary_cv_metrics.value(),
+                       result.cv_folds_run,
+                       result.cv_per_fold_accuracy);
+    } else if (result.multi_class_cv_metrics.has_value()) {
+        _showCVMultiClassMetrics(result.multi_class_cv_metrics.value(),
+                                 result.class_names,
+                                 result.cv_folds_run,
+                                 result.cv_per_fold_accuracy);
+    }
+
     // Output keys
     if (result.writer_result.has_value()) {
         setOutputKeys(result.writer_result->interval_keys,
@@ -183,6 +195,7 @@ void ResultsPanel::setOutputKeys(
 
 void ResultsPanel::clearResults() {
     _clearValidationWidgets();
+    _clearCVWidgets();
     _showNoResultsState();
     _last_putative_group_ids.clear();
     _has_results = false;
@@ -472,6 +485,175 @@ void ResultsPanel::_showValidationMultiClassMetrics(
     cmLabel->setText(_formatMultiClassConfusionMatrix(metrics, class_names));
     vbox->insertWidget(insert_idx++, cmLabel);
     _validation_widgets.push_back(cmLabel);
+}
+
+// =============================================================================
+// Cross-validation metric display
+// =============================================================================
+
+namespace {
+
+/// Find insertion point after the last validation widget, or after
+/// confusionMatrixLabel if no validation widgets exist.
+int findCVInsertionPoint(QLayout * layout,
+                         std::vector<QWidget *> const & validation_widgets,
+                         QLabel * confusion_matrix_label) {
+    // Prefer inserting after the last validation widget
+    if (!validation_widgets.empty()) {
+        for (int i = layout->count() - 1; i >= 0; --i) {
+            auto * item = layout->itemAt(i);
+            if (item && item->widget() == validation_widgets.back()) {
+                return i + 1;
+            }
+        }
+    }
+    // Fallback: after confusion matrix
+    for (int i = 0; i < layout->count(); ++i) {
+        auto * item = layout->itemAt(i);
+        if (item && item->widget() == confusion_matrix_label) {
+            return i + 1;
+        }
+    }
+    return -1;
+}
+
+}// namespace
+
+void ResultsPanel::_clearCVWidgets() {
+    for (auto * w: _cv_widgets) {
+        w->setParent(nullptr);
+        delete w;
+    }
+    _cv_widgets.clear();
+}
+
+void ResultsPanel::_showCVMetrics(
+        MLCore::BinaryClassificationMetrics const & metrics,
+        std::size_t folds_run,
+        std::vector<double> const & per_fold_accuracy) {
+    _clearCVWidgets();
+
+    auto * layout = ui->resultsPage->layout();
+    if (!layout) return;
+
+    int insert_idx = findCVInsertionPoint(layout, _validation_widgets,
+                                          ui->confusionMatrixLabel);
+    if (insert_idx < 0) return;
+
+    auto * vbox = qobject_cast<QVBoxLayout *>(layout);
+    if (!vbox) return;
+
+    // Separator
+    auto * separator = new QFrame(ui->resultsPage);
+    separator->setFrameShape(QFrame::HLine);
+    separator->setFrameShadow(QFrame::Sunken);
+    vbox->insertWidget(insert_idx++, separator);
+    _cv_widgets.push_back(separator);
+
+    // Header
+    auto * header = new QLabel(
+            QStringLiteral("Cross-Validation (%1 folds)").arg(folds_run),
+            ui->resultsPage);
+    header->setStyleSheet(QStringLiteral("QLabel { font-weight: bold; color: #6B2E8A; }"));
+    vbox->insertWidget(insert_idx++, header);
+    _cv_widgets.push_back(header);
+
+    // Averaged metrics
+    auto * metricsLabel = new QLabel(ui->resultsPage);
+    metricsLabel->setWordWrap(true);
+    metricsLabel->setText(
+            QStringLiteral("Accuracy: %1%  |  Sensitivity: %2%  |  Specificity: %3%  |  Dice/F1: %4%")
+                    .arg(metrics.accuracy * 100.0, 0, 'f', 2)
+                    .arg(metrics.sensitivity * 100.0, 0, 'f', 2)
+                    .arg(metrics.specificity * 100.0, 0, 'f', 2)
+                    .arg(metrics.dice_score * 100.0, 0, 'f', 2));
+    vbox->insertWidget(insert_idx++, metricsLabel);
+    _cv_widgets.push_back(metricsLabel);
+
+    // Per-fold accuracy
+    if (!per_fold_accuracy.empty()) {
+        QString fold_text = QStringLiteral("Per-fold accuracy: ");
+        for (std::size_t i = 0; i < per_fold_accuracy.size(); ++i) {
+            if (i > 0) fold_text += QStringLiteral(", ");
+            fold_text += QStringLiteral("%1%").arg(per_fold_accuracy[i] * 100.0, 0, 'f', 1);
+        }
+        auto * foldLabel = new QLabel(fold_text, ui->resultsPage);
+        foldLabel->setWordWrap(true);
+        foldLabel->setStyleSheet(QStringLiteral("QLabel { color: #555; font-size: 10px; }"));
+        vbox->insertWidget(insert_idx++, foldLabel);
+        _cv_widgets.push_back(foldLabel);
+    }
+}
+
+void ResultsPanel::_showCVMultiClassMetrics(
+        MLCore::MultiClassMetrics const & metrics,
+        std::vector<std::string> const & class_names,
+        std::size_t folds_run,
+        std::vector<double> const & per_fold_accuracy) {
+    _clearCVWidgets();
+
+    auto * layout = ui->resultsPage->layout();
+    if (!layout) return;
+
+    int insert_idx = findCVInsertionPoint(layout, _validation_widgets,
+                                          ui->confusionMatrixLabel);
+    if (insert_idx < 0) return;
+
+    auto * vbox = qobject_cast<QVBoxLayout *>(layout);
+    if (!vbox) return;
+
+    // Separator
+    auto * separator = new QFrame(ui->resultsPage);
+    separator->setFrameShape(QFrame::HLine);
+    separator->setFrameShadow(QFrame::Sunken);
+    vbox->insertWidget(insert_idx++, separator);
+    _cv_widgets.push_back(separator);
+
+    // Header
+    auto * header = new QLabel(
+            QStringLiteral("Cross-Validation (%1 folds)").arg(folds_run),
+            ui->resultsPage);
+    header->setStyleSheet(QStringLiteral("QLabel { font-weight: bold; color: #6B2E8A; }"));
+    vbox->insertWidget(insert_idx++, header);
+    _cv_widgets.push_back(header);
+
+    // Accuracy
+    auto * accLabel = new QLabel(
+            QStringLiteral("Accuracy: %1%").arg(metrics.overall_accuracy * 100.0, 0, 'f', 2),
+            ui->resultsPage);
+    vbox->insertWidget(insert_idx++, accLabel);
+    _cv_widgets.push_back(accLabel);
+
+    // Per-class F1
+    if (!metrics.per_class_f1.empty()) {
+        QString f1_text = QStringLiteral("Per-class F1: ");
+        for (std::size_t i = 0; i < metrics.per_class_f1.size(); ++i) {
+            if (i > 0) f1_text += QStringLiteral(", ");
+            std::string const & name = (i < class_names.size()) ? class_names[i]
+                                                                : std::to_string(i);
+            f1_text += QStringLiteral("%1=%2%")
+                               .arg(QString::fromStdString(name))
+                               .arg(metrics.per_class_f1[i] * 100.0, 0, 'f', 1);
+        }
+        auto * f1Label = new QLabel(f1_text, ui->resultsPage);
+        f1Label->setWordWrap(true);
+        vbox->insertWidget(insert_idx++, f1Label);
+        _cv_widgets.push_back(f1Label);
+    }
+
+    // Per-fold accuracy
+    if (!per_fold_accuracy.empty()) {
+        QString fold_text = QStringLiteral("Per-fold accuracy: ");
+        for (std::size_t i = 0; i < per_fold_accuracy.size(); ++i) {
+            if (i > 0) fold_text += QStringLiteral(", ");
+            fold_text += QStringLiteral("%1%").arg(per_fold_accuracy[i] * 100.0, 0, 'f', 1);
+        }
+        auto * foldLabel = new QLabel(fold_text, ui->resultsPage);
+        foldLabel->setWordWrap(true);
+        foldLabel->setStyleSheet(QStringLiteral("QLabel { color: #555; font-size: 10px; }"));
+        vbox->insertWidget(insert_idx++, foldLabel);
+        _cv_widgets.push_back(foldLabel);
+    }
 }
 
 // =============================================================================

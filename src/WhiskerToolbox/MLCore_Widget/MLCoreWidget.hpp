@@ -228,6 +228,7 @@ private:
     // Sub-panels (Classification)
     FeatureSelectionPanel * _feature_panel = nullptr;
     RegionSelectionPanel * _training_region_panel = nullptr;
+    RegionSelectionPanel * _validation_region_panel = nullptr;
     LabelConfigPanel * _label_panel = nullptr;
     ModelConfigPanel * _model_config_panel = nullptr;
     PredictionPanel * _prediction_panel = nullptr;

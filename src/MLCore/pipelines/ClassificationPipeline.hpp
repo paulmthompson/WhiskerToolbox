@@ -168,6 +168,32 @@ struct ClassificationPipelineConfig {
      */
     std::string training_interval_key;
 
+    // -- Validation region --
+
+    /**
+     * @brief DataManager key of a DigitalIntervalSeries defining the validation region
+     *
+     * When non-empty, only frames within these intervals are used for
+     * computing validation metrics. Unlike the old heuristic ("everything
+     * outside training = validation"), this explicitly specifies which
+     * intervals have known labels for evaluation.
+     *
+     * Validation intervals are NOT used for training.
+     */
+    std::string validation_interval_key;
+
+    // -- Cross-validation --
+
+    /**
+     * @brief Maximum number of leave-one-interval-out cross-validation folds
+     *
+     * When > 0 and at least 2 training intervals exist, the pipeline holds
+     * out each training interval in turn (up to this many), retrains on the
+     * rest, and predicts the held-out interval with boundary constraints.
+     * Set to 0 to disable cross-validation.
+     */
+    std::size_t max_cv_folds = 5;
+
     // -- Feature conversion --
 
     /**
@@ -347,6 +373,28 @@ struct ClassificationPipelineResult {
      * @brief Number of validation observations used for validation metrics
      */
     std::size_t validation_observations = 0;
+
+    // -- Metrics (cross-validation) --
+
+    /**
+     * @brief Averaged binary CV metrics across leave-one-interval-out folds
+     */
+    std::optional<BinaryClassificationMetrics> binary_cv_metrics;
+
+    /**
+     * @brief Averaged multi-class CV metrics across folds
+     */
+    std::optional<MultiClassMetrics> multi_class_cv_metrics;
+
+    /**
+     * @brief Number of leave-one-interval-out folds actually executed
+     */
+    std::size_t cv_folds_run = 0;
+
+    /**
+     * @brief Per-fold accuracy for detailed inspection
+     */
+    std::vector<double> cv_per_fold_accuracy;
 
     // -- Prediction output --
 

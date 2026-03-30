@@ -40,6 +40,7 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit featureTensorKeyChanged(QString::fromStdString(_data.feature_tensor_key));
         emit trainingRegionKeyChanged(QString::fromStdString(_data.training_region_key));
         emit predictionRegionKeyChanged(QString::fromStdString(_data.prediction_region_key));
+        emit validationRegionKeyChanged(QString::fromStdString(_data.validation_region_key));
         emit labelSourceTypeChanged(QString::fromStdString(_data.label_source_type));
         emit labelIntervalKeyChanged(QString::fromStdString(_data.label_interval_key));
         emit labelPositiveClassNameChanged(QString::fromStdString(_data.label_positive_class_name));
@@ -52,6 +53,8 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit balancingEnabledChanged(_data.balancing_enabled);
         emit balancingStrategyChanged(QString::fromStdString(_data.balancing_strategy));
         emit balancingMaxRatioChanged(_data.balancing_max_ratio);
+        emit cvEnabledChanged(_data.cv_enabled);
+        emit maxCvFoldsChanged(_data.max_cv_folds);
         emit outputPrefixChanged(QString::fromStdString(_data.output_prefix));
         emit probabilityThresholdChanged(_data.probability_threshold);
         emit outputProbabilitiesChanged(_data.output_probabilities);
@@ -124,6 +127,18 @@ void MLCoreWidgetState::setPredictionRegionKey(std::string const & key) {
 
 std::string const & MLCoreWidgetState::predictionRegionKey() const {
     return _data.prediction_region_key;
+}
+
+void MLCoreWidgetState::setValidationRegionKey(std::string const & key) {
+    if (_data.validation_region_key != key) {
+        _data.validation_region_key = key;
+        markDirty();
+        emit validationRegionKeyChanged(QString::fromStdString(key));
+    }
+}
+
+std::string const & MLCoreWidgetState::validationRegionKey() const {
+    return _data.validation_region_key;
 }
 
 void MLCoreWidgetState::setConstrainedDecoding(bool enabled) {
@@ -322,6 +337,32 @@ void MLCoreWidgetState::setBalancingMaxRatio(double ratio) {
 
 double MLCoreWidgetState::balancingMaxRatio() const {
     return _data.balancing_max_ratio;
+}
+
+// === Cross-validation configuration ===
+
+void MLCoreWidgetState::setCvEnabled(bool enabled) {
+    if (_data.cv_enabled != enabled) {
+        _data.cv_enabled = enabled;
+        markDirty();
+        emit cvEnabledChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::cvEnabled() const {
+    return _data.cv_enabled;
+}
+
+void MLCoreWidgetState::setMaxCvFolds(int folds) {
+    if (_data.max_cv_folds != folds) {
+        _data.max_cv_folds = folds;
+        markDirty();
+        emit maxCvFoldsChanged(folds);
+    }
+}
+
+int MLCoreWidgetState::maxCvFolds() const {
+    return _data.max_cv_folds;
 }
 
 // === Output configuration ===

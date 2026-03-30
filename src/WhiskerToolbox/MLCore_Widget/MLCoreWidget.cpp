@@ -298,6 +298,11 @@ void MLCoreWidget::_setupUi() {
             _state, _data_manager, RegionMode::Training, classification_tab);
     classification_layout->addWidget(_training_region_panel);
 
+    // Validation region panel
+    _validation_region_panel = new RegionSelectionPanel(
+            _state, _data_manager, RegionMode::Validation, classification_tab);
+    classification_layout->addWidget(_validation_region_panel);
+
     // Label configuration panel
     _label_panel = new LabelConfigPanel(_state, _data_manager, classification_tab);
     classification_layout->addWidget(_label_panel);
@@ -758,6 +763,18 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
     // -- Training region --
     if (_training_region_panel && !_training_region_panel->isAllFramesChecked()) {
         config.training_interval_key = _training_region_panel->selectedRegionKey();
+    }
+
+    // -- Validation region --
+    if (_validation_region_panel && !_validation_region_panel->isAllFramesChecked()) {
+        config.validation_interval_key = _validation_region_panel->selectedRegionKey();
+    }
+
+    // -- Cross-validation --
+    if (_state && _state->cvEnabled()) {
+        config.max_cv_folds = static_cast<std::size_t>(_state->maxCvFolds());
+    } else {
+        config.max_cv_folds = 0;
     }
 
     // -- Class balancing --

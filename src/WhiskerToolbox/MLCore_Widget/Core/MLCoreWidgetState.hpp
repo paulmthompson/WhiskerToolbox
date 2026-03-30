@@ -68,6 +68,9 @@ public:
     void setPredictionRegionKey(std::string const & key);
     [[nodiscard]] std::string const & predictionRegionKey() const;
 
+    void setValidationRegionKey(std::string const & key);
+    [[nodiscard]] std::string const & validationRegionKey() const;
+
     void setConstrainedDecoding(bool enabled);
     [[nodiscard]] bool constrainedDecoding() const;
 
@@ -121,6 +124,12 @@ public:
 
     void setBalancingMaxRatio(double ratio);
     [[nodiscard]] double balancingMaxRatio() const;
+
+    void setCvEnabled(bool enabled);
+    [[nodiscard]] bool cvEnabled() const;
+
+    void setMaxCvFolds(int folds);
+    [[nodiscard]] int maxCvFolds() const;
 
     // === Output configuration ===
 
@@ -211,6 +220,7 @@ signals:
     void featureTensorKeyChanged(QString const & key);
     void trainingRegionKeyChanged(QString const & key);
     void predictionRegionKeyChanged(QString const & key);
+    void validationRegionKeyChanged(QString const & key);
     void constrainedDecodingChanged(bool enabled);
     void hmmDiagonalCovarianceChanged(bool enabled);
     void hmmGMMEmissionsChanged(bool enabled);
@@ -227,6 +237,8 @@ signals:
     void balancingEnabledChanged(bool enabled);
     void balancingStrategyChanged(QString const & strategy);
     void balancingMaxRatioChanged(double ratio);
+    void cvEnabledChanged(bool enabled);
+    void maxCvFoldsChanged(int folds);
     void outputPrefixChanged(QString const & prefix);
     void probabilityThresholdChanged(double threshold);
     void outputProbabilitiesChanged(bool enabled);
