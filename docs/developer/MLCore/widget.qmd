@@ -104,6 +104,14 @@ MLCore_Widget
 | `dim_reduction_n_components` | `int` | Number of output components (default: 2) |
 | `dim_reduction_scale` | `bool` | Scale features before reduction (default: true) |
 | `dim_reduction_zscore_normalize` | `bool` | Z-score normalize before reduction (default: false) |
+| `dim_reduction_supervised` | `bool` | Supervised mode toggle (default: false) |
+| `dim_reduction_label_source_type` | `string` | `"intervals"`, `"groups"`, `"entity_groups"`, or `"events"` |
+| `dim_reduction_label_interval_key` | `string` | Interval series key (interval mode) |
+| `dim_reduction_label_positive_class` | `string` | Positive class name (interval mode, default: `"Inside"`) |
+| `dim_reduction_label_negative_class` | `string` | Negative class name (interval mode, default: `"Outside"`) |
+| `dim_reduction_label_event_key` | `string` | Event series key (events mode) |
+| `dim_reduction_label_group_ids` | `vector<uint64_t>` | Group IDs (group modes) |
+| `dim_reduction_label_data_key` | `string` | Data key (entity_groups mode) |
 
 ### UI State
 
@@ -187,7 +195,14 @@ MLCore_Widget
 
 ### Panel Layout
 
+The Dim Reduction tab supports both unsupervised (PCA, t-SNE, Robust PCA) and supervised (Logit Projection) modes, controlled by radio buttons at the top.
+
+#### Unsupervised Mode (default)
+
 ```
+┌─── Mode ─────────────────────────────────────┐
+│ ● Unsupervised  ○ Supervised                  │
+└───────────────────────────────────────────────┘
 ┌─── Data Source ──────────────────────────────┐
 │ TensorData: [combo ▼]  shape info label       │
 │ ☐ Z-score normalize                          │
@@ -206,11 +221,61 @@ MLCore_Widget
 └───────────────────────────────────────────────┘
 ```
 
+#### Supervised Mode
+
+When "Supervised" is selected, the algorithm list switches to `MLTaskType::SupervisedDimensionalityReduction` (Logit Projection) and a Labels section appears for configuring label assembly.
+
+```
+┌─── Mode ─────────────────────────────────────┐
+│ ○ Unsupervised  ● Supervised                  │
+└───────────────────────────────────────────────┘
+┌─── Data Source ──────────────────────────────┐
+│ TensorData: [combo ▼]  shape info label       │
+│ ☐ Z-score normalize                          │
+└───────────────────────────────────────────────┘
+┌─── Algorithm ────────────────────────────────┐
+│ Algorithm: [combo ▼]  Components: [spinbox]   │
+└───────────────────────────────────────────────┘
+┌─── Labels ───────────────────────────────────┐
+│ Source: [combo ▼ Interval Series]             │
+│   Interval Key: [combo ▼]                     │
+│   Positive class: [text]  Negative: [text]    │
+│  ── OR ──                                     │
+│ Source: [combo ▼ Entity Groups]               │
+│   Group: [combo ▼] [+] [-]                    │
+│   Class 0: "Contact" (50 entities)            │
+│   Class 1: "No Contact" (50 entities)         │
+│  ── OR ──                                     │
+│ Source: [combo ▼ Event Series]                │
+│   Event Key: [combo ▼]                        │
+└───────────────────────────────────────────────┘
+┌─── Output ───────────────────────────────────┐
+│ Output key: [text]                            │
+│ [Run Reduction]                               │
+└───────────────────────────────────────────────┘
+┌─── Results ──────────────────────────────────┐
+│ Total observations, training observations,    │
+│ features, output dims, dropped rows,          │
+│ unlabeled count, classes, class names          │
+└───────────────────────────────────────────────┘
+```
+
 ### Sub-Panel
 
 | Panel | Purpose |
 |---|---|
-| `DimReductionPanel` | TensorData selection, algorithm combo filtered to `MLTaskType::DimensionalityReduction`, n_components spinbox, scale/z-score checkboxes, output key, run button. Shows explained variance ratio per component after completion. |
+| `DimReductionPanel` | TensorData selection, mode toggle (unsupervised/supervised), algorithm combo filtered by task type, n_components spinbox, scale/z-score checkboxes, label source configuration (supervised mode), output key, run button. Shows explained variance ratio per component (unsupervised) or class-specific training stats (supervised) after completion. |
+
+### Label Source Configuration (Supervised Mode)
+
+The supervised label configuration reuses the same 4 label assembly modes as the Classification tab's `LabelConfigPanel`, presented through a `QStackedWidget` controlled by the label source combo box:
+
+| Mode | Config Widgets |
+|---|---|
+| Interval Series | Interval key combo, positive/negative class name text fields |
+| Entity Groups | Group selection combo + Add/Remove buttons, class assignment list |
+| Data Entity Groups | Data key combo, group selection combo + Add/Remove buttons |
+| Event Series | Event key combo |
 
 ### Auto-Focus
 
@@ -218,7 +283,7 @@ After a successful dim reduction, the output TensorData key is broadcast via `Se
 
 ## Pipeline Execution
 
-All three pipelines run asynchronously in a `QThread` background worker:
+All three pipelines (four including supervised dim reduction) run asynchronously in a `QThread` background worker:
 
 1. UI panels are disabled during execution
 2. Progress callback updates a status label and indeterminate progress bar
@@ -226,7 +291,7 @@ All three pipelines run asynchronously in a `QThread` background worker:
 4. On failure, an error message is shown
 5. Deferred writes are committed on the main thread for thread safety
 
-The `_runPipelineAsync()` / `_runClusteringPipelineAsync()` / `_runDimReductionPipelineAsync()` methods assemble the config from panel state, spawn a worker thread, and connect completion signals.
+The `_runPipelineAsync()` / `_runClusteringPipelineAsync()` / `_runDimReductionPipelineAsync()` / `_runSupervisedDimReductionPipelineAsync()` methods assemble the config from panel state, spawn a worker thread, and connect completion signals.
 
 ## SelectionContext Integration
 

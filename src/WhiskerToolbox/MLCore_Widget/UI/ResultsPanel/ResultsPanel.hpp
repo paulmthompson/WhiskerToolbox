@@ -204,6 +204,13 @@ private:
                              std::size_t num_classes,
                              bool was_balanced);
 
+    void _showValidationMetrics(MLCore::BinaryClassificationMetrics const & metrics,
+                                std::size_t validation_observations);
+    void _showValidationMultiClassMetrics(MLCore::MultiClassMetrics const & metrics,
+                                          std::vector<std::string> const & class_names,
+                                          std::size_t validation_observations);
+    void _clearValidationWidgets();
+
     [[nodiscard]] static QString _formatConfusionMatrix(
             MLCore::BinaryClassificationMetrics const & metrics);
 
@@ -218,6 +225,7 @@ private:
     Ui::ResultsPanel * ui;
     GroupManager * _group_manager = nullptr;
     std::vector<uint64_t> _last_putative_group_ids;
+    std::vector<QWidget *> _validation_widgets;///< Dynamically created validation metric widgets
     bool _has_results = false;
 };
 
