@@ -149,6 +149,88 @@ arma::Row<std::size_t> filterLabels(
     return filtered;
 }
 
+/**
+ * @brief Split prediction segments at labeled-block boundaries
+ *
+ * When constrained Viterbi decoding is enabled, the initial state of each
+ * segment is forced to a known label. With a single long segment this only
+ * anchors the very first frame; accuracy degrades for frames far from that
+ * anchor.
+ *
+ * This function splits at **both** label-boundary transitions:
+ *   - unlabeled→labeled  (start of a training block)
+ *   - labeled→unlabeled  (end of a training block)
+ *
+ * This ensures unlabeled gaps become their own segments, bookended by
+ * labeled blocks. Each sub-segment's initial state is constrained either
+ * directly (segment starts on a labeled frame) or via the first_time-1
+ * fallback (segment starts right after a labeled block ends).
+ *
+ * @param segments Prediction segments from SequenceAssembler
+ * @param label_map Map from TimeFrameIndex raw values to their known class labels
+ * @return Vector of sub-segments, split at every label-boundary transition
+ */
+[[nodiscard]] std::vector<SequenceSegment> splitSegmentsAtLabelBoundaries(
+        std::vector<SequenceSegment> const & segments,
+        std::unordered_map<std::int64_t, std::size_t> const & label_map) {
+
+    std::vector<SequenceSegment> result;
+    result.reserve(segments.size() * 2);
+
+    for (auto const & seg: segments) {
+        if (seg.times.size() < 2) {
+            result.push_back(seg);
+            continue;
+        }
+
+        // Find indices where the labeled/unlabeled status changes
+        std::vector<std::size_t> split_points;
+        split_points.push_back(0);
+
+        for (std::size_t i = 1; i < seg.times.size(); ++i) {
+            bool const curr_labeled = label_map.contains(seg.times[i].getValue());
+            bool const prev_labeled = label_map.contains(seg.times[i - 1].getValue());
+
+            // Split at both transitions:
+            //   unlabeled→labeled: start of a new training block
+            //   labeled→unlabeled: end of a training block (gap begins)
+            if (curr_labeled != prev_labeled) {
+                split_points.push_back(i);
+            }
+        }
+
+        if (split_points.size() <= 1) {
+            result.push_back(seg);
+            continue;
+        }
+
+        // Create sub-segments at each split point
+        for (std::size_t s = 0; s < split_points.size(); ++s) {
+            auto const start = split_points[s];
+            auto const end = (s + 1 < split_points.size())
+                                     ? split_points[s + 1]
+                                     : seg.times.size();
+
+            if (end <= start) {
+                continue;
+            }
+
+            SequenceSegment sub;
+            sub.features = seg.features.cols(
+                    static_cast<arma::uword>(start),
+                    static_cast<arma::uword>(end - 1));
+
+            sub.times.assign(
+                    seg.times.begin() + static_cast<std::ptrdiff_t>(start),
+                    seg.times.begin() + static_cast<std::ptrdiff_t>(end));
+
+            result.push_back(std::move(sub));
+        }
+    }
+
+    return result;
+}
+
 }// anonymous namespace
 
 // ============================================================================
@@ -658,6 +740,32 @@ ClassificationPipelineResult runClassificationPipeline(
                                    "meeting the minimum length requirement");
             }
 
+            // Build label_map early — used for both segment splitting and
+            // initial-state constraint lookup during constrained decoding
+            std::unordered_map<std::int64_t, std::size_t> label_map;
+            bool const use_constrained =
+                    config.prediction_region.constrained_decoding &&
+                    !train_row_times.empty();
+
+            if (use_constrained) {
+                label_map.reserve(train_row_times.size());
+                for (std::size_t i = 0; i < train_row_times.size(); ++i) {
+                    label_map[train_row_times[i].getValue()] = train_labels[i];
+                }
+
+                // Split segments at labeled-block boundaries so each
+                // sub-segment gets its own initial-state constraint,
+                // improving prediction accuracy for longer sequences.
+                pred_segments = splitSegmentsAtLabelBoundaries(
+                        pred_segments, label_map);
+
+                if (pred_segments.empty()) {
+                    return makeFailure(ClassificationStage::Predicting,
+                                       "No prediction sequences remain after "
+                                       "label-boundary splitting");
+                }
+            }
+
             // Build feature sequence vectors for predictSequences
             std::vector<arma::mat> pred_feature_seqs;
             pred_feature_seqs.reserve(pred_segments.size());
@@ -667,17 +775,7 @@ ClassificationPipelineResult runClassificationPipeline(
 
             std::vector<arma::Row<std::size_t>> pred_sequences;
 
-            // Use constrained Viterbi decoding when enabled and we have
-            // training label data to derive boundary constraints from
-            if (config.prediction_region.constrained_decoding &&
-                !train_row_times.empty()) {
-                // Build a map from TimeFrameIndex → training label
-                std::unordered_map<std::int64_t, std::size_t> label_map;
-                label_map.reserve(train_row_times.size());
-                for (std::size_t i = 0; i < train_row_times.size(); ++i) {
-                    label_map[train_row_times[i].getValue()] = train_labels[i];
-                }
-
+            if (use_constrained) {
                 // For each prediction segment, determine initial state constraint
                 std::vector<std::optional<std::size_t>> constraints;
                 constraints.reserve(pred_segments.size());
