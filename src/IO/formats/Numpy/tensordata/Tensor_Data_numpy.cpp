@@ -63,7 +63,7 @@ std::shared_ptr<TensorData> load(NpyTensorLoaderOptions const & options) {
     // Check for a rows sidecar file
     auto const sidecar = rowsSidecarPath(options.filepath);
     if (std::filesystem::exists(sidecar)) {
-        auto rows_npy = npy::read_npy<int64_t>(sidecar);
+        auto rows_npy = npy::read_npy<int64_t>(sidecar.string());
 
         if (rows_npy.shape.size() == 2 && rows_npy.shape[1] == 2) {
             // Interval: Nx2 array of [start, end]
