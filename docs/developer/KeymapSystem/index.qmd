@@ -1,0 +1,188 @@
+---
+title: "Keymap System"
+format: html
+---
+
+The **Keymap System** provides configurable, context-aware keyboard shortcuts for WhiskerToolbox. It is heavily inspired by [Blender's keymap architecture](https://docs.blender.org/manual/en/latest/editors/preferences/keymap.html), adapted for a Qt6 docked-widget environment.
+
+## Motivation
+
+All keyboard shortcuts in WhiskerToolbox are currently hardcoded:
+
+- **Global keys** (Space for play/pause, arrows for frame navigation) live in `MainWindow::eventFilter()`.
+- **Per-widget keys** (1–9 for group assignment in Media_Widget, Enter/Escape/Backspace for polygon editing in scatter plots) are in individual `keyPressEvent()` overrides.
+- **Always-routed keys** (arrow keys dispatched to `TimeScrollBar` regardless of focus) are mixed into the global event filter with manual `qobject_cast` checks.
+
+There is no way for users to reconfigure bindings, no way for a widget to advertise "I provide action X," and no systematic conflict detection. The Keymap System replaces this ad-hoc approach with a structured, extensible, and user-configurable dispatch layer.
+
+## Use Cases
+
+1. **Focus switching** — Assign a hotkey (e.g., F2) to raise and focus a specific editor, regardless of which widget currently has keyboard focus.
+2. **Per-editor shortcuts** — When a particular editor is focused, its registered actions take priority (e.g., Media_Widget's group-assignment keys).
+3. **Always-routed commands** — Certain actions always dispatch to a specific widget even when it is not focused (e.g., arrow keys always control the timeline scrollbar).
+
+## Design Overview
+
+### Scope Resolution Order
+
+When a key is pressed, the system resolves bindings in this order (first match wins):
+
+1. **Text/input bypass** — If the focused widget is a `QLineEdit`, `QTextEdit`, `QComboBox`, or similar input widget, the key event passes through to Qt normally. This preserves standard text editing.
+2. **Focused-editor keymap** — Actions registered by the editor type that currently has keyboard focus (e.g., Media_Widget's group-assignment keys only fire when Media_Widget is focused).
+3. **Always-routed keymap** — Actions that always dispatch to a specific widget regardless of focus (e.g., Space → play/pause via TimeScrollBar).
+4. **Global keymap** — Actions not tied to any editor (e.g., focus-switching hotkeys).
+
+This matches Blender's model: context-specific bindings shadow global bindings, and input widgets are always exempt.
+
+### Core Types
+
+#### `KeyActionDescriptor`
+
+A named, bindable action. Pure metadata — no callback stored.
+
+| Field | Type | Example |
+|-------|------|---------|
+| `action_id` | `QString` | `"media.assign_group_1"` |
+| `display_name` | `QString` | `"Assign to Group 1"` |
+| `category` | `QString` | `"Media Viewer"` |
+| `scope` | `KeyActionScope` | `EditorFocused("MediaWidget")` |
+| `default_binding` | `QKeySequence` | `Qt::Key_1` |
+
+#### `KeyActionScope`
+
+Determines when an action is eligible for dispatch.
+
+| Variant | Meaning |
+|---------|---------|
+| `Global` | Always available, no target widget |
+| `EditorFocused(EditorTypeId)` | Only when this editor type has keyboard focus |
+| `AlwaysRouted(EditorTypeId)` | Always available; dispatched to this editor type regardless of focus |
+
+#### `KeymapEntry`
+
+A resolved binding: maps an action to a key sequence. Supports user overrides.
+
+```
+action_id:    "timeline.play_pause"
+key_sequence: QKeySequence(Qt::Key_Space)
+enabled:      true
+is_override:  false   // true when user has customized this binding
+```
+
+#### `KeyActionHandler` (mixin)
+
+Widgets that want to receive keymap dispatches implement this interface:
+
+```cpp
+class KeyActionHandler {
+public:
+    virtual ~KeyActionHandler() = default;
+    virtual bool handleKeyAction(QString const & action_id) = 0;
+};
+```
+
+`KeymapManager` finds the target widget (via `EditorRegistry` + `SelectionContext`) and calls `handleKeyAction()`. The widget returns `true` if it handled the action.
+
+This follows the same mixin pattern as `DataFocusAware`.
+
+### `KeymapManager`
+
+Central singleton-like object (owned by MainWindow). Responsibilities:
+
+- **Action registry** — Stores all `KeyActionDescriptor`s. Widgets register descriptors during `registerTypes()`.
+- **Event filter** — Installed on `QApplication`. Intercepts `QEvent::KeyPress`, applies scope resolution, and dispatches to the correct handler.
+- **Override management** — Merges shipped defaults with user customizations. Detects and reports conflicts (same key bound to multiple actions in the same scope).
+- **Persistence** — Serializes user overrides to `AppPreferencesData` (stored in `~/.config/WhiskerToolbox/preferences.json`).
+- **Auto-generated focus actions** — For every registered `EditorTypeId`, creates a `"focus.<type_id>"` action (default: unbound) that raises the dock widget and transfers focus.
+
+### Dispatch Flow
+
+```
+QKeyEvent arrives at QApplication event filter
+  │
+  ├── Is focused widget a text input? → pass through to Qt
+  │
+  ├── Look up focused editor via SelectionContext::activeEditorId()
+  │   └── Find EditorFocused actions for that type matching this key
+  │       └── Found? → dispatch to focused widget's handleKeyAction() → done
+  │
+  ├── Find AlwaysRouted actions matching this key
+  │   └── Found? → find target widget, call handleKeyAction() → done
+  │
+  ├── Find Global actions matching this key
+  │   └── Found? → execute (focus switch, app command, etc.) → done
+  │
+  └── No match → pass through to Qt (event not consumed)
+```
+
+### Registration Pattern
+
+Widgets register action *descriptors* (pure metadata) during their `registerTypes()` call. No callbacks or widget pointers are stored — dispatch happens via the `KeyActionHandler` virtual method on live widget instances.
+
+```cpp
+// In MediaWidgetModule::registerTypes()
+keymap_manager->registerAction({
+    .action_id = "media.assign_group_1",
+    .display_name = "Assign to Group 1",
+    .category = "Media Viewer",
+    .scope = KeyActionScope::EditorFocused(EditorTypeId("MediaWidget")),
+    .default_binding = QKeySequence(Qt::Key_1)
+});
+// ... repeat for groups 2–9
+```
+
+The Media_Window (or its state) implements `KeyActionHandler`:
+
+```cpp
+bool Media_Window::handleKeyAction(QString const & action_id) {
+    if (action_id == "media.assign_group_1") {
+        assignToGroup(1);
+        return true;
+    }
+    // ...
+    return false;
+}
+```
+
+### Persistence
+
+User keybinding overrides are stored in `AppPreferencesData`:
+
+```cpp
+struct KeymapOverrideEntry {
+    std::string action_id;        // "timeline.play_pause"
+    std::string key_sequence;     // "Space"
+    bool enabled = true;
+};
+
+struct AppPreferencesData {
+    // ... existing fields ...
+    std::vector<KeymapOverrideEntry> keybinding_overrides;
+};
+```
+
+This is app-wide (not per-workspace) — the same keybindings apply everywhere, matching Blender's model. Serialized via reflect-cpp to `~/.config/WhiskerToolbox/preferences.json`.
+
+### Keybinding Editor Widget
+
+A dedicated editor (registered via `EditorRegistry`, opened from the View menu) that displays all actions grouped by category:
+
+- Each row shows: action name, scope badge, current key binding, and a "Record" button
+- Pressing "Record" then pressing a key captures the new binding
+- Conflicting bindings (same key + same scope) are highlighted
+- "Reset to Default" per-action and "Reset All" buttons
+- Changes are persisted on apply
+
+## Relationship to Existing Systems
+
+| System | Relationship |
+|--------|-------------|
+| **`SelectionContext`** | KeymapManager reads `activeEditorId()` to determine focused editor for scope resolution |
+| **`ContextAction`** | Orthogonal — ContextActions are *mouse-driven* actions shown in context menus; KeyActions are *keyboard-driven*. A future unification could share action IDs. |
+| **`Commands` (`ICommand`)** | A `handleKeyAction()` implementation may internally create and execute an `ICommand`. The keymap layer handles *input binding*; the command layer handles *data mutation*. |
+| **`EditorRegistry`** | KeymapManager uses the type registry to enumerate editor types (for auto-generated focus actions) and to look up widget instances for dispatch. |
+| **`AppPreferencesData`** | Stores user keybinding overrides. Loaded on startup, saved on change. |
+
+## Contents
+
+- [Implementation Roadmap](roadmap.md): Step-by-step plan for building the Keymap System.

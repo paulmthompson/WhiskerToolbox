@@ -102,6 +102,7 @@ website:
                 - developer/MLCore/features.qmd
                 - developer/MLCore/label_assembly.qmd
                 - developer/MLCore/pipelines.qmd
+                - developer/MLCore/validation_cross_validation.qmd
                 - developer/MLCore/prediction_regions.qmd
                 - developer/MLCore/sequence_assembler.qmd
                 - developer/MLCore/output.qmd
@@ -163,6 +164,10 @@ website:
         - section: "Architecture"
           contents:
             - developer/inter_widget_communication_roadmap.md
+            - section: "Keymap System"
+              href: developer/KeymapSystem/index.qmd
+              contents:
+                - developer/KeymapSystem/roadmap.md
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd
