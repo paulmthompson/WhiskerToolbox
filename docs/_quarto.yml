@@ -163,6 +163,7 @@ website:
             - developer/TriageSession/index.qmd
         - section: "Architecture"
           contents:
+            - developer/WidgetDevelopment/index.qmd
             - developer/inter_widget_communication_roadmap.md
             - section: "Keymap System"
               href: developer/KeymapSystem/index.qmd

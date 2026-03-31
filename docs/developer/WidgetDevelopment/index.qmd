@@ -1,0 +1,646 @@
+---
+title: "Widget Development Guide"
+format: html
+---
+
+This guide walks through the systems that a new widget in WhiskerToolbox should integrate with. Each section describes what the system does, when you need it, and how to wire it up. The goal is not to duplicate the detailed reference docs — those are linked throughout — but to give you a map of the landscape and a concrete checklist.
+
+## Overview: What Makes a Widget
+
+A WhiskerToolbox widget is a Qt6 `QWidget` that lives inside the `Qt6AdvancedDocking` dock system. Unlike a traditional Qt application where you manually create widgets and add them to layouts, WhiskerToolbox widgets are **registered as types** with the `EditorRegistry`, which manages their lifecycle, placement, and serialization.
+
+A fully-featured widget integrates with up to six systems:
+
+| System | Purpose | Required? |
+|--------|---------|-----------|
+| **EditorRegistry** | Type registration, factory functions, dock placement | **Yes** — every widget |
+| **DataManager + Observer** | Reading/writing shared data, reacting to changes | **Yes** — nearly every widget |
+| **Command Architecture** | Serializable, undoable data mutations | When widget mutates DataManager |
+| **ParameterSchema + AutoParamWidget** | Auto-generated config forms from C++ structs | When widget has configurable parameters |
+| **Context Actions** | Right-click actions that open/configure your widget | When widget can be a target for data |
+| **Keymap System** | Configurable keyboard shortcuts | When widget has keyboard-driven actions |
+
+The following diagram shows how these systems relate at runtime:
+
+```
+  User types a key                   User right-clicks data
+        │                                    │
+        ▼                                    ▼
+ ┌──────────────┐                  ┌──────────────────┐
+ │ KeymapManager│                  │ SelectionContext  │
+ │ (event filter│                  │ (ContextActions)  │
+ └──────┬───────┘                  └────────┬─────────┘
+        │ dispatch                          │ execute()
+        ▼                                   ▼
+ ┌──────────────┐  ◄──── state ───  ┌──────────────┐
+ │ KeyAction    │                   │ EditorRegistry│
+ │ Adapter      │  ───── owns ───►  │ (type + state)│
+ └──────┬───────┘                   └───────┬───────┘
+        │                                   │ createEditor()
+        ▼                                   ▼
+ ┌──────────────────────────────────────────────────┐
+ │                   Your Widget                     │
+ │                                                   │
+ │  ┌────────────────┐   ┌────────────────────────┐ │
+ │  │ EditorState    │   │ AutoParamWidget         │ │
+ │  │ (serializable) │   │ (generated from         │ │
+ │  │                │   │  ParameterSchema)       │ │
+ │  └────────┬───────┘   └────────────────────────┘ │
+ │           │                                       │
+ │           │ reads/writes via Commands              │
+ │           ▼                                       │
+ │     ┌──────────┐   notifyObservers()              │
+ │     │DataManager├──────────────────────►callbacks  │
+ │     └──────────┘                                  │
+ └───────────────────────────────────────────────────┘
+```
+
+## 1. EditorRegistry — Type Registration and Lifecycle {#editor-registry}
+
+Every widget starts here. The `EditorRegistry` is the central catalog that knows what widget types exist, how to create them, and where to place them in the dock layout.
+
+**Detailed reference:** [Inter-Widget Communication Roadmap](../inter_widget_communication_roadmap.md)
+
+### What You Provide
+
+You register an `EditorTypeInfo` struct that describes your widget type. The key fields are:
+
+| Field | What it controls |
+|-------|-----------------|
+| `type_id` | Unique string identifier (e.g. `"MyWidget"`) |
+| `display_name` | Shown in the View menu |
+| `menu_path` | Menu hierarchy (e.g. `"View/Analysis"`) |
+| `preferred_zone` / `properties_zone` | Where the dock places the view and properties panels |
+| `allow_multiple` | Whether the user can open more than one instance |
+| `create_state` | Factory for your `EditorState` subclass |
+| `create_view` | Factory for the main `QWidget` |
+| `create_properties` | Factory for the properties/sidebar `QWidget` (optional) |
+| `create_editor_custom` | Alternative: single factory that builds everything (for complex cases) |
+
+### Zone Placement
+
+Widgets are placed into one of four zones:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Menu Bar                                                        │
+├────────────────┬─────────────────────────────┬───────────────────┤
+│   Left         │         Center              │      Right        │
+│   Data tree,   │   Main content:             │   Properties,     │
+│   Groups       │   Media, Plots              │   Inspectors      │
+├────────────────┴─────────────────────────────┴───────────────────┤
+│  Bottom  (Timeline, Terminal)                                    │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+Choose `Zone::Center` for primary content widgets (visualizations, editors) and `Zone::Right` for tools/config panels. Data browsers typically go in `Zone::Left`.
+
+### The Registration File
+
+Each widget module has a dedicated registration file. This is the conventional pattern:
+
+```
+src/WhiskerToolbox/MyWidget/
+├── CMakeLists.txt
+├── MyWidget.hpp / .cpp         ← The widget itself
+├── MyWidgetState.hpp / .cpp    ← EditorState subclass
+└── MyWidgetRegistration.hpp / .cpp  ← Registration with EditorRegistry
+```
+
+**MyWidgetRegistration.hpp:**
+
+```cpp
+#pragma once
+
+class EditorRegistry;
+class DataManager;
+#include <memory>
+
+namespace MyWidgetModule {
+void registerTypes(EditorRegistry * registry,
+                   std::shared_ptr<DataManager> data_manager);
+}
+```
+
+**MyWidgetRegistration.cpp** (standard pattern — separate view and properties factories):
+
+```cpp
+#include "MyWidgetRegistration.hpp"
+#include "MyWidget.hpp"
+#include "MyWidgetState.hpp"
+#include "EditorState/EditorRegistry.hpp"
+
+namespace MyWidgetModule {
+
+void registerTypes(EditorRegistry * registry,
+                   std::shared_ptr<DataManager> data_manager)
+{
+    auto dm = std::move(data_manager);
+
+    registry->registerType({
+        .type_id = QStringLiteral("MyWidget"),
+        .display_name = QStringLiteral("My Widget"),
+        .menu_path = QStringLiteral("View/Analysis"),
+        .preferred_zone = Zone::Center,
+        .properties_zone = Zone::Right,
+        .allow_multiple = true,
+
+        .create_state = []() {
+            return std::make_shared<MyWidgetState>();
+        },
+
+        .create_view = [dm](std::shared_ptr<EditorState> state) -> QWidget * {
+            auto my_state = std::dynamic_pointer_cast<MyWidgetState>(state);
+            auto * widget = new MyWidget(my_state, dm);
+            return widget;
+        },
+
+        .create_properties = [dm](std::shared_ptr<EditorState> state) -> QWidget * {
+            auto my_state = std::dynamic_pointer_cast<MyWidgetState>(state);
+            return new MyWidgetProperties(my_state, dm);
+        }
+    });
+}
+
+} // namespace MyWidgetModule
+```
+
+For widgets that need a more complex setup (cross-references between subwidgets, access to `SelectionContext`, etc.), use `create_editor_custom` instead. See the MLCoreWidget registration for an example of this pattern.
+
+### EditorState
+
+Every widget type has an `EditorState` subclass that holds its serializable state. This is what gets saved/restored when the user saves a workspace.
+
+**Key requirements:**
+
+- Inherit from `EditorState` (a `QObject`)
+- Override `getTypeName()`, `toJson()`, `fromJson()`
+- Use a reflect-cpp serializable struct for the data
+- Emit `stateChanged()` when state is modified
+- Call `markDirty()` to flag unsaved changes
+
+```cpp
+struct MyWidgetStateData {
+    std::string selected_key;
+    double zoom = 1.0;
+};
+
+class MyWidgetState : public EditorState {
+    Q_OBJECT
+public:
+    QString getTypeName() const override { return QStringLiteral("MyWidget"); }
+    std::string toJson() const override;
+    bool fromJson(std::string const & json) override;
+
+    // Typed accessors
+    std::string selectedKey() const { return _data.selected_key; }
+    void setSelectedKey(std::string const & key);
+
+signals:
+    void selectedKeyChanged(QString const & key);
+
+private:
+    MyWidgetStateData _data;
+};
+```
+
+## 2. DataManager + Observer — Shared Data and Change Notifications {#data-manager-observer}
+
+`DataManager` is the central data store. It holds all data objects (PointData, LineData, TensorData, etc.) in a `std::map<std::string, Variant>`. Any widget that reads or writes data interacts with DataManager.
+
+**Detailed references:**
+
+- [Observer Library](../Observer/index.qmd) — API for `ObserverData`, `CallbackID`, `ModificationHandle`
+- [Data Manager](../DataManager/data_manager.qmd) — DataManager API
+- [Observer Thread-Safety Roadmap](../DataManager/observer_thread_safety_roadmap.qmd) — Thread-safe callback patterns
+
+### Registering an Observer
+
+When your widget needs to react to data changes (new objects added, existing objects modified), register an observer callback:
+
+```cpp
+// In your widget's setDataManager() or constructor:
+_observer_id = _data_manager->addObserver([this]() {
+    // Data changed — refresh our UI
+    _refreshDisplay();
+});
+```
+
+::: {.callout-important}
+## Cleanup Is Mandatory
+
+Always store the returned `CallbackID` and remove the observer in your destructor. Failing to do this causes dangling callbacks and crashes.
+
+```cpp
+MyWidget::~MyWidget()
+{
+    if (_data_manager && _observer_id >= 0) {
+        _data_manager->removeObserver(_observer_id);
+    }
+}
+```
+:::
+
+If `setDataManager()` can be called more than once (e.g. widget is reused), also remove the previous observer before registering a new one.
+
+### Thread-Safety: The `QTimer::singleShot` Pattern
+
+Observer callbacks fire on whatever thread calls `notifyObservers()`. If a background worker modifies DataManager, your callback runs on the worker thread — but Qt widget operations must happen on the main thread. The standard fix:
+
+```cpp
+_observer_id = _data_manager->addObserver([this]() {
+    QTimer::singleShot(0, this, [this]() {
+        // This body runs on the main thread, and is automatically
+        // cancelled if 'this' widget is destroyed before it fires.
+        _refreshDisplay();
+    });
+});
+```
+
+This pattern is already used by MLCoreWidget's panels. See the [Observer Thread-Safety Roadmap](../DataManager/observer_thread_safety_roadmap.qmd) for the full list of safe vs. unsafe callbacks.
+
+### Reading and Writing Data
+
+```cpp
+// Reading
+auto tensor = _data_manager->getData<TensorData>("my_tensor_key");
+if (tensor) {
+    auto const & mat = tensor->getDataAsArma();
+    // Use the data...
+}
+
+// Writing
+_data_manager->setData<TensorData>("output_key", std::move(new_data));
+// This triggers notifyObservers() — all registered callbacks fire.
+```
+
+For mutation operations that should be serializable and undoable, use the Command Architecture instead of calling `setData()` directly. See [§3 Commands](#command-architecture) below.
+
+## 3. Command Architecture — Serializable Data Mutations {#command-architecture}
+
+The Command Architecture represents DataManager operations as `ICommand` objects. Commands are JSON-serializable, composable into sequences, and optionally undoable.
+
+**Detailed references:**
+
+- [Command Architecture Overview](../DataManager/Commands/index.qmd) — Design, ICommand interface, scope boundaries
+- [Command Registry](../DataManager/Commands/command_registry.qmd) — Factory and dispatch
+- [Sequence Execution](../DataManager/Commands/sequence_execution.qmd) — Running multi-step workflows
+- [Available Commands](../DataManager/Commands/commands.qmd) — List of implemented commands
+
+### When to Use Commands vs. Direct DataManager Calls
+
+| Scenario | Use |
+|----------|-----|
+| Simple read + display | Direct `getData<T>()` — no command needed |
+| One-off write during development | `setData<T>()` is fine initially |
+| User-facing "button click" that modifies data | **Command** — for undo, journaling, and pipeline composition |
+| Multi-step workflow (triage, batch processing) | **Command sequence** — serialize the whole workflow as JSON |
+
+### Dispatching Commands from a Widget
+
+```cpp
+#include "Commands/Core/ICommand.hpp"
+#include "Commands/Core/SequenceExecution.hpp"
+
+// Build the command descriptor (JSON-serializable)
+auto descriptor = commands::CommandSequenceDescriptor{};
+descriptor.steps.push_back({
+    .command = "CopyByTimeRange",
+    .params = rfl::json::write(CopyByTimeRangeParams{
+        .source_key = "predicted_lines",
+        .dest_key = "ground_truth_lines",
+        .start_time = 1000,
+        .end_time = 2000
+    })
+});
+
+// Execute
+auto ctx = commands::CommandContext{.data_manager = _data_manager};
+auto result = commands::executeSequence(descriptor, ctx);
+if (!result.result.success) {
+    spdlog::error("Command failed: {}", result.result.error_message);
+}
+```
+
+### The Scope Boundary
+
+Commands exist for **data mutations only** — operations that change what's in DataManager. UI state changes (line color, zoom level, active tab) go through `EditorState` signals, not commands. This mirrors Blender's Operator/viewport split: data changes are undoable; view changes are not.
+
+## 4. ParameterSchema + AutoParamWidget — Auto-Generated Config Forms {#parameter-schema}
+
+When your widget has a settings struct (thresholds, modes, algorithm parameters), you can automatically generate a Qt form from it rather than hand-building spin boxes and combo boxes.
+
+**Detailed references:**
+
+- [ParameterSchema Library](../ParameterSchema/index.qmd) — Schema extraction, field descriptors, constraints
+- [AutoParam System](../ui/autoparam.qmd) — The Qt widget that renders the form
+
+### The Flow
+
+```
+C++ params struct          extractParameterSchema<T>()        AutoParamWidget
+(with reflect-cpp)    ─────────────────────────────►    ────────────────────►  Qt form
+                              ParameterSchema
+```
+
+1. **Define your parameters** as a plain C++ struct compatible with reflect-cpp:
+
+```cpp
+struct MyAlgorithmParams {
+    float threshold = 0.5f;
+    int iterations = 10;
+    std::string mode = "Fast";
+    bool verbose = false;
+};
+```
+
+2. **Optionally add UI annotations** via `ParameterUIHints`:
+
+```cpp
+template<>
+struct ParameterUIHints<MyAlgorithmParams> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("threshold")) {
+            f->tooltip = "Detection threshold (0.0 to 1.0)";
+            f->min_value = 0.0;
+            f->max_value = 1.0;
+        }
+        if (auto * f = schema.field("mode")) {
+            f->allowed_values = {"Fast", "Accurate", "Debug"};
+        }
+    }
+};
+```
+
+3. **Extract the schema and create the widget:**
+
+```cpp
+#include "ParameterSchema/ParameterSchema.hpp"
+#include "AutoParamWidget/AutoParamWidget.hpp"
+
+auto schema = extractParameterSchema<MyAlgorithmParams>();
+auto * param_widget = new AutoParamWidget(schema, this);
+
+connect(param_widget, &AutoParamWidget::parametersChanged,
+        this, &MyWidget::_onParamsChanged);
+```
+
+AutoParamWidget maps types to widgets automatically:
+
+| C++ Type | Qt Widget |
+|----------|-----------|
+| `float` / `double` | `QDoubleSpinBox` |
+| `int` | `QSpinBox` |
+| `bool` | `QCheckBox` |
+| `std::string` | `QLineEdit` or `QComboBox` (if `allowed_values` set) |
+| `std::optional<T>` | Checkbox-gated widget |
+| `enum class` | `QComboBox` (auto-detected) |
+| `rfl::TaggedUnion` | `QComboBox` + `QStackedWidget` (discriminated union) |
+
+### Dynamic Combo Fields
+
+If a combo box's items come from DataManager (e.g., data key selection), use the dynamic combo pattern:
+
+```cpp
+// In ParameterUIHints:
+f->dynamic_combo = true;
+f->include_none_sentinel = true;  // Prepend "(None)" → maps to ""
+
+// At runtime, populate from DataManager:
+auto keys = _data_manager->getKeys<TensorData>();
+_param_widget->updateAllowedValues("source_key", keys);
+```
+
+## 5. Context Actions — Right-Click Integration {#context-actions}
+
+Context Actions let your widget advertise what it can do for the currently selected data. They appear in right-click context menus across the application.
+
+**Detailed reference:** [Inter-Widget Communication Roadmap — Layer 4](../inter_widget_communication_roadmap.md)
+
+### When to Use
+
+Register a ContextAction when:
+
+- Your widget can process or visualize a particular data type
+- You want a one-click path from data selection to your widget
+- The action's availability depends on the current selection state
+
+### Registering a Context Action
+
+Context actions are registered in your widget's `registerTypes()` function, alongside the `EditorTypeInfo`:
+
+```cpp
+void registerTypes(EditorRegistry * registry,
+                   std::shared_ptr<DataManager> data_manager)
+{
+    auto dm = data_manager;
+
+    // 1. Register the widget type (as in §1)
+    registry->registerType({ /* ... */ });
+
+    // 2. Register context actions
+    auto * selection_ctx = registry->selectionContext();
+
+    ContextAction action;
+    action.action_id = QStringLiteral("my_widget.analyze_tensor");
+    action.display_name = QStringLiteral("Analyze in My Widget");
+    action.producer_type = EditorLib::EditorTypeId(QStringLiteral("MyWidget"));
+
+    action.is_applicable = [dm](SelectionContext const & ctx) -> bool {
+        // Only show for TensorData with 3+ columns
+        if (ctx.dataFocusType() != QStringLiteral("TensorData")) return false;
+        auto key = ctx.dataFocus().toStdString();
+        auto tensor = dm->getData<TensorData>(key);
+        return tensor && tensor->numColumns() >= 3;
+    };
+
+    action.execute = [registry](SelectionContext const & ctx) {
+        // Open (or focus) an instance of MyWidget
+        auto state = registry->openEditor(
+                EditorLib::EditorTypeId(QStringLiteral("MyWidget")));
+        // Configure it with the selected data
+        if (auto my_state = std::dynamic_pointer_cast<MyWidgetState>(state)) {
+            my_state->setInputKey(ctx.dataFocus().toStdString());
+        }
+    };
+
+    selection_ctx->registerAction(std::move(action));
+}
+```
+
+### Distinction from Commands
+
+| | Context Actions | Commands |
+|---|---|---|
+| **What they do** | Open/configure widgets (UI orchestration) | Mutate data in DataManager |
+| **Serializable** | No (contain `std::function`) | Yes (JSON via reflect-cpp) |
+| **Undoable** | No | Optionally |
+| **Where registered** | `SelectionContext::registerAction()` | `CommandRegistry` |
+
+A context action *may* call commands internally (e.g., "Cluster with K-Means" opens MLCoreWidget, which eventually dispatches a clustering command). The action itself is the UI glue; the command is the data operation.
+
+## 6. Keymap System — Configurable Keyboard Shortcuts {#keymap-system}
+
+The Keymap System provides configurable, context-aware keyboard shortcuts. It replaces the ad-hoc `keyPressEvent()` overrides scattered across widgets.
+
+**Detailed reference:** [Keymap System](../KeymapSystem/index.qmd)
+
+::: {.callout-note}
+The Keymap System is currently in design/early implementation. The patterns described here reflect the planned architecture. Check the [Keymap Roadmap](../KeymapSystem/roadmap.md) for current status.
+:::
+
+### Core Concepts
+
+**Scope resolution order** (first match wins):
+
+1. **Text input bypass** — If focus is in a `QLineEdit`/`QTextEdit`, the key goes to Qt normally
+2. **Focused-editor keymap** — Actions for the widget type that currently has focus
+3. **Always-routed keymap** — Actions that always go to a specific widget (e.g. Space → play/pause)
+4. **Global keymap** — Actions not tied to any editor (e.g. focus-switching hotkeys)
+
+### Registering Actions
+
+Action *descriptors* (pure metadata) are registered during `registerTypes()`:
+
+```cpp
+keymap_manager->registerAction({
+    .action_id = QStringLiteral("my_widget.do_something"),
+    .display_name = QStringLiteral("Do Something"),
+    .category = QStringLiteral("My Widget"),
+    .scope = KeyActionScope::EditorFocused(
+            EditorTypeId(QStringLiteral("MyWidget"))),
+    .default_binding = QKeySequence(Qt::Key_D)
+});
+```
+
+### Handling Actions at Runtime
+
+When your widget is instantiated, create a `KeyActionAdapter` (composition, not inheritance):
+
+```cpp
+// In MyWidget constructor:
+_key_adapter = new KeyActionAdapter(this);  // QObject parenting handles cleanup
+_key_adapter->setInstanceId(_state->getInstanceId());
+_key_adapter->setHandler([this](QString const & action_id) -> bool {
+    if (action_id == QStringLiteral("my_widget.do_something")) {
+        doSomething();
+        return true;  // Handled
+    }
+    return false;  // Not handled — let dispatch continue
+});
+keymap_manager->registerAdapter(_key_adapter);
+```
+
+Deregistration is automatic via `QObject::destroyed` — when your widget (the adapter's parent) is destroyed, `KeymapManager` cleans up.
+
+### Scope Types
+
+| Scope | Use When |
+|-------|----------|
+| `EditorFocused("MyWidget")` | Action only makes sense when your widget has keyboard focus |
+| `AlwaysRouted("TimeScrollBar")` | Action should always go to a specific widget regardless of focus |
+| `Global` | Action is not tied to any particular widget |
+
+## DataFocusAware — Reacting to Selection Changes
+
+A cross-cutting concern: if your widget should update when the user selects a different data key elsewhere (e.g., clicking a row in the Data Manager tree), implement `DataFocusAware`:
+
+```cpp
+class MyWidget : public QWidget, public DataFocusAware {
+public:
+    MyWidget(SelectionContext * ctx, /* ... */) {
+        connectToSelectionContext(ctx, this);
+    }
+
+    void onDataFocusChanged(EditorLib::SelectedDataKey const & key,
+                            QString const & data_type) override
+    {
+        if (data_type == QStringLiteral("TensorData")) {
+            _loadTensor(key.toStdString());
+        }
+    }
+};
+```
+
+The `SelectionSource` parameter in the underlying signal prevents circular updates — if your widget *sets* the data focus, it won't immediately react to its own change.
+
+## OperationContext — Inter-Widget Request/Response
+
+When one widget needs structured data from another (e.g., a column config dialog requests a pipeline from the Transforms V2 editor), use `OperationContext`.
+
+**Detailed reference:** [Inter-Widget Communication Roadmap — Layer 3](../inter_widget_communication_roadmap.md)
+
+### As a Consumer (Requesting Data)
+
+```cpp
+auto result = _operation_context->requestOperation(
+    EditorLib::EditorInstanceId(_my_instance_id),
+    EditorLib::EditorTypeId(QStringLiteral("TransformsV2Widget")),
+    EditorLib::OperationRequestOptions{
+        .channel = EditorLib::DataChannels::TransformPipeline,
+        .keep_open_for_iteration = true
+    });
+```
+
+Connect to `operationDelivered` and `operationClosed` signals to receive the response.
+
+### As a Producer (Providing Data)
+
+Your widget checks for pending operations and shows a "Send to [requester]" button when one is active. When the user clicks it, call:
+
+```cpp
+_operation_context->deliverResult(operation_id, result_payload);
+```
+
+## Checklist: Creating a New Widget
+
+Here is a step-by-step checklist for adding a new widget:
+
+### Minimum Viable Widget
+
+- [ ] Create `MyWidgetState` subclass of `EditorState` with reflect-cpp serializable data
+- [ ] Create `MyWidget` (the `QWidget`) and optionally `MyWidgetProperties`
+- [ ] Create `MyWidgetRegistration.cpp` with `registerTypes()` that registers `EditorTypeInfo`
+- [ ] Call `registerTypes()` from the application startup (where other widgets are registered)
+- [ ] Add `CMakeLists.txt` for the new widget and link required libraries
+
+### Data Integration
+
+- [ ] Accept `std::shared_ptr<DataManager>` in your factory/constructor
+- [ ] Register an observer callback to react to data changes
+- [ ] Store the `CallbackID` and remove the observer in the destructor
+- [ ] If the widget can be called from a background thread, use the `QTimer::singleShot` pattern
+
+### Optional: Command Integration
+
+- [ ] When the widget has "action buttons" that mutate DataManager, represent those as `ICommand`s
+- [ ] Use `commands::executeSequence()` to dispatch
+- [ ] Consider undo support for destructive operations
+
+### Optional: Auto-Generated Parameter Forms
+
+- [ ] Define a reflect-cpp params struct for your algorithm/config
+- [ ] Optionally specialize `ParameterUIHints<T>` for tooltips and constraints
+- [ ] Create an `AutoParamWidget` from `extractParameterSchema<T>()`
+- [ ] Connect `parametersChanged` to your handler
+
+### Optional: Context Actions
+
+- [ ] Register `ContextAction` in `registerTypes()` if your widget can process focused data
+- [ ] Implement `is_applicable` predicate based on data type/properties
+- [ ] Implement `execute` to open your widget and configure it with the selection
+
+### Optional: Keyboard Shortcuts
+
+- [ ] Register `KeyActionDescriptor`s during `registerTypes()` for discoverable, rebindable actions
+- [ ] Create a `KeyActionAdapter` in the widget constructor
+- [ ] Install a handler lambda that dispatches by `action_id`
+
+### Optional: DataFocusAware
+
+- [ ] Inherit `DataFocusAware` and call `connectToSelectionContext()` if the widget should react to what the user has selected elsewhere
+
+### Optional: OperationContext
+
+- [ ] Implement consumer pattern if you need structured data from another widget
+- [ ] Implement producer pattern if other widgets should be able to request data from yours
