@@ -2,20 +2,72 @@
 
 #include "TimeScrollBar.hpp"
 #include "TimeScrollBarState.hpp"
-#include "EditorState/EditorRegistry.hpp"
 #include "DataManager/DataManager.hpp"
+#include "EditorState/EditorRegistry.hpp"
+#include "KeymapSystem/KeyAction.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
+
+#include <QKeySequence>
 
 #include <iostream>
 
 namespace TimeScrollBarModule {
 
+namespace {
+
+static void registerEditorActions(KeymapSystem::KeymapManager * km) {
+    if (!km) {
+        return;
+    }
+
+    auto const scope = KeymapSystem::KeyActionScope::alwaysRouted(
+            EditorLib::EditorTypeId(QStringLiteral("TimeScrollBar")));
+    QString const category = QStringLiteral("Timeline");
+
+    km->registerAction({.action_id = QStringLiteral("timeline.play_pause"),
+                        .display_name = QStringLiteral("Play / Pause"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_Space)});
+
+    km->registerAction({.action_id = QStringLiteral("timeline.next_frame"),
+                        .display_name = QStringLiteral("Next Frame"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_Right)});
+
+    km->registerAction({.action_id = QStringLiteral("timeline.prev_frame"),
+                        .display_name = QStringLiteral("Previous Frame"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_Left)});
+
+    km->registerAction({.action_id = QStringLiteral("timeline.jump_forward"),
+                        .display_name = QStringLiteral("Jump Forward"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::CTRL | Qt::Key_Right)});
+
+    km->registerAction({.action_id = QStringLiteral("timeline.jump_backward"),
+                        .display_name = QStringLiteral("Jump Backward"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::CTRL | Qt::Key_Left)});
+}
+
+}  // namespace
+
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager) {
+                   std::shared_ptr<DataManager> data_manager,
+                   KeymapSystem::KeymapManager * keymap_manager) {
     
     if (!registry) {
         std::cerr << "TimeScrollBarModule::registerTypes: registry is null" << std::endl;
         return;
     }
+
+    // Register configurable keyboard shortcuts for timeline navigation
+    registerEditorActions(keymap_manager);
 
     // Capture dependencies for lambdas
     auto dm = data_manager;

@@ -120,6 +120,7 @@ target_link_libraries(Media_Widget PRIVATE LineStyleControls)
 target_link_libraries(Media_Widget PRIVATE WhiskerToolbox::MediaProcessingPipeline)
 target_link_libraries(Media_Widget PRIVATE GroupManagementWidget)
 target_link_libraries(Media_Widget PRIVATE GroupContextMenu)
+target_link_libraries(Media_Widget PRIVATE KeymapSystem)
 target_link_libraries(Media_Widget PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 
 target_link_libraries(Media_Widget PUBLIC CoreUtilities) # Color in header

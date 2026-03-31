@@ -3,9 +3,9 @@
 
 #include "../Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 #include "../Media_Widget/DisplayOptions/DisplayOptions.hpp"
-#include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
+#include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -37,6 +37,11 @@ class LineData;
 class PointData;
 class MaskData;
 class GroupContextMenuHandler;
+
+namespace KeymapSystem {
+class KeymapManager;
+class KeyActionAdapter;
+}// namespace KeymapSystem
 
 struct TextOverlay;
 
@@ -98,6 +103,16 @@ public:
      * @param group_manager Pointer to the GroupManager instance
      */
     void setGroupManager(GroupManager * group_manager);
+
+    /**
+     * @brief Set the KeymapManager for configurable keyboard shortcuts
+     *
+     * Creates a KeyActionAdapter that handles group-assignment actions
+     * (media.assign_group_1 through media.assign_group_9).
+     *
+     * @param manager Pointer to the KeymapManager instance (can be nullptr)
+     */
+    void setKeymapManager(KeymapSystem::KeymapManager * manager);
 
     /**
      * @brief Set the MediaWidgetState for state synchronization
@@ -168,11 +183,11 @@ public:
     bool hasSelections() const;
     std::unordered_set<EntityId> getSelectedEntities() const;
     void selectEntity(EntityId entity_id, std::string const & data_key, std::string const & data_type);
-    
+
     // Selection mode coordination
     void setGroupSelectionEnabled(bool enabled);
     bool isGroupSelectionEnabled() const;
-    
+
     // Public methods for entity finding
     EntityId findPointAtPosition(QPointF const & scene_pos, std::string const & point_key);
     EntityId findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type);
@@ -241,13 +256,13 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent * event) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent * event) override;
-    void keyPressEvent(QKeyEvent * event) override;
 
 private:
     std::shared_ptr<DataManager> _data_manager;
     QWidget * _parent_widget = nullptr;
     GroupManager * _group_manager = nullptr;
-    MediaWidgetState * _media_widget_state = nullptr;  // Non-owning pointer for state sync
+    MediaWidgetState * _media_widget_state = nullptr;// Non-owning pointer for state sync
+    KeymapSystem::KeyActionAdapter * _key_adapter = nullptr;
 
     QGraphicsPixmapItem * _canvasPixmap = nullptr;
     QImage _canvasImage;
@@ -277,13 +292,13 @@ private:
 
     // Temporary line visualization
     bool _show_temporary_line{false};
-    QGraphicsPathItem * _temporary_line_item{nullptr};// Track temporary line item
+    QGraphicsPathItem * _temporary_line_item{nullptr};         // Track temporary line item
     std::vector<QGraphicsEllipseItem *> _temporary_line_points;// Track temporary line point markers
 
     std::vector<QPointF> _drawing_points;
 
     // Display options are now stored in MediaWidgetState's DisplayOptionsRegistry
-    // (Phase 4C: removed _line_configs, _mask_configs, _point_configs, 
+    // (Phase 4C: removed _line_configs, _mask_configs, _point_configs,
     //  _interval_configs, _tensor_configs - use _media_widget_state->displayOptions() instead)
 
     // Preview data storage for masks
@@ -295,9 +310,9 @@ private:
 
     // Selection and context menu support
     std::unordered_set<EntityId> _selected_entities;
-    std::string _selected_data_key;  // Key of the data containing selected entities
-    std::string _selected_data_type; // Type of selected data ("line", "point", "mask")
-    bool _group_selection_enabled = true; // Allow group-based selection to be disabled
+    std::string _selected_data_key;      // Key of the data containing selected entities
+    std::string _selected_data_type;     // Type of selected data ("line", "point", "mask")
+    bool _group_selection_enabled = true;// Allow group-based selection to be disabled
     QMenu * _context_menu = nullptr;
     std::unique_ptr<GroupContextMenuHandler> _group_menu_handler;
 
@@ -335,9 +350,9 @@ private:
     void _addRemoveData();
 
     // Helper for timeframe conversion
-    static bool _needsTimeFrameConversion(const std::shared_ptr<TimeFrame>& video_timeframe,
-                                   std::shared_ptr<TimeFrame> const & interval_timeframe);
-    
+    static bool _needsTimeFrameConversion(std::shared_ptr<TimeFrame> const & video_timeframe,
+                                          std::shared_ptr<TimeFrame> const & interval_timeframe);
+
     // Group-aware color helpers
     [[nodiscard]] QColor _getGroupAwareColor(EntityId entity_id, QColor const & default_color) const;
     [[nodiscard]] QRgb _getGroupAwareColorRgb(EntityId entity_id, QRgb default_color) const;
@@ -383,7 +398,7 @@ signals:
     void leftClickMediaCoords(MediaCoordinates const & coords);
     void rightClickMediaCoords(MediaCoordinates const & coords);
     void mouseMoveCanvas(CanvasCoordinates const & coords);
-    
+
     // Mouse event signal with full event information (for modifier detection)
     void leftClickMediaWithEvent(qreal x_media, qreal y_media, Qt::KeyboardModifiers modifiers);
 };

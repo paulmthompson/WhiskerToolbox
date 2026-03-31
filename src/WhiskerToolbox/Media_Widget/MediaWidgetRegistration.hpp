@@ -40,6 +40,10 @@ class EditorRegistry;
 class DataManager;
 class GroupManager;
 
+namespace KeymapSystem {
+class KeymapManager;
+}
+
 namespace MediaWidgetModule {
 
 /**
@@ -56,11 +60,13 @@ namespace MediaWidgetModule {
  * @param registry The EditorRegistry to register types with
  * @param data_manager Shared DataManager for widget construction
  * @param group_manager Optional GroupManager for group-aware features (can be nullptr)
+ * @param keymap_manager Optional KeymapManager for registering keyboard shortcuts (can be nullptr)
  */
 void registerTypes(EditorRegistry * registry,
                    std::shared_ptr<DataManager> data_manager,
-                   GroupManager * group_manager = nullptr);
+                   GroupManager * group_manager = nullptr,
+                   KeymapSystem::KeymapManager * keymap_manager = nullptr);
 
-}  // namespace MediaWidgetModule
+}// namespace MediaWidgetModule
 
-#endif  // MEDIA_WIDGET_REGISTRATION_HPP
+#endif// MEDIA_WIDGET_REGISTRATION_HPP

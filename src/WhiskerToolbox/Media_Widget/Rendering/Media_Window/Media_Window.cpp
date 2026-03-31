@@ -14,6 +14,8 @@
 #include "GroupContextMenu/GroupContextMenuHandler.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
+#include "KeymapSystem/KeyActionAdapter.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
@@ -2666,38 +2668,46 @@ void Media_Window::onClearSelection() {
     clearAllSelections();
 }
 
-void Media_Window::keyPressEvent(QKeyEvent * event) {
-    // Handle keyboard shortcuts for group assignment (1-9)
-    if (!_group_manager || _selected_entities.empty()) {
-        QGraphicsScene::keyPressEvent(event);
+void Media_Window::setKeymapManager(KeymapSystem::KeymapManager * manager) {
+    if (!manager || _key_adapter) {
         return;
     }
 
-    // Check if the pressed key is a digit from 1 to 9
-    int const key_value = event->key();
-    if (key_value >= Qt::Key_1 && key_value <= Qt::Key_9) {
-        // Convert key to group number (Qt::Key_1 = 49, so subtract 48 to get 1-9)
-        int const group_number = key_value - Qt::Key_0;
+    // QGraphicsScene is a QObject, so we can parent the adapter to it
+    _key_adapter = new KeymapSystem::KeyActionAdapter(this);
+    _key_adapter->setTypeId(EditorLib::EditorTypeId(QStringLiteral("MediaWidget")));
 
-        // Get available groups from the group manager
-        auto groups = _group_manager->getGroupsForContextMenu();
-
-        // Find the group with the matching number in the display order
-        if (group_number <= static_cast<int>(groups.size())) {
-            // Groups are returned in order, so we can use index-based access
-            auto it = groups.begin();
-            std::advance(it, group_number - 1);
-            int const group_id = it->first;
-
-            // Assign selected entities to the group using group manager directly
-            _group_manager->assignEntitiesToGroup(group_id, _selected_entities);
-            clearAllSelections();
-            UpdateCanvas();
-            event->accept();
-            return;
+    _key_adapter->setHandler([this](QString const & action_id) -> bool {
+        // Only handle group assignment actions
+        if (!action_id.startsWith(QStringLiteral("media.assign_group_"))) {
+            return false;
         }
-    }
 
-    // If not handled, pass to parent
-    QGraphicsScene::keyPressEvent(event);
+        if (!_group_manager || _selected_entities.empty()) {
+            return false;
+        }
+
+        // Extract group number from action_id: "media.assign_group_N" → N
+        bool ok = false;
+        int const group_number = action_id.mid(QStringLiteral("media.assign_group_").length()).toInt(&ok);
+        if (!ok || group_number < 1 || group_number > 9) {
+            return false;
+        }
+
+        auto groups = _group_manager->getGroupsForContextMenu();
+        if (group_number > static_cast<int>(groups.size())) {
+            return false;
+        }
+
+        auto it = groups.begin();
+        std::advance(it, group_number - 1);
+        int const group_id = it->first;
+
+        _group_manager->assignEntitiesToGroup(group_id, _selected_entities);
+        clearAllSelections();
+        UpdateCanvas();
+        return true;
+    });
+
+    manager->registerAdapter(_key_adapter);
 }

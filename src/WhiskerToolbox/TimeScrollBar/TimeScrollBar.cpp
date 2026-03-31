@@ -4,6 +4,8 @@
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "KeymapSystem/KeyActionAdapter.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"// For TimeKey
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBarState.hpp"
@@ -13,6 +15,7 @@
 #include <QTimer>
 
 #include <iostream>
+#include <utility>
 
 /**
  * @brief Helper function to setup common UI connections
@@ -157,7 +160,7 @@ void TimeScrollBar::Slider_Scroll(int newPos) {
     ui->horizontalScrollBar->setSliderPosition(newPos);
 
     // Create TimePosition with the actual TimeFrame pointer
-    TimePosition position(TimeFrameIndex(frame_id), tf);
+    TimePosition const position(TimeFrameIndex(frame_id), tf);
 
     // Update EditorRegistry directly (preferred path)
     if (_editor_registry) {
@@ -321,7 +324,7 @@ void TimeScrollBar::FrameSpinBoxChanged(int new_frame) {
     auto frame_id = tf->checkFrameInbounds(new_frame);
 
     // Create TimePosition with the actual TimeFrame pointer
-    TimePosition position(TimeFrameIndex(frame_id), tf);
+    TimePosition const position(TimeFrameIndex(frame_id), tf);
 
     // Update EditorRegistry directly (preferred path)
     if (_editor_registry) {
@@ -358,9 +361,44 @@ void TimeScrollBar::setEditorRegistry(EditorRegistry * registry) {
     }
 }
 
-void TimeScrollBar::setTimeFrame(std::shared_ptr<TimeFrame> tf, TimeKey display_key) {
+void TimeScrollBar::setKeymapManager(KeymapSystem::KeymapManager * manager) {
+    if (!manager) {
+        return;
+    }
+
+    _key_adapter = new KeymapSystem::KeyActionAdapter(this);
+    _key_adapter->setTypeId(EditorLib::EditorTypeId(QStringLiteral("TimeScrollBar")));
+
+    _key_adapter->setHandler([this](QString const & action_id) -> bool {
+        if (action_id == QStringLiteral("timeline.play_pause")) {
+            PlayButton();
+            return true;
+        }
+        if (action_id == QStringLiteral("timeline.next_frame")) {
+            changeScrollBarValue(1, true);
+            return true;
+        }
+        if (action_id == QStringLiteral("timeline.prev_frame")) {
+            changeScrollBarValue(-1, true);
+            return true;
+        }
+        if (action_id == QStringLiteral("timeline.jump_forward")) {
+            changeScrollBarValue(getFrameJumpValue(), true);
+            return true;
+        }
+        if (action_id == QStringLiteral("timeline.jump_backward")) {
+            changeScrollBarValue(-getFrameJumpValue(), true);
+            return true;
+        }
+        return false;
+    });
+
+    manager->registerAdapter(_key_adapter);
+}
+
+void TimeScrollBar::setTimeFrame(const std::shared_ptr<TimeFrame>& tf, TimeKey display_key) {
     _current_time_frame = tf;
-    _current_display_key = display_key;
+    _current_display_key = std::move(display_key);
 
     if (tf) {
         updateScrollBarNewMax(static_cast<int>(tf->getTotalFrameCount() - 1));
@@ -383,8 +421,8 @@ void TimeScrollBar::_populateTimeKeySelector() {
     }
 
     // Set current selection if available
-    QString current_key_str = QString::fromStdString(_current_display_key.str());
-    int index = ui->timekey_combobox->findText(current_key_str);
+    QString const current_key_str = QString::fromStdString(_current_display_key.str());
+    int const index = ui->timekey_combobox->findText(current_key_str);
     if (index >= 0) {
         ui->timekey_combobox->setCurrentIndex(index);
     }
@@ -397,14 +435,14 @@ void TimeScrollBar::_onTimeKeyChanged(QString const & key_str) {
         return;
     }
 
-    TimeKey key(key_str.toStdString());
+    TimeKey const key(key_str.toStdString());
     auto tf = _data_manager->getTime(key);
     if (tf) {
         setTimeFrame(tf, key);
     }
 }
 
-void TimeScrollBar::_onEditorRegistryTimeChanged(TimePosition position) {
+void TimeScrollBar::_onEditorRegistryTimeChanged(const TimePosition& position) {
     // Only update if the time change is for the same clock we're controlling
     if (!position.isValid()) {
         std::cout << "TimeScrollBar::_onEditorRegistryTimeChanged: Invalid time position" << std::endl;
@@ -415,7 +453,7 @@ void TimeScrollBar::_onEditorRegistryTimeChanged(TimePosition position) {
         return;
     }
 
-    int frame_value = position.convertTo(_current_time_frame.get()).getValue();
+    int const frame_value = position.convertTo(_current_time_frame.get()).getValue();
     ui->horizontalScrollBar->blockSignals(true);
     ui->horizontalScrollBar->setSliderPosition(frame_value);
     ui->horizontalScrollBar->blockSignals(false);

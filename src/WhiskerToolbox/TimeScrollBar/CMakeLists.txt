@@ -38,6 +38,7 @@ target_link_libraries(TimeScrollBar PRIVATE
 
 target_link_libraries(TimeScrollBar PRIVATE DataManager)
 target_link_libraries(TimeScrollBar PRIVATE EditorState)
+target_link_libraries(TimeScrollBar PRIVATE KeymapSystem)
 
 # Conditionally link to MediaData when FFMPEG is enabled for video-specific functionality
 if(ENABLE_FFMPEG)

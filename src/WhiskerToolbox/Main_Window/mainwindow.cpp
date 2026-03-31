@@ -31,6 +31,7 @@
 // Module registration headers - each module defines its own factory functions
 #include "BatchProcessing_Widget/BatchProcessingWidgetRegistration.hpp"
 #include "CommandLog_Widget/CommandLogWidgetRegistration.hpp"
+#include "KeybindingEditor/KeybindingEditorRegistration.hpp"
 #include "DataImport_Widget/DataImportWidgetRegistration.hpp"
 #include "DataInspector_Widget/DataInspectorWidgetRegistration.hpp"
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
@@ -79,6 +80,7 @@
 
 #include "Commands/Core/CommandRecorder.hpp"
 #include "Commands/Core/register_core_commands.hpp"
+#include "KeymapSystem/KeyAction.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
 #include "utils/DataLoadUtils.hpp"
 
@@ -90,15 +92,12 @@
 #include <QImage>
 #include <QKeyEvent>
 #include <QLineEdit>
-#include <QListWidget>
 #include <QMenu>
 #include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QProgressDialog>
 #include <QSplitter>
-#include <QTableWidget>
-#include <QTextEdit>
-#include <QTreeWidget>
+
 
 #include <QCoreApplication>
 #include <QElapsedTimer>
@@ -209,8 +208,13 @@ MainWindow::MainWindow(QWidget * parent)
         return states.empty() ? nullptr : states.back();
     });
 
+    // Create KeymapManager for configurable keyboard shortcuts
+    // Created BEFORE _registerEditorTypes() so widget modules can register their actions
+    _keymap_manager = new KeymapSystem::KeymapManager(this);
+    _keymap_manager->setEditorRegistry(_editor_registry.get());
+
     // Register editor types with the factory
-    // Must be called AFTER creating dependencies (TimeScrollBar, GroupManager)
+    // Must be called AFTER creating dependencies (TimeScrollBar, GroupManager, KeymapManager)
     _registerEditorTypes();
 
     // Register the TimeScrollBar state that was created before registration
@@ -228,14 +232,14 @@ MainWindow::MainWindow(QWidget * parent)
     // Install application-wide event filter for targeted key interception
     qApp->installEventFilter(this);
 
-    // Create KeymapManager for configurable keyboard shortcuts
-    // Installed AFTER 'this' so it runs FIRST (Qt LIFO event filter order)
-    _keymap_manager = new KeymapSystem::KeymapManager(this);
-    _keymap_manager->setEditorRegistry(_editor_registry.get());
+    // Install KeymapManager as event filter AFTER 'this' so it runs FIRST (Qt LIFO order)
     qApp->installEventFilter(_keymap_manager);
 
     // Load persisted keybinding overrides into KeymapManager
     _keymap_manager->importOverrides(_state_manager->preferences()->keybindingOverrides());
+
+    // Wire the TimeScrollBar adapter so KeymapManager can dispatch timeline actions
+    _time_scrollbar->setKeymapManager(_keymap_manager);
 
     // Auto-save keybinding overrides whenever bindings change
     connect(_keymap_manager, &KeymapSystem::KeymapManager::bindingsChanged,
@@ -468,6 +472,7 @@ void MainWindow::_createActions() {
     connect(ui->actionOnion_Skin_View, &QAction::triggered, this, &MainWindow::openOnionSkinViewWidget);
     connect(ui->actionData_Synthesizer, &QAction::triggered, this, &MainWindow::openDataSynthesizerWidget);
     connect(ui->actionCommand_Log, &QAction::triggered, this, &MainWindow::openCommandLogWidget);
+    connect(ui->actionKeybinding_Editor, &QAction::triggered, this, &MainWindow::openKeybindingEditor);
 }
 
 /*
@@ -704,73 +709,9 @@ ads::CDockWidget * MainWindow::findDockWidget(std::string const & key) const {
 
 bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
     if (event->type() == QEvent::KeyPress) {
-        auto * keyEvent = dynamic_cast<QKeyEvent *>(event);
-
-        // Handle spacebar for play/pause (unless in text input widget)
-        if (keyEvent->key() == Qt::Key_Space && keyEvent->modifiers() == Qt::NoModifier) {
-            QWidget * focusedWidget = QApplication::focusWidget();
-
-            // Don't intercept spacebar if we're in a text input widget
-            if (focusedWidget) {
-                if (qobject_cast<QLineEdit *>(focusedWidget) ||
-                    qobject_cast<QTextEdit *>(focusedWidget) ||
-                    qobject_cast<QPlainTextEdit *>(focusedWidget)) {
-                    // Let the text widget handle the space normally
-                    return false;
-                }
-            }
-
-            // Toggle play/pause
-            _time_scrollbar->PlayButton();
-            return true;// Event handled
-        }
-
-        // Always handle Ctrl+Left/Right for frame navigation regardless of focus
-        if (keyEvent->modifiers() & Qt::ControlModifier) {
-            if (keyEvent->key() == Qt::Key_Right) {
-                _time_scrollbar->changeScrollBarValue(_time_scrollbar->getFrameJumpValue(), true);
-                return true;// Event handled, don't pass it on
-            } else if (keyEvent->key() == Qt::Key_Left) {
-                _time_scrollbar->changeScrollBarValue(-_time_scrollbar->getFrameJumpValue(), true);
-                return true;// Event handled, don't pass it on
-            }
-        }
-
-        // For plain arrow keys, be very selective
-        if (keyEvent->modifiers() == Qt::NoModifier &&
-            (keyEvent->key() == Qt::Key_Right || keyEvent->key() == Qt::Key_Left)) {
-
-            QWidget * focusedWidget = QApplication::focusWidget();
-
-            // If we're in a text input widget, let it handle the arrow keys for cursor movement
-            if (focusedWidget) {
-                // Check for text input widgets
-                if (qobject_cast<QLineEdit *>(focusedWidget) ||
-                    qobject_cast<QTextEdit *>(focusedWidget) ||
-                    qobject_cast<QPlainTextEdit *>(focusedWidget)) {
-                    // Let the text widget handle the event normally
-                    return false;
-                }
-
-                // Check if we're in a widget that should handle arrow keys (like combo boxes, lists, etc.)
-                if (qobject_cast<QComboBox *>(focusedWidget) ||
-                    qobject_cast<QListWidget *>(focusedWidget) ||
-                    qobject_cast<QTableWidget *>(focusedWidget) ||
-                    qobject_cast<QTreeWidget *>(focusedWidget)) {
-                    // Let these widgets handle their own arrow key navigation
-                    return false;
-                }
-            }
-
-            // Otherwise, use arrow keys for frame navigation
-            if (keyEvent->key() == Qt::Key_Right) {
-                _time_scrollbar->changeScrollBarValue(_time_scrollbar->getFrameJumpValue(), true);
-                return true;// Event handled
-            } else if (keyEvent->key() == Qt::Key_Left) {
-                _time_scrollbar->changeScrollBarValue(-_time_scrollbar->getFrameJumpValue(), true);
-                return true;// Event handled
-            }
-        }
+        // Timeline key handling (Space, arrows, Ctrl+arrows) has been migrated
+        // to the KeymapSystem. KeymapManager's event filter intercepts those keys
+        // before this filter runs (Qt LIFO event filter order).
 
         // === FIX HERE ===
         // DO NOT call QMainWindow::eventFilter(obj, event) for objects that are not 'this'.
@@ -783,7 +724,6 @@ bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
         }
 
         // For all other keys, let them pass through to the focused widget
-        qDebug() << "MainWindow::eventFilter - Passing key through to focused widget";
         return false;
     }
 
@@ -874,6 +814,10 @@ void MainWindow::openDataSynthesizerWidget() {
 
 void MainWindow::openCommandLogWidget() {
     openEditor(QStringLiteral("CommandLogWidget"));
+}
+
+void MainWindow::openKeybindingEditor() {
+    openEditor(QStringLiteral("KeybindingEditor"));
 }
 
 void MainWindow::openDataImport() {
@@ -981,7 +925,7 @@ void MainWindow::_registerEditorTypes() {
     // Each module defines its own factory functions - MainWindow doesn't need
     // to know implementation details like MediaWidgetState, MediaViewWidget, etc.
 
-    MediaWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
+    MediaWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get(), _keymap_manager);
 
     DataInspectorModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get(), commandRecorder());
 
@@ -1001,7 +945,7 @@ void MainWindow::_registerEditorTypes() {
 
     WhiskerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    TimeScrollBarModule::registerTypes(_editor_registry.get(), _data_manager);
+    TimeScrollBarModule::registerTypes(_editor_registry.get(), _data_manager, _keymap_manager);
 
     DataManagerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
@@ -1048,6 +992,8 @@ void MainWindow::_registerEditorTypes() {
     DataSynthesizerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, commandRecorder());
 
     CommandLogWidgetModule::registerTypes(_editor_registry.get(), commandRecorder());
+
+    KeybindingEditorModule::registerTypes(_editor_registry.get(), _keymap_manager);
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);

@@ -107,6 +107,17 @@ src/WhiskerToolbox/MyWidget/
 └── MyWidgetRegistration.hpp / .cpp  ← Registration with EditorRegistry
 ```
 
+If the registration file grows (see [§ Registration File Organization](#registration-file-organization) below), an optional companion file can be added:
+
+```
+src/WhiskerToolbox/MyWidget/
+├── CMakeLists.txt
+├── MyWidget.hpp / .cpp
+├── MyWidgetState.hpp / .cpp
+├── MyWidgetRegistration.hpp / .cpp  ← Type metadata + factories
+└── MyWidgetActions.cpp              ← (optional) Actions when file exceeds ~250 lines
+```
+
 **MyWidgetRegistration.hpp:**
 
 ```cpp
@@ -132,10 +143,27 @@ void registerTypes(EditorRegistry * registry,
 
 namespace MyWidgetModule {
 
+namespace {
+
+// Named helpers keep registerTypes() readable as actions accumulate.
+// registerEditorActions: keymap descriptors (pure metadata, no widget instance)
+// registerContextActions: right-click menu entries tied to SelectionContext
+//
+// Add sections here as the widget grows. Extract to MyWidgetActions.cpp
+// if this file exceeds ~250 lines or the widget has more than ~8 actions.
+
+// void registerEditorActions(KeymapSystem::KeymapManager * km) { ... }
+// void registerContextActions(EditorRegistry * registry, ...) { ... }
+
+} // namespace
+
 void registerTypes(EditorRegistry * registry,
                    std::shared_ptr<DataManager> data_manager)
 {
     auto dm = std::move(data_manager);
+
+    // registerEditorActions(km);       // uncomment when keymap integration is added
+    // registerContextActions(registry); // uncomment when context actions are added
 
     registry->registerType({
         .type_id = QStringLiteral("MyWidget"),
@@ -166,6 +194,61 @@ void registerTypes(EditorRegistry * registry,
 ```
 
 For widgets that need a more complex setup (cross-references between subwidgets, access to `SelectionContext`, etc.), use `create_editor_custom` instead. See the MLCoreWidget registration for an example of this pattern.
+
+### Registration File Organization {#registration-file-organization}
+
+The registration file has three distinct jobs that tend to grow independently:
+
+1. **Type metadata** — `EditorTypeInfo` struct and factory lambdas
+2. **Editor actions** — keymap descriptor registration
+3. **Context actions** — right-click menu entries
+
+The convention is to represent each concern as a named `static void` helper in an **anonymous namespace** at the top of the registration `.cpp`, and call them from `registerTypes()`. This keeps the `registerTypes()` function readable as the widget grows.
+
+```cpp
+namespace MyWidgetModule {
+
+namespace {
+
+static void registerEditorActions(KeymapSystem::KeymapManager * km) {
+    auto const scope = KeyActionScope::editorFocused(
+            EditorTypeId(QStringLiteral("MyWidget")));
+    km->registerAction({
+        .action_id = QStringLiteral("my_widget.do_something"),
+        ...});
+}
+
+static void registerContextActions(EditorRegistry * registry,
+                                   std::shared_ptr<DataManager> const & dm) {
+    ContextAction action;
+    action.action_id = QStringLiteral("my_widget.analyze_tensor");
+    // ...
+    registry->selectionContext()->registerAction(std::move(action));
+}
+
+} // namespace
+
+void registerTypes(EditorRegistry * registry, ...) {
+    registerEditorActions(km);
+    registerContextActions(registry, dm);
+    registry->registerType({ /* factories */ });
+}
+
+} // namespace MyWidgetModule
+```
+
+::: {.callout-tip}
+## When to extract to a companion file
+
+Extract to `MyWidgetActions.cpp` (added to the same static library) when:
+
+- The registration `.cpp` exceeds **~250 lines**, or
+- The widget has **more than ~8 actions** across categories
+
+Do **not** create empty placeholder action files — add the helpers when there is something to register. The [Keybinding Editor widget](../KeymapSystem/roadmap.md) (Phase 3) is the canonical answer to "what actions does this widget have?", not the source files.
+:::
+
+**Action ID naming:** follow the `<widget_domain>.<verb>_<noun>` convention (e.g. `my_widget.assign_group_1`, `scatter_plot.visualize_2d_tensor`). The prefix is what groups actions together in the Keybinding Editor.
 
 ### EditorState
 
@@ -427,19 +510,16 @@ Register a ContextAction when:
 
 ### Registering a Context Action
 
-Context actions are registered in your widget's `registerTypes()` function, alongside the `EditorTypeInfo`:
+Context actions are registered via a `static void registerContextActions(...)` helper in the anonymous namespace at the top of your registration `.cpp`, called from `registerTypes()`. See [§ Registration File Organization](#registration-file-organization) for the full pattern.
+
+The helper signature:
 
 ```cpp
-void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager)
-{
-    auto dm = data_manager;
-
-    // 1. Register the widget type (as in §1)
-    registry->registerType({ /* ... */ });
-
-    // 2. Register context actions
+namespace {
+static void registerContextActions(EditorRegistry * registry,
+                                   std::shared_ptr<DataManager> const & dm) {
     auto * selection_ctx = registry->selectionContext();
+    if (!selection_ctx) { return; }
 
     ContextAction action;
     action.action_id = QStringLiteral("my_widget.analyze_tensor");
@@ -466,6 +546,7 @@ void registerTypes(EditorRegistry * registry,
 
     selection_ctx->registerAction(std::move(action));
 }
+} // namespace
 ```
 
 ### Distinction from Commands
@@ -500,18 +581,44 @@ The Keymap System is currently in design/early implementation. The patterns desc
 
 ### Registering Actions
 
-Action *descriptors* (pure metadata) are registered during `registerTypes()`:
+Action *descriptors* (pure metadata) are registered via a `static void registerEditorActions(KeymapSystem::KeymapManager * km)` helper in the anonymous namespace at the top of your registration `.cpp`, called from `registerTypes()`. See [§ Registration File Organization](#registration-file-organization) for the full pattern.
+
+The helper signature:
 
 ```cpp
-keymap_manager->registerAction({
-    .action_id = QStringLiteral("my_widget.do_something"),
-    .display_name = QStringLiteral("Do Something"),
-    .category = QStringLiteral("My Widget"),
-    .scope = KeyActionScope::EditorFocused(
-            EditorTypeId(QStringLiteral("MyWidget"))),
-    .default_binding = QKeySequence(Qt::Key_D)
-});
+namespace {
+static void registerEditorActions(KeymapSystem::KeymapManager * km) {
+    if (!km) { return; }
+    auto const scope = KeyActionScope::editorFocused(
+            EditorTypeId(QStringLiteral("MyWidget")));
+    km->registerAction({
+        .action_id = QStringLiteral("my_widget.do_something"),
+        .display_name = QStringLiteral("Do Something"),
+        .category = QStringLiteral("My Widget"),
+        .scope = scope,
+        .default_binding = QKeySequence(Qt::Key_D)
+    });
+    // Actions with no shipped default — user-assignable only:
+    km->registerAction({
+        .action_id = QStringLiteral("my_widget.export_svg"),
+        .display_name = QStringLiteral("Export as SVG"),
+        .category = QStringLiteral("My Widget"),
+        .scope = scope,
+        .default_binding = {}  // intentionally unbound
+    });
+}
+} // namespace
 ```
+
+::: {.callout-tip}
+## Registering "potential" actions without a default key
+
+Not every action needs a shipped default key. If a feature is useful but not common enough to warrant a pre-assigned shortcut, register the descriptor with `default_binding = {}` (a default-constructed `QKeySequence`).
+
+The action still appears in the Keybinding Editor under its category with "(unbound)" shown, and the user can assign any key they want. The assigned binding is persisted via `AppPreferencesData::keybinding_overrides` and survives restarts.
+
+The `KeyActionAdapter` handler is wired up normally — it simply will not fire until the user assigns a key. There is no special "potential" flag or separate API; the only difference is an empty `default_binding`.
+:::
 
 ### Handling Actions at Runtime
 
@@ -626,15 +733,20 @@ Here is a step-by-step checklist for adding a new widget:
 
 ### Optional: Context Actions
 
-- [ ] Register `ContextAction` in `registerTypes()` if your widget can process focused data
+- [ ] Add a `static void registerContextActions(EditorRegistry *, ...)` helper in the anonymous namespace of your registration `.cpp`
+- [ ] Call it from `registerTypes()` before `registry->registerType()`
 - [ ] Implement `is_applicable` predicate based on data type/properties
 - [ ] Implement `execute` to open your widget and configure it with the selection
+- [ ] Use action IDs following `<widget_domain>.<verb>_<noun>` (e.g. `my_widget.visualize_tensor`)
 
 ### Optional: Keyboard Shortcuts
 
-- [ ] Register `KeyActionDescriptor`s during `registerTypes()` for discoverable, rebindable actions
-- [ ] Create a `KeyActionAdapter` in the widget constructor
-- [ ] Install a handler lambda that dispatches by `action_id`
+- [ ] Add a `KeymapSystem::KeymapManager *` parameter to `registerTypes()`
+- [ ] Add a `static void registerEditorActions(KeymapSystem::KeymapManager *)` helper in the anonymous namespace
+- [ ] Call it from `registerTypes()`, guarded by `if (km)`
+- [ ] Register `KeyActionDescriptor`s with `<widget_domain>.<verb>_<noun>` action IDs
+- [ ] Create a `KeyActionAdapter` in the widget constructor with a handler lambda that dispatches by `action_id`
+- [ ] Remove the original `keyPressEvent()` / `eventFilter()` key handling once migrated
 
 ### Optional: DataFocusAware
 
