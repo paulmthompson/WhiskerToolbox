@@ -30,6 +30,8 @@
 
 #include "AppPreferencesData.hpp"
 
+#include "KeymapSystem/Keymap.hpp"
+
 #include <QObject>
 #include <QString>
 
@@ -83,6 +85,11 @@ public:
 
     [[nodiscard]] std::string defaultTimeFrameKey() const;
     void setDefaultTimeFrameKey(std::string const & key);
+
+    // === Keyboard Shortcuts ===
+
+    [[nodiscard]] std::vector<KeymapSystem::KeymapOverrideEntry> keybindingOverrides() const;
+    void setKeybindingOverrides(std::vector<KeymapSystem::KeymapOverrideEntry> const & overrides);
 
     // === Direct access (for testing / advanced use) ===
 

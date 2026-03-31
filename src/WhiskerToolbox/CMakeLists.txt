@@ -16,6 +16,7 @@ find_package(glm CONFIG REQUIRED)
 qt_standard_project_setup()
 
 add_subdirectory(EditorState) # reflectcpp, Qt
+add_subdirectory(KeymapSystem) # Qt, EditorState
 add_subdirectory(Collapsible_Widget) # Qt
 add_subdirectory(Terminal_Widget) # Qt, EditorState, reflectcpp
 add_subdirectory(ColorPicker_Widget) # Qt, DataManager
@@ -257,6 +258,7 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager DataManagerIO TensorDat
 target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
 target_link_libraries(WhiskerToolbox PRIVATE EditorState)
+target_link_libraries(WhiskerToolbox PRIVATE KeymapSystem)
 target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataExport_Widget)

@@ -56,7 +56,7 @@ void AppPreferences::save() {
     _save_timer->stop();
 
     // Ensure directory exists
-    QDir dir;
+    QDir const dir;
     dir.mkpath(QFileInfo(_file_path).absolutePath());
 
     std::ofstream file(_file_path.toStdString());
@@ -136,6 +136,18 @@ void AppPreferences::setDefaultTimeFrameKey(std::string const & key) {
         _scheduleSave();
         emit preferenceChanged(QStringLiteral("default_time_frame_key"));
     }
+}
+
+// === Keyboard Shortcuts ===
+
+std::vector<KeymapSystem::KeymapOverrideEntry> AppPreferences::keybindingOverrides() const {
+    return _data.keybinding_overrides;
+}
+
+void AppPreferences::setKeybindingOverrides(std::vector<KeymapSystem::KeymapOverrideEntry> const & overrides) {
+    _data.keybinding_overrides = overrides;
+    _scheduleSave();
+    emit preferenceChanged(QStringLiteral("keybinding_overrides"));
 }
 
 }// namespace StateManagement

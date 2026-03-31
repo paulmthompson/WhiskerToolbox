@@ -79,6 +79,7 @@
 
 #include "Commands/Core/CommandRecorder.hpp"
 #include "Commands/Core/register_core_commands.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "utils/DataLoadUtils.hpp"
 
 #include <QCloseEvent>
@@ -226,6 +227,22 @@ MainWindow::MainWindow(QWidget * parent)
     this->installEventFilter(this);
     // Install application-wide event filter for targeted key interception
     qApp->installEventFilter(this);
+
+    // Create KeymapManager for configurable keyboard shortcuts
+    // Installed AFTER 'this' so it runs FIRST (Qt LIFO event filter order)
+    _keymap_manager = new KeymapSystem::KeymapManager(this);
+    _keymap_manager->setEditorRegistry(_editor_registry.get());
+    qApp->installEventFilter(_keymap_manager);
+
+    // Load persisted keybinding overrides into KeymapManager
+    _keymap_manager->importOverrides(_state_manager->preferences()->keybindingOverrides());
+
+    // Auto-save keybinding overrides whenever bindings change
+    connect(_keymap_manager, &KeymapSystem::KeymapManager::bindingsChanged,
+            this, [this]() {
+                _state_manager->preferences()->setKeybindingOverrides(
+                        _keymap_manager->exportOverrides());
+            });
 
     _buildInitialLayout();
 

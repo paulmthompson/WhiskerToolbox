@@ -17,6 +17,8 @@
 
 #include <rfl.hpp>
 
+#include "KeymapSystem/Keymap.hpp"
+
 #include <string>
 #include <vector>
 
@@ -41,6 +43,9 @@ struct AppPreferencesData {
 
     // === Data Loading ===
     std::string default_time_frame_key;///< Default TimeFrame key for new data loads
+
+    // === Keyboard Shortcuts ===
+    std::vector<KeymapSystem::KeymapOverrideEntry> keybinding_overrides;///< User keybinding customizations
 };
 
 }// namespace StateManagement

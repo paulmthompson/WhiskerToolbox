@@ -18,6 +18,10 @@ namespace commands {
 class CommandRecorder;
 }// namespace commands
 
+namespace KeymapSystem {
+class KeymapManager;
+}// namespace KeymapSystem
+
 namespace StateManagement {
 class StateManager;
 class WorkspaceData;
@@ -90,6 +94,12 @@ public:
     commands::CommandRecorder * commandRecorder() const { return _command_recorder.get(); }
 
     /**
+     * @brief Get the keymap manager for configurable keyboard shortcuts
+     * @return Non-owning pointer to the KeymapManager
+     */
+    KeymapSystem::KeymapManager * keymapManager() const { return _keymap_manager; }
+
+    /**
      * @brief Get the editor registry for state and type management
      * 
      * EditorRegistry provides:
@@ -125,6 +135,9 @@ private:
     std::unique_ptr<GroupManager> _group_manager;
     std::unique_ptr<SplitButtonHandler> _split_button_handler;
     std::unique_ptr<commands::CommandRecorder> _command_recorder;
+
+    /// Configurable keyboard shortcut manager (installed as QApplication event filter)
+    KeymapSystem::KeymapManager * _keymap_manager;
 
     // Main widgets created programmatically (not in UI file)
     TimeScrollBar * _time_scrollbar;
