@@ -258,6 +258,7 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager DataManagerIO TensorDat
 target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
 target_link_libraries(WhiskerToolbox PRIVATE EditorState)
+target_link_libraries(WhiskerToolbox PRIVATE KeymapSystem)
 target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataExport_Widget)

@@ -73,10 +73,15 @@ Central manager class (owned by MainWindow). Inherits `QObject`.
 
 **Signal:** `bindingsChanged()` — emitted on any binding modification.
 
+**Event filter (installed on QApplication by MainWindow):**
+
+- `eventFilter(obj, event)` — Intercepts `QEvent::KeyPress`. Bypasses text-input widgets (`QLineEdit`, `QTextEdit`, `QPlainTextEdit`, `QComboBox`, `QAbstractSpinBox`). Resolves and dispatches through scope priority. Returns `false` (pass-through) when no action matches.
+- `setEditorRegistry(registry)` — Set the `EditorRegistry` used for focus tracking via `SelectionContext::activeEditorId()`.
+
 ## Dependencies
 
-- `Qt6::Core`, `Qt6::Gui` — `QKeySequence`, `QObject`, signals/slots
-- `EditorState` — `EditorTypeId`, `EditorInstanceId` strong types
+- `Qt6::Core`, `Qt6::Gui`, `Qt6::Widgets` — `QKeySequence`, `QObject`, signals/slots, widget type checks for text-input bypass
+- `EditorState` — `EditorTypeId`, `EditorInstanceId` strong types, `EditorRegistry`, `SelectionContext`
 
 ## Test Coverage
 

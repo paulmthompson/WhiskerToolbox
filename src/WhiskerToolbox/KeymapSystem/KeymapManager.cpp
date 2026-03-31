@@ -7,6 +7,20 @@
 
 #include "KeymapSystem/KeyActionAdapter.hpp"
 
+#include "EditorState/EditorRegistry.hpp"
+#include "EditorState/EditorState.hpp"
+#include "EditorState/SelectionContext.hpp"
+
+#include <QAbstractSpinBox>
+#include <QApplication>
+#include <QComboBox>
+#include <QEvent>
+#include <QKeyEvent>
+#include <QLineEdit>
+#include <QPlainTextEdit>
+#include <QTextEdit>
+#include <QWidget>
+
 #include <algorithm>
 #include <cassert>
 
@@ -16,6 +30,94 @@ KeymapManager::KeymapManager(QObject * parent)
     : QObject(parent) {}
 
 KeymapManager::~KeymapManager() = default;
+
+// --- Event filter ---
+
+bool KeymapManager::eventFilter(QObject * obj, QEvent * event) {
+    if (event->type() != QEvent::KeyPress) {
+        return QObject::eventFilter(obj, event);
+    }
+
+    // Bypass: if the focused widget is a text-input widget, let Qt handle it
+    QWidget * focused = QApplication::focusWidget();
+    if (_isTextInputWidget(focused)) {
+        return false;
+    }
+
+    auto * key_event = dynamic_cast<QKeyEvent *>(event);
+
+    // Build a QKeySequence from the key event (key + modifiers)
+    int const key_with_modifiers = key_event->key() | static_cast<int>(key_event->modifiers());
+    QKeySequence const key_seq(key_with_modifiers);
+
+    // Determine the focused editor type from SelectionContext
+    EditorLib::EditorTypeId focused_type_id;
+    if (_editor_registry) {
+        auto * context = _editor_registry->selectionContext();
+        auto const instance_id = context->activeEditorId();
+        if (instance_id.isValid()) {
+            auto const state = _editor_registry->state(
+                    EditorLib::EditorInstanceId(instance_id.value));
+            if (state) {
+                focused_type_id = EditorLib::EditorTypeId(state->getTypeName());
+            }
+        }
+    }
+
+    // Resolve the key press through scope priority
+    auto const action_id = resolveKeyPress(key_seq, focused_type_id);
+    if (!action_id.has_value()) {
+        return false;// No match — let the event pass through
+    }
+
+    // Look up the action descriptor for target routing
+    auto const desc = action(*action_id);
+    if (!desc.has_value()) {
+        return false;
+    }
+
+    // Determine target type for dispatch
+    EditorLib::EditorTypeId target_type_id;
+    switch (desc->scope.kind) {
+        case KeyActionScopeKind::EditorFocused:
+            target_type_id = focused_type_id;
+            break;
+        case KeyActionScopeKind::AlwaysRouted:
+            target_type_id = desc->scope.editor_type_id;
+            break;
+        case KeyActionScopeKind::Global:
+            // Global actions: try dispatching to any adapter that handles it
+            target_type_id = {};
+            break;
+    }
+
+    // Dispatch to the appropriate adapter
+    if (dispatchAction(*action_id, target_type_id)) {
+        return true;// Event consumed
+    }
+
+    // Action resolved but no adapter handled it — don't consume the event
+    return false;
+}
+
+// --- Editor registry integration ---
+
+void KeymapManager::setEditorRegistry(EditorRegistry * registry) {
+    _editor_registry = registry;
+}
+
+// --- Text-input bypass ---
+
+bool KeymapManager::_isTextInputWidget(QWidget * widget) {
+    if (!widget) {
+        return false;
+    }
+    return qobject_cast<QLineEdit *>(widget) != nullptr ||
+           qobject_cast<QTextEdit *>(widget) != nullptr ||
+           qobject_cast<QPlainTextEdit *>(widget) != nullptr ||
+           qobject_cast<QComboBox *>(widget) != nullptr ||
+           qobject_cast<QAbstractSpinBox *>(widget) != nullptr;
+}
 
 // --- Registration ---
 

@@ -34,6 +34,7 @@ target_link_libraries(StateManagement
     PRIVATE
         nlohmann_json::nlohmann_json
         EditorState
+        KeymapSystem
         ZoneManager
 )
 

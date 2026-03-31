@@ -28,6 +28,9 @@
 #include <string>
 #include <vector>
 
+class EditorRegistry;
+class QEvent;
+
 namespace KeymapSystem {
 
 class KeyActionAdapter;
@@ -53,14 +56,34 @@ struct KeyConflict {
  *   (EditorFocused > AlwaysRouted > Global)
  * - Adapter routing: dispatches actions to registered KeyActionAdapters
  *
- * This class does NOT install itself as an event filter — that is done in Step 1.3.
- * For Step 1.1, it provides the registration and resolution APIs only.
+ * When installed as a QApplication event filter, it intercepts key events and
+ * dispatches them through the scope resolution pipeline. Text-input widgets
+ * (QLineEdit, QTextEdit, etc.) are automatically bypassed.
  */
 class KeymapManager : public QObject {
     Q_OBJECT
 public:
     explicit KeymapManager(QObject * parent = nullptr);
     ~KeymapManager() override;
+
+    // --- Event filter (installed on QApplication by MainWindow) ---
+
+    /**
+     * @brief Application-wide event filter for keyboard dispatch
+     *
+     * Intercepts QEvent::KeyPress events and applies scope resolution.
+     * Text-input widgets are bypassed automatically.
+     * If no action matches, the event passes through to Qt.
+     */
+    bool eventFilter(QObject * obj, QEvent * event) override;
+
+    // --- Editor registry integration ---
+
+    /**
+     * @brief Set the editor registry used for focus tracking
+     * @param registry Non-owning pointer to the EditorRegistry (must outlive KeymapManager)
+     */
+    void setEditorRegistry(EditorRegistry * registry);
 
     // --- Registration (called during widget type setup) ---
 
@@ -188,6 +211,12 @@ private:
 
     /// Registered adapters (non-owning; cleaned up via QObject::destroyed)
     std::vector<KeyActionAdapter *> _adapters;
+
+    /// Non-owning pointer to the editor registry for focus tracking
+    EditorRegistry * _editor_registry = nullptr;
+
+    /// Check if the currently focused widget is a text-input widget
+    [[nodiscard]] static bool _isTextInputWidget(QWidget * widget);
 
     /// Remove an adapter from the routing table (called on QObject::destroyed)
     void _removeAdapter(QObject * adapter);

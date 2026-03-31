@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 qt_add_library(KeymapSystem STATIC
     KeyAction.hpp
@@ -14,7 +14,7 @@ set_target_properties(KeymapSystem PROPERTIES
 )
 
 target_link_libraries(KeymapSystem
-    PUBLIC Qt6::Core Qt6::Gui
+    PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets
     PUBLIC EditorState
 )
 

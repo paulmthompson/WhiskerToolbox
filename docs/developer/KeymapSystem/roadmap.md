@@ -1,6 +1,6 @@
 # Keymap System — Implementation Roadmap
 
-**Last updated:** 2026-03-30 — Steps 1.1 and 1.2 complete
+**Last updated:** 2026-03-30 — Steps 1.1–1.4 complete
 
 ## Progress
 
@@ -8,8 +8,8 @@
 |------|--------|
 | 1.1 — `KeymapSystem` static library | ✅ Complete |
 | 1.2 — `KeyActionAdapter` component | ✅ Complete (delivered as part of 1.1) |
-| 1.3 — Wire into MainWindow | ⬜ Not started |
-| 1.4 — Persistence in AppPreferencesData | ⬜ Not started |
+| 1.3 — Wire into MainWindow | ✅ Complete |
+| 1.4 — Persistence in AppPreferencesData | ✅ Complete |
 | 2.1 — Timeline actions | ⬜ Not started |
 | 2.2 — Media_Widget group assignment | ⬜ Not started |
 | 2.3 — Plot polygon editing | ⬜ Not started |
@@ -57,39 +57,38 @@ This roadmap breaks the Keymap System into incremental steps that each produce a
 
 ---
 
-### Step 1.3 — Wire `KeymapManager` into MainWindow
+### ✅ Step 1.3 — Wire `KeymapManager` into MainWindow
 
-**Goal:** Install `KeymapManager` as a QApplication event filter, running alongside the existing `MainWindow::eventFilter()`.
-
-**Modified files:**
-
-| File | Change |
-|------|--------|
-| `src/WhiskerToolbox/Main_Window/mainwindow.hpp` | Add `KeymapManager *` member |
-| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Create `KeymapManager` in constructor. Install as app event filter. Wire `SelectionContext::activeEditorId()` for focus tracking. |
-
-**Behavior:** `KeymapManager::eventFilter()` runs *first*. If it finds a matching action, it consumes the event. If not, the event falls through to the existing `MainWindow::eventFilter()` which handles the hardcoded keys as before.
+**Completed.** `KeymapManager` is created in the MainWindow constructor and installed as a QApplication event filter. It runs before MainWindow's own event filter (Qt LIFO order). The text-input bypass logic is implemented in `KeymapManager::eventFilter()`, and focus tracking is wired through `EditorRegistry`/`SelectionContext`.
 
 **No registered actions yet**, so this step changes nothing at runtime — it only installs the plumbing.
 
-**Exit criteria:** Application starts and runs identically to before. No regressions.
+**Modified files:**
+
+| File | Change |
+|------|--------|
+| `src/WhiskerToolbox/KeymapSystem/KeymapManager.hpp` | Added `eventFilter()` override, `setEditorRegistry()`, `_isTextInputWidget()` |
+| `src/WhiskerToolbox/KeymapSystem/KeymapManager.cpp` | Implemented event filter with text-input bypass, scope resolution, and adapter dispatch |
+| `src/WhiskerToolbox/KeymapSystem/CMakeLists.txt` | Added `Qt6::Widgets` dependency (for text-input widget type checks) |
+| `src/WhiskerToolbox/Main_Window/mainwindow.hpp` | Added `KeymapSystem::KeymapManager *` member and `keymapManager()` accessor |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Creates `KeymapManager`, sets editor registry, installs as app event filter |
+| `src/WhiskerToolbox/CMakeLists.txt` | Added `KeymapSystem` to WhiskerToolbox link dependencies |
 
 ---
 
-### Step 1.4 — Add persistence to `AppPreferencesData`
+### ✅ Step 1.4 — Add persistence to `AppPreferencesData`
 
-**Goal:** Store user keybinding overrides across sessions.
+**Completed.** User keybinding overrides are stored in `AppPreferencesData` and round-tripped via `KeymapManager::exportOverrides()` / `importOverrides()`.
 
 **Modified files:**
 
 | File | Change |
 |------|--------|
-| `src/WhiskerToolbox/StateManagement/AppPreferencesData.hpp` | Add `std::vector<KeymapOverrideEntry> keybinding_overrides` field |
-| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | On startup: load overrides from `AppPreferences` into `KeymapManager`. On `bindingsChanged()`: save back. |
-
-`KeymapOverrideEntry` (defined in `Keymap.hpp`) uses `std::string` fields for reflect-cpp compatibility — see `src/WhiskerToolbox/KeymapSystem/Keymap.hpp`.
-
-**Exit criteria:** Override round-trip works: set override → restart app → override is still applied. (Can be verified once actions are registered in Phase 2.)
+| `src/WhiskerToolbox/StateManagement/AppPreferencesData.hpp` | Added `keybinding_overrides` field (`std::vector<KeymapSystem::KeymapOverrideEntry>`) |
+| `src/WhiskerToolbox/StateManagement/AppPreferences.hpp` | Added `keybindingOverrides()` getter and `setKeybindingOverrides()` setter |
+| `src/WhiskerToolbox/StateManagement/AppPreferences.cpp` | Implemented getter/setter (setter triggers debounced auto-save) |
+| `src/WhiskerToolbox/StateManagement/CMakeLists.txt` | Added `KeymapSystem` as PRIVATE dependency |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | On startup: imports overrides from preferences. On `bindingsChanged()`: exports overrides back to preferences. |
 
 ---
 
@@ -351,12 +350,18 @@ Currently, an `EditorFocused` action is available whenever that editor type has 
 
 | Path | Phase | Status | Change |
 |------|-------|--------|--------|
-| `src/WhiskerToolbox/CMakeLists.txt` | 1.1 | ✅ Done | Added `KeymapSystem` subdirectory |
+| `src/WhiskerToolbox/CMakeLists.txt` | 1.1, 1.3 | ✅ Done | Added `KeymapSystem` subdirectory (1.1); linked `KeymapSystem` to WhiskerToolbox target (1.3) |
 | `tests/WhiskerToolbox/CMakeLists.txt` | 1.1 | ✅ Done | Added `KeymapSystem` subdirectory |
 | `.github/copilot-instructions.md` | 1.1 | ✅ Done | Added `KeymapSystem` library description |
-| `src/WhiskerToolbox/StateManagement/AppPreferencesData.hpp` | 1.4 | ⬜ Todo | Add `keybinding_overrides` field |
-| `src/WhiskerToolbox/Main_Window/mainwindow.hpp` | 1.3 | ⬜ Todo | Add `KeymapManager *` member |
-| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 1.3, 2.1–2.4 | ⬜ Todo | Create `KeymapManager`, register actions, migrate `eventFilter()` |
+| `src/WhiskerToolbox/KeymapSystem/KeymapManager.hpp` | 1.3 | ✅ Done | Added `eventFilter()`, `setEditorRegistry()`, `_isTextInputWidget()` |
+| `src/WhiskerToolbox/KeymapSystem/KeymapManager.cpp` | 1.3 | ✅ Done | Implemented event filter with text-input bypass and dispatch |
+| `src/WhiskerToolbox/KeymapSystem/CMakeLists.txt` | 1.3 | ✅ Done | Added `Qt6::Widgets` dependency |
+| `src/WhiskerToolbox/Main_Window/mainwindow.hpp` | 1.3 | ✅ Done | Added `KeymapManager *` member and `keymapManager()` accessor |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 1.3, 1.4, 2.1–2.4 | ✅ 1.3–1.4 Done | Creates `KeymapManager`, sets editor registry, installs as app event filter; imports/exports overrides via AppPreferences |
+| `src/WhiskerToolbox/StateManagement/AppPreferencesData.hpp` | 1.4 | ✅ Done | Added `keybinding_overrides` field |
+| `src/WhiskerToolbox/StateManagement/AppPreferences.hpp` | 1.4 | ✅ Done | Added `keybindingOverrides()` / `setKeybindingOverrides()` |
+| `src/WhiskerToolbox/StateManagement/AppPreferences.cpp` | 1.4 | ✅ Done | Implemented getter/setter |
+| `src/WhiskerToolbox/StateManagement/CMakeLists.txt` | 1.4 | ✅ Done | Added `KeymapSystem` dependency |
 | `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` | 2.1 | ⬜ Todo | Add `KeyActionAdapter *` member |
 | `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.cpp` | 2.1 | ⬜ Todo | Create adapter, set handler, register with `KeymapManager` |
 | `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.hpp` | 2.2 | ⬜ Todo | Add `KeyActionAdapter *` member |
