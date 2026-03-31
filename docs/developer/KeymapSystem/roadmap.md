@@ -1,6 +1,6 @@
 # Keymap System — Implementation Roadmap
 
-**Last updated:** 2026-03-30 — Steps 1.1–1.4 complete
+**Last updated:** 2026-03-31 — Steps 1.1–1.4, 2.1, and 2.2 complete
 
 ## Progress
 
@@ -10,8 +10,8 @@
 | 1.2 — `KeyActionAdapter` component | ✅ Complete (delivered as part of 1.1) |
 | 1.3 — Wire into MainWindow | ✅ Complete |
 | 1.4 — Persistence in AppPreferencesData | ✅ Complete |
-| 2.1 — Timeline actions | ⬜ Not started |
-| 2.2 — Media_Widget group assignment | ⬜ Not started |
+| 2.1 — Timeline actions | ✅ Complete |
+| 2.2 — Media_Widget group assignment | ✅ Complete |
 | 2.3 — Plot polygon editing | ⬜ Not started |
 | 2.4 — Auto-generated focus actions | ⬜ Not started |
 | 2.5 — Python Console shortcuts | ⬜ Not started |
@@ -96,9 +96,11 @@ This roadmap breaks the Keymap System into incremental steps that each produce a
 
 Each step in this phase registers action descriptors for an existing set of hardcoded keys, adds a `KeyActionAdapter` to the target widget, and removes the corresponding hardcoded code. Steps are independent and can be done in any order.
 
-### Step 2.1 — Timeline actions (always-routed)
+### ✅ Step 2.1 — Timeline actions (always-routed)
 
-**Actions to register (in MainWindow initialization):**
+**Completed.** Five timeline actions are registered as `AlwaysRouted("TimeScrollBar")` and dispatched via a `KeyActionAdapter` in `TimeScrollBar`. The hardcoded key handling in `MainWindow::eventFilter()` has been removed.
+
+**Actions registered:**
 
 | Action ID | Display Name | Scope | Default Key |
 |-----------|-------------|-------|-------------|
@@ -108,40 +110,53 @@ Each step in this phase registers action descriptors for an existing set of hard
 | `timeline.jump_forward` | Jump Forward | AlwaysRouted("TimeScrollBar") | Ctrl+Right |
 | `timeline.jump_backward` | Jump Backward | AlwaysRouted("TimeScrollBar") | Ctrl+Left |
 
+**Behavior change:** Plain arrow keys now step by ±1 frame (previously used `getFrameJumpValue()`). Ctrl+arrows continue to jump by the frame jump value. This makes the distinction between single-frame and multi-frame navigation explicit.
+
 **Modified files:**
 
 | File | Change |
 |------|--------|
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` | Add `KeyActionAdapter *` member |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.cpp` | Create `KeyActionAdapter` in constructor. Handler dispatches `play_pause` → `PlayButton()`, `next_frame` / `prev_frame` → `changeScrollBarValue(±1)`, `jump_forward` / `jump_backward` → `changeScrollBarValue(±getFrameJumpValue())`. Register adapter with `KeymapManager`. |
-| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Register above action descriptors. Remove arrow-key and spacebar handling from `eventFilter()`. |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` | Added `KeyActionAdapter *` member, `setKeymapManager()` method, forward declarations for `KeymapSystem` types |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.cpp` | Implemented `setKeymapManager()`: creates adapter with handler dispatching all 5 timeline actions |
+| `src/WhiskerToolbox/TimeScrollBar/CMakeLists.txt` | Added `KeymapSystem` as PRIVATE dependency |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Registered 5 timeline action descriptors after `KeymapManager` creation. Called `setKeymapManager()` on `TimeScrollBar`. Removed all hardcoded Space/arrow/Ctrl+arrow handling from `eventFilter()`. |
+| `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | Added 4 test cases for timeline action registration, scope resolution, adapter dispatch, and rebinding |
 
-**Handling the text-input bypass:** The bypass logic (don't consume keys when a text input has focus) moves into `KeymapManager::eventFilter()` as a general mechanism, not per-action code. This is cleaner than the current approach of checking `qobject_cast<QLineEdit*>` in multiple places.
-
-**Exit criteria:** Space/arrow keys work exactly as before. User can reassign them via `KeymapManager::setUserOverride()` API (no UI yet). Existing tests pass.
+**Text-input bypass:** Handled by `KeymapManager::eventFilter()` as a general mechanism — the bypass logic in `MainWindow::eventFilter()` is no longer needed for timeline keys.
 
 ---
 
-### Step 2.2 — Media_Widget group assignment (editor-focused)
+### ✅ Step 2.2 — Media_Widget group assignment (editor-focused)
 
-**Actions to register (in `MediaWidgetModule::registerTypes()`):**
+**Completed.** Nine group-assignment actions are registered as `EditorFocused("MediaWidget")` in `MediaWidgetModule::registerTypes()`. A `KeyActionAdapter` in `Media_Window` handles the dispatch, and the old `keyPressEvent()` override has been removed.
+
+**Actions registered:**
 
 | Action ID | Display Name | Scope | Default Key |
 |-----------|-------------|-------|-------------|
 | `media.assign_group_1` | Assign to Group 1 | EditorFocused("MediaWidget") | 1 |
 | `media.assign_group_2` | Assign to Group 2 | EditorFocused("MediaWidget") | 2 |
-| … | … | … | … |
+| `media.assign_group_3` | Assign to Group 3 | EditorFocused("MediaWidget") | 3 |
+| `media.assign_group_4` | Assign to Group 4 | EditorFocused("MediaWidget") | 4 |
+| `media.assign_group_5` | Assign to Group 5 | EditorFocused("MediaWidget") | 5 |
+| `media.assign_group_6` | Assign to Group 6 | EditorFocused("MediaWidget") | 6 |
+| `media.assign_group_7` | Assign to Group 7 | EditorFocused("MediaWidget") | 7 |
+| `media.assign_group_8` | Assign to Group 8 | EditorFocused("MediaWidget") | 8 |
 | `media.assign_group_9` | Assign to Group 9 | EditorFocused("MediaWidget") | 9 |
 
 **Modified files:**
 
 | File | Change |
 |------|--------|
-| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.hpp` | Add `KeyActionAdapter *` member |
-| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.cpp` | Create `KeyActionAdapter` in constructor with handler for group assignment. Register adapter with `KeymapManager`. Remove the `keyPressEvent()` override that handles keys 1-9. |
-| `src/WhiskerToolbox/Media_Widget/MediaWidgetRegistration.cpp` | Register the 9 actions with `KeymapManager`. |
+| `src/WhiskerToolbox/Media_Widget/MediaWidgetRegistration.hpp` | Added `KeymapSystem::KeymapManager *` parameter to `registerTypes()` (default: `nullptr`) |
+| `src/WhiskerToolbox/Media_Widget/MediaWidgetRegistration.cpp` | Added `registerGroupActions()` helper. Registers 9 `media.assign_group_N` descriptors. Updated view and custom-editor factories to call `media_window->setKeymapManager(km)`. |
+| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.hpp` | Added `KeymapSystem` forward declarations; added `setKeymapManager()` public method; added `KeyActionAdapter *` private member; removed `keyPressEvent()` override declaration. |
+| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.cpp` | Added `KeymapSystem/KeyActionAdapter.hpp` and `KeymapSystem/KeymapManager.hpp` includes. Implemented `setKeymapManager()`: creates adapter parented to `this`, sets type `"MediaWidget"`, handler extracts group number from action ID and calls `assignEntitiesToGroup()`. Removed `keyPressEvent()` implementation. |
+| `src/WhiskerToolbox/Media_Widget/CMakeLists.txt` | Added `KeymapSystem` as PRIVATE dependency. |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Passes `_keymap_manager` to `MediaWidgetModule::registerTypes()`. Fixed duplicate `KeymapManager` creation (was created twice due to merge artifact). |
+| `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | Added 4 test cases: group action registration/scope/defaults, EditorFocused resolution, adapter dispatch, and rebinding via user override. |
 
-**Exit criteria:** Group assignment works as before. Keys are now configurable.
+**Test count:** 27 passing (19 original + 4 timeline + 4 media group).
 
 ---
 
@@ -355,6 +370,11 @@ Currently, an `EditorFocused` action is available whenever that editor type has 
 | `.github/copilot-instructions.md` | 1.1 | ✅ Done | Added `KeymapSystem` library description |
 | `src/WhiskerToolbox/KeymapSystem/KeymapManager.hpp` | 1.3 | ✅ Done | Added `eventFilter()`, `setEditorRegistry()`, `_isTextInputWidget()` |
 | `src/WhiskerToolbox/KeymapSystem/KeymapManager.cpp` | 1.3 | ✅ Done | Implemented event filter with text-input bypass and dispatch |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` | 2.1 | ✅ Done | Added `KeyActionAdapter *` member, `setKeymapManager()`, forward declarations |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.cpp` | 2.1 | ✅ Done | Implemented `setKeymapManager()` with adapter handler for 5 timeline actions |
+| `src/WhiskerToolbox/TimeScrollBar/CMakeLists.txt` | 2.1 | ✅ Done | Added `KeymapSystem` as PRIVATE dependency |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 1.3, 1.4, 2.1 | ✅ Done | Created KeymapManager (1.3); imported/exported overrides (1.4); registered timeline actions, called `setKeymapManager()`, removed hardcoded eventFilter key handling (2.1) |
+| `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | 2.1 | ✅ Done | Added 4 timeline action test cases |
 | `src/WhiskerToolbox/KeymapSystem/CMakeLists.txt` | 1.3 | ✅ Done | Added `Qt6::Widgets` dependency |
 | `src/WhiskerToolbox/Main_Window/mainwindow.hpp` | 1.3 | ✅ Done | Added `KeymapManager *` member and `keymapManager()` accessor |
 | `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 1.3, 1.4, 2.1–2.4 | ✅ 1.3–1.4 Done | Creates `KeymapManager`, sets editor registry, installs as app event filter; imports/exports overrides via AppPreferences |

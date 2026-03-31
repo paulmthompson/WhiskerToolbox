@@ -1,8 +1,8 @@
 #ifndef TIMESCROLLBAR_H
 #define TIMESCROLLBAR_H
 
-#include "TimeFrame/TimeFrame.hpp"  // For TimePosition, TimeFrameIndex
-#include "TimeFrame/StrongTimeTypes.hpp"  // For TimeKey
+#include "TimeFrame/StrongTimeTypes.hpp"// For TimeKey
+#include "TimeFrame/TimeFrame.hpp"      // For TimePosition, TimeFrameIndex
 
 #include <QWidget>
 
@@ -14,15 +14,18 @@ class QComboBox;
 class QTimer;
 class TimeScrollBarState;
 
+namespace KeymapSystem {
+class KeyActionAdapter;
+class KeymapManager;
+}// namespace KeymapSystem
+
 namespace Ui {
 class TimeScrollBar;
 }
 
-class TimeScrollBar : public QWidget
-{
+class TimeScrollBar : public QWidget {
     Q_OBJECT
 public:
-
     /**
      * @brief Construct TimeScrollBar with EditorState support
      * 
@@ -42,7 +45,7 @@ public:
      * @brief Legacy constructor without state (backward compatible)
      * @deprecated Use the constructor with TimeScrollBarState instead
      */
-    explicit TimeScrollBar(QWidget *parent = nullptr);
+    explicit TimeScrollBar(QWidget * parent = nullptr);
 
     ~TimeScrollBar() override;
 
@@ -56,10 +59,10 @@ public:
      */
     void setDataManager(std::shared_ptr<DataManager> data_manager);
     void updateScrollBarNewMax(int new_max);
-    void changeScrollBarValue(int new_value, bool relative=false); // Should be friend
+    void changeScrollBarValue(int new_value, bool relative = false);// Should be friend
 
     int getFrameJumpValue() const;
-    
+
     void PlayButton();
 
     /**
@@ -73,6 +76,16 @@ public:
     void setEditorRegistry(EditorRegistry * registry);
 
     /**
+     * @brief Set the KeymapManager and register the adapter for timeline actions
+     *
+     * Creates a KeyActionAdapter that handles play_pause, next_frame, prev_frame,
+     * jump_forward, and jump_backward actions dispatched by the KeymapSystem.
+     *
+     * @param manager The KeymapManager to register with (must outlive TimeScrollBar)
+     */
+    void setKeymapManager(KeymapSystem::KeymapManager * manager);
+
+    /**
      * @brief Set which TimeFrame this scrollbar controls
      * 
      * Updates the scrollbar to control the specified TimeFrame. The display_key
@@ -81,36 +94,39 @@ public:
      * @param tf The TimeFrame to control (can be nullptr)
      * @param display_key The TimeKey for UI display (defaults to "time")
      */
-    void setTimeFrame(std::shared_ptr<TimeFrame> tf, TimeKey display_key = TimeKey("time"));
+    void setTimeFrame(const std::shared_ptr<TimeFrame>& tf, TimeKey display_key = TimeKey("time"));
 
 protected:
 private:
-    Ui::TimeScrollBar *ui;
+    Ui::TimeScrollBar * ui;
     std::shared_ptr<DataManager> _data_manager;
-    std::shared_ptr<TimeScrollBarState> _state;  // EditorState for serialization
-    EditorRegistry * _editor_registry{nullptr};  // For time synchronization
-    
-    // TimeFrame management
-    std::shared_ptr<TimeFrame> _current_time_frame;  // The TimeFrame this scrollbar controls
-    TimeKey _current_display_key{TimeKey("time")};   // For UI display only
-    
-    // DataManager observer
-    int _data_manager_observer_id{-1};  // Observer ID for DataManager notifications
-    
-    bool _verbose {true};
-    int _play_speed {1};
-    bool _play_mode {false};
+    std::shared_ptr<TimeScrollBarState> _state;// EditorState for serialization
+    EditorRegistry * _editor_registry{nullptr};// For time synchronization
 
-    QTimer* _timer;
+    // TimeFrame management
+    std::shared_ptr<TimeFrame> _current_time_frame;// The TimeFrame this scrollbar controls
+    TimeKey _current_display_key{TimeKey("time")}; // For UI display only
+
+    // DataManager observer
+    int _data_manager_observer_id{-1};// Observer ID for DataManager notifications
+
+    bool _verbose{true};
+    int _play_speed{1};
+    bool _play_mode{false};
+
+    /// Adapter for receiving keymap dispatches (owned via QObject parenting)
+    KeymapSystem::KeyActionAdapter * _key_adapter{nullptr};
+
+    QTimer * _timer;
 
 
     void _updateFrameLabels(int frame_num);
     void _vidLoop();
-    
+
     // State management helpers
     void _setupConnections();
     void _initializeFromState();
-    
+
     /**
      * @brief Handle snap-to-keyframe logic for video data
      * @param current_frame The current frame position
@@ -137,7 +153,7 @@ private:
      * 
      * @param position The new TimePosition
      */
-    void _onEditorRegistryTimeChanged(TimePosition position);
+    void _onEditorRegistryTimeChanged(const TimePosition& position);
 
     /**
      * @brief Handle DataManager state changes
@@ -154,7 +170,7 @@ private slots:
     void Slider_Scroll(int newPos);
     void RewindButton();
     void FastForwardButton();
-    void FrameSpinBoxChanged(int frameNumber);
+    void FrameSpinBoxChanged(int new_frame);
 signals:
     /**
      * @brief Emitted when user scrubs the timeline (includes TimeFrame pointer)
@@ -173,4 +189,4 @@ signals:
 };
 
 
-#endif // TIMESCROLLBAR_H
+#endif// TIMESCROLLBAR_H
