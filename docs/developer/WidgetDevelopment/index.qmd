@@ -598,10 +598,27 @@ static void registerEditorActions(KeymapSystem::KeymapManager * km) {
         .scope = scope,
         .default_binding = QKeySequence(Qt::Key_D)
     });
-    // Additional actions follow the same pattern
+    // Actions with no shipped default — user-assignable only:
+    km->registerAction({
+        .action_id = QStringLiteral("my_widget.export_svg"),
+        .display_name = QStringLiteral("Export as SVG"),
+        .category = QStringLiteral("My Widget"),
+        .scope = scope,
+        .default_binding = {}  // intentionally unbound
+    });
 }
 } // namespace
 ```
+
+::: {.callout-tip}
+## Registering "potential" actions without a default key
+
+Not every action needs a shipped default key. If a feature is useful but not common enough to warrant a pre-assigned shortcut, register the descriptor with `default_binding = {}` (a default-constructed `QKeySequence`).
+
+The action still appears in the Keybinding Editor under its category with "(unbound)" shown, and the user can assign any key they want. The assigned binding is persisted via `AppPreferencesData::keybinding_overrides` and survives restarts.
+
+The `KeyActionAdapter` handler is wired up normally — it simply will not fire until the user assigns a key. There is no special "potential" flag or separate API; the only difference is an empty `default_binding`.
+:::
 
 ### Handling Actions at Runtime
 

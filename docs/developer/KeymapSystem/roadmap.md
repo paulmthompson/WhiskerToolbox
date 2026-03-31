@@ -1,6 +1,6 @@
 # Keymap System — Implementation Roadmap
 
-**Last updated:** 2026-03-31 — Steps 1.1–1.4, 2.1, and 2.2 complete
+**Last updated:** 2026-03-31 — Steps 1.1–1.4, 2.1, 2.2, and 3.1 complete
 
 ## Progress
 
@@ -15,7 +15,7 @@
 | 2.3 — Plot polygon editing | ⬜ Not started |
 | 2.4 — Auto-generated focus actions | ⬜ Not started |
 | 2.5 — Python Console shortcuts | ⬜ Not started |
-| 3.1 — KeybindingEditor widget | ⬜ Not started |
+| 3.1 — KeybindingEditor widget | ✅ Complete (scaffold) |
 | 3.2 — Register as editor type | ⬜ Not started |
 
 ## Overview
@@ -178,7 +178,6 @@ Where `<type>` is `scatter_plot`, `temporal_projection`, `analysis_dashboard`, e
 |------|--------|
 | ScatterPlotOpenGLWidget | Add `KeyActionAdapter *` member, create adapter with polygon action handler, register with `KeymapManager`, remove `keyPressEvent()` polygon code |
 | TemporalProjectionOpenGLWidget | Same pattern |
-| BasePlotOpenGLWidget (Analysis Dashboard) | Same pattern (also migrate "R" for reset view) |
 | Corresponding Registration files | Register actions |
 
 **Exit criteria:** Polygon editing works as before. Keys are configurable.
@@ -219,19 +218,26 @@ Where `<type>` is `scatter_plot`, `temporal_projection`, `analysis_dashboard`, e
 
 ## Phase 3: Keybinding Editor Widget
 
-### Step 3.1 — Create `KeybindingEditor` widget
+### ✅ Step 3.1 — Create `KeybindingEditor` widget
 
-**Goal:** A dedicated dock widget for viewing and editing keybindings.
+**Completed (scaffold).** The static library is created and compiles cleanly. The widget is a placeholder with a `QLabel`; the full UI (QTreeView model, Record/Reset controls) will be implemented in a later pass. The `registerTypes()` call is wired in CMakeLists.txt but not yet called from mainwindow (that is Step 3.2).
 
-**New files:**
+**Delivered files:**
 
 | File | Contents |
 |------|----------|
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.hpp` | Widget class |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.cpp` | Implementation |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.hpp` | `registerTypes()` |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.cpp` | Registration implementation |
-| `src/WhiskerToolbox/KeybindingEditor/CMakeLists.txt` | Static library, depends on KeymapSystem + Qt6::Widgets |
+| `src/WhiskerToolbox/KeybindingEditor/CMakeLists.txt` | Static library `KeybindingEditor`. Depends on `KeymapSystem` (PRIVATE), `EditorState` (PUBLIC), `Qt6::Widgets` (PUBLIC). |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorState.hpp/.cpp` | Minimal `EditorState` subclass. `toJson()` returns `{}`. No user state — all persistent data lives in `KeymapManager`. |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.hpp/.cpp` | `QWidget` subclass. Constructor takes `shared_ptr<KeybindingEditorState>` and `KeymapManager*`. Placeholder `QLabel` body. |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.hpp/.cpp` | `KeybindingEditorModule::registerTypes(EditorRegistry*, KeymapManager*)`. Registers type `"KeybindingEditor"`, `Zone::Right`, `allow_multiple = false`, `menu_path = "View/Tools"`. |
+
+**Modified files:**
+
+| File | Change |
+|------|--------|
+| `src/WhiskerToolbox/CMakeLists.txt` | Added `add_subdirectory(KeybindingEditor)` and `target_link_libraries(WhiskerToolbox PRIVATE KeybindingEditor)` |
+
+**UI layout (planned for full implementation):**
 
 **UI layout:**
 
@@ -299,7 +305,6 @@ This phase is ongoing — each widget migrates its keyboard handling at its own 
 | `DataViewer_Widget` | Wheel zoom sensitivity, any future keys | Low |
 | `Whisker_Widget` | "T" key (currently commented out) | Low |
 | `LinePlotWidget` | Ctrl-release for line selection cancel | Medium |
-| `BasePlotOpenGLWidget` | "R" for reset view | Medium |
 | Future widgets | Define actions at creation time | N/A |
 
 ### Migration checklist for each widget:
@@ -355,11 +360,12 @@ Currently, an `EditorFocused` action is available whenever that editor type has 
 | `tests/WhiskerToolbox/KeymapSystem/CMakeLists.txt` | 1.1 | ✅ Done | CMake |
 | `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | 1.1 | ✅ Done | Test |
 | `docs/developer/KeymapSystem/library_reference.qmd` | 1.1 | ✅ Done | Docs |
-| `src/WhiskerToolbox/KeybindingEditor/CMakeLists.txt` | 3.1 | ⬜ Todo | CMake |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.hpp` | 3.1 | ⬜ Todo | Header |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.cpp` | 3.1 | ⬜ Todo | Source |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.hpp` | 3.2 | ⬜ Todo | Header |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.cpp` | 3.2 | ⬜ Todo | Source |
+| `src/WhiskerToolbox/KeybindingEditor/CMakeLists.txt` | 3.1 | ✅ Done | CMake |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorState.hpp/.cpp` | 3.1 | ✅ Done | Header/Source |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.hpp` | 3.1 | ✅ Done | Header |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.cpp` | 3.1 | ✅ Done | Source |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.hpp` | 3.2 | ✅ Done | Header |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.cpp` | 3.2 | ✅ Done | Source |
 
 ## Summary of All Modified Files
 
