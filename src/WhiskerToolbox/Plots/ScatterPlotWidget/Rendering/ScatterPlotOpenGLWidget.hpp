@@ -47,6 +47,11 @@ class QKeyEvent;
 class ScatterPlotState;
 class SelectionContext;
 
+namespace KeymapSystem {
+class KeyActionAdapter;
+class KeymapManager;
+}// namespace KeymapSystem
+
 namespace CorePlotting {
 class RenderableScene;
 class SceneHitTester;
@@ -95,6 +100,17 @@ public:
      */
     void setSelectionContext(SelectionContext * selection_context);
 
+    /**
+     * @brief Set the KeymapManager to enable configurable polygon editing shortcuts
+     *
+     * Creates a KeyActionAdapter that handles scatter_plot.polygon_complete,
+     * scatter_plot.polygon_cancel, and scatter_plot.polygon_undo_vertex.
+     * The hardcoded keyPressEvent() polygon handling is replaced by adapter dispatch.
+     *
+     * @param manager Pointer to the KeymapManager (can be nullptr)
+     */
+    void setKeymapManager(KeymapSystem::KeymapManager * manager);
+
 signals:
     void viewBoundsChanged();
     void pointDoubleClicked(TimePosition position);
@@ -108,7 +124,6 @@ protected:
     void mouseReleaseEvent(QMouseEvent * event) override;
     void mouseDoubleClickEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
-    void keyPressEvent(QKeyEvent * event) override;
     void leaveEvent(QEvent * event) override;
     void contextMenuEvent(QContextMenuEvent * event) override;
 
@@ -164,6 +179,9 @@ private:
     SelectionContext * _selection_context{nullptr};
     std::vector<QAction *> _dynamic_context_actions;///< Dynamically added ContextAction menu items
     QAction * _cluster_selection_action{nullptr};   ///< "Cluster Selection..." menu action
+
+    // Keymap adapter for polygon editing shortcuts
+    KeymapSystem::KeyActionAdapter * _key_adapter{nullptr};
 
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);

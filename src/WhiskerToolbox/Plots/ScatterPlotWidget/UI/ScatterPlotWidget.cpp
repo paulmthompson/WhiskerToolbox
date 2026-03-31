@@ -3,6 +3,7 @@
 #include "Core/ScatterPlotState.hpp"
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "DataManager/DataManager.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWidget.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
@@ -48,9 +49,9 @@ ScatterPlotWidget::ScatterPlotWidget(std::shared_ptr<DataManager> data_manager,
     vertical_layout->addLayout(horizontal_layout, 1);
 
     QLayout * old_layout = layout();
-    
-        delete old_layout;
-    
+
+    delete old_layout;
+
     setLayout(vertical_layout);
 }
 
@@ -270,5 +271,11 @@ void ScatterPlotWidget::setGroupManager(GroupManager * group_manager) {
 void ScatterPlotWidget::setSelectionContext(SelectionContext * selection_context) {
     if (_opengl_widget) {
         _opengl_widget->setSelectionContext(selection_context);
+    }
+}
+
+void ScatterPlotWidget::setKeymapManager(KeymapSystem::KeymapManager * manager) {
+    if (_opengl_widget) {
+        _opengl_widget->setKeymapManager(manager);
     }
 }

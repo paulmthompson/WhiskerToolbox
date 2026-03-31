@@ -24,6 +24,8 @@
 #include "EditorState/SelectionContext.hpp"
 #include "GroupContextMenu/GroupContextMenuHandler.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
+#include "KeymapSystem/KeyActionAdapter.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
@@ -352,29 +354,38 @@ void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
     event->accept();
 }
 
-void ScatterPlotOpenGLWidget::keyPressEvent(QKeyEvent * event) {
-    if (_polygon_controller->isActive()) {
-        if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+void ScatterPlotOpenGLWidget::setKeymapManager(KeymapSystem::KeymapManager * manager) {
+    if (!manager || _key_adapter) {
+        return;
+    }
+
+    _key_adapter = new KeymapSystem::KeyActionAdapter(this);
+    _key_adapter->setTypeId(EditorLib::EditorTypeId(QStringLiteral("ScatterPlotWidget")));
+
+    _key_adapter->setHandler([this](QString const & action_id) -> bool {
+        if (!_polygon_controller->isActive()) {
+            return false;
+        }
+        if (action_id == QStringLiteral("scatter_plot.polygon_complete")) {
             completePolygonSelection();
-            event->accept();
-            return;
+            return true;
         }
-        if (event->key() == Qt::Key_Escape) {
+        if (action_id == QStringLiteral("scatter_plot.polygon_cancel")) {
             cancelPolygonSelection();
-            event->accept();
-            return;
+            return true;
         }
-        if (event->key() == Qt::Key_Backspace) {
+        if (action_id == QStringLiteral("scatter_plot.polygon_undo_vertex")) {
             _polygon_controller->removeLastVertex();
             if (!_polygon_vertices_world.empty()) {
                 _polygon_vertices_world.pop_back();
             }
             update();
-            event->accept();
-            return;
+            return true;
         }
-    }
-    QOpenGLWidget::keyPressEvent(event);
+        return false;
+    });
+
+    manager->registerAdapter(_key_adapter);
 }
 
 void ScatterPlotOpenGLWidget::leaveEvent(QEvent * event) {

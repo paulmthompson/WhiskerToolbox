@@ -11,6 +11,8 @@
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
+#include "KeymapSystem/KeyAction.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -20,6 +22,32 @@
 namespace ScatterPlotWidgetModule {
 
 namespace {
+
+void registerPolygonActions(KeymapSystem::KeymapManager * km) {
+    if (!km) {
+        return;
+    }
+    km->registerAction({.action_id = QStringLiteral("scatter_plot.polygon_complete"),
+                        .display_name = QStringLiteral("Complete Polygon"),
+                        .category = QStringLiteral("Scatter Plot"),
+                        .scope = KeymapSystem::KeyActionScope::editorFocused(
+                                EditorLib::EditorTypeId(QStringLiteral("ScatterPlotWidget"))),
+                        .default_binding = QKeySequence(Qt::Key_Return)});
+
+    km->registerAction({.action_id = QStringLiteral("scatter_plot.polygon_cancel"),
+                        .display_name = QStringLiteral("Cancel Polygon"),
+                        .category = QStringLiteral("Scatter Plot"),
+                        .scope = KeymapSystem::KeyActionScope::editorFocused(
+                                EditorLib::EditorTypeId(QStringLiteral("ScatterPlotWidget"))),
+                        .default_binding = QKeySequence(Qt::Key_Escape)});
+
+    km->registerAction({.action_id = QStringLiteral("scatter_plot.polygon_undo_vertex"),
+                        .display_name = QStringLiteral("Undo Last Vertex"),
+                        .category = QStringLiteral("Scatter Plot"),
+                        .scope = KeymapSystem::KeyActionScope::editorFocused(
+                                EditorLib::EditorTypeId(QStringLiteral("ScatterPlotWidget"))),
+                        .default_binding = QKeySequence(Qt::Key_Backspace)});
+}
 
 void registerContextActions(EditorRegistry * registry,
                             std::shared_ptr<DataManager> const & dm) {
@@ -72,8 +100,9 @@ void registerContextActions(EditorRegistry * registry,
 }// namespace
 
 void registerTypes(EditorRegistry * registry,
-                   const std::shared_ptr<DataManager>& data_manager,
-                   GroupManager * group_manager) {
+                   std::shared_ptr<DataManager> const & data_manager,
+                   GroupManager * group_manager,
+                   KeymapSystem::KeymapManager * keymap_manager) {
 
     if (!registry) {
         std::cerr << "ScatterPlotWidgetModule::registerTypes: registry is null" << std::endl;
@@ -81,8 +110,11 @@ void registerTypes(EditorRegistry * registry,
     }
 
     // Capture dependencies for lambdas
-    auto const & dm = std::move(data_manager);
+    auto const & dm = data_manager;
     auto gm = group_manager;
+    auto km = keymap_manager;
+
+    registerPolygonActions(km);
 
     registry->registerType({.type_id = QStringLiteral("ScatterPlotWidget"),
                             .display_name = QStringLiteral("Scatter Plot"),
@@ -99,7 +131,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<ScatterPlotState>(); },
 
                             // View factory - creates ScatterPlotWidget (the view component)
-                            .create_view = [dm, registry, gm](std::shared_ptr<EditorState> const & state) -> QWidget * {
+                            .create_view = [dm, registry, gm, km](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<ScatterPlotState>(state);
                                 if (!plot_state) {
                                     std::cerr << "ScatterPlotWidgetModule: Failed to cast state to ScatterPlotState" << std::endl;
@@ -109,10 +141,10 @@ void registerTypes(EditorRegistry * registry,
                                 auto * widget = new ScatterPlotWidget(dm);
                                 widget->setState(plot_state);
 
-                                // Set the group manager if available
                                 if (gm) {
                                     widget->setGroupManager(gm);
                                 }
+                                widget->setKeymapManager(km);
 
                                 return widget;
                             },
@@ -131,7 +163,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Custom editor creation for potential future view/properties coupling
-                            .create_editor_custom = [dm, gm](EditorRegistry * reg)
+                            .create_editor_custom = [dm, gm, km](EditorRegistry * reg)
                                     -> EditorRegistry::EditorInstance {
                                 // Create the shared state
                                 auto state = std::make_shared<ScatterPlotState>();
@@ -140,10 +172,10 @@ void registerTypes(EditorRegistry * registry,
                                 auto * view = new ScatterPlotWidget(dm);
                                 view->setState(state);
 
-                                // Set the group manager if available
                                 if (gm) {
                                     view->setGroupManager(gm);
                                 }
+                                view->setKeymapManager(km);
 
                                 // Set selection context for ContextAction menu integration
                                 if (reg->selectionContext()) {
@@ -158,7 +190,7 @@ void registerTypes(EditorRegistry * registry,
                                 // This allows the scatter plot to navigate to a specific time position
                                 if (reg) {
                                     QObject::connect(view, &ScatterPlotWidget::timePositionSelected,
-                                                     [reg](const TimePosition& position) {
+                                                     [reg](TimePosition const & position) {
                                                          // Update EditorRegistry time (triggers timeChanged signal for other widgets)
                                                          reg->setCurrentTime(position);
                                                      });
