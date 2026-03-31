@@ -7,6 +7,10 @@ add_library(KeybindingEditor STATIC
     KeybindingEditorState.cpp
     KeybindingEditor.hpp
     KeybindingEditor.cpp
+    KeymapModel.hpp
+    KeymapModel.cpp
+    KeySequenceRecorder.hpp
+    KeySequenceRecorder.cpp
 )
 
 target_link_libraries(KeybindingEditor

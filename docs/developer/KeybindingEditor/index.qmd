@@ -1,0 +1,88 @@
+---
+title: "Keybinding Editor"
+---
+
+## Overview
+
+The **KeybindingEditor** is a dock widget that allows users to view and customize all registered keyboard shortcuts. It reads from and writes to `KeymapManager`, providing a full GUI for the Keymap System's override management.
+
+## Architecture
+
+The editor is composed of three internal components:
+
+### KeymapModel
+
+`QAbstractItemModel` subclass that provides a two-level tree structure:
+
+- **Level 0 (Category):** Groups actions by their `KeyActionDescriptor::category` field (e.g., "Timeline", "Media Viewer", "Application")
+- **Level 1 (Action):** Individual actions within each category
+
+**Columns:**
+
+| Column | Contents |
+|--------|----------|
+| Action | Display name (bold for categories) |
+| Binding | Current effective binding (blue italic if overridden, red if conflicting) |
+| Scope | `Global`, `Focused (TypeId)`, or `Always (TypeId)` |
+| Default | The shipped default binding |
+
+**Custom roles:**
+
+| Role | Type | Description |
+|------|------|-------------|
+| `ActionIdRole` | `QString` | The `action_id` for action rows; empty for categories |
+| `IsCategoryRole` | `bool` | `true` for category rows |
+| `HasConflictRole` | `bool` | `true` if this action participates in a binding conflict |
+| `IsOverrideRole` | `bool` | `true` if user override differs from default |
+
+The model calls `KeymapManager::allActions()` and `KeymapManager::detectConflicts()` on each `refresh()`. Refresh is triggered automatically by `KeymapManager::bindingsChanged()`.
+
+### KeySequenceRecorder
+
+A `QPushButton` subclass that captures keyboard input:
+
+1. User clicks "Record" → button enters recording mode (yellow highlight, "Press a key..." text)
+2. Button grabs keyboard focus
+3. Next key press (with modifiers) is captured as a `QKeySequence`
+4. `keySequenceRecorded(QKeySequence)` signal is emitted
+5. Button returns to normal state
+
+**Special behaviors:**
+
+- **Escape** cancels recording without emitting a result
+- **Bare modifier keys** (Shift, Ctrl, Alt, Meta alone) are ignored — recording waits for a real key
+- **Focus loss** auto-cancels recording
+
+### KeybindingEditor
+
+The main widget composed of:
+
+- **Search bar** (`QLineEdit`) — filters the tree by action name using `QSortFilterProxyModel` with recursive filtering
+- **Tree view** (`QTreeView`) — displays the `KeymapModel` through the proxy
+- **Record button** (`KeySequenceRecorder`) — captures a new key for the selected action
+- **Clear button** — unbinds the selected action (sets empty `QKeySequence` as override)
+- **Reset button** — reverts the selected action to its default binding
+- **Reset All button** — clears all overrides (with confirmation dialog)
+
+## Data Flow
+
+```
+KeymapManager ──allActions()──→ KeymapModel ──→ QSortFilterProxyModel ──→ QTreeView
+    ↑                                                                        │
+    │                                                                        │
+    └────setUserOverride()────── KeybindingEditor ←──── user interaction ─────┘
+    └────clearUserOverride()──── KeybindingEditor
+    └────clearAllOverrides()──── KeybindingEditor
+```
+
+Changes flow back through `KeymapManager::bindingsChanged()` signal, which triggers `KeymapModel::refresh()` and persistence to `AppPreferencesData`.
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `KeymapModel.hpp/.cpp` | Two-level tree model for category → action display |
+| `KeySequenceRecorder.hpp/.cpp` | Key capture push button widget |
+| `KeybindingEditor.hpp/.cpp` | Main editor widget composing all components |
+| `KeybindingEditorState.hpp/.cpp` | Minimal `EditorState` subclass (no persistent state) |
+| `KeybindingEditorRegistration.hpp/.cpp` | `EditorRegistry` integration and Global action registration |

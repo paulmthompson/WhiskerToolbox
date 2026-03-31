@@ -1,6 +1,6 @@
 # Keymap System — Implementation Roadmap
 
-**Last updated:** 2026-03-31 — Steps 1.1–1.4, 2.1, 2.2, 3.1, and 3.2 complete
+**Last updated:** 2026-03-31 — Steps 1.1–1.4, 2.1, 2.2, 3.1, 3.2, and 3.3 (full UI) complete
 
 ## Progress
 
@@ -17,6 +17,7 @@
 | 2.5 — Python Console shortcuts | ⬜ Not started |
 | 3.1 — KeybindingEditor widget | ✅ Complete (scaffold) |
 | 3.2 — Register as editor type | ✅ Complete |
+| 3.3 — Full KeybindingEditor UI | ✅ Complete |
 
 ## Overview
 
@@ -292,6 +293,65 @@ Features:
 
 ---
 
+### ✅ Step 3.3 — Full KeybindingEditor UI
+
+**Completed.** The placeholder widget has been replaced with a full tree-based keybinding editor. The widget displays all registered actions in a two-level tree (Category → Action) with columns for name, current binding, scope, and default binding. Users can record new bindings, clear bindings, and reset individual or all overrides.
+
+**New files:**
+
+| File | Contents |
+|------|----------|
+| `src/WhiskerToolbox/KeybindingEditor/KeymapModel.hpp/.cpp` | `QAbstractItemModel` subclass providing a two-level tree: categories (from `KeyActionDescriptor::category`) as parent rows, actions as child rows. Columns: Name, Binding, Scope, Default. Exposes `ActionIdRole`, `IsCategoryRole`, `HasConflictRole`, `IsOverrideRole` custom data roles. Conflict detection via `KeymapManager::detectConflicts()` highlights conflicting bindings in red. Overridden bindings shown in blue italic. |
+| `src/WhiskerToolbox/KeybindingEditor/KeySequenceRecorder.hpp/.cpp` | `QPushButton` subclass that enters "recording" mode on click, grabs keyboard, captures the next key combination, and emits `keySequenceRecorded(QKeySequence)`. Escape cancels recording. Focus loss auto-cancels. Bare modifier keys (Shift, Ctrl, Alt, Meta) are ignored during recording. |
+
+**Modified files:**
+
+| File | Change |
+|------|--------|
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.hpp` | Replaced placeholder with full UI: `QLineEdit` search bar, `QTreeView` with `QSortFilterProxyModel`, `KeySequenceRecorder` record button, Reset/Clear/Reset All buttons. |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.cpp` | Full implementation: builds UI layout, connects `bindingsChanged()` signal to refresh model, search filtering with `QSortFilterProxyModel::setRecursiveFilteringEnabled(true)`, selection-aware button states. |
+| `src/WhiskerToolbox/KeybindingEditor/CMakeLists.txt` | Added `KeymapModel.hpp/.cpp` and `KeySequenceRecorder.hpp/.cpp` to source list. |
+
+**UI layout:**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ Search: [________________]                                   │
+├──────────────────────────────────────────────────────────────┤
+│ Action         │ Binding    │ Scope              │ Default   │
+│ ▼ Application                                               │
+│   Open Keybinding Editor  (unbound)  Global        (none)   │
+│ ▼ Media Viewer                                              │
+│   Assign to Group 1       1          Focused(…)    1        │
+│   Assign to Group 2       2          Focused(…)    2        │
+│   ...                                                       │
+│ ▼ Timeline                                                  │
+│   Play / Pause            Space      Always(…)     Space    │
+│   Next Frame              →          Always(…)     →        │
+│   ...                                                       │
+├──────────────────────────────────────────────────────────────┤
+│ [Record]  [Clear]  [Reset]                    [Reset All]   │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Features implemented:**
+
+- **QTreeView** with custom `KeymapModel`, grouped by category
+- **Scope column** showing `Global`, `Focused (TypeId)`, or `Always (TypeId)`
+- **Record button** (`KeySequenceRecorder`) — captures next key press as new binding
+- **Clear button** — unbinds the selected action (sets to empty `QKeySequence`)
+- **Reset button** — reverts the selected action to its default binding
+- **Reset All button** — clears all overrides (with confirmation dialog)
+- **Conflict highlighting** — conflicting bindings shown in red text
+- **Override highlighting** — user-customized bindings shown in blue italic
+- **Search filter** — recursive `QSortFilterProxyModel` narrows tree by action name
+- **Auto-refresh** — model rebuilds on `KeymapManager::bindingsChanged()` signal
+- **Button state management** — Record/Clear/Reset disabled when no action is selected
+
+**Exit criteria:** ✅ Widget opens from Modules menu. Displays all registered actions grouped by category. Record, Clear, Reset, and Reset All all work. Overrides persist across restart (via existing AppPreferencesData pipeline from Step 1.4).
+
+---
+
 ## Phase 4: Extended Widget Adoption
 
 This phase is ongoing — each widget migrates its keyboard handling at its own pace. No ordering required.
@@ -364,6 +424,10 @@ Currently, an `EditorFocused` action is available whenever that editor type has 
 | `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.cpp` | 3.1 | ✅ Done | Source |
 | `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.hpp` | 3.2 | ✅ Done | Header |
 | `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.cpp` | 3.2 | ✅ Done | Source |
+| `src/WhiskerToolbox/KeybindingEditor/KeymapModel.hpp` | 3.3 | ✅ Done | Header |
+| `src/WhiskerToolbox/KeybindingEditor/KeymapModel.cpp` | 3.3 | ✅ Done | Source |
+| `src/WhiskerToolbox/KeybindingEditor/KeySequenceRecorder.hpp` | 3.3 | ✅ Done | Header |
+| `src/WhiskerToolbox/KeybindingEditor/KeySequenceRecorder.cpp` | 3.3 | ✅ Done | Source |
 
 ## Summary of All Modified Files
 

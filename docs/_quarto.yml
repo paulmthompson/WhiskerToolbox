@@ -170,6 +170,7 @@ website:
               contents:
                 - developer/KeymapSystem/roadmap.md
                 - developer/KeymapSystem/library_reference.qmd
+                - developer/KeybindingEditor/index.qmd
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd
