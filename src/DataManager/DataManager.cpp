@@ -806,6 +806,52 @@ void checkOptionalFields(json const & item, std::vector<std::string> const & opt
     }
 }
 
+/// @brief Replace all \${variable_name} occurrences in \p json_str with their values.
+///
+/// Resolution order for each \${NAME}:
+///   1. Inline \p variables dict (from the JSON "variables" section).
+///   2. OS environment variables (std::getenv).
+///   3. Left as-is when neither source provides a value.
+///
+/// This lets machine-specific paths (e.g. Windows vs WSL) be supplied via the
+/// environment without requiring separate copies of the shared data.json file.
+static std::string substituteVariablesInJsonString(
+        std::string const & json_str,
+        std::map<std::string, std::string> const & variables) {
+    std::string result = json_str;
+    std::string::size_type pos = 0;
+    while ((pos = result.find("${", pos)) != std::string::npos) {
+        auto const end = result.find('}', pos + 2);
+        if (end == std::string::npos) {
+            pos += 2;
+            continue;
+        }
+        auto const name = result.substr(pos + 2, end - pos - 2);
+        std::string value;
+        bool resolved = false;
+        // 1. Inline variables take priority over environment variables
+        if (auto const it = variables.find(name); it != variables.end()) {
+            value = it->second;
+            resolved = true;
+        }
+        // 2. Fall back to OS environment variables (enables Windows vs WSL path differences)
+        if (!resolved) {
+            // NOLINTNEXTLINE(concurrency-mt-unsafe) -- single-threaded data loading path
+            if (char const * env_val = std::getenv(name.c_str()); env_val != nullptr) {
+                value = env_val;
+                resolved = true;
+            }
+        }
+        if (resolved) {
+            result.replace(pos, end - pos + 1, value);
+            pos += value.size();
+        } else {
+            pos = end + 1;
+        }
+    }
+    return result;
+}
+
 DM_DataType stringToDataType(std::string const & data_type_str) {
     if (data_type_str == "video") return DM_DataType::Video;
     if (data_type_str == "images") return DM_DataType::Images;
@@ -825,9 +871,38 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
     std::map<std::string, std::string> clock_mappings;
 
+    // Support the extended format where the root is an object rather than a plain array:
+    //
+    //   {
+    //     "variables": { "local": "/data/raw", "shared": "/mnt/shared" },
+    //     "data": [ { "filepath": "${local}/video.mp4", ... }, ... ]
+    //   }
+    //
+    // A plain JSON array is accepted unchanged (backward-compatible).
+    json resolved;// owns the array when variable substitution is applied
+    json const * working_ptr = &j;
+
+    if (j.is_object() && j.contains("data") && j["data"].is_array()) {
+        std::map<std::string, std::string> variables;
+        if (j.contains("variables") && j["variables"].is_object()) {
+            for (auto const & [k, v]: j["variables"].items()) {
+                if (v.is_string()) {
+                    variables[k] = v.get<std::string>();
+                }
+            }
+        }
+        // Always run substitution: inline variables take priority, env vars are the fallback
+        auto data_str = j["data"].dump();
+        data_str = substituteVariablesInJsonString(data_str, variables);
+        resolved = json::parse(data_str);
+        working_ptr = &resolved;
+    }
+
+    json const & working = *working_ptr;
+
     // Count total items to load (excluding transformations which are processed separately)
     int total_items = 0;
-    for (auto const & item: j) {
+    for (auto const & item: working) {
         if (!item.contains("transformations")) {
             total_items++;
         }
@@ -845,7 +920,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
     int current_item = 0;
 
     // Iterate through JSON array
-    for (auto const & item: j) {
+    for (auto const & item: working) {
 
         // Skip transformation objects - they will be processed separately
         if (item.contains("transformations")) {
@@ -1371,7 +1446,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
     }
 
     // Process all transformation objects found in the JSON array
-    for (auto const & item: j) {
+    for (auto const & item: working) {
         if (item.contains("transformations")) {
             std::cout << "Found transformations section, executing pipeline..." << std::endl;
 
