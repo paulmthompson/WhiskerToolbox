@@ -1,6 +1,6 @@
 # Keymap System — Implementation Roadmap
 
-**Last updated:** 2026-03-31 — Steps 1.1–1.4, 2.1, 2.2, and 3.1 complete
+**Last updated:** 2026-03-31 — Steps 1.1–1.4, 2.1, 2.2, 3.1, and 3.2 complete
 
 ## Progress
 
@@ -16,7 +16,7 @@
 | 2.4 — Auto-generated focus actions | ⬜ Not started |
 | 2.5 — Python Console shortcuts | ⬜ Not started |
 | 3.1 — KeybindingEditor widget | ✅ Complete (scaffold) |
-| 3.2 — Register as editor type | ⬜ Not started |
+| 3.2 — Register as editor type | ✅ Complete |
 
 ## Overview
 
@@ -280,17 +280,15 @@ Features:
 
 ---
 
-### Step 3.2 — Register as editor type
+### ✅ Step 3.2 — Register as editor type
+
+**Completed.** `KeybindingEditorModule::registerTypes()` is called from `MainWindow::_registerEditorTypes()`. The widget appears in the **View/Tools** menu and can be opened/raised like any other editor type. Only one instance is allowed (`allow_multiple = false`).
 
 **Modified files:**
 
 | File | Change |
 |------|--------|
-| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Add `KeybindingEditorModule::registerTypes()` call in `_registerEditorTypes()`. |
-
-Register with `type_id = "KeybindingEditor"`, `allow_multiple = false`, `preferred_zone = Zone::Center`, accessible from the View/Tools menu.
-
-**Exit criteria:** Keybinding Editor opens via View > Tools menu. Only one instance allowed.
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Added `#include "KeybindingEditor/KeybindingEditorRegistration.hpp"`. Added `KeybindingEditorModule::registerTypes(_editor_registry.get(), _keymap_manager)` call at the end of `_registerEditorTypes()`. |
 
 ---
 

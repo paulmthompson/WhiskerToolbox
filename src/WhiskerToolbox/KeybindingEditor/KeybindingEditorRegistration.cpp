@@ -9,6 +9,8 @@
 #include "KeybindingEditorState.hpp"
 
 #include "EditorState/EditorRegistry.hpp"
+#include "KeymapSystem/KeyAction.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 
 #include <iostream>
 
@@ -16,8 +18,16 @@ namespace KeybindingEditorModule {
 
 namespace {
 
-// No editor actions or context actions for this widget —
-// it is the UI for managing those registrations, not a consumer of them.
+static void registerGlobalActions(KeymapSystem::KeymapManager * km) {
+    if (!km) { return; }
+    km->registerAction({
+            .action_id = QStringLiteral("app.open_keybinding_editor"),
+            .display_name = QStringLiteral("Open Keybinding Editor"),
+            .category = QStringLiteral("Application"),
+            .scope = KeymapSystem::KeyActionScope::global(),
+            .default_binding = {}// unbound by default — user assigns in the editor itself
+    });
+}
 
 }// namespace
 
@@ -28,6 +38,8 @@ void registerTypes(EditorRegistry * registry, KeymapSystem::KeymapManager * keym
     }
 
     auto * km = keymap_manager;
+
+    registerGlobalActions(km);
 
     registry->registerType({.type_id = QStringLiteral("KeybindingEditor"),
                             .display_name = QStringLiteral("Keybinding Editor"),

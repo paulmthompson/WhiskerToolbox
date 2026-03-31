@@ -29,14 +29,4 @@ set_target_properties(KeybindingEditor PROPERTIES
     AUTOMOC ON
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(KeybindingEditor PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(KeybindingEditor PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(KeybindingEditor PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(KeybindingEditor)

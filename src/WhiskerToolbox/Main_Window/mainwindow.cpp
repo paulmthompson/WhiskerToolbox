@@ -31,6 +31,7 @@
 // Module registration headers - each module defines its own factory functions
 #include "BatchProcessing_Widget/BatchProcessingWidgetRegistration.hpp"
 #include "CommandLog_Widget/CommandLogWidgetRegistration.hpp"
+#include "KeybindingEditor/KeybindingEditorRegistration.hpp"
 #include "DataImport_Widget/DataImportWidgetRegistration.hpp"
 #include "DataInspector_Widget/DataInspectorWidgetRegistration.hpp"
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
@@ -471,6 +472,7 @@ void MainWindow::_createActions() {
     connect(ui->actionOnion_Skin_View, &QAction::triggered, this, &MainWindow::openOnionSkinViewWidget);
     connect(ui->actionData_Synthesizer, &QAction::triggered, this, &MainWindow::openDataSynthesizerWidget);
     connect(ui->actionCommand_Log, &QAction::triggered, this, &MainWindow::openCommandLogWidget);
+    connect(ui->actionKeybinding_Editor, &QAction::triggered, this, &MainWindow::openKeybindingEditor);
 }
 
 /*
@@ -814,6 +816,10 @@ void MainWindow::openCommandLogWidget() {
     openEditor(QStringLiteral("CommandLogWidget"));
 }
 
+void MainWindow::openKeybindingEditor() {
+    openEditor(QStringLiteral("KeybindingEditor"));
+}
+
 void MainWindow::openDataImport() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("DataImportWidget"));
@@ -986,6 +992,8 @@ void MainWindow::_registerEditorTypes() {
     DataSynthesizerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, commandRecorder());
 
     CommandLogWidgetModule::registerTypes(_editor_registry.get(), commandRecorder());
+
+    KeybindingEditorModule::registerTypes(_editor_registry.get(), _keymap_manager);
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);

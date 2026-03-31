@@ -99,6 +99,7 @@
     <addaction name="actionPython_Console"/>
     <addaction name="actionData_Synthesizer"/>
     <addaction name="actionCommand_Log"/>
+    <addaction name="actionKeybinding_Editor"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -342,6 +343,11 @@
   <action name="actionCommand_Log">
    <property name="text">
     <string>Command Log</string>
+   </property>
+  </action>
+  <action name="actionKeybinding_Editor">
+   <property name="text">
+    <string>Keybinding Editor</string>
    </property>
   </action>
  </widget>
