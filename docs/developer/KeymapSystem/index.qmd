@@ -69,21 +69,33 @@ enabled:      true
 is_override:  false   // true when user has customized this binding
 ```
 
-#### `KeyActionHandler` (mixin)
+#### `KeyActionAdapter` (composition)
 
-Widgets that want to receive keymap dispatches implement this interface:
+Widgets that want to receive keymap dispatches create a `KeyActionAdapter` as a child QObject. This uses **composition over inheritance** — no multiple inheritance or virtual interfaces required.
 
 ```cpp
-class KeyActionHandler {
+class KeyActionAdapter : public QObject {
+    Q_OBJECT
 public:
-    virtual ~KeyActionHandler() = default;
-    virtual bool handleKeyAction(QString const & action_id) = 0;
+    using Handler = std::function<bool(QString const &)>;
+
+    explicit KeyActionAdapter(QObject * parent = nullptr);
+
+    /// Set the handler called when an action is dispatched to this adapter.
+    void setHandler(Handler handler);
+
+    /// Called by KeymapManager. Delegates to the installed handler.
+    bool handleKeyAction(QString const & action_id);
+
+    /// The EditorInstanceId this adapter is associated with.
+    void setInstanceId(EditorInstanceId const & id);
+    [[nodiscard]] EditorInstanceId instanceId() const;
 };
 ```
 
-`KeymapManager` finds the target widget (via `EditorRegistry` + `SelectionContext`) and calls `handleKeyAction()`. The widget returns `true` if it handled the action.
+When a widget is created, it constructs a `KeyActionAdapter` as a child and registers it with `KeymapManager`. When the widget is destroyed, Qt's parent-child ownership automatically destroys the adapter, and `KeymapManager` detects this via `QObject::destroyed` to clean up its routing table.
 
-This follows the same mixin pattern as `DataFocusAware`.
+This approach avoids the diamond-inheritance problems that arise when multiple mixins are combined with `QObject`-derived classes.
 
 ### `KeymapManager`
 
@@ -104,10 +116,12 @@ QKeyEvent arrives at QApplication event filter
   │
   ├── Look up focused editor via SelectionContext::activeEditorId()
   │   └── Find EditorFocused actions for that type matching this key
-  │       └── Found? → dispatch to focused widget's handleKeyAction() → done
+  │       └── Found? → look up KeyActionAdapter for that editor instance
+  │           └── Call adapter->handleKeyAction(action_id) → done
   │
   ├── Find AlwaysRouted actions matching this key
-  │   └── Found? → find target widget, call handleKeyAction() → done
+  │   └── Found? → look up KeyActionAdapter for the target editor type
+  │       └── Call adapter->handleKeyAction(action_id) → done
   │
   ├── Find Global actions matching this key
   │   └── Found? → execute (focus switch, app command, etc.) → done
@@ -117,10 +131,12 @@ QKeyEvent arrives at QApplication event filter
 
 ### Registration Pattern
 
-Widgets register action *descriptors* (pure metadata) during their `registerTypes()` call. No callbacks or widget pointers are stored — dispatch happens via the `KeyActionHandler` virtual method on live widget instances.
+Widgets register action *descriptors* (pure metadata) during their `registerTypes()` call. No callbacks or widget pointers are stored at registration time.
+
+At runtime, when a widget instance is created, it constructs a `KeyActionAdapter`, installs a handler, and registers the adapter with `KeymapManager`. Dispatch happens through the adapter — no virtual interface inheritance required.
 
 ```cpp
-// In MediaWidgetModule::registerTypes()
+// During type registration (pure metadata, no widget instances yet):
 keymap_manager->registerAction({
     .action_id = "media.assign_group_1",
     .display_name = "Assign to Group 1",
@@ -131,17 +147,22 @@ keymap_manager->registerAction({
 // ... repeat for groups 2–9
 ```
 
-The Media_Window (or its state) implements `KeyActionHandler`:
+When a Media_Window is created, it sets up its adapter:
 
 ```cpp
-bool Media_Window::handleKeyAction(QString const & action_id) {
+// In Media_Window constructor:
+_key_adapter = new KeyActionAdapter(this);  // QObject parenting
+_key_adapter->setInstanceId(_state->getInstanceId());
+_key_adapter->setHandler([this](QString const & action_id) -> bool {
     if (action_id == "media.assign_group_1") {
         assignToGroup(1);
         return true;
     }
     // ...
     return false;
-}
+});
+keymap_manager->registerAdapter(_key_adapter);
+// Deregistration is automatic via QObject::destroyed signal
 ```
 
 ### Persistence
@@ -179,7 +200,7 @@ A dedicated editor (registered via `EditorRegistry`, opened from the View menu) 
 |--------|-------------|
 | **`SelectionContext`** | KeymapManager reads `activeEditorId()` to determine focused editor for scope resolution |
 | **`ContextAction`** | Orthogonal — ContextActions are *mouse-driven* actions shown in context menus; KeyActions are *keyboard-driven*. A future unification could share action IDs. |
-| **`Commands` (`ICommand`)** | A `handleKeyAction()` implementation may internally create and execute an `ICommand`. The keymap layer handles *input binding*; the command layer handles *data mutation*. |
+| **`Commands` (`ICommand`)** | A `KeyActionAdapter` handler may internally create and execute an `ICommand`. The keymap layer handles *input binding*; the command layer handles *data mutation*. |
 | **`EditorRegistry`** | KeymapManager uses the type registry to enumerate editor types (for auto-generated focus actions) and to look up widget instances for dispatch. |
 | **`AppPreferencesData`** | Stores user keybinding overrides. Loaded on startup, saved on change. |
 

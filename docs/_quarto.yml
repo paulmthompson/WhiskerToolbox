@@ -169,6 +169,7 @@ website:
               href: developer/KeymapSystem/index.qmd
               contents:
                 - developer/KeymapSystem/roadmap.md
+                - developer/KeymapSystem/library_reference.qmd
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd

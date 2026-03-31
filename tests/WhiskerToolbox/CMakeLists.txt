@@ -28,6 +28,8 @@ add_subdirectory(FileExplorer_Widgets)
 add_subdirectory(DeepLearning_Widget)
 add_subdirectory(AutoParamWidget)
 
+add_subdirectory(KeymapSystem)
+
 add_subdirectory(LayoutTesting)
 
 # Docking behavior test programs (manual GUI tests, not automated)

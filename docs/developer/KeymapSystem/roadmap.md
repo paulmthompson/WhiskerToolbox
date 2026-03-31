@@ -1,6 +1,22 @@
 # Keymap System — Implementation Roadmap
 
-**Last updated:** 2026-03-30
+**Last updated:** 2026-03-30 — Steps 1.1 and 1.2 complete
+
+## Progress
+
+| Step | Status |
+|------|--------|
+| 1.1 — `KeymapSystem` static library | ✅ Complete |
+| 1.2 — `KeyActionAdapter` component | ✅ Complete (delivered as part of 1.1) |
+| 1.3 — Wire into MainWindow | ⬜ Not started |
+| 1.4 — Persistence in AppPreferencesData | ⬜ Not started |
+| 2.1 — Timeline actions | ⬜ Not started |
+| 2.2 — Media_Widget group assignment | ⬜ Not started |
+| 2.3 — Plot polygon editing | ⬜ Not started |
+| 2.4 — Auto-generated focus actions | ⬜ Not started |
+| 2.5 — Python Console shortcuts | ⬜ Not started |
+| 3.1 — KeybindingEditor widget | ⬜ Not started |
+| 3.2 — Register as editor type | ⬜ Not started |
 
 ## Overview
 
@@ -16,129 +32,28 @@ This roadmap breaks the Keymap System into incremental steps that each produce a
 
 ## Phase 1: Core Infrastructure
 
-### Step 1.1 — Create the `KeymapSystem` static library
+### ✅ Step 1.1 — Create the `KeymapSystem` static library
 
-**Goal:** Define the core types and `KeymapManager` class without wiring it into the application.
+**Completed.** See [library_reference.qmd](library_reference.qmd) for full API documentation.
 
-**New files:**
+**Delivered files:**
 
 | File | Contents |
 |------|----------|
-| `src/WhiskerToolbox/KeymapSystem/CMakeLists.txt` | Static library. Depends on `Qt6::Core`, `ParameterSchema`, `EditorState` (for strong types). |
-| `src/WhiskerToolbox/KeymapSystem/KeyAction.hpp` | `KeyActionScope` (enum/variant), `KeyActionDescriptor` (action metadata). |
-| `src/WhiskerToolbox/KeymapSystem/Keymap.hpp` | `KeymapEntry` (action→key binding), `KeymapOverrideEntry` (serializable user override). |
-| `src/WhiskerToolbox/KeymapSystem/KeyActionHandler.hpp` | `KeyActionHandler` mixin with virtual `handleKeyAction(QString) → bool`. |
-| `src/WhiskerToolbox/KeymapSystem/KeymapManager.hpp` | Class declaration. |
-| `src/WhiskerToolbox/KeymapSystem/KeymapManager.cpp` | Implementation: action registration, scope resolution, conflict detection, override management. |
+| `src/WhiskerToolbox/KeymapSystem/CMakeLists.txt` | Static library. Depends on `Qt6::Core`, `Qt6::Gui`, `EditorState`. |
+| `src/WhiskerToolbox/KeymapSystem/KeyAction.hpp` | `KeyActionScopeKind`, `KeyActionScope`, `KeyActionDescriptor` |
+| `src/WhiskerToolbox/KeymapSystem/Keymap.hpp` | `KeymapEntry`, `KeymapOverrideEntry` |
+| `src/WhiskerToolbox/KeymapSystem/KeyActionAdapter.hpp/.cpp` | Composition-based dispatch component |
+| `src/WhiskerToolbox/KeymapSystem/KeymapManager.hpp/.cpp` | Registration, scope resolution, override management, conflict detection |
+| `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | 23 passing tests |
 
-**`KeyActionScope` design:**
-
-```cpp
-enum class KeyActionScopeKind { Global, EditorFocused, AlwaysRouted };
-
-struct KeyActionScope {
-    KeyActionScopeKind kind = KeyActionScopeKind::Global;
-    QString editor_type_id;  // Only used for EditorFocused and AlwaysRouted
-
-    static KeyActionScope global();
-    static KeyActionScope editorFocused(QString const & type_id);
-    static KeyActionScope alwaysRouted(QString const & type_id);
-};
-```
-
-**`KeyActionDescriptor` design:**
-
-```cpp
-struct KeyActionDescriptor {
-    QString action_id;          // "media.assign_group_1" — unique, dot-namespaced
-    QString display_name;       // "Assign to Group 1" — for UI
-    QString category;           // "Media Viewer" — grouping in keybinding editor
-    KeyActionScope scope;       // When this action is eligible
-    QKeySequence default_binding;  // Shipped default (may be empty = unbound)
-};
-```
-
-**`KeymapManager` public API:**
-
-```cpp
-class KeymapManager : public QObject {
-    Q_OBJECT
-public:
-    // --- Registration (called during widget type setup) ---
-    void registerAction(KeyActionDescriptor descriptor);
-    void unregisterAction(QString const & action_id);
-
-    // --- Query ---
-    std::vector<KeyActionDescriptor> allActions() const;
-    std::vector<KeyActionDescriptor> actionsForScope(KeyActionScope const & scope) const;
-    QKeySequence bindingFor(QString const & action_id) const;  // resolved: override > default
-
-    // --- Override management ---
-    void setUserOverride(QString const & action_id, QKeySequence const & binding);
-    void clearUserOverride(QString const & action_id);
-    void resetAllOverrides();
-
-    // --- Conflict detection ---
-    struct Conflict {
-        QString action_id_a;
-        QString action_id_b;
-        QKeySequence key;
-        KeyActionScope scope;
-    };
-    std::vector<Conflict> detectConflicts() const;
-
-    // --- Dispatch (called from event filter) ---
-    bool resolveKeyPress(QKeyEvent * event,
-                         QString const & focused_editor_type_id) const;
-
-    // --- Persistence ---
-    std::vector<KeymapOverrideEntry> exportOverrides() const;
-    void importOverrides(std::vector<KeymapOverrideEntry> const & overrides);
-
-signals:
-    void bindingsChanged();
-};
-```
-
-**Modified files:**
-
-| File | Change |
-|------|--------|
-| `src/CMakeLists.txt` | Add `add_subdirectory(WhiskerToolbox/KeymapSystem)` |
-
-**Tests:** `tests/KeymapSystem/test_keymap_manager.cpp`
-
-- Register actions in different scopes, verify `allActions()` returns them
-- `bindingFor()` returns default when no override; returns override when set
-- `detectConflicts()` flags same key+scope, allows same key in different scopes
-- `resolveKeyPress()` returns correct action ID given scope priority
-- `exportOverrides()` → `importOverrides()` round-trip
-
-**Exit criteria:** Library builds, tests pass. No application behavior changes.
+**Modified files:** `src/WhiskerToolbox/CMakeLists.txt` (added subdirectory), `tests/WhiskerToolbox/CMakeLists.txt` (added subdirectory), `.github/copilot-instructions.md` (added library description).
 
 ---
 
-### Step 1.2 — Create the `KeyActionHandler` mixin
+### ✅ Step 1.2 — Create the `KeyActionAdapter` component
 
-**Goal:** Define the interface that widgets implement to receive keymap dispatches.
-
-This is part of Step 1.1's file set (`KeyActionHandler.hpp`), but called out separately because widget adoption depends on it.
-
-**Design:**
-
-```cpp
-class KeyActionHandler {
-public:
-    virtual ~KeyActionHandler() = default;
-
-    /// Handle a keymap action. Return true if handled.
-    virtual bool handleKeyAction(QString const & action_id) = 0;
-};
-```
-
-Widgets that want to receive dispatches inherit from this (alongside `QWidget` / `QGraphicsScene`). This follows the `DataFocusAware` mixin pattern — lightweight, no Qt dependency beyond `QString`.
-
-**Exit criteria:** Header compiles. No runtime effect yet.
+**Completed as part of Step 1.1.** `KeyActionAdapter` is implemented in `KeyActionAdapter.hpp/.cpp`. Widgets create it as a child `QObject` (composition, not inheritance), install a handler lambda, and register it with `KeymapManager`. Automatic deregistration happens via `QObject::destroyed`.
 
 ---
 
@@ -172,15 +87,7 @@ Widgets that want to receive dispatches inherit from this (alongside `QWidget` /
 | `src/WhiskerToolbox/StateManagement/AppPreferencesData.hpp` | Add `std::vector<KeymapOverrideEntry> keybinding_overrides` field |
 | `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | On startup: load overrides from `AppPreferences` into `KeymapManager`. On `bindingsChanged()`: save back. |
 
-**`KeymapOverrideEntry`** (defined in `Keymap.hpp`):
-
-```cpp
-struct KeymapOverrideEntry {
-    std::string action_id;
-    std::string key_sequence;   // QKeySequence::toString() format
-    bool enabled = true;
-};
-```
+`KeymapOverrideEntry` (defined in `Keymap.hpp`) uses `std::string` fields for reflect-cpp compatibility — see `src/WhiskerToolbox/KeymapSystem/Keymap.hpp`.
 
 **Exit criteria:** Override round-trip works: set override → restart app → override is still applied. (Can be verified once actions are registered in Phase 2.)
 
@@ -188,7 +95,7 @@ struct KeymapOverrideEntry {
 
 ## Phase 2: Migrate Existing Hardcoded Keys
 
-Each step in this phase registers actions for an existing set of hardcoded keys, implements `handleKeyAction()` on the target widget, and removes the corresponding hardcoded code. Steps are independent and can be done in any order.
+Each step in this phase registers action descriptors for an existing set of hardcoded keys, adds a `KeyActionAdapter` to the target widget, and removes the corresponding hardcoded code. Steps are independent and can be done in any order.
 
 ### Step 2.1 — Timeline actions (always-routed)
 
@@ -206,9 +113,9 @@ Each step in this phase registers actions for an existing set of hardcoded keys,
 
 | File | Change |
 |------|--------|
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` | Inherit `KeyActionHandler`, implement `handleKeyAction()` |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.cpp` | Dispatch `play_pause` → `PlayButton()`, `next_frame` / `prev_frame` → `changeScrollBarValue(±1)`, `jump_forward` / `jump_backward` → `changeScrollBarValue(±getFrameJumpValue())` |
-| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Register above actions. Remove arrow-key and spacebar handling from `eventFilter()`. Register `TimeScrollBar` as the always-routed handler for these actions with `KeymapManager`. |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` | Add `KeyActionAdapter *` member |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.cpp` | Create `KeyActionAdapter` in constructor. Handler dispatches `play_pause` → `PlayButton()`, `next_frame` / `prev_frame` → `changeScrollBarValue(±1)`, `jump_forward` / `jump_backward` → `changeScrollBarValue(±getFrameJumpValue())`. Register adapter with `KeymapManager`. |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Register above action descriptors. Remove arrow-key and spacebar handling from `eventFilter()`. |
 
 **Handling the text-input bypass:** The bypass logic (don't consume keys when a text input has focus) moves into `KeymapManager::eventFilter()` as a general mechanism, not per-action code. This is cleaner than the current approach of checking `qobject_cast<QLineEdit*>` in multiple places.
 
@@ -231,8 +138,8 @@ Each step in this phase registers actions for an existing set of hardcoded keys,
 
 | File | Change |
 |------|--------|
-| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.hpp` | Inherit `KeyActionHandler` |
-| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.cpp` | Implement `handleKeyAction()` for group assignment. Remove the `keyPressEvent()` override that handles keys 1-9. |
+| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.hpp` | Add `KeyActionAdapter *` member |
+| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.cpp` | Create `KeyActionAdapter` in constructor with handler for group assignment. Register adapter with `KeymapManager`. Remove the `keyPressEvent()` override that handles keys 1-9. |
 | `src/WhiskerToolbox/Media_Widget/MediaWidgetRegistration.cpp` | Register the 9 actions with `KeymapManager`. |
 
 **Exit criteria:** Group assignment works as before. Keys are now configurable.
@@ -255,7 +162,7 @@ Where `<type>` is `scatter_plot`, `temporal_projection`, `analysis_dashboard`, e
 
 | File | Change |
 |------|--------|
-| ScatterPlotOpenGLWidget | Inherit `KeyActionHandler`, implement `handleKeyAction()`, remove `keyPressEvent()` polygon code |
+| ScatterPlotOpenGLWidget | Add `KeyActionAdapter *` member, create adapter with polygon action handler, register with `KeymapManager`, remove `keyPressEvent()` polygon code |
 | TemporalProjectionOpenGLWidget | Same pattern |
 | BasePlotOpenGLWidget (Analysis Dashboard) | Same pattern (also migrate "R" for reset view) |
 | Corresponding Registration files | Register actions |
@@ -266,25 +173,7 @@ Where `<type>` is `scatter_plot`, `temporal_projection`, `analysis_dashboard`, e
 
 ### Step 2.4 — Auto-generated focus actions
 
-**Goal:** For every registered editor type, automatically create a `"focus.<type_id>"` action.
-
-**Implementation in `KeymapManager`:**
-
-```cpp
-void KeymapManager::generateFocusActions(EditorRegistry const * registry) {
-    for (auto const & type_info : registry->allTypes()) {
-        registerAction({
-            .action_id = "focus." + type_info.type_id,
-            .display_name = "Focus " + type_info.display_name,
-            .category = "Focus",
-            .scope = KeyActionScope::global(),
-            .default_binding = QKeySequence()  // unbound by default
-        });
-    }
-}
-```
-
-**Execution:** When a focus action fires, `KeymapManager` calls `EditorRegistry::openEditor()` to raise/create the widget, then `SelectionContext::setActiveEditor()` to transfer focus.
+**Goal:** For every registered editor type, automatically create a `"focus.<type_id>"` action (default: unbound). When fired, `KeymapManager` calls `EditorRegistry::openEditor()` and `SelectionContext::setActiveEditor()`.
 
 **Modified files:**
 
@@ -379,19 +268,7 @@ Features:
 |------|--------|
 | `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Add `KeybindingEditorModule::registerTypes()` call in `_registerEditorTypes()`. |
 
-**Registration details:**
-
-```cpp
-registry->registerType({
-    .type_id = "KeybindingEditor",
-    .display_name = "Keybinding Editor",
-    .menu_path = "View/Tools",
-    .preferred_zone = Zone::Center,
-    .allow_multiple = false,
-    .create_state = ...
-    .create_view = ...
-});
-```
+Register with `type_id = "KeybindingEditor"`, `allow_multiple = false`, `preferred_zone = Zone::Center`, accessible from the View/Tools menu.
 
 **Exit criteria:** Keybinding Editor opens via View > Tools menu. Only one instance allowed.
 
@@ -416,10 +293,11 @@ This phase is ongoing — each widget migrates its keyboard handling at its own 
 1. Identify all keys handled in `keyPressEvent()` or `eventFilter()`
 2. Define `KeyActionDescriptor` for each, with appropriate scope
 3. Register descriptors in the widget's `registerTypes()`
-4. Inherit `KeyActionHandler`, implement `handleKeyAction()`
-5. Remove the original `keyPressEvent()` / `eventFilter()` key handling
-6. Verify the widget still works
-7. Verify keys appear in the Keybinding Editor
+4. Add a `KeyActionAdapter *` member, create it in the constructor with a handler lambda
+5. Register the adapter with `KeymapManager` (deregistration is automatic via QObject parenting)
+6. Remove the original `keyPressEvent()` / `eventFilter()` key handling
+7. Verify the widget still works
+8. Verify keys appear in the Keybinding Editor
 
 ---
 
@@ -451,34 +329,37 @@ Currently, an `EditorFocused` action is available whenever that editor type has 
 
 ## Summary of All New Files
 
-| Path | Phase | Type |
-|------|-------|------|
-| `src/WhiskerToolbox/KeymapSystem/CMakeLists.txt` | 1.1 | CMake |
-| `src/WhiskerToolbox/KeymapSystem/KeyAction.hpp` | 1.1 | Header |
-| `src/WhiskerToolbox/KeymapSystem/Keymap.hpp` | 1.1 | Header |
-| `src/WhiskerToolbox/KeymapSystem/KeyActionHandler.hpp` | 1.1 | Header |
-| `src/WhiskerToolbox/KeymapSystem/KeymapManager.hpp` | 1.1 | Header |
-| `src/WhiskerToolbox/KeymapSystem/KeymapManager.cpp` | 1.1 | Source |
-| `src/WhiskerToolbox/KeybindingEditor/CMakeLists.txt` | 3.1 | CMake |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.hpp` | 3.1 | Header |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.cpp` | 3.1 | Source |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.hpp` | 3.2 | Header |
-| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.cpp` | 3.2 | Source |
-| `tests/KeymapSystem/CMakeLists.txt` | 1.1 | CMake |
-| `tests/KeymapSystem/test_keymap_manager.cpp` | 1.1 | Test |
+| Path | Phase | Status | Type |
+|------|-------|--------|------|
+| `src/WhiskerToolbox/KeymapSystem/CMakeLists.txt` | 1.1 | ✅ Done | CMake |
+| `src/WhiskerToolbox/KeymapSystem/KeyAction.hpp` | 1.1 | ✅ Done | Header |
+| `src/WhiskerToolbox/KeymapSystem/Keymap.hpp` | 1.1 | ✅ Done | Header |
+| `src/WhiskerToolbox/KeymapSystem/KeyActionAdapter.hpp` | 1.1 | ✅ Done | Header |
+| `src/WhiskerToolbox/KeymapSystem/KeyActionAdapter.cpp` | 1.1 | ✅ Done | Source |
+| `src/WhiskerToolbox/KeymapSystem/KeymapManager.hpp` | 1.1 | ✅ Done | Header |
+| `src/WhiskerToolbox/KeymapSystem/KeymapManager.cpp` | 1.1 | ✅ Done | Source |
+| `tests/WhiskerToolbox/KeymapSystem/CMakeLists.txt` | 1.1 | ✅ Done | CMake |
+| `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | 1.1 | ✅ Done | Test |
+| `docs/developer/KeymapSystem/library_reference.qmd` | 1.1 | ✅ Done | Docs |
+| `src/WhiskerToolbox/KeybindingEditor/CMakeLists.txt` | 3.1 | ⬜ Todo | CMake |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.hpp` | 3.1 | ⬜ Todo | Header |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditor.cpp` | 3.1 | ⬜ Todo | Source |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.hpp` | 3.2 | ⬜ Todo | Header |
+| `src/WhiskerToolbox/KeybindingEditor/KeybindingEditorRegistration.cpp` | 3.2 | ⬜ Todo | Source |
 
 ## Summary of All Modified Files
 
-| Path | Phase | Change |
-|------|-------|--------|
-| `src/CMakeLists.txt` | 1.1 | Add `KeymapSystem` subdirectory |
-| `src/WhiskerToolbox/StateManagement/AppPreferencesData.hpp` | 1.4 | Add `keybinding_overrides` field |
-| `src/WhiskerToolbox/Main_Window/mainwindow.hpp` | 1.3 | Add `KeymapManager *` member |
-| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 1.3, 2.1–2.4 | Create `KeymapManager`, register actions, migrate `eventFilter()` |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` | 2.1 | Inherit `KeyActionHandler` |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.cpp` | 2.1 | Implement `handleKeyAction()` |
-| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.hpp` | 2.2 | Inherit `KeyActionHandler` |
-| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.cpp` | 2.2 | Implement `handleKeyAction()`, remove `keyPressEvent()` |
-| `src/WhiskerToolbox/Media_Widget/MediaWidgetRegistration.cpp` | 2.2 | Register group-assignment actions |
-| Plot widget files (Scatter, Temporal, Analysis) | 2.3 | Same migration pattern |
-| `.github/copilot-instructions.md` | 1.1 | Add `KeymapSystem` library description |
+| Path | Phase | Status | Change |
+|------|-------|--------|--------|
+| `src/WhiskerToolbox/CMakeLists.txt` | 1.1 | ✅ Done | Added `KeymapSystem` subdirectory |
+| `tests/WhiskerToolbox/CMakeLists.txt` | 1.1 | ✅ Done | Added `KeymapSystem` subdirectory |
+| `.github/copilot-instructions.md` | 1.1 | ✅ Done | Added `KeymapSystem` library description |
+| `src/WhiskerToolbox/StateManagement/AppPreferencesData.hpp` | 1.4 | ⬜ Todo | Add `keybinding_overrides` field |
+| `src/WhiskerToolbox/Main_Window/mainwindow.hpp` | 1.3 | ⬜ Todo | Add `KeymapManager *` member |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 1.3, 2.1–2.4 | ⬜ Todo | Create `KeymapManager`, register actions, migrate `eventFilter()` |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` | 2.1 | ⬜ Todo | Add `KeyActionAdapter *` member |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.cpp` | 2.1 | ⬜ Todo | Create adapter, set handler, register with `KeymapManager` |
+| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.hpp` | 2.2 | ⬜ Todo | Add `KeyActionAdapter *` member |
+| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.cpp` | 2.2 | ⬜ Todo | Create adapter, set handler, register, remove `keyPressEvent()` |
+| `src/WhiskerToolbox/Media_Widget/MediaWidgetRegistration.cpp` | 2.2 | ⬜ Todo | Register group-assignment actions |
+| Plot widget files (Scatter, Temporal, Analysis) | 2.3 | ⬜ Todo | Same migration pattern |

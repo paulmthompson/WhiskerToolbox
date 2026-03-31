@@ -16,6 +16,7 @@ find_package(glm CONFIG REQUIRED)
 qt_standard_project_setup()
 
 add_subdirectory(EditorState) # reflectcpp, Qt
+add_subdirectory(KeymapSystem) # Qt, EditorState
 add_subdirectory(Collapsible_Widget) # Qt
 add_subdirectory(Terminal_Widget) # Qt, EditorState, reflectcpp
 add_subdirectory(ColorPicker_Widget) # Qt, DataManager

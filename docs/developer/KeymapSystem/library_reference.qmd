@@ -1,0 +1,97 @@
+---
+title: "KeymapSystem Library Reference"
+format: html
+---
+
+## Overview
+
+The `KeymapSystem` static library (`src/WhiskerToolbox/KeymapSystem/`) provides the core infrastructure for configurable, context-aware keyboard shortcuts. It implements action registration, scope-based resolution, user override management, and conflict detection.
+
+## Files
+
+### KeyAction.hpp
+
+Defines the core action types:
+
+- **`KeyActionScopeKind`** — Enum: `Global`, `EditorFocused`, `AlwaysRouted`
+- **`KeyActionScope`** — Pairs a scope kind with an optional `EditorTypeId`. Factory methods: `global()`, `editorFocused(type_id)`, `alwaysRouted(type_id)`
+- **`KeyActionDescriptor`** — Pure metadata for a bindable action: `action_id`, `display_name`, `category`, `scope`, and `default_binding`
+
+### Keymap.hpp
+
+Defines binding types:
+
+- **`KeymapEntry`** — Runtime resolved binding (action → key sequence, enabled flag, override flag)
+- **`KeymapOverrideEntry`** — Serializable user override using `std::string` for reflect-cpp compatibility. Stored in `AppPreferencesData` for persistence.
+
+### KeyActionAdapter.hpp / KeyActionAdapter.cpp
+
+Composition-based component for receiving keymap dispatches. Widgets create a `KeyActionAdapter` as a child `QObject` and install a handler lambda. No inheritance required.
+
+Key API:
+
+- `setHandler(Handler)` — Install callback `std::function<bool(QString const &)>`
+- `handleKeyAction(action_id)` — Called by `KeymapManager` to dispatch
+- `setInstanceId()` / `setTypeId()` — Associate with an editor instance/type
+
+### KeymapManager.hpp / KeymapManager.cpp
+
+Central manager class (owned by MainWindow). Inherits `QObject`.
+
+**Registration API:**
+
+- `registerAction(descriptor)` — Register action metadata (returns false on duplicate)
+- `unregisterAction(action_id)` — Remove action and its override
+
+**Query API:**
+
+- `allActions()` — All registered descriptors
+- `action(action_id)` — Lookup by ID
+- `bindingFor(action_id)` — Effective key (override > default)
+- `isActionEnabled(action_id)` — Check enabled state
+
+**Override API:**
+
+- `setUserOverride(action_id, key)` — Override key binding
+- `clearUserOverride(action_id)` — Revert to default
+- `clearAllOverrides()` — Reset all customizations
+- `setActionEnabled(action_id, enabled)` — Enable/disable
+
+**Resolution API:**
+
+- `resolveKeyPress(key, focused_type_id)` — Scope-priority resolution: EditorFocused > AlwaysRouted > Global
+- `detectConflicts()` — Find same-key/same-scope collisions
+
+**Adapter routing:**
+
+- `registerAdapter(adapter)` — Register for dispatch (auto-deregisters on destruction)
+- `dispatchAction(action_id, target_type, target_instance)` — Route to matching adapter
+
+**Serialization:**
+
+- `exportOverrides()` / `importOverrides(overrides)` — Round-trip persistence
+
+**Signal:** `bindingsChanged()` — emitted on any binding modification.
+
+## Dependencies
+
+- `Qt6::Core`, `Qt6::Gui` — `QKeySequence`, `QObject`, signals/slots
+- `EditorState` — `EditorTypeId`, `EditorInstanceId` strong types
+
+## Test Coverage
+
+Tests in `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` cover:
+
+- Action registration and duplicate rejection
+- Unregistration with override cleanup
+- Default and override binding resolution
+- Override clear (single and all)
+- Enable/disable state
+- Conflict detection (same scope, different scope, override-created)
+- Scope resolution priority (EditorFocused > AlwaysRouted > Global)
+- Disabled action exclusion from resolution
+- Override binding in resolution
+- Adapter registration and dispatch routing
+- Adapter auto-deregistration on destruction
+- Instance-targeted dispatch
+- Export/import override round-trip
