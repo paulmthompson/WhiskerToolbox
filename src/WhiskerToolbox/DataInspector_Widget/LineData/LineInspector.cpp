@@ -331,15 +331,15 @@ void LineInspector::_onApplyImageSizeClicked() {
 
     // Ask user if they want to scale existing data
     int const ret = QMessageBox::question(this, "Scale Existing Data",
-                                    QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4?\n\n"
-                                            "Click 'Yes' to scale all line data proportionally.\n"
-                                            "Click 'No' to just change the image size without scaling.\n"
-                                            "Click 'Cancel' to abort the operation.")
-                                            .arg(current_size.width)
-                                            .arg(current_size.height)
-                                            .arg(new_width)
-                                            .arg(new_height),
-                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+                                          QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4?\n\n"
+                                                  "Click 'Yes' to scale all line data proportionally.\n"
+                                                  "Click 'No' to just change the image size without scaling.\n"
+                                                  "Click 'Cancel' to abort the operation.")
+                                                  .arg(current_size.width)
+                                                  .arg(current_size.height)
+                                                  .arg(new_width)
+                                                  .arg(new_height),
+                                          QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
     if (ret == QMessageBox::Cancel) {
         return;
@@ -445,16 +445,16 @@ void LineInspector::_onCopyImageSizeClicked() {
 
     // Ask user if they want to scale existing data
     int const ret = QMessageBox::question(this, "Scale Existing Data",
-                                    QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4 (from '%5')?\n\n"
-                                            "Click 'Yes' to scale all line data proportionally.\n"
-                                            "Click 'No' to just change the image size without scaling.\n"
-                                            "Click 'Cancel' to abort the operation.")
-                                            .arg(current_size.width)
-                                            .arg(current_size.height)
-                                            .arg(media_size.width)
-                                            .arg(media_size.height)
-                                            .arg(selected_media_key),
-                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+                                          QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4 (from '%5')?\n\n"
+                                                  "Click 'Yes' to scale all line data proportionally.\n"
+                                                  "Click 'No' to just change the image size without scaling.\n"
+                                                  "Click 'Cancel' to abort the operation.")
+                                                  .arg(current_size.width)
+                                                  .arg(current_size.height)
+                                                  .arg(media_size.width)
+                                                  .arg(media_size.height)
+                                                  .arg(selected_media_key),
+                                          QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
     if (ret == QMessageBox::Cancel) {
         return;
@@ -743,23 +743,22 @@ void LineInspector::_onDeleteLinesRequested() {
     std::cout << "LineInspector: Deleting " << selected_entity_ids.size()
               << " selected lines from '" << _active_key << "'..." << std::endl;
 
-    // Remove entities from groups first
-    if (groupManager()) {
-        std::unordered_set<EntityId> const entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
-        groupManager()->ungroupEntities(entity_ids_set);
-    }
-
-    int total_lines_deleted = 0;
-
-    // Delete each selected line individually
+    // Build the set of valid entity IDs to delete (exclude EntityId(0))
+    std::unordered_set<EntityId> entity_ids_to_delete;
+    entity_ids_to_delete.reserve(selected_entity_ids.size());
     for (EntityId const entity_id: selected_entity_ids) {
         if (entity_id != EntityId(0)) {
-            bool const success = line_data->clearByEntityId(entity_id, NotifyObservers::No);
-            if (success) {
-                total_lines_deleted++;
-            }
+            entity_ids_to_delete.insert(entity_id);
         }
     }
+
+    // Remove entities from groups first
+    if (groupManager()) {
+        groupManager()->ungroupEntities(entity_ids_to_delete);
+    }
+
+    // Bulk delete: single O(n + k) pass instead of O(n * k) individual deletions
+    size_t const total_lines_deleted = line_data->clearByEntityIds(entity_ids_to_delete, NotifyObservers::No);
 
     // Notify observers only once at the end
     if (total_lines_deleted > 0) {
