@@ -981,7 +981,7 @@ void MainWindow::_registerEditorTypes() {
 
     TemporalProjectionViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
-    ScatterPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
+    ScatterPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get(), _keymap_manager);
 
     SpectrogramWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

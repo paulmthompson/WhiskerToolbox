@@ -38,27 +38,28 @@ class DataManager;
 class EditorRegistry;
 class GroupManager;
 
+namespace KeymapSystem {
+class KeymapManager;
+}// namespace KeymapSystem
+
 namespace ScatterPlotWidgetModule {
 
 /**
  * @brief Register all Scatter Plot Widget editor types with the registry
- * 
- * This function registers the ScatterPlotWidget type, including:
- * - State factory: Creates ScatterPlotState
- * - View factory: Creates ScatterPlotWidget (the main plot component)
- * - Properties factory: Creates ScatterPlotPropertiesWidget
- * 
- * The Scatter Plot supports group context menu for adding selected points
- * to entity groups when a GroupManager is provided.
- * 
- * @param registry The EditorRegistry to register types with
+ *
+ * This function registers the ScatterPlotWidget type and the three polygon
+ * editing key actions (complete, cancel, undo-vertex) with KeymapManager.
+ *
+ * @param registry     The EditorRegistry to register types with
  * @param data_manager Shared DataManager for widget construction
  * @param group_manager Optional GroupManager for group-aware features (can be nullptr)
+ * @param keymap_manager Optional KeymapManager for polygon shortcut registration (can be nullptr)
  */
 void registerTypes(EditorRegistry * registry,
-                   const std::shared_ptr<DataManager>& data_manager,
-                   GroupManager * group_manager = nullptr);
+                   std::shared_ptr<DataManager> const & data_manager,
+                   GroupManager * group_manager = nullptr,
+                   KeymapSystem::KeymapManager * keymap_manager = nullptr);
 
-}  // namespace ScatterPlotWidgetModule
+}// namespace ScatterPlotWidgetModule
 
-#endif  // SCATTER_PLOT_WIDGET_REGISTRATION_HPP
+#endif// SCATTER_PLOT_WIDGET_REGISTRATION_HPP

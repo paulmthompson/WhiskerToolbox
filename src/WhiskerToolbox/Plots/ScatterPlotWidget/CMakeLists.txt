@@ -60,6 +60,7 @@ target_link_libraries(ScatterPlotWidget PRIVATE CorePlotting)
 target_link_libraries(ScatterPlotWidget PRIVATE PlottingOpenGL)
 target_link_libraries(ScatterPlotWidget PRIVATE TooltipManager)
 target_link_libraries(ScatterPlotWidget PRIVATE GroupContextMenu)
+target_link_libraries(ScatterPlotWidget PRIVATE KeymapSystem)
 
 
 target_include_directories(ScatterPlotWidget PUBLIC

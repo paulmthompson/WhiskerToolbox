@@ -29,6 +29,10 @@ class VerticalAxisWidget;
 
 class QResizeEvent;
 
+namespace KeymapSystem {
+class KeymapManager;
+}// namespace KeymapSystem
+
 namespace Ui {
 class ScatterPlotWidget;
 }
@@ -59,6 +63,12 @@ public:
      * @param selection_context Pointer to the SelectionContext (not owned)
      */
     void setSelectionContext(SelectionContext * selection_context);
+
+    /**
+     * @brief Set the KeymapManager to enable configurable polygon editing shortcuts
+     * @param manager Pointer to the KeymapManager (can be nullptr)
+     */
+    void setKeymapManager(KeymapSystem::KeymapManager * manager);
 
     [[nodiscard]] HorizontalAxisRangeControls * getHorizontalRangeControls() const;
     [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;

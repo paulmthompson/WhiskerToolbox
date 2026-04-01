@@ -1,6 +1,6 @@
 # Keymap System — Implementation Roadmap
 
-**Last updated:** 2026-03-31 — Steps 1.1–1.4, 2.1, 2.2, 3.1, 3.2, and 3.3 (full UI) complete
+**Last updated:** 2026-03-31 — Steps 1.1–1.4, 2.1, 2.2, 2.3, 3.1, 3.2, and 3.3 complete
 
 ## Progress
 
@@ -12,7 +12,7 @@
 | 1.4 — Persistence in AppPreferencesData | ✅ Complete |
 | 2.1 — Timeline actions | ✅ Complete |
 | 2.2 — Media_Widget group assignment | ✅ Complete |
-| 2.3 — Plot polygon editing | ⬜ Not started |
+| 2.3 — Plot polygon editing | ✅ Complete (ScatterPlotWidget) |
 | 2.4 — Auto-generated focus actions | ⬜ Not started |
 | 2.5 — Python Console shortcuts | ⬜ Not started |
 | 3.1 — KeybindingEditor widget | ✅ Complete (scaffold) |
@@ -161,27 +161,36 @@ Each step in this phase registers action descriptors for an existing set of hard
 
 ---
 
-### Step 2.3 — Plot polygon editing (editor-focused)
+### ✅ Step 2.3 — Plot polygon editing (editor-focused)
 
-**Actions to register (per plot widget type):**
+**Completed for ScatterPlotWidget.** Three polygon editing actions are registered as `EditorFocused("ScatterPlotWidget")` in `ScatterPlotWidgetModule::registerTypes()`. A `KeyActionAdapter` in `ScatterPlotOpenGLWidget` handles the dispatch, and the old `keyPressEvent()` polygon handling has been removed.
+
+**Actions registered:**
 
 | Action ID | Display Name | Scope | Default Key |
 |-----------|-------------|-------|-------------|
-| `<type>.polygon_complete` | Complete Polygon | EditorFocused | Enter |
-| `<type>.polygon_cancel` | Cancel Polygon | EditorFocused | Escape |
-| `<type>.polygon_undo_vertex` | Undo Last Vertex | EditorFocused | Backspace |
+| `scatter_plot.polygon_complete` | Complete Polygon | EditorFocused("ScatterPlotWidget") | Enter |
+| `scatter_plot.polygon_cancel` | Cancel Polygon | EditorFocused("ScatterPlotWidget") | Escape |
+| `scatter_plot.polygon_undo_vertex` | Undo Last Vertex | EditorFocused("ScatterPlotWidget") | Backspace |
 
-Where `<type>` is `scatter_plot`, `temporal_projection`, `analysis_dashboard`, etc.
+**Handler behavior:** All three actions check `_polygon_controller->isActive()` — if polygon mode is not active, the adapter returns `false` so the event passes through normally.
 
 **Modified files:**
 
 | File | Change |
 |------|--------|
-| ScatterPlotOpenGLWidget | Add `KeyActionAdapter *` member, create adapter with polygon action handler, register with `KeymapManager`, remove `keyPressEvent()` polygon code |
-| TemporalProjectionOpenGLWidget | Same pattern |
-| Corresponding Registration files | Register actions |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.hpp` | Added `KeymapSystem::KeymapManager *` parameter to `registerTypes()` (default: `nullptr`) |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.cpp` | Added `registerPolygonActions()` helper. Registers 3 polygon action descriptors. Updated view and custom-editor factories to call `widget->setKeymapManager(km)`. Updated signature to match. |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.hpp` | Added `KeymapSystem` forward declarations; added `setKeymapManager()` public method; added `KeyActionAdapter *` private member; removed `keyPressEvent()` override declaration. |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp` | Added `KeymapSystem/KeyActionAdapter.hpp` and `KeymapSystem/KeymapManager.hpp` includes. Implemented `setKeymapManager()`. Removed `keyPressEvent()` implementation. |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotWidget.hpp` | Added `KeymapSystem` forward declaration; added `setKeymapManager()` pass-through method. |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotWidget.cpp` | Added `KeymapSystem/KeymapManager.hpp` include. Implemented `setKeymapManager()` pass-through to `_opengl_widget`. |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/CMakeLists.txt` | Added `KeymapSystem` as PRIVATE dependency. |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | Passes `_keymap_manager` to `ScatterPlotWidgetModule::registerTypes()`. |
 
-**Exit criteria:** Polygon editing works as before. Keys are configurable.
+---
+
+### Step 2.3 (remaining) — TemporalProjection / AnalysisDashboard polygon editing
 
 ---
 
@@ -445,14 +454,19 @@ Currently, an `EditorFocused` action is available whenever that editor type has 
 | `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | 2.1 | ✅ Done | Added 4 timeline action test cases |
 | `src/WhiskerToolbox/KeymapSystem/CMakeLists.txt` | 1.3 | ✅ Done | Added `Qt6::Widgets` dependency |
 | `src/WhiskerToolbox/Main_Window/mainwindow.hpp` | 1.3 | ✅ Done | Added `KeymapManager *` member and `keymapManager()` accessor |
-| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 1.3, 1.4, 2.1–2.4 | ✅ 1.3–1.4 Done | Creates `KeymapManager`, sets editor registry, installs as app event filter; imports/exports overrides via AppPreferences |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 1.3, 1.4, 2.1, 2.2, 2.3 | ✅ Done | Created KeymapManager (1.3); imported/exported overrides (1.4); registered timeline actions, called `setKeymapManager()`, removed hardcoded eventFilter key handling (2.1); passes `km` to MediaWidget (2.2) and ScatterPlotWidget (2.3) registration calls |
 | `src/WhiskerToolbox/StateManagement/AppPreferencesData.hpp` | 1.4 | ✅ Done | Added `keybinding_overrides` field |
 | `src/WhiskerToolbox/StateManagement/AppPreferences.hpp` | 1.4 | ✅ Done | Added `keybindingOverrides()` / `setKeybindingOverrides()` |
 | `src/WhiskerToolbox/StateManagement/AppPreferences.cpp` | 1.4 | ✅ Done | Implemented getter/setter |
 | `src/WhiskerToolbox/StateManagement/CMakeLists.txt` | 1.4 | ✅ Done | Added `KeymapSystem` dependency |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` | 2.1 | ⬜ Todo | Add `KeyActionAdapter *` member |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.cpp` | 2.1 | ⬜ Todo | Create adapter, set handler, register with `KeymapManager` |
-| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.hpp` | 2.2 | ⬜ Todo | Add `KeyActionAdapter *` member |
-| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.cpp` | 2.2 | ⬜ Todo | Create adapter, set handler, register, remove `keyPressEvent()` |
-| `src/WhiskerToolbox/Media_Widget/MediaWidgetRegistration.cpp` | 2.2 | ⬜ Todo | Register group-assignment actions |
-| Plot widget files (Scatter, Temporal, Analysis) | 2.3 | ⬜ Todo | Same migration pattern |
+| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.hpp` | 2.2 | ✅ Done | Added `KeyActionAdapter *` member and `setKeymapManager()` |
+| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.cpp` | 2.2 | ✅ Done | Implemented adapter with handler; removed `keyPressEvent()` frame-advance code |
+| `src/WhiskerToolbox/Media_Widget/MediaWidgetRegistration.cpp` | 2.2 | ✅ Done | Registered group-assignment actions; passes `km` to `Media_Window::setKeymapManager()` |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.hpp` | 2.3 | ✅ Done | Added `KeymapSystem::KeymapManager *` parameter to `registerTypes()` |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.cpp` | 2.3 | ✅ Done | Added `registerPolygonActions()` helper; passes `km` to widget factories |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.hpp` | 2.3 | ✅ Done | Added `setKeymapManager()`, `KeyActionAdapter *` member; removed `keyPressEvent()` override |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp` | 2.3 | ✅ Done | Implemented `setKeymapManager()` with polygon action handler; removed `keyPressEvent()` |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotWidget.hpp` | 2.3 | ✅ Done | Added `setKeymapManager()` pass-through declaration |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotWidget.cpp` | 2.3 | ✅ Done | Implemented `setKeymapManager()` pass-through to OpenGL widget |
+| `src/WhiskerToolbox/Plots/ScatterPlotWidget/CMakeLists.txt` | 2.3 | ✅ Done | Added `KeymapSystem` as PRIVATE dependency |
+| Remaining plot widgets (Temporal, Analysis) | 2.3+ | ⬜ Todo | Same migration pattern when polygon editing is added |

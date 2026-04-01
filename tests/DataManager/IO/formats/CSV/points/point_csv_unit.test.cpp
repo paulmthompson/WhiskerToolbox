@@ -22,6 +22,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -422,6 +423,77 @@ TEST_CASE("CSV Point save-load round-trip - deterministic", "[CSV][Points][round
         REQUIRE(loaded.size() == 2);
         REQUIRE(loaded.at(TimeFrameIndex(100)).x == Catch::Approx(1.5F));
         REQUIRE(loaded.at(TimeFrameIndex(200)).y == Catch::Approx(4.5F));
+    }
+
+    std::filesystem::remove_all(temp_dir);
+}
+
+//=============================================================================
+// Unit Tests: NaN coordinate handling
+//=============================================================================
+
+TEST_CASE("Simple CSV Point loader - NaN coordinate values", "[CSV][Points][unit][nan]") {
+
+    auto const temp_dir = std::filesystem::temp_directory_path() / "nan_point_csv_unit_test";
+    std::filesystem::create_directories(temp_dir);
+    auto const csv_path = temp_dir / "nan_points.csv";
+
+    // Write CSV with mix of NaN and valid coordinates (matches real tracking output)
+    {
+        std::ofstream file(csv_path);
+        file << "Frame,X,Y,Probability\n";
+        file << "0,nan,nan,1.0\n";
+        file << "1,nan,nan,1.0\n";
+        file << "2,100.5,200.5,0.99\n";
+        file << "3,nan,nan,1.0\n";
+    }
+
+    CSVPointLoaderOptions opts;
+    opts.filepath = csv_path.string();
+    opts.frame_column = 0;
+    opts.x_column = 1;
+    opts.y_column = 2;
+    opts.column_delim = ",";
+
+    SECTION("All data rows (including NaN) are loaded — header row is skipped") {
+        auto const result = load(opts);
+
+        // Header row is skipped; all 4 data rows are present
+        REQUIRE(result.size() == 4);
+    }
+
+    SECTION("NaN rows have NaN x/y coordinates") {
+        auto const result = load(opts);
+
+        REQUIRE(std::isnan(result.at(TimeFrameIndex(0)).x));
+        REQUIRE(std::isnan(result.at(TimeFrameIndex(0)).y));
+        REQUIRE(std::isnan(result.at(TimeFrameIndex(1)).x));
+        REQUIRE(std::isnan(result.at(TimeFrameIndex(3)).x));
+    }
+
+    SECTION("Valid rows retain correct coordinates") {
+        auto const result = load(opts);
+
+        REQUIRE(result.at(TimeFrameIndex(2)).x == Catch::Approx(100.5F));
+        REQUIRE(result.at(TimeFrameIndex(2)).y == Catch::Approx(200.5F));
+    }
+
+    SECTION("All-NaN CSV loads without exception") {
+        auto const all_nan_path = temp_dir / "all_nan.csv";
+        {
+            std::ofstream file(all_nan_path);
+            file << "Frame,X,Y,Probability\n";
+            for (int i = 0; i < 24; ++i) {
+                file << i << ",nan,nan,1.0\n";
+            }
+        }
+
+        CSVPointLoaderOptions nan_opts = opts;
+        nan_opts.filepath = all_nan_path.string();
+
+        REQUIRE_NOTHROW(load(nan_opts));
+        auto const result = load(nan_opts);
+        REQUIRE(result.size() == 24);
     }
 
     std::filesystem::remove_all(temp_dir);
