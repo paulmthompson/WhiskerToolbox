@@ -46,6 +46,7 @@ set(MY_DYLIBS
         "${CMAKE_BINARY_DIR}/libDataManagerHDF5.dylib"
         "${CMAKE_BINARY_DIR}/libDataManagerOpenCV.dylib"
         "${CMAKE_BINARY_DIR}/libDataManagerNumpy.dylib"
+        "${CMAKE_BINARY_DIR}/_deps/iir-build/libiir.dylib"
 )
 
 set_target_properties(WhiskerToolbox PROPERTIES
