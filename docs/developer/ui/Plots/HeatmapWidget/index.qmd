@@ -177,6 +177,36 @@ Hovering over a heatmap row displays a tooltip showing the `DigitalEventSeries` 
 
 **Planned**: The tooltip will be extended to show a miniature stacked PSTH histogram and raster plot for the hovered unit, rendered on-demand using cached `GatherResult` data. See [roadmap Phase 8](roadmap.qmd) for the full implementation plan, including rendering approach and layout.
 
+## Right-Click Context Menu
+
+Right-clicking a heatmap row opens a context menu with actions for the unit under the cursor. The menu is built dynamically using the **ContextAction** system (see [`SelectionContext`](../../EditorState/SelectionContext.qmd) and [`ContextAction`](../../EditorState/ContextAction.qmd)), following the same pattern as [`ScatterPlotWidget`](../ScatterPlotWidget/index.qmd).
+
+| Action | Target Widget | Settings Transferred |
+|--------|--------------|---------------------|
+| **Open in Event Plot** | `EventPlotWidget` | Alignment event key, interval alignment type, offset, window size |
+| **Open in PSTH** | `PSTHWidget` | Alignment event key, interval alignment type, offset, window size, estimation params, scaling mode |
+
+Each action opens a **new instance** of the target widget (both are `allow_multiple = true`) via `EditorRegistry::openEditor()` and configures its state to match the heatmap's current settings. This gives users a one-click path from population overview to detailed single-unit views.
+
+### Implementation Pattern
+
+The context menu uses the **ContextAction / SelectionContext** system:
+
+1. `HeatmapOpenGLWidget` receives a `SelectionContext *` via `setSelectionContext()`, wired in the `create_editor_custom` factory
+2. On right-click, `contextMenuEvent()` calls `_selection_context->setDataFocus()` with the clicked unit's key (type `"DigitalEventSeries"`)
+3. `applicableActions()` is queried to find all ContextActions whose `is_applicable` predicate matches this data focus type
+4. Menu items are created dynamically from the applicable actions and cleaned up on each invocation (same pattern as `ScatterPlotOpenGLWidget`)
+
+The ContextActions (`heatmap.open_in_event_plot`, `heatmap.open_in_psth`) are registered in the `registerContextActions()` helper within `HeatmapWidgetRegistration.cpp`. Each action captures `EditorRegistry *` and the owning `HeatmapState`, enabling:
+
+- Opening the target widget via `registry->openEditor()`
+- Transferring alignment settings from the heatmap state
+- Adding the focused unit key as a plot event
+
+::: {.callout-note}
+The `EventPlotWidget` and `PSTHWidget` state headers are included only in `HeatmapWidgetRegistration.cpp` (not in the OpenGL or UI widget headers), and linked as PRIVATE CMake dependencies. The OpenGL widget itself depends only on `SelectionContext` for the dynamic menu — the concrete target widget knowledge lives entirely in the registration layer.
+:::
+
 ## Selection
 
 Single-clicking a heatmap row identifies the `DigitalEventSeries` key corresponding to the Y-axis position. A signal is emitted carrying that key via `SelectionContext`, which companion widgets can respond to:

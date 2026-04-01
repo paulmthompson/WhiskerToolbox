@@ -3,10 +3,13 @@
 #include "CorePlotting/Colormaps/Colormap.hpp"
 #include "CorePlotting/Mappers/HeatmapMapper.hpp"
 #include "DataManager/DataManager.hpp"
+#include "EditorState/SelectionContext.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "Plots/HeatmapWidget/Core/HeatmapDataPipeline.hpp"
 
+#include <QAction>
 #include <QDebug>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QWheelEvent>
 
@@ -68,6 +71,10 @@ void HeatmapOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manag
 
 CorePlotting::ViewStateData const & HeatmapOpenGLWidget::viewState() const {
     return _cached_view_state;
+}
+
+void HeatmapOpenGLWidget::setSelectionContext(SelectionContext * selection_context) {
+    _selection_context = selection_context;
 }
 
 void HeatmapOpenGLWidget::resetView() {
@@ -191,6 +198,66 @@ void HeatmapOpenGLWidget::wheelEvent(QWheelEvent * event) {
 void HeatmapOpenGLWidget::leaveEvent(QEvent * event) {
     _tooltip_mgr->onLeave();
     QOpenGLWidget::leaveEvent(event);
+}
+
+void HeatmapOpenGLWidget::contextMenuEvent(QContextMenuEvent * event) {
+    if (!_selection_context) {
+        QOpenGLWidget::contextMenuEvent(event);
+        return;
+    }
+
+    QPointF const world = screenToWorld(event->pos());
+    int const unit_index = worldToUnitIndex(world);
+
+    // Only show menu when hovering over a valid unit row
+    if (unit_index < 0) {
+        QOpenGLWidget::contextMenuEvent(event);
+        return;
+    }
+
+    auto const & unit_key = _display_unit_keys[static_cast<size_t>(unit_index)];
+
+    // Set data focus to the unit under the mouse so ContextActions can evaluate applicability
+    SelectionSource const source{
+            EditorLib::EditorInstanceId(QStringLiteral("heatmap_context_menu")),
+            QStringLiteral("HeatmapWidget")};
+    _selection_context->setDataFocus(
+            SelectedDataKey(QString::fromStdString(unit_key)),
+            QStringLiteral("DigitalEventSeries"),
+            source);
+
+    // Remove previously added dynamic ContextAction items
+    for (auto * action: _dynamic_context_actions) {
+        if (_context_menu) {
+            _context_menu->removeAction(action);
+        }
+        action->deleteLater();
+    }
+    _dynamic_context_actions.clear();
+
+    // Query applicable ContextActions and build the menu dynamically
+    auto const applicable = _selection_context->applicableActions();
+    if (applicable.empty()) {
+        QOpenGLWidget::contextMenuEvent(event);
+        return;
+    }
+
+    if (!_context_menu) {
+        _context_menu = new QMenu(this);
+    }
+    _context_menu->clear();
+
+    for (auto const * ctx_action: applicable) {
+        auto * menu_action = _context_menu->addAction(ctx_action->display_name);
+        auto const * action_ptr = ctx_action;
+        connect(menu_action, &QAction::triggered, this, [this, action_ptr]() {
+            action_ptr->execute(*_selection_context);
+        });
+        _dynamic_context_actions.push_back(menu_action);
+    }
+
+    _context_menu->popup(event->globalPos());
+    event->accept();
 }
 
 // =============================================================================

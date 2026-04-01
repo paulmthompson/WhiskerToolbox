@@ -26,8 +26,12 @@
 #include <vector>
 
 class DataManager;
+class QAction;
+class QContextMenuEvent;
+class QMenu;
 class QMouseEvent;
 class QWheelEvent;
+class SelectionContext;
 
 class HeatmapOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -47,6 +51,12 @@ public:
     [[nodiscard]] CorePlotting::ViewStateData const & viewState() const;
     void resetView();
 
+    /**
+     * @brief Set the SelectionContext for ContextAction integration in the context menu
+     * @param selection_context Pointer to the SelectionContext (not owned)
+     */
+    void setSelectionContext(SelectionContext * selection_context);
+
 signals:
     void plotDoubleClicked(int64_t time_frame_index);
     void viewBoundsChanged();
@@ -63,6 +73,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
     void leaveEvent(QEvent * event) override;
+    void contextMenuEvent(QContextMenuEvent * event) override;
 
 private slots:
     void onStateChanged();
@@ -92,6 +103,10 @@ private:
     std::vector<std::string> _display_unit_keys;
 
     std::unique_ptr<WhiskerToolbox::Plots::PlotTooltipManager> _tooltip_mgr;
+
+    SelectionContext * _selection_context{nullptr};
+    QMenu * _context_menu{nullptr};
+    std::vector<QAction *> _dynamic_context_actions;
 
     int _widget_width{1};
     int _widget_height{1};

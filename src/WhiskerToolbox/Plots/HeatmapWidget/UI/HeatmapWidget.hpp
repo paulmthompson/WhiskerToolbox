@@ -12,6 +12,7 @@
 class DataManager;
 class RelativeTimeAxisWidget;
 class RelativeTimeAxisRangeControls;
+class SelectionContext;
 class VerticalAxisWidget;
 class VerticalAxisRangeControls;
 class VerticalAxisState;
@@ -37,6 +38,12 @@ public:
     [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
     /** @brief Vertical axis state is owned by HeatmapState */
     [[nodiscard]] VerticalAxisState * getVerticalAxisState() const;
+
+    /**
+     * @brief Set the SelectionContext for ContextAction integration in the context menu
+     * @param selection_context Pointer to the SelectionContext (not owned)
+     */
+    void setSelectionContext(SelectionContext * selection_context);
 
 signals:
     void timePositionSelected(TimePosition position);
