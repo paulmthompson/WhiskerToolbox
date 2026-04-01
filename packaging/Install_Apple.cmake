@@ -41,6 +41,11 @@ set(MY_DYLIBS
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libomp.dylib"
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libtorch.dylib"
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libtorch_cpu.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManagerIO.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManagerIO_CapnProto.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManagerHDF5.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManagerOpenCV.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManagerNumpy.dylib"
 )
 
 set_target_properties(WhiskerToolbox PROPERTIES
