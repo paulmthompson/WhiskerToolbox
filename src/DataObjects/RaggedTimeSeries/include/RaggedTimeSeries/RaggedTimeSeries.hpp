@@ -1,8 +1,8 @@
 #ifndef RAGGED_TIME_SERIES_HPP
 #define RAGGED_TIME_SERIES_HPP
 
-#include "map_timeseries.hpp"
 #include "RaggedStorage.hpp"
+#include "map_timeseries.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
@@ -11,8 +11,8 @@
 #include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
-#include "TimeFrame/TimeFrame.hpp"          // TimeFrame and TimeFrameIndex
-#include "TimeFrame/interval_data.hpp"      // 
+#include "TimeFrame/TimeFrame.hpp"    // TimeFrame and TimeFrameIndex
+#include "TimeFrame/interval_data.hpp"//
 
 #include <algorithm>
 #include <memory>
@@ -24,7 +24,8 @@
 #include <unordered_set>
 #include <vector>
 
-template <typename TData> class RaggedTimeSeriesView;
+template<typename TData>
+class RaggedTimeSeriesView;
 
 /**
  * @brief Base template class for ragged time series data structures.
@@ -44,7 +45,7 @@ template <typename TData> class RaggedTimeSeriesView;
  *
  * @tparam TData The data type stored in each entry (e.g., Line2D, Mask2D, Point2D<float>)
  */
-template <typename TData>
+template<typename TData>
 class RaggedTimeSeries : public ObserverData {
 public:
     // ========== Element Type (for concept-compliant iteration) ==========
@@ -60,11 +61,13 @@ public:
      */
     struct RaggedElement {
         TimeFrameIndex _time;
-        TData const* _data_ptr;
+        TData const * _data_ptr;
         EntityId _entity_id;
 
-        RaggedElement(TimeFrameIndex t, TData const& data, EntityId eid)
-            : _time(t), _data_ptr(&data), _entity_id(eid) {}
+        RaggedElement(TimeFrameIndex t, TData const & data, EntityId eid)
+            : _time(t),
+              _data_ptr(&data),
+              _entity_id(eid) {}
 
         // ========== Standardized Accessors (for TimeSeriesElement/EntityElement concepts) ==========
 
@@ -84,13 +87,13 @@ public:
          * @brief Get the data of this element
          * @return TData const& Reference to the element data
          */
-        [[nodiscard]] TData const& data() const noexcept { return *_data_ptr; }
+        [[nodiscard]] TData const & data() const noexcept { return *_data_ptr; }
 
         /**
          * @brief Alias for data() - satisfies ValueElement concept
          * @return TData const& Reference to the element data
          */
-        [[nodiscard]] TData const& value() const noexcept { return *_data_ptr; }
+        [[nodiscard]] TData const & value() const noexcept { return *_data_ptr; }
 
         // ========== Legacy Accessors (for backward compatibility) ==========
 
@@ -108,7 +111,7 @@ public:
 
     // Delete copy constructor and copy assignment
     RaggedTimeSeries(RaggedTimeSeries &&) = default;
-    RaggedTimeSeries& operator=(RaggedTimeSeries&&) noexcept = default;
+    RaggedTimeSeries & operator=(RaggedTimeSeries &&) noexcept = default;
     RaggedTimeSeries(RaggedTimeSeries const &) = delete;
     RaggedTimeSeries & operator=(RaggedTimeSeries const &) = delete;
 
@@ -136,13 +139,14 @@ public:
      * ```
      */
     template<std::ranges::input_range R>
-    requires requires(std::ranges::range_value_t<R> pair) {
-        { pair.first } -> std::convertible_to<TimeFrameIndex>;
-        { pair.second } -> std::convertible_to<TData>;
-    }
-    explicit RaggedTimeSeries(R&& time_data_pairs) : RaggedTimeSeries() {
+        requires requires(std::ranges::range_value_t<R> pair) {
+            { pair.first } -> std::convertible_to<TimeFrameIndex>;
+            { pair.second } -> std::convertible_to<TData>;
+        }
+    explicit RaggedTimeSeries(R && time_data_pairs)
+        : RaggedTimeSeries() {
         // Process the range, adding each element with automatic EntityId assignment
-        for (auto&& [time, data] : time_data_pairs) {
+        for (auto && [time, data]: time_data_pairs) {
             // Use addAtTime which handles EntityId assignment via identity context
             if constexpr (std::is_rvalue_reference_v<decltype(data)>) {
                 addAtTime(time, std::forward<decltype(data)>(data), NotifyObservers::No);
@@ -150,7 +154,7 @@ public:
                 addAtTime(time, data, NotifyObservers::No);
             }
         }
-        
+
         // Single notification at end after all data is loaded
         if (!_storage.empty()) {
             notifyObservers();
@@ -176,15 +180,15 @@ public:
      * @see getDataByEntityIds() for lazy zero-copy access to filtered data
      */
     [[nodiscard]] RaggedTimeSeries<TData> createFilteredCopy(
-        std::unordered_set<EntityId> const& entity_ids) const {
-        
+            std::unordered_set<EntityId> const & entity_ids) const {
+
         RaggedTimeSeries<TData> result;
         result.setImageSize(_image_size);
         result.setTimeFrame(_time_frame);
-        
+
         // If we have an identity context, the new series should get its own EntityIds
         // Otherwise, preserve the original EntityIds
-        
+
         for (size_t i = 0; i < _storage.size(); ++i) {
             EntityId const eid = _storage.getEntityId(i);
             if (entity_ids.contains(eid)) {
@@ -193,7 +197,7 @@ public:
                 result.addEntryAtTime(_storage.getTime(i), _storage.getData(i), eid, NotifyObservers::No);
             }
         }
-        
+
         return result;
     }
 
@@ -208,20 +212,20 @@ public:
      * @return New RaggedTimeSeries containing only entries in the time range
      */
     [[nodiscard]] RaggedTimeSeries<TData> createTimeRangeCopy(
-        TimeFrameIndex start_time, 
-        TimeFrameIndex end_time) const {
-        
+            TimeFrameIndex start_time,
+            TimeFrameIndex end_time) const {
+
         RaggedTimeSeries<TData> result;
         result.setImageSize(_image_size);
         result.setTimeFrame(_time_frame);
-        
+
         for (size_t i = 0; i < _storage.size(); ++i) {
             TimeFrameIndex const time = _storage.getTime(i);
             if (time >= start_time && time <= end_time) {
                 result.addEntryAtTime(time, _storage.getData(i), _storage.getEntityId(i), NotifyObservers::No);
             }
         }
-        
+
         return result;
     }
 
@@ -271,21 +275,20 @@ public:
     [[nodiscard]] static std::shared_ptr<RaggedTimeSeries<TData>> createFromView(
             ViewType view,
             std::shared_ptr<TimeFrame> time_frame,
-            ImageSize image_size = ImageSize{})
-    {
+            ImageSize image_size = ImageSize{}) {
         size_t num_elements = std::ranges::size(view);
-        
+
         // Create lazy storage
         auto lazy_storage = LazyRaggedStorage<TData, ViewType>(std::move(view), num_elements);
         RaggedStorageWrapper<TData> storage_wrapper(std::move(lazy_storage));
-        
+
         // Create the result using the wrapper
         auto result = std::make_shared<RaggedTimeSeries<TData>>();
         result->_storage = std::move(storage_wrapper);
         result->_time_frame = std::move(time_frame);
         result->_image_size = image_size;
         result->_updateStorageCache();
-        
+
         return result;
     }
 
@@ -312,33 +315,32 @@ public:
     [[nodiscard]] static std::shared_ptr<RaggedTimeSeries<TData>> createFromViewWithNewIds(
             ViewType view,
             std::shared_ptr<TimeFrame> time_frame,
-            std::string const& data_key,
-            EntityRegistry* registry,
-            ImageSize image_size = ImageSize{})
-    {
+            std::string const & data_key,
+            EntityRegistry * registry,
+            ImageSize image_size = ImageSize{}) {
         auto result = std::make_shared<RaggedTimeSeries<TData>>();
         result->_time_frame = std::move(time_frame);
         result->_image_size = image_size;
         result->setIdentityContext(data_key, registry);
-        
+
         // Materialize immediately with new EntityIds
-        for (auto&& element : view) {
+        for (auto && element: view) {
             if constexpr (requires { std::get<0>(element); std::get<1>(element); }) {
                 // Tuple or pair: (TimeFrameIndex, TData)
                 auto time = std::get<0>(element);
-                auto const& data = std::get<1>(element);
+                auto const & data = std::get<1>(element);
                 result->addAtTime(time, data, NotifyObservers::No);
             } else {
                 // Structured binding style
-                auto const& [time, data] = element;
+                auto const & [time, data] = element;
                 result->addAtTime(time, data, NotifyObservers::No);
             }
         }
-        
+
         if (!result->_storage.empty()) {
             result->notifyObservers();
         }
-        
+
         return result;
     }
 
@@ -348,8 +350,8 @@ public:
      * 
      * @param time_frame Shared pointer to the TimeFrame to associate with this data
      */
-    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { 
-        _time_frame = std::move(time_frame); 
+    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) {
+        _time_frame = std::move(time_frame);
     }
 
     /**
@@ -367,8 +369,8 @@ public:
      * 
      * @return The current ImageSize
      */
-    [[nodiscard]] ImageSize getImageSize() const { 
-        return _image_size; 
+    [[nodiscard]] ImageSize getImageSize() const {
+        return _image_size;
     }
 
     /**
@@ -376,8 +378,8 @@ public:
      * 
      * @param image_size The ImageSize to set
      */
-    void setImageSize(ImageSize const & image_size) { 
-        _image_size = image_size; 
+    void setImageSize(ImageSize const & image_size) {
+        _image_size = image_size;
     }
 
     // ========== Identity Context ==========
@@ -418,27 +420,27 @@ public:
         }
 
         EntityKind const kind = getEntityKind();
-        
+
         // Create a new owning storage and repopulate with correct EntityIds
         OwningRaggedStorage<TData> new_storage;
         new_storage.reserve(_storage.size());
-        
+
         // Track local indices per time for EntityId generation
         std::map<TimeFrameIndex, int> time_local_indices;
-        
+
         for (size_t i = 0; i < _storage.size(); ++i) {
             TimeFrameIndex const time = _storage.getTime(i);
-            TData const& data = _storage.getData(i);
-            
+            TData const & data = _storage.getData(i);
+
             int local_index = time_local_indices[time]++;
             EntityId entity_id = EntityId(0);
             if (_identity_registry) {
                 entity_id = _identity_registry->ensureId(_identity_data_key, kind, time, local_index);
             }
-            
+
             new_storage.append(time, data, entity_id);
         }
-        
+
         _storage = RaggedStorageWrapper<TData>(std::move(new_storage));
         _updateStorageCache();
     }
@@ -480,8 +482,8 @@ public:
      * @return The number of entries actually copied
      */
     template<typename DerivedTarget>
-    std::size_t copyByEntityIds(DerivedTarget & target, 
-                                std::unordered_set<EntityId> const & entity_ids, 
+    std::size_t copyByEntityIds(DerivedTarget & target,
+                                std::unordered_set<EntityId> const & entity_ids,
                                 NotifyObservers notify) {
         std::size_t count = 0;
         // Iterate through storage in order to preserve ordering
@@ -512,8 +514,8 @@ public:
      * @return The number of entries actually moved
      */
     template<typename DerivedTarget>
-    std::size_t moveByEntityIds(DerivedTarget & target, 
-                                std::unordered_set<EntityId> const & entity_ids, 
+    std::size_t moveByEntityIds(DerivedTarget & target,
+                                std::unordered_set<EntityId> const & entity_ids,
                                 NotifyObservers notify) {
         // Collect entries to move (iterate in order to preserve ordering)
         std::vector<std::tuple<TimeFrameIndex, TData, EntityId>> to_move;
@@ -523,21 +525,21 @@ public:
                 to_move.emplace_back(_storage.getTime(i), _storage.getData(i), eid);
             }
         }
-        
+
         // Add to target (preserving EntityIds)
-        for (auto const& [time, data, eid] : to_move) {
+        for (auto const & [time, data, eid]: to_move) {
             target.addEntryAtTime(time, data, eid, NotifyObservers::No);
         }
-        
+
         // Remove from source
         _invalidateStorageCache();
-        for (auto const& [time, data, eid] : to_move) {
-            (void)time;
-            (void)data;
+        for (auto const & [time, data, eid]: to_move) {
+            (void) time;
+            (void) data;
             _storage.removeByEntityId(eid);
         }
         _updateStorageCache();
-        
+
         if (notify == NotifyObservers::Yes && !to_move.empty()) {
             target.notifyObservers();
             notifyObservers();
@@ -595,16 +597,15 @@ public:
      *       The span must remain valid for the lifetime of the view.
      */
     [[nodiscard]] auto getDataByEntityIds(std::span<EntityId const> entity_ids) const {
-        return entity_ids
-            | std::views::transform([this](EntityId eid) {
-                return std::pair{eid, _storage.findByEntityId(eid)};
-            })
-            | std::views::filter([](auto const& pair) {
-                return pair.second.has_value();
-            })
-            | std::views::transform([this](auto const& pair) {
-                return std::pair{pair.first, std::cref(_storage.getData(*pair.second))};
-            });
+        return entity_ids | std::views::transform([this](EntityId eid) {
+                   return std::pair{eid, _storage.findByEntityId(eid)};
+               }) |
+               std::views::filter([](auto const & pair) {
+                   return pair.second.has_value();
+               }) |
+               std::views::transform([this](auto const & pair) {
+                   return std::pair{pair.first, std::cref(_storage.getData(*pair.second))};
+               });
     }
 
     /**
@@ -651,10 +652,10 @@ public:
 
         TData & data_ref = _storage.getMutableData(*idx_opt);
 
-        return DataModifier(data_ref, [this, notify]() { 
-            if (notify == NotifyObservers::Yes) { 
-                this->notifyObservers(); 
-            } 
+        return DataModifier(data_ref, [this, notify]() {
+            if (notify == NotifyObservers::Yes) {
+                this->notifyObservers();
+            }
         });
     }
 
@@ -673,6 +674,29 @@ public:
         bool const removed = _storage.removeByEntityId(entity_id);
         _updateStorageCache();
         if (removed && notify == NotifyObservers::Yes) {
+            notifyObservers();
+        }
+        return removed;
+    }
+
+    /**
+     * @brief Clear multiple data entries by their EntityIds in a single pass
+     *
+     * Bulk removal is O(n + k) total, far more efficient than calling
+     * clearByEntityId() k times which would be O(n * k).
+     *
+     * @param entity_ids Set of EntityIds to remove
+     * @param notify Whether to notify observers after the operation
+     * @return Number of entries actually removed
+     */
+    size_t clearByEntityIds(std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
+        if (entity_ids.empty()) {
+            return 0;
+        }
+        _invalidateStorageCache();
+        size_t const removed = _storage.removeByEntityIds(entity_ids);
+        _updateStorageCache();
+        if (removed > 0 && notify == NotifyObservers::Yes) {
             notifyObservers();
         }
         return removed;
@@ -893,7 +917,7 @@ public:
      */
     [[nodiscard]] std::size_t getMaxEntriesAtAnyTime() const {
         std::size_t max_entries = 0;
-        for (auto const& [time, range] : _storage.timeRanges()) {
+        for (auto const & [time, range]: _storage.timeRanges()) {
             size_t const count = range.second - range.first;
             max_entries = std::max(max_entries, count);
         }
@@ -925,13 +949,12 @@ public:
 
     // ========== Time-based Getters ==========
 
-    public:
+public:
     [[nodiscard]] auto getAtTime(TimeFrameIndex time) const {
         auto [start, end] = _storage.getTimeRange(time);
-        return std::views::iota(start, end) 
-            | std::views::transform([this](size_t idx) -> TData const& {
-                return _storage.getData(idx);
-            });
+        return std::views::iota(start, end) | std::views::transform([this](size_t idx) -> TData const & {
+                   return _storage.getData(idx);
+               });
     }
 
     [[nodiscard]] auto getAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
@@ -950,10 +973,9 @@ public:
 
     [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time) const {
         auto [start, end] = _storage.getTimeRange(time);
-        return std::views::iota(start, end)
-            | std::views::transform([this](size_t idx) {
-                return _storage.getEntityId(idx);
-            });
+        return std::views::iota(start, end) | std::views::transform([this](size_t idx) {
+                   return _storage.getEntityId(idx);
+               });
     }
 
     [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
@@ -983,8 +1005,7 @@ public:
      * @return A zero-copy filtered view of flattened_data() for times within the interval
      */
     [[nodiscard]] auto getElementsInRange(TimeFrameInterval const & interval) const {
-        return flattened_data() 
-            | std::views::filter([interval](auto const & tuple) {
+        return flattened_data() | std::views::filter([interval](auto const & tuple) {
                    auto const & time = std::get<0>(tuple);
                    return time >= interval.start && time <= interval.end;
                });
@@ -1004,7 +1025,7 @@ public:
      * @return A zero-copy filtered view of flattened_data() for times within the converted interval
      */
     [[nodiscard]] auto getElementsInRange(TimeFrameInterval const & interval,
-                                         TimeFrame const & source_timeframe) const {
+                                          TimeFrame const & source_timeframe) const {
         // If the timeframes are the same object, no conversion is needed
         if (&source_timeframe == _time_frame.get()) {
             return getElementsInRange(interval);
@@ -1040,12 +1061,11 @@ public:
      */
     [[nodiscard]] auto elements() const {
         // Use flattened iteration over all storage indices
-        return std::views::iota(size_t{0}, _storage.size())
-            | std::views::transform([this](size_t idx) {
-                return std::make_pair(
-                    _storage.getTime(idx), 
-                    DataEntry<TData>{_storage.getEntityId(idx), _storage.getData(idx)});
-            });
+        return std::views::iota(size_t{0}, _storage.size()) | std::views::transform([this](size_t idx) {
+                   return std::make_pair(
+                           _storage.getTime(idx),
+                           DataEntry<TData>{_storage.getEntityId(idx), _storage.getData(idx)});
+               });
     }
 
     /**
@@ -1073,13 +1093,12 @@ public:
      */
     [[nodiscard]] auto elementsView() const {
         // Use flattened iteration over all storage indices
-        return std::views::iota(size_t{0}, _storage.size())
-            | std::views::transform([this](size_t idx) {
-                return RaggedElement{
-                    _storage.getTime(idx), 
-                    _storage.getData(idx),
-                    _storage.getEntityId(idx)};
-            });
+        return std::views::iota(size_t{0}, _storage.size()) | std::views::transform([this](size_t idx) {
+                   return RaggedElement{
+                           _storage.getTime(idx),
+                           _storage.getData(idx),
+                           _storage.getEntityId(idx)};
+               });
     }
 
     /**
@@ -1090,13 +1109,12 @@ public:
      * @deprecated Use elementsView() instead for concept-compliant iteration
      */
     [[nodiscard]] auto flattened_data() const {
-        return std::views::iota(size_t{0}, _storage.size())
-            | std::views::transform([this](size_t idx) {
-                return std::make_tuple(
-                    _storage.getTime(idx), 
-                    _storage.getEntityId(idx), 
-                    std::cref(_storage.getData(idx)));
-            });
+        return std::views::iota(size_t{0}, _storage.size()) | std::views::transform([this](size_t idx) {
+                   return std::make_tuple(
+                           _storage.getTime(idx),
+                           _storage.getEntityId(idx),
+                           std::cref(_storage.getData(idx)));
+               });
     }
 
     /**
@@ -1136,7 +1154,7 @@ public:
      * 
      * @return RaggedStorageCache<TData> with valid pointers if storage is contiguous
      */
-    [[nodiscard]] RaggedStorageCache<TData> const& getStorageCache() const {
+    [[nodiscard]] RaggedStorageCache<TData> const & getStorageCache() const {
         if (!_cached_storage.isValid() && !_storage.empty()) {
             _updateStorageCache();
         }
@@ -1211,27 +1229,26 @@ public:
         auto result = std::make_shared<RaggedTimeSeries<TData>>();
         result->setImageSize(_image_size);
         result->setTimeFrame(_time_frame);
-        
+
         // Reserve space for efficiency
         if (_storage.size() > 0) {
             // Can't reserve on wrapper, but it will grow efficiently
         }
-        
+
         // Copy all elements with their EntityIds preserved
         for (size_t i = 0; i < _storage.size(); ++i) {
             result->addEntryAtTime(
-                _storage.getTime(i),
-                _storage.getData(i),
-                _storage.getEntityId(i),
-                NotifyObservers::No
-            );
+                    _storage.getTime(i),
+                    _storage.getData(i),
+                    _storage.getEntityId(i),
+                    NotifyObservers::No);
         }
-        
+
         // Copy identity context if set
         if (_identity_registry) {
             result->setIdentityContext(_identity_data_key, _identity_registry);
         }
-        
+
         return result;
     }
 
@@ -1249,7 +1266,7 @@ protected:
         // We need to match on the TData type
         // Forward declarations needed:
         // - Line2D, Mask2D, Point2D<float>
-        
+
         if constexpr (std::is_same_v<TData, Line2D>) {
             return EntityKind::LineEntity;
         } else if constexpr (std::is_same_v<TData, Mask2D>) {
@@ -1259,11 +1276,11 @@ protected:
         } else {
             // Fallback for unknown types - this will cause a compile error
             // if an unsupported type is used
-            static_assert(std::is_same_v<TData, Line2D> || 
-                         std::is_same_v<TData, Mask2D> || 
-                         std::is_same_v<TData, Point2D<float>>,
-                         "TData must be Line2D, Mask2D, or Point2D<float>");
-            return EntityKind::LineEntity; // Never reached, but needed for compilation
+            static_assert(std::is_same_v<TData, Line2D> ||
+                                  std::is_same_v<TData, Mask2D> ||
+                                  std::is_same_v<TData, Point2D<float>>,
+                          "TData must be Line2D, Mask2D, or Point2D<float>");
+            return EntityKind::LineEntity;// Never reached, but needed for compilation
         }
     }
 
@@ -1285,7 +1302,7 @@ protected:
         if (removed == 0) {
             return false;
         }
-        
+
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
         }
@@ -1293,27 +1310,27 @@ protected:
     }
 
     // ========== Protected Member Variables ==========
-    
+
     /// Storage for time series data using type-erased wrapper
     /// Default-constructs with OwningRaggedStorage backend
     RaggedStorageWrapper<TData> _storage;
-    
+
     /// Cached pointers for fast-path iteration when storage is contiguous
     /// This cache is invalidated when storage is modified
     mutable RaggedStorageCache<TData> _cached_storage;
-    
+
     /// Image size metadata
     ImageSize _image_size;
-    
+
     /// Associated time frame for temporal indexing
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
-    
+
     /// Data key for EntityRegistry lookups
     std::string _identity_data_key;
-    
+
     /// Pointer to EntityRegistry for automatic EntityId management
     EntityRegistry * _identity_registry{nullptr};
-    
+
     /**
      * @brief Update the cached storage pointers
      * 
@@ -1324,7 +1341,7 @@ protected:
     void _updateStorageCache() const {
         _cached_storage = _storage.tryGetCache();
     }
-    
+
     /**
      * @brief Invalidate the storage cache
      * 
@@ -1337,50 +1354,51 @@ protected:
 
 // RaggedTimeSeriesView wraps a RaggedTimeSeries and provides a proper range interface
 // It caches the elements view to ensure begin()/end() return compatible iterators
-template <typename TData>
+template<typename TData>
 class RaggedTimeSeriesView : public std::ranges::view_interface<RaggedTimeSeriesView<TData>> {
 public:
     // The underlying elements view type from RaggedTimeSeries::elements()
-    using ElementsView = decltype(std::declval<RaggedTimeSeries<TData> const&>().elements());
-    
+    using ElementsView = decltype(std::declval<RaggedTimeSeries<TData> const &>().elements());
+
 private:
     // We store the view by value to ensure iterator compatibility
     // mutable because begin()/end() are const but we need to lazily initialize
     mutable std::optional<ElementsView> _cached_view;
-    RaggedTimeSeries<TData> const* _ts = nullptr;
-    
+    RaggedTimeSeries<TData> const * _ts = nullptr;
+
     void ensureView() const {
         if (!_cached_view.has_value() && _ts != nullptr) {
             _cached_view.emplace(_ts->elements());
         }
     }
-    
+
 public:
     RaggedTimeSeriesView() = default;
-    explicit RaggedTimeSeriesView(RaggedTimeSeries<TData> const& ts) : _ts(&ts) {}
-    
-    auto begin() const { 
+    explicit RaggedTimeSeriesView(RaggedTimeSeries<TData> const & ts)
+        : _ts(&ts) {}
+
+    auto begin() const {
         ensureView();
         return _cached_view->begin();
     }
-    
-    auto end() const { 
+
+    auto end() const {
         ensureView();
         return _cached_view->end();
     }
-    
+
     // Convenience method for explicit flattening
     [[nodiscard]] auto flatten() const { return _ts->elements(); }
     [[nodiscard]] auto elements() const { return _ts->elements(); }
-    
+
     // Size information
     [[nodiscard]] std::size_t size() const { return _ts ? _ts->getTotalEntryCount() : 0; }
     [[nodiscard]] bool empty() const { return size() == 0; }
 };
 
-template <typename TData>
+template<typename TData>
 auto RaggedTimeSeries<TData>::view() const {
     return RaggedTimeSeriesView<TData>(*this);
 }
 
-#endif // RAGGED_TIME_SERIES_HPP
+#endif// RAGGED_TIME_SERIES_HPP
