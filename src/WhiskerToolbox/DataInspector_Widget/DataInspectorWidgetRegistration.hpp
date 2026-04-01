@@ -42,6 +42,10 @@ namespace commands {
 class CommandRecorder;
 }// namespace commands
 
+namespace KeymapSystem {
+class KeymapManager;
+}// namespace KeymapSystem
+
 namespace DataInspectorModule {
 
 /**
@@ -62,9 +66,10 @@ namespace DataInspectorModule {
  * @param recorder Optional CommandRecorder for recording executed commands (can be nullptr)
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
+                   const std::shared_ptr<DataManager>& data_manager,
                    GroupManager * group_manager = nullptr,
-                   commands::CommandRecorder * recorder = nullptr);
+                   commands::CommandRecorder * recorder = nullptr,
+                   KeymapSystem::KeymapManager * keymap_manager = nullptr);
 
 }// namespace DataInspectorModule
 

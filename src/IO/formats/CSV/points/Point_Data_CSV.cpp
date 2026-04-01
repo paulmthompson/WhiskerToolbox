@@ -1,12 +1,13 @@
 #include "Point_Data_CSV.hpp"
 
+#include "CoreUtilities/json_reflection.hpp"
+#include "CoreUtilities/loading_utils.hpp"
+#include "CoreUtilities/string_manip.hpp"
 #include "IO/core/AtomicWrite.hpp"
 #include "Points/Point_Data.hpp"
-#include "CoreUtilities/loading_utils.hpp"
-#include "CoreUtilities/json_reflection.hpp"
-#include "CoreUtilities/string_manip.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -64,8 +65,12 @@ std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts
         }
 
         if (is_number(frame_str)) {
-            //line_output[TimeFrameIndex(std::stoi(frame_str))]=Point2D<float>{std::stof(x_str),std::stof(y_str)};
-            csv_vector.emplace_back(TimeFrameIndex(std::stoi(frame_str)), Point2D<float>{std::stof(x_str), std::stof(y_str)});
+            float const x_val = std::stof(x_str);
+            float const y_val = std::stof(y_str);
+            if (opts.getNaNHandling() == NaNHandling::Skip && (std::isnan(x_val) || std::isnan(y_val))) {
+                continue;
+            }
+            csv_vector.emplace_back(TimeFrameIndex(std::stoi(frame_str)), Point2D<float>{x_val, y_val});
         }
     }
     std::cout.flush();
@@ -138,6 +143,9 @@ bool save(PointData const * point_data, CSVPointSaverOptions const & opts) {
         }
 
         for (auto const & [time, entity_id, point]: point_data->flattened_data()) {
+            if (opts.nan_handling == NaNHandling::Skip && (std::isnan(point.x) || std::isnan(point.y))) {
+                continue;
+            }
             out << time.getValue();
             out << opts.delimiter << point.x << opts.delimiter << point.y;
             out << opts.line_delim;

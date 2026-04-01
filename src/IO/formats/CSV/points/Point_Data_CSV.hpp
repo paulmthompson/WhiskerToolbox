@@ -20,6 +20,15 @@
 class PointData;
 
 /**
+ * @enum NaNHandling
+ * @brief Controls how NaN coordinate values are treated during CSV load and save operations.
+ */
+enum class NaNHandling {
+    Skip,  ///< Skip rows where x or y is NaN (default)
+    Include///< Preserve rows with NaN coordinates
+};
+
+/**
  * @struct CSVPointLoaderOptions
  *
  * @brief Options for loading point data from CSV files.
@@ -36,12 +45,14 @@ struct CSVPointLoaderOptions {
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> x_column;
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> y_column;
     std::optional<std::string> column_delim;
+    std::optional<NaNHandling> nan_handling;
 
     // Helper methods to get values with defaults
     int getFrameColumn() const { return frame_column.has_value() ? frame_column.value().value() : 0; }
     int getXColumn() const { return x_column.has_value() ? x_column.value().value() : 1; }
     int getYColumn() const { return y_column.has_value() ? y_column.value().value() : 2; }
     char getColumnDelim() const { return column_delim.has_value() && !column_delim.value().empty() ? column_delim.value()[0] : ' '; }
+    NaNHandling getNaNHandling() const { return nan_handling.value_or(NaNHandling::Skip); }
 };
 
 // Compile-time validation that CSVPointLoaderOptions conforms to loader requirements
@@ -69,6 +80,9 @@ struct ParameterUIHints<CSVPointLoaderOptions> {
         if (auto * f = schema.field("column_delim")) {
             f->tooltip = "Column separator; only the first character is used if the string is non-empty";
             f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("nan_handling")) {
+            f->tooltip = "Whether to skip rows with NaN coordinates (Skip) or preserve them (Include)";
         }
     }
 };
@@ -104,6 +118,7 @@ struct CSVPointSaverOptions {
     std::string line_delim = "\n";
     bool save_header = true;
     std::string header = "frame,x,y";
+    NaNHandling nan_handling = NaNHandling::Skip;
 };
 
 /**
@@ -142,6 +157,9 @@ struct ParameterUIHints<CSVPointSaverOptions> {
         }
         if (auto * f = schema.field("header")) {
             f->tooltip = "Header text to write when save_header is true";
+        }
+        if (auto * f = schema.field("nan_handling")) {
+            f->tooltip = "Whether to skip rows with NaN coordinates (Skip) or write them as 'nan' (Include)";
         }
     }
 };

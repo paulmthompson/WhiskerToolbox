@@ -26,6 +26,11 @@
 #include <variant>// std::variant
 #include <vector>
 
+namespace KeymapSystem {
+class KeymapManager;
+class KeyActionAdapter;
+}// namespace KeymapSystem
+
 namespace Ui {
 class DigitalIntervalSeriesInspector;
 }
@@ -89,9 +94,21 @@ public:
      */
     void setSelectionProvider(std::function<std::vector<Interval>()> provider);
 
+    /**
+     * @brief Connect to the application keymap manager for configurable shortcuts
+     * @param manager Non-owning pointer to the KeymapManager (can be nullptr)
+     *
+     * Registers a KeyActionAdapter for the three interval marking actions:
+     * - digital_interval_series.mark_contact_start
+     * - digital_interval_series.mark_contact_end
+     * - digital_interval_series.flip_current_frame
+     */
+    void setKeymapManager(KeymapSystem::KeymapManager * manager);
+
 private:
     Ui::DigitalIntervalSeriesInspector * ui;
     DigitalIntervalSeriesDataView * _data_view{nullptr};
+    KeymapSystem::KeyActionAdapter * _key_adapter{nullptr};
     bool _interval_epoch{false};
     int64_t _interval_start{0};
     int64_t _interval_end{0};// Track both start and end for bidirectional support
@@ -179,6 +196,22 @@ private:
      * DigitalIntervalSeries timeframe, and returns the TimeFrameIndex value.
      */
     [[nodiscard]] int64_t _getCurrentTimeInSeriesFrame() const;
+
+    /**
+     * @brief Mark the start of a contact interval at the current frame
+     *
+     * Always resets interval epoch state and records the current frame as the
+     * new interval start. Equivalent to the first click of the Create Interval button.
+     */
+    void _markContactStart();
+
+    /**
+     * @brief Mark the end of a contact interval at the current frame
+     *
+     * Completes the in-progress interval (from the last markContactStart call).
+     * Does nothing if no interval start has been recorded.
+     */
+    void _markContactEnd();
 
 private slots:
     void _createIntervalButton();

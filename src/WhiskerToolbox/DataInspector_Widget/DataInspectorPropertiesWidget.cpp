@@ -21,6 +21,7 @@
 #include "Commands/Core/CommandRecorder.hpp"
 #include "DataManager/DataManager.hpp"
 #include "EditorState/SelectionContext.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QLabel>
@@ -290,6 +291,13 @@ void DataInspectorPropertiesWidget::_createInspectorForType(DM_DataType type) {
         // Forward the command recorder for recording command executions
         _current_inspector->setCommandRecorder(_command_recorder);
 
+        // Forward the keymap manager to interval series inspectors for configurable shortcuts
+        if (_keymap_manager) {
+            if (auto * interval_inspector = dynamic_cast<DigitalIntervalSeriesInspector *>(_current_inspector.get())) {
+                interval_inspector->setKeymapManager(_keymap_manager);
+            }
+        }
+
         ui->contentLayout->addWidget(_current_inspector.get());
 
         // Connect the inspector's frameSelected signal
@@ -338,6 +346,10 @@ void DataInspectorPropertiesWidget::_clearInspector() {
 void DataInspectorPropertiesWidget::setViewWidget(DataInspectorViewWidget * view_widget) {
     _view_widget = view_widget;
     _connectInspectorToView();
+}
+
+void DataInspectorPropertiesWidget::setKeymapManager(KeymapSystem::KeymapManager * manager) {
+    _keymap_manager = manager;
 }
 
 void DataInspectorPropertiesWidget::_connectInspectorToView() {
