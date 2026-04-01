@@ -963,7 +963,7 @@ void MainWindow::_registerEditorTypes() {
 
     MLCoreWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
-    DeepLearningWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    DeepLearningWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _keymap_manager);
 
     DataViewerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

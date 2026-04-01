@@ -42,6 +42,10 @@
 class DataManager;
 class EditorRegistry;
 
+namespace KeymapSystem {
+class KeymapManager;
+}// namespace KeymapSystem
+
 namespace DeepLearningWidgetModule {
 
 /**
@@ -54,9 +58,11 @@ namespace DeepLearningWidgetModule {
  *
  * @param registry The EditorRegistry to register types with.
  * @param data_manager Shared DataManager for widget construction.
+ * @param keymap_manager Optional KeymapManager for keyboard shortcut registration.
  */
 void registerTypes(EditorRegistry * registry,
-                   const std::shared_ptr<DataManager>& data_manager);
+                   std::shared_ptr<DataManager> const & data_manager,
+                   KeymapSystem::KeymapManager * keymap_manager = nullptr);
 
 }// namespace DeepLearningWidgetModule
 

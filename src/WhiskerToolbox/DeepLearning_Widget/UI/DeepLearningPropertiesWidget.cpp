@@ -45,6 +45,10 @@
 #include <QStandardItemModel>
 #include <QVBoxLayout>
 
+#include "EditorState/StrongTypes.hpp"
+#include "KeymapSystem/KeyActionAdapter.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
+
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
@@ -119,6 +123,25 @@ DeepLearningPropertiesWidget::~DeepLearningPropertiesWidget() {
 
 SlotAssembler * DeepLearningPropertiesWidget::assembler() const {
     return _assembler.get();
+}
+
+void DeepLearningPropertiesWidget::setKeymapManager(KeymapSystem::KeymapManager * manager) {
+    if (!manager) {
+        return;
+    }
+
+    _key_adapter = new KeymapSystem::KeyActionAdapter(this);
+    _key_adapter->setTypeId(EditorLib::EditorTypeId(QStringLiteral("DeepLearningWidget")));
+
+    _key_adapter->setHandler([this](QString const & action_id) -> bool {
+        if (action_id == QStringLiteral("deep_learning.predict_current")) {
+            _onPredictCurrentFrame();
+            return true;
+        }
+        return false;
+    });
+
+    manager->registerAdapter(_key_adapter);
 }
 
 // ────────────────────────────────────────────────────────────────────────────

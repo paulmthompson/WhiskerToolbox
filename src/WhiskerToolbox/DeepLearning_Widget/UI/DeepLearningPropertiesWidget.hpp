@@ -40,6 +40,11 @@ class DataManager;
 class DeepLearningState;
 class InferenceController;
 
+namespace KeymapSystem {
+class KeyActionAdapter;
+class KeymapManager;
+}// namespace KeymapSystem
+
 namespace dl::widget {
 class DynamicInputSlotWidget;
 class EncoderShapeWidget;
@@ -63,6 +68,16 @@ public:
 
     /// Non-owning access to the SlotAssembler for cache preview queries.
     [[nodiscard]] SlotAssembler * assembler() const;
+
+    /**
+     * @brief Register the KeyActionAdapter with the keymap manager.
+     *
+     * Wires up the "deep_learning.predict_current" action so the
+     * Ctrl+R shortcut fires even when this widget does not have focus.
+     *
+     * @param manager Non-owning pointer to KeymapManager (must outlive this widget).
+     */
+    void setKeymapManager(KeymapSystem::KeymapManager * manager);
 
 public slots:
     /**
@@ -178,6 +193,9 @@ private:
 
     // Inference orchestration (owns worker thread, result merging).
     std::unique_ptr<InferenceController> _inference_controller;
+
+    // Keymap adapter for AlwaysRouted actions (e.g. Ctrl+R → predict current).
+    KeymapSystem::KeyActionAdapter * _key_adapter{nullptr};
 };
 
 #endif// DEEP_LEARNING_PROPERTIES_WIDGET_HPP
