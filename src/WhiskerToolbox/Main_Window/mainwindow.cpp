@@ -933,7 +933,7 @@ void MainWindow::_registerEditorTypes() {
 
     TransformsV2WidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    TriageSessionWidgetModule::registerTypes(_editor_registry.get(), _data_manager, commandRecorder());
+    TriageSessionWidgetModule::registerTypes(_editor_registry.get(), _data_manager, commandRecorder(), _keymap_manager);
 
     DataImportWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

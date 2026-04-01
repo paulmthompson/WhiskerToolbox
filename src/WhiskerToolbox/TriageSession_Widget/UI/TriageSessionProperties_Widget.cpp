@@ -11,6 +11,8 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "GuidedPipelineEditor.hpp"
+#include "KeymapSystem/KeyActionAdapter.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "StateManagement/AppFileDialog.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TriageSession/TriageSession.hpp"
@@ -45,6 +47,33 @@ TriageSessionProperties_Widget::TriageSessionProperties_Widget(
 }
 
 TriageSessionProperties_Widget::~TriageSessionProperties_Widget() = default;
+
+void TriageSessionProperties_Widget::setKeymapManager(KeymapSystem::KeymapManager * manager) {
+    if (!manager || _key_adapter) {
+        return;
+    }
+
+    _key_adapter = new KeymapSystem::KeyActionAdapter(this);
+    _key_adapter->setTypeId(EditorLib::EditorTypeId(QStringLiteral("TriageSessionWidget")));
+
+    _key_adapter->setHandler([this](QString const & action_id) -> bool {
+        if (action_id == QStringLiteral("triage.mark")) {
+            _onMarkClicked();
+            return true;
+        }
+        if (action_id == QStringLiteral("triage.commit")) {
+            _onCommitClicked();
+            return true;
+        }
+        if (action_id == QStringLiteral("triage.recall")) {
+            _onRecallClicked();
+            return true;
+        }
+        return false;
+    });
+
+    manager->registerAdapter(_key_adapter);
+}
 
 void TriageSessionProperties_Widget::_buildUI() {
     auto * main_layout = new QVBoxLayout(this);
