@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>PSTH Widget Roadmap – Neuralyzer</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../api_reference.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#psthwidget-development-roadmap" id="toc-psthwidget-development-roadmap" class="nav-link active" data-scroll-target="#psthwidget-development-roadmap">PSTHWidget Development Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#completed-work-summary" id="toc-completed-work-summary" class="nav-link" data-scroll-target="#completed-work-summary">Completed Work Summary</a></li>
+  <li><a href="#phase-3-variability-and-confidence-intervals" id="toc-phase-3-variability-and-confidence-intervals" class="nav-link" data-scroll-target="#phase-3-variability-and-confidence-intervals">Phase 3: Variability and Confidence Intervals</a>
+  <ul class="collapse">
+  <li><a href="#per-trial-data-via-estimateratewithtrials" id="toc-per-trial-data-via-estimateratewithtrials" class="nav-link" data-scroll-target="#per-trial-data-via-estimateratewithtrials">3.1 Per-Trial Data via <code>estimateRateWithTrials()</code></a></li>
+  <li><a href="#confidence-bands-via-shared-api" id="toc-confidence-bands-via-shared-api" class="nav-link" data-scroll-target="#confidence-bands-via-shared-api">3.2 Confidence Bands via Shared API</a></li>
+  <li><a href="#rendering-confidence-bands" id="toc-rendering-confidence-bands" class="nav-link" data-scroll-target="#rendering-confidence-bands">3.3 Rendering Confidence Bands</a></li>
+  <li><a href="#properties-panel" id="toc-properties-panel" class="nav-link" data-scroll-target="#properties-panel">3.4 Properties Panel</a></li>
+  </ul></li>
+  <li><a href="#phase-4-cross-widget-linking" id="toc-phase-4-cross-widget-linking" class="nav-link" data-scroll-target="#phase-4-cross-widget-linking">Phase 4: Cross-Widget Linking</a>
+  <ul class="collapse">
+  <li><a href="#selectioncontext-integration" id="toc-selectioncontext-integration" class="nav-link" data-scroll-target="#selectioncontext-integration">4.1 SelectionContext Integration</a></li>
+  <li><a href="#pin-button" id="toc-pin-button" class="nav-link" data-scroll-target="#pin-button">4.2 Pin Button</a></li>
+  <li><a href="#heatmap-psth-raster-flow" id="toc-heatmap-psth-raster-flow" class="nav-link" data-scroll-target="#heatmap-psth-raster-flow">4.3 Heatmap → PSTH + Raster Flow</a></li>
+  <li><a href="#shared-alignment-state-future-consideration" id="toc-shared-alignment-state-future-consideration" class="nav-link" data-scroll-target="#shared-alignment-state-future-consideration">4.4 Shared Alignment State (Future Consideration)</a></li>
+  </ul></li>
+  <li><a href="#phase-5-svg-export" id="toc-phase-5-svg-export" class="nav-link" data-scroll-target="#phase-5-svg-export">Phase 5: SVG Export</a>
+  <ul class="collapse">
+  <li><a href="#existing-infrastructure" id="toc-existing-infrastructure" class="nav-link" data-scroll-target="#existing-infrastructure">5.1 Existing Infrastructure</a></li>
+  <li><a href="#shared-svg-export-for-plot-widgets" id="toc-shared-svg-export-for-plot-widgets" class="nav-link" data-scroll-target="#shared-svg-export-for-plot-widgets">5.2 Shared SVG Export for Plot Widgets</a></li>
+  <li><a href="#ui-integration" id="toc-ui-integration" class="nav-link" data-scroll-target="#ui-integration">5.3 UI Integration</a></li>
+  <li><a href="#export-options" id="toc-export-options" class="nav-link" data-scroll-target="#export-options">5.4 Export Options</a></li>
+  </ul></li>
+  <li><a href="#phase-6-embeddable-psth-for-tooltips" id="toc-phase-6-embeddable-psth-for-tooltips" class="nav-link" data-scroll-target="#phase-6-embeddable-psth-for-tooltips">Phase 6: Embeddable PSTH for Tooltips</a>
+  <ul class="collapse">
+  <li><a href="#concept" id="toc-concept" class="nav-link" data-scroll-target="#concept">6.1 Concept</a></li>
+  <li><a href="#lightweight-histogram-renderer" id="toc-lightweight-histogram-renderer" class="nav-link" data-scroll-target="#lightweight-histogram-renderer">6.2 Lightweight Histogram Renderer</a></li>
+  <li><a href="#qpainter-based-mini-renderer" id="toc-qpainter-based-mini-renderer" class="nav-link" data-scroll-target="#qpainter-based-mini-renderer">6.3 QPainter-based Mini Renderer</a></li>
+  <li><a href="#combined-raster-psth-tooltip" id="toc-combined-raster-psth-tooltip" class="nav-link" data-scroll-target="#combined-raster-psth-tooltip">6.4 Combined Raster + PSTH Tooltip</a></li>
+  <li><a href="#reuse-with-acfwidget" id="toc-reuse-with-acfwidget" class="nav-link" data-scroll-target="#reuse-with-acfwidget">6.5 Reuse with ACFWidget</a></li>
+  </ul></li>
+  <li><a href="#phase-7-per-series-histograms-and-multi-color-overlay" id="toc-phase-7-per-series-histograms-and-multi-color-overlay" class="nav-link" data-scroll-target="#phase-7-per-series-histograms-and-multi-color-overlay">Phase 7: Per-Series Histograms and Multi-Color Overlay</a>
+  <ul class="collapse">
+  <li><a href="#per-series-binning" id="toc-per-series-binning" class="nav-link" data-scroll-target="#per-series-binning">7.1 Per-Series Binning</a></li>
+  <li><a href="#overlay-modes" id="toc-overlay-modes" class="nav-link" data-scroll-target="#overlay-modes">7.2 Overlay Modes</a></li>
+  <li><a href="#color-application" id="toc-color-application" class="nav-link" data-scroll-target="#color-application">7.3 Color Application</a></li>
+  </ul></li>
+  <li><a href="#implementation-priority" id="toc-implementation-priority" class="nav-link" data-scroll-target="#implementation-priority">Implementation Priority</a>
+  <ul class="collapse">
+  <li><a href="#next-up" id="toc-next-up" class="nav-link" data-scroll-target="#next-up">Next Up</a></li>
+  <li><a href="#following" id="toc-following" class="nav-link" data-scroll-target="#following">Following</a></li>
+  <li><a href="#later" id="toc-later" class="nav-link" data-scroll-target="#later">Later</a></li>
+  </ul></li>
+  <li><a href="#open-questions" id="toc-open-questions" class="nav-link" data-scroll-target="#open-questions">Open Questions</a></li>
+  </ul></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">PSTH Widget Roadmap</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="psthwidget-development-roadmap" class="level1">
+<h1>PSTHWidget Development Roadmap</h1>
+<p>This document tracks remaining development tasks for the PSTH Widget. For documentation of completed features and current architecture, see the <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">main developer documentation</a>.</p>
+<section id="completed-work-summary" class="level2">
+<h2 class="anchored" data-anchor-id="completed-work-summary">Completed Work Summary</h2>
+<p>The following features are complete and documented in <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">index.qmd</a>:</p>
+<ul>
+<li><strong>Core rendering</strong>: OpenGL pipeline, <code>GatherResult</code> integration, <code>HistogramMapper</code>, <code>SceneRenderer</code></li>
+<li><strong>Binning</strong>: Uniform time bins with configurable bin size</li>
+<li><strong>Plot styles</strong>: Bar chart and step-function line rendering via shared <code>HistogramMapper</code></li>
+<li><strong>Interaction</strong>: Separated X/Y zoom, pan, double-click time navigation</li>
+<li><strong>Axis system</strong>: <code>RelativeTimeAxisWidget</code> (X) and <code>VerticalAxisWidget</code> (Y) with bidirectional sync</li>
+<li><strong>Properties panel</strong>: Alignment controls, event series management, style selection, per-event color picker</li>
+<li><strong>State serialization</strong>: Full round-trip JSON via <code>rfl::json</code></li>
+<li><strong>Rate estimation integration</strong>: <code>PSTHStateData</code> now stores <code>EstimationParams</code> variant directly. <code>PSTHPropertiesWidget</code> uses the shared <code>EstimationMethodControls</code> widget from <code>RateEstimationControls</code> library for method selection and per-method parameter editing. Renderer extracts bin size from <code>estimationParams()</code> via <code>std::get_if&lt;BinningParams&gt;</code>.</li>
+<li><strong>Normalization/scaling</strong> : <code>PSTHStateData</code> stores <code>ScalingMode</code> from the shared <code>RateEstimate.hpp</code>. <code>PSTHPropertiesWidget</code> uses the shared <code>ScalingModeControls</code> widget. <code>PSTHPlotOpenGLWidget::rebuildScene()</code> applies scaling via <code>applyScaling()</code> from <code>RateNormalization.hpp</code>, supporting all scaling modes (Raw Count, Firing Rate Hz, Z-Score, Normalized [0,1], Count/Trial).</li>
+</ul>
+<hr>
+</section>
+<section id="phase-3-variability-and-confidence-intervals" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-variability-and-confidence-intervals">Phase 3: Variability and Confidence Intervals</h2>
+<p><strong>Status</strong>: Design phase. Depends on Phase 1 (normalization) and the <a href="../../../../developer/ui/Plots/Common/EventRateEstimation/rate_estimation_redesign.html">Rate Estimation Redesign</a>.</p>
+<p><strong>Goal</strong>: Display trial-to-trial variability in the PSTH, providing a visual measure of the reliability of the rate estimate.</p>
+<p>This phase uses the shared uncertainty infrastructure from the redesign rather than defining bespoke per-trial histogram or confidence band types.</p>
+<section id="per-trial-data-via-estimateratewithtrials" class="level3">
+<h3 class="anchored" data-anchor-id="per-trial-data-via-estimateratewithtrials">3.1 Per-Trial Data via <code>estimateRateWithTrials()</code></h3>
+<p>The shared library provides <code>estimateRateWithTrials()</code>, which returns a <code>RateEstimateWithTrials</code> containing both the aggregate <code>RateEstimate</code> (mean across trials) and a <code>PerTrialData</code> matrix (each trial’s individual rate curve). This is the opt-in computation path — <code>estimateRate()</code> (the default) does not allocate per-trial storage.</p>
+<p>See <a href="../../../../developer/ui/Plots/Common/EventRateEstimation/rate_estimation_redesign.html#per-trial-data-for-uncertainty-and-z-score">Rate Estimation Redesign — Per-Trial Data</a>.</p>
+</section>
+<section id="confidence-bands-via-shared-api" class="level3">
+<h3 class="anchored" data-anchor-id="confidence-bands-via-shared-api">3.2 Confidence Bands via Shared API</h3>
+<p>The shared <code>ConfidenceBand</code> struct and computation functions handle all variability modes:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ConfidenceBand <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> lower<span class="op">;</span>    <span class="co">///&lt; Lower bound at each time point</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> upper<span class="op">;</span>    <span class="co">///&lt; Upper bound at each time point</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> ci <span class="op">=</span> computeSEM<span class="op">(</span>data<span class="op">,</span> <span class="fl">1.96</span><span class="op">);</span>               <span class="co">// SEM × 1.96 for 95% CI</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> ci <span class="op">=</span> computePercentileCI<span class="op">(</span>data<span class="op">,</span> <span class="fl">2.5</span><span class="op">,</span> <span class="fl">97.5</span><span class="op">);</span> <span class="co">// Percentile-based 95% CI</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> ci <span class="op">=</span> bootstrapCI<span class="op">(</span>data<span class="op">,</span> <span class="dv">1000</span><span class="op">,</span> <span class="fl">0.95</span><span class="op">);</span>        <span class="co">// Bootstrap CI</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For the normalization + uncertainty pipeline, use the <code>applyScaling(RateEstimateWithTrials &amp;)</code> overload to ensure aggregate and per-trial data are normalized consistently before computing CI:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> data <span class="op">=</span> estimateRateWithTrials<span class="op">(</span>gathered<span class="op">,</span> tf<span class="op">,</span> window_size<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>applyScaling<span class="op">(</span>data<span class="op">,</span> ScalingMode<span class="op">::</span>ZScore<span class="op">,</span> <span class="fl">1000.0</span><span class="op">);</span>  <span class="co">// normalizes aggregate + all trials</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> ci <span class="op">=</span> computeSEM<span class="op">(</span>data<span class="op">);</span>  <span class="co">// CI is in z-score space — consistent</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>See <a href="../../../../developer/ui/Plots/Common/EventRateEstimation/rate_estimation_redesign.html#uncertainty-quantification">Rate Estimation Redesign — Uncertainty</a>.</p>
+</section>
+<section id="rendering-confidence-bands" class="level3">
+<h3 class="anchored" data-anchor-id="rendering-confidence-bands">3.3 Rendering Confidence Bands</h3>
+<p>Confidence bands should be rendered as a filled semi-transparent region behind the mean line/bars. The <code>ConfidenceBand</code> provides <code>lower[i]</code> and <code>upper[i]</code> at each time point, which maps directly to a filled polygon or rectangle batch.</p>
+<p>The <code>HistogramMapper</code> could be extended with a <code>toConfidenceBand()</code> method that produces a filled polygon batch, or a new <code>ConfidenceBandMapper</code> could be introduced. The band should use the same fill color as the histogram but with reduced opacity (e.g., alpha = 0.2).</p>
+</section>
+<section id="properties-panel" class="level3">
+<h3 class="anchored" data-anchor-id="properties-panel">3.4 Properties Panel</h3>
+<p>Add controls to <code>PSTHPropertiesWidget</code>:</p>
+<ul>
+<li>Variability mode combo box (<code>None</code>, <code>SEM</code>, <code>CI95</code>, <code>Percentile</code>, <code>Bootstrap</code>)</li>
+<li>Confidence band color/opacity slider</li>
+<li>For Percentile mode: lower and upper percentile spinboxes</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-4-cross-widget-linking" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-cross-widget-linking">Phase 4: Cross-Widget Linking</h2>
+<p><strong>Status</strong>: Design complete. <code>pinned</code> field exists in <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a> state. Implementation needed for PSTHWidget.</p>
+<p><strong>Goal</strong>: Enable PSTH, <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a>, and <a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">HeatmapWidget</a> to synchronize on active unit selection.</p>
+<section id="selectioncontext-integration" class="level3">
+<h3 class="anchored" data-anchor-id="selectioncontext-integration">4.1 SelectionContext Integration</h3>
+<p>Following the existing <code>SelectionContext</code> pattern used by DataInspector widgets and described in the <a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlot Roadmap</a>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPropertiesWidget<span class="op">::</span>_onSelectionChanged<span class="op">(</span>SelectionSource <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state <span class="op">&amp;&amp;</span> _state<span class="op">-&gt;</span>isPinned<span class="op">())</span> <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state <span class="op">&amp;&amp;</span> source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">==</span> _state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_selection_context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> selected <span class="op">=</span> _selection_context<span class="op">-&gt;</span>primarySelectedData<span class="op">();</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>selected<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> type <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getType<span class="op">(</span>selected<span class="op">.</span>toString<span class="op">().</span>toStdString<span class="op">());</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>type <span class="op">==</span> DM_DataType<span class="op">::</span>DigitalEventSeries<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                updateDisplayedEventSeries<span class="op">(</span>selected<span class="op">.</span>toString<span class="op">());</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="pin-button" class="level3">
+<h3 class="anchored" data-anchor-id="pin-button">4.2 Pin Button</h3>
+<p>Add a <code>pinned</code> field to <code>PSTHStateData</code> and a pin/unpin toggle button to the properties panel toolbar:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PSTHStateData <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing fields ...</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> pinned <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>When pinned, the widget ignores <code>SelectionContext</code> changes, preserving its current view. This enables workflows where one PSTH is locked to a specific unit while another follows the user’s selection.</p>
+<p>The pinned state should be serialized for workspace restoration.</p>
+</section>
+<section id="heatmap-psth-raster-flow" class="level3">
+<h3 class="anchored" data-anchor-id="heatmap-psth-raster-flow">4.3 Heatmap → PSTH + Raster Flow</h3>
+<p>The primary cross-widget workflow:</p>
+<pre><code>HeatmapWidget row click
+        ↓
+SelectionContext::setSelectedData("unit_42", source)
+        ↓
+PSTHWidget (if not pinned) receives selectionChanged
+        ↓
+Checks type == DigitalEventSeries → updates histogram
+        ↓
+EventPlotWidget (if not pinned) also receives selectionChanged
+        ↓
+Updates raster plot for same unit</code></pre>
+<p>This enables rapid exploration of neural data: click through units in the heatmap while the PSTH and raster plot update in sync. See the <a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlot Roadmap</a> Phase 6 for the complementary EventPlot implementation.</p>
+</section>
+<section id="shared-alignment-state-future-consideration" class="level3">
+<h3 class="anchored" data-anchor-id="shared-alignment-state-future-consideration">4.4 Shared Alignment State (Future Consideration)</h3>
+<p>Currently, each trial-aligned widget (EventPlot, PSTH, Heatmap) maintains its own independent <code>PlotAlignmentState</code>. A future enhancement could allow these widgets to <strong>share</strong> a single alignment state so that changing the alignment event or window size in one widget updates all linked widgets simultaneously. See <a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlot Roadmap</a> Phase 6 for discussion.</p>
+<hr>
+</section>
+</section>
+<section id="phase-5-svg-export" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-svg-export">Phase 5: SVG Export</h2>
+<p><strong>Status</strong>: Infrastructure exists in <code>CorePlotting::Export</code>. Implementation needed for PSTHWidget.</p>
+<p><strong>Goal</strong>: Export the current PSTH plot to SVG for publication-quality figures.</p>
+<section id="existing-infrastructure" class="level3">
+<h3 class="anchored" data-anchor-id="existing-infrastructure">5.1 Existing Infrastructure</h3>
+<p>The project already has SVG export infrastructure in <code>CorePlotting/Export/SVGPrimitives.hpp</code>:</p>
+<ul>
+<li><code>buildSVGDocument(RenderableScene, SVGExportParams)</code> — generates a complete SVG from any <code>RenderableScene</code></li>
+<li><code>renderRectangleBatchToSVG()</code> — converts bar charts to <code>&lt;rect&gt;</code> elements</li>
+<li><code>renderPolyLineBatchToSVG()</code> — converts line plots to <code>&lt;polyline&gt;</code> elements</li>
+<li><code>renderSceneToSVG()</code> — renders a full scene including all batch types</li>
+</ul>
+<p>The <code>DataViewerWidget</code> already uses this infrastructure via a bespoke <code>SVGExporter</code> class that builds scenes from the DataViewer’s specific state format.</p>
+</section>
+<section id="shared-svg-export-for-plot-widgets" class="level3">
+<h3 class="anchored" data-anchor-id="shared-svg-export-for-plot-widgets">5.2 Shared SVG Export for Plot Widgets</h3>
+<p>Rather than building another bespoke exporter, a shared SVG export mechanism should be created for all plot widgets that use <code>SceneRenderer</code>. Since the PSTH, EventPlot, and other OpenGL widgets all produce <code>RenderableScene</code> objects, the export path is:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> Plots<span class="op">::</span>Export <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> exportPlotToSVG<span class="op">(</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        RenderableScene <span class="at">const</span> <span class="op">&amp;</span> scene<span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> view_matrix<span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        SVGExportParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">);</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This can be shared across <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a>, PSTHWidget, <a href="../../../../developer/ui/Plots/ACFWidget/index.html">ACFWidget</a>, and any future OpenGL plot widget.</p>
+</section>
+<section id="ui-integration" class="level3">
+<h3 class="anchored" data-anchor-id="ui-integration">5.3 UI Integration</h3>
+<p>Add an “Export SVG…” action to the PSTH properties panel or a right-click context menu on the plot. The action should:</p>
+<ol type="1">
+<li>Open a file save dialog</li>
+<li>Build the SVG from the cached <code>RenderableScene</code> and current view/projection matrices</li>
+<li>Optionally include axis labels, title, and scalebar</li>
+<li>Save to the chosen path</li>
+</ol>
+</section>
+<section id="export-options" class="level3">
+<h3 class="anchored" data-anchor-id="export-options">5.4 Export Options</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PlotSVGExportOptions <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> width <span class="op">=</span> <span class="dv">1920</span><span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> height <span class="op">=</span> <span class="dv">1080</span><span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> include_axes <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> include_title <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> include_scalebar <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> scalebar_length <span class="op">=</span> <span class="dv">100</span><span class="op">;</span>      <span class="co">// in time units</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string background_color <span class="op">=</span> <span class="st">"#FFFFFF"</span><span class="op">;</span>  <span class="co">// White for publication</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<hr>
+</section>
+</section>
+<section id="phase-6-embeddable-psth-for-tooltips" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-embeddable-psth-for-tooltips">Phase 6: Embeddable PSTH for Tooltips</h2>
+<p><strong>Status</strong>: Design exploration. Depends on histogram infrastructure being factored for lightweight use.</p>
+<p><strong>Goal</strong>: Provide a lightweight, embeddable PSTH rendering that can appear in tooltips — for example, when hovering over a row of the <a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">HeatmapWidget</a>.</p>
+<section id="concept" class="level3">
+<h3 class="anchored" data-anchor-id="concept">6.1 Concept</h3>
+<p>When a user hovers over a unit row in the HeatmapWidget, a tooltip could display:</p>
+<ul>
+<li>A miniature PSTH for that unit</li>
+<li>Optionally, a combined raster + PSTH view</li>
+</ul>
+<p>This requires decoupling the PSTH computation and rendering from the full widget machinery.</p>
+</section>
+<section id="lightweight-histogram-renderer" class="level3">
+<h3 class="anchored" data-anchor-id="lightweight-histogram-renderer">6.2 Lightweight Histogram Renderer</h3>
+<p>Use the shared <code>estimateRate()</code> from the <code>EventRateEstimation</code> library to compute the histogram data. The <code>RateEstimate</code> output (paired <code>times[]</code> + <code>values[]</code>) can be rendered directly by a lightweight <code>QPainter</code>-based renderer without needing the full OpenGL widget machinery.</p>
+<p>For tooltip rendering, there are two approaches:</p>
+<ol type="1">
+<li><strong>QPixmap approach</strong>: Render the histogram to a <code>QPixmap</code> via a headless OpenGL context or a software rasterizer, then display in <code>QToolTip</code></li>
+<li><strong>QPainter approach</strong>: Implement a simple <code>QPainter</code>-based histogram renderer that doesn’t require OpenGL. This is simpler and avoids GL context issues in tooltips.</li>
+</ol>
+</section>
+<section id="qpainter-based-mini-renderer" class="level3">
+<h3 class="anchored" data-anchor-id="qpainter-based-mini-renderer">6.3 QPainter-based Mini Renderer</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> CorePlotting<span class="op">::</span>PSTH <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPixmap</span> renderMiniPSTH<span class="op">(</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        HistogramData <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        HistogramStyle <span class="at">const</span> <span class="op">&amp;</span> style<span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QSize</span> size <span class="op">=</span> <span class="op">{</span><span class="dv">200</span><span class="op">,</span> <span class="dv">80</span><span class="op">});</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This would use <code>QPainter</code> to draw bars/lines onto a <code>QPixmap</code>, suitable for embedding in tooltips, table cells, or any widget that can display a pixmap.</p>
+</section>
+<section id="combined-raster-psth-tooltip" class="level3">
+<h3 class="anchored" data-anchor-id="combined-raster-psth-tooltip">6.4 Combined Raster + PSTH Tooltip</h3>
+<p>For the HeatmapWidget tooltip showing both raster and PSTH:</p>
+<pre><code>┌─────────────────────┐
+│ ▎ ▎  ▎▎   ▎  ▎     │  ← raster (mini)
+│  ▎▎   ▎  ▎ ▎  ▎▎   │
+│ ▎  ▎▎ ▎    ▎   ▎    │
+├─────────────────────┤
+│ ▓▓▓▓████▓▓▓▓▓▓▓▓▓  │  ← PSTH (mini)
+└─────────────────────┘
+  Unit: spikes_unit_42</code></pre>
+<p>This requires factoring out the EventPlot’s raster rendering in a similar lightweight fashion.</p>
+</section>
+<section id="reuse-with-acfwidget" class="level3">
+<h3 class="anchored" data-anchor-id="reuse-with-acfwidget">6.5 Reuse with ACFWidget</h3>
+<p>The same <code>QPainter</code>-based mini histogram renderer could serve ACFWidget for ISI distribution tooltips or summary displays in other contexts where a full OpenGL widget is overkill.</p>
+<hr>
+</section>
+</section>
+<section id="phase-7-per-series-histograms-and-multi-color-overlay" class="level2">
+<h2 class="anchored" data-anchor-id="phase-7-per-series-histograms-and-multi-color-overlay">Phase 7: Per-Series Histograms and Multi-Color Overlay</h2>
+<p><strong>Status</strong>: Partially implemented. Multiple event series can be added but currently all events are binned into a single histogram.</p>
+<p><strong>Goal</strong>: When multiple <code>DigitalEventSeries</code> are overlaid, render separate histograms per series with distinct colors, with optional stacking or transparency.</p>
+<section id="per-series-binning" class="level3">
+<h3 class="anchored" data-anchor-id="per-series-binning">7.1 Per-Series Binning</h3>
+<p>Modify <code>rebuildScene()</code> to produce separate <code>HistogramData</code> per event series rather than accumulating all events into a single histogram.</p>
+</section>
+<section id="overlay-modes" class="level3">
+<h3 class="anchored" data-anchor-id="overlay-modes">7.2 Overlay Modes</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> PSTHOverlayMode <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    Stacked<span class="op">,</span>        <span class="co">///&lt; Bars stacked vertically (colors distinguish series)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    Overlaid<span class="op">,</span>       <span class="co">///&lt; Semi-transparent bars overlaid at same baseline</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    SideBySide      <span class="co">///&lt; Bars placed side-by-side within each bin</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="color-application" class="level3">
+<h3 class="anchored" data-anchor-id="color-application">7.3 Color Application</h3>
+<p>The existing per-event <code>hex_color</code> in <code>PSTHEventOptions</code> should be applied to the <code>HistogramStyle::fill_color</code> when building each series’ scene. Currently, all series share a single default color.</p>
+<hr>
+</section>
+</section>
+<section id="implementation-priority" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-priority">Implementation Priority</h2>
+<section id="next-up" class="level3">
+<h3 class="anchored" data-anchor-id="next-up">Next Up</h3>
+<ol type="1">
+<li><strong>Phase 2</strong> (remaining): Migrate <code>PSTHPlotOpenGLWidget::rebuildScene()</code> to use <code>EventRateEstimation</code> library’s <code>estimateRate()</code>; then add Gaussian kernel and other smoothing methods</li>
+<li><strong>Phase 4</strong>: Cross-widget linking with pin support</li>
+<li><strong>Phase 5</strong>: SVG export (infrastructure already exists)</li>
+</ol>
+</section>
+<section id="following" class="level3">
+<h3 class="anchored" data-anchor-id="following">Following</h3>
+<ol start="4" type="1">
+<li><strong>Phase 7</strong>: Per-series histograms and multi-color overlay</li>
+<li><strong>Phase 3</strong>: Variability / confidence intervals</li>
+</ol>
+</section>
+<section id="later" class="level3">
+<h3 class="anchored" data-anchor-id="later">Later</h3>
+<ol start="6" type="1">
+<li><strong>Phase 6</strong>: Embeddable PSTH for tooltips</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="open-questions" class="level2">
+<h2 class="anchored" data-anchor-id="open-questions">Open Questions</h2>
+<ol type="1">
+<li><p><strong>SVG export scope</strong>: Should SVG export be a per-widget feature (button in each widget), or a centralized “Export All Visible Plots” action? The DataViewerWidget already has its own bespoke SVG exporter — should that be migrated to the shared infrastructure?</p></li>
+<li><p><strong>Tooltip rendering</strong>: Should tooltip histograms use <code>QPainter</code> (simpler, no GL context needed) or render to <code>QPixmap</code> via GL (consistent with main rendering)? <code>QPainter</code> is strongly preferred for reliability.</p></li>
+<li><p><strong>Multiple event series</strong>: When overlaying multiple event series, should the default be stacked or overlaid? Neuroscience convention varies — PSTH typically shows one unit at a time, but comparing two conditions on the same unit is common.</p></li>
+</ol>
+</section>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<ul>
+<li><a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget Documentation</a> — Full architecture and feature documentation</li>
+<li><a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a> — Shared architecture, axis types, DataManager integration</li>
+<li><a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a> — Raster plot (natural companion)</li>
+<li><a href="../../../../developer/ui/Plots/EventPlotWidget/roadmap.html">EventPlot Roadmap</a> — Cross-widget linking design (Phase 6), SVG export plans</li>
+<li><a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">HeatmapWidget</a> — Shares alignment, GatherResult, and planned linking</li>
+<li><a href="../../../../developer/ui/Plots/ACFWidget/index.html">ACFWidget</a> — Shares HistogramMapper, bar chart rendering; ISI histograms</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

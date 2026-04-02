@@ -48,7 +48,8 @@ public:
     ///        (before any encoding/resizing). Used for coordinate scaling.
     /// @param mode               Interpolation strategy (Nearest or Bilinear).
     ///
-    /// @pre source_image_size.width > 0 and source_image_size.height > 0
+    /// @pre source_image_size.width > 0 (enforcement: assert)
+    /// @pre source_image_size.height > 0 (enforcement: assert)
     explicit SpatialPointExtractModule(
             ImageSize source_image_size,
             InterpolationMode mode = InterpolationMode::Nearest);
@@ -60,13 +61,17 @@ public:
     /// @param features  Input tensor of shape `[B, C, H, W]`.
     /// @return Tensor of shape `[B, C]`.
     ///
-    /// @pre features.dim() == 4
-    /// @pre setPoint() must have been called at least once
+    /// @pre features must be defined (not a default-constructed undefined tensor) (enforcement: assert)
+    /// @pre features.dim() == 4 (enforcement: exception)
+    /// @pre features.size(0) >= 1 (batch dim B >= 1) (enforcement: none) [IMPORTANT]
+    /// @pre features.size(2) >= 1 and features.size(3) >= 1 (H and W >= 1; bilinear path divides by W-1 and H-1) (enforcement: none) [CRITICAL]
+    /// @pre setPoint() should have been called with a meaningful point before apply(); default {0,0} is used otherwise (enforcement: none) [IMPORTANT]
     [[nodiscard]] at::Tensor apply(at::Tensor const & features) const override;
 
     /// Returns `{C}` where C is `input_shape[0]`.
     ///
-    /// @pre input_shape.size() >= 1
+    /// @pre input_shape must not be empty (enforcement: assert)
+    /// @pre input_shape[0] >= 1 (channel count C must be positive) (enforcement: none) [IMPORTANT]
     [[nodiscard]] std::vector<int64_t>
     outputShape(std::vector<int64_t> const & input_shape) const override;
 

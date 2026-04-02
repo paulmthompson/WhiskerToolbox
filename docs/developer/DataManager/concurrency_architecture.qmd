@@ -4,34 +4,18 @@ title: "Concurrency Architecture"
 
 ## Overview
 
-This document describes the concurrency architecture for WhiskerToolbox: what 
-problems need concurrency, what design patterns fit the existing single-threaded 
-DataManager-centric architecture, and a staged plan for introducing safe 
-concurrency without rewriting the core.
-
-For the immediate, actionable task list addressing the existing observer
-thread-safety problem — callback hardening, deferred writes, and thread
-assertions — see
-[Observer Thread-Safety Roadmap](observer_thread_safety_roadmap.qmd).
+This document describes the concurrency architecture for WhiskerToolbox: what problems need concurrency, what design patterns fit the existing single-threaded DataManager-centric architecture, and a staged plan for introducing safe concurrency without rewriting the core.
 
 ## Context: How the System Works Today
 
-WhiskerToolbox runs entirely on the Qt main thread. A shared `DataManager` 
-instance holds all data objects (`MaskData`, `LineData`, `PointData`, 
-`AnalogTimeSeries`, `VideoData`, etc.) in a 
-`std::map<std::string, DataTypeVariant>` map. Consumers call 
-`getData<T>(key)` to get a `shared_ptr<T>` — always mutable, always 
-unsynchronized. The `ObserverData` callback system is synchronous and 
-explicitly not thread-safe.
+WhiskerToolbox runs entirely on the Qt main thread. A shared `DataManager` instance holds all data objects (`MaskData`, `LineData`, `PointData`, `AnalogTimeSeries`, `VideoData`, etc.) in a `std::map<std::string, DataTypeVariant>` map. Consumers call `getData<T>(key)` to get a `shared_ptr<T>` — always mutable, always unsynchronized. The `ObserverData` callback system is synchronous and explicitly not thread-safe.
 
-This is simple and correct for a single-threaded program. The concurrency 
-challenge is to keep this core model intact while moving expensive work off 
-the main thread.
+This is simple and correct for a single-threaded program. The concurrency challenge is to keep this core model intact while moving expensive work off the main thread.
 
 ## Where Concurrency Is Needed
 
 | Use Case | Nature | Duration | Current State |
-|----------|--------|----------|---------------|
+|-----------------|-----------------|-----------------|-----------------------|
 | Data loading (CSV, binary, HDF5) | Pure producer — reads file, builds object | Seconds | Blocks main thread |
 | Deep learning inference (batch) | Reads media frames, runs model, writes results | Minutes | Blocks main thread |
 | Data transforms (TransformsV2) | Reads input data, computes, writes output | ms–seconds | Blocks main thread |
@@ -39,123 +23,71 @@ the main thread.
 | Interactive editing (masks, points) | User modifies data at one frame | μs | Works, main thread only |
 | Display / rendering | Reads data for visualization | μs | Works, main thread only |
 
-The pattern: **95% of operations are microsecond-scale and single-threaded. 
-The remaining 5% are seconds-to-minutes and need to run in the background.**
+The pattern: **95% of operations are microsecond-scale and single-threaded. The remaining 5% are seconds-to-minutes and need to run in the background.**
 
 ## Why Not Locks on DataManager?
 
-`DataManager`, `ObserverData`, and all data types (`MaskData`, `PointData`, 
-`LineData`, `RaggedTimeSeries`, `AnalogTimeSeries`) are entirely 
-unsynchronized. Adding mutexes would mean:
+`DataManager`, `ObserverData`, and all data types (`MaskData`, `PointData`, `LineData`, `RaggedTimeSeries`, `AnalogTimeSeries`) are entirely unsynchronized. Adding mutexes would mean:
 
-1. Every `getData()` call acquires a lock — overhead on every widget 
-   interaction (~100 call sites across the codebase).
-2. Every `addAtTime()` call acquires a lock — overhead on every data 
-   mutation.
-3. `notifyObservers()` fires synchronous callbacks while holding a lock — 
-   deadlock risk if any callback accesses DataManager.
-4. Every consumer must reason about lock ordering to avoid deadlocks.
+1.  Every `getData()` call acquires a lock — overhead on every widget interaction (\~100 call sites across the codebase).
+2.  Every `addAtTime()` call acquires a lock — overhead on every data mutation.
+3.  `notifyObservers()` fires synchronous callbacks while holding a lock — deadlock risk if any callback accesses DataManager.
+4.  Every consumer must reason about lock ordering to avoid deadlocks.
 
-This would be a massive, error-prone refactor for marginal benefit. The 
-system's access pattern (grab data, compute, release) doesn't match the 
-mutex model (short critical sections with immediate release).
+This would be a massive, error-prone refactor for marginal benefit. The system's access pattern (grab data, compute, release) doesn't match the mutex model (short critical sections with immediate release).
 
 ## Why Not Per-Key Reader-Writer Locks?
 
-A reader-writer lock per DataManager key (`"masks"`, `"points"`, etc.) seems 
-attractive: multiple readers, exclusive writer, scoped to each data object.
+A reader-writer lock per DataManager key (`"masks"`, `"points"`, etc.) seems attractive: multiple readers, exclusive writer, scoped to each data object.
 
-The problem is that **writes are not scoped to DataManager.** Consumers call 
-`getData<MaskData>("masks")` once and then call `addAtTime()` on the returned 
-object many times across many frames. The "write" is a long-lived mutable 
-reference, not a single atomic operation. A reader-writer lock would either:
+The problem is that **writes are not scoped to DataManager.** Consumers call `getData<MaskData>("masks")` once and then call `addAtTime()` on the returned object many times across many frames. The "write" is a long-lived mutable reference, not a single atomic operation. A reader-writer lock would either:
 
-- Lock for the entire duration the mutable reference is held — blocking all 
-  readers for seconds/minutes during a transform.
-- Require lock-per-mutation — locking every `addAtTime()` call, even for 
-  microsecond operations. This adds overhead everywhere and changes every 
-  consumer.
+-   Lock for the entire duration the mutable reference is held — blocking all readers for seconds/minutes during a transform.
+-   Require lock-per-mutation — locking every `addAtTime()` call, even for microsecond operations. This adds overhead everywhere and changes every consumer.
 
 Neither is practical.
 
 ## Why Not Per-Frame Locks on Time Series?
 
-Since nearly all data is time series, locking individual time elements seems 
-natural: a DL transform writes frame 100 while the UI reads frame 42.
+Since nearly all data is time series, locking individual time elements seems natural: a DL transform writes frame 100 while the UI reads frame 42.
 
-This fails because of the underlying storage layout. `RaggedTimeSeries` 
-stores data in contiguous SoA arrays (`std::vector<TimeFrameIndex>`, 
-`std::vector<TData>`, `std::vector<EntityId>`). `addAtTime()` can trigger 
-vector reallocation, which invalidates **all** pointers and iterators — not 
-just those for the written frame. A per-frame lock cannot protect against 
-reallocation.
+This fails because of the underlying storage layout. `RaggedTimeSeries` stores data in contiguous SoA arrays (`std::vector<TimeFrameIndex>`, `std::vector<TData>`, `std::vector<EntityId>`). `addAtTime()` can trigger vector reallocation, which invalidates **all** pointers and iterators — not just those for the written frame. A per-frame lock cannot protect against reallocation.
 
-Additionally, for microsecond transforms, the cost of acquiring and releasing 
-a lock per frame would dominate the actual computation time.
+Additionally, for microsecond transforms, the cost of acquiring and releasing a lock per frame would dominate the actual computation time.
 
 ## The Right Model: Thread Confinement + Merge
 
 The design that fits this system is:
 
-1. **DataManager stays single-threaded.** All reads and writes happen on the 
-   main (Qt) thread. No synchronization added.
-2. **Workers use private data.** Background threads work with either 
-   independent data (file I/O) or private buffer objects (transform outputs).
-3. **Results merge on the main thread.** Workers produce results in private 
-   buffers. The main thread absorbs those results into DataManager, either 
-   all-at-once (simple) or periodically (for progressive visibility).
-4. **Qt signals provide the communication channel.** Cross-thread signals use 
-   `Qt::QueuedConnection` automatically — no manual synchronization needed.
+1.  **DataManager stays single-threaded.** All reads and writes happen on the main (Qt) thread. No synchronization added.
+2.  **Workers use private data.** Background threads work with either independent data (file I/O) or private buffer objects (transform outputs).
+3.  **Results merge on the main thread.** Workers produce results in private buffers. The main thread absorbs those results into DataManager, either all-at-once (simple) or periodically (for progressive visibility).
+4.  **Qt signals provide the communication channel.** Cross-thread signals use `Qt::QueuedConnection` automatically — no manual synchronization needed.
 
-This requires **zero synchronization primitives on data objects**. Safety 
-comes from: (a) the type system (`shared_ptr<T const>` prevents mutation), 
-(b) thread isolation (workers write to private buffers), and (c) temporal 
-separation (merges happen on the main thread between event loop iterations).
+This requires **zero synchronization primitives on data objects**. Safety comes from: (a) the type system (`shared_ptr<T const>` prevents mutation), (b) thread isolation (workers write to private buffers), and (c) temporal separation (merges happen on the main thread between event loop iterations).
 
 ## Ownership, Const, and Sharing
 
 ### Read-Only vs Mutable Access
 
-**Current state:** `getData<T>(key)` returns `std::shared_ptr<T>` — always 
-mutable. There is no `getConstData()` API. Consumers who only need to read 
-(~90% of call sites) get full write access.
+**Current state:** `getData<T>(key)` returns `std::shared_ptr<T>` — always mutable. There is no `getConstData()` API. Consumers who only need to read (\~90% of call sites) get full write access.
 
-**Why this matters for concurrency:** If we know a consumer only reads, we 
-can safely let multiple threads hold `shared_ptr<T const>` simultaneously 
-without any synchronization. If any consumer might write, we need exclusive 
-access guarantees.
+**Why this matters for concurrency:** If we know a consumer only reads, we can safely let multiple threads hold `shared_ptr<T const>` simultaneously without any synchronization. If any consumer might write, we need exclusive access guarantees.
 
 ### Why `shared_ptr<T const>` Over Alternatives
 
-**`T const *` (raw pointer):** Honest about non-ownership, but fragile. Safe 
-only if DataManager won't replace or delete the object during use. Breaks if 
-an observer callback fires, a `processEvents()` call is on the stack, or the 
-main thread calls `setData()` with a new object for the same key — the old 
-`shared_ptr` is replaced, its refcount drops to zero, the object is destroyed, 
-and the raw pointer dangles.
+**`T const *` (raw pointer):** Honest about non-ownership, but fragile. Safe only if DataManager won't replace or delete the object during use. Breaks if an observer callback fires, a `processEvents()` call is on the stack, or the main thread calls `setData()` with a new object for the same key — the old `shared_ptr` is replaced, its refcount drops to zero, the object is destroyed, and the raw pointer dangles.
 
-**`weak_ptr<T const>`:** Semantically appealing ("I observe but don't own"), 
-but `weak_ptr::lock()` returns a `shared_ptr` — giving shared ownership 
-during use anyway, with worse ergonomics (null check on every access). 
-Useful for long-lived cached references, not for short-lived read access.
+**`weak_ptr<T const>`:** Semantically appealing ("I observe but don't own"), but `weak_ptr::lock()` returns a `shared_ptr` — giving shared ownership during use anyway, with worse ergonomics (null check on every access). Useful for long-lived cached references, not for short-lived read access.
 
-**`shared_ptr<T const>`:** The temporary co-ownership is the safety 
-mechanism, not a design smell. If DataManager replaces the data at a key 
-while someone holds `shared_ptr<T const>`, the old object stays alive until 
-released. The consumer doesn't see the new data, but doesn't crash. The 
-ownership typically lasts microseconds (the scope of a function call). The 
-refcount increment/decrement is a single atomic operation — negligible cost.
+**`shared_ptr<T const>`:** The temporary co-ownership is the safety mechanism, not a design smell. If DataManager replaces the data at a key while someone holds `shared_ptr<T const>`, the old object stays alive until released. The consumer doesn't see the new data, but doesn't crash. The ownership typically lasts microseconds (the scope of a function call). The refcount increment/decrement is a single atomic operation — negligible cost.
 
 ### Data Types Have Different Sharing Characteristics
 
-`VideoData` wraps a stateful FFmpeg decoder. Two threads cannot read frames 
-from the same `VideoData` — the decoder's internal seek position, codec 
-context, and frame buffer are mutable and unsynchronized. By contrast, 
-`LineData` is a structure of arrays: if no one is writing, any number of 
-threads can read it safely.
+`VideoData` wraps a stateful FFmpeg decoder. Two threads cannot read frames from the same `VideoData` — the decoder's internal seek position, codec context, and frame buffer are mutable and unsynchronized. By contrast, `LineData` is a structure of arrays: if no one is writing, any number of threads can read it safely.
 
 | Data Type | Storage | Concurrent Read | Shareable via `const`? |
-|-----------|---------|-----------------|----------------------|
+|---------------|---------------|------------------|------------------------|
 | `LineData`, `PointData`, `MaskData` | SoA arrays (RaggedTimeSeries) | Safe if no writer | Yes |
 | `AnalogTimeSeries` | Dense array | Safe if no writer | Yes |
 | `VideoData` | Stateful FFmpeg decoder | Never safe | No — must clone |
@@ -163,7 +95,7 @@ threads can read it safely.
 
 ### ConcurrencyTraits: Encoding Sharing Properties at Compile Time
 
-```cpp
+``` cpp
 template<typename T>
 struct ConcurrencyTraits {
     /// Whether T supports concurrent reads when no writer is active.
@@ -192,7 +124,7 @@ struct ConcurrencyTraits<LineData> {
 
 **How traits guide threading strategy:**
 
-```
+```         
                          supports_concurrent_read?
                          ┌──────────┬──────────┐
                          │   YES    │    NO    │
@@ -205,12 +137,9 @@ clone?   ├───────────────┼──────�
          └───────────────┴──────────┴──────────┘
 ```
 
-- **Share (const):** Worker receives `shared_ptr<T const>`. Zero cost. 
-  Requires that no writer modifies the object while the worker runs.
-- **Clone:** Worker creates a new instance from the same source (e.g., new 
-  `VideoData` with the same file path). Moderate cost.
-- **Snapshot (copy):** Worker receives a deep copy. Expensive. Last resort 
-  — indicates a design problem if encountered.
+-   **Share (const):** Worker receives `shared_ptr<T const>`. Zero cost. Requires that no writer modifies the object while the worker runs.
+-   **Clone:** Worker creates a new instance from the same source (e.g., new `VideoData` with the same file path). Moderate cost.
+-   **Snapshot (copy):** Worker receives a deep copy. Expensive. Last resort — indicates a design problem if encountered.
 
 ## Staged Design
 
@@ -218,56 +147,40 @@ clone?   ├───────────────┼──────�
 
 Add a DataManager API that returns `shared_ptr<T const>`:
 
-```cpp
+``` cpp
 template<typename T>
 std::shared_ptr<T const> getConstData(std::string const & key) const;
 ```
 
 **What it provides:**
 
-- **Documents intent.** Call sites that only read use `getConstData()`. Call 
-  sites that mutate use `getData()`. The distinction is visible in the code.
-- **Compile-time enforcement.** You cannot call `addAtTime()` through a 
-  `shared_ptr<MaskData const>`.
-- **Foundation for safe sharing.** Multiple threads can hold 
-  `shared_ptr<T const>` to the same object without synchronization, as long 
-  as no thread holds a mutable reference simultaneously.
-- **Gradual adoption.** Existing `getData()` calls don't need to change. New 
-  code can opt in. Over time, `getData()` calls can be audited and converted.
+-   **Documents intent.** Call sites that only read use `getConstData()`. Call sites that mutate use `getData()`. The distinction is visible in the code.
+-   **Compile-time enforcement.** You cannot call `addAtTime()` through a `shared_ptr<MaskData const>`.
+-   **Foundation for safe sharing.** Multiple threads can hold `shared_ptr<T const>` to the same object without synchronization, as long as no thread holds a mutable reference simultaneously.
+-   **Gradual adoption.** Existing `getData()` calls don't need to change. New code can opt in. Over time, `getData()` calls can be audited and converted.
 
-**Implementation:** Trivially wraps `getData<T>()` — `shared_ptr<T>` 
-implicitly converts to `shared_ptr<T const>`. No data objects change.
+**Implementation:** Trivially wraps `getData<T>()` — `shared_ptr<T>` implicitly converts to `shared_ptr<T const>`. No data objects change.
 
-**Caveat — mutable cache in RaggedTimeSeries:** `RaggedTimeSeries` has a 
-mutable `_cached_storage` field populated lazily on read. Two threads 
-calling read-path methods that populate the cache create a data race on 
-the cache itself. Before `shared_ptr<T const>` is truly safe for concurrent 
-reads, the cache must be made thread-safe (e.g., populate eagerly on 
-construction, or use `std::call_once`).
+**Caveat — mutable cache in RaggedTimeSeries:** `RaggedTimeSeries` has a mutable `_cached_storage` field populated lazily on read. Two threads calling read-path methods that populate the cache create a data race on the cache itself. Before `shared_ptr<T const>` is truly safe for concurrent reads, the cache must be made thread-safe (e.g., populate eagerly on construction, or use `std::call_once`).
 
 ### Stage 2: Write Reservations — Background Worker Protocol
 
-A write reservation is a lightweight object that mediates background writes 
-to a DataManager key. It replaces direct `getData()` + `addAtTime()` for 
-background workers.
+A write reservation is a lightweight object that mediates background writes to a DataManager key. It replaces direct `getData()` + `addAtTime()` for background workers.
 
-```cpp
+``` cpp
 auto reservation = dm->createWriteReservation<MaskData>("output_masks");
 ```
 
 A reservation holds:
 
-- A **private buffer** — a new, empty data object (e.g., `MaskData`) owned 
-  by the reservation. The worker writes here.
-- The **target key** in DataManager where results will be merged.
-- A **`merge()` method** that transfers accumulated data from the buffer to 
-  the real data object on the main thread.
-- A **state flag** indicating a background operation is in progress for this 
-  key.
+-   A **private buffer** — a new, empty data object (e.g., `MaskData`) owned by the reservation. The worker writes here.
+-   The **target key** in DataManager where results will be merged.
+-   A **`merge()` method** that transfers accumulated data from the buffer to the real data object on the main thread.
+-   A **state flag** indicating a background operation is in progress for this key.
 
 **Worker writes to the buffer, not to DataManager:**
 
-```cpp
+``` cpp
 // Worker thread — never touches DataManager
 void WorkerThread::run() {
     for (int frame = start; frame <= end; ++frame) {
@@ -280,7 +193,7 @@ void WorkerThread::run() {
 
 **Main thread merges periodically:**
 
-```cpp
+``` cpp
 // Main thread — QTimer fires every ~200ms
 void onMergeTimer() {
     reservation.mergeInto(*dm);
@@ -294,104 +207,73 @@ void onMergeTimer() {
 
 **What this provides:**
 
-- **Progressive visibility.** Every 200ms, newly computed frames appear in 
-  the real data object. Observer callbacks fire, the UI redraws, and the 
-  user sees results appearing as the worker runs.
-- **Interactive editing during background work.** Between merges, the main 
-  thread has full exclusive access to the real data object. The user can 
-  edit frame N in Media_Widget normally. The worker writes to a separate 
-  buffer. No conflict.
-- **Zero overhead for fast operations.** The reservation system is only used 
-  when explicitly created. The 99% case (direct `getData()` on main thread) 
-  is untouched.
+-   **Progressive visibility.** Every 200ms, newly computed frames appear in the real data object. Observer callbacks fire, the UI redraws, and the user sees results appearing as the worker runs.
+-   **Interactive editing during background work.** Between merges, the main thread has full exclusive access to the real data object. The user can edit frame N in Media_Widget normally. The worker writes to a separate buffer. No conflict.
+-   **Zero overhead for fast operations.** The reservation system is only used when explicitly created. The 99% case (direct `getData()` on main thread) is untouched.
 
 **Merge frequency tradeoffs:**
 
 | Frequency | Behavior | Use Case |
-|-----------|----------|----------|
+|--------------------------|-----------------------|-----------------------|
 | 200ms timer | 5 merges/second, smooth visual updates | DL inference, long transforms |
 | On completion only | All-at-once delivery | Data loading (entire object arrives at once) |
 | Worker-driven signal | Worker emits `batchReady(N)` every N frames | Flexible, data-rate adaptive |
 
-**Conflict resolution:** If the user edits frame 150 while the worker also 
-computes frame 150, the merge must decide who wins. Simplest policy: "last 
-writer wins" — the merge overwrites. If user edits should take priority, the 
-merge can skip frames modified since the reservation was created (tracked 
-via a "dirty frame set" in the reservation).
+**Conflict resolution:** If the user edits frame 150 while the worker also computes frame 150, the merge must decide who wins. Simplest policy: "last writer wins" — the merge overwrites. If user edits should take priority, the merge can skip frames modified since the reservation was created (tracked via a "dirty frame set" in the reservation).
 
 ### Stage 3: Borrow Tracking — Protocol Enforcement
 
-An optional diagnostic layer that enforces the protocol: "don't mutate data 
-that has an active write reservation."
+An optional diagnostic layer that enforces the protocol: "don't mutate data that has an active write reservation."
 
 DataManager maintains a per-key state:
 
-```cpp
+``` cpp
 enum class BorrowState { Free, ReadBorrowed, WriteReserved };
 ```
 
 Rules:
 
-- `getConstData()` succeeds if: `Free` or `ReadBorrowed`. Transitions to 
-  `ReadBorrowed`.
-- `getData()` succeeds if: `Free` only.
-- `createWriteReservation()` succeeds if: `Free` or `ReadBorrowed` (the 
-  reservation writes to a private buffer, not the real object).
-- `getData()` asserts (debug) if: `WriteReserved` — catches protocol 
-  violations where someone tries to mutate the real object while a 
-  background worker is producing data for it.
+-   `getConstData()` succeeds if: `Free` or `ReadBorrowed`. Transitions to `ReadBorrowed`.
+-   `getData()` succeeds if: `Free` only.
+-   `createWriteReservation()` succeeds if: `Free` or `ReadBorrowed` (the reservation writes to a private buffer, not the real object).
+-   `getData()` asserts (debug) if: `WriteReserved` — catches protocol violations where someone tries to mutate the real object while a background worker is producing data for it.
 
-**In debug builds:** Violations trigger an assertion with a clear message 
-("Attempted getData() on key 'output_masks' which has an active write 
-reservation").
+**In debug builds:** Violations trigger an assertion with a clear message ("Attempted getData() on key 'output_masks' which has an active write reservation").
 
-**In release builds:** The tracking can be compiled out entirely (zero cost) 
-or kept as a cheap enum check.
+**In release builds:** The tracking can be compiled out entirely (zero cost) or kept as a cheap enum check.
 
 ## How Threaded Scenarios Map to This Design
 
 ### Data Loading (Simple: Fork-Join)
 
-Worker reads a file, builds a complete data object, returns it. No 
-DataManager contact during work. Main thread calls `setData()` once after 
-worker finishes. Uses no reservations or borrows — the data object doesn't 
-exist in DataManager until the worker is done.
+Worker reads a file, builds a complete data object, returns it. No DataManager contact during work. Main thread calls `setData()` once after worker finishes. Uses no reservations or borrows — the data object doesn't exist in DataManager until the worker is done.
 
 See [Threaded Loading Roadmap](threaded_loading_roadmap.qmd).
 
 ### Deep Learning Batch Inference (Merge Pattern)
 
-Worker runs model inference over a frame range, producing mask/point/line 
-data. Worker clones `VideoData` for independent frame access. Writes to a 
-private buffer (write reservation). Main thread merges periodically for 
-progressive visibility. User can simultaneously interact with the media 
-widget and existing data.
+Worker runs model inference over a frame range, producing mask/point/line data. Worker clones `VideoData` for independent frame access. Writes to a private buffer (write reservation). Main thread merges periodically for progressive visibility. User can simultaneously interact with the media widget and existing data.
 
 See [Background Inference Roadmap](../DeepLearning/background_inference_roadmap.qmd).
 
 ### Data Transforms (Fork-Join or Merge)
 
-Short transforms (< 100ms): run synchronously on the main thread, no 
-threading needed.
+Short transforms (\< 100ms): run synchronously on the main thread, no threading needed.
 
-Long transforms (seconds+): use the merge pattern. Worker computes into 
-a private buffer, main thread merges after completion (or periodically for 
-very long transforms).
+Long transforms (seconds+): use the merge pattern. Worker computes into a private buffer, main thread merges after completion (or periodically for very long transforms).
 
 ### Interactive Editing During Background Work
 
 User edits mask at frame 42 while a DL transform populates frames 100-500:
 
-1. Worker writes to a **private buffer**, not the real `MaskData`.
-2. User's edit goes through `getData<MaskData>("masks")` → 
-   `addAtTime(42, ...)` on the **real object**, on the main thread.
-3. Next merge absorbs the worker's new frames into the real object, 
-   alongside the user's edit.
-4. No conflict — worker and user operate on different objects.
+1.  Worker writes to a **private buffer**, not the real `MaskData`.
+2.  User's edit goes through `getData<MaskData>("masks")` → `addAtTime(42, ...)` on the **real object**, on the main thread.
+3.  Next merge absorbs the worker's new frames into the real object, alongside the user's edit.
+4.  No conflict — worker and user operate on different objects.
 
 ## The Full Progression
 
-```
+```         
 Today:          getData<T>() → shared_ptr<T>           (mutable, untracked)
 
 Stage 1:      + getConstData<T>() → shared_ptr<T const> (immutable, untracked)
@@ -415,62 +297,36 @@ Each stage is independently useful and doesn't break previous consumers.
 
 ### Thread Confinement
 
-Designate that certain objects are only ever accessed from one specific 
-thread. DataManager is main-thread-confined. Workers operate on private data 
-only. Communication happens through Qt signals (automatically queued across 
-thread boundaries) and result harvesting after `QThread::finished`.
+Designate that certain objects are only ever accessed from one specific thread. DataManager is main-thread-confined. Workers operate on private data only. Communication happens through Qt signals (automatically queued across thread boundaries) and result harvesting after `QThread::finished`.
 
 ### The Fork-Join Pattern
 
-Main thread _forks_ a worker, worker runs independently, main thread _joins_ 
-(via `finished` signal) to collect results. During the fork phase, main 
-thread and worker share nothing. Used by data loading.
+Main thread *forks* a worker, worker runs independently, main thread *joins* (via `finished` signal) to collect results. During the fork phase, main thread and worker share nothing. Used by data loading.
 
 ### The Merge Pattern
 
-Extension of fork-join with incremental result delivery. Worker produces data 
-continuously into a private buffer. Main thread periodically merges buffer 
-contents into the real data object. Provides progressive visibility and 
-allows interactive editing during background work. Used by DL inference and 
-long transforms.
+Extension of fork-join with incremental result delivery. Worker produces data continuously into a private buffer. Main thread periodically merges buffer contents into the real data object. Provides progressive visibility and allows interactive editing during background work. Used by DL inference and long transforms.
 
 ### Value Types vs Reference Types in Concurrency
 
-- **Value types** (returned by value): inherently safe — each thread has its 
-  own copy.
-- **Reference types** (`shared_ptr`, raw pointers): create aliasing — two 
-  threads with `shared_ptr<MaskData>` point to the same object.
-- `shared_ptr<T const>`: **shared immutable reference** — safe for 
-  concurrent reads when no mutable reference exists simultaneously.
+-   **Value types** (returned by value): inherently safe — each thread has its own copy.
+-   **Reference types** (`shared_ptr`, raw pointers): create aliasing — two threads with `shared_ptr<MaskData>` point to the same object.
+-   `shared_ptr<T const>`: **shared immutable reference** — safe for concurrent reads when no mutable reference exists simultaneously.
 
 ### `const` as a Concurrency Contract
 
-When data types are correctly designed — `const` methods truly only read, 
-`mutable` is only used for thread-safe caches — then `shared_ptr<T const>` 
-acts as a contract: "I will not modify this object, and I expect no one else 
-to modify it while I hold this reference."
+When data types are correctly designed — `const` methods truly only read, `mutable` is only used for thread-safe caches — then `shared_ptr<T const>` acts as a contract: "I will not modify this object, and I expect no one else to modify it while I hold this reference."
 
-The existing `RaggedTimeSeries` API already respects this: `addAtTime()` and 
-`clearAtTime()` are non-const, so they cannot be called through a const 
-reference. See the caveat about mutable caches in Stage 1.
+The existing `RaggedTimeSeries` API already respects this: `addAtTime()` and `clearAtTime()` are non-const, so they cannot be called through a const reference. See the caveat about mutable caches in Stage 1.
 
 ### Type Traits as Compile-Time Documentation
 
-`ConcurrencyTraits<T>::supports_concurrent_read` is a `constexpr bool` that 
-enables `static_assert` at API boundaries, `if constexpr` for compile-time 
-code path selection, and self-documenting code. No runtime overhead.
+`ConcurrencyTraits<T>::supports_concurrent_read` is a `constexpr bool` that enables `static_assert` at API boundaries, `if constexpr` for compile-time code path selection, and self-documenting code. No runtime overhead.
 
 ## Design Decisions
 
-- **No synchronization primitives on data objects.** Safety comes from 
-  thread isolation and temporal separation, not locks.
-- **`QThread` (not `std::jthread`)** for background work. Consistent with 
-  existing `MLCoreWidget` pattern; integrates with Qt signal/slot.
-- **Merge, not lock, for progressive results.** Avoids mutex contention, 
-  allows interactive editing, has zero overhead for fast operations.
-- **Staged rollout.** Each stage is useful alone. No big-bang migration.
-- **DataManager stays single-threaded indefinitely.** Workers return or 
-  buffer results; main thread writes. The
-  [Observer Thread-Safety Roadmap](observer_thread_safety_roadmap.qmd)
-  documents the deferred-writes pattern that enforces this today, which is
-  the low-cost precursor to Stage 2 (Write Reservations).
+-   **No synchronization primitives on data objects.** Safety comes from thread isolation and temporal separation, not locks.
+-   **`QThread` (not `std::jthread`)** for background work. Consistent with existing `MLCoreWidget` pattern; integrates with Qt signal/slot.
+-   **Merge, not lock, for progressive results.** Avoids mutex contention, allows interactive editing, has zero overhead for fast operations.
+-   **Staged rollout.** Each stage is useful alone. No big-bang migration.
+-   **DataManager stays single-threaded indefinitely.** Workers return or buffer results; main thread writes.

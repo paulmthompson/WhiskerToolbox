@@ -22,7 +22,7 @@ class DataManager;
 /**
  * @brief Build scatter point data from two axis sources
  *
- * Precondition: sources must be compatible (check with checkSourceCompatibility() first).
+ * @pre sources must be compatible (check with checkSourceCompatibility() first) (enforcement: runtime_check)
  *
  * For AnalogTimeSeries x AnalogTimeSeries: iterates over the intersection of valid
  * TimeFrameIndex values, applying temporal offset by shifting the index.

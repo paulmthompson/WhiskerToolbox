@@ -1,6 +1,7 @@
 
 
 install(RUNTIME_DEPENDENCY_SET appDeps
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}
                 PRE_EXCLUDE_REGEXES
                 [[libc\.so\..*]] [[libgcc_s\.so\..*]] [[libm\.so\..*]] [[libstdc\+\+\.so\..*]]
                 [[ld.*]] [[libbz2.*]] [[libdl.*]] [[libgmp.*]] [[libgnutls.*]] [[libhogweed.*]]
@@ -8,6 +9,11 @@ install(RUNTIME_DEPENDENCY_SET appDeps
                 POST_EXCLUDE_REGEXES
                 [[/lib/x86_64-linux-gnu/*]]
         )
+
+set_target_properties(WhiskerToolbox PROPERTIES
+        INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"
+        BUILD_WITH_INSTALL_RPATH TRUE
+)
 
 
 install(TARGETS WhiskerToolbox
@@ -18,6 +24,7 @@ install(TARGETS WhiskerToolbox
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME
         DESTINATION ${CMAKE_INSTALL_BINDIR}
+        RUNTIME_DEPENDENCIES appDeps
         INCLUDES
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )

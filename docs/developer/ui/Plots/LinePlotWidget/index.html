@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Line Plot Widget – Neuralyzer</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../../api_reference.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../../developer/ui/data_manager/data_manager_widget.html">User Interface</a></li><li class="breadcrumb-item"><a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widgets</a></li><li class="breadcrumb-item"><a href="../../../../developer/ui/Plots/LinePlotWidget/index.html">Line Plot Widget</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Developer Documentation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/python_bindings/python_integration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Python Integration</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Profiling and Performance</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/building.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Building</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/copilot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C++ Development Tools Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contributing Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fuzz Testing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to C++</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/analysis/precondition_protocol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Precondition Documentation Protocol</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/testing/layout_sanity_checker_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Layout Sanity Checker — Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../api_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">API Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core Libraries</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/CoreGeometry/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Core Geometry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CorePlotting Library</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/Entity/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Entity Library</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/DeepLearning/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Learning</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/model_wrapper_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Creating a C++ Model Wrapper</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/aot_inductor_tutorial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AOT Inductor Export Tutorial</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/static_input_capture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Static Input Capture &amp; Preview (Phase 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/recurrent_inputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recurrent (Feedback) Inputs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/hybrid_sequence_inputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hybrid Sequence Inputs (Phase 5)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/batch_mode_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Batch Mode &amp; Multi-Variant Model Loading</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/batch_inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Batch Range Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/background_inference_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Background Inference Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/background_inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Background Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/general_encoder.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">General Encoder Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/post_encoder_modules.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Post-Encoder Feature Extraction Modules</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DeepLearning/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Learning Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/transforms_v2/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Transforms V2</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/transforms_v2/architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/transforms_v2/adding_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Adding New Transforms</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/ParameterSchema/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ParameterSchema</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ParameterSchema/enum_variant_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Enum &amp; Variant Support — Roadmap</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+ <span class="menu-text">Data Synthesizer</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/GeneratorRegistry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generator Registry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DataSynthesizer Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text">Generators</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Generators/Analog.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Analog Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Generators/DigitalEvent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Digital Event Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Generators/DigitalInterval.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Digital Interval Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Generators/Spatial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Generators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataSynthesizer/Generators/MotionModels.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Motion Models</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <span class="sidebar-item-text sidebar-link text-start">
+ <span class="menu-text">Media Processing Pipeline</span></span>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Inspectors</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/data_inspectors/tensor_inspector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tensor Inspector (Dev)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/data_inspectors/digital_event_series_inspector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DigitalEventSeries Inspector</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Management</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/data_manager.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">File IO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/IO/mask_csv_rle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mask Data CSV (RLE) Loader</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/IO/csv_line_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CSV Line Data I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/IO/capnproto_line_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CapnProto Binary Line Data I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/IO/opencv_mask_image.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">OpenCV Binary Image Mask I/O</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/IO/saver_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SaverInfo &amp; AtomicWrite</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/data_structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Structure Performance</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/binary_loading_performance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Binary Multi-Channel Loading Performance Analysis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/generic_time_series.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generic Time Series Programming</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/storage_architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/storage_testing_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Testing Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/storage_benchmarking_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Storage Backend Benchmarking Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/concurrency_architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concurrency Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/threaded_loading_roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Threaded Loading Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/DataManager/Commands/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Architecture</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Architecture Roadmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/core_types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Core Types &amp; Factory</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/sequence_execution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Variable Substitution &amp; Sequence Execution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/get_entity_ids_in_range.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">getEntityIdsInRange Helpers</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/commands.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Concrete Commands</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/save_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SaveData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/load_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">LoadData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/synthesize_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SynthesizeData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/command_introspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Introspection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/gui_verb_audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GUI Verb Audit (Step 1.10)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/widget_save_refactoring_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refactoring Guide: Widget Export to SaveData Command</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/data_manager_snapshot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DataManagerSnapshot</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/DataManager/Commands/command_log_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command Log Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">Triage Session</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/TriageSession/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TriageSession</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true">
+ <span class="menu-text">User Interface</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/data_manager/data_manager_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/data_transform/data_transform_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Transform Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/media_widget/media_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/ui/media_widget/media_point_widget.qmd</span>
+  </li>
+          <li class="sidebar-item">
+ <span class="menu-text">developer/ui/media_widget/media_line_widget.qmd</span>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/TriageSession_Widget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TriageSession Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/ui/Features/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Features</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Collapsible Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/autoparam.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AutoParam System</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../../developer/ui/Plots/plot_widget_guide.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Plot Widgets</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-15" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false">
+ <span class="menu-text">Common</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-16" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/Common/ColormapControls/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ColormapControls</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/Common/TooltipManager/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TooltipManager</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/3DPlot/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/ACFWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ACF Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/DataViewerWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Viewer Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Event Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/HeatmapWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Heatmap Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/LinePlotWidget/index.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Line Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/OnionSkinViewWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Onion Skin View Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/PSTHWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PSTH Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/ScatterPlotWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Scatter Plot Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/SpectrogramWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spectrogram Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Temporal Projection View Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#line-plot-widget-overview" id="toc-line-plot-widget-overview" class="nav-link active" data-scroll-target="#line-plot-widget-overview">Line Plot Widget Overview</a></li>
+  <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a>
+  <ul class="collapse">
+  <li><a href="#component-overview" id="toc-component-overview" class="nav-link" data-scroll-target="#component-overview">Component Overview</a></li>
+  <li><a href="#editorstate-pattern" id="toc-editorstate-pattern" class="nav-link" data-scroll-target="#editorstate-pattern">EditorState Pattern</a></li>
+  </ul></li>
+  <li><a href="#state-management" id="toc-state-management" class="nav-link" data-scroll-target="#state-management">State Management</a>
+  <ul class="collapse">
+  <li><a href="#lineplotstatedata" id="toc-lineplotstatedata" class="nav-link" data-scroll-target="#lineplotstatedata">LinePlotStateData</a></li>
+  <li><a href="#per-series-options" id="toc-per-series-options" class="nav-link" data-scroll-target="#per-series-options">Per-Series Options</a></li>
+  <li><a href="#signal-architecture" id="toc-signal-architecture" class="nav-link" data-scroll-target="#signal-architecture">Signal Architecture</a></li>
+  <li><a href="#composition-with-plotalignmentstate" id="toc-composition-with-plotalignmentstate" class="nav-link" data-scroll-target="#composition-with-plotalignmentstate">Composition with PlotAlignmentState</a></li>
+  <li><a href="#composition-with-axis-states" id="toc-composition-with-axis-states" class="nav-link" data-scroll-target="#composition-with-axis-states">Composition with Axis States</a></li>
+  </ul></li>
+  <li><a href="#rendering-pipeline" id="toc-rendering-pipeline" class="nav-link" data-scroll-target="#rendering-pipeline">Rendering Pipeline</a>
+  <ul class="collapse">
+  <li><a href="#data-flow" id="toc-data-flow" class="nav-link" data-scroll-target="#data-flow">Data Flow</a></li>
+  <li><a href="#gatherresult-integration" id="toc-gatherresult-integration" class="nav-link" data-scroll-target="#gatherresult-integration">GatherResult Integration</a></li>
+  <li><a href="#scene-building" id="toc-scene-building" class="nav-link" data-scroll-target="#scene-building">Scene Building</a></li>
+  <li><a href="#batch-line-rendering-system" id="toc-batch-line-rendering-system" class="nav-link" data-scroll-target="#batch-line-rendering-system">Batch Line Rendering System</a>
+  <ul class="collapse">
+  <li><a href="#per-line-color-overrides" id="toc-per-line-color-overrides" class="nav-link" data-scroll-target="#per-line-color-overrides">Per-Line Color Overrides</a></li>
+  <li><a href="#line-state-colors" id="toc-line-state-colors" class="nav-link" data-scroll-target="#line-state-colors">Line State Colors</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#interaction" id="toc-interaction" class="nav-link" data-scroll-target="#interaction">Interaction</a>
+  <ul class="collapse">
+  <li><a href="#zoom-and-pan" id="toc-zoom-and-pan" class="nav-link" data-scroll-target="#zoom-and-pan">Zoom and Pan</a></li>
+  <li><a href="#double-click" id="toc-double-click" class="nav-link" data-scroll-target="#double-click">Double Click</a></li>
+  <li><a href="#line-selection" id="toc-line-selection" class="nav-link" data-scroll-target="#line-selection">Line Selection</a></li>
+  </ul></li>
+  <li><a href="#axis-system" id="toc-axis-system" class="nav-link" data-scroll-target="#axis-system">Axis System</a>
+  <ul class="collapse">
+  <li><a href="#time-axis-x" id="toc-time-axis-x" class="nav-link" data-scroll-target="#time-axis-x">Time Axis (X)</a></li>
+  <li><a href="#value-axis-y" id="toc-value-axis-y" class="nav-link" data-scroll-target="#value-axis-y">Value Axis (Y)</a></li>
+  </ul></li>
+  <li><a href="#properties-panel" id="toc-properties-panel" class="nav-link" data-scroll-target="#properties-panel">Properties Panel</a>
+  <ul class="collapse">
+  <li><a href="#alignment-section" id="toc-alignment-section" class="nav-link" data-scroll-target="#alignment-section">Alignment Section</a></li>
+  <li><a href="#series-management" id="toc-series-management" class="nav-link" data-scroll-target="#series-management">Series Management</a></li>
+  <li><a href="#per-series-options-1" id="toc-per-series-options-1" class="nav-link" data-scroll-target="#per-series-options-1">Per-Series Options</a></li>
+  <li><a href="#axis-range-controls" id="toc-axis-range-controls" class="nav-link" data-scroll-target="#axis-range-controls">Axis Range Controls</a></li>
+  </ul></li>
+  <li><a href="#relationship-to-other-widgets" id="toc-relationship-to-other-widgets" class="nav-link" data-scroll-target="#relationship-to-other-widgets">Relationship to Other Widgets</a></li>
+  <li><a href="#group-management" id="toc-group-management" class="nav-link" data-scroll-target="#group-management">Group Management</a>
+  <ul class="collapse">
+  <li><a href="#groupmanager-integration" id="toc-groupmanager-integration" class="nav-link" data-scroll-target="#groupmanager-integration">GroupManager Integration</a></li>
+  <li><a href="#trial-entityid-mapping" id="toc-trial-entityid-mapping" class="nav-link" data-scroll-target="#trial-entityid-mapping">Trial → EntityID Mapping</a></li>
+  <li><a href="#context-menu" id="toc-context-menu" class="nav-link" data-scroll-target="#context-menu">Context Menu</a></li>
+  <li><a href="#group-coloring" id="toc-group-coloring" class="nav-link" data-scroll-target="#group-coloring">Group Coloring</a></li>
+  <li><a href="#shared-infrastructure" id="toc-shared-infrastructure" class="nav-link" data-scroll-target="#shared-infrastructure">Shared Infrastructure</a></li>
+  </ul></li>
+  <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a>
+  <ul class="collapse">
+  <li><a href="#test-files" id="toc-test-files" class="nav-link" data-scroll-target="#test-files">Test Files</a></li>
+  </ul></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../../developer/ui/data_manager/data_manager_widget.html">User Interface</a></li><li class="breadcrumb-item"><a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widgets</a></li><li class="breadcrumb-item"><a href="../../../../developer/ui/Plots/LinePlotWidget/index.html">Line Plot Widget</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Line Plot Widget</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="line-plot-widget-overview" class="level1">
+<h1>Line Plot Widget Overview</h1>
+<p>The <strong>Line Plot Widget</strong> renders <strong>trial-aligned line plots</strong> of continuous analog signals (<code>AnalogTimeSeries</code>), aligned to a user-selected reference event or interval. Each trial produces a line showing the signal value over relative time, with all trials overlaid in the same coordinate space. This is useful for visualizing signals such as ΔF/F calcium traces aligned to a repeated stimulus, or tongue area aligned to lick onset.</p>
+<p>Users can overlay multiple <code>AnalogTimeSeries</code>, configure per-series line appearance (thickness, color), and interact with the plot via zoom, pan, and line selection. Selected lines (trials) can be used for downstream analysis such as adding trials to entity groups.</p>
+</section>
+<section id="architecture" class="level1">
+<h1>Architecture</h1>
+<p>The widget follows the standard plot widget directory layout:</p>
+<pre><code>Plots/LinePlotWidget/
+├── CMakeLists.txt
+├── LinePlotWidgetRegistration.hpp    # EditorRegistry registration module
+├── LinePlotWidgetRegistration.cpp
+├── Core/
+│   ├── LinePlotState.hpp             # QObject state class (EditorState subclass)
+│   ├── LinePlotState.cpp
+│   ├── LinePlotStateData.hpp         # Plain serializable struct (rfl-compatible)
+│   ├── ViewStateAdapter.hpp          # Helper for ViewState conversion
+│   └── ViewStateAdapter.cpp
+├── Rendering/
+│   ├── LinePlotOpenGLWidget.hpp      # OpenGL rendering + mouse interaction + line selection
+│   └── LinePlotOpenGLWidget.cpp
+└── UI/
+    ├── LinePlotWidget.hpp            # Main composite widget (axes + OpenGL + layout)
+    ├── LinePlotWidget.cpp
+    ├── LinePlotWidget.ui
+    ├── LinePlotPropertiesWidget.hpp  # Properties/settings panel
+    ├── LinePlotPropertiesWidget.cpp
+    └── LinePlotPropertiesWidget.ui</code></pre>
+<section id="component-overview" class="level2">
+<h2 class="anchored" data-anchor-id="component-overview">Component Overview</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>LinePlotWidget</code> (UI)</td>
+<td>Top-level Qt widget — composes OpenGL canvas, relative time axis, vertical axis</td>
+</tr>
+<tr class="even">
+<td><code>LinePlotPropertiesWidget</code> (UI)</td>
+<td>Properties panel — alignment settings, series management, line options (thickness, color), axis range controls</td>
+</tr>
+<tr class="odd">
+<td><code>LinePlotOpenGLWidget</code> (Rendering)</td>
+<td>OpenGL canvas — batch line rendering, mouse interaction, line selection via intersection</td>
+</tr>
+<tr class="even">
+<td><code>LinePlotState</code> (Core)</td>
+<td>Serializable state — alignment, view state, per-series line options</td>
+</tr>
+<tr class="odd">
+<td><code>LinePlotStateData</code> (Core)</td>
+<td>Plain struct for serialization via <code>rfl::json</code> (separated for fuzz testing)</td>
+</tr>
+<tr class="even">
+<td><code>ViewStateAdapter</code> (Core)</td>
+<td>Converts <code>LinePlotViewState</code> to <code>CorePlotting::ViewState</code></td>
+</tr>
+<tr class="odd">
+<td><code>LinePlotWidgetRegistration</code></td>
+<td>Registers type with <code>EditorRegistry</code> (state, view, properties factories)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="editorstate-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="editorstate-pattern">EditorState Pattern</h2>
+<p>The Line Plot Widget follows the project’s <strong>EditorState</strong> architecture:</p>
+<ul>
+<li><code>LinePlotState</code> inherits from <code>EditorState</code></li>
+<li>Registered with <code>EditorRegistry</code> via <code>LinePlotWidgetModule::registerTypes()</code></li>
+<li><code>LinePlotWidget</code> is the <strong>view</strong> factory, <code>LinePlotPropertiesWidget</code> is the <strong>properties</strong> factory</li>
+<li>Both share the same <code>LinePlotState</code> instance</li>
+<li>Properties placed in Right zone, view placed in Center zone (default)</li>
+<li>The <code>create_editor_custom</code> factory in <code>LinePlotWidgetRegistration</code> handles coupling the view and properties widgets (connecting range controls and forwarding <code>timePositionSelected</code> to <code>EditorRegistry::setCurrentTime()</code>)</li>
+</ul>
+</section>
+</section>
+<section id="state-management" class="level1">
+<h1>State Management</h1>
+<section id="lineplotstatedata" class="level2">
+<h2 class="anchored" data-anchor-id="lineplotstatedata">LinePlotStateData</h2>
+<p>The serializable state struct is defined in a <strong>separate header</strong> (<code>LinePlotStateData.hpp</code>) from the Qt state class. This separation allows fuzz testing to include the data struct without Qt dependencies:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LinePlotOptions <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string series_key<span class="op">;</span>          <span class="co">///&lt; Key of the AnalogTimeSeries to plot</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> line_thickness <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span>     <span class="co">///&lt; Thickness of the line</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string hex_color <span class="op">=</span> <span class="st">"#000000"</span><span class="op">;</span> <span class="co">///&lt; Color as hex string</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LinePlotStateData <span class="op">{</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string instance_id<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string display_name <span class="op">=</span> <span class="st">"Line Plot"</span><span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData alignment<span class="op">;</span>                              <span class="co">// Shared alignment config</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> LinePlotOptions<span class="op">&gt;</span> plot_series<span class="op">;</span>      <span class="co">// Per-series options</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>ViewStateData view_state<span class="op">;</span>                   <span class="co">// Zoom, pan, bounds</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    RelativeTimeAxisStateData time_axis<span class="op">;</span>                      <span class="co">// Time axis range</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    VerticalAxisStateData vertical_axis<span class="op">;</span>                      <span class="co">// Vertical axis range</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="per-series-options" class="level2">
+<h2 class="anchored" data-anchor-id="per-series-options">Per-Series Options</h2>
+<p>Each overlaid <code>AnalogTimeSeries</code> has independent display options via <code>LinePlotOptions</code>:</p>
+<ul>
+<li><strong><code>series_key</code></strong> — DataManager key of the <code>AnalogTimeSeries</code></li>
+<li><strong><code>line_thickness</code></strong> — Line width (default: 1.0)</li>
+<li><strong><code>hex_color</code></strong> — Color as hex string (default: black)</li>
+</ul>
+<p>Series are stored in a <code>std::map&lt;std::string, LinePlotOptions&gt;</code> keyed by a user-assigned name (currently the same as the series key). The state emits per-series signals (<code>plotSeriesAdded</code>, <code>plotSeriesRemoved</code>, <code>plotSeriesOptionsChanged</code>) so the UI and renderer can react granularly.</p>
+</section>
+<section id="signal-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="signal-architecture">Signal Architecture</h2>
+<p>LinePlotState emits category-level signals to minimize coupling complexity:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 47%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Signal</th>
+<th>Trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>alignmentEventKeyChanged</code></td>
+<td>Alignment event/interval key changed</td>
+</tr>
+<tr class="even">
+<td><code>intervalAlignmentTypeChanged</code></td>
+<td>Interval alignment type changed</td>
+</tr>
+<tr class="odd">
+<td><code>offsetChanged</code></td>
+<td>Alignment offset changed</td>
+</tr>
+<tr class="even">
+<td><code>windowSizeChanged</code></td>
+<td>Window size changed (also resets zoom/pan to fit)</td>
+</tr>
+<tr class="odd">
+<td><code>plotSeriesAdded</code> / <code>plotSeriesRemoved</code> / <code>plotSeriesOptionsChanged</code></td>
+<td>Per-series changes</td>
+</tr>
+<tr class="even">
+<td><code>viewStateChanged</code></td>
+<td>Zoom, pan, or bounds changed (view transform only — no scene rebuild)</td>
+</tr>
+<tr class="odd">
+<td><code>colorByGroupChanged</code></td>
+<td>Color-by-group toggle changed</td>
+</tr>
+<tr class="even">
+<td><code>seriesStyleChanged</code></td>
+<td>Per-series line style (color, thickness) changed</td>
+</tr>
+<tr class="odd">
+<td><code>stateChanged</code> (inherited)</td>
+<td>Any change requiring scene rebuild</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Performance-critical separation</strong>: Zoom and pan operations emit only <code>viewStateChanged()</code>, which updates the projection matrix without triggering an expensive scene rebuild via <code>stateChanged()</code>.</p>
+</section>
+<section id="composition-with-plotalignmentstate" class="level2">
+<h2 class="anchored" data-anchor-id="composition-with-plotalignmentstate">Composition with PlotAlignmentState</h2>
+<p><code>LinePlotState</code> owns a <code>PlotAlignmentState</code> instance that manages alignment settings (event key, interval alignment type, offset, window size). This is the same shared component used by <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a>, <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a>, and <a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">HeatmapWidget</a>, ensuring consistent alignment behavior across all trial-aligned plot types.</p>
+</section>
+<section id="composition-with-axis-states" class="level2">
+<h2 class="anchored" data-anchor-id="composition-with-axis-states">Composition with Axis States</h2>
+<p><code>LinePlotState</code> owns both:</p>
+<ul>
+<li><strong><code>RelativeTimeAxisState</code></strong> — for the X-axis (relative time centered at t = 0). Synchronized bidirectionally with the view state using the “silent update” pattern described in the <a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a>.</li>
+<li><strong><code>VerticalAxisState</code></strong> — for the Y-axis (signal value). The Y bounds are auto-adjusted when the scene rebuilds to encompass the min/max signal values across all trials (with 5% padding).</li>
+</ul>
+</section>
+</section>
+<section id="rendering-pipeline" class="level1">
+<h1>Rendering Pipeline</h1>
+<section id="data-flow" class="level2">
+<h2 class="anchored" data-anchor-id="data-flow">Data Flow</h2>
+<pre><code>LinePlotState (alignment settings + per-series options)
+        ↓
+GatherResult&lt;AnalogTimeSeries&gt; (trial-aligned views)
+        ↓
+Y/X bounds computation (auto-fit from data)
+        ↓
+CorePlotting::buildLineBatchFromGatherResult() → LineBatchData
+        ↓
+PlottingOpenGL::BatchLineStore (GPU upload)
+        ↓
+PlottingOpenGL::BatchLineRenderer::render()</code></pre>
+</section>
+<section id="gatherresult-integration" class="level2">
+<h2 class="anchored" data-anchor-id="gatherresult-integration">GatherResult Integration</h2>
+<p>Trial alignment uses the shared <code>GatherResult</code> infrastructure from DataManager. The <code>LinePlotOpenGLWidget::gatherTrialData()</code> method:</p>
+<ol type="1">
+<li>Reads the first series key from the plot series list</li>
+<li>Gets alignment settings from <code>LinePlotState::alignmentState()</code></li>
+<li>Calls <code>WhiskerToolbox::Plots::createAlignedGatherResult&lt;AnalogTimeSeries&gt;()</code> using the shared <code>PlotAlignmentGather</code> utility</li>
+<li>Returns a <code>GatherResult&lt;AnalogTimeSeries&gt;</code> where each element is a trial view of the signal</li>
+</ol>
+<p>This uses the same template-based <code>GatherResult</code> pattern as <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a> (for <code>DigitalEventSeries</code>) and <a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">HeatmapWidget</a>.</p>
+</section>
+<section id="scene-building" class="level2">
+<h2 class="anchored" data-anchor-id="scene-building">Scene Building</h2>
+<p>The <code>LinePlotOpenGLWidget</code> manages the full rendering lifecycle:</p>
+<ol type="1">
+<li><strong>Scene rebuild</strong> (on <code>stateChanged</code>): Gathers trial data, computes auto-fit bounds, builds <code>LineBatchData</code> via <code>CorePlotting::buildLineBatchFromGatherResult()</code>, restores selection masks, and uploads to <code>BatchLineStore</code></li>
+<li><strong>View update</strong> (on <code>viewStateChanged</code>): Updates only the projection matrix — no data re-gathering</li>
+<li><strong>Paint</strong> (on <code>paintGL</code>): Renders the cached batch lines through <code>BatchLineRenderer</code>, plus the <code>SceneRenderer</code> for overlays (axes, grids — future), and the selection preview line if actively selecting</li>
+</ol>
+<p>Auto-fit bounds are computed by scanning all trial data for min/max X (relative time) and Y (signal value), with 5% vertical padding. Bounds are applied to the state via <code>setXBounds()</code> and <code>setYBounds()</code>.</p>
+</section>
+<section id="batch-line-rendering-system" class="level2">
+<h2 class="anchored" data-anchor-id="batch-line-rendering-system">Batch Line Rendering System</h2>
+<p>The LinePlotWidget uses a specialized <strong>batch line rendering</strong> pipeline distinct from the <code>SceneRenderer</code> used by other plot types:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 36%">
+<col style="width: 33%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>LineBatchData</code></td>
+<td><code>CorePlotting/LineBatch/</code></td>
+<td>CPU-side flat segment representation</td>
+</tr>
+<tr class="even">
+<td><code>LineBatchBuilder</code></td>
+<td><code>CorePlotting/LineBatch/</code></td>
+<td>Builds <code>LineBatchData</code> from <code>GatherResult&lt;AnalogTimeSeries&gt;</code> or <code>LineData</code></td>
+</tr>
+<tr class="odd">
+<td><code>BatchLineStore</code></td>
+<td><code>PlottingOpenGL/LineBatch/</code></td>
+<td>GPU buffer management for line segments</td>
+</tr>
+<tr class="even">
+<td><code>BatchLineRenderer</code></td>
+<td><code>PlottingOpenGL/LineBatch/</code></td>
+<td>Renders batch lines with per-line coloring (normal, selected, hover states)</td>
+</tr>
+<tr class="odd">
+<td><code>ILineBatchIntersector</code></td>
+<td><code>CorePlotting/LineBatch/</code></td>
+<td>Interface for line-vs-segment intersection</td>
+</tr>
+<tr class="even">
+<td><code>CpuLineBatchIntersector</code></td>
+<td><code>CorePlotting/LineBatch/</code></td>
+<td>CPU-based brute-force intersector (fallback)</td>
+</tr>
+<tr class="odd">
+<td><code>ComputeShaderIntersector</code></td>
+<td><code>PlottingOpenGL/LineBatch/</code></td>
+<td>GPU compute shader intersector (GL 4.3+)</td>
+</tr>
+</tbody>
+</table>
+<p>This infrastructure is <strong>shared with</strong> <a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html">TemporalProjectionViewWidget</a>, which uses the same <code>LineBatchData</code> / <code>BatchLineRenderer</code> / intersection system for rendering and selecting <code>LineData</code> entities.</p>
+<section id="per-line-color-overrides" class="level3">
+<h3 class="anchored" data-anchor-id="per-line-color-overrides">Per-Line Color Overrides</h3>
+<p>The <code>BatchLineRenderer</code> supports per-line color overrides via a <code>vec4</code> vertex attribute at location 3. When the alpha component is &gt; 0, the override color is used instead of the global color. The fragment shader applies the following priority:</p>
+<ol type="1">
+<li><strong>Hover color</strong> (highest priority)</li>
+<li><strong>Selected color</strong></li>
+<li><strong>Group/per-line override</strong> (alpha &gt; 0)</li>
+<li><strong>Global color</strong> (fallback)</li>
+</ol>
+<p>This is used for group-based coloring (see <a href="#group-management">Group Management</a>) and will support external feature coloring and multi-series rendering in the future.</p>
+</section>
+<section id="line-state-colors" class="level3">
+<h3 class="anchored" data-anchor-id="line-state-colors">Line State Colors</h3>
+<p>The <code>BatchLineRenderer</code> supports three visual states per line:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 48%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>State</th>
+<th>Default Color</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Normal</td>
+<td>Semi-transparent blue (0.3, 0.5, 1.0, 0.6)</td>
+<td>Unselected trial lines</td>
+</tr>
+<tr class="even">
+<td>Selected</td>
+<td>Bright red (1.0, 0.2, 0.2, 1.0)</td>
+<td>Lines crossed by selection stroke</td>
+</tr>
+<tr class="odd">
+<td>Hover</td>
+<td>Yellow (1.0, 1.0, 0.0, 1.0)</td>
+<td>Mouse hover (not yet implemented)</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+<section id="interaction" class="level1">
+<h1>Interaction</h1>
+<section id="zoom-and-pan" class="level2">
+<h2 class="anchored" data-anchor-id="zoom-and-pan">Zoom and Pan</h2>
+<p>The widget supports separated X/Y zoom for independent exploration of time and value dimensions, using the shared <code>PlotInteractionHelpers</code>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Input</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mouse wheel</td>
+<td>X-zoom only (time axis)</td>
+</tr>
+<tr class="even">
+<td>Shift + wheel</td>
+<td>Y-zoom only (value axis)</td>
+</tr>
+<tr class="odd">
+<td>Ctrl + wheel</td>
+<td>Uniform zoom (both axes)</td>
+</tr>
+<tr class="even">
+<td>Click + drag</td>
+<td>Pan in both axes</td>
+</tr>
+</tbody>
+</table>
+<p>The interaction delegates to <code>WhiskerToolbox::Plots::handlePanning()</code> and <code>WhiskerToolbox::Plots::handleZoom()</code> from <code>PlotInteractionHelpers</code>, which are shared across all OpenGL plot widgets. A <code>DRAG_THRESHOLD</code> of 4 pixels prevents accidental pans during clicks.</p>
+<p>Zoom and pan update only the view projection (no scene rebuild), providing smooth interactive performance.</p>
+</section>
+<section id="double-click" class="level2">
+<h2 class="anchored" data-anchor-id="double-click">Double Click</h2>
+<p>Double-clicking converts the clicked relative time position to an absolute time using the first trial’s alignment time, then emits <code>plotDoubleClicked(absolute_time, series_key)</code>. The parent <code>LinePlotWidget</code> converts this to a <code>TimePosition</code> and forwards to <code>EditorRegistry::setCurrentTime()</code>, navigating other time-synced widgets.</p>
+</section>
+<section id="line-selection" class="level2">
+<h2 class="anchored" data-anchor-id="line-selection">Line Selection</h2>
+<p>The LinePlotWidget supports <strong>line selection</strong> via a freehand intersection stroke, allowing the user to select specific trials from the overlaid lines:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 46%">
+<col style="width: 53%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Input</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ctrl + Click + Drag</td>
+<td>Draw selection stroke — intersected lines are selected</td>
+</tr>
+<tr class="even">
+<td>Shift + Ctrl + Click + Drag</td>
+<td>Remove mode — intersected lines are deselected</td>
+</tr>
+<tr class="odd">
+<td>Ctrl key release during drag</td>
+<td>Cancel selection</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Selection flow:</strong></p>
+<ol type="1">
+<li><code>startSelection()</code> — records start position in NDC, sets cursor to crosshair</li>
+<li><code>updateSelection()</code> — tracks endpoint, triggers repaint to show preview line</li>
+<li><code>completeSelection()</code> — runs intersection query, applies results, emits <code>trialsSelected()</code></li>
+</ol>
+<p>The intersection uses the <code>ILineBatchIntersector</code> interface with two backends:</p>
+<ul>
+<li><strong>GPU compute shader</strong> (<code>ComputeShaderIntersector</code>) — used when OpenGL 4.3+ is available</li>
+<li><strong>CPU fallback</strong> (<code>CpuLineBatchIntersector</code>) — brute-force segment-vs-segment test</li>
+</ul>
+<p>The selection preview is rendered as a <code>GlyphPreview::Line</code> via <code>SceneRenderer::renderPreview()</code> — white for add mode, red for remove mode.</p>
+<p>This selection infrastructure is <strong>shared with</strong> <a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html">TemporalProjectionViewWidget</a> via <code>LineSelectionHelpers</code>. The shared helpers handle:</p>
+<ul>
+<li>Building, the preview glyph (<code>buildLineSelectionPreview()</code>)</li>
+<li>Running the intersection query (<code>runLineSelectionIntersection()</code>)</li>
+</ul>
+<p>Widget-specific logic (mapping hit indices to trial indices vs.&nbsp;entity IDs) remains in each widget.</p>
+<p>Selected trial indices are emitted via <code>trialsSelected(std::vector&lt;uint32_t&gt;)</code> and preserved across scene rebuilds by restoring the selection mask from the cached indices.</p>
+</section>
+</section>
+<section id="axis-system" class="level1">
+<h1>Axis System</h1>
+<section id="time-axis-x" class="level2">
+<h2 class="anchored" data-anchor-id="time-axis-x">Time Axis (X)</h2>
+<p>Uses the shared <code>RelativeTimeAxisWidget</code> with <code>RelativeTimeAxisState</code>. The axis is synchronized bidirectionally with the view state:</p>
+<ul>
+<li><strong>User changes axis range</strong> → view state updates → scene rebuilds (via <code>rangeChanged</code>)</li>
+<li><strong>User zooms/pans</strong> → axis range updates silently via <code>setRangeSilent()</code> (no feedback loop)</li>
+</ul>
+<p>See <a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a> for full axis integration details including the “Silent Update” pattern.</p>
+</section>
+<section id="value-axis-y" class="level2">
+<h2 class="anchored" data-anchor-id="value-axis-y">Value Axis (Y)</h2>
+<p>Uses <code>VerticalAxisWidget</code> with <code>VerticalAxisState</code>. The Y bounds are <strong>auto-adjusted</strong> when the scene rebuilds:</p>
+<ul>
+<li>After scanning all trial data, <code>y_min</code> and <code>y_max</code> are set to the signal extremes with 5% padding</li>
+<li>This triggers a vertical axis range update via <code>LinePlotState::setYBounds()</code></li>
+</ul>
+<p>Both axis widgets provide collapsible range control sections (<code>RelativeTimeAxisRangeControls</code> and <code>VerticalAxisRangeControls</code>) that are inserted into the properties panel when <code>setPlotWidget()</code> is called.</p>
+</section>
+</section>
+<section id="properties-panel" class="level1">
+<h1>Properties Panel</h1>
+<p>The <code>LinePlotPropertiesWidget</code> provides the following controls:</p>
+<section id="alignment-section" class="level2">
+<h2 class="anchored" data-anchor-id="alignment-section">Alignment Section</h2>
+<p>Uses the shared <code>PlotAlignmentWidget</code> component (same as <a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a>, <a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a>, and <a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">HeatmapWidget</a>). Provides:</p>
+<ul>
+<li>Alignment event combo box (populated with <code>DigitalEventSeries</code> and <code>DigitalIntervalSeries</code> keys)</li>
+<li>Interval alignment type (Beginning/End)</li>
+<li>Offset control</li>
+<li>Window size control</li>
+</ul>
+</section>
+<section id="series-management" class="level2">
+<h2 class="anchored" data-anchor-id="series-management">Series Management</h2>
+<p>The properties panel includes:</p>
+<ol type="1">
+<li><strong>Add series combo box</strong> — lists all <code>AnalogTimeSeries</code> keys from the DataManager</li>
+<li><strong>Add button</strong> — adds the selected key as a new plot series</li>
+<li><strong>Series table</strong> — two-column table (Series Name, Data Key) with single-row selection</li>
+<li><strong>Remove button</strong> — removes the selected series from the plot</li>
+</ol>
+<p>The combo box is kept in sync with the DataManager via the standard observer pattern (see <a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a>).</p>
+</section>
+<section id="per-series-options-1" class="level2">
+<h2 class="anchored" data-anchor-id="per-series-options-1">Per-Series Options</h2>
+<p>When a series is selected in the table, the options panel shows:</p>
+<ul>
+<li><strong>Line thickness spinbox</strong> — adjusts the line width</li>
+<li><strong>Color button</strong> — opens a <code>QColorDialog</code> for color selection</li>
+<li><strong>Color display</strong> — shows the current color as a styled button</li>
+</ul>
+</section>
+<section id="axis-range-controls" class="level2">
+<h2 class="anchored" data-anchor-id="axis-range-controls">Axis Range Controls</h2>
+<p>Created when <code>setPlotWidget()</code> is called:</p>
+<ul>
+<li><strong>Time Axis Range Controls</strong> — <code>RelativeTimeAxisRangeControls</code> in a collapsible <code>Section</code></li>
+<li><strong>Vertical Axis Range Controls</strong> — <code>VerticalAxisRangeControls</code> in a collapsible <code>Section</code></li>
+</ul>
+</section>
+</section>
+<section id="relationship-to-other-widgets" class="level1">
+<h1>Relationship to Other Widgets</h1>
+<p>The Line Plot Widget shares significant infrastructure with sibling trial-aligned plot types:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Shared Component</th>
+<th>LinePlot</th>
+<th><a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a></th>
+<th><a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a></th>
+<th><a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">HeatmapWidget</a></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>PlotAlignmentWidget</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td><code>PlotAlignmentState</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td><code>RelativeTimeAxisWidget</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td><code>GatherResult</code></td>
+<td>Yes (<code>AnalogTimeSeries</code>)</td>
+<td>Yes (<code>DigitalEventSeries</code>)</td>
+<td>Yes (<code>DigitalEventSeries</code>)</td>
+<td>Yes (<code>DigitalEventSeries</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>PlotInteractionHelpers</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>OpenGL rendering</td>
+<td><code>BatchLineRenderer</code></td>
+<td><code>SceneRenderer</code></td>
+<td><code>SceneRenderer</code></td>
+<td><code>SceneRenderer</code></td>
+</tr>
+</tbody>
+</table>
+<p>Additionally, the LinePlotWidget shares <strong>line selection infrastructure</strong> uniquely with <a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html">TemporalProjectionViewWidget</a>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Shared Component</th>
+<th>LinePlot</th>
+<th><a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html">TemporalProjectionViewWidget</a></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>LineBatchData</code></td>
+<td>Yes (trials)</td>
+<td>Yes (entities)</td>
+</tr>
+<tr class="even">
+<td><code>LineBatchBuilder</code></td>
+<td>Yes (<code>buildLineBatchFromGatherResult</code>)</td>
+<td>Yes (<code>buildLineBatchFromLineData</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>BatchLineStore</code> / <code>BatchLineRenderer</code></td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td><code>ILineBatchIntersector</code> (CPU/GPU)</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td><code>LineSelectionHelpers</code></td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The key architectural distinction: LinePlotWidget maps selection results to <strong>trial indices</strong> (0-based into <code>GatherResult</code>), while TemporalProjectionViewWidget maps them to <strong>entity IDs</strong>.</p>
+</section>
+<section id="group-management" class="level1">
+<h1>Group Management</h1>
+<p>The LinePlotWidget integrates with the application-wide <code>GroupManager</code> to allow users to assign selected trials to entity groups and visualize group membership via per-line coloring.</p>
+<section id="groupmanager-integration" class="level2">
+<h2 class="anchored" data-anchor-id="groupmanager-integration">GroupManager Integration</h2>
+<p>A <code>GroupManager*</code> is passed to <code>LinePlotWidget</code> via <code>setGroupManager()</code> during widget creation in <code>LinePlotWidgetRegistration</code>. The <code>LinePlotOpenGLWidget</code> connects to the <code>GroupManager</code>’s <code>groupCreated</code>, <code>groupRemoved</code>, and <code>groupModified</code> signals to reactively update the display.</p>
+</section>
+<section id="trial-entityid-mapping" class="level2">
+<h2 class="anchored" data-anchor-id="trial-entityid-mapping">Trial → EntityID Mapping</h2>
+<p>Each trial in the displayed <code>GatherResult</code> corresponds to an alignment event. The alignment times are cached in <code>_cached_alignment_times</code> during <code>rebuildScene()</code>. The mapping is:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>EntityId<span class="op">{</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint64_t</span><span class="op">&gt;(</span>alignment_time_at_trial_index<span class="op">)}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This enables both the context menu (adding selected trials to groups) and group color lookups.</p>
+</section>
+<section id="context-menu" class="level2">
+<h2 class="anchored" data-anchor-id="context-menu">Context Menu</h2>
+<p>Right-clicking the plot opens a context menu powered by the shared <code>GroupContextMenuHandler</code> (from <code>GroupContextMenu/</code>). The handler uses <code>GroupContextMenuCallbacks</code> to query the widget for:</p>
+<ul>
+<li><code>getSelectedEntities()</code> — maps selected trial indices to <code>EntityId</code>s</li>
+<li><code>hasSelection()</code> — whether any trials are selected</li>
+<li><code>clearSelection()</code> — clears selection state</li>
+<li><code>onGroupOperationCompleted()</code> — triggers scene rebuild after group changes</li>
+</ul>
+</section>
+<section id="group-coloring" class="level2">
+<h2 class="anchored" data-anchor-id="group-coloring">Group Coloring</h2>
+<p>When <code>color_by_group</code> is enabled (default), lines belonging to entity groups are colored according to the group’s assigned color. The <code>applyGroupColorsToLines()</code> method iterates over all lines, maps each to its entity and group, and uploads per-line color overrides to the <code>BatchLineRenderer</code>.</p>
+<p>Group color updates use a <strong>generation counter</strong> pattern: <code>paintGL()</code> checks <code>GroupManager::generation()</code> each frame and only re-applies colors when the generation changes, avoiding redundant GPU uploads.</p>
+<p>The <code>LinePlotPropertiesWidget</code> provides:</p>
+<ul>
+<li><strong>Selection instructions</strong> — describes Ctrl+Click drag for line selection (shared via <code>SelectionInstructions::lineCrossing()</code>)</li>
+<li><strong>“Color by group assignment” checkbox</strong> — toggles per-line group coloring on/off</li>
+</ul>
+</section>
+<section id="shared-infrastructure" class="level2">
+<h2 class="anchored" data-anchor-id="shared-infrastructure">Shared Infrastructure</h2>
+<p>The group management pattern is shared with <a href="../../../../developer/ui/Plots/ScatterPlotWidget/index.html">ScatterPlotWidget</a>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 47%">
+<col style="width: 27%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Shared Component</th>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>GroupContextMenuHandler</code></td>
+<td><code>GroupContextMenu/</code></td>
+<td>Populates context menu with group actions</td>
+</tr>
+<tr class="even">
+<td><code>GroupContextMenuCallbacks</code></td>
+<td><code>GroupContextMenu/</code></td>
+<td>Widget-specific selection/entity callbacks</td>
+</tr>
+<tr class="odd">
+<td><code>GroupManager</code></td>
+<td><code>GroupManagementWidget/</code></td>
+<td>Central group state with generation counter</td>
+</tr>
+<tr class="even">
+<td><code>SelectionInstructions</code></td>
+<td><code>Plots/Common/</code></td>
+<td>Selection mode help text</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="testing" class="level1">
+<h1>Testing</h1>
+<section id="test-files" class="level2">
+<h2 class="anchored" data-anchor-id="test-files">Test Files</h2>
+<ul>
+<li><code>tests/WhiskerToolbox/Plots/LinePlotWidget/LinePlotPropertiesWidget.test.cpp</code> — properties widget observer tests</li>
+<li><code>tests/WhiskerToolbox/Plots/Common/PlotWidgetCommonTests.test.cpp</code> — common template-based tests covering LinePlotWidget alongside EventPlotWidget and ACFWidget</li>
+</ul>
+<p>The common tests verify:</p>
+<ul>
+<li>Combo box population from DataManager</li>
+<li>Observer refresh on data addition/removal</li>
+<li>Destruction cleanup (no dangling observer)</li>
+<li>Stale key handling</li>
+</ul>
+<p>See <a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a> for full testing requirements.</p>
+</section>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<ul>
+<li><a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a> — Shared architecture, axis types, DataManager integration</li>
+<li><a href="../../../../developer/ui/Plots/EventPlotWidget/index.html">EventPlotWidget</a> — Trial-level raster plot; shares alignment and <code>GatherResult</code> infrastructure</li>
+<li><a href="../../../../developer/ui/Plots/PSTHWidget/index.html">PSTHWidget</a> — Aggregated histogram; shares alignment infrastructure</li>
+<li><a href="../../../../developer/ui/Plots/HeatmapWidget/index.html">HeatmapWidget</a> — Population heatmap; shares alignment infrastructure</li>
+<li><a href="../../../../developer/ui/Plots/TemporalProjectionViewWidget/index.html">TemporalProjectionViewWidget</a> — Shares batch line rendering and selection infrastructure</li>
+<li><a href="../../../../developer/ui/Plots/LinePlotWidget/roadmap.html">LinePlotWidget Roadmap</a> — Planned features and development phases</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

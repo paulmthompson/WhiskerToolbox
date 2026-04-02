@@ -1,37 +1,45 @@
 ---
 title: "How-To: Label Video Intervals"
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
 ## Goal
 
-You have a long video and want to label specific events or behaviors (e.g., whisker contacts,
-licking bouts, freezing episodes) by inspecting scattered regions of the video. You need to:
+You have a long video and want to label specific events or behaviors
+(e.g., whisker contacts, licking bouts, freezing episodes) by inspecting
+scattered regions of the video. You need to:
 
-- Record the intervals where you observed events.
-- Track which regions of the video you have actually inspected, so that unlabeled frames
-  *within* inspected regions are correctly treated as "no event" rather than "unknown."
+-   Record the intervals where you observed events.
+-   Track which regions of the video you have actually inspected, so
+    that unlabeled frames *within* inspected regions are correctly
+    treated as "no event" rather than "unknown."
 
-This distinction matters for training classifiers and computing metrics — frames you never
-looked at should not count as negative examples.
+This distinction matters for training classifiers and computing metrics
+— frames you never looked at should not count as negative examples.
 
 ## Prerequisites
 
-- A video loaded in the Media Viewer.
-- (Optional) An existing `DigitalIntervalSeries` or `DigitalEventSeries` if you want to add
-  labels to a pre-existing data object.
+-   A video loaded in the Media Viewer.
+-   (Optional) An existing `DigitalIntervalSeries` or
+    `DigitalEventSeries` if you want to add labels to a pre-existing
+    data object.
 
 ## Concepts
 
 This workflow uses two types of interval data:
 
-- **Label intervals** — The events you are marking (e.g., `contact_intervals`). Each interval
-  represents a region where the behavior occurred.
-- **Tracked regions** — The regions of the video you have *inspected*. Any frame inside a
-  tracked region that does not have a label is implicitly "no event." Frames outside all
-  tracked regions are "unknown."
+-   **Label intervals** — The events you are marking (e.g.,
+    `contact_intervals`). Each interval represents a region where the
+    behavior occurred.
+-   **Tracked regions** — The regions of the video you have *inspected*.
+    Any frame inside a tracked region that does not have a label is
+    implicitly "no event." Frames outside all tracked regions are
+    "unknown."
 
-The Triage Session Widget manages the tracked-regions bookkeeping automatically via the
-`AddInterval` command.
+The Triage Session Widget manages the tracked-regions bookkeeping
+automatically via the `AddInterval` command.
 
 ## Steps
 
@@ -41,9 +49,23 @@ Go to **View → Tools → Triage Session** to open the widget.
 
 ### 2. Create a Pipeline
 
-For interval labeling, the simplest pipeline just records the inspected region:
+A **pipeline** is a sequence of steps you wish to execute. In the Triage
+Widget, if you click "Mark", followed by "Commit", a pipeline of
+commands will be applyed to all frames between the Mark and Commit
+frames. In this scenario with labeling your behavior, you will most
+likely add the behavioral intervals in a sequence of frames (say between
+1 and 1000). At frame 1000, you may wish to skip to another part of the
+video for more diverse training data. It would be useful to add an
+interval to signify that you have manually classified all frames in this
+part of the video. To do this, on frame 1, you can set a **Mark**, and
+click Add Command... Select the **AddInterval** command. The pipeline
+will now be populated with this command - you can expand the dialogue to
+see the Interval Key, Start Frame and End Frame options. For Interval
+Key, type "tracked_regions". For Start Frame, use \${make_frame} and for
+End frame use \${current_frame}. You should see this JSON produced below
+your command:
 
-```json
+``` json
 {
   "name": "Track Inspected Region",
   "commands": [
@@ -61,123 +83,123 @@ For interval labeling, the simplest pipeline just records the inspected region:
 }
 ```
 
-If you also want to **copy** events from a predicted series into a curated series at the same
-time, add a `CopyByTimeRange` command before the `AddInterval`:
+If you also want to **copy** events from a predicted series into a
+curated series at the same time, add a `CopyByTimeRange` command before
+the `AddInterval`:
 
-```json
-{
-  "name": "Curate Events and Track",
-  "commands": [
-    {
-      "command_name": "CopyByTimeRange",
-      "description": "Copy predicted events to curated set",
-      "parameters": {
-        "source_key": "predicted_contacts",
-        "destination_key": "curated_contacts",
-        "start_frame": "${mark_frame}",
-        "end_frame": "${current_frame}"
-      }
-    },
-    {
-      "command_name": "AddInterval",
-      "description": "Record inspected region",
-      "parameters": {
-        "interval_key": "tracked_regions",
-        "start_frame": "${mark_frame}",
-        "end_frame": "${current_frame}",
-        "create_if_missing": true
-      }
-    }
+``` json
+{"commands":
+[
+  {
+    "command_name":"AddInterval",
+    "parameters":
+      {"interval_key": "tracked_regions",
+      "start_frame": "${mark_frame}",
+      "end_frame": "${current_frame}",
+      "create_if_missing":true},
+    "description":"Append an interval to a DigitalIntervalSeries, creating it if needed"
+  }
   ]
 }
 ```
 
-### 3. Load the Pipeline
+This JSON can be saved and loaded. For trivial pipelines they are easy
+to create, but as they become more complex, you may wish to re-use them
+for next time.
 
-Click **Load JSON...** to load your pipeline file, or build it step by step using the guided
-editor (**Add Command...** button).
+Clicking mark, scrolling to another frame, and clicking commit will
+result in an interval between the mark frame and the current frame being
+added to a DigitalIntervalSeries named "tracked_regions".
 
-### 4. Inspect and Commit Regions
+### 3. Inspect and Commit Regions
 
-The key insight is that you do not need to inspect the video sequentially. Jump to any region
-of interest and process it:
+The key insight is that you do not need to inspect the video
+sequentially. Jump to any region of interest and process it:
 
-1. **Jump** to a region you want to inspect (e.g., frame 75000).
-2. **Press Mark.** The widget records frame 75000 as `mark_frame`.
-3. **Scrub forward** through the region (e.g., to frame 76000), watching for events of
-   interest. Use other tools (e.g., the Data Manager or Media Viewer annotation tools) to
-   add labels for events you observe during this stretch.
-4. **Press Commit** at the end of the inspected region. The pipeline runs:
-   - The interval `[75000, 76000]` is added to `tracked_regions`.
-   - If you included a `CopyByTimeRange`, events are also copied.
-5. **Jump** to the next region of interest (e.g., frame 150000) and repeat.
+1.  **Jump** to a region you want to inspect (e.g., frame 75000).
+2.  **Press Mark.** The widget records frame 75000 as `mark_frame`.
+3.  **Scrub forward** through the region (e.g., to frame 76000),
+    watching for events of interest. Use other tools (e.g., the Data
+    Manager or Media Viewer annotation tools) to add labels for events
+    you observe during this stretch.
+4.  **Press Commit** at the end of the inspected region. The pipeline
+    runs:
+    -   The interval `[75000, 76000]` is added to `tracked_regions`.
+5.  **Jump** to the next region of interest (e.g., frame 150000) and
+    repeat.
 
-### 5. Interpret the Results
+### 4. Interpret the Results
 
-After inspecting several regions, your data has three categories of frames:
+After inspecting several regions, your data has three categories of
+frames:
 
 | Frame Category | How to Identify |
-|----------------|----------------|
+|------------------------------------|------------------------------------|
 | **Labeled event** | Frame has an entry in the label data object (e.g., `contact_intervals`) |
 | **No event (negative)** | Frame is inside a `tracked_regions` interval but has no label |
 | **Unknown** | Frame is *not* inside any `tracked_regions` interval |
 
-This three-way distinction is essential for honest evaluation. When computing precision/recall
-or training a classifier, exclude "unknown" frames from the negative class.
+This three-way distinction is essential for honest evaluation. When
+computing precision/recall or training a classifier, exclude "unknown"
+frames from the negative class.
 
-### 6. Monitor Progress
+### 5. Monitor Progress
 
 The **Tracked Regions** section of the widget shows:
 
-- **Interval count** — How many separate regions you have inspected.
-- **Total frame count** — The cumulative number of frames covered by all inspected regions.
+-   **Interval count** — How many separate regions you have inspected.
+-   **Total frame count** — The cumulative number of frames covered by
+    all inspected regions.
 
 Use this to track your progress across the full video.
 
 ## Tips
 
-- **Non-contiguous inspection is the point.** You can inspect frames 75000–76000, then
-  150000–151000, then 10000–12000. The tracked-regions data object records them all.
-- **Overlapping commits are safe.** If you accidentally commit an overlapping region, the
-  `AddInterval` command simply adds another interval. Overlapping intervals can be merged
-  later if needed.
-- **Use `CopyByTimeRange` instead of `MoveByTimeRange`** when you want to keep the original
-  predictions intact (e.g., for comparison).
-- **Template variables** let you reuse the same pipeline JSON across experiments with different
-  data key names. Define defaults in the `variables` section.
+-   **Non-contiguous inspection is the point.** You can inspect frames
+    75000–76000, then 150000–151000, then 10000–12000. The
+    tracked-regions data object records them all.
+-   **Overlapping commits are safe.** If you accidentally commit an
+    overlapping region, the `AddInterval` command simply adds another
+    interval. Overlapping intervals can be merged later if needed.
+-   **Use `CopyByTimeRange` instead of `MoveByTimeRange`** when you want
+    to keep the original predictions intact (e.g., for comparison).
+-   **Template variables** let you reuse the same pipeline JSON across
+    experiments with different data key names. Define defaults in the
+    `variables` section.
 
 ## Example: Contact Labeling Workflow
 
 A typical contact-labeling session might look like this:
 
-1. Load a video and predicted contact intervals (`predicted_contacts`).
-2. Create a pipeline that copies predicted contacts and tracks inspected regions.
-3. Jump to a predicted contact event.
-4. Mark → scrub through the contact region → visually confirm or correct → Commit.
-5. Jump to the next predicted contact.
-6. Repeat until you have inspected enough regions for your analysis.
+1.  Load a video and predicted contact intervals (`predicted_contacts`).
+2.  Create a pipeline that copies predicted contacts and tracks
+    inspected regions.
+3.  Jump to a predicted contact event.
+4.  Mark → scrub through the contact region → visually confirm or
+    correct → Commit.
+5.  Jump to the next predicted contact.
+6.  Repeat until you have inspected enough regions for your analysis.
 
 After the session, you have:
 
-- `curated_contacts` — confirmed contact intervals.
-- `tracked_regions` — every region you inspected, whether or not it contained contacts.
+-   `curated_contacts` — confirmed contact intervals.
+-   `tracked_regions` — every region you inspected, whether or not it
+    contained contacts.
 
 ## Command Reference
 
 | Parameter | Type | Description |
-|-----------|------|-------------|
-| **AddInterval** | | |
+|-------------------------|-----------------|------------------------------|
+| **AddInterval** |  |  |
 | `interval_key` | string | `DigitalIntervalSeries` key |
 | `start_frame` | integer | Start frame (inclusive) |
 | `end_frame` | integer | End frame (inclusive) |
 | `create_if_missing` | boolean | Create the series if it doesn't exist (default: `true`) |
-| **CopyByTimeRange** | | |
-| `source_key` | string | Data object key to copy from |
-| `destination_key` | string | Data object key to copy to |
-| `start_frame` | integer | Start frame (inclusive) |
-| `end_frame` | integer | End frame (inclusive) |
 
 ## See Also
 
-- [Triage Session Widget](../../user_guide/triage_session/overview.qmd) — full widget reference
-- [How-To: Triage Line Data](triage_line_data.qmd) — line triage workflow
+-   [Triage Session
+    Widget](../../user_guide/triage_session/overview.qmd) — full widget
+    reference
+-   [How-To: Triage Line Data](triage_line_data.qmd) — line triage
+    workflow

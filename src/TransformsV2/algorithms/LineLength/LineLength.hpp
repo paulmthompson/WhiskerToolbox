@@ -22,8 +22,6 @@
  * @see CoreGeometry/line_geometry.hpp for calc_length()
  */
 
-#include "extension/ElementTransform.hpp"
-
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 

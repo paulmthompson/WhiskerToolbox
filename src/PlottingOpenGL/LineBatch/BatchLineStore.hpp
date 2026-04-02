@@ -75,25 +75,107 @@ public:
     /**
      * @brief Full re-upload of batch data to GPU (and update CPU mirror).
      *
-     * This is the expensive path — called when the underlying data changes.
      * The segments are packed into the 5-float-per-segment format expected
      * by the compute shader (x1, y1, x2, y2, line_id_as_bits).
+     *
+     * **CPU mirror is always updated**, regardless of whether initialize()
+     * has been called or succeeded. This allows the CpuLineBatchIntersector
+     * and other CPU-side consumers to query the data even on platforms where
+     * GPU buffers are unavailable (e.g., macOS / OpenGL < 4.3).
+     *
+     * GPU upload is skipped (returns early) if !isInitialized().
+     * Empty visibility_mask, selection_mask, and line_ids are handled
+     * gracefully (0-byte SSBO allocation with nullptr).
+     *
+     * @param batch The new batch data
+     *
+     * @pre A valid OpenGL context must be current on the calling thread
+     *      when isInitialized() == true (enforcement: none) [CRITICAL]
+     *      — SSBO allocate() calls raw GL; GLSSBOBuffer docs state all
+     *      methods require a current context. If !isInitialized(), upload()
+     *      returns before touching the GPU, so no context is needed.
+     * @pre batch.line_ids.size() == batch.segments.size() / 4
+     *      (one line_id per segment) (enforcement: none) [CRITICAL]
+     *      — packSegments() accesses line_ids[seg] for every seg in
+     *      [0, numSegments()) with no bounds check; if line_ids is shorter,
+     *      this is an out-of-bounds vector read (UB / potential crash).
+     * @pre batch.segments.size() % 4 == 0 (each segment must be a complete
+     *      {x1, y1, x2, y2} quad) (enforcement: none) [IMPORTANT]
+     *      — numSegments() = segments.size() / 4 truncates; a trailing
+     *      partial segment is silently ignored at pack time.
+     * @pre batch.segments.size() * sizeof(float) <= INT_MAX (narrowing cast
+     *      to int for SSBO allocate()) (enforcement: none) [LOW]
+     *
+     * @post m_cpu_data == batch (CPU mirror is always updated).
+     * @post If isInitialized(): all SSBOs reflect the new batch data and
+     *       the intersection count SSBO has been reset to zero.
      */
     void upload(CorePlotting::LineBatchData const & batch);
 
     // ── Cheap partial updates ──────────────────────────────────────────
 
+
     /**
      * @brief Update only the visibility mask (CPU + GPU).
      *
-     * Much cheaper than a full upload.  @p mask must have size == numLines().
+     * Much cheaper than a full upload. Updates m_cpu_data.visibility_mask
+     * and (if initialized and non-empty) writes to the visibility SSBO
+     * via glBufferSubData without reallocating or touching any other buffer.
+     *
+     * If the size check fails, the function returns silently — no error is
+     * reported and neither the CPU mirror nor the GPU buffer is updated.
+     *
+     * @param mask New per-line visibility values (1 = visible, 0 = hidden).
+     *             Must have size == numLines().
+     *
+     * @pre upload() must have been called at least once before this function
+     *      to establish the expected mask size in m_cpu_data.visibility_mask
+     *      (enforcement: none) [IMPORTANT]
+     *      — if upload() has not been called, m_cpu_data.visibility_mask.size()
+     *      == 0; any non-empty mask will silently fail the size check and the
+     *      update will be dropped with no indication of failure.
+     * @pre mask.size() == numLines() (enforcement: runtime_check — silent)
+     *      — a size mismatch causes an unconditional silent early return;
+     *      callers cannot distinguish a successful write from a dropped one.
+     * @pre A valid OpenGL context must be current on the calling thread when
+     *      isInitialized() == true and mask is non-empty
+     *      (enforcement: none) [CRITICAL]
+     *      — m_visibility_ssbo.write() calls glBufferSubData with no context guard.
+     * @pre mask.size() * sizeof(uint32_t) <= INT_MAX (narrowing cast to int
+     *      for m_visibility_ssbo.write()) (enforcement: none) [LOW]
      */
     void updateVisibilityMask(std::vector<std::uint32_t> const & mask);
 
     /**
      * @brief Update only the selection mask (CPU + GPU).
      *
-     * @p mask must have size == numLines().
+     * Structurally identical to updateVisibilityMask() — same size check,
+     * same silent-failure pattern, same conditional SSBO write — operating
+     * on selection_mask / m_selection_ssbo instead of the visibility counterparts.
+     *
+     * If the size check fails, the function returns silently — no error is
+     * reported and neither the CPU mirror nor the GPU buffer is updated.
+     *
+     * @param mask New per-line selection values (1 = selected, 0 = not selected).
+     *             Must have size == numLines().
+     *
+     * @pre upload() must have been called at least once before this function
+     *      to establish the expected mask size in m_cpu_data.selection_mask
+     *      (enforcement: none) [IMPORTANT]
+     *      — if upload() has not been called, m_cpu_data.selection_mask.size()
+     *      == 0; any non-empty mask will silently fail the size check and the
+     *      update will be dropped with no indication of failure.
+     * @pre mask.size() == numLines() (enforcement: runtime_check — silent)
+     *      — a size mismatch causes an unconditional silent early return;
+     *      callers cannot distinguish a successful write from a dropped one.
+     * @pre A valid OpenGL context must be current on the calling thread when
+     *      isInitialized() == true and mask is non-empty
+     *      (enforcement: none) [CRITICAL]
+     *      — m_selection_ssbo.write() calls glBufferSubData with no context guard.
+     * @pre mask.size() * sizeof(uint32_t) <= INT_MAX (narrowing cast to int
+     *      for m_selection_ssbo.write()) (enforcement: none) [LOW]
+     *
+     * @see updateVisibilityMask() for the equivalent visibility update.
      */
     void updateSelectionMask(std::vector<std::uint32_t> const & mask);
 

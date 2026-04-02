@@ -34,12 +34,16 @@ public:
     /// @param features Input tensor of shape `[B, C, H, W]`.
     /// @return Tensor of shape `[B, C]`.
     ///
-    /// @pre features.dim() == 4
+    /// @pre features must be defined (not a default-constructed undefined tensor) (enforcement: assert)
+    /// @pre features.dim() == 4 (enforcement: exception)
+    /// @pre features.size(0) >= 1 (batch dim B >= 1) (enforcement: none) [IMPORTANT]
+    /// @pre features.size(2) >= 1 and features.size(3) >= 1 (H and W >= 1 for adaptive_avg_pool2d) (enforcement: none) [CRITICAL]
     [[nodiscard]] at::Tensor apply(at::Tensor const & features) const override;
 
     /// Returns `{C}` where C is `input_shape[0]` (the channel dimension).
     ///
-    /// @pre input_shape.size() >= 1
+    /// @pre input_shape must not be empty (enforcement: assert)
+    /// @pre input_shape[0] >= 1 (channel count C must be positive) (enforcement: none) [IMPORTANT]
     [[nodiscard]] std::vector<int64_t>
     outputShape(std::vector<int64_t> const & input_shape) const override;
 };

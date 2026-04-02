@@ -7,6 +7,9 @@ title: "Learning Resources"
 Detailed step-by-step guides to help you learn the basics.
 
 - [Keypoint Labeling](../examples/keypoint_labeling.qmd)
+- [Using a Hidden Markov Model to Predict Behavioral Epochs with Deep Learning Features](tutorials/hmm_behavioral_epochs.qmd)
+- [Is this neuron real? Following a signal between results and raw data](tutorials/is_this_neuron_real_tutorial.qmd)
+- [Identifying Clusters in High Dimensional Data](tutorials/clustering_tutorial.qmd)
 
 ## How-to Guides
 
@@ -18,10 +21,40 @@ Practical guides to help you achieve specific tasks.
 - [Image Stack Import](../examples/image_stack_import.qmd)
 - [Load Tabular Binary Events](../examples/tabular_binary_events.qmd)
 
+### Data Synthesizer
+
+
+
+### Deep Learning
+
+- [Exporting Pytorch Models for Neuralyzer](how-to/exporting_aoti_encoder.qmd)
+- [Using NeuroSAM for Object Segmentation](how-to/neurosam_howto.qmd)
+
 ### Labeling
 
 - [Keypoint Label Creation](../labeling/keypoint.qmd)
 - [Mask Creation](../labeling/mask.qmd)
+
+### Layout
+
+TODO: Create layout and save and load
+
+### Machine Learning
+
+TODO: Random Forest Classification
+TODO: Clustering
+
+### Plotting
+
+TODO: Flagging outliers with scatter plot widget
+TODO: Sorting by internal and external features in raster plot widget
+TODO: Exporting DataViewer to SVG
+
+
+### Python Integration
+
+TODO: Using conda environment for processing
+TODO: 
 
 ### Triage & Curation
 

@@ -287,10 +287,10 @@ Update `SceneBuildingHelpers::buildEventSeriesBatch()` to use
 
 ## Phase 4: Enhanced Interval Rendering {#phase-4-enhanced-interval-rendering}
 
-**Status**: Not started. Intervals are currently rendered as filled rectangles with configurable
+Status: Not started. Intervals are currently rendered as filled rectangles with configurable
 color and alpha but no border or pattern options.
 
-**Goal**: Rich interval visualization with adjustable border, alpha, and hatching patterns.
+Goal: Rich interval visualization with adjustable border, alpha, and hatching patterns.
 
 ### 4.1 IntervalRenderingOptions
 
