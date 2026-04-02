@@ -254,15 +254,17 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
     auto const * series_tf = series.getTimeFrame().get();
     TimeFrameIndex cache_start = params.start_time;
     TimeFrameIndex cache_end = params.end_time;
-    
+
     if (series_tf && series_tf != master_time_frame.get()) {
         std::tie(cache_start, cache_end) = convertTimeFrameRange(
-            params.start_time, params.end_time, *master_time_frame, *series_tf);
+                params.start_time, params.end_time, *master_time_frame, *series_tf);
     }
 
     // Initialize cache if needed (use 3x visible window for smooth scrolling)
-    size_t const visible_points = static_cast<size_t>(cache_end.getValue() - cache_start.getValue());
-    size_t const desired_capacity = visible_points * 3;
+    // Minimum capacity of 64 prevents a crash when the series time frame range
+    // collapses to zero (e.g., a single data point surrounded by a huge gap).
+    auto const visible_points = static_cast<size_t>(cache_end.getValue() - cache_start.getValue());
+    size_t const desired_capacity = std::max(visible_points * 3, static_cast<size_t>(64));
 
     if (!cache.isInitialized() || cache.capacity() < desired_capacity) {
         cache.initialize(desired_capacity);
@@ -288,7 +290,7 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
                 TimeFrameIndex master_end = range.end;
                 if (series_tf && series_tf != master_time_frame.get()) {
                     std::tie(master_start, master_end) = convertTimeFrameRange(
-                        range.start, range.end, *series_tf, *master_time_frame);
+                            range.start, range.end, *series_tf, *master_time_frame);
                 }
                 auto vertices = generateVerticesForRange(series, master_time_frame,
                                                          master_start, master_end);
