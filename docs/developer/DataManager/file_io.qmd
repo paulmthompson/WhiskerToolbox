@@ -48,3 +48,65 @@ For key-value database structures, there are multiple libraries available. Many 
 ## Prioritization and Future Considerations
 
 Currently, the data that would benefit from key-value updates is only theoretical. Having a line for whiskers for each frame in a high-speed video of up to 200,000 frames results in a file size that is almost 300 MB. However, saving a binary file in its entirety when making whisker-specific updates through manual curation still takes less than a second to save and is not noticeable to the user. Consequently, I think prioritizing having binary outputs to save entire files and memory mapping of those binary file types that are read-only, such as for Neuropixel analog traces, may be the most desirable next feature. Key-value pairs with something like RocksDB should be remembered for the future, but I am going to make that less of a priority until I see a clear use case that would benefit.
+
+# JSON Config Variable Substitution
+
+The data-loading JSON accepted by **File → Load JSON Config** (i.e., `load_data_from_json_config`) supports `${variable_name}` substitution throughout the file. This is useful when the same `data.json` is shared between users who keep certain files in different locations (e.g., large raw data stored locally, curated outputs stored on a shared network drive, or the same user switching between Windows and WSL).
+
+## Resolution order for `${NAME}`
+
+1. **Inline `"variables"` dict** — defined in the JSON itself (shared defaults, computed paths).
+2. **OS environment variables** (`std::getenv`) — machine-specific overrides; not committed to the shared JSON file.
+3. **Left as-is** — when neither source resolves the name (no error).
+
+This means a Windows user can set `WHISKER_LOCAL=C:/Users/wanglab/data` while the same user under WSL sets `WHISKER_LOCAL=/mnt/c/Users/wanglab/data`, and the shared `data.json` is identical on both.
+
+## Legacy format (backward-compatible plain array)
+
+Plain JSON arrays continue to work unchanged. Variable substitution only applies when the extended object format is used.
+
+```json
+[
+  { "filepath": "/data/session1/output.mp4", "data_type": "video", "name": "media" },
+  { "filepath": "/shared/session1/contact_0.csv", "data_type": "digital_interval", "name": "Contact_Events_0" }
+]
+```
+
+## Extended format — env vars only (no `"variables"` section needed)
+
+```json
+{
+  "data": [
+    { "filepath": "${WHISKER_LOCAL}/output.mp4",       "data_type": "video",            "name": "media" },
+    { "filepath": "${WHISKER_SHARED}/contact_0.csv",   "data_type": "digital_interval", "name": "Contact_Events_0" }
+  ]
+}
+```
+
+Each machine exports its own values; the JSON file is identical everywhere:
+
+| Environment | Setting |
+|---|---|
+| Windows PowerShell | `$Env:WHISKER_LOCAL = "C:/Users/wanglab/data/session1"` |
+| WSL / Linux `.bashrc` | `export WHISKER_LOCAL="/mnt/c/Users/wanglab/data/session1"` |
+
+## Extended format — inline variables with env-var fallback
+
+Inline `"variables"` entries override env vars of the same name, so you can provide shared defaults while still allowing per-machine overrides:
+
+```json
+{
+  "variables": {
+    "shared": "/mnt/shared/session1"
+  },
+  "data": [
+    { "filepath": "${WHISKER_LOCAL}/output.mp4",       "data_type": "video",            "name": "media" },
+    { "filepath": "${WHISKER_LOCAL}/amplifier.dat",    "data_type": "analog",           "name": "voltage" },
+    { "filepath": "${shared}/contact_0.csv",           "data_type": "digital_interval", "name": "Contact_Events_0" }
+  ]
+}
+```
+
+Variables can appear anywhere in a string value — in `filepath`, `name`, `clock`, or any other field. Transformation blocks embedded in the array are substituted before execution as well.
+
+

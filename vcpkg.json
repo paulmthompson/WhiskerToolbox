@@ -89,7 +89,12 @@
                     "name": "glib"
                 },
                 {
-                    "name": "opencv4"
+                    "name": "opencv4",
+                    "features": [
+                        {
+                            "name": "ffmpeg"
+                        }
+                    ]
                 },
                 {
                     "name": "protobuf"

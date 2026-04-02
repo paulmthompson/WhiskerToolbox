@@ -78,6 +78,23 @@ Central manager class (owned by MainWindow). Inherits `QObject`.
 - `eventFilter(obj, event)` — Intercepts `QEvent::KeyPress`. Bypasses text-input widgets (`QLineEdit`, `QTextEdit`, `QPlainTextEdit`, `QComboBox`, `QAbstractSpinBox`). Resolves and dispatches through scope priority. Returns `false` (pass-through) when no action matches.
 - `setEditorRegistry(registry)` — Set the `EditorRegistry` used for focus tracking via `SelectionContext::activeEditorId()`.
 
+## Registered Action Catalogue
+
+| Action ID | Display Name | Category | Scope | Default Key |
+|---|---|---|---|---|
+| `media.assign_group_1`–`9` | Assign to Group 1–9 | Media Viewer | EditorFocused (`MediaWidget`) | 1–9 |
+| `timeline.play_pause` | Play / Pause | Timeline | AlwaysRouted (`TimeScrollBar`) | Space |
+| `timeline.next_frame` | Next Frame | Timeline | AlwaysRouted (`TimeScrollBar`) | Right |
+| `timeline.prev_frame` | Previous Frame | Timeline | AlwaysRouted (`TimeScrollBar`) | Left |
+| `timeline.jump_forward` | Jump Forward | Timeline | AlwaysRouted (`TimeScrollBar`) | Ctrl+Right |
+| `timeline.jump_backward` | Jump Backward | Timeline | AlwaysRouted (`TimeScrollBar`) | Ctrl+Left |
+| `scatter_plot.polygon_complete` | Complete Polygon | Scatter Plot | EditorFocused (`ScatterPlotWidget`) | Return |
+| `scatter_plot.polygon_cancel` | Cancel Polygon | Scatter Plot | EditorFocused (`ScatterPlotWidget`) | Escape |
+| `scatter_plot.polygon_undo_vertex` | Undo Last Vertex | Scatter Plot | EditorFocused (`ScatterPlotWidget`) | Backspace |
+| `digital_interval_series.mark_contact_start` | Mark Contact Start | Digital Interval Series | AlwaysRouted (`DigitalIntervalSeriesInspector`) | *(none)* |
+| `digital_interval_series.mark_contact_end` | Mark Contact End | Digital Interval Series | AlwaysRouted (`DigitalIntervalSeriesInspector`) | *(none)* |
+| `digital_interval_series.flip_current_frame` | Flip Current Frame | Digital Interval Series | AlwaysRouted (`DigitalIntervalSeriesInspector`) | *(none)* |
+
 ## Dependencies
 
 - `Qt6::Core`, `Qt6::Gui`, `Qt6::Widgets` — `QKeySequence`, `QObject`, signals/slots, widget type checks for text-input bypass

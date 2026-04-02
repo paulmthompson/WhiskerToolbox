@@ -22,9 +22,9 @@
  * @see DataInspectorViewWidget for the view component
  */
 
-#include "DataTypeEnum/DM_DataType.hpp"  // For DM_DataType
-#include "EditorState/StrongTypes.hpp"  // Must be before any TimePosition usage in signals
-#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
+#include "DataTypeEnum/DM_DataType.hpp"// For DM_DataType
+#include "EditorState/StrongTypes.hpp" // Must be before any TimePosition usage in signals
+#include "TimeFrame/TimeFrame.hpp"     // For TimePosition
 
 #include <QWidget>
 
@@ -45,6 +45,10 @@ class CommandRecorder;
 namespace EditorLib {
 class OperationContext;
 }// namespace EditorLib
+
+namespace KeymapSystem {
+class KeymapManager;
+}// namespace KeymapSystem
 
 namespace Ui {
 class DataInspectorPropertiesWidget;
@@ -127,6 +131,12 @@ public:
      */
     void setViewWidget(DataInspectorViewWidget * view_widget);
 
+    /**
+     * @brief Set the keymap manager so it can be forwarded to type-specific inspectors
+     * @param manager Non-owning pointer to the KeymapManager (can be nullptr)
+     */
+    void setKeymapManager(KeymapSystem::KeymapManager * manager);
+
 signals:
     /**
      * @brief Emitted when a frame is selected in the inspector
@@ -158,6 +168,7 @@ private:
     EditorLib::OperationContext * _operation_context{nullptr};
     GroupManager * _group_manager{nullptr};
     commands::CommandRecorder * _command_recorder{nullptr};
+    KeymapSystem::KeymapManager * _keymap_manager{nullptr};
 
     // Current inspector (type-specific, created by InspectorFactory)
     std::unique_ptr<class BaseInspector> _current_inspector;

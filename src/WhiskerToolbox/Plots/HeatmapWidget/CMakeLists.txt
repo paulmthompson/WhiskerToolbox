@@ -56,6 +56,8 @@ target_link_libraries(HeatmapWidget PRIVATE EventRateEstimation)
 target_link_libraries(HeatmapWidget PRIVATE RateEstimationControls)
 target_link_libraries(HeatmapWidget PRIVATE ColormapControls)
 target_link_libraries(HeatmapWidget PRIVATE TooltipManager)
+target_link_libraries(HeatmapWidget PRIVATE EventPlotWidget)
+target_link_libraries(HeatmapWidget PRIVATE PSTHWidget)
 
 target_include_directories(HeatmapWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

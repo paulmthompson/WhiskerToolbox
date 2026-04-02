@@ -27,6 +27,11 @@ namespace commands {
 class CommandRecorder;
 }// namespace commands
 
+namespace KeymapSystem {
+class KeyActionAdapter;
+class KeymapManager;
+}// namespace KeymapSystem
+
 namespace triage {
 class TriageSession;
 }
@@ -57,6 +62,12 @@ public:
      * @param recorder Non-owning pointer to the CommandRecorder (can be nullptr)
      */
     void setCommandRecorder(commands::CommandRecorder * recorder) { _command_recorder = recorder; }
+
+    /**
+     * @brief Connect this widget to the KeymapManager for keymap-driven actions
+     * @param manager Non-owning pointer (can be nullptr)
+     */
+    void setKeymapManager(KeymapSystem::KeymapManager * manager);
 
 private slots:
     void _onMarkClicked();
@@ -100,6 +111,8 @@ private:
     QLabel * _tracked_summary_label = nullptr;
 
     commands::CommandRecorder * _command_recorder{nullptr};
+
+    KeymapSystem::KeyActionAdapter * _key_adapter{nullptr};
 
     bool _syncing_from_editor = false;///< Guard against re-entrant pipeline sync
 };

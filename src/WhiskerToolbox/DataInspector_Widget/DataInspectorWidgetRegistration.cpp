@@ -8,26 +8,68 @@
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/OperationContext.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
+#include "KeymapSystem/KeyAction.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
+
+#include <QKeySequence>
 
 #include <iostream>
 #include <utility>
 
 namespace DataInspectorModule {
 
+namespace {
+
+/// @brief Register the three DigitalIntervalSeries keymap actions (no default keys)
+void registerIntervalActions(KeymapSystem::KeymapManager * km) {
+    if (!km) {
+        return;
+    }
+
+    auto const scope = KeymapSystem::KeyActionScope::alwaysRouted(
+            EditorLib::EditorTypeId(QStringLiteral("DigitalIntervalSeriesInspector")));
+    QString const category = QStringLiteral("Digital Interval Series");
+
+    km->registerAction({.action_id = QStringLiteral("digital_interval_series.mark_contact_start"),
+                        .display_name = QStringLiteral("Mark Contact Start"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence()});
+
+    km->registerAction({.action_id = QStringLiteral("digital_interval_series.mark_contact_end"),
+                        .display_name = QStringLiteral("Mark Contact End"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence()});
+
+    km->registerAction({.action_id = QStringLiteral("digital_interval_series.flip_current_frame"),
+                        .display_name = QStringLiteral("Flip Current Frame"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence()});
+}
+
+}// namespace
+
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
+                   const std::shared_ptr<DataManager>& data_manager,
                    GroupManager * group_manager,
-                   commands::CommandRecorder * recorder) {
+                   commands::CommandRecorder * recorder,
+                   KeymapSystem::KeymapManager * keymap_manager) {
 
     if (!registry) {
         std::cerr << "DataInspectorModule::registerTypes: registry is null" << std::endl;
         return;
     }
 
+    // Register configurable keyboard shortcuts for interval marking
+    registerIntervalActions(keymap_manager);
+
     // Capture dependencies for lambdas
-    const auto& dm = std::move(data_manager);
+    auto const & dm = std::move(data_manager);
     auto gm = group_manager;
     auto cr = recorder;
+    auto * km = keymap_manager;
 
     registry->registerType({.type_id = QStringLiteral("DataInspector"),
                             .display_name = QStringLiteral("Data Inspector"),
@@ -44,7 +86,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<DataInspectorState>(); },
 
                             // View factory - creates DataInspectorViewWidget (Center zone)
-                            .create_view = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                            .create_view = [dm](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto inspector_state = std::dynamic_pointer_cast<DataInspectorState>(state);
                                 if (!inspector_state) {
                                     std::cerr << "DataInspectorModule: Failed to cast state to DataInspectorState" << std::endl;
@@ -57,7 +99,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Properties factory - creates DataInspectorPropertiesWidget (Right zone)
-                            .create_properties = [dm, gm, cr](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                            .create_properties = [dm, gm, cr, km](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto inspector_state = std::dynamic_pointer_cast<DataInspectorState>(state);
                                 if (!inspector_state) {
                                     std::cerr << "DataInspectorModule: Failed to cast state to DataInspectorState for properties" << std::endl;
@@ -67,12 +109,13 @@ void registerTypes(EditorRegistry * registry,
                                 auto * widget = new DataInspectorPropertiesWidget(dm, gm);
                                 widget->setState(inspector_state);
                                 widget->setCommandRecorder(cr);
+                                widget->setKeymapManager(km);
                                 return widget;
                             },
 
                             // Custom editor creation for complex view/properties coupling
                             // Ensures both widgets share the same state and SelectionContext
-                            .create_editor_custom = [dm, gm, cr](EditorRegistry * reg)
+                            .create_editor_custom = [dm, gm, cr, km](EditorRegistry * reg)
                                     -> EditorRegistry::EditorInstance {
                                 // Create the shared state
                                 auto state = std::make_shared<DataInspectorState>();
@@ -85,6 +128,7 @@ void registerTypes(EditorRegistry * registry,
                                 auto * props = new DataInspectorPropertiesWidget(dm, gm);
                                 props->setState(state);
                                 props->setCommandRecorder(cr);
+                                props->setKeymapManager(km);
 
                                 // Connect properties to selection context from registry
                                 if (reg) {
@@ -100,9 +144,9 @@ void registerTypes(EditorRegistry * registry,
                                 // This allows double-clicking on table cells to navigate to the corresponding frame
                                 if (reg && dm) {
                                     QObject::connect(view, &DataInspectorViewWidget::frameSelected,
-                                                     [reg](TimePosition position) {
+                                                     [reg](const TimePosition& position) {
                                                          // Update EditorRegistry time (triggers timeChanged signal for other widgets)
-                                                         reg->setCurrentTime(std::move(position));
+                                                         reg->setCurrentTime(position);
                                                      });
                                 }
 

@@ -25,6 +25,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <memory>
 
 /**
@@ -455,15 +456,36 @@ TEST_CASE("Simple CSV Point loader - NaN coordinate values", "[CSV][Points][unit
     opts.y_column = 2;
     opts.column_delim = ",";
 
-    SECTION("All data rows (including NaN) are loaded — header row is skipped") {
+    SECTION("Default (Skip): NaN rows are excluded, only valid rows loaded") {
         auto const result = load(opts);
+
+        // Frames 0, 1, 3 have NaN coordinates and are skipped by default
+        REQUIRE(result.size() == 1);
+        REQUIRE(result.find(TimeFrameIndex(2)) != result.end());
+    }
+
+    SECTION("Default (Skip): valid row retains correct coordinates") {
+        auto const result = load(opts);
+
+        REQUIRE(result.at(TimeFrameIndex(2)).x == Catch::Approx(100.5F));
+        REQUIRE(result.at(TimeFrameIndex(2)).y == Catch::Approx(200.5F));
+    }
+
+    SECTION("Include: all data rows (including NaN) are loaded — header row is skipped") {
+        CSVPointLoaderOptions include_opts = opts;
+        include_opts.nan_handling = NaNHandling::Include;
+
+        auto const result = load(include_opts);
 
         // Header row is skipped; all 4 data rows are present
         REQUIRE(result.size() == 4);
     }
 
-    SECTION("NaN rows have NaN x/y coordinates") {
-        auto const result = load(opts);
+    SECTION("Include: NaN rows have NaN x/y coordinates") {
+        CSVPointLoaderOptions include_opts = opts;
+        include_opts.nan_handling = NaNHandling::Include;
+
+        auto const result = load(include_opts);
 
         REQUIRE(std::isnan(result.at(TimeFrameIndex(0)).x));
         REQUIRE(std::isnan(result.at(TimeFrameIndex(0)).y));
@@ -471,14 +493,17 @@ TEST_CASE("Simple CSV Point loader - NaN coordinate values", "[CSV][Points][unit
         REQUIRE(std::isnan(result.at(TimeFrameIndex(3)).x));
     }
 
-    SECTION("Valid rows retain correct coordinates") {
-        auto const result = load(opts);
+    SECTION("Include: valid row retains correct coordinates") {
+        CSVPointLoaderOptions include_opts = opts;
+        include_opts.nan_handling = NaNHandling::Include;
+
+        auto const result = load(include_opts);
 
         REQUIRE(result.at(TimeFrameIndex(2)).x == Catch::Approx(100.5F));
         REQUIRE(result.at(TimeFrameIndex(2)).y == Catch::Approx(200.5F));
     }
 
-    SECTION("All-NaN CSV loads without exception") {
+    SECTION("Default (Skip): all-NaN CSV loads without exception and returns empty") {
         auto const all_nan_path = temp_dir / "all_nan.csv";
         {
             std::ofstream file(all_nan_path);
@@ -493,7 +518,120 @@ TEST_CASE("Simple CSV Point loader - NaN coordinate values", "[CSV][Points][unit
 
         REQUIRE_NOTHROW(load(nan_opts));
         auto const result = load(nan_opts);
+        REQUIRE(result.empty());
+    }
+
+    SECTION("Include: all-NaN CSV loads all rows without exception") {
+        auto const all_nan_path = temp_dir / "all_nan_include.csv";
+        {
+            std::ofstream file(all_nan_path);
+            file << "Frame,X,Y,Probability\n";
+            for (int i = 0; i < 24; ++i) {
+                file << i << ",nan,nan,1.0\n";
+            }
+        }
+
+        CSVPointLoaderOptions nan_opts = opts;
+        nan_opts.filepath = all_nan_path.string();
+        nan_opts.nan_handling = NaNHandling::Include;
+
+        REQUIRE_NOTHROW(load(nan_opts));
+        auto const result = load(nan_opts);
         REQUIRE(result.size() == 24);
+    }
+
+    std::filesystem::remove_all(temp_dir);
+}
+
+//=============================================================================
+// Unit Tests: NaN handling for save()
+//=============================================================================
+
+TEST_CASE("CSV Point saver - NaN coordinate handling", "[CSV][Points][unit][nan]") {
+
+    auto const temp_dir = std::filesystem::temp_directory_path() / "nan_point_saver_unit_test";
+    std::filesystem::create_directories(temp_dir);
+
+    // PointData with a mix of valid and NaN coordinates
+    std::map<TimeFrameIndex, Point2D<float>> input = {
+            {TimeFrameIndex(0), {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN()}},
+            {TimeFrameIndex(1), {10.0F, 20.0F}},
+            {TimeFrameIndex(2), {std::numeric_limits<float>::quiet_NaN(), 50.0F}},
+            {TimeFrameIndex(3), {30.0F, 40.0F}},
+    };
+    PointData const point_data(input);
+
+    SECTION("Default (Skip): NaN rows are omitted from the output file") {
+        CSVPointSaverOptions save_opts;
+        save_opts.filename = "nan_skip.csv";
+        save_opts.parent_dir = temp_dir.string();
+        save_opts.delimiter = ",";
+
+        REQUIRE(save(&point_data, save_opts));
+
+        CSVPointLoaderOptions load_opts;
+        load_opts.filepath = (temp_dir / "nan_skip.csv").string();
+        load_opts.frame_column = 0;
+        load_opts.x_column = 1;
+        load_opts.y_column = 2;
+        load_opts.column_delim = ",";
+        load_opts.nan_handling = NaNHandling::Include;// Load everything to inspect raw file contents
+
+        auto const loaded = load(load_opts);
+        REQUIRE(loaded.size() == 2);
+        REQUIRE(loaded.find(TimeFrameIndex(1)) != loaded.end());
+        REQUIRE(loaded.find(TimeFrameIndex(3)) != loaded.end());
+        REQUIRE(loaded.find(TimeFrameIndex(0)) == loaded.end());
+        REQUIRE(loaded.find(TimeFrameIndex(2)) == loaded.end());
+    }
+
+    SECTION("Include: NaN rows written as 'nan' entries and round-trip correctly") {
+        CSVPointSaverOptions save_opts;
+        save_opts.filename = "nan_include.csv";
+        save_opts.parent_dir = temp_dir.string();
+        save_opts.delimiter = ",";
+        save_opts.nan_handling = NaNHandling::Include;
+
+        REQUIRE(save(&point_data, save_opts));
+
+        CSVPointLoaderOptions load_opts;
+        load_opts.filepath = (temp_dir / "nan_include.csv").string();
+        load_opts.frame_column = 0;
+        load_opts.x_column = 1;
+        load_opts.y_column = 2;
+        load_opts.column_delim = ",";
+        load_opts.nan_handling = NaNHandling::Include;
+
+        auto const loaded = load(load_opts);
+        REQUIRE(loaded.size() == 4);
+        REQUIRE(std::isnan(loaded.at(TimeFrameIndex(0)).x));
+        REQUIRE(std::isnan(loaded.at(TimeFrameIndex(0)).y));
+        REQUIRE(loaded.at(TimeFrameIndex(1)).x == Catch::Approx(10.0F));
+        REQUIRE(std::isnan(loaded.at(TimeFrameIndex(2)).x));
+        REQUIRE(loaded.at(TimeFrameIndex(3)).y == Catch::Approx(40.0F));
+    }
+
+    SECTION("Default (Skip): round-trip skips NaN on both ends") {
+        CSVPointSaverOptions save_opts;
+        save_opts.filename = "nan_skip_rt.csv";
+        save_opts.parent_dir = temp_dir.string();
+        save_opts.delimiter = ",";
+        // nan_handling defaults to Skip
+
+        REQUIRE(save(&point_data, save_opts));
+
+        CSVPointLoaderOptions load_opts;
+        load_opts.filepath = (temp_dir / "nan_skip_rt.csv").string();
+        load_opts.frame_column = 0;
+        load_opts.x_column = 1;
+        load_opts.y_column = 2;
+        load_opts.column_delim = ",";
+        // nan_handling defaults to Skip
+
+        auto const loaded = load(load_opts);
+        REQUIRE(loaded.size() == 2);
+        REQUIRE(loaded.at(TimeFrameIndex(1)).x == Catch::Approx(10.0F));
+        REQUIRE(loaded.at(TimeFrameIndex(3)).y == Catch::Approx(40.0F));
     }
 
     std::filesystem::remove_all(temp_dir);

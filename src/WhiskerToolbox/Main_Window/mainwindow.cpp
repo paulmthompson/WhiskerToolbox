@@ -927,13 +927,13 @@ void MainWindow::_registerEditorTypes() {
 
     MediaWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get(), _keymap_manager);
 
-    DataInspectorModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get(), commandRecorder());
+    DataInspectorModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get(), commandRecorder(), _keymap_manager);
 
     DataTransformWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TransformsV2WidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    TriageSessionWidgetModule::registerTypes(_editor_registry.get(), _data_manager, commandRecorder());
+    TriageSessionWidgetModule::registerTypes(_editor_registry.get(), _data_manager, commandRecorder(), _keymap_manager);
 
     DataImportWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
@@ -963,7 +963,7 @@ void MainWindow::_registerEditorTypes() {
 
     MLCoreWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
-    DeepLearningWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    DeepLearningWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _keymap_manager);
 
     DataViewerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

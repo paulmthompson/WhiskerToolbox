@@ -6,22 +6,52 @@
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/StrongTypes.hpp"
+#include "KeymapSystem/KeyAction.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+
+#include <QKeySequence>
 
 #include <iostream>
 #include <utility>
 
 namespace DeepLearningWidgetModule {
 
+namespace {
+
+void registerEditorActions(KeymapSystem::KeymapManager * km) {
+    if (!km) {
+        return;
+    }
+
+    // AlwaysRouted so the shortcut fires even when the widget is not focused
+    auto const scope = KeymapSystem::KeyActionScope::alwaysRouted(
+            EditorLib::EditorTypeId(QStringLiteral("DeepLearningWidget")));
+    QString const category = QStringLiteral("Deep Learning");
+
+    km->registerAction({.action_id = QStringLiteral("deep_learning.predict_current"),
+                        .display_name = QStringLiteral("Predict Current Frame"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::CTRL | Qt::Key_R)});
+}
+
+}// namespace
+
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> const & data_manager) {
+                   std::shared_ptr<DataManager> const & data_manager,
+                   KeymapSystem::KeymapManager * keymap_manager) {
     if (!registry) {
         std::cerr << "DeepLearningWidgetModule::registerTypes: registry is null" << std::endl;
         return;
     }
 
+    registerEditorActions(keymap_manager);
+
     auto const & dm = data_manager;
     auto reg = registry;
+    auto * km = keymap_manager;
 
     registry->registerType({.type_id = QStringLiteral("DeepLearningWidget"),
                             .display_name = QStringLiteral("Deep Learning"),
@@ -64,7 +94,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Custom editor creation to connect time signal
-                            .create_editor_custom = [dm, reg](EditorRegistry * /*unused*/)
+                            .create_editor_custom = [dm, reg, km](EditorRegistry * /*unused*/)
                                     -> EditorRegistry::EditorInstance {
                                 // Create the shared state
                                 auto state = std::make_shared<DeepLearningState>();
@@ -74,8 +104,7 @@ void registerTypes(EditorRegistry * registry,
 
                                 // Create the properties widget with the shared state
                                 auto * props = new DeepLearningPropertiesWidget(state, dm);
-
-                                // Give the view widget access to the assembler for cache previews
+                                props->setKeymapManager(km);
                                 view->setAssembler(props->assembler());
 
                                 // Connect EditorRegistry time changes to properties widget

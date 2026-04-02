@@ -688,12 +688,23 @@ std::vector<float> Export_Video_Widget::_generateClickAudio(float duration_secon
 
     std::vector<float> audio_data(total_samples, 0.0f);
 
-    // Generate a simple click sound (sine wave burst)
-    float frequency = 1000.0f;// 1kHz click
+    // Generate a neuroscience-style spike click.
+    // Real extracellular recordings are bandpass-filtered ~300 Hz–8 kHz, so action
+    // potentials played through a speaker sound like a sharp, bright "tick" lasting
+    // 1–2 ms — often described as a pencil tap on a table.
+    // We model this with:
+    //   - 3 kHz carrier (within the electrophysiology bandpass range)
+    //   - Very fast exponential decay (~1500 → ~2 ms effective duration)
+    //   - A slight negative phase to mimic the biphasic extracellular waveform morphology
+    float const frequency = 3000.0f;   // 3 kHz — bright, percussive tick quality
+    float const decay_rate = 1500.0f;  // Decay to <5% in ~2 ms
+    float const biphasic_ratio = 0.35f;// Negative phase relative to positive
     for (int i = 0; i < std::min(click_samples, total_samples); ++i) {
         float t = static_cast<float>(i) / static_cast<float>(sample_rate);
-        float amplitude = std::exp(-t * 20.0f);// Exponential decay
-        audio_data[i] = amplitude * std::sin(2.0f * std::numbers::pi * frequency * t);
+        float amplitude = std::exp(-t * decay_rate);
+        // Biphasic: primary fast lobe + slower opposite-polarity lobe
+        float waveform = std::sin(2.0f * std::numbers::pi_v<float> * frequency * t) - biphasic_ratio * std::sin(std::numbers::pi_v<float> * frequency * t);
+        audio_data[i] = amplitude * waveform;
     }
 
     return audio_data;

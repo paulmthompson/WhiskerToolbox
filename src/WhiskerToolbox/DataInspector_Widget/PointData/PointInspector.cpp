@@ -8,13 +8,13 @@
 #include "Commands/IO/SaveData.hpp"
 #include "DataExport_Widget/Points/CSV/CSVPointSaver_Widget.hpp"
 #include "DataManager.hpp"
-#include "IO/formats/CSV/points/Point_Data_CSV.hpp"
-#include "Media/Media_Data.hpp"
-#include "Points/Point_Data.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "Inspectors/GroupFilterHelper.hpp"
+#include "Media/Media_Data.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
 #include "MediaExport/media_export.hpp"
+#include "Points/Point_Data.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 
@@ -318,15 +318,15 @@ void PointInspector::_onApplyImageSizeClicked() {
 
     // Ask user if they want to scale existing data
     int const ret = QMessageBox::question(this, "Scale Existing Data",
-                                    QString("Current image size is %1 × %2. Do you want to scale all existing point data to the new size %3 × %4?\n\n"
-                                            "Click 'Yes' to scale all point data proportionally.\n"
-                                            "Click 'No' to just change the image size without scaling.\n"
-                                            "Click 'Cancel' to abort the operation.")
-                                            .arg(current_size.width)
-                                            .arg(current_size.height)
-                                            .arg(new_width)
-                                            .arg(new_height),
-                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+                                          QString("Current image size is %1 × %2. Do you want to scale all existing point data to the new size %3 × %4?\n\n"
+                                                  "Click 'Yes' to scale all point data proportionally.\n"
+                                                  "Click 'No' to just change the image size without scaling.\n"
+                                                  "Click 'Cancel' to abort the operation.")
+                                                  .arg(current_size.width)
+                                                  .arg(current_size.height)
+                                                  .arg(new_width)
+                                                  .arg(new_height),
+                                          QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
     if (ret == QMessageBox::Cancel) {
         return;
@@ -437,16 +437,16 @@ void PointInspector::_onCopyImageSizeClicked() {
 
     // Ask user if they want to scale existing data
     int const ret = QMessageBox::question(this, "Scale Existing Data",
-                                    QString("Current image size is %1 × %2. Do you want to scale all existing point data to the new size %3 × %4 (from '%5')?\n\n"
-                                            "Click 'Yes' to scale all point data proportionally.\n"
-                                            "Click 'No' to just change the image size without scaling.\n"
-                                            "Click 'Cancel' to abort the operation.")
-                                            .arg(current_size.width)
-                                            .arg(current_size.height)
-                                            .arg(media_size.width)
-                                            .arg(media_size.height)
-                                            .arg(selected_media_key),
-                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+                                          QString("Current image size is %1 × %2. Do you want to scale all existing point data to the new size %3 × %4 (from '%5')?\n\n"
+                                                  "Click 'Yes' to scale all point data proportionally.\n"
+                                                  "Click 'No' to just change the image size without scaling.\n"
+                                                  "Click 'Cancel' to abort the operation.")
+                                                  .arg(current_size.width)
+                                                  .arg(current_size.height)
+                                                  .arg(media_size.width)
+                                                  .arg(media_size.height)
+                                                  .arg(selected_media_key),
+                                          QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
     if (ret == QMessageBox::Cancel) {
         return;
@@ -674,17 +674,17 @@ void PointInspector::_onDeletePointsRequested() {
         groupManager()->ungroupEntities(entity_ids_set);
     }
 
-    int total_points_deleted = 0;
-
-    // Delete each selected point individually
+    // Build the set of valid entity IDs to delete (exclude EntityId(0))
+    std::unordered_set<EntityId> entity_ids_to_delete;
+    entity_ids_to_delete.reserve(selected_entity_ids.size());
     for (EntityId const entity_id: selected_entity_ids) {
         if (entity_id != EntityId(0)) {
-            bool const success = point_data->clearByEntityId(entity_id, NotifyObservers::No);
-            if (success) {
-                total_points_deleted++;
-            }
+            entity_ids_to_delete.insert(entity_id);
         }
     }
+
+    // Bulk delete: single O(n + k) pass instead of O(n * k) individual deletions
+    size_t const total_points_deleted = point_data->clearByEntityIds(entity_ids_to_delete, NotifyObservers::No);
 
     // Notify observers only once at the end
     if (total_points_deleted > 0) {

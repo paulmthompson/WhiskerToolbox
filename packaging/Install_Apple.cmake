@@ -41,6 +41,13 @@ set(MY_DYLIBS
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libomp.dylib"
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libtorch.dylib"
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libtorch_cpu.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManagerIO.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManagerIO_CapnProto.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManagerHDF5.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManagerOpenCV.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManagerNumpy.dylib"
+        "${CMAKE_BINARY_DIR}/_deps/iir-build/libiir.dylib"
+        "${CMAKE_BINARY_DIR}/libffmpeg_wrapper.dylib"
 )
 
 set_target_properties(WhiskerToolbox PROPERTIES
@@ -61,6 +68,8 @@ update_install_name("janelia" "@executable_path/../Frameworks/libjanelia.dylib" 
 update_install_name("Whisker-Analysis" "@executable_path/../Frameworks/libWhisker-Analysis.dylib" "libWhisker-Analysis.dylib")
 update_install_name("qt6advanceddocking" "@executable_path/../Frameworks/libqt6advanceddocking.dylib" "bin/libqt6advanceddocking.4.3.1.dylib")
 update_install_name("StateEstimation" "@executable_path/../Frameworks/libStateEstimation.dylib" "libStateEstimation.dylib")
+update_install_name("iir" "@executable_path/../Frameworks/libiir.dylib" "_deps/iir-build/libiir.1.dylib")
+
 copy_items_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
 copy_items_during_install("${CMAKE_SOURCE_DIR}/packaging/WhiskerToolbox.icns" "WhiskerToolbox.app/Contents/Resources/")
 

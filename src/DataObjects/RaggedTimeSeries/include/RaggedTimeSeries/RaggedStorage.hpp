@@ -12,21 +12,23 @@
 #include <span>
 #include <stdexcept>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
 
-// Forward declarations
-template<typename TData> class OwningRaggedStorage;
-template<typename TData> class ViewRaggedStorage;
+template<typename TData>
+class OwningRaggedStorage;
+template<typename TData>
+class ViewRaggedStorage;
 
 /**
  * @brief Storage type enumeration for runtime type identification
  */
 enum class RaggedStorageType {
-    Owning,  ///< Owns the data in SoA layout
-    View,    ///< References another storage via indices
-    Lazy     ///< Lazy-evaluated transform (future support)
+    Owning,///< Owns the data in SoA layout
+    View,  ///< References another storage via indices
+    Lazy   ///< Lazy-evaluated transform (future support)
 };
 
 // =============================================================================
@@ -48,12 +50,12 @@ enum class RaggedStorageType {
  */
 template<typename TData>
 struct RaggedStorageCache {
-    TimeFrameIndex const* times_ptr = nullptr;
-    TData const* data_ptr = nullptr;
-    EntityId const* entity_ids_ptr = nullptr;
+    TimeFrameIndex const * times_ptr = nullptr;
+    TData const * data_ptr = nullptr;
+    EntityId const * entity_ids_ptr = nullptr;
     size_t cache_size = 0;
-    bool is_contiguous = false;  ///< True if storage is contiguous (owning)
-    
+    bool is_contiguous = false;///< True if storage is contiguous (owning)
+
     /**
      * @brief Check if the cache is valid for fast-path access
      * 
@@ -68,17 +70,17 @@ struct RaggedStorageCache {
     [[nodiscard]] constexpr bool isValid() const noexcept {
         return is_contiguous;
     }
-    
+
     // Convenience accessors for cached data (only valid if isValid() && idx < cache_size)
-    
+
     [[nodiscard]] TimeFrameIndex getTime(size_t idx) const noexcept {
         return times_ptr[idx];
     }
-    
-    [[nodiscard]] TData const& getData(size_t idx) const noexcept {
+
+    [[nodiscard]] TData const & getData(size_t idx) const noexcept {
         return data_ptr[idx];
     }
-    
+
     [[nodiscard]] EntityId getEntityId(size_t idx) const noexcept {
         return entity_ids_ptr[idx];
     }
@@ -112,14 +114,14 @@ template<typename Derived, typename TData>
 class RaggedStorageBase {
 public:
     // ========== Size & Bounds ==========
-    
+
     /**
      * @brief Get total number of entries across all times
      */
     [[nodiscard]] size_t size() const {
-        return static_cast<Derived const*>(this)->sizeImpl();
+        return static_cast<Derived const *>(this)->sizeImpl();
     }
-    
+
     /**
      * @brief Check if storage is empty
      */
@@ -128,33 +130,33 @@ public:
     }
 
     // ========== Element Access ==========
-    
+
     /**
      * @brief Get the TimeFrameIndex at a flat index
      * @param idx Flat index in [0, size())
      */
     [[nodiscard]] TimeFrameIndex getTime(size_t idx) const {
-        return static_cast<Derived const*>(this)->getTimeImpl(idx);
+        return static_cast<Derived const *>(this)->getTimeImpl(idx);
     }
-    
+
     /**
      * @brief Get const reference to data at a flat index
      * @param idx Flat index in [0, size())
      */
-    [[nodiscard]] TData const& getData(size_t idx) const {
-        return static_cast<Derived const*>(this)->getDataImpl(idx);
+    [[nodiscard]] TData const & getData(size_t idx) const {
+        return static_cast<Derived const *>(this)->getDataImpl(idx);
     }
-    
+
     /**
      * @brief Get the EntityId at a flat index
      * @param idx Flat index in [0, size())
      */
     [[nodiscard]] EntityId getEntityId(size_t idx) const {
-        return static_cast<Derived const*>(this)->getEntityIdImpl(idx);
+        return static_cast<Derived const *>(this)->getEntityIdImpl(idx);
     }
 
     // ========== EntityId Lookup ==========
-    
+
     /**
      * @brief Find flat index by EntityId
      * @param id The EntityId to find
@@ -162,36 +164,36 @@ public:
      * @note O(1) for OwningRaggedStorage, O(1) for ViewRaggedStorage
      */
     [[nodiscard]] std::optional<size_t> findByEntityId(EntityId id) const {
-        return static_cast<Derived const*>(this)->findByEntityIdImpl(id);
+        return static_cast<Derived const *>(this)->findByEntityIdImpl(id);
     }
 
     // ========== Time-based Access ==========
-    
+
     /**
      * @brief Get range of flat indices for a specific time
      * @param time The TimeFrameIndex to query
      * @return Pair of (start_idx, end_idx) where end is exclusive, or (0,0) if not found
      */
     [[nodiscard]] std::pair<size_t, size_t> getTimeRange(TimeFrameIndex time) const {
-        return static_cast<Derived const*>(this)->getTimeRangeImpl(time);
+        return static_cast<Derived const *>(this)->getTimeRangeImpl(time);
     }
-    
+
     /**
      * @brief Get number of distinct times with data
      */
     [[nodiscard]] size_t getTimeCount() const {
-        return static_cast<Derived const*>(this)->getTimeCountImpl();
+        return static_cast<Derived const *>(this)->getTimeCountImpl();
     }
 
     // ========== Storage Type ==========
-    
+
     /**
      * @brief Get the storage type identifier
      */
     [[nodiscard]] RaggedStorageType getStorageType() const {
-        return static_cast<Derived const*>(this)->getStorageTypeImpl();
+        return static_cast<Derived const *>(this)->getStorageTypeImpl();
     }
-    
+
     /**
      * @brief Check if this is a view (doesn't own data)
      */
@@ -200,7 +202,7 @@ public:
     }
 
     // ========== Cache Optimization ==========
-    
+
     /**
      * @brief Try to get cached pointers for fast-path access
      * 
@@ -211,7 +213,7 @@ public:
      * @return RaggedStorageCache<TData> with valid pointers if contiguous, invalid otherwise
      */
     [[nodiscard]] RaggedStorageCache<TData> tryGetCache() const {
-        return static_cast<Derived const*>(this)->tryGetCacheImpl();
+        return static_cast<Derived const *>(this)->tryGetCacheImpl();
     }
 
 protected:
@@ -240,9 +242,9 @@ template<typename TData>
 class OwningRaggedStorage : public RaggedStorageBase<OwningRaggedStorage<TData>, TData> {
 public:
     OwningRaggedStorage() = default;
-    
+
     // ========== Modification ==========
-    
+
     /**
      * @brief Append a new entry (most efficient insertion)
      * 
@@ -252,32 +254,32 @@ public:
      * @param data The data to store (will be moved)
      * @param entity_id The EntityId for this entry
      */
-    void append(TimeFrameIndex time, TData&& data, EntityId entity_id) {
+    void append(TimeFrameIndex time, TData && data, EntityId entity_id) {
         size_t const idx = _times.size();
-        
+
         _times.push_back(time);
         _data.push_back(std::move(data));
         _entity_ids.push_back(entity_id);
-        
+
         // Update acceleration structures
         _entity_to_index[entity_id] = idx;
         _updateTimeRanges(time, idx);
     }
-    
+
     /**
      * @brief Append a new entry (copy version)
      */
-    void append(TimeFrameIndex time, TData const& data, EntityId entity_id) {
+    void append(TimeFrameIndex time, TData const & data, EntityId entity_id) {
         size_t const idx = _times.size();
-        
+
         _times.push_back(time);
         _data.push_back(data);
         _entity_ids.push_back(entity_id);
-        
+
         _entity_to_index[entity_id] = idx;
         _updateTimeRanges(time, idx);
     }
-    
+
     /**
      * @brief Reserve capacity for expected number of entries
      */
@@ -286,7 +288,7 @@ public:
         _data.reserve(capacity);
         _entity_ids.reserve(capacity);
     }
-    
+
     /**
      * @brief Clear all data
      */
@@ -297,7 +299,7 @@ public:
         _entity_to_index.clear();
         _time_ranges.clear();
     }
-    
+
     /**
      * @brief Remove entry by EntityId
      * @param entity_id The EntityId to remove
@@ -311,20 +313,58 @@ public:
         if (it == _entity_to_index.end()) {
             return false;
         }
-        
+
         size_t const idx = it->second;
-        
+
         // Erase from arrays
         _times.erase(_times.begin() + static_cast<std::ptrdiff_t>(idx));
         _data.erase(_data.begin() + static_cast<std::ptrdiff_t>(idx));
         _entity_ids.erase(_entity_ids.begin() + static_cast<std::ptrdiff_t>(idx));
-        
+
         // Rebuild acceleration structures (indices shifted)
         _rebuildAccelerationStructures();
-        
+
         return true;
     }
-    
+
+    /**
+     * @brief Remove multiple entries by EntityId in a single O(n + k) pass
+     * @param entity_ids Set of EntityIds to remove
+     * @return Number of entries actually removed
+     *
+     * @note O(n + k) compared to O(n * k) for repeated removeByEntityId calls.
+     */
+    size_t removeByEntityIds(std::unordered_set<EntityId> const & entity_ids) {
+        if (entity_ids.empty()) {
+            return 0;
+        }
+
+        size_t const n = _times.size();
+        size_t write = 0;
+        for (size_t read = 0; read < n; ++read) {
+            if (entity_ids.count(_entity_ids[read]) == 0) {
+                if (write != read) {
+                    _times[write] = _times[read];
+                    _data[write] = std::move(_data[read]);
+                    _entity_ids[write] = _entity_ids[read];
+                }
+                ++write;
+            }
+        }
+
+        size_t const removed = n - write;
+        if (removed == 0) {
+            return 0;
+        }
+
+        auto const erase_from = static_cast<std::ptrdiff_t>(write);
+        _times.erase(_times.begin() + erase_from, _times.end());
+        _data.erase(_data.begin() + erase_from, _data.end());
+        _entity_ids.erase(_entity_ids.begin() + erase_from, _entity_ids.end());
+        _rebuildAccelerationStructures();
+        return removed;
+    }
+
     /**
      * @brief Remove all entries at a specific time
      * @param time The TimeFrameIndex to remove all entries for
@@ -337,10 +377,10 @@ public:
         if (it == _time_ranges.end()) {
             return 0;
         }
-        
+
         auto [start, end] = it->second;
         size_t const count = end - start;
-        
+
         // Erase the range from all vectors
         _times.erase(_times.begin() + static_cast<std::ptrdiff_t>(start),
                      _times.begin() + static_cast<std::ptrdiff_t>(end));
@@ -348,35 +388,35 @@ public:
                     _data.begin() + static_cast<std::ptrdiff_t>(end));
         _entity_ids.erase(_entity_ids.begin() + static_cast<std::ptrdiff_t>(start),
                           _entity_ids.begin() + static_cast<std::ptrdiff_t>(end));
-        
+
         // Rebuild acceleration structures
         _rebuildAccelerationStructures();
-        
+
         return count;
     }
 
     // ========== CRTP Implementation ==========
-    
+
     [[nodiscard]] size_t sizeImpl() const { return _times.size(); }
-    
+
     [[nodiscard]] TimeFrameIndex getTimeImpl(size_t idx) const { return _times[idx]; }
-    
-    [[nodiscard]] TData const& getDataImpl(size_t idx) const { return _data[idx]; }
-    
+
+    [[nodiscard]] TData const & getDataImpl(size_t idx) const { return _data[idx]; }
+
     [[nodiscard]] EntityId getEntityIdImpl(size_t idx) const { return _entity_ids[idx]; }
-    
+
     [[nodiscard]] std::optional<size_t> findByEntityIdImpl(EntityId id) const {
         auto it = _entity_to_index.find(id);
         return it != _entity_to_index.end() ? std::optional{it->second} : std::nullopt;
     }
-    
+
     [[nodiscard]] std::pair<size_t, size_t> getTimeRangeImpl(TimeFrameIndex time) const {
         auto it = _time_ranges.find(time);
         return it != _time_ranges.end() ? it->second : std::pair<size_t, size_t>{0, 0};
     }
-    
+
     [[nodiscard]] size_t getTimeCountImpl() const { return _time_ranges.size(); }
-    
+
     [[nodiscard]] RaggedStorageType getStorageTypeImpl() const { return RaggedStorageType::Owning; }
 
     /**
@@ -387,36 +427,36 @@ public:
      */
     [[nodiscard]] RaggedStorageCache<TData> tryGetCacheImpl() const {
         return RaggedStorageCache<TData>{
-            _times.data(),
-            _data.data(),
-            _entity_ids.data(),
-            _times.size(),
-            true  // is_contiguous - owning storage is always contiguous
+                _times.data(),
+                _data.data(),
+                _entity_ids.data(),
+                _times.size(),
+                true// is_contiguous - owning storage is always contiguous
         };
     }
 
     // ========== Direct Array Access (for views and iteration) ==========
-    
-    [[nodiscard]] std::vector<TimeFrameIndex> const& times() const { return _times; }
-    [[nodiscard]] std::vector<TData> const& data() const { return _data; }
-    [[nodiscard]] std::vector<EntityId> const& entityIds() const { return _entity_ids; }
-    
+
+    [[nodiscard]] std::vector<TimeFrameIndex> const & times() const { return _times; }
+    [[nodiscard]] std::vector<TData> const & data() const { return _data; }
+    [[nodiscard]] std::vector<EntityId> const & entityIds() const { return _entity_ids; }
+
     [[nodiscard]] std::span<TimeFrameIndex const> timesSpan() const { return _times; }
     [[nodiscard]] std::span<TData const> dataSpan() const { return _data; }
     [[nodiscard]] std::span<EntityId const> entityIdsSpan() const { return _entity_ids; }
-    
+
     /**
      * @brief Get mutable reference to data (use with caution)
      * 
      * Modifications through this reference do not update acceleration structures.
      * Only use for in-place modifications that don't change EntityId or time.
      */
-    [[nodiscard]] TData& getMutableData(size_t idx) { return _data[idx]; }
-    
+    [[nodiscard]] TData & getMutableData(size_t idx) { return _data[idx]; }
+
     /**
      * @brief Get the time ranges map for iteration
      */
-    [[nodiscard]] std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const {
+    [[nodiscard]] std::map<TimeFrameIndex, std::pair<size_t, size_t>> const & timeRanges() const {
         return _time_ranges;
     }
 
@@ -431,11 +471,11 @@ private:
             it->second.second = idx + 1;
         }
     }
-    
+
     void _rebuildAccelerationStructures() {
         _entity_to_index.clear();
         _time_ranges.clear();
-        
+
         for (size_t i = 0; i < _times.size(); ++i) {
             _entity_to_index[_entity_ids[i]] = i;
             _updateTimeRanges(_times[i], i);
@@ -496,8 +536,8 @@ public:
      * @throws static_assert if view is not random-access
      */
     explicit LazyRaggedStorage(ViewType view, size_t num_elements)
-        : _view(std::move(view))
-        , _num_elements(num_elements) {
+        : _view(std::move(view)),
+          _num_elements(num_elements) {
         static_assert(std::ranges::random_access_range<ViewType>,
                       "LazyRaggedStorage requires random access range");
         _buildLocalIndices();
@@ -514,7 +554,7 @@ public:
         return std::get<0>(element);
     }
 
-    [[nodiscard]] TData const& getDataImpl(size_t idx) const {
+    [[nodiscard]] TData const & getDataImpl(size_t idx) const {
         auto element = _view[idx];
         // Handle both std::cref<TData> and TData directly
         if constexpr (requires { element; std::get<2>(element).get(); }) {
@@ -553,13 +593,13 @@ public:
      * This is correct since lazy storage computes values on-demand.
      */
     [[nodiscard]] RaggedStorageCache<TData> tryGetCacheImpl() const {
-        return RaggedStorageCache<TData>{};  // Invalid cache
+        return RaggedStorageCache<TData>{};// Invalid cache
     }
 
     /**
      * @brief Get reference to underlying view (for advanced use)
      */
-    [[nodiscard]] ViewType const& getView() const {
+    [[nodiscard]] ViewType const & getView() const {
         return _view;
     }
 
@@ -573,14 +613,14 @@ private:
     void _buildLocalIndices() {
         _entity_to_index.clear();
         _time_ranges.clear();
-        
+
         for (size_t i = 0; i < _num_elements; ++i) {
             auto element = _view[i];
             TimeFrameIndex time = std::get<0>(element);
             EntityId eid = std::get<1>(element);
-            
+
             _entity_to_index[eid] = i;
-            
+
             auto it = _time_ranges.find(time);
             if (it == _time_ranges.end()) {
                 _time_ranges[time] = {i, i + 1};
@@ -593,11 +633,11 @@ private:
 
     ViewType _view;
     size_t _num_elements;
-    
+
     // Acceleration structures built on construction
     std::unordered_map<EntityId, size_t> _entity_to_index;
     std::map<TimeFrameIndex, std::pair<size_t, size_t>> _time_ranges;
-    
+
     // Mutable cache for getDataImpl (required for returning const ref)
     mutable TData _cached_data;
 };
@@ -627,7 +667,7 @@ public:
      */
     explicit ViewRaggedStorage(std::shared_ptr<OwningRaggedStorage<TData> const> source)
         : _source(std::move(source)) {}
-    
+
     /**
      * @brief Set the indices this view includes
      * 
@@ -640,7 +680,7 @@ public:
         _indices = std::move(indices);
         _rebuildLocalEntityIndex();
     }
-    
+
     /**
      * @brief Create view of all entries (useful as starting point for chained operations)
      */
@@ -651,7 +691,7 @@ public:
         }
         _rebuildLocalEntityIndex();
     }
-    
+
     /**
      * @brief Filter by EntityId set
      * 
@@ -660,21 +700,21 @@ public:
      * @param entity_ids Set of EntityIds to include
      */
     template<typename EntityIdContainer>
-    void filterByEntityIds(EntityIdContainer const& entity_ids) {
+    void filterByEntityIds(EntityIdContainer const & entity_ids) {
         _indices.clear();
-        _indices.reserve(entity_ids.size()); // Approximate
-        
-        for (EntityId const& eid : entity_ids) {
+        _indices.reserve(entity_ids.size());// Approximate
+
+        for (EntityId const & eid: entity_ids) {
             if (auto idx = _source->findByEntityId(eid)) {
                 _indices.push_back(*idx);
             }
         }
-        
+
         // Sort for cache-friendly access
         std::sort(_indices.begin(), _indices.end());
         _rebuildLocalEntityIndex();
     }
-    
+
     /**
      * @brief Filter by time range [start, end] inclusive
      * 
@@ -683,61 +723,61 @@ public:
      */
     void filterByTimeRange(TimeFrameIndex start, TimeFrameIndex end) {
         _indices.clear();
-        
+
         // Use time_ranges from source for efficiency
-        for (auto const& [time, range] : _source->timeRanges()) {
+        for (auto const & [time, range]: _source->timeRanges()) {
             if (time >= start && time <= end) {
                 for (size_t i = range.first; i < range.second; ++i) {
                     _indices.push_back(i);
                 }
             }
         }
-        
+
         _rebuildLocalEntityIndex();
     }
-    
+
     /**
      * @brief Get the source storage
      */
     [[nodiscard]] std::shared_ptr<OwningRaggedStorage<TData> const> source() const {
         return _source;
     }
-    
+
     /**
      * @brief Get the indices vector
      */
-    [[nodiscard]] std::vector<size_t> const& indices() const {
+    [[nodiscard]] std::vector<size_t> const & indices() const {
         return _indices;
     }
 
     // ========== CRTP Implementation ==========
-    
+
     [[nodiscard]] size_t sizeImpl() const { return _indices.size(); }
-    
+
     [[nodiscard]] TimeFrameIndex getTimeImpl(size_t idx) const {
         return _source->getTime(_indices[idx]);
     }
-    
-    [[nodiscard]] TData const& getDataImpl(size_t idx) const {
+
+    [[nodiscard]] TData const & getDataImpl(size_t idx) const {
         return _source->getData(_indices[idx]);
     }
-    
+
     [[nodiscard]] EntityId getEntityIdImpl(size_t idx) const {
         return _source->getEntityId(_indices[idx]);
     }
-    
+
     [[nodiscard]] std::optional<size_t> findByEntityIdImpl(EntityId id) const {
         auto it = _local_entity_to_index.find(id);
         return it != _local_entity_to_index.end() ? std::optional{it->second} : std::nullopt;
     }
-    
+
     [[nodiscard]] std::pair<size_t, size_t> getTimeRangeImpl(TimeFrameIndex time) const {
         auto it = _local_time_ranges.find(time);
         return it != _local_time_ranges.end() ? it->second : std::pair<size_t, size_t>{0, 0};
     }
-    
+
     [[nodiscard]] size_t getTimeCountImpl() const { return _local_time_ranges.size(); }
-    
+
     [[nodiscard]] RaggedStorageType getStorageTypeImpl() const { return RaggedStorageType::View; }
 
     /**
@@ -760,33 +800,33 @@ public:
         if (_indices.empty()) {
             return RaggedStorageCache<TData>{nullptr, nullptr, nullptr, 0, true};
         }
-        
+
         // Check if indices form a contiguous range [start, start+1, ..., start+n-1]
         size_t const start_idx = _indices[0];
         bool is_contiguous = true;
-        
+
         for (size_t i = 1; i < _indices.size(); ++i) {
             if (_indices[i] != start_idx + i) {
                 is_contiguous = false;
                 break;
             }
         }
-        
+
         if (is_contiguous) {
             // Return cache pointing to the contiguous range in source
-            auto const& src_times = _source->times();
-            auto const& src_data = _source->data();
-            auto const& src_entity_ids = _source->entityIds();
-            
+            auto const & src_times = _source->times();
+            auto const & src_data = _source->data();
+            auto const & src_entity_ids = _source->entityIds();
+
             return RaggedStorageCache<TData>{
-                src_times.data() + start_idx,
-                src_data.data() + start_idx,
-                src_entity_ids.data() + start_idx,
-                _indices.size(),
-                true  // is_contiguous
+                    src_times.data() + start_idx,
+                    src_data.data() + start_idx,
+                    src_entity_ids.data() + start_idx,
+                    _indices.size(),
+                    true// is_contiguous
             };
         }
-        
+
         // Non-contiguous - return invalid cache
         return RaggedStorageCache<TData>{};
     }
@@ -795,11 +835,11 @@ private:
     void _rebuildLocalEntityIndex() {
         _local_entity_to_index.clear();
         _local_time_ranges.clear();
-        
+
         for (size_t i = 0; i < _indices.size(); ++i) {
             size_t const src_idx = _indices[i];
             _local_entity_to_index[_source->getEntityId(src_idx)] = i;
-            
+
             TimeFrameIndex const time = _source->getTime(src_idx);
             auto it = _local_time_ranges.find(time);
             if (it == _local_time_ranges.end()) {
@@ -809,7 +849,7 @@ private:
             }
         }
     }
-    
+
     std::shared_ptr<OwningRaggedStorage<TData> const> _source;
     std::vector<size_t> _indices;
     std::unordered_map<EntityId, size_t> _local_entity_to_index;
@@ -840,117 +880,119 @@ public:
     using OwningType = OwningRaggedStorage<TData>;
     using ViewType = ViewRaggedStorage<TData>;
     using VariantType = std::variant<OwningType, ViewType>;
-    
+
     /**
      * @brief Default construct with empty owning storage
      */
-    RaggedStorageVariant() : _storage(OwningType{}) {}
-    
+    RaggedStorageVariant()
+        : _storage(OwningType{}) {}
+
     /**
      * @brief Construct from owning storage (move)
      */
-    explicit RaggedStorageVariant(OwningType storage) 
+    explicit RaggedStorageVariant(OwningType storage)
         : _storage(std::move(storage)) {}
-    
+
     /**
      * @brief Construct from view storage (move)
      */
     explicit RaggedStorageVariant(ViewType storage)
         : _storage(std::move(storage)) {}
-    
+
     // ========== Unified Interface ==========
-    
+
     [[nodiscard]] size_t size() const {
-        return std::visit([](auto const& s) { return s.size(); }, _storage);
+        return std::visit([](auto const & s) { return s.size(); }, _storage);
     }
-    
+
     [[nodiscard]] bool empty() const {
-        return std::visit([](auto const& s) { return s.empty(); }, _storage);
+        return std::visit([](auto const & s) { return s.empty(); }, _storage);
     }
-    
+
     [[nodiscard]] TimeFrameIndex getTime(size_t idx) const {
-        return std::visit([idx](auto const& s) { return s.getTime(idx); }, _storage);
+        return std::visit([idx](auto const & s) { return s.getTime(idx); }, _storage);
     }
-    
-    [[nodiscard]] TData const& getData(size_t idx) const {
-        return std::visit([idx](auto const& s) -> TData const& { 
-            return s.getData(idx); 
-        }, _storage);
+
+    [[nodiscard]] TData const & getData(size_t idx) const {
+        return std::visit([idx](auto const & s) -> TData const & {
+            return s.getData(idx);
+        },
+                          _storage);
     }
-    
+
     [[nodiscard]] EntityId getEntityId(size_t idx) const {
-        return std::visit([idx](auto const& s) { return s.getEntityId(idx); }, _storage);
+        return std::visit([idx](auto const & s) { return s.getEntityId(idx); }, _storage);
     }
-    
+
     [[nodiscard]] std::optional<size_t> findByEntityId(EntityId id) const {
-        return std::visit([id](auto const& s) { return s.findByEntityId(id); }, _storage);
+        return std::visit([id](auto const & s) { return s.findByEntityId(id); }, _storage);
     }
-    
+
     [[nodiscard]] std::pair<size_t, size_t> getTimeRange(TimeFrameIndex time) const {
-        return std::visit([time](auto const& s) { return s.getTimeRange(time); }, _storage);
+        return std::visit([time](auto const & s) { return s.getTimeRange(time); }, _storage);
     }
-    
+
     [[nodiscard]] size_t getTimeCount() const {
-        return std::visit([](auto const& s) { return s.getTimeCount(); }, _storage);
+        return std::visit([](auto const & s) { return s.getTimeCount(); }, _storage);
     }
-    
+
     [[nodiscard]] RaggedStorageType getStorageType() const {
-        return std::visit([](auto const& s) { return s.getStorageType(); }, _storage);
+        return std::visit([](auto const & s) { return s.getStorageType(); }, _storage);
     }
-    
+
     [[nodiscard]] bool isView() const {
         return getStorageType() == RaggedStorageType::View;
     }
-    
+
     // ========== Type-Specific Access ==========
-    
+
     /**
      * @brief Check if storage is owning type
      */
     [[nodiscard]] bool isOwning() const {
         return std::holds_alternative<OwningType>(_storage);
     }
-    
+
     /**
      * @brief Get owning storage if present
      * @return Pointer to owning storage, or nullptr if view
      */
-    [[nodiscard]] OwningType* getOwning() {
+    [[nodiscard]] OwningType * getOwning() {
         return std::get_if<OwningType>(&_storage);
     }
-    
-    [[nodiscard]] OwningType const* getOwning() const {
+
+    [[nodiscard]] OwningType const * getOwning() const {
         return std::get_if<OwningType>(&_storage);
     }
-    
+
     /**
      * @brief Get view storage if present
      * @return Pointer to view storage, or nullptr if owning
      */
-    [[nodiscard]] ViewType* getView() {
+    [[nodiscard]] ViewType * getView() {
         return std::get_if<ViewType>(&_storage);
     }
-    
-    [[nodiscard]] ViewType const* getView() const {
+
+    [[nodiscard]] ViewType const * getView() const {
         return std::get_if<ViewType>(&_storage);
     }
-    
+
     /**
      * @brief Access the underlying variant for advanced use
      */
-    [[nodiscard]] VariantType& variant() { return _storage; }
-    [[nodiscard]] VariantType const& variant() const { return _storage; }
-    
+    [[nodiscard]] VariantType & variant() { return _storage; }
+    [[nodiscard]] VariantType const & variant() const { return _storage; }
+
     /**
      * @brief Apply a visitor to the storage
      */
     template<typename Visitor>
-    decltype(auto) visit(Visitor&& visitor) {
+    decltype(auto) visit(Visitor && visitor) {
         return std::visit(std::forward<Visitor>(visitor), _storage);
     }
-    
+
     template<typename Visitor>
-    decltype(auto) visit(Visitor&& visitor) const {
+    decltype(auto) visit(Visitor && visitor) const {
         return std::visit(std::forward<Visitor>(visitor), _storage);
     }
 
@@ -1003,29 +1045,29 @@ public:
     // Default constructor creates empty owning storage
     RaggedStorageWrapper()
         : _impl(std::make_unique<StorageModel<OwningRaggedStorage<TData>>>(
-              OwningRaggedStorage<TData>{})) {}
+                  OwningRaggedStorage<TData>{})) {}
 
     // Move-only semantics (unique_ptr member)
-    RaggedStorageWrapper(RaggedStorageWrapper&&) noexcept = default;
-    RaggedStorageWrapper& operator=(RaggedStorageWrapper&&) noexcept = default;
-    RaggedStorageWrapper(RaggedStorageWrapper const&) = delete;
-    RaggedStorageWrapper& operator=(RaggedStorageWrapper const&) = delete;
+    RaggedStorageWrapper(RaggedStorageWrapper &&) noexcept = default;
+    RaggedStorageWrapper & operator=(RaggedStorageWrapper &&) noexcept = default;
+    RaggedStorageWrapper(RaggedStorageWrapper const &) = delete;
+    RaggedStorageWrapper & operator=(RaggedStorageWrapper const &) = delete;
 
     // ========== Unified Interface (Virtual Dispatch) ==========
-    
-    [[nodiscard]] size_t size() const { 
-        return _impl->size(); 
+
+    [[nodiscard]] size_t size() const {
+        return _impl->size();
     }
-    
-    [[nodiscard]] bool empty() const { 
-        return _impl->size() == 0; 
+
+    [[nodiscard]] bool empty() const {
+        return _impl->size() == 0;
     }
 
     [[nodiscard]] TimeFrameIndex getTime(size_t idx) const {
         return _impl->getTime(idx);
     }
 
-    [[nodiscard]] TData const& getData(size_t idx) const {
+    [[nodiscard]] TData const & getData(size_t idx) const {
         return _impl->getData(idx);
     }
 
@@ -1054,7 +1096,7 @@ public:
     }
 
     // ========== Cache Optimization ==========
-    
+
     /**
      * @brief Try to get cached pointers for fast-path iteration
      * 
@@ -1069,7 +1111,7 @@ public:
     }
 
     // ========== Mutation Operations ==========
-    
+
     /**
      * @brief Append a new entry (move version)
      * 
@@ -1080,7 +1122,7 @@ public:
      * @param entity_id The EntityId for this entry
      * @throws std::runtime_error if storage is not owning
      */
-    void append(TimeFrameIndex time, TData&& data, EntityId entity_id) {
+    void append(TimeFrameIndex time, TData && data, EntityId entity_id) {
         _impl->append(time, std::move(data), entity_id);
     }
 
@@ -1089,7 +1131,7 @@ public:
      * 
      * Only valid for owning storage. Throws if storage is a view.
      */
-    void append(TimeFrameIndex time, TData const& data, EntityId entity_id) {
+    void append(TimeFrameIndex time, TData const & data, EntityId entity_id) {
         _impl->append(time, data, entity_id);
     }
 
@@ -1124,6 +1166,18 @@ public:
     }
 
     /**
+     * @brief Remove multiple entries by EntityId in a single O(n + k) pass
+     *
+     * Only valid for owning storage.
+     *
+     * @param entity_ids Set of EntityIds to remove
+     * @return Number of entries actually removed
+     */
+    size_t removeByEntityIds(std::unordered_set<EntityId> const & entity_ids) {
+        return _impl->removeByEntityIds(entity_ids);
+    }
+
+    /**
      * @brief Remove all entries at a specific time
      * 
      * Only valid for owning storage.
@@ -1144,7 +1198,7 @@ public:
      * @param idx Flat index in [0, size())
      * @return Mutable reference to data
      */
-    [[nodiscard]] TData& getMutableData(size_t idx) {
+    [[nodiscard]] TData & getMutableData(size_t idx) {
         return _impl->getMutableData(idx);
     }
 
@@ -1153,12 +1207,12 @@ public:
      * 
      * @return Const reference to time ranges map, or throws if not owning
      */
-    [[nodiscard]] std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const {
+    [[nodiscard]] std::map<TimeFrameIndex, std::pair<size_t, size_t>> const & timeRanges() const {
         return _impl->timeRanges();
     }
 
     // ========== Type Access ==========
-    
+
     /**
      * @brief Try to get underlying storage as specific type
      * 
@@ -1169,14 +1223,14 @@ public:
      * @return Pointer to underlying storage, or nullptr
      */
     template<typename StorageType>
-    [[nodiscard]] StorageType* tryGet() {
-        auto* model = dynamic_cast<StorageModel<StorageType>*>(_impl.get());
+    [[nodiscard]] StorageType * tryGet() {
+        auto * model = dynamic_cast<StorageModel<StorageType> *>(_impl.get());
         return model ? &model->_storage : nullptr;
     }
 
     template<typename StorageType>
-    [[nodiscard]] StorageType const* tryGet() const {
-        auto const* model = dynamic_cast<StorageModel<StorageType> const*>(_impl.get());
+    [[nodiscard]] StorageType const * tryGet() const {
+        auto const * model = dynamic_cast<StorageModel<StorageType> const *>(_impl.get());
         return model ? &model->_storage : nullptr;
     }
 
@@ -1186,35 +1240,36 @@ private:
      */
     struct StorageConcept {
         virtual ~StorageConcept() = default;
-        
+
         // Size & bounds
         virtual size_t size() const = 0;
-        
+
         // Element access (const)
         virtual TimeFrameIndex getTime(size_t idx) const = 0;
-        virtual TData const& getData(size_t idx) const = 0;
+        virtual TData const & getData(size_t idx) const = 0;
         virtual EntityId getEntityId(size_t idx) const = 0;
-        
+
         // Lookups
         virtual std::optional<size_t> findByEntityId(EntityId id) const = 0;
         virtual std::pair<size_t, size_t> getTimeRange(TimeFrameIndex time) const = 0;
         virtual size_t getTimeCount() const = 0;
-        
+
         // Type identification
         virtual RaggedStorageType getStorageType() const = 0;
-        
+
         // Cache optimization
         virtual RaggedStorageCache<TData> tryGetCache() const = 0;
-        
+
         // Mutation operations (may throw for read-only storage types)
-        virtual void append(TimeFrameIndex time, TData&& data, EntityId entity_id) = 0;
-        virtual void append(TimeFrameIndex time, TData const& data, EntityId entity_id) = 0;
+        virtual void append(TimeFrameIndex time, TData && data, EntityId entity_id) = 0;
+        virtual void append(TimeFrameIndex time, TData const & data, EntityId entity_id) = 0;
         virtual void reserve(size_t capacity) = 0;
         virtual void clear() = 0;
         virtual bool removeByEntityId(EntityId entity_id) = 0;
+        virtual size_t removeByEntityIds(std::unordered_set<EntityId> const & entity_ids) = 0;
         virtual size_t removeAtTime(TimeFrameIndex time) = 0;
-        virtual TData& getMutableData(size_t idx) = 0;
-        virtual std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const = 0;
+        virtual TData & getMutableData(size_t idx) = 0;
+        virtual std::map<TimeFrameIndex, std::pair<size_t, size_t>> const & timeRanges() const = 0;
     };
 
     /**
@@ -1237,7 +1292,7 @@ private:
             return _storage.getTime(idx);
         }
 
-        TData const& getData(size_t idx) const override {
+        TData const & getData(size_t idx) const override {
             return _storage.getData(idx);
         }
 
@@ -1272,7 +1327,7 @@ private:
         }
 
         // Mutation operations - only supported for OwningRaggedStorage
-        void append(TimeFrameIndex time, TData&& data, EntityId entity_id) override {
+        void append(TimeFrameIndex time, TData && data, EntityId entity_id) override {
             if constexpr (requires { _storage.append(time, std::move(data), entity_id); }) {
                 _storage.append(time, std::move(data), entity_id);
             } else {
@@ -1280,7 +1335,7 @@ private:
             }
         }
 
-        void append(TimeFrameIndex time, TData const& data, EntityId entity_id) override {
+        void append(TimeFrameIndex time, TData const & data, EntityId entity_id) override {
             if constexpr (requires { _storage.append(time, data, entity_id); }) {
                 _storage.append(time, data, entity_id);
             } else {
@@ -1311,6 +1366,14 @@ private:
             }
         }
 
+        size_t removeByEntityIds(std::unordered_set<EntityId> const & entity_ids) override {
+            if constexpr (requires { _storage.removeByEntityIds(entity_ids); }) {
+                return _storage.removeByEntityIds(entity_ids);
+            } else {
+                throw std::runtime_error("removeByEntityIds() not supported for view/lazy storage");
+            }
+        }
+
         size_t removeAtTime(TimeFrameIndex time) override {
             if constexpr (requires { _storage.removeAtTime(time); }) {
                 return _storage.removeAtTime(time);
@@ -1319,7 +1382,7 @@ private:
             }
         }
 
-        TData& getMutableData(size_t idx) override {
+        TData & getMutableData(size_t idx) override {
             if constexpr (requires { _storage.getMutableData(idx); }) {
                 return _storage.getMutableData(idx);
             } else {
@@ -1327,7 +1390,7 @@ private:
             }
         }
 
-        std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const override {
+        std::map<TimeFrameIndex, std::pair<size_t, size_t>> const & timeRanges() const override {
             if constexpr (requires { _storage.timeRanges(); }) {
                 return _storage.timeRanges();
             } else {
@@ -1341,4 +1404,4 @@ private:
     std::unique_ptr<StorageConcept> _impl;
 };
 
-#endif // RAGGED_STORAGE_HPP
+#endif// RAGGED_STORAGE_HPP

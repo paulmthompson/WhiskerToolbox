@@ -11,7 +11,7 @@ title: "Command Architecture Roadmap"
 | Phase | Status | Notes |
 |-------|--------|-------|
 | **Phase 1:** Command Foundation | **Complete** | 7 commands, factory, validation, variable substitution, recorder, mutation guard, golden traces |
-| **Phase 2:** Triage Session | **Nearly Complete** | Core, widget, guided editor all done. Keyboard shortcuts (2.4) and tracked-regions overlay (2.5) remain. |
+| **Phase 2:** Triage Session | **Nearly Complete** | Core, widget, guided editor all done. tracked-regions overlay (2.5) remains. |
 | **Phase 3:** Persistence & Save Registry | **Complete** | SaverRegistry, 8 savers (CSV ×6, CapnProto, OpenCV), SaveData + LoadData commands, round-trip fuzz tests |
 | **Phase 3.5:** Command Recording & Test Generation | **Nearly Complete** | Steps 3.5.1–3.5.3 done (recorder wired, widgets routed, Command Log UI). Only end-to-end verification (3.5.4) remains. |
 | **Phase 4:** Action Journal Integration | Not Started | Generalizes CommandRecorder into persistent, timestamped journal. Depends on Phase 3.5. |
@@ -72,7 +72,7 @@ For the full architectural design, types, and code examples, see the
 ```
 Completed Foundation (Phases 1, 3, 3.5 nearly done, 7)
    │
-   ├──► Phase 2 Remaining: Keyboard shortcuts (2.4), tracked-regions viz (2.5)
+   ├──► Phase 2 Remaining: tracked-regions viz (2.5)
    │
    ├──► Phase 3.5 Remaining: End-to-end verification (3.5.4)
    │       Steps 3.5.1–3.5.3 done (recorder wired, widgets routed, Command Log UI)
@@ -139,12 +139,6 @@ Replaced the hardcoded if-else chain in `CommandFactory` with `CommandRegistry` 
 **Completed:** TriageSession core (state machine, `commit()` with runtime variables), TriageSessionState (EditorState subclass), TriageSessionWidget (UI), unit tests, AutoParamWidget extraction, Guided Pipeline Editor.
 
 ### Remaining Steps
-
-#### Step 2.4 — Keyboard Shortcuts
-
-- [ ] **M** — Mark (start a triage range)
-- [ ] **C** — Commit (execute pipeline for `[mark_frame, current_frame]`)
-- [ ] **R** — Recall (abort, jump back to mark frame)
 
 #### Step 2.5 — Tracked-Regions Visualization
 

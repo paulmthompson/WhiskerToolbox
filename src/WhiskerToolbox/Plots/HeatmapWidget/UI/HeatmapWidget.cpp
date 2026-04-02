@@ -50,9 +50,9 @@ HeatmapWidget::HeatmapWidget(std::shared_ptr<DataManager> data_manager,
 
     // Replace the main layout
     QLayout * old_layout = layout();
-    
-        delete old_layout;
-    
+
+    delete old_layout;
+
     setLayout(vertical_layout);
 
     // Forward signals from OpenGL widget
@@ -79,6 +79,12 @@ HeatmapWidget::HeatmapWidget(std::shared_ptr<DataManager> data_manager,
 
 HeatmapWidget::~HeatmapWidget() {
     delete ui;
+}
+
+void HeatmapWidget::setSelectionContext(SelectionContext * selection_context) {
+    if (_opengl_widget) {
+        _opengl_widget->setSelectionContext(selection_context);
+    }
 }
 
 void HeatmapWidget::setState(std::shared_ptr<HeatmapState> state) {

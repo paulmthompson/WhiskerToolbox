@@ -8,12 +8,14 @@
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
 #include "DataManager.hpp"
-#include "Commands/Core/CommandContext.hpp"
-#include "Commands/IO/SaveData.hpp"
-#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "DigitalIntervalSeriesDataView.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
+
+#include "KeymapSystem/KeyAction.hpp"
+#include "KeymapSystem/KeyActionAdapter.hpp"
+#include "KeymapSystem/KeymapManager.hpp"
 
 #include <QAction>
 #include <QComboBox>
@@ -250,7 +252,28 @@ int64_t DigitalIntervalSeriesInspector::_getCurrentTimeInSeriesFrame() const {
     return converted_index.getValue();
 }
 
-void DigitalIntervalSeriesInspector::_createIntervalButton() {
+void DigitalIntervalSeriesInspector::_markContactStart() {
+    auto current_time = _getCurrentTimeInSeriesFrame();
+    if (current_time < 0) {
+        std::cerr << "DigitalIntervalSeriesInspector: Failed to get current time in series frame" << std::endl;
+        return;
+    }
+
+    auto contactIntervals = dataManager()->getData<DigitalIntervalSeries>(_active_key);
+    if (!contactIntervals) return;
+
+    _interval_start = current_time;
+    _interval_epoch = true;
+
+    ui->create_interval_button->setText("Mark Interval End");
+    ui->cancel_interval_button->setVisible(true);
+    _updateStartFrameLabel(_interval_start);
+}
+
+void DigitalIntervalSeriesInspector::_markContactEnd() {
+    if (!_interval_epoch) {
+        return;
+    }
 
     auto current_time = _getCurrentTimeInSeriesFrame();
     if (current_time < 0) {
@@ -261,32 +284,53 @@ void DigitalIntervalSeriesInspector::_createIntervalButton() {
     auto contactIntervals = dataManager()->getData<DigitalIntervalSeries>(_active_key);
     if (!contactIntervals) return;
 
+    _interval_epoch = false;
+    _interval_end = current_time;
+
+    // Ensure proper ordering (start <= end) by swapping if necessary
+    int64_t const start = std::min(_interval_start, _interval_end);
+    int64_t const end = std::max(_interval_start, _interval_end);
+
+    contactIntervals->addEvent(TimeFrameIndex(start), TimeFrameIndex(end));
+
+    ui->create_interval_button->setText("Create Interval");
+    ui->cancel_interval_button->setVisible(false);
+    _updateStartFrameLabel(-1);
+}
+
+void DigitalIntervalSeriesInspector::_createIntervalButton() {
     if (_interval_epoch) {
-        // User is selecting the second frame
-        _interval_epoch = false;
-        _interval_end = current_time;
-
-        // Ensure proper ordering (start <= end) by swapping if necessary
-        int64_t const start = std::min(_interval_start, _interval_end);
-        int64_t const end = std::max(_interval_start, _interval_end);
-
-        contactIntervals->addEvent(TimeFrameIndex(start), TimeFrameIndex(end));
-
-        // Reset UI state
-        ui->create_interval_button->setText("Create Interval");
-        ui->cancel_interval_button->setVisible(false);
-        _updateStartFrameLabel(-1);// Clear the label
-
+        _markContactEnd();
     } else {
-        // User is selecting the first frame
-        _interval_start = current_time;
-        _interval_epoch = true;
-
-        // Update UI state
-        ui->create_interval_button->setText("Mark Interval End");
-        ui->cancel_interval_button->setVisible(true);
-        _updateStartFrameLabel(_interval_start);
+        _markContactStart();
     }
+}
+
+void DigitalIntervalSeriesInspector::setKeymapManager(KeymapSystem::KeymapManager * manager) {
+    if (!manager || _key_adapter) {
+        return;
+    }
+
+    _key_adapter = new KeymapSystem::KeyActionAdapter(this);
+    _key_adapter->setTypeId(EditorLib::EditorTypeId(QStringLiteral("DigitalIntervalSeriesInspector")));
+
+    _key_adapter->setHandler([this](QString const & action_id) -> bool {
+        if (action_id == QStringLiteral("digital_interval_series.mark_contact_start")) {
+            _markContactStart();
+            return true;
+        }
+        if (action_id == QStringLiteral("digital_interval_series.mark_contact_end")) {
+            _markContactEnd();
+            return true;
+        }
+        if (action_id == QStringLiteral("digital_interval_series.flip_current_frame")) {
+            _flipIntervalButton();
+            return true;
+        }
+        return false;
+    });
+
+    manager->registerAdapter(_key_adapter);
 }
 
 void DigitalIntervalSeriesInspector::_removeIntervalButton() {

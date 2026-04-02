@@ -1,20 +1,20 @@
 #include "LinePlotOpenGLWidget.hpp"
 
+#include "CoreGeometry/boundingbox.hpp"
 #include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
 #include "CorePlotting/DataTypes/LineStyleData.hpp"
+#include "CorePlotting/Interaction/GlyphPreview.hpp"
+#include "CorePlotting/LineBatch/CpuLineBatchIntersector.hpp"
+#include "CorePlotting/LineBatch/LineBatchBuilder.hpp"
+#include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
+#include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "GroupContextMenu/GroupContextMenuHandler.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
-#include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/LineSelectionHelpers.hpp"
+#include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
-#include "CorePlotting/LineBatch/LineBatchBuilder.hpp"
-#include "CorePlotting/LineBatch/CpuLineBatchIntersector.hpp"
-#include "CorePlotting/Interaction/GlyphPreview.hpp"
-#include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
-#include "CorePlotting/SceneGraph/SceneBuilder.hpp"
-#include "CoreGeometry/boundingbox.hpp"
 #include "PlottingOpenGL/LineBatch/ComputeShaderIntersector.hpp"
 
 #include <QAction>
@@ -28,14 +28,13 @@
 #include <QSurfaceFormat>
 #include <QWheelEvent>
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 #include <cmath>
+#include <glm/gtc/matrix_transform.hpp>
 #include <unordered_set>
 
 LinePlotOpenGLWidget::LinePlotOpenGLWidget(QWidget * parent)
-    : QOpenGLWidget(parent)
-{
+    : QOpenGLWidget(parent) {
     // Set widget attributes for OpenGL
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
@@ -45,12 +44,11 @@ LinePlotOpenGLWidget::LinePlotOpenGLWidget(QWidget * parent)
     QSurfaceFormat format;
     format.setVersion(4, 1);
     format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSamples(4); // Enable multisampling for smooth lines
+    format.setSamples(4);// Enable multisampling for smooth lines
     setFormat(format);
 }
 
-LinePlotOpenGLWidget::~LinePlotOpenGLWidget()
-{
+LinePlotOpenGLWidget::~LinePlotOpenGLWidget() {
     makeCurrent();
     _line_renderer.cleanup();
     _line_store.cleanup();
@@ -58,8 +56,7 @@ LinePlotOpenGLWidget::~LinePlotOpenGLWidget()
     doneCurrent();
 }
 
-void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state)
-{
+void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state) {
     if (_state) {
         _state->disconnect(this);
     }
@@ -75,6 +72,21 @@ void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state)
                 this, &LinePlotOpenGLWidget::onViewStateChanged);
         connect(_state.get(), &LinePlotState::windowSizeChanged,
                 this, [this](double /* window_size */) {
+                    _scene_dirty = true;
+                    update();
+                });
+        connect(_state.get(), &LinePlotState::alignmentEventKeyChanged,
+                this, [this](QString const & /* key */) {
+                    _scene_dirty = true;
+                    update();
+                });
+        connect(_state.get(), &LinePlotState::intervalAlignmentTypeChanged,
+                this, [this](IntervalAlignmentType /* type */) {
+                    _scene_dirty = true;
+                    update();
+                });
+        connect(_state.get(), &LinePlotState::offsetChanged,
+                this, [this](double /* offset */) {
                     _scene_dirty = true;
                     update();
                 });
@@ -117,15 +129,13 @@ void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state)
     }
 }
 
-void LinePlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager)
-{
+void LinePlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = data_manager;
     _scene_dirty = true;
     update();
 }
 
-void LinePlotOpenGLWidget::setGroupManager(GroupManager * group_manager)
-{
+void LinePlotOpenGLWidget::setGroupManager(GroupManager * group_manager) {
     if (_group_manager) {
         disconnect(_group_manager, nullptr, this, nullptr);
     }
@@ -156,8 +166,7 @@ void LinePlotOpenGLWidget::setGroupManager(GroupManager * group_manager)
     }
 }
 
-std::pair<double, double> LinePlotOpenGLWidget::getViewBounds() const
-{
+std::pair<double, double> LinePlotOpenGLWidget::getViewBounds() const {
     if (!_state) {
         return {-500.0, 500.0};
     }
@@ -169,8 +178,7 @@ std::pair<double, double> LinePlotOpenGLWidget::getViewBounds() const
 // OpenGL Lifecycle
 // =============================================================================
 
-void LinePlotOpenGLWidget::initializeGL()
-{
+void LinePlotOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -197,9 +205,9 @@ void LinePlotOpenGLWidget::initializeGL()
     }
 
     // Set visible colors for line states — defaults overridden by applyLineStyle
-    _line_renderer.setGlobalColor(glm::vec4{0.3f, 0.5f, 1.0f, 0.6f});   // Semi-transparent blue for normal lines
-    _line_renderer.setSelectedColor(glm::vec4{1.0f, 0.2f, 0.2f, 1.0f}); // Bright red for selected lines
-    _line_renderer.setHoverColor(glm::vec4{1.0f, 1.0f, 0.0f, 1.0f});    // Yellow for hover
+    _line_renderer.setGlobalColor(glm::vec4{0.3f, 0.5f, 1.0f, 0.6f});  // Semi-transparent blue for normal lines
+    _line_renderer.setSelectedColor(glm::vec4{1.0f, 0.2f, 0.2f, 1.0f});// Bright red for selected lines
+    _line_renderer.setHoverColor(glm::vec4{1.0f, 1.0f, 0.0f, 1.0f});   // Yellow for hover
     _line_renderer.setLineWidth(1.5f);
 
     // Apply line style from state if available
@@ -230,8 +238,7 @@ void LinePlotOpenGLWidget::initializeGL()
     updateMatrices();
 }
 
-void LinePlotOpenGLWidget::paintGL()
-{
+void LinePlotOpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!_opengl_initialized) {
@@ -268,14 +275,13 @@ void LinePlotOpenGLWidget::paintGL()
     }
 }
 
-void LinePlotOpenGLWidget::resizeGL(int w, int h)
-{
+void LinePlotOpenGLWidget::resizeGL(int w, int h) {
     _widget_width = std::max(1, w);
     _widget_height = std::max(1, h);
 
     glViewport(0, 0, _widget_width, _widget_height);
     _line_renderer.setViewportSize(
-        glm::vec2{static_cast<float>(_widget_width), static_cast<float>(_widget_height)});
+            glm::vec2{static_cast<float>(_widget_width), static_cast<float>(_widget_height)});
     updateMatrices();
 }
 
@@ -283,8 +289,7 @@ void LinePlotOpenGLWidget::resizeGL(int w, int h)
 // Mouse Interaction
 // =============================================================================
 
-void LinePlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
-{
+void LinePlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         // Ctrl+Click starts line selection (Shift+Ctrl = deselect mode)
         if (event->modifiers().testFlag(Qt::ControlModifier)) {
@@ -308,8 +313,7 @@ void LinePlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
     event->accept();
 }
 
-void LinePlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
-{
+void LinePlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (event->buttons() & Qt::LeftButton) {
         // Selection drag takes priority
         if (_is_selecting) {
@@ -338,8 +342,7 @@ void LinePlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
     event->accept();
 }
 
-void LinePlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
-{
+void LinePlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         if (_is_selecting) {
             completeSelection();
@@ -353,8 +356,7 @@ void LinePlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
     event->accept();
 }
 
-void LinePlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
-{
+void LinePlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         // Don't navigate while in selection mode
         if (_is_selecting) {
@@ -376,8 +378,7 @@ void LinePlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
     event->accept();
 }
 
-void LinePlotOpenGLWidget::wheelEvent(QWheelEvent * event)
-{
+void LinePlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
     // Don't zoom while selecting
     if (_is_selecting) {
         event->accept();
@@ -391,8 +392,7 @@ void LinePlotOpenGLWidget::wheelEvent(QWheelEvent * event)
     event->accept();
 }
 
-void LinePlotOpenGLWidget::keyReleaseEvent(QKeyEvent * event)
-{
+void LinePlotOpenGLWidget::keyReleaseEvent(QKeyEvent * event) {
     // If Ctrl is released during selection drag, cancel the selection
     if (event->key() == Qt::Key_Control && _is_selecting) {
         cancelSelection();
@@ -406,14 +406,12 @@ void LinePlotOpenGLWidget::keyReleaseEvent(QKeyEvent * event)
 // Slots
 // =============================================================================
 
-void LinePlotOpenGLWidget::onStateChanged()
-{
+void LinePlotOpenGLWidget::onStateChanged() {
     _scene_dirty = true;
     update();
 }
 
-void LinePlotOpenGLWidget::onViewStateChanged()
-{
+void LinePlotOpenGLWidget::onViewStateChanged() {
     if (_state) {
         _cached_view_state = _state->viewState();
     }
@@ -422,22 +420,19 @@ void LinePlotOpenGLWidget::onViewStateChanged()
     emit viewBoundsChanged();
 }
 
-void LinePlotOpenGLWidget::onWindowSizeChanged(double /* window_size */)
-{
+void LinePlotOpenGLWidget::onWindowSizeChanged(double /* window_size */) {
     _scene_dirty = true;
     update();
 }
 
-void LinePlotOpenGLWidget::onSeriesStyleChanged(QString const & /* series_name */)
-{
+void LinePlotOpenGLWidget::onSeriesStyleChanged(QString const & /* series_name */) {
     // When any series style changes, re-apply line style
     // Currently we use first series for global color; future: per-line colors
     applyLineStyle();
     update();
 }
 
-void LinePlotOpenGLWidget::applyLineStyle()
-{
+void LinePlotOpenGLWidget::applyLineStyle() {
     if (!_state || !_opengl_initialized) {
         return;
     }
@@ -463,8 +458,7 @@ void LinePlotOpenGLWidget::applyLineStyle()
 // Private Methods
 // =============================================================================
 
-void LinePlotOpenGLWidget::rebuildScene()
-{
+void LinePlotOpenGLWidget::rebuildScene() {
     if (!_state || !_data_manager) {
         _scene_renderer.clearScene();
         _line_renderer.clearData();
@@ -526,7 +520,7 @@ void LinePlotOpenGLWidget::rebuildScene()
         bool first = true;
         TimeFrameIndex first_time{0};
         TimeFrameIndex last_time{0};
-        for (auto const & sample : all_samples) {
+        for (auto const & sample: all_samples) {
             if (first) {
                 first_time = sample.time();
                 first = false;
@@ -552,8 +546,8 @@ void LinePlotOpenGLWidget::rebuildScene()
     if (y_min < y_max) {
         float const y_margin = (y_max - y_min) * 0.05f;
         _state->setYBounds(
-            static_cast<double>(y_min - y_margin),
-            static_cast<double>(y_max + y_margin));
+                static_cast<double>(y_min - y_margin),
+                static_cast<double>(y_max + y_margin));
     }
 
     if (x_min < x_max) {
@@ -591,7 +585,7 @@ void LinePlotOpenGLWidget::rebuildScene()
     // Restore selection mask from previous selection (if trials still match)
     if (!_selected_trial_indices.empty()) {
         std::unordered_set<std::uint32_t> selected_set(
-            _selected_trial_indices.begin(), _selected_trial_indices.end());
+                _selected_trial_indices.begin(), _selected_trial_indices.end());
         for (std::uint32_t i = 0; i < batch.numLines(); ++i) {
             if (selected_set.contains(batch.lines[i].trial_index)) {
                 batch.selection_mask[i] = 1;
@@ -611,42 +605,37 @@ void LinePlotOpenGLWidget::rebuildScene()
     _scene_renderer.clearScene();
 }
 
-void LinePlotOpenGLWidget::updateMatrices()
-{
+void LinePlotOpenGLWidget::updateMatrices() {
     _projection_matrix =
-        WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
-QPointF LinePlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
-{
+QPointF LinePlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
     return WhiskerToolbox::Plots::screenToWorld(
-        _projection_matrix, _widget_width, _widget_height, screen_pos);
+            _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
-void LinePlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
-{
+void LinePlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
     WhiskerToolbox::Plots::handlePanning(
-        *_state, _cached_view_state, delta_x, delta_y, _widget_width,
-        _widget_height);
+            *_state, _cached_view_state, delta_x, delta_y, _widget_width,
+            _widget_height);
 }
 
-void LinePlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
-{
+void LinePlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes) {
     if (!_state) {
         return;
     }
 
     // Use shared helper for zoom logic
     WhiskerToolbox::Plots::handleZoom(
-        *_state, _cached_view_state, delta, y_only, both_axes);
+            *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
-GatherResult<AnalogTimeSeries> LinePlotOpenGLWidget::gatherTrialData() const
-{
+GatherResult<AnalogTimeSeries> LinePlotOpenGLWidget::gatherTrialData() const {
     if (!_data_manager || !_state) {
         return GatherResult<AnalogTimeSeries>{};
     }
@@ -671,17 +660,16 @@ GatherResult<AnalogTimeSeries> LinePlotOpenGLWidget::gatherTrialData() const
 
     // Use the PlotAlignmentGather API for AnalogTimeSeries
     return WhiskerToolbox::Plots::createAlignedGatherResult<AnalogTimeSeries>(
-        _data_manager,
-        series_options->series_key,
-        alignment_state->data());
+            _data_manager,
+            series_options->series_key,
+            alignment_state->data());
 }
 
 // =============================================================================
 // Selection
 // =============================================================================
 
-void LinePlotOpenGLWidget::clearSelection()
-{
+void LinePlotOpenGLWidget::clearSelection() {
     _selected_trial_indices.clear();
 
     // Clear selection mask on the GPU store
@@ -696,14 +684,12 @@ void LinePlotOpenGLWidget::clearSelection()
     update();
 }
 
-glm::vec2 LinePlotOpenGLWidget::screenToNDC(QPoint const & screen_pos) const
-{
+glm::vec2 LinePlotOpenGLWidget::screenToNDC(QPoint const & screen_pos) const {
     return WhiskerToolbox::Plots::screenToNDC(screen_pos, _widget_width,
-                                             _widget_height);
+                                              _widget_height);
 }
 
-void LinePlotOpenGLWidget::startSelection(QPoint const & screen_pos, bool remove_mode)
-{
+void LinePlotOpenGLWidget::startSelection(QPoint const & screen_pos, bool remove_mode) {
     _is_selecting = true;
     _selection_remove_mode = remove_mode;
     _selection_start_ndc = screenToNDC(screen_pos);
@@ -714,15 +700,13 @@ void LinePlotOpenGLWidget::startSelection(QPoint const & screen_pos, bool remove
     update();
 }
 
-void LinePlotOpenGLWidget::updateSelection(QPoint const & screen_pos)
-{
+void LinePlotOpenGLWidget::updateSelection(QPoint const & screen_pos) {
     _selection_end_ndc = screenToNDC(screen_pos);
     _selection_end_screen = screen_pos;
     update();
 }
 
-void LinePlotOpenGLWidget::completeSelection()
-{
+void LinePlotOpenGLWidget::completeSelection() {
     _is_selecting = false;
     setCursor(Qt::ArrowCursor);
 
@@ -731,30 +715,29 @@ void LinePlotOpenGLWidget::completeSelection()
         return;
     }
     std::vector<CorePlotting::LineBatchIndex> const hit_indices =
-        WhiskerToolbox::Plots::runLineSelectionIntersection(
-            *_intersector, _line_store.cpuData(), _selection_start_ndc,
-            _selection_end_ndc, _projection_matrix, _view_matrix);
+            WhiskerToolbox::Plots::runLineSelectionIntersection(
+                    *_intersector, _line_store.cpuData(), _selection_start_ndc,
+                    _selection_end_ndc, _projection_matrix, _view_matrix);
     applyIntersectionResults(hit_indices, _selection_remove_mode);
     update();
 }
 
 void LinePlotOpenGLWidget::applyIntersectionResults(
-    std::vector<CorePlotting::LineBatchIndex> const & hit_indices,
-    bool remove)
-{
+        std::vector<CorePlotting::LineBatchIndex> const & hit_indices,
+        bool remove) {
     auto const & cpu = _line_store.cpuData();
 
     if (remove) {
         // Remove mode: remove intersected trials from current selection
         std::unordered_set<std::uint32_t> to_remove;
-        for (auto idx : hit_indices) {
+        for (auto idx: hit_indices) {
             if (idx < cpu.numLines()) {
                 to_remove.insert(cpu.lines[idx].trial_index);
             }
         }
         std::vector<std::uint32_t> filtered;
         filtered.reserve(_selected_trial_indices.size());
-        for (auto ti : _selected_trial_indices) {
+        for (auto ti: _selected_trial_indices) {
             if (!to_remove.contains(ti)) {
                 filtered.push_back(ti);
             }
@@ -764,7 +747,7 @@ void LinePlotOpenGLWidget::applyIntersectionResults(
         // Replace mode: set selection to exactly the intersected trials
         _selected_trial_indices.clear();
         _selected_trial_indices.reserve(hit_indices.size());
-        for (auto idx : hit_indices) {
+        for (auto idx: hit_indices) {
             if (idx < cpu.numLines()) {
                 _selected_trial_indices.push_back(cpu.lines[idx].trial_index);
             }
@@ -774,7 +757,7 @@ void LinePlotOpenGLWidget::applyIntersectionResults(
     // Update selection mask on the store
     std::vector<std::uint32_t> mask(cpu.numLines(), 0);
     std::unordered_set<std::uint32_t> selected_set(
-        _selected_trial_indices.begin(), _selected_trial_indices.end());
+            _selected_trial_indices.begin(), _selected_trial_indices.end());
     for (std::uint32_t i = 0; i < cpu.numLines(); ++i) {
         if (selected_set.contains(cpu.lines[i].trial_index)) {
             mask[i] = 1;
@@ -786,25 +769,22 @@ void LinePlotOpenGLWidget::applyIntersectionResults(
     emit trialsSelected(_selected_trial_indices);
 }
 
-void LinePlotOpenGLWidget::cancelSelection()
-{
+void LinePlotOpenGLWidget::cancelSelection() {
     _is_selecting = false;
     setCursor(Qt::ArrowCursor);
     update();
 }
 
-CorePlotting::Interaction::GlyphPreview LinePlotOpenGLWidget::buildSelectionPreview() const
-{
+CorePlotting::Interaction::GlyphPreview LinePlotOpenGLWidget::buildSelectionPreview() const {
     return WhiskerToolbox::Plots::buildLineSelectionPreview(
-        _selection_start_screen, _selection_end_screen, _selection_remove_mode);
+            _selection_start_screen, _selection_end_screen, _selection_remove_mode);
 }
 
 // =============================================================================
 // Context Menu & Group Management
 // =============================================================================
 
-void LinePlotOpenGLWidget::contextMenuEvent(QContextMenuEvent * event)
-{
+void LinePlotOpenGLWidget::contextMenuEvent(QContextMenuEvent * event) {
     if (!_context_menu || !_group_manager) {
         QOpenGLWidget::contextMenuEvent(event);
         return;
@@ -815,8 +795,7 @@ void LinePlotOpenGLWidget::contextMenuEvent(QContextMenuEvent * event)
     event->accept();
 }
 
-void LinePlotOpenGLWidget::createContextMenu()
-{
+void LinePlotOpenGLWidget::createContextMenu() {
     _context_menu = new QMenu(this);
 
     _group_menu_handler = std::make_unique<GroupContextMenuHandler>(this);
@@ -852,10 +831,9 @@ void LinePlotOpenGLWidget::createContextMenu()
     });
 }
 
-std::unordered_set<EntityId> LinePlotOpenGLWidget::getSelectedEntities() const
-{
+std::unordered_set<EntityId> LinePlotOpenGLWidget::getSelectedEntities() const {
     std::unordered_set<EntityId> result;
-    for (auto const trial_idx : _selected_trial_indices) {
+    for (auto const trial_idx: _selected_trial_indices) {
         auto eid = getEntityIdForTrial(trial_idx);
         if (eid.has_value()) {
             result.insert(*eid);
@@ -864,16 +842,14 @@ std::unordered_set<EntityId> LinePlotOpenGLWidget::getSelectedEntities() const
     return result;
 }
 
-std::optional<EntityId> LinePlotOpenGLWidget::getEntityIdForTrial(std::uint32_t trial_index) const
-{
+std::optional<EntityId> LinePlotOpenGLWidget::getEntityIdForTrial(std::uint32_t trial_index) const {
     if (trial_index >= _cached_alignment_times.size()) {
         return std::nullopt;
     }
     return EntityId{static_cast<uint64_t>(_cached_alignment_times[trial_index])};
 }
 
-void LinePlotOpenGLWidget::applyGroupColorsToLines()
-{
+void LinePlotOpenGLWidget::applyGroupColorsToLines() {
     if (!_state || !_state->colorByGroup() || !_group_manager) {
         return;
     }
@@ -896,7 +872,7 @@ void LinePlotOpenGLWidget::applyGroupColorsToLines()
 
         int const group_id = _group_manager->getEntityGroup(*entity_id);
         if (group_id == -1) {
-            continue; // Not in any group — keep default color
+            continue;// Not in any group — keep default color
         }
 
         QColor const group_color = _group_manager->getEntityColor(*entity_id, QColor());
@@ -905,10 +881,10 @@ void LinePlotOpenGLWidget::applyGroupColorsToLines()
         }
 
         per_line_colors[i] = glm::vec4(
-            static_cast<float>(group_color.redF()),
-            static_cast<float>(group_color.greenF()),
-            static_cast<float>(group_color.blueF()),
-            static_cast<float>(group_color.alphaF()));
+                static_cast<float>(group_color.redF()),
+                static_cast<float>(group_color.greenF()),
+                static_cast<float>(group_color.blueF()),
+                static_cast<float>(group_color.alphaF()));
     }
 
     _line_renderer.updateLineColorOverrides(per_line_colors);
