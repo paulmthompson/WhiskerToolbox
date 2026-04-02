@@ -7,8 +7,8 @@
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
 #include "CorePlotting/Mappers/RasterMapper.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
-#include "DataManager/DataManager.hpp"
 #include "CoreUtilities/color.hpp"
+#include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
@@ -126,6 +126,21 @@ void EventPlotOpenGLWidget::setState(std::shared_ptr<EventPlotState> state) {
         connect(_state.get(), &EventPlotState::backgroundColorChanged,
                 this, [this]() {
                     updateBackgroundColor();
+                    update();
+                });
+        connect(_state.get(), &EventPlotState::alignmentEventKeyChanged,
+                this, [this](QString const & /* key */) {
+                    _scene_dirty = true;
+                    update();
+                });
+        connect(_state.get(), &EventPlotState::intervalAlignmentTypeChanged,
+                this, [this](IntervalAlignmentType /* type */) {
+                    _scene_dirty = true;
+                    update();
+                });
+        connect(_state.get(), &EventPlotState::offsetChanged,
+                this, [this](double /* offset */) {
+                    _scene_dirty = true;
                     update();
                 });
 
@@ -596,7 +611,7 @@ std::optional<std::pair<int, std::string>> EventPlotOpenGLWidget::findEventNear(
     // Configure hit tester with pixel tolerance converted to world units
     // X tolerance: convert pixels to time units
     float const world_per_pixel_x = (_cached_view_state.x_max - _cached_view_state.x_min) /
-                              (_widget_width * _cached_view_state.x_zoom);
+                                    (_widget_width * _cached_view_state.x_zoom);
     float const world_tolerance = tolerance_pixels * world_per_pixel_x;
 
     CorePlotting::HitTestConfig config;
@@ -628,7 +643,7 @@ void EventPlotOpenGLWidget::handleClickSelection(QPoint const & screen_pos) {
 
     // Configure hit tester with reasonable tolerance
     float const world_per_pixel_x = (_cached_view_state.x_max - _cached_view_state.x_min) /
-                              (_widget_width * _cached_view_state.x_zoom);
+                                    (_widget_width * _cached_view_state.x_zoom);
     float const world_tolerance = 10.0f * world_per_pixel_x;// 10 pixel tolerance
 
     CorePlotting::HitTestConfig config;
@@ -763,8 +778,8 @@ std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
                     auto trial_tf = trial_view->getTimeFrame();
                     for (auto const & event: trial_view->view()) {
                         int64_t const event_time_abs = trial_tf
-                                                         ? trial_tf->getTimeAtIndex(event.time())
-                                                         : event.time().getValue();
+                                                               ? trial_tf->getTimeAtIndex(event.time())
+                                                               : event.time().getValue();
                         // Relative time (positive = after alignment)
                         auto const relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
                         if (relative_time >= 0.0 && relative_time < first_positive_latency) {

@@ -61,6 +61,21 @@ void PSTHPlotOpenGLWidget::setState(std::shared_ptr<PSTHState> state) {
                     _scene_dirty = true;
                     update();
                 });
+        connect(_state.get(), &PSTHState::alignmentEventKeyChanged,
+                this, [this](QString const & /* key */) {
+                    _scene_dirty = true;
+                    update();
+                });
+        connect(_state.get(), &PSTHState::intervalAlignmentTypeChanged,
+                this, [this](IntervalAlignmentType /* type */) {
+                    _scene_dirty = true;
+                    update();
+                });
+        connect(_state.get(), &PSTHState::offsetChanged,
+                this, [this](double /* offset */) {
+                    _scene_dirty = true;
+                    update();
+                });
 
         _scene_dirty = true;
         updateMatrices();
@@ -245,7 +260,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
 
     // Extract bin size from estimation parameters
     // Currently only BinningParams is implemented; other methods use default bin_size
-    double bin_size = 10.0;  // fallback default
+    double bin_size = 10.0;// fallback default
     auto const & params = _state->estimationParams();
     if (auto const * binning = std::get_if<WhiskerToolbox::Plots::BinningParams>(&params)) {
         bin_size = binning->bin_size;
@@ -362,7 +377,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
     // Apply scaling/normalization using shared RateEstimate infrastructure
     // Build a RateEstimate from the histogram data
     WhiskerToolbox::Plots::RateEstimate rate_estimate;
-    rate_estimate.values = histogram;  // Copy histogram counts
+    rate_estimate.values = histogram;// Copy histogram counts
     rate_estimate.num_trials = total_trials;
     rate_estimate.metadata.sample_spacing = bin_size;
 
@@ -385,7 +400,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
 
     // Recompute max after scaling for Y-axis bounds
     max_count = 0.0;
-    for (double val : histogram) {
+    for (double val: histogram) {
         max_count = std::max(max_count, val);
     }
     qDebug() << "  Max bin value (scaled):" << max_count;
@@ -437,21 +452,19 @@ QPointF PSTHPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
             _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
-void PSTHPlotOpenGLWidget::updateMatrices()
-{
+void PSTHPlotOpenGLWidget::updateMatrices() {
     _projection_matrix =
-        WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
-void PSTHPlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
-{
+void PSTHPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
     WhiskerToolbox::Plots::handlePanning(
-        *_state, _cached_view_state, delta_x, delta_y, _widget_width,
-        _widget_height);
+            *_state, _cached_view_state, delta_x, delta_y, _widget_width,
+            _widget_height);
 }
 
 void PSTHPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes) {

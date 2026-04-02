@@ -57,6 +57,26 @@ void HeatmapOpenGLWidget::setState(std::shared_ptr<HeatmapState> state) {
                     updateBackgroundColor();
                     update();
                 });
+        connect(_state.get(), &HeatmapState::alignmentEventKeyChanged,
+                this, [this](QString const & /* key */) {
+                    _scene_dirty = true;
+                    update();
+                });
+        connect(_state.get(), &HeatmapState::intervalAlignmentTypeChanged,
+                this, [this](IntervalAlignmentType /* type */) {
+                    _scene_dirty = true;
+                    update();
+                });
+        connect(_state.get(), &HeatmapState::offsetChanged,
+                this, [this](double /* offset */) {
+                    _scene_dirty = true;
+                    update();
+                });
+        connect(_state.get(), &HeatmapState::windowSizeChanged,
+                this, [this](double /* window_size */) {
+                    _scene_dirty = true;
+                    update();
+                });
 
         _scene_dirty = true;
         updateMatrices();
