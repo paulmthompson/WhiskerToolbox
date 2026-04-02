@@ -169,6 +169,13 @@ std::unique_ptr<MLCore::MLModelParametersBase> DimReductionPanel::currentParamet
         return params;
     }
 
+    if (name == "Supervised PCA") {
+        auto params = std::make_unique<MLCore::SupervisedPCAParameters>();
+        params->n_components = static_cast<std::size_t>(nComponents());
+        params->scale = scaleFeatures();
+        return params;
+    }
+
     return nullptr;
 }
 
@@ -448,8 +455,22 @@ void DimReductionPanel::_onAlgorithmChanged(int index) {
         _state->setDimReductionModelName(name);
     }
 
-    // Toggle algorithm-specific parameter widgets (unsupervised only)
-    if (!isSupervisedMode()) {
+    // Toggle algorithm-specific parameter widgets
+    if (isSupervisedMode()) {
+        // Supervised PCA reuses the PCA params widget (n_components + scale)
+        bool const is_spca = (name == "Supervised PCA");
+        ui->pcaParamsWidget->setVisible(is_spca);
+        ui->tsneParamsWidget->setVisible(false);
+        ui->robustPcaParamsWidget->setVisible(false);
+
+        // Hide class name fields for non-discriminative algorithms (e.g. sPCA)
+        // where output dimensions are user-controlled, not class-count-based.
+        bool const show_class_names = !is_spca;
+        ui->positiveClassLabel->setVisible(show_class_names);
+        ui->positiveClassEdit->setVisible(show_class_names);
+        ui->negativeClassLabel->setVisible(show_class_names);
+        ui->negativeClassEdit->setVisible(show_class_names);
+    } else {
         bool const is_pca = (name == "PCA");
         bool const is_tsne = (name == "t-SNE");
         bool const is_rpca = (name == "Robust PCA");
@@ -708,10 +729,23 @@ void DimReductionPanel::_populateAlgorithms() {
                     QString::fromStdString(name));
         }
 
-        // Hide unsupervised param widgets
-        ui->pcaParamsWidget->setVisible(false);
+        // Show/hide param widgets based on the first supervised algorithm
         ui->tsneParamsWidget->setVisible(false);
         ui->robustPcaParamsWidget->setVisible(false);
+        if (ui->algorithmComboBox->count() > 0) {
+            auto const first_name =
+                    ui->algorithmComboBox->currentData().toString().toStdString();
+            bool const is_spca = (first_name == "Supervised PCA");
+            ui->pcaParamsWidget->setVisible(is_spca);
+
+            // Hide class name fields for non-discriminative algorithms
+            ui->positiveClassLabel->setVisible(!is_spca);
+            ui->positiveClassEdit->setVisible(!is_spca);
+            ui->negativeClassLabel->setVisible(!is_spca);
+            ui->negativeClassEdit->setVisible(!is_spca);
+        } else {
+            ui->pcaParamsWidget->setVisible(false);
+        }
     } else {
         // Unsupervised algorithms
         auto const names = _registry->getModelNames(
@@ -954,7 +988,9 @@ void DimReductionPanel::_updateOutputKeyFromInput() {
     std::string const algo = selectedAlgorithmName();
     std::string suffix = "reduced";
 
-    if (isSupervisedMode()) {
+    if (isSupervisedMode() && algo == "Supervised PCA") {
+        suffix = "spca";
+    } else if (isSupervisedMode()) {
         suffix = "logit";
     } else if (algo == "PCA") {
         suffix = "pca";
@@ -976,8 +1012,8 @@ void DimReductionPanel::_updateSupervisedVisibility(bool supervised) {
     ui->labelsGroupBox->setVisible(supervised);
 
     // In supervised mode, hide unsupervised-specific param widgets
+    // (the correct widgets will be shown by _populateAlgorithms)
     if (supervised) {
-        ui->pcaParamsWidget->setVisible(false);
         ui->tsneParamsWidget->setVisible(false);
         ui->robustPcaParamsWidget->setVisible(false);
     }

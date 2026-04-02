@@ -1,0 +1,121 @@
+---
+title: "Supervised PCA Operation"
+description: "PCA dimensionality reduction fitted on labeled data subset"
+---
+
+## Overview
+
+`SupervisedPCAOperation` is a supervised dimensionality reduction technique that fits PCA
+exclusively on the labeled subset of observations. The principal components therefore capture
+variance within the labeled data, not the entire dataset. All observations (labeled and unlabeled)
+are then projected into the resulting space.
+
+This is useful when the labeled data represents a specific phenomenon of interest (e.g., whisker
+contact frames), and the user wants the top principal components to reflect variance within that
+phenomenon rather than variance across the full recording.
+
+**Task type:** `SupervisedDimensionalityReduction`
+
+**Source files:**
+
+- Header: `src/MLCore/models/supervised/SupervisedPCAOperation.hpp`
+- Implementation: `src/MLCore/models/supervised/SupervisedPCAOperation.cpp`
+- Abstract base: `src/MLCore/models/MLSupervisedDimReductionOperation.hpp`
+- Tests: `tests/MLCore/SupervisedPCAOperation.test.cpp`
+
+## Parameters
+
+`SupervisedPCAParameters` in `MLModelParameters.hpp`:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `n_components` | `std::size_t` | 2 | Number of principal components to retain. |
+| `scale` | `bool` | `true` | Standardize features (zero mean, unit variance) before PCA. Statistics computed from labeled subset. |
+
+## How It Differs from Standard PCA
+
+| Aspect | Standard PCA | Supervised PCA |
+|---|---|---|
+| **Fitting data** | All observations | Labeled observations only |
+| **Centering stats** | Mean/stddev of all data | Mean/stddev of labeled subset |
+| **What PCs capture** | Variance across entire dataset | Variance within labeled subset |
+| **Output rows** | `n_components` | `n_components` |
+| **Use case** | General exploration | Focus on labeled phenomenon |
+
+## Architecture
+
+### Class Hierarchy
+
+```
+MLModelOperation (interface)
+  └── MLSupervisedDimReductionOperation (abstract base)
+        ├── LogitProjectionOperation
+        └── SupervisedPCAOperation (this class)
+```
+
+### Pimpl Pattern
+
+The implementation uses the pimpl idiom to keep Armadillo matrix members out of the header:
+
+```
+SupervisedPCAOperation.hpp  →  MLSupervisedDimReductionOperation (public API)
+SupervisedPCAOperation.cpp  →  eigenvectors, eigenvalues, mean, stddev (hidden)
+```
+
+The `Impl` struct holds:
+
+- `eigenvectors` — $(D \times n\_components)$ projection matrix
+- `eigenvalues` — sorted descending
+- `mean` — per-feature mean (from labeled subset)
+- `stddev` — per-feature std dev (from labeled subset, if `scale=true`)
+- `total_variance` — sum of all eigenvalues (for variance ratio computation)
+
+## Algorithm
+
+### fitTransform
+
+1. **Validate** inputs (non-empty, matching dimensions, ≥ 2 classes, n_components ≤ D)
+2. **Compute statistics** from labeled subset: per-feature mean and (optional) standard deviation
+3. **Center** labeled data (subtract mean, optionally divide by stddev)
+4. **Covariance** matrix from centered labeled data: $\Sigma = \frac{1}{N-1} X_c X_c^T$
+5. **Eigendecomposition** via `arma::eig_sym`, reversed to descending order
+6. **Truncate** to top `n_components` eigenvectors
+7. **Project ALL data** (not just labeled) using the fitted eigenvectors, mean, and stddev
+
+### transform
+
+Uses the stored eigenvectors, mean, and stddev to project new data without retraining.
+
+## Column Names
+
+Output columns are named `"SPCA:0"`, `"SPCA:1"`, etc. — similar to the `"Logit:N"` convention
+used by `LogitProjectionOperation`.
+
+## Explained Variance Ratio
+
+`explainedVarianceRatio()` returns the fraction of labeled-subset variance explained by each
+component. This is analogous to `PCAOperation::explainedVarianceRatio()` but computed from the
+labeled subset's covariance.
+
+## Serialization
+
+Uses Cereal binary archives. Stores eigenvectors, eigenvalues, mean, stddev, and metadata. The
+deserialized model can `transform()` new data without refitting.
+
+## Pipeline Integration
+
+Works with `SupervisedDimReductionPipeline` via the model name `"Supervised PCA"`. The pipeline:
+
+1. Converts TensorData to Armadillo matrix
+2. Assembles labels from intervals, entity groups, or events
+3. Calls `fitTransform()` on labeled+unlabeled data
+4. Stores the output TensorData in DataManager
+
+## Registry
+
+Registered in `MLModelRegistry` as `"Supervised PCA"` with task type
+`SupervisedDimensionalityReduction`. Created via:
+
+```cpp
+auto model = registry.create("Supervised PCA");
+```

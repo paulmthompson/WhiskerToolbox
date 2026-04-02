@@ -33,6 +33,7 @@ add_executable(test_MLCore
     LogitProjectionOperation.test.cpp
     SoftmaxRegressionOperation.test.cpp
     SupervisedDimReductionPipeline.test.cpp
+    SupervisedPCAOperation.test.cpp
     MLModelOperation.test.cpp
     NaiveBayesOperation.test.cpp
     PredictionWriter.test.cpp

@@ -399,10 +399,6 @@ SupervisedDimReductionPipelineResult runSupervisedDimReductionPipeline(
     // ========================================================================
     // Stage 4: Fit + Transform
     // ========================================================================
-    reportProgress(progress, SupervisedDimReductionStage::FittingAndTransforming,
-                   "Fitting '" + config.model_name + "' on " +
-                           std::to_string(train_features.n_cols) + " labeled observations × " +
-                           std::to_string(train_features.n_rows) + " features");
 
     auto model = registry.create(config.model_name);
     if (!model) {
@@ -417,7 +413,27 @@ SupervisedDimReductionPipelineResult runSupervisedDimReductionPipeline(
                                    "' does not implement MLSupervisedDimReductionOperation");
     }
 
+    // For non-discriminative models (e.g. Supervised PCA) that only need the
+    // positive class for fitting: when every row is already labeled (interval
+    // labeling gives class 0 = "Outside", class 1 = "Inside"), subset to only
+    // the positive class (label > 0) so PCA fits on the target phenomenon.
+    if (!sup_op->requiresAllClassesForFitting() && labels.unlabeled_count == 0) {
+        arma::uvec const positive_cols = arma::find(train_labels > 0);
+        if (positive_cols.empty()) {
+            return makeFailure(SupervisedDimReductionStage::FittingAndTransforming,
+                               "No positive-class observations found for '" +
+                                       config.model_name + "'");
+        }
+        train_features = train_features.cols(positive_cols);
+        train_labels = train_labels.elem(positive_cols).t();
+    }
+
     // Fit on labeled rows (training).
+    reportProgress(progress, SupervisedDimReductionStage::FittingAndTransforming,
+                   "Fitting '" + config.model_name + "' on " +
+                           std::to_string(train_features.n_cols) + " observations × " +
+                           std::to_string(train_features.n_rows) + " features");
+
     arma::mat train_logits;
     if (!sup_op->fitTransform(train_features, train_labels, config.model_params,
                               train_logits)) {
@@ -436,11 +452,20 @@ SupervisedDimReductionPipelineResult runSupervisedDimReductionPipeline(
 
     std::size_t const n_dims = sup_op->outputDimensions();
 
-    // Build column names using actual class names: "Logit:<ClassName>".
+    // Build column names from the model's own naming convention.
+    // For LogitProjection, we override with class-specific names: "Logit:<ClassName>".
+    // For SupervisedPCA (and other models where n_dims != num_classes), we use
+    // the model's default names (e.g. "SPCA:0", "SPCA:1", ...).
     std::vector<std::string> col_names;
-    col_names.reserve(n_dims);
-    for (auto const & class_name: labels.class_names) {
-        col_names.push_back("Logit:" + class_name);
+    if (n_dims == labels.num_classes) {
+        // Class-count matches output dims — use class-specific naming
+        col_names.reserve(n_dims);
+        for (auto const & class_name: labels.class_names) {
+            col_names.push_back("Logit:" + class_name);
+        }
+    } else {
+        // Output dims differ from class count — use model's own names
+        col_names = sup_op->outputColumnNames();
     }
 
     // ========================================================================

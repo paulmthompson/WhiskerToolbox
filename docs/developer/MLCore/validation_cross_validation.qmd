@@ -1,0 +1,198 @@
+---
+title: "Validation & Cross-Validation"
+description: "Honest evaluation of HMM classification via explicit validation intervals and leave-one-interval-out cross-validation"
+---
+
+## Motivation
+
+The classification pipeline implements ground-truth (GT) substitution: after
+Viterbi decoding, predictions for labeled frames are overwritten with their
+known labels. This ensures the final output is exact on training data, but it
+means train-set metrics are always 100% — which is useless for evaluation.
+
+Additionally, the existing "validation" heuristic (frames outside the training
+region) is unreliable because many non-training frames have no labels at all,
+and unlabeled frames do not represent class 0.
+
+Two features address this:
+
+1. **Explicit validation intervals** — a dedicated `DigitalIntervalSeries`
+   specifying regions with known labels for honest evaluation.
+2. **Leave-one-interval-out cross-validation** — retrain the model multiple
+   times, each time holding out one training interval, predict it with
+   boundary constraints, and average per-fold metrics.
+
+## Architecture
+
+### Raw vs. GT-Substituted Predictions
+
+The pipeline maintains two prediction vectors:
+
+- **`raw_predictions`** — the model's actual Viterbi output, unmodified.
+  Used for all metric computations.
+- **`predictions`** — after GT substitution (training frame labels overwrite
+  model output). Used only for the final output writer
+  (`PredictionWriter`), so downstream consumers get clean labeled data.
+
+This split ensures metrics reflect true model performance while the output
+retains exact labels on known frames.
+
+### Validation Intervals
+
+```
+Config field: validation_interval_key (std::string)
+```
+
+When set, the pipeline partitions predicted frames into three buckets:
+
+| Bucket          | Source                                     | Metrics computed? |
+|-----------------|--------------------------------------------|-------------------|
+| **Training**    | Frames inside `training_interval_key`      | Yes (train)       |
+| **Validation**  | Frames inside `validation_interval_key`    | Yes (validation)  |
+| **Other**       | All remaining frames                       | No                |
+
+Ground-truth labels for validation frames are assembled using the same label
+configuration as training (e.g., `LabelFromIntervals` with the same contact
+interval series). The key difference is that validation intervals are *not*
+used for training — the model has never seen these labels.
+
+Validation intervals still benefit from boundary-constrained decoding: the
+first and last frames of a validation interval (which have known labels)
+serve as Viterbi bookends, just like training interval boundaries.
+
+### Leave-One-Interval-Out Cross-Validation
+
+```
+Config field: max_cv_folds (std::size_t, default 5; 0 = disabled)
+```
+
+Cross-validation runs as **Stage 5c**, after the main model is trained in
+Stage 5b. It does not affect the main model or its predictions — it is purely
+an evaluation mechanism.
+
+#### Algorithm
+
+For $K$ training intervals (capped at `max_cv_folds`):
+
+1. **Hold out interval $k$** from the training set.
+2. **Retrain** a fresh model on the remaining $K-1$ intervals.
+3. **Predict** the held-out interval using the retrained model:
+   - Segment the held-out interval's features into contiguous sequences.
+   - Apply bidirectional boundary constraints: the first and last frames of
+     the held-out interval have known labels (from the full label assembly),
+     which serve as initial and terminal Viterbi constraints.
+   - Run `predictSequencesBidirectionalConstrained()`.
+4. **Compute per-fold metrics** by comparing raw predictions to ground truth
+   on the held-out interval.
+5. **Average** metrics across all $K$ folds.
+
+The main model (trained on ALL intervals) remains the one used for Stage 6
+prediction. CV results are stored in separate result fields.
+
+#### Why Full Retrain?
+
+Each fold retrains from scratch rather than using the main model. This is
+because the HMM's transition matrix, emission distributions, and initial
+state distribution are all estimated from training data. Removing one
+interval changes these parameters, and the difference is the signal we want
+to measure — how much does the model depend on each block of labeled data?
+
+#### Boundary Constraints in CV
+
+The held-out interval's own first and last frame labels serve as bookends.
+These labels come from the label assembly (which covers all labeled frames),
+not from the training `label_map` (which excludes the held-out interval).
+This is realistic: in production, adjacent labeled blocks provide boundary
+constraints for unlabeled gaps between them.
+
+## Config Fields
+
+### `ClassificationPipelineConfig`
+
+| Field                      | Type          | Default | Description                                                    |
+|----------------------------|---------------|---------|----------------------------------------------------------------|
+| `validation_interval_key`  | `std::string` | `""`    | DIS key for intervals with known labels used only for validation |
+| `max_cv_folds`             | `std::size_t` | `5`     | Max leave-one-out folds; 0 disables CV                          |
+
+### `ClassificationPipelineResult`
+
+| Field                              | Type                                      | Description                                        |
+|------------------------------------|-------------------------------------------|----------------------------------------------------|
+| `binary_cv_metrics`                | `std::optional<BinaryClassificationMetrics>` | Averaged binary CV metrics across folds             |
+| `multi_class_cv_metrics`           | `std::optional<MultiClassMetrics>`        | Averaged multiclass CV metrics across folds         |
+| `cv_folds_run`                     | `std::size_t`                             | Number of folds actually executed                    |
+| `cv_per_fold_accuracy`             | `std::vector<double>`                     | Per-fold accuracy for inspection                     |
+
+## Pipeline Stage Flow (Sequence Models)
+
+```
+ValidatingFeatures → ConvertingFeatures → AssemblingLabels →
+FilteringToTrainingRegion → BalancingClasses → SegmentingSequences →
+Training → CrossValidation(5c) → Predicting → ComputingMetrics →
+WritingOutput → Complete
+```
+
+Stage 5c (`CrossValidation`) is skipped when `max_cv_folds == 0` or fewer
+than 2 training intervals exist.
+
+## UI Integration
+
+### Validation Region Panel
+
+A `RegionSelectionPanel` in `RegionMode::Validation` mode provides a combo
+box listing all `DigitalIntervalSeries` in the DataManager. The selected key
+populates `config.validation_interval_key`. An "All frames" checkbox is
+available but defaults to unchecked (no validation region).
+
+### Cross-Validation Controls
+
+Located in `ModelConfigPanel`:
+
+- **"Cross-validate" checkbox** — enables/disables CV (`max_cv_folds = 0`
+  when unchecked).
+- **"Max folds" spinbox** (1–20, default 5) — caps the number of
+  leave-one-out iterations.
+
+### Results Display
+
+`ResultsPanel` shows three metric sections when available:
+
+1. **Training Metrics** — computed on training-region frames using raw
+   predictions (not 100%).
+2. **Validation Metrics** — computed on validation-region frames if
+   `validation_interval_key` is set.
+3. **Cross-Validation Metrics** — averaged across folds, with per-fold
+   accuracy detail.
+
+## Example Workflow
+
+```
+TensorData: "features" (100,000 frames × 192 features)
+Labels: "contact" DigitalIntervalSeries (contact events)
+Training region: "train" DIS with intervals [1000–2000], [5000–6000], [8000–9000]
+Validation region: "validate" DIS with intervals [3000–4000], [7000–7500]
+```
+
+1. Model trains on frames within `[1000–2000] ∪ [5000–6000] ∪ [8000–9000]`.
+2. CV holds out each training interval in turn (3 folds), retrains on the
+   other 2, predicts the held-out interval with boundary constraints, and
+   reports per-fold accuracy.
+3. Main model predicts all 100k frames. Viterbi uses boundary constraints at
+   labeled block boundaries.
+4. Train metrics: raw predictions vs ground truth on training-region frames.
+5. Validation metrics: raw predictions vs ground truth on validation-region
+   frames.
+6. Output: GT-substituted predictions + probabilities written to DataManager.
+
+## Files
+
+| File | Role |
+|------|------|
+| `src/MLCore/pipelines/ClassificationPipeline.hpp` | Config and result structs |
+| `src/MLCore/pipelines/ClassificationPipeline.cpp` | Pipeline stages including CV |
+| `src/MLCore/pipelines/BoundingSpan.hpp/cpp` | Training/validation row filtering |
+| `src/WhiskerToolbox/MLCore_Widget/UI/RegionSelectionPanel/` | Validation region UI |
+| `src/WhiskerToolbox/MLCore_Widget/UI/ModelConfigPanel/` | CV controls |
+| `src/WhiskerToolbox/MLCore_Widget/UI/ResultsPanel/` | CV results display |
+| `src/WhiskerToolbox/MLCore_Widget/MLCoreWidget.cpp` | Config assembly (`_buildPipelineConfig`) |
+| `src/WhiskerToolbox/MLCore_Widget/MLCoreWidgetState.hpp` | State fields for validation key + CV |

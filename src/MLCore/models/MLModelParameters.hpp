@@ -181,6 +181,18 @@ struct LogitProjectionParameters : public MLModelParametersBase {
     bool scale_features = false;       ///< Standardize features (zero mean, unit variance) before fitting
 };
 
+/**
+ * @brief Parameters for Supervised PCA dimensionality reduction
+ *
+ * Supervised PCA fits PCA on the labeled subset of observations only,
+ * so that the principal components capture the variance structure of the
+ * labeled data. All observations are then projected into that space.
+ */
+struct SupervisedPCAParameters : public MLModelParametersBase {
+    std::size_t n_components = 2;///< Number of principal components to retain
+    bool scale = true;           ///< Standardize features (zero mean, unit variance) before PCA
+};
+
 // ============================================================================
 // Sequence model parameters
 // ============================================================================

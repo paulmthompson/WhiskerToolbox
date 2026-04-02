@@ -102,6 +102,19 @@ public:
      */
     [[nodiscard]] virtual std::vector<std::string> outputColumnNames() const = 0;
 
+    /**
+     * @brief Whether the model requires all class labels for fitting
+     *
+     * Discriminative models (e.g. LogitProjection) need samples from every
+     * class to learn a decision boundary ⇒ return true (the default).
+     *
+     * Non-discriminative models (e.g. SupervisedPCA) only need the "positive"
+     * class subset to fit a projection ⇒ return false.  The pipeline uses
+     * this flag to subset to only the positive class (label > 0) when all
+     * rows already carry a label (e.g. interval-based labeling).
+     */
+    [[nodiscard]] virtual bool requiresAllClassesForFitting() const { return true; }
+
     // ========================================================================
     // MLModelOperation overrides
     // ========================================================================
