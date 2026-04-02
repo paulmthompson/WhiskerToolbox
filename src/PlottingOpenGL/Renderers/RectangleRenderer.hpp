@@ -57,8 +57,33 @@ public:
 
     /**
      * @brief Upload a rectangle batch to GPU memory.
-     * 
+     *
+     * Stores the batch into an internal CPU-side list. The actual GPU upload
+     * (VBO allocation and data transfer) is deferred and occurs during render().
+     * Each call **appends** a new batch — call clearData() between frames to
+     * avoid accumulating stale batches across renders.
+     *
+     * An empty `batch.bounds` is handled gracefully (early return, no batch stored).
+     * If `batch.colors` is empty, all rectangles default to semi-transparent white.
+     * If `batch.selection_flags` is empty, all rectangles default to unselected.
+     *
      * @param batch The rectangle batch to upload
+     *
+     * @pre initialize() must have been called and returned true before the first call
+     *      (enforcement: runtime_check — early return if !m_initialized)
+     * @pre No GL context is required at call time — GPU upload is deferred to render()
+     *      (enforcement: N/A — noted here to distinguish from other renderers)
+     * @pre If batch.colors is non-empty, batch.colors.size() >= batch.bounds.size()
+     *      (enforcement: none) [IMPORTANT]
+     *      — if colors has fewer elements than bounds, render() uploads only the
+     *      provided colors to the color VBO, but glDrawArraysInstanced draws
+     *      instance_count = batch.bounds.size() instances, causing the GPU to
+     *      read uninitialized instance color data for the excess rectangles.
+     * @pre If batch.selection_flags is non-empty,
+     *      batch.selection_flags.size() >= batch.bounds.size() (enforcement: none) [LOW]
+     *      — render() guards selection_flags access with i < selection_flags.size(),
+     *      so excess rectangles are silently treated as unselected (no crash, but
+     *      selection state silently wrong for those instances).
      */
     void uploadData(CorePlotting::RenderableRectangleBatch const & batch);
 

@@ -61,8 +61,38 @@ public:
 
     /**
      * @brief Upload a glyph batch to GPU memory.
-     * 
+     *
+     * Stores batch metadata (positions, colors, model matrix, glyph type) CPU-side.
+     * Instance VBO uploads (positions and colors) are **deferred** to render(),
+     * so there is no O(N²) re-upload cost from multiple uploadData calls.
+     *
+     * For non-Circle glyph types, glyph geometry is created and immediately
+     * uploaded to the geometry VBO if the type has changed or no geometry exists.
+     * For Circle glyphs, no GPU work is done at uploadData time.
+     *
+     * Each call **appends** a new batch — call clearData() between frames.
+     *
+     * An empty `batch.positions` is handled gracefully (early return).
+     * An empty `batch.colors` causes a uniform white color array to be generated
+     * for all instances — no precondition is required for that field.
+     *
      * @param batch The glyph batch to upload
+     *
+     * @pre initialize() must have been called and returned true before the first call
+     *      (enforcement: runtime_check — early return if !m_initialized)
+     * @pre A valid OpenGL context must be current on the calling thread when
+     *      batch.glyph_type != GlyphType::Circle (enforcement: none) [IMPORTANT]
+     *      — non-Circle types call m_geometry_vbo.allocate() immediately if
+     *      the geometry type changed or no geometry exists; Circle glyphs defer
+     *      all GL work to render(), so no context is required for them at this point.
+     * @pre If batch.colors is non-empty, batch.colors.size() >= batch.positions.size()
+     *      (enforcement: none) [IMPORTANT]
+     *      — render() uploads batch.colors to the color VBO and then draws
+     *      batch.positions.size() instances; if colors is shorter, the GPU reads
+     *      uninitialized instance color data for the excess glyphs.
+     * @pre batch.size > 0 (enforcement: none) [LOW]
+     *      — passed directly to u_glyph_size / u_point_size uniforms in render();
+     *      zero or negative values produce invisible or degenerate glyphs.
      */
     void uploadData(CorePlotting::RenderableGlyphBatch const & batch);
 

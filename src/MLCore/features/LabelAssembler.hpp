@@ -161,7 +161,7 @@ struct AssembledLabels {
  * @param config Configuration with class names (defaults: "Outside", "Inside")
  * @return Binary labels aligned with row_times (unlabeled_count always 0)
  *
- * @pre row_times must not be empty
+ * @pre row_times must not be empty (enforcement: exception)
  * @throws std::invalid_argument if row_times is empty
  */
 [[nodiscard]] AssembledLabels assembleLabelsFromIntervals(
@@ -187,8 +187,8 @@ struct AssembledLabels {
  * @param config Configuration with group IDs and time key
  * @return Multi-class labels aligned with row_times
  *
- * @pre config.class_groups must not be empty
- * @pre row_times must not be empty
+ * @pre config.class_groups must not be empty (enforcement: exception)
+ * @pre row_times must not be empty (enforcement: exception)
  * @throws std::invalid_argument if class_groups or row_times is empty
  */
 [[nodiscard]] AssembledLabels assembleLabelsFromTimeEntityGroups(
@@ -210,8 +210,8 @@ struct AssembledLabels {
  * @param config Configuration with data key and group IDs
  * @return Multi-class labels aligned with row_times
  *
- * @pre config.class_groups must not be empty
- * @pre row_times must not be empty
+ * @pre config.class_groups must not be empty (enforcement: exception)
+ * @pre row_times must not be empty (enforcement: exception)
  * @throws std::invalid_argument if class_groups or row_times is empty
  */
 [[nodiscard]] AssembledLabels assembleLabelsFromDataEntityGroups(
@@ -233,7 +233,7 @@ struct AssembledLabels {
  * @param config Configuration with class names (defaults: "NoEvent", "Event")
  * @return Binary labels aligned with row_times (unlabeled_count always 0)
  *
- * @pre row_times must not be empty
+ * @pre row_times must not be empty (enforcement: exception)
  * @throws std::invalid_argument if row_times is empty
  */
 [[nodiscard]] AssembledLabels assembleLabelsFromEvents(

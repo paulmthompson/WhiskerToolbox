@@ -121,6 +121,12 @@ public:
      * - First upload after clearData()
      * 
      * @param batch The new polyline batch
+     *
+     * @pre initialize() must have been called and returned true before the first call (enforcement: runtime_check)
+     * @pre A valid OpenGL context must be current on the calling thread (enforcement: none) [CRITICAL]
+     * @pre batch.line_start_indices.size() == batch.line_vertex_counts.size() (topology arrays must be parallel) (enforcement: none) [IMPORTANT]
+     * @pre For each i: batch.line_start_indices[i] + batch.line_vertex_counts[i] <= batch.vertices.size() / 2 (no index exceeds the vertex buffer) (enforcement: none) [CRITICAL]
+     * @pre batch.thickness > 0 (required by glLineWidth; zero or negative produces a GL error) (enforcement: none) [LOW]
      */
     void updateData(CorePlotting::RenderablePolyLineBatch const & batch);
 
@@ -129,6 +135,15 @@ public:
      * 
      * Use this when you know the data has changed significantly,
      * such as when loading a new dataset.
+     *
+     * An empty `batch.vertices` is handled gracefully: the buffer is cleared
+     * and the function returns without touching the GPU.
+     *
+     * @pre initialize() must have been called and returned true before the first call (enforcement: runtime_check)
+     * @pre A valid OpenGL context must be current on the calling thread (enforcement: none) [CRITICAL]
+     * @pre batch.line_start_indices.size() == batch.line_vertex_counts.size() (topology arrays must be parallel) (enforcement: none) [IMPORTANT]
+     * @pre For each i: batch.line_start_indices[i] + batch.line_vertex_counts[i] <= batch.vertices.size() / 2 (no index exceeds the vertex buffer; checked against the cached batch used by render()) (enforcement: none) [CRITICAL]
+     * @pre batch.thickness > 0 (required by glLineWidth in render(); zero or negative produces a GL error) (enforcement: none) [LOW]
      */
     void uploadData(CorePlotting::RenderablePolyLineBatch const & batch);
 
@@ -174,17 +189,98 @@ private:
 
     /**
      * @brief Compare new batch with cached data and compute dirty regions
+     *
+     * Populates `m_dirty_regions` and `m_pending_vertices` as a side effect.
+     * Returns `false` (full re-upload) whenever topology changes, the vertex count
+     * changes, the GPU buffer has insufficient capacity, or more than 50% of floats
+     * differ. All of these conditions are runtime-checked internally.
+     *
      * @return true if incremental update is possible, false if full re-upload needed
+     *
+     * @pre Called only from updateData(), which has already checked m_initialized
+     *      (enforcement: runtime_check — via caller guard, not re-checked here)
+     * @pre batch.line_start_indices.size() == batch.line_vertex_counts.size()
+     *      (topology arrays must be parallel; mismatches are not detected here —
+     *      they propagate silently into m_cached_batch and are consumed by render())
+     *      (enforcement: none) [IMPORTANT]
+     * @pre m_comparison_tolerance >= 0.0f (negative values cause every vertex float
+     *      to compare as dirty, collapsing all incremental updates into full re-uploads)
+     *      (enforcement: none) [LOW]
+     * @pre m_comparison_tolerance is not NaN (NaN comparisons are always false, so no
+     *      vertex is ever marked dirty, causing updateGPUBufferIncremental to skip all
+     *      uploads and leave the GPU buffer silently stale)
+     *      (enforcement: none) [IMPORTANT]
+     *
+     * @post If returns true: m_dirty_regions and m_pending_vertices are populated for
+     *       updateGPUBufferIncremental(). If returns false: m_dirty_regions is empty
+     *       and m_pending_vertices holds a copy of batch.vertices.
      */
     bool computeDirtyRegions(CorePlotting::RenderablePolyLineBatch const & batch);
 
     /**
      * @brief Perform incremental GPU buffer update using glBufferSubData
+     *
+     * Uploads only the byte ranges recorded in `m_dirty_regions` using
+     * `glBufferSubData`, then moves `m_pending_vertices` into the CPU cache.
+     * Returns early (no-op) if `GLFunctions::get()` is null or `m_dirty_regions`
+     * is empty.
+     *
+     * @pre computeDirtyRegions() must have been called and returned true in the
+     *      same frame before this is called (enforcement: none) [CRITICAL]
+     *      — this is the only way m_dirty_regions and m_pending_vertices can
+     *      carry the invariants this method relies on:
+     *        • Every region has end_byte >= start_byte
+     *        • Every region's start_byte is a multiple of sizeof(float)
+     *        • Every region's end_byte <= m_pending_vertices.size() * sizeof(float)
+     *        • Every region's end_byte <= m_gpu_buffer_capacity
+     *      Violating any of these causes size_t underflow, misaligned VBO reads,
+     *      out-of-bounds pointer arithmetic, or writes past the allocated GPU buffer.
+     * @pre A valid OpenGL context must be current on the calling thread
+     *      (enforcement: none) [CRITICAL]
+     *      — GLFunctions::get() non-null is checked, but does not guarantee a
+     *      current context; m_vao.bind() and m_vbo.write() will silently corrupt
+     *      state or crash without one.
+     * @pre m_initialized == true — enforced by the caller chain via updateData()
+     *      (enforcement: runtime_check — via caller guard, not re-checked here)
+     *
+     * @post m_dirty_regions is cleared. If any upload was performed,
+     *       m_cached_batch.vertices == (the vertices from the batch passed to
+     *       computeDirtyRegions()) and m_cached_batch.valid == true.
      */
     void updateGPUBufferIncremental();
 
     /**
      * @brief Perform full GPU buffer allocation and upload
+     *
+     * Allocates (or reuses) a GPU buffer of `batch.vertices.size() * sizeof(float)
+     * * m_capacity_multiplier` bytes, then uploads all vertex data via `glBufferData`
+     * / `glBufferSubData`. An empty `batch.vertices` is handled gracefully by calling
+     * `clearData()` and returning early.
+     *
+     * @pre A valid OpenGL context must be current on the calling thread
+     *      (enforcement: none) [CRITICAL]
+     *      — m_vao.bind() and m_vbo.write() require one; no context guard exists here.
+     * @pre m_capacity_multiplier > 0.0f and not NaN (enforcement: none) [CRITICAL]
+     *      — zero: desired_capacity computes as 0, allocating a 0-byte buffer, then
+     *        m_vbo.write() immediately writes required_bytes past the end (GPU corruption).
+     *      — negative or NaN: static_cast<size_t>(negative/NaN float) is C++ undefined
+     *        behaviour (float-to-unsigned conversion of out-of-range value).
+     *      In practice, m_capacity_multiplier defaults to 2.0f and is only set via the
+     *      constructor, so this risk only surfaces with an explicit bad constructor argument.
+     * @pre m_initialized == true — enforced by the caller chain via updateData() /
+     *      uploadData() (enforcement: runtime_check — via caller guards, not re-checked here)
+     * @pre batch.line_start_indices.size() == batch.line_vertex_counts.size()
+     *      (topology arrays must be parallel — both are written to m_cached_batch and
+     *      consumed by render() without further validation) (enforcement: none) [IMPORTANT]
+     * @pre For each i: batch.line_start_indices[i] + batch.line_vertex_counts[i]
+     *      <= batch.vertices.size() / 2 (no index exceeds the uploaded vertex buffer)
+     *      (enforcement: none) [CRITICAL]
+     * @pre batch.thickness > 0 (required by glLineWidth in render()) (enforcement: none) [LOW]
+     * @pre batch.vertices.size() * sizeof(float) <= INT_MAX (narrowing cast to int for
+     *      m_vbo.write() and m_vbo.allocate()) (enforcement: none) [LOW]
+     *
+     * @post m_cached_batch mirrors batch exactly and m_cached_batch.valid == true.
+     *       m_gpu_buffer_capacity >= batch.vertices.size() * sizeof(float).
      */
     void uploadGPUBufferFull(CorePlotting::RenderablePolyLineBatch const & batch);
 

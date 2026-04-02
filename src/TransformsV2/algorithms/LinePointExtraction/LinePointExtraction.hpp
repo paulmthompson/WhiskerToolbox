@@ -1,8 +1,6 @@
 #ifndef WHISKERTOOLBOX_V2_LINE_POINT_EXTRACTION_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_LINE_POINT_EXTRACTION_TRANSFORM_HPP
 
-#include "extension/ElementTransform.hpp"
-
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 

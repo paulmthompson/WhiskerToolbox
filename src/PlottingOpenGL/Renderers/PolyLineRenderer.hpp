@@ -60,11 +60,49 @@ public:
 
     /**
      * @brief Upload a polyline batch to GPU memory.
-     * 
-     * This copies the batch data to GPU buffers. The batch can be modified
-     * or destroyed after this call without affecting the renderer.
-     * 
+     *
+     * Appends the batch's vertex data to an internal combined buffer and
+     * immediately re-uploads the entire buffer to the VBO via `glBufferData`.
+     * Batch metadata (topology, colors, model matrix) is stored CPU-side.
+     *
+     * Each call **appends** — call clearData() between frames. Because the
+     * full combined vertex buffer is re-allocated and re-uploaded on every call,
+     * repeated calls within a frame are O(N²) in total bytes uploaded to the GPU.
+     *
+     * An empty `batch.vertices` is handled gracefully (early return).
+     * Per-line colors (`batch.colors`) whose size does not match
+     * `batch.line_start_indices.size()` fall back silently to the global color in
+     * render() — no precondition is required for that field.
+     *
+     * The batch can be modified or destroyed after this call without affecting
+     * the renderer.
+     *
      * @param batch The polyline batch to upload
+     *
+     * @pre initialize() must have been called and returned true before the first call
+     *      (enforcement: runtime_check — early return if !m_initialized)
+     * @pre A valid OpenGL context must be current on the calling thread
+     *      (enforcement: none) [CRITICAL]
+     *      — m_vbo.allocate() is called immediately (not deferred); unlike
+     *      RectangleRenderer, GPU upload happens at uploadData time.
+     * @pre batch.vertices.size() % 2 == 0 (vertex buffer must contain complete xy pairs)
+     *      (enforcement: none) [IMPORTANT]
+     *      — an odd count silently drops the trailing float; batch.total_vertices is
+     *      computed as vertices.size() / 2, so the partial vertex is ignored but the
+     *      discarded float is still uploaded to the VBO.
+     * @pre batch.line_start_indices.size() == batch.line_vertex_counts.size()
+     *      (topology arrays must be parallel) (enforcement: none) [IMPORTANT]
+     *      — both are iterated in parallel in render() without a size guard.
+     * @pre For each i: batch.line_start_indices[i] + batch.line_vertex_counts[i]
+     *      <= batch.vertices.size() / 2 (no index exceeds the vertex buffer)
+     *      (enforcement: none) [CRITICAL]
+     *      — render() passes these directly to glDrawArrays; an out-of-range index
+     *      causes the GPU to read beyond the VBO (undefined driver behaviour).
+     * @pre batch.thickness > 0 (required by glLineWidth in render())
+     *      (enforcement: none) [LOW]
+     * @pre m_all_vertices.size() * sizeof(float) + batch.vertices.size() * sizeof(float)
+     *      <= INT_MAX (narrowing cast to int for m_vbo.allocate())
+     *      (enforcement: none) [LOW]
      */
     void uploadData(CorePlotting::RenderablePolyLineBatch const & batch);
 
