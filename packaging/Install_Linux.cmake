@@ -24,9 +24,9 @@ install(TARGETS WhiskerToolbox
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME
         DESTINATION ${CMAKE_INSTALL_BINDIR}
-        RUNTIME_DEPENDENCIES appDeps
         INCLUDES
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        RUNTIME_DEPENDENCY_SET appDeps
 )
 
 qt_generate_deploy_app_script(
