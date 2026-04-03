@@ -12,6 +12,7 @@
 #include <string>
 
 class DataManager;
+class EditorState;
 class QMenu;
 
 namespace commands {
@@ -184,7 +185,7 @@ private:
      */
     void closeEvent(QCloseEvent * event) override;
 
-    void openEditor(QString const & type_id);
+    std::shared_ptr<EditorState> openEditor(QString const & type_id);
 
     void loadData();
     void _updateFrameCount();

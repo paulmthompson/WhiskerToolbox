@@ -203,9 +203,7 @@ MainWindow::MainWindow(QWidget * parent)
     // Wire the openEditor callback so ContextActions can open/focus editors
     _editor_registry->setOpenEditorCallback([this](EditorTypeId const & type_id)
                                                     -> std::shared_ptr<EditorState> {
-        openEditor(type_id.value);
-        auto states = _editor_registry->statesByType(type_id);
-        return states.empty() ? nullptr : states.back();
+        return openEditor(type_id.value);
     });
 
     // Create KeymapManager for configurable keyboard shortcuts
@@ -999,13 +997,13 @@ void MainWindow::_registerEditorTypes() {
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);
 }
 
-void MainWindow::openEditor(QString const & type_id) {
+std::shared_ptr<EditorState> MainWindow::openEditor(QString const & type_id) {
     auto info = _editor_registry->typeInfo(EditorLib::EditorTypeId(type_id));
 
     if (info.type_id.isEmpty()) {
         std::cerr << "MainWindow::openEditor: Unknown editor type: "
                   << type_id.toStdString() << std::endl;
-        return;
+        return nullptr;
     }
 
     // For single-instance editors, check if already open
@@ -1028,7 +1026,7 @@ void MainWindow::openEditor(QString const & type_id) {
 
                         // Set as active editor for PropertiesHost
                         _editor_registry->selectionContext()->setActiveEditor(instance_id);
-                        return;
+                        return state;
                     }
                 }
             }
@@ -1052,7 +1050,7 @@ void MainWindow::openEditor(QString const & type_id) {
     if (!placed.isValid()) {
         std::cerr << "MainWindow::openEditor: Failed to create editor: "
                   << type_id.toStdString() << std::endl;
-        return;
+        return nullptr;
     }
 
     EditorLib::EditorInstanceId const instance_id(placed.state->getInstanceId());
@@ -1064,6 +1062,8 @@ void MainWindow::openEditor(QString const & type_id) {
               << " via EditorCreationController (instance: "
               << instance_id.toStdString() << ", zone: "
               << zoneToString(info.preferred_zone).toStdString() << ")" << std::endl;
+
+    return placed.state;
 }
 
 // ---------------------------------------------------------------------------
