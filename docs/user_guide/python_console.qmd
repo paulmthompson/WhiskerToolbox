@@ -119,10 +119,17 @@ else:
 
 ### AnalogTimeSeries
 
--   `AnalogTimeSeries(values, times)`: Constructor taking lists of floats and time indices.
--   `values`: Read-only NumPy array of the data (zero-copy).
+-   `AnalogTimeSeries(values, times)`: Constructor taking lists of floats and `TimeFrameIndex` values.
+-   `AnalogTimeSeries(values, num_samples)`: Constructor from a values list with a sample count (dense, regularly-spaced indices).
+-   `values`: Read-only NumPy `float32` array of the data values (zero-copy).
+-   `times`: NumPy `int64` array of the time index for every sample.
 -   `getNumSamples() -> int`: Get the number of samples.
--   `toList() -> list[float]`: Copy data to a Python list.
+-   `__len__() -> int`: Same as `getNumSamples()`.
+-   `toList() -> list[float]`: Copy all values to a Python list.
+-   `getTimeSeries() -> list[TimeFrameIndex]`: Get all time indices as a list of `TimeFrameIndex` objects.
+-   `toTimeValueArrays() -> tuple[np.ndarray, np.ndarray]`: Return `(times, values)` as a `(int64, float32)` NumPy array pair.
+-   `getDataInRange(start, end) -> np.ndarray`: Read-only NumPy view of values in `[start, end]` (zero-copy).
+-   `getAtTime(time) -> float | None`: Value at a specific `TimeFrameIndex`, or `None` if not found.
 
 ### MaskData
 
