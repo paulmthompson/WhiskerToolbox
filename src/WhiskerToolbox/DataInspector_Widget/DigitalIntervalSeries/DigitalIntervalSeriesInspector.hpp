@@ -213,6 +213,12 @@ private:
      */
     void _markContactEnd();
 
+    /**
+     * @brief Update the visual indicator showing whether this inspector is the active hotkey target
+     * @param is_active true if this inspector is currently receiving hotkey actions
+     */
+    void _updateActiveTargetIndicator(bool is_active);
+
 private slots:
     void _createIntervalButton();
     void _removeIntervalButton();

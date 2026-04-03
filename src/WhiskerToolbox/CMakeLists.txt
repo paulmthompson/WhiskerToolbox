@@ -241,6 +241,8 @@ target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
 target_link_libraries(WhiskerToolbox PRIVATE glm::glm)
 
+target_link_libraries(WhiskerToolbox PRIVATE spdlog::spdlog_header_only)
+
 
 target_include_directories(WhiskerToolbox PRIVATE
 

@@ -1,4 +1,5 @@
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(spdlog CONFIG REQUIRED)
 
 qt_add_library(KeymapSystem STATIC
     KeyAction.hpp
@@ -16,6 +17,7 @@ set_target_properties(KeymapSystem PROPERTIES
 target_link_libraries(KeymapSystem
     PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets
     PUBLIC EditorState
+    PRIVATE spdlog::spdlog_header_only
 )
 
 target_include_directories(KeymapSystem

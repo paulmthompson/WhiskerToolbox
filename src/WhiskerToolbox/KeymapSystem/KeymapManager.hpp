@@ -91,7 +91,16 @@ public:
      * @brief Register an action descriptor
      * @param descriptor The action metadata to register
      * @return true if registered successfully, false if action_id already exists
-     * @pre descriptor.action_id must not be empty
+     *
+     * @pre descriptor.action_id must not be empty (enforcement: assert)
+     * @pre descriptor.scope.editor_type_id must be non-empty when scope.kind is
+     *      AlwaysRouted or EditorFocused — an empty type_id is accepted silently
+     *      but causes dispatchAction to match the wrong adapter class (enforcement: none)
+     * @pre descriptor.action_id must not already be registered; if it is, false is
+     *      returned and the caller's descriptor is silently ignored (enforcement: runtime_check)
+     * @pre descriptor.display_name should be non-empty for usable keybinding UI (enforcement: none)
+     * @pre descriptor.category should be non-empty for correct grouping in the
+     *      keybinding editor (enforcement: none)
      */
     bool registerAction(KeyActionDescriptor const & descriptor);
 
@@ -185,6 +194,47 @@ public:
             EditorLib::EditorTypeId const & target_type_id,
             EditorLib::EditorInstanceId const & target_instance_id = {}) const;
 
+    // --- Active target management (for multi-instance AlwaysRouted dispatch) ---
+
+    /**
+     * @brief Cycle the active target to the next adapter of the given type
+     * @param type_id The editor type to cycle through
+     *
+     * When multiple adapters of the same type are registered, AlwaysRouted
+     * actions dispatch to the "active target" for that type. This method
+     * advances the active target to the next adapter in registration order,
+     * wrapping around. If no active target is set, selects the first adapter.
+     *
+     * Emits activeTargetChanged.
+     */
+    void cycleActiveTarget(EditorLib::EditorTypeId const & type_id);
+
+    /**
+     * @brief Set the active target instance for a given editor type
+     * @param type_id The editor type
+     * @param instance_id The instance to make active (empty to clear)
+     *
+     * Emits activeTargetChanged.
+     */
+    void setActiveTarget(EditorLib::EditorTypeId const & type_id,
+                         EditorLib::EditorInstanceId const & instance_id);
+
+    /**
+     * @brief Get the active target instance for a given editor type
+     * @param type_id The editor type to query
+     * @return The active instance ID, or invalid if none set
+     */
+    [[nodiscard]] EditorLib::EditorInstanceId activeTarget(
+            EditorLib::EditorTypeId const & type_id) const;
+
+    /**
+     * @brief Get all registered adapters for a given editor type
+     * @param type_id The editor type to query
+     * @return List of (instance_id, adapter) pairs
+     */
+    [[nodiscard]] std::vector<EditorLib::EditorInstanceId> adapterInstancesForType(
+            EditorLib::EditorTypeId const & type_id) const;
+
     // --- Serialization ---
 
     /// Export all user overrides for persistence
@@ -196,6 +246,10 @@ public:
 signals:
     /// Emitted when any binding changes (override set/cleared, action registered/removed)
     void bindingsChanged();
+
+    /// Emitted when the active target for a type changes (cycling or explicit set)
+    void activeTargetChanged(EditorLib::EditorTypeId type_id,
+                             EditorLib::EditorInstanceId instance_id);
 
 private:
     struct OverrideState {
@@ -211,6 +265,9 @@ private:
 
     /// Registered adapters (non-owning; cleaned up via QObject::destroyed)
     std::vector<KeyActionAdapter *> _adapters;
+
+    /// Per-type active target for AlwaysRouted dispatch with multiple instances
+    std::map<EditorLib::EditorTypeId, EditorLib::EditorInstanceId> _active_targets;
 
     /// Non-owning pointer to the editor registry for focus tracking
     EditorRegistry * _editor_registry = nullptr;

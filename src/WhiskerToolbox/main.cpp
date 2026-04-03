@@ -11,6 +11,10 @@
 #include <QSurfaceFormat>
 #include <qstylefactory.h>
 
+#include <spdlog/spdlog.h>
+
+#include <algorithm>
+
 // Ensure HDF5Explorer registration is linked when HDF5 is enabled
 #ifdef ENABLE_HDF5
 #include "HDF5Explorer_Widget/HDF5ExplorerRegistration.hpp"
@@ -47,6 +51,16 @@ protected:
 
 
 int main(int argc, char * argv[]) {
+    // Parse --debug flag before QApplication to enable verbose logging.
+    // Usage: WhiskerToolbox --debug
+    bool const debug_logging = std::any_of(argv, argv + argc, [](char const * arg) {
+        return std::string_view(arg) == "--debug";
+    });
+    if (debug_logging) {
+        spdlog::set_level(spdlog::level::debug);
+        spdlog::debug("Debug logging enabled");
+    }
+
     // https://githubuser0xffff.github.io/Qt-Advanced-Docking-System/doc/user-guide.html#opengl--ads
     QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 

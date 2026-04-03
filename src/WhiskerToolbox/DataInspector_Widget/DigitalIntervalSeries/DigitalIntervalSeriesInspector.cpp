@@ -44,6 +44,9 @@ DigitalIntervalSeriesInspector::DigitalIntervalSeriesInspector(
       ui(new Ui::DigitalIntervalSeriesInspector) {
     ui->setupUi(this);
 
+    // Allow stylesheet border to render on this QWidget
+    setAttribute(Qt::WA_StyledBackground, true);
+
     // Initialize start frame label as hidden
     ui->start_frame_label->setVisible(false);
 
@@ -314,6 +317,11 @@ void DigitalIntervalSeriesInspector::setKeymapManager(KeymapSystem::KeymapManage
     _key_adapter = new KeymapSystem::KeyActionAdapter(this);
     _key_adapter->setTypeId(EditorLib::EditorTypeId(QStringLiteral("DigitalIntervalSeriesInspector")));
 
+    // Set the instance ID so the active target system can address this specific inspector
+    if (state()) {
+        _key_adapter->setInstanceId(EditorLib::EditorInstanceId(state()->getInstanceId()));
+    }
+
     _key_adapter->setHandler([this](QString const & action_id) -> bool {
         if (action_id == QStringLiteral("digital_interval_series.mark_contact_start")) {
             _markContactStart();
@@ -331,6 +339,27 @@ void DigitalIntervalSeriesInspector::setKeymapManager(KeymapSystem::KeymapManage
     });
 
     manager->registerAdapter(_key_adapter);
+
+    // Connect to activeTargetChanged to update visual indicator
+    auto const my_type = EditorLib::EditorTypeId(QStringLiteral("DigitalIntervalSeriesInspector"));
+    connect(manager, &KeymapSystem::KeymapManager::activeTargetChanged,
+            this, [this, my_type](EditorLib::EditorTypeId const & type_id, EditorLib::EditorInstanceId const & instance_id) {
+                if (type_id != my_type) {
+                    return;
+                }
+                _updateActiveTargetIndicator(
+                        _key_adapter && instance_id.isValid() &&
+                        _key_adapter->instanceId() == instance_id);
+            });
+}
+
+void DigitalIntervalSeriesInspector::_updateActiveTargetIndicator(bool is_active) {
+    if (is_active) {
+        setStyleSheet(QStringLiteral(
+                "#DigitalIntervalSeriesInspector { border: 2px solid #4CAF50; }"));
+    } else {
+        setStyleSheet(QString());
+    }
 }
 
 void DigitalIntervalSeriesInspector::_removeIntervalButton() {

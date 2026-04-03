@@ -684,3 +684,385 @@ TEST_CASE("media group actions can be rebound via user override") {
     REQUIRE(result.has_value());
     CHECK(*result == "media.assign_group_1");
 }
+
+// ============================================================
+// Active target management
+// ============================================================
+
+TEST_CASE("activeTarget returns invalid ID when no target is set") {
+    KeymapManager mgr;
+    auto const type = EditorTypeId("TestWidget");
+    CHECK_FALSE(mgr.activeTarget(type).isValid());
+}
+
+TEST_CASE("setActiveTarget and activeTarget round-trip") {
+    KeymapManager mgr;
+    auto const type = EditorTypeId("TestWidget");
+    auto const id = EditorInstanceId::generate();
+
+    mgr.setActiveTarget(type, id);
+    CHECK(mgr.activeTarget(type) == id);
+}
+
+TEST_CASE("setActiveTarget emits activeTargetChanged") {
+    KeymapManager mgr;
+    auto const type = EditorTypeId("TestWidget");
+    auto const id = EditorInstanceId::generate();
+
+    EditorTypeId received_type;
+    EditorInstanceId received_id;
+    QObject::connect(&mgr, &KeymapManager::activeTargetChanged,
+                     [&](EditorTypeId t, EditorInstanceId i) {
+                         received_type = t;
+                         received_id = i;
+                     });
+
+    mgr.setActiveTarget(type, id);
+    CHECK(received_type == type);
+    CHECK(received_id == id);
+}
+
+TEST_CASE("setActiveTarget with empty ID clears the target") {
+    KeymapManager mgr;
+    auto const type = EditorTypeId("TestWidget");
+    auto const id = EditorInstanceId::generate();
+
+    mgr.setActiveTarget(type, id);
+    REQUIRE(mgr.activeTarget(type).isValid());
+
+    mgr.setActiveTarget(type, {});
+    CHECK_FALSE(mgr.activeTarget(type).isValid());
+}
+
+TEST_CASE("cycleActiveTarget cycles through adapters of the same type") {
+    KeymapManager mgr;
+    auto const type = EditorTypeId("MultiWidget");
+    auto const id_a = EditorInstanceId::generate();
+    auto const id_b = EditorInstanceId::generate();
+    auto const id_c = EditorInstanceId::generate();
+
+    auto * adapter_a = new KeyActionAdapter(&mgr);
+    adapter_a->setTypeId(type);
+    adapter_a->setInstanceId(id_a);
+    adapter_a->setHandler([](QString const &) { return true; });
+
+    auto * adapter_b = new KeyActionAdapter(&mgr);
+    adapter_b->setTypeId(type);
+    adapter_b->setInstanceId(id_b);
+    adapter_b->setHandler([](QString const &) { return true; });
+
+    auto * adapter_c = new KeyActionAdapter(&mgr);
+    adapter_c->setTypeId(type);
+    adapter_c->setInstanceId(id_c);
+    adapter_c->setHandler([](QString const &) { return true; });
+
+    mgr.registerAdapter(adapter_a);
+    mgr.registerAdapter(adapter_b);
+    mgr.registerAdapter(adapter_c);
+
+    // First cycle: no active target → selects first
+    mgr.cycleActiveTarget(type);
+    CHECK(mgr.activeTarget(type) == id_a);
+
+    // Second cycle: a → b
+    mgr.cycleActiveTarget(type);
+    CHECK(mgr.activeTarget(type) == id_b);
+
+    // Third cycle: b → c
+    mgr.cycleActiveTarget(type);
+    CHECK(mgr.activeTarget(type) == id_c);
+
+    // Fourth cycle: c → wraps to a
+    mgr.cycleActiveTarget(type);
+    CHECK(mgr.activeTarget(type) == id_a);
+}
+
+TEST_CASE("cycleActiveTarget with single adapter stays on it") {
+    KeymapManager mgr;
+    auto const type = EditorTypeId("SingleWidget");
+    auto const id = EditorInstanceId::generate();
+
+    auto * adapter = new KeyActionAdapter(&mgr);
+    adapter->setTypeId(type);
+    adapter->setInstanceId(id);
+    adapter->setHandler([](QString const &) { return true; });
+    mgr.registerAdapter(adapter);
+
+    mgr.cycleActiveTarget(type);
+    CHECK(mgr.activeTarget(type) == id);
+
+    // Cycling again stays on the same adapter
+    mgr.cycleActiveTarget(type);
+    CHECK(mgr.activeTarget(type) == id);
+}
+
+TEST_CASE("cycleActiveTarget with no adapters does nothing") {
+    KeymapManager mgr;
+    auto const type = EditorTypeId("EmptyWidget");
+
+    mgr.cycleActiveTarget(type);
+    CHECK_FALSE(mgr.activeTarget(type).isValid());
+}
+
+TEST_CASE("destroying active target adapter clears it") {
+    KeymapManager mgr;
+    auto const type = EditorTypeId("DestroyWidget");
+    auto const id_a = EditorInstanceId::generate();
+    auto const id_b = EditorInstanceId::generate();
+
+    auto * adapter_a = new KeyActionAdapter(&mgr);
+    adapter_a->setTypeId(type);
+    adapter_a->setInstanceId(id_a);
+    adapter_a->setHandler([](QString const &) { return true; });
+
+    auto * adapter_b = new KeyActionAdapter(&mgr);
+    adapter_b->setTypeId(type);
+    adapter_b->setInstanceId(id_b);
+    adapter_b->setHandler([](QString const &) { return true; });
+
+    mgr.registerAdapter(adapter_a);
+    mgr.registerAdapter(adapter_b);
+
+    // Set active target to adapter_a
+    mgr.setActiveTarget(type, id_a);
+    REQUIRE(mgr.activeTarget(type) == id_a);
+
+    // Destroy adapter_a → active target should be cleared
+    delete adapter_a;
+    CHECK_FALSE(mgr.activeTarget(type).isValid());
+}
+
+TEST_CASE("AlwaysRouted dispatch uses active target when set") {
+    KeymapManager mgr;
+    auto const type = EditorTypeId("IntervalInspector");
+    auto const id_a = EditorInstanceId::generate();
+    auto const id_b = EditorInstanceId::generate();
+
+    int call_count_a = 0;
+    int call_count_b = 0;
+
+    auto * adapter_a = new KeyActionAdapter(&mgr);
+    adapter_a->setTypeId(type);
+    adapter_a->setInstanceId(id_a);
+    adapter_a->setHandler([&call_count_a](QString const &) {
+        ++call_count_a;
+        return true;
+    });
+
+    auto * adapter_b = new KeyActionAdapter(&mgr);
+    adapter_b->setTypeId(type);
+    adapter_b->setInstanceId(id_b);
+    adapter_b->setHandler([&call_count_b](QString const &) {
+        ++call_count_b;
+        return true;
+    });
+
+    mgr.registerAdapter(adapter_a);
+    mgr.registerAdapter(adapter_b);
+
+    // Without active target: dispatches to first matching adapter
+    mgr.dispatchAction("test.action", type);
+    CHECK(call_count_a == 1);
+    CHECK(call_count_b == 0);
+
+    // Set active target to adapter_b
+    mgr.setActiveTarget(type, id_b);
+
+    // Now dispatch — should go to adapter_b
+    mgr.dispatchAction("test.action", type, mgr.activeTarget(type));
+    CHECK(call_count_a == 1);// Unchanged
+    CHECK(call_count_b == 1);// Got the action
+}
+
+TEST_CASE("adapterInstancesForType returns all instances of a type") {
+    KeymapManager mgr;
+    auto const type_a = EditorTypeId("TypeA");
+    auto const type_b = EditorTypeId("TypeB");
+    auto const id_1 = EditorInstanceId::generate();
+    auto const id_2 = EditorInstanceId::generate();
+    auto const id_3 = EditorInstanceId::generate();
+
+    auto * a1 = new KeyActionAdapter(&mgr);
+    a1->setTypeId(type_a);
+    a1->setInstanceId(id_1);
+    mgr.registerAdapter(a1);
+
+    auto * a2 = new KeyActionAdapter(&mgr);
+    a2->setTypeId(type_a);
+    a2->setInstanceId(id_2);
+    mgr.registerAdapter(a2);
+
+    auto * b1 = new KeyActionAdapter(&mgr);
+    b1->setTypeId(type_b);
+    b1->setInstanceId(id_3);
+    mgr.registerAdapter(b1);
+
+    auto const instances = mgr.adapterInstancesForType(type_a);
+    REQUIRE(instances.size() == 2);
+    CHECK(instances[0] == id_1);
+    CHECK(instances[1] == id_2);
+
+    auto const b_instances = mgr.adapterInstancesForType(type_b);
+    REQUIRE(b_instances.size() == 1);
+    CHECK(b_instances[0] == id_3);
+}
+
+// ============================================================
+// End-to-end integration: DigitalIntervalSeries multi-instance scenario
+// ============================================================
+
+TEST_CASE("E2E: AlwaysRouted actions reach the correct inspector instance") {
+    KeymapManager mgr;
+
+    // --- Step 1: Register actions (mirrors DataInspectorWidgetRegistration.cpp) ---
+    auto const inspector_type = EditorTypeId("DigitalIntervalSeriesInspector");
+    auto const scope = KeyActionScope::alwaysRouted(inspector_type);
+    QString const category = "Digital Interval Series";
+
+    mgr.registerAction({.action_id = QStringLiteral("digital_interval_series.mark_contact_start"),
+                        .display_name = QStringLiteral("Mark Contact Start"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence()});
+
+    mgr.registerAction({.action_id = QStringLiteral("digital_interval_series.cycle_active_target"),
+                        .display_name = QStringLiteral("Cycle Active Interval Inspector"),
+                        .category = category,
+                        .scope = KeyActionScope::global(),
+                        .default_binding = QKeySequence()});
+
+    // Bind keys (user would do this in the keybinding editor)
+    mgr.setUserOverride("digital_interval_series.mark_contact_start", QKeySequence(Qt::Key_Q));
+    mgr.setUserOverride("digital_interval_series.cycle_active_target", QKeySequence(Qt::Key_Tab));
+
+    // --- Step 2: Register the global cycle adapter (mirrors registration code) ---
+    auto * cycle_adapter = new KeyActionAdapter(&mgr);
+    cycle_adapter->setTypeId(EditorTypeId{});// Global scope = empty type
+    cycle_adapter->setHandler(
+            [&mgr, inspector_type](QString const & action_id) -> bool {
+                if (action_id == "digital_interval_series.cycle_active_target") {
+                    mgr.cycleActiveTarget(inspector_type);
+                    return true;
+                }
+                return false;
+            });
+    mgr.registerAdapter(cycle_adapter);
+
+    // --- Step 3: Create two inspector adapters (mirrors setKeymapManager) ---
+    auto const id_inspector1 = EditorInstanceId::generate();
+    auto const id_inspector2 = EditorInstanceId::generate();
+
+    int handler_calls_1 = 0;
+    int handler_calls_2 = 0;
+
+    auto * adapter1 = new KeyActionAdapter(&mgr);
+    adapter1->setTypeId(inspector_type);
+    adapter1->setInstanceId(id_inspector1);
+    adapter1->setHandler([&handler_calls_1](QString const & action_id) -> bool {
+        if (action_id == "digital_interval_series.mark_contact_start") {
+            ++handler_calls_1;
+            return true;
+        }
+        return false;
+    });
+    mgr.registerAdapter(adapter1);
+
+    auto * adapter2 = new KeyActionAdapter(&mgr);
+    adapter2->setTypeId(inspector_type);
+    adapter2->setInstanceId(id_inspector2);
+    adapter2->setHandler([&handler_calls_2](QString const & action_id) -> bool {
+        if (action_id == "digital_interval_series.mark_contact_start") {
+            ++handler_calls_2;
+            return true;
+        }
+        return false;
+    });
+    mgr.registerAdapter(adapter2);
+
+    // --- Step 4: Simulate keypress Q (mark_contact_start) with NO active target ---
+    // This is what eventFilter does: resolve → determine target → dispatch
+    {
+        auto const resolved = mgr.resolveKeyPress(QKeySequence(Qt::Key_Q), EditorTypeId{});
+        REQUIRE(resolved.has_value());
+        CHECK(*resolved == "digital_interval_series.mark_contact_start");
+
+        auto const desc = mgr.action(*resolved);
+        REQUIRE(desc.has_value());
+        CHECK(desc->scope.kind == KeyActionScopeKind::AlwaysRouted);
+
+        EditorTypeId target_type = desc->scope.editor_type_id;
+        EditorInstanceId target_instance = mgr.activeTarget(target_type);
+
+        // No active target set yet — target_instance should be invalid
+        CHECK_FALSE(target_instance.isValid());
+
+        // Dispatch should go to the FIRST adapter (adapter1)
+        bool handled = mgr.dispatchAction(*resolved, target_type, target_instance);
+        REQUIRE(handled);
+        CHECK(handler_calls_1 == 1);
+        CHECK(handler_calls_2 == 0);
+    }
+
+    // --- Step 5: Simulate keypress Tab (cycle_active_target) ---
+    {
+        auto const resolved = mgr.resolveKeyPress(QKeySequence(Qt::Key_Tab), EditorTypeId{});
+        REQUIRE(resolved.has_value());
+        CHECK(*resolved == "digital_interval_series.cycle_active_target");
+
+        auto const desc = mgr.action(*resolved);
+        REQUIRE(desc.has_value());
+        CHECK(desc->scope.kind == KeyActionScopeKind::Global);
+
+        EditorTypeId target_type{};// Global = empty
+        bool handled = mgr.dispatchAction(*resolved, target_type);
+        REQUIRE(handled);
+
+        // After cycling once, active target should be inspector1
+        CHECK(mgr.activeTarget(inspector_type) == id_inspector1);
+    }
+
+    // --- Step 6: Cycle again → should switch to inspector2 ---
+    {
+        auto const resolved = mgr.resolveKeyPress(QKeySequence(Qt::Key_Tab), EditorTypeId{});
+        auto const desc = mgr.action(*resolved);
+        bool handled = mgr.dispatchAction(*resolved, EditorTypeId{});
+        REQUIRE(handled);
+        CHECK(mgr.activeTarget(inspector_type) == id_inspector2);
+    }
+
+    // --- Step 7: Now press Q again — should go to inspector2 (active target) ---
+    {
+        auto const resolved = mgr.resolveKeyPress(QKeySequence(Qt::Key_Q), EditorTypeId{});
+        REQUIRE(resolved.has_value());
+
+        auto const desc = mgr.action(*resolved);
+        EditorTypeId target_type = desc->scope.editor_type_id;
+        EditorInstanceId target_instance = mgr.activeTarget(target_type);
+
+        CHECK(target_instance == id_inspector2);
+
+        bool handled = mgr.dispatchAction(*resolved, target_type, target_instance);
+        REQUIRE(handled);
+        CHECK(handler_calls_1 == 1);// Unchanged
+        CHECK(handler_calls_2 == 1);// Got the action
+    }
+
+    // --- Step 8: Cycle again → wraps back to inspector1 ---
+    {
+        mgr.dispatchAction("digital_interval_series.cycle_active_target", EditorTypeId{});
+        CHECK(mgr.activeTarget(inspector_type) == id_inspector1);
+    }
+
+    // --- Step 9: Press Q → should go to inspector1 now ---
+    {
+        auto const resolved = mgr.resolveKeyPress(QKeySequence(Qt::Key_Q), EditorTypeId{});
+        auto const desc = mgr.action(*resolved);
+        EditorTypeId target_type = desc->scope.editor_type_id;
+        EditorInstanceId target_instance = mgr.activeTarget(target_type);
+
+        bool handled = mgr.dispatchAction(*resolved, target_type, target_instance);
+        REQUIRE(handled);
+        CHECK(handler_calls_1 == 2);// Got the action
+        CHECK(handler_calls_2 == 1);// Unchanged
+    }
+}

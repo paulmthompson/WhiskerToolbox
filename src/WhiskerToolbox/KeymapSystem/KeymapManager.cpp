@@ -21,6 +21,8 @@
 #include <QTextEdit>
 #include <QWidget>
 
+#include <spdlog/spdlog.h>
+
 #include <algorithm>
 #include <cassert>
 
@@ -38,17 +40,19 @@ bool KeymapManager::eventFilter(QObject * obj, QEvent * event) {
         return QObject::eventFilter(obj, event);
     }
 
-    // Bypass: if the focused widget is a text-input widget, let Qt handle it
     QWidget * focused = QApplication::focusWidget();
-    if (_isTextInputWidget(focused)) {
-        return false;
-    }
+    bool const in_text_input = _isTextInputWidget(focused);
 
     auto * key_event = dynamic_cast<QKeyEvent *>(event);
 
     // Build a QKeySequence from the key event (key + modifiers)
     int const key_with_modifiers = key_event->key() | static_cast<int>(key_event->modifiers());
     QKeySequence const key_seq(key_with_modifiers);
+
+    spdlog::debug("[KeymapManager] KeyPress: seq='{}' focused_widget='{}' in_text_input={}",
+                  key_seq.toString().toStdString(),
+                  focused ? focused->metaObject()->className() : "(none)",
+                  in_text_input);
 
     // Determine the focused editor type from SelectionContext
     EditorLib::EditorTypeId focused_type_id;
@@ -64,11 +68,16 @@ bool KeymapManager::eventFilter(QObject * obj, QEvent * event) {
         }
     }
 
+    spdlog::debug("[KeymapManager] Focused editor type: '{}'",
+                  focused_type_id.value.toStdString());
+
     // Resolve the key press through scope priority
     auto const action_id = resolveKeyPress(key_seq, focused_type_id);
     if (!action_id.has_value()) {
+        spdlog::debug("[KeymapManager] No action bound to this key — passing through");
         return false;// No match — let the event pass through
     }
+    spdlog::debug("[KeymapManager] Resolved to action: '{}'", action_id->toStdString());
 
     // Look up the action descriptor for target routing
     auto const desc = action(*action_id);
@@ -76,14 +85,27 @@ bool KeymapManager::eventFilter(QObject * obj, QEvent * event) {
         return false;
     }
 
+    // EditorFocused actions defer to text-input widgets so that typing
+    // in QLineEdits, QComboBoxes, QSpinBoxes, etc. is not stolen.
+    // AlwaysRouted and Global actions bypass this — they are meant to
+    // fire regardless of where focus happens to be.
+    if (in_text_input && desc->scope.kind == KeyActionScopeKind::EditorFocused) {
+        spdlog::debug("[KeymapManager] Blocked: EditorFocused action '{}' deferred to text input",
+                      action_id->toStdString());
+        return false;
+    }
+
     // Determine target type for dispatch
     EditorLib::EditorTypeId target_type_id;
+    EditorLib::EditorInstanceId target_instance_id;
     switch (desc->scope.kind) {
         case KeyActionScopeKind::EditorFocused:
             target_type_id = focused_type_id;
             break;
         case KeyActionScopeKind::AlwaysRouted:
             target_type_id = desc->scope.editor_type_id;
+            // Use active target if one is set for this type
+            target_instance_id = activeTarget(target_type_id);
             break;
         case KeyActionScopeKind::Global:
             // Global actions: try dispatching to any adapter that handles it
@@ -91,11 +113,20 @@ bool KeymapManager::eventFilter(QObject * obj, QEvent * event) {
             break;
     }
 
+    spdlog::debug("[KeymapManager] Dispatching: action='{}' type='{}' instance='{}' adapters={}",
+                  action_id->toStdString(),
+                  target_type_id.value.toStdString(),
+                  target_instance_id.value.toStdString(),
+                  _adapters.size());
+
     // Dispatch to the appropriate adapter
-    if (dispatchAction(*action_id, target_type_id)) {
+    if (dispatchAction(*action_id, target_type_id, target_instance_id)) {
+        spdlog::debug("[KeymapManager] Dispatch succeeded");
         return true;// Event consumed
     }
 
+    spdlog::debug("[KeymapManager] Dispatch failed — no adapter handled action '{}'",
+                  action_id->toStdString());
     // Action resolved but no adapter handled it — don't consume the event
     return false;
 }
@@ -124,10 +155,21 @@ bool KeymapManager::_isTextInputWidget(QWidget * widget) {
 bool KeymapManager::registerAction(KeyActionDescriptor const & descriptor) {
     assert(!descriptor.action_id.isEmpty() && "registerAction: action_id must not be empty");
 
+    // Precondition #2: AlwaysRouted and EditorFocused scopes require a non-empty editor_type_id.
+    // An empty type_id silently routes dispatch to the wrong adapters.
+    assert((descriptor.scope.kind == KeyActionScopeKind::Global ||
+            !descriptor.scope.editor_type_id.value.isEmpty()) &&
+           "registerAction: AlwaysRouted/EditorFocused scope requires a non-empty editor_type_id");
+
     if (_actions.contains(descriptor.action_id)) {
+        spdlog::debug("[KeymapManager] registerAction: duplicate action_id '{}' — ignored",
+                      descriptor.action_id.toStdString());
         return false;
     }
     _actions.emplace(descriptor.action_id, descriptor);
+    spdlog::debug("[KeymapManager] Registered action '{}' scope={}",
+                  descriptor.action_id.toStdString(),
+                  static_cast<int>(descriptor.scope.kind));
     emit bindingsChanged();
     return true;
 }
@@ -334,22 +376,116 @@ bool KeymapManager::dispatchAction(
         EditorLib::EditorTypeId const & target_type_id,
         EditorLib::EditorInstanceId const & target_instance_id) const {
 
+    spdlog::debug("[KeymapManager::dispatch] action='{}' target_type='{}' target_instance='{}' total_adapters={}",
+                  action_id.toStdString(),
+                  target_type_id.value.toStdString(),
+                  target_instance_id.value.toStdString(),
+                  _adapters.size());
+
     for (auto * adapter: _adapters) {
         // Match by type
         if (adapter->typeId() != target_type_id) {
+            spdlog::debug("[KeymapManager::dispatch] Skip adapter: type mismatch ('{}' != '{}')",
+                          adapter->typeId().value.toStdString(),
+                          target_type_id.value.toStdString());
             continue;
         }
 
         // If a specific instance is requested, match that too
         if (target_instance_id.isValid() && adapter->instanceId() != target_instance_id) {
+            spdlog::debug("[KeymapManager::dispatch] Skip adapter: instance mismatch ('{}' != '{}')",
+                          adapter->instanceId().value.toStdString(),
+                          target_instance_id.value.toStdString());
             continue;
         }
 
+        spdlog::debug("[KeymapManager::dispatch] Trying adapter type='{}' instance='{}'",
+                      adapter->typeId().value.toStdString(),
+                      adapter->instanceId().value.toStdString());
+
         if (adapter->handleKeyAction(action_id)) {
+            spdlog::debug("[KeymapManager::dispatch] Handled by adapter instance='{}'",
+                          adapter->instanceId().value.toStdString());
             return true;
         }
+        spdlog::debug("[KeymapManager::dispatch] Adapter declined action");
     }
+    spdlog::debug("[KeymapManager::dispatch] No adapter handled the action");
     return false;
+}
+
+// --- Active target management ---
+
+void KeymapManager::cycleActiveTarget(EditorLib::EditorTypeId const & type_id) {
+    // Collect all adapters matching this type
+    std::vector<KeyActionAdapter *> matching;
+    for (auto * adapter: _adapters) {
+        if (adapter->typeId() == type_id) {
+            matching.push_back(adapter);
+        }
+    }
+
+    if (matching.empty()) {
+        return;
+    }
+
+    // Find the current active target
+    auto const current_it = _active_targets.find(type_id);
+    EditorLib::EditorInstanceId next_id;
+
+    if (current_it == _active_targets.end() || !current_it->second.isValid()) {
+        // No active target — select first
+        next_id = matching.front()->instanceId();
+    } else {
+        // Find the current adapter in the list and advance to next
+        auto const pos = std::find_if(matching.begin(), matching.end(),
+                                      [&](KeyActionAdapter const * a) {
+                                          return a->instanceId() == current_it->second;
+                                      });
+        if (pos == matching.end() || std::next(pos) == matching.end()) {
+            // Current not found or at end — wrap to first
+            next_id = matching.front()->instanceId();
+        } else {
+            next_id = (*std::next(pos))->instanceId();
+        }
+    }
+
+    _active_targets[type_id] = next_id;
+    emit activeTargetChanged(type_id, next_id);
+}
+
+void KeymapManager::setActiveTarget(EditorLib::EditorTypeId const & type_id,
+                                    EditorLib::EditorInstanceId const & instance_id) {
+    auto const old_it = _active_targets.find(type_id);
+    if (old_it != _active_targets.end() && old_it->second == instance_id) {
+        return;// No change
+    }
+    if (instance_id.isValid()) {
+        _active_targets[type_id] = instance_id;
+    } else {
+        _active_targets.erase(type_id);
+    }
+    emit activeTargetChanged(type_id, instance_id);
+}
+
+EditorLib::EditorInstanceId KeymapManager::activeTarget(
+        EditorLib::EditorTypeId const & type_id) const {
+    auto const it = _active_targets.find(type_id);
+    if (it != _active_targets.end()) {
+        return it->second;
+    }
+    return {};
+}
+
+std::vector<EditorLib::EditorInstanceId> KeymapManager::adapterInstancesForType(
+        EditorLib::EditorTypeId const & type_id) const {
+    std::vector<EditorLib::EditorInstanceId> result;
+    for (auto const * adapter: _adapters) {
+        if (adapter->typeId() == type_id) {
+            result.push_back(adapter->instanceId());
+        }
+    }
+    return result;
 }
 
 // --- Serialization ---
@@ -382,7 +518,18 @@ void KeymapManager::importOverrides(std::vector<KeymapOverrideEntry> const & ove
 void KeymapManager::_removeAdapter(QObject * adapter) {
     auto const it = std::find(_adapters.begin(), _adapters.end(), adapter);
     if (it != _adapters.end()) {
+        auto const * typed = static_cast<KeyActionAdapter const *>(*it);
+        auto const type_id = typed->typeId();
+        auto const instance_id = typed->instanceId();
+
         _adapters.erase(it);
+
+        // If the removed adapter was the active target for its type, clear it
+        auto const target_it = _active_targets.find(type_id);
+        if (target_it != _active_targets.end() && target_it->second == instance_id) {
+            _active_targets.erase(target_it);
+            emit activeTargetChanged(type_id, {});
+        }
     }
 }
 

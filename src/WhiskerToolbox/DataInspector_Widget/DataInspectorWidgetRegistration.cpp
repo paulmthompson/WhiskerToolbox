@@ -9,6 +9,7 @@
 #include "EditorState/OperationContext.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "KeymapSystem/KeyAction.hpp"
+#include "KeymapSystem/KeyActionAdapter.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
 
 #include <QKeySequence>
@@ -47,12 +48,36 @@ void registerIntervalActions(KeymapSystem::KeymapManager * km) {
                         .category = category,
                         .scope = scope,
                         .default_binding = QKeySequence()});
+
+    // Global action to cycle which DigitalIntervalSeriesInspector receives hotkeys
+    km->registerAction(
+            {.action_id = QStringLiteral("digital_interval_series.cycle_active_target"),
+             .display_name = QStringLiteral("Cycle Active Interval Inspector"),
+             .category = category,
+             .scope = KeymapSystem::KeyActionScope::global(),
+             .default_binding = QKeySequence()});
+
+    // Register a global adapter to handle the cycling action
+    auto const target_type =
+            EditorLib::EditorTypeId(QStringLiteral("DigitalIntervalSeriesInspector"));
+    auto * cycle_adapter = new KeymapSystem::KeyActionAdapter(km);
+    // Global scope — empty type ID so it matches Global dispatch
+    cycle_adapter->setTypeId(EditorLib::EditorTypeId{});
+    cycle_adapter->setHandler(
+            [km, target_type](QString const & action_id) -> bool {
+                if (action_id == QStringLiteral("digital_interval_series.cycle_active_target")) {
+                    km->cycleActiveTarget(target_type);
+                    return true;
+                }
+                return false;
+            });
+    km->registerAdapter(cycle_adapter);
 }
 
 }// namespace
 
 void registerTypes(EditorRegistry * registry,
-                   const std::shared_ptr<DataManager>& data_manager,
+                   std::shared_ptr<DataManager> const & data_manager,
                    GroupManager * group_manager,
                    commands::CommandRecorder * recorder,
                    KeymapSystem::KeymapManager * keymap_manager) {
@@ -66,7 +91,7 @@ void registerTypes(EditorRegistry * registry,
     registerIntervalActions(keymap_manager);
 
     // Capture dependencies for lambdas
-    auto const & dm = std::move(data_manager);
+    auto const & dm = data_manager;
     auto gm = group_manager;
     auto cr = recorder;
     auto * km = keymap_manager;
@@ -144,7 +169,7 @@ void registerTypes(EditorRegistry * registry,
                                 // This allows double-clicking on table cells to navigate to the corresponding frame
                                 if (reg && dm) {
                                     QObject::connect(view, &DataInspectorViewWidget::frameSelected,
-                                                     [reg](const TimePosition& position) {
+                                                     [reg](TimePosition const & position) {
                                                          // Update EditorRegistry time (triggers timeChanged signal for other widgets)
                                                          reg->setCurrentTime(position);
                                                      });
