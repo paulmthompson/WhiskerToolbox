@@ -14,15 +14,15 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/utils/statistics.hpp"
 #include "DataManager.hpp"
-#include "DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "EditorState/EditorRegistry.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "EditorState/EditorRegistry.hpp"
 
 #include <QFile>
 #include <QMenu>
@@ -37,9 +37,39 @@
 #include "StateManagement/AppFileDialog.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <iostream>
 #include <sstream>
+
+namespace {
+
+/**
+ * @brief Extract group name from a series key
+ * 
+ * Strips a trailing _N suffix (where N is one or more digits) to derive
+ * the group name. For example, "voltage_3" returns "voltage".
+ * If no numeric suffix is found, returns the key unchanged.
+ */
+std::string extractGroupName(std::string const & key) {
+    auto const pos = key.rfind('_');
+    if (pos == std::string::npos || pos == 0 || pos + 1 >= key.size()) {
+        return key;
+    }
+    bool all_digits = true;
+    for (size_t i = pos + 1; i < key.size(); ++i) {
+        if (std::isdigit(static_cast<unsigned char>(key[i])) == 0) {
+            all_digits = false;
+            break;
+        }
+    }
+    if (all_digits) {
+        return key.substr(0, pos);
+    }
+    return key;
+}
+
+}// anonymous namespace
 
 DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
                                      QWidget * parent)
@@ -59,7 +89,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Set up observer to automatically clean up data when it's deleted from DataManager
     // Queue the cleanup to the Qt event loop to avoid running during mid-update mutations
     _data_manager->addObserver([this]() {
-        QPointer<DataViewer_Widget> self = this;
+        QPointer<DataViewer_Widget> const self = this;
         QMetaObject::invokeMethod(self, [self]() {
             if (!self) return;
             self->cleanupDeletedData(); }, Qt::QueuedConnection);
@@ -90,19 +120,19 @@ DataViewer_Widget::~DataViewer_Widget() {
 
 void DataViewer_Widget::setState(std::shared_ptr<DataViewerState> state) {
     if (!state) {
-        return;  // Don't accept null state
+        return;// Don't accept null state
     }
-    
+
     _state = std::move(state);
-    
+
     // Share with OpenGLWidget
     ui->openGLWidget->setState(_state);
-    
+
     // Connect viewStateChanged to update labels when time range changes
     connect(_state.get(), &DataViewerState::viewStateChanged, this, [this]() {
         _updateLabels();
     });
-    
+
     _updateLabels();
 }
 
@@ -129,10 +159,10 @@ void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
     }
 }
 
-void DataViewer_Widget::_onTimeChanged(TimePosition position) {
+void DataViewer_Widget::_onTimeChanged(const TimePosition& position) {
     // Get the TimeFrame for the data this widget is displaying (master clock)
     auto my_tf = _time_frame;
-    
+
     if (position.sameClock(my_tf)) {
         // Same clock - use index directly
         _state->current_position = position;
@@ -143,7 +173,7 @@ void DataViewer_Widget::_onTimeChanged(TimePosition position) {
         _state->current_position = TimePosition(converted, my_tf);
         ui->openGLWidget->updateCanvas(converted);
     }
-    
+
     _updateLabels();
 }
 
@@ -154,7 +184,7 @@ void DataViewer_Widget::_updatePlot(int time) {
 
     if (_time_frame.get() != _data_manager->getTime(TimeKey("time")).get()) {
         auto time_in_ticks = _data_manager->getTime(TimeKey("time"))->getTimeAtIndex(TimeFrameIndex(time));
-        TimeFrameIndex master_index = _time_frame->getIndexAtTime(static_cast<float>(time_in_ticks));
+        TimeFrameIndex const master_index = _time_frame->getIndexAtTime(static_cast<float>(time_in_ticks));
         ui->openGLWidget->updateCanvas(master_index);
     } else {
         ui->openGLWidget->updateCanvas(TimeFrameIndex(time));
@@ -182,10 +212,13 @@ void DataViewer_Widget::addFeatures(std::vector<std::string> const & keys, std::
     // Process all features in the group without triggering individual canvas updates
     for (size_t i = 0; i < keys.size(); ++i) {
         std::string const & key = keys[i];
-        std::string color = (i < colors.size()) ? colors[i] : "#FF6B6B";  // Default color if not provided
+        std::string const color = (i < colors.size()) ? colors[i] : "#FF6B6B";// Default color if not provided
         _plotSelectedFeatureWithoutUpdate(key, color);
     }
     _is_batch_add = false;
+
+    // Apply unified group scaling for analog series
+    _applyGroupScalingForBatch(keys);
 
     // Auto-arrange and auto-fill once after batch
     if (!keys.empty()) {
@@ -432,18 +465,18 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
         if (fine_mode) {
             // Fine mode: 1% of current range, very low minimum for precise control
             base_percentage = 0.01f;
-            min_clamp_divisor = 10000.0f;  // 0.01% of total as minimum
-            max_clamp_divisor = 100.0f;    // 1% of total as maximum
+            min_clamp_divisor = 10000.0f;// 0.01% of total as minimum
+            max_clamp_divisor = 100.0f;  // 1% of total as maximum
         } else if (coarse_mode) {
             // Coarse mode: 20% of current range for quick navigation
             base_percentage = 0.20f;
-            min_clamp_divisor = 20.0f;     // 5% of total as minimum
-            max_clamp_divisor = 5.0f;      // 20% of total as maximum
+            min_clamp_divisor = 20.0f;// 5% of total as minimum
+            max_clamp_divisor = 5.0f; // 20% of total as maximum
         } else {
             // Normal mode: 3% of current range (reduced from 10% for less sensitivity)
             base_percentage = 0.03f;
-            min_clamp_divisor = 1000.0f;   // 0.1% of total as minimum
-            max_clamp_divisor = 50.0f;     // 2% of total as maximum
+            min_clamp_divisor = 1000.0f;// 0.1% of total as minimum
+            max_clamp_divisor = 50.0f;  // 2% of total as maximum
         }
 
         rangeFactor = static_cast<float>(current_range) * base_percentage;
@@ -456,11 +489,11 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
         // Fixed scaling mode with modifier support
         float divisor;
         if (fine_mode) {
-            divisor = 100000.0f;  // Very fine steps
+            divisor = 100000.0f;// Very fine steps
         } else if (coarse_mode) {
-            divisor = 1000.0f;    // Coarse steps
+            divisor = 1000.0f;// Coarse steps
         } else {
-            divisor = 30000.0f;   // Normal steps (reduced from 10000 for less sensitivity)
+            divisor = 30000.0f;// Normal steps (reduced from 10000 for less sensitivity)
         }
         rangeFactor = total_frames / divisor;
     }
@@ -651,7 +684,7 @@ void DataViewer_Widget::_calculateOptimalScaling(std::vector<std::string> const 
     for (auto const & key: all_keys) {
         if (_data_manager->getType(key) == DM_DataType::Analog) {
             // Check if this key is already in our group (avoid double counting)
-            bool in_group = std::find(group_keys.begin(), group_keys.end(), key) != group_keys.end();
+            bool const in_group = std::find(group_keys.begin(), group_keys.end(), key) != group_keys.end();
             if (!in_group) {
                 // Check if this series is currently visible via state
                 auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
@@ -829,7 +862,7 @@ void DataViewer_Widget::autoArrangeVerticalSpacing() {
     std::cout << "DataViewer_Widget: Auto-arrange completed for " << total_keys << " series" << std::endl;
 }
 
-std::string DataViewer_Widget::_convertDataType(DM_DataType dm_type) const {
+std::string DataViewer_Widget::_convertDataType(DM_DataType dm_type) {
     switch (dm_type) {
         case DM_DataType::Analog:
             return "Analog";
@@ -849,6 +882,30 @@ std::string DataViewer_Widget::_convertDataType(DM_DataType dm_type) const {
 // ===== Context menu and configuration handling =====
 void DataViewer_Widget::showGroupContextMenu(std::string const & group_name, QPoint const & global_pos) {
     QMenu menu;
+
+    // Group scaling toggle (only for groups with analog series)
+    std::vector<std::string> const group_analog_keys = _findGroupAnalogKeys(group_name);
+    if (group_analog_keys.size() >= 2) {
+        bool const is_unified = _state->isGroupUnifiedScaling(group_name);
+        QAction * unifiedAction = menu.addAction("Unified Std Dev Scaling");
+        unifiedAction->setCheckable(true);
+        unifiedAction->setChecked(is_unified);
+
+        // Show group std_dev value
+        auto const * gs = _state->getGroupScaling(group_name);
+        if (gs && gs->group_std_dev > 0.0f) {
+            QString const info = QString("Group Std Dev: %1").arg(static_cast<double>(gs->group_std_dev), 0, 'g', 4);
+            QAction * infoAction = menu.addAction(info);
+            infoAction->setEnabled(false);
+        }
+
+        menu.addSeparator();
+
+        connect(unifiedAction, &QAction::toggled, this, [this, group_name](bool checked) {
+            _toggleGroupUnifiedScaling(group_name, checked);
+        });
+    }
+
     QMenu * loadMenu = menu.addMenu("Load configuration");
     QAction * loadSpikeSorter = loadMenu->addAction("spikesorter configuration");
     QAction * clearConfig = menu.addAction("Clear configuration");
@@ -865,7 +922,7 @@ void DataViewer_Widget::showGroupContextMenu(std::string const & group_name, QPo
 
 void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & group_name) {
     // Open file dialog to select spike sorter configuration file
-    QString path = AppFileDialog::getOpenFileName(
+    QString const path = AppFileDialog::getOpenFileName(
             this,
             QStringLiteral("spike_sorter_config"),
             QString("Load spikesorter configuration for %1").arg(group_name),
@@ -875,7 +932,7 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & gr
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
 
-    QByteArray data = file.readAll();
+    QByteArray const data = file.readAll();
     auto positions = _parseSpikeSorterConfig(data.toStdString());
     if (positions.empty()) return;
 
@@ -942,11 +999,11 @@ void DataViewer_Widget::_autoFillCanvas() {
         }
     }
 
-    int visible_analog_count = static_cast<int>(analog_keys.size());
-    int visible_event_count = static_cast<int>(event_keys.size());
-    int visible_interval_count = static_cast<int>(interval_keys.size());
+    int const visible_analog_count = static_cast<int>(analog_keys.size());
+    int const visible_event_count = static_cast<int>(event_keys.size());
+    int const visible_interval_count = static_cast<int>(interval_keys.size());
 
-    int total_visible = visible_analog_count + visible_event_count + visible_interval_count;
+    int const total_visible = visible_analog_count + visible_event_count + visible_interval_count;
     std::cout << "Visible series: " << visible_analog_count << " analog, "
               << visible_event_count << " events, " << visible_interval_count
               << " intervals (total: " << total_visible << ")" << std::endl;
@@ -1025,7 +1082,7 @@ void DataViewer_Widget::_autoFillCanvas() {
             if (opts && opts->get_is_visible()) {
                 auto series = _data_manager->getData<AnalogTimeSeries>(key);
                 if (series) {
-                    float std_dev = calculate_std_dev_approximate(*series);
+                    float const std_dev = calculate_std_dev_approximate(*series);
                     if (std_dev > 0.0f) {
                         sample_std_devs.push_back(std_dev);
                         sampled++;
@@ -1037,7 +1094,7 @@ void DataViewer_Widget::_autoFillCanvas() {
         if (!sample_std_devs.empty()) {
             // Use median standard deviation for scaling calculation
             std::sort(sample_std_devs.begin(), sample_std_devs.end());
-            float median_std_dev = sample_std_devs[sample_std_devs.size() / 2];
+            float const median_std_dev = sample_std_devs[sample_std_devs.size() / 2];
 
             // Calculate scale so that ±3 standard deviations use ~60% of allocated space
             float const target_amplitude_fraction = 0.6f;
@@ -1063,6 +1120,151 @@ void DataViewer_Widget::_autoFillCanvas() {
     }
 
     std::cout << "Auto-fill canvas completed" << std::endl;
+}
+
+void DataViewer_Widget::_applyGroupScalingForBatch(std::vector<std::string> const & keys) {
+    // Filter to only analog series keys
+    std::vector<std::string> analog_keys;
+    for (auto const & key: keys) {
+        if (_data_manager->getType(key) == DM_DataType::Analog) {
+            analog_keys.push_back(key);
+        }
+    }
+    if (analog_keys.size() < 2) {
+        return;// No point in group scaling for 0 or 1 series
+    }
+
+    // Derive group name from the first key
+    std::string const group_name = extractGroupName(analog_keys[0]);
+    if (group_name.empty()) {
+        return;
+    }
+
+    // Compute max std_dev across the group using data store caches
+    auto const & analog_map = ui->openGLWidget->getAnalogSeriesMap();
+    float max_std_dev = 0.0f;
+    for (auto const & key: analog_keys) {
+        auto it = analog_map.find(key);
+        if (it != analog_map.end()) {
+            float const sd = it->second.data_cache.individual_std_dev;
+            if (sd > max_std_dev) {
+                max_std_dev = sd;
+            }
+        }
+    }
+
+    if (max_std_dev <= 0.0f) {
+        return;
+    }
+
+    // Check if unified scaling is enabled for this group (default: true)
+    bool const unified = _state->isGroupUnifiedScaling(group_name);
+
+    // Store group scaling state
+    GroupScalingState gs;
+    gs.unified_scaling = unified;
+    gs.group_std_dev = max_std_dev;
+    _state->setGroupScaling(group_name, gs);
+
+    if (unified) {
+        // Apply the group std_dev to all analog series in the batch
+        // Access the data store through OpenGLWidget to modify caches
+        for (auto const & key: analog_keys) {
+            auto * cache = const_cast<CorePlotting::SeriesDataCache *>(
+                    ui->openGLWidget->getAnalogSeriesMap().count(key) > 0
+                            ? &ui->openGLWidget->getAnalogSeriesMap().at(key).data_cache
+                            : nullptr);
+            if (cache) {
+                cache->cached_std_dev = max_std_dev;
+                cache->std_dev_cache_valid = true;
+                cache->intrinsic_scale = 1.0f / (3.0f * max_std_dev);
+            }
+        }
+        std::cout << "Applied unified group scaling for '" << group_name
+                  << "': group_std_dev=" << max_std_dev
+                  << " across " << analog_keys.size() << " series" << std::endl;
+    }
+}
+
+void DataViewer_Widget::_toggleGroupUnifiedScaling(std::string const & group_name, bool enabled) {
+    std::vector<std::string> const group_keys = _findGroupAnalogKeys(group_name);
+    if (group_keys.empty()) {
+        return;
+    }
+
+    auto * gs = _state->getGroupScalingMutable(group_name);
+    if (!gs) {
+        // Create new state
+        GroupScalingState new_gs;
+        new_gs.unified_scaling = enabled;
+        // Compute max std_dev
+        auto const & analog_map = ui->openGLWidget->getAnalogSeriesMap();
+        float max_std_dev = 0.0f;
+        for (auto const & key: group_keys) {
+            auto it = analog_map.find(key);
+            if (it != analog_map.end()) {
+                float const sd = it->second.data_cache.individual_std_dev;
+                if (sd > max_std_dev) {
+                    max_std_dev = sd;
+                }
+            }
+        }
+        new_gs.group_std_dev = max_std_dev;
+        _state->setGroupScaling(group_name, new_gs);
+        gs = _state->getGroupScalingMutable(group_name);
+    } else {
+        gs->unified_scaling = enabled;
+    }
+
+    if (enabled && gs != nullptr) {
+        // Apply group std_dev to all series in the group
+        for (auto const & key: group_keys) {
+            auto * cache = const_cast<CorePlotting::SeriesDataCache *>(
+                    ui->openGLWidget->getAnalogSeriesMap().count(key) > 0
+                            ? &ui->openGLWidget->getAnalogSeriesMap().at(key).data_cache
+                            : nullptr);
+            if (cache) {
+                cache->cached_std_dev = gs->group_std_dev;
+                cache->std_dev_cache_valid = true;
+                cache->intrinsic_scale = 1.0f / (3.0f * gs->group_std_dev);
+            }
+        }
+        std::cout << "Enabled unified scaling for group '" << group_name
+                  << "': std_dev=" << gs->group_std_dev << std::endl;
+    } else {
+        // Revert to individual std_devs
+        for (auto const & key: group_keys) {
+            auto * cache = const_cast<CorePlotting::SeriesDataCache *>(
+                    ui->openGLWidget->getAnalogSeriesMap().count(key) > 0
+                            ? &ui->openGLWidget->getAnalogSeriesMap().at(key).data_cache
+                            : nullptr);
+            if (cache) {
+                cache->cached_std_dev = cache->individual_std_dev;
+                cache->std_dev_cache_valid = true;
+                if (cache->individual_std_dev > 0.0f) {
+                    cache->intrinsic_scale = 1.0f / (3.0f * cache->individual_std_dev);
+                } else {
+                    cache->intrinsic_scale = 1.0f;
+                }
+            }
+        }
+        std::cout << "Disabled unified scaling for group '" << group_name
+                  << "', reverted to individual std_devs" << std::endl;
+    }
+
+    // Trigger re-render
+    ui->openGLWidget->updateCanvas();
+}
+
+std::vector<std::string> DataViewer_Widget::_findGroupAnalogKeys(std::string const & group_name) const {
+    std::vector<std::string> result;
+    auto const & analog_map = ui->openGLWidget->getAnalogSeriesMap();
+    for (auto const & [key, entry]: analog_map) {
+        if (extractGroupName(key) == group_name) {
+            result.push_back(key);
+        }
+    }
+    return result;
 }
 
 void DataViewer_Widget::cleanupDeletedData() {
@@ -1103,7 +1305,7 @@ void DataViewer_Widget::cleanupDeletedData() {
     keys_to_cleanup.erase(std::unique(keys_to_cleanup.begin(), keys_to_cleanup.end()), keys_to_cleanup.end());
 
     // Post cleanup to OpenGLWidget's thread safely
-    QPointer<OpenGLWidget> glw = ui ? ui->openGLWidget : nullptr;
+    QPointer<OpenGLWidget> const glw = ui ? ui->openGLWidget : nullptr;
     if (glw) {
         QMetaObject::invokeMethod(glw, [glw, keys = keys_to_cleanup]() {
             if (!glw) return;

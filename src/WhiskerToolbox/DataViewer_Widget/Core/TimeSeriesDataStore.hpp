@@ -54,10 +54,10 @@ namespace DataViewer {
  */
 struct AnalogSeriesEntry {
     std::shared_ptr<AnalogTimeSeries> series;
-    
+
     /// Layout transform computed by LayoutEngine (offset, gain)
     CorePlotting::LayoutTransform layout_transform;
-    
+
     /// Cached statistics (mean, std_dev, intrinsic_scale)
     CorePlotting::SeriesDataCache data_cache;
 
@@ -72,7 +72,7 @@ struct AnalogSeriesEntry {
  */
 struct DigitalEventSeriesEntry {
     std::shared_ptr<DigitalEventSeries> series;
-    
+
     /// Layout transform computed by LayoutEngine
     CorePlotting::LayoutTransform layout_transform;
 };
@@ -84,7 +84,7 @@ struct DigitalEventSeriesEntry {
  */
 struct DigitalIntervalSeriesEntry {
     std::shared_ptr<DigitalIntervalSeries> series;
-    
+
     /// Layout transform computed by LayoutEngine
     CorePlotting::LayoutTransform layout_transform;
 };
@@ -278,6 +278,39 @@ public:
     [[nodiscard]] CorePlotting::SeriesDataCache const * getAnalogDataCache(std::string const & key) const;
 
     // ========================================================================
+    // Group Scaling
+    // ========================================================================
+
+    /**
+     * @brief Compute the maximum standard deviation across a set of analog series
+     * @param keys Series keys to consider
+     * @return Maximum std_dev, or 0.0 if no valid series found
+     */
+    [[nodiscard]] float computeGroupMaxStdDev(std::vector<std::string> const & keys) const;
+
+    /**
+     * @brief Apply a unified standard deviation to a group of analog series
+     * 
+     * Sets cached_std_dev and intrinsic_scale for all specified series
+     * to use the provided group_std_dev instead of their individual values.
+     * The individual_std_dev field is preserved for later reversion.
+     * 
+     * @param keys Series keys in the group
+     * @param group_std_dev Standard deviation to use for all series
+     */
+    void applyGroupStdDev(std::vector<std::string> const & keys, float group_std_dev);
+
+    /**
+     * @brief Revert series to their individual standard deviations
+     * 
+     * Restores cached_std_dev and intrinsic_scale from individual_std_dev
+     * for each specified series.
+     * 
+     * @param keys Series keys to revert
+     */
+    void revertToIndividualScaling(std::vector<std::string> const & keys);
+
+    // ========================================================================
     // Layout System Integration
     // ========================================================================
 
@@ -375,7 +408,7 @@ private:
     std::unordered_map<std::string, AnalogSeriesEntry> _analog_series;
     std::unordered_map<std::string, DigitalEventSeriesEntry> _digital_event_series;
     std::unordered_map<std::string, DigitalIntervalSeriesEntry> _digital_interval_series;
-    
+
     /// Non-owning pointer to SeriesOptionsRegistry for visibility lookups
     SeriesOptionsRegistry * _series_options_registry{nullptr};
 };

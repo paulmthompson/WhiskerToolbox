@@ -35,11 +35,15 @@ private slots:
 
 private:
     void _updateColorDisplay(QString const & hex_color);
+    void _updateStdDevDisplay();
 
     Ui::AnalogViewer_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     OpenGLWidget * _opengl_widget;
     std::string _active_key;
+
+    class QLabel * _std_dev_label{nullptr};
+    class QLabel * _group_std_dev_label{nullptr};
 };
 
 #endif// ANALOGVIEWER_WIDGET_HPP

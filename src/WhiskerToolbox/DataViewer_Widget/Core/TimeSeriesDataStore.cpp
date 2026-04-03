@@ -27,10 +27,10 @@ void TimeSeriesDataStore::addAnalogSeries(std::string const & key,
                                           std::string const & color) {
     AnalogSeriesEntry entry;
     entry.series = std::move(series);
-    
+
     // Initialize layout transform with default values (will be computed by LayoutEngine)
     entry.layout_transform = CorePlotting::LayoutTransform{0.0f, 1.0f};
-    
+
     // Calculate intrinsic properties (mean, std_dev, intrinsic_scale) for the data cache
     auto start_time = std::chrono::high_resolution_clock::now();
     setAnalogIntrinsicPropertiesForCache(entry.series.get(), entry.data_cache);
@@ -49,7 +49,7 @@ void TimeSeriesDataStore::addEventSeries(std::string const & key,
                                          std::string const & color) {
     DigitalEventSeriesEntry entry;
     entry.series = std::move(series);
-    
+
     // Initialize layout transform with default values
     entry.layout_transform = CorePlotting::LayoutTransform{0.0f, 1.0f};
 
@@ -64,7 +64,7 @@ void TimeSeriesDataStore::addIntervalSeries(std::string const & key,
                                             std::string const & color) {
     DigitalIntervalSeriesEntry entry;
     entry.series = std::move(series);
-    
+
     // Initialize layout transform with default values
     entry.layout_transform = CorePlotting::LayoutTransform{0.0f, 1.0f};
 
@@ -206,6 +206,56 @@ CorePlotting::SeriesDataCache const * TimeSeriesDataStore::getAnalogDataCache(st
 }
 
 // ============================================================================
+// Group Scaling
+// ============================================================================
+
+float TimeSeriesDataStore::computeGroupMaxStdDev(std::vector<std::string> const & keys) const {
+    float max_std_dev = 0.0f;
+    for (auto const & key: keys) {
+        auto it = _analog_series.find(key);
+        if (it != _analog_series.end()) {
+            float const sd = it->second.data_cache.individual_std_dev;
+            if (sd > max_std_dev) {
+                max_std_dev = sd;
+            }
+        }
+    }
+    return max_std_dev;
+}
+
+void TimeSeriesDataStore::applyGroupStdDev(std::vector<std::string> const & keys, float group_std_dev) {
+    for (auto const & key: keys) {
+        auto it = _analog_series.find(key);
+        if (it != _analog_series.end()) {
+            auto & cache = it->second.data_cache;
+            cache.cached_std_dev = group_std_dev;
+            cache.std_dev_cache_valid = true;
+            if (group_std_dev > 0.0f) {
+                cache.intrinsic_scale = 1.0f / (3.0f * group_std_dev);
+            } else {
+                cache.intrinsic_scale = 1.0f;
+            }
+        }
+    }
+}
+
+void TimeSeriesDataStore::revertToIndividualScaling(std::vector<std::string> const & keys) {
+    for (auto const & key: keys) {
+        auto it = _analog_series.find(key);
+        if (it != _analog_series.end()) {
+            auto & cache = it->second.data_cache;
+            cache.cached_std_dev = cache.individual_std_dev;
+            cache.std_dev_cache_valid = true;
+            if (cache.individual_std_dev > 0.0f) {
+                cache.intrinsic_scale = 1.0f / (3.0f * cache.individual_std_dev);
+            } else {
+                cache.intrinsic_scale = 1.0f;
+            }
+        }
+    }
+}
+
+// ============================================================================
 // Series Options Registry
 // ============================================================================
 
@@ -255,7 +305,7 @@ CorePlotting::LayoutRequest TimeSeriesDataStore::buildLayoutRequest(
     for (auto const & [key, data]: _digital_event_series) {
         // Check visibility via registry if available
         bool is_visible = true;
-        bool is_stacked = true;  // Default to stacked
+        bool is_stacked = true;// Default to stacked
         if (_series_options_registry) {
             auto const * opts = _series_options_registry->get<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
             is_visible = opts ? opts->get_is_visible() : false;

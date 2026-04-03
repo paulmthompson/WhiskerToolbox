@@ -57,9 +57,9 @@
  * @see SeriesOptionsRegistry for per-series options API
  */
 
-#include "EditorState/EditorState.hpp"
-#include "EditorState/StrongTypes.hpp"  // Must be before any TimePosition usage in signals
 #include "DataViewerStateData.hpp"
+#include "EditorState/EditorState.hpp"
+#include "EditorState/StrongTypes.hpp"// Must be before any TimePosition usage in signals
 #include "SeriesOptionsRegistry.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -416,6 +416,49 @@ public:
      */
     [[nodiscard]] DataViewerInteractionMode interactionMode() const { return _data.interaction.mode; }
 
+    // ==================== Group Scaling ====================
+
+    /**
+     * @brief Set group scaling state for a named group
+     * @param group_name Group identifier (e.g., "voltage")
+     * @param state Group scaling state
+     */
+    void setGroupScaling(std::string const & group_name, GroupScalingState const & state);
+
+    /**
+     * @brief Get group scaling state for a named group
+     * @param group_name Group identifier
+     * @return Pointer to group state, or nullptr if not found
+     */
+    [[nodiscard]] GroupScalingState const * getGroupScaling(std::string const & group_name) const;
+
+    /**
+     * @brief Get mutable group scaling state for a named group
+     * @param group_name Group identifier
+     * @return Pointer to group state, or nullptr if not found
+     */
+    [[nodiscard]] GroupScalingState * getGroupScalingMutable(std::string const & group_name);
+
+    /**
+     * @brief Check if unified scaling is enabled for a group
+     * @param group_name Group identifier
+     * @return true if unified scaling is enabled (default: true)
+     */
+    [[nodiscard]] bool isGroupUnifiedScaling(std::string const & group_name) const;
+
+    /**
+     * @brief Remove group scaling state
+     * @param group_name Group identifier to remove
+     */
+    void removeGroupScaling(std::string const & group_name);
+
+    /**
+     * @brief Get the group scaling map (const)
+     */
+    [[nodiscard]] std::map<std::string, GroupScalingState> const & allGroupScaling() const {
+        return _data.group_scaling;
+    }
+
 signals:
     // === Consolidated Signals ===
 
@@ -446,6 +489,12 @@ signals:
      * @param mode New interaction mode
      */
     void interactionModeChanged(DataViewerInteractionMode mode);
+
+    /**
+     * @brief Emitted when group scaling state changes
+     * @param group_name The group whose scaling changed
+     */
+    void groupScalingChanged(QString const & group_name);
 
     // === Series Options Signals (Forwarded from Registry) ===
 
@@ -481,4 +530,4 @@ private:
     void _connectRegistrySignals();
 };
 
-#endif // DATA_VIEWER_STATE_HPP
+#endif// DATA_VIEWER_STATE_HPP

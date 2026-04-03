@@ -1,8 +1,8 @@
 #include "AnalogSeriesHelpers.hpp"
 
-#include "AnalogTimeSeriesDisplayOptions.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/utils/statistics.hpp"
+#include "AnalogTimeSeriesDisplayOptions.hpp"
 #include "CorePlotting/DataTypes/SeriesDataCache.hpp"
 
 void setAnalogIntrinsicProperties(AnalogTimeSeries const * analog,
@@ -42,7 +42,8 @@ void setAnalogIntrinsicPropertiesForCache(AnalogTimeSeries const * analog,
     // Calculate standard deviation
     data_cache.cached_std_dev = calculate_std_dev_approximate(*analog);
     data_cache.std_dev_cache_valid = true;
-    
+    data_cache.individual_std_dev = data_cache.cached_std_dev;
+
     // Calculate intrinsic scale (3 * std_dev for typical data range)
     if (data_cache.cached_std_dev > 0.0f) {
         data_cache.intrinsic_scale = 1.0f / (3.0f * data_cache.cached_std_dev);
@@ -51,8 +52,8 @@ void setAnalogIntrinsicPropertiesForCache(AnalogTimeSeries const * analog,
     }
 }
 
-float getCachedStdDev(AnalogTimeSeries const & series, 
-                     NewAnalogTimeSeriesDisplayOptions & display_options) {
+float getCachedStdDev(AnalogTimeSeries const & series,
+                      NewAnalogTimeSeriesDisplayOptions & display_options) {
     if (!display_options.data_cache.std_dev_cache_valid) {
         // Calculate and cache the standard deviation
         display_options.data_cache.cached_std_dev = calculate_std_dev(series);

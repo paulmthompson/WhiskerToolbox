@@ -308,6 +308,44 @@ This is critical for smooth scrolling with dense electrophysiology data.
 
 The `SVGExporter` generates publication-quality SVG output from the current view by building the same `RenderableScene` used for OpenGL rendering. It uses a fixed 1920×1080 canvas with `viewBox` for clean scaling, and preserves all visual styles (colors, transparency, line thickness).
 
+# Group Unified Scaling
+
+## Motivation
+
+When a group of analog time series (e.g., `voltage_0`, `voltage_1`, ..., `voltage_N`) is added to the Data Viewer, each series receives its own standard deviation for Y-axis normalization via `forStdDevRange(mean, std_dev, 3.0f)`. This causes each channel to fill its lane regardless of actual amplitude, making it impossible to visually compare signal magnitudes across channels within the group.
+
+## Mechanism
+
+When a group of analog series is added (via batch add from the feature tree), the system:
+
+1. Computes each series' individual `std_dev` (stored in `SeriesDataCache::individual_std_dev`)
+2. Takes the **maximum** `std_dev` across the group
+3. Applies the max `std_dev` as `cached_std_dev` and recomputes `intrinsic_scale = 1/(3*max_std_dev)` for all series in the group
+
+This ensures that the channel with the largest amplitude fills its lane fully, while quieter channels appear proportionally smaller — enabling fair visual comparison.
+
+## State Management
+
+Group scaling state is stored in `DataViewerStateData::group_scaling`, a map of group name → `GroupScalingState`:
+
+```cpp
+struct GroupScalingState {
+    bool unified_scaling = true;   // Enabled by default
+    float group_std_dev = 0.0f;    // Max std_dev across group
+};
+```
+
+## User Controls
+
+- **Enabled by default**: When a group with 2+ analog series is added, unified scaling is applied automatically
+- **Toggle**: Right-click a group node in the feature tree → "Unified Std Dev Scaling" checkbox
+- **Display**: The `AnalogViewer_Widget` shows per-series `Std Dev` and `Group Std Dev` (with active/disabled status)
+- **Reversible**: Toggling off reverts each series to its `individual_std_dev`
+
+## Group Name Derivation
+
+Group names are derived from series keys by stripping the trailing `_N` suffix (where N is one or more digits). For example, `voltage_3` belongs to group `voltage`. This matches the grouping pattern used by `Feature_Tree_Widget`.
+
 # See Also
 
 - [Data Viewer Widget Roadmap](roadmap.qmd) — Development roadmap and planned features

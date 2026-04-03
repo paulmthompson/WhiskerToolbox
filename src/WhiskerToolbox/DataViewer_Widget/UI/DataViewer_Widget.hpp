@@ -4,11 +4,11 @@
 #include "Core/SpikeSorterConfigLoader.hpp"
 
 #include "DataTypeEnum/DM_DataType.hpp"
-#include "EditorState/StrongTypes.hpp"  // For TimePosition
+#include "EditorState/StrongTypes.hpp"// For TimePosition
 #include "TimeFrame/TimeFrame.hpp"
 
-#include <QWidget>
 #include <QPoint>
+#include <QWidget>
 
 #include <memory>
 #include <string>
@@ -146,7 +146,7 @@ public:
      */
     void showGroupContextMenu(std::string const & group_name, QPoint const & global_pos);
 
-    void _onTimeChanged(TimePosition position);
+    void _onTimeChanged(const TimePosition& position);
 
 protected:
     void closeEvent(QCloseEvent * event) override;
@@ -184,7 +184,7 @@ private:
      * @param dm_type DataManager data type
      * @return String identifier for the data type
      */
-    std::string _convertDataType(DM_DataType dm_type) const;
+    static std::string _convertDataType(DM_DataType dm_type) ;
 
     void _calculateOptimalScaling(std::vector<std::string> const & group_keys);
 
@@ -208,6 +208,39 @@ private:
      * to minimize empty space.
      */
     void _autoFillCanvas();
+
+    /**
+     * @brief Apply group-unified std_dev scaling after a batch add
+     * 
+     * Detects analog series among the added keys, computes the group's
+     * max std_dev, and applies it to all analog series in the batch.
+     * Stores group scaling state in DataViewerState.
+     * 
+     * @param keys All keys added in the batch (may include non-analog)
+     */
+    void _applyGroupScalingForBatch(std::vector<std::string> const & keys);
+
+    /**
+     * @brief Toggle unified scaling for a specific group
+     * 
+     * When enabling: applies group max std_dev to all series matching the group.
+     * When disabling: reverts each series to its individual std_dev.
+     * 
+     * @param group_name Group identifier (e.g., "voltage")
+     * @param enabled true to enable unified scaling, false to revert
+     */
+    void _toggleGroupUnifiedScaling(std::string const & group_name, bool enabled);
+
+    /**
+     * @brief Find all analog series keys belonging to a group
+     * 
+     * Searches the currently displayed analog series for keys whose
+     * group name matches the specified pattern (key prefix before _N suffix).
+     * 
+     * @param group_name Group identifier
+     * @return Vector of matching series keys
+     */
+    [[nodiscard]] std::vector<std::string> _findGroupAnalogKeys(std::string const & group_name) const;
 
     /**
      * @brief Clean up data references that have been deleted from the DataManager

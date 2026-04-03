@@ -3,8 +3,7 @@
 #include <cmath>
 
 DataViewerState::DataViewerState(QObject * parent)
-    : EditorState(parent)
-{
+    : EditorState(parent) {
     // Initialize the instance_id in data from the base class
     _data.instance_id = getInstanceId().toStdString();
 
@@ -12,40 +11,37 @@ DataViewerState::DataViewerState(QObject * parent)
     _connectRegistrySignals();
 }
 
-void DataViewerState::_connectRegistrySignals()
-{
+void DataViewerState::_connectRegistrySignals() {
     // Forward registry signals to state signals
     connect(&_series_options, &SeriesOptionsRegistry::optionsChanged,
             this, [this](QString const & key, QString const & type) {
-        markDirty();
-        emit seriesOptionsChanged(key, type);
-        emit stateChanged();
-    });
+                markDirty();
+                emit seriesOptionsChanged(key, type);
+                emit stateChanged();
+            });
 
     connect(&_series_options, &SeriesOptionsRegistry::optionsRemoved,
             this, [this](QString const & key, QString const & type) {
-        markDirty();
-        emit seriesOptionsRemoved(key, type);
-        emit stateChanged();
-    });
+                markDirty();
+                emit seriesOptionsRemoved(key, type);
+                emit stateChanged();
+            });
 
     connect(&_series_options, &SeriesOptionsRegistry::visibilityChanged,
             this, [this](QString const & key, QString const & type, bool visible) {
-        markDirty();
-        emit seriesVisibilityChanged(key, type, visible);
-        emit stateChanged();
-    });
+                markDirty();
+                emit seriesVisibilityChanged(key, type, visible);
+                emit stateChanged();
+            });
 }
 
 // ==================== Type Identification ====================
 
-QString DataViewerState::getDisplayName() const
-{
+QString DataViewerState::getDisplayName() const {
     return QString::fromStdString(_data.display_name);
 }
 
-void DataViewerState::setDisplayName(QString const & name)
-{
+void DataViewerState::setDisplayName(QString const & name) {
     if (_data.display_name != name.toStdString()) {
         _data.display_name = name.toStdString();
         markDirty();
@@ -55,16 +51,14 @@ void DataViewerState::setDisplayName(QString const & name)
 
 // ==================== Serialization ====================
 
-std::string DataViewerState::toJson() const
-{
+std::string DataViewerState::toJson() const {
     // Include instance_id in serialization for restoration
     DataViewerStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();
     return rfl::json::write(data_to_serialize);
 }
 
-bool DataViewerState::fromJson(std::string const & json)
-{
+bool DataViewerState::fromJson(std::string const & json) {
     auto result = rfl::json::read<DataViewerStateData>(json);
     if (result) {
         _data = *result;
@@ -87,8 +81,7 @@ bool DataViewerState::fromJson(std::string const & json)
 
 // ==================== View State ====================
 
-void DataViewerState::setTimeWindow(int64_t start, int64_t end)
-{
+void DataViewerState::setTimeWindow(int64_t start, int64_t end) {
     if (_data.view.time_start != start || _data.view.time_end != end) {
         _data.view.time_start = start;
         _data.view.time_end = end;
@@ -97,28 +90,24 @@ void DataViewerState::setTimeWindow(int64_t start, int64_t end)
     }
 }
 
-std::pair<int64_t, int64_t> DataViewerState::timeWindow() const
-{
+std::pair<int64_t, int64_t> DataViewerState::timeWindow() const {
     return {_data.view.time_start, _data.view.time_end};
 }
 
-void DataViewerState::adjustTimeWidth(int64_t delta)
-{
+void DataViewerState::adjustTimeWidth(int64_t delta) {
     _data.view.adjustTimeWidth(delta);
     markDirty();
     emit viewStateChanged();
 }
 
-int64_t DataViewerState::setTimeWidth(int64_t width)
-{
+int64_t DataViewerState::setTimeWidth(int64_t width) {
     int64_t const actual_width = _data.view.setTimeWidth(width);
     markDirty();
     emit viewStateChanged();
     return actual_width;
 }
 
-void DataViewerState::setYBounds(float y_min, float y_max)
-{
+void DataViewerState::setYBounds(float y_min, float y_max) {
     constexpr float epsilon = 1e-6f;
     if (std::abs(_data.view.y_min - y_min) > epsilon ||
         std::abs(_data.view.y_max - y_max) > epsilon) {
@@ -129,13 +118,11 @@ void DataViewerState::setYBounds(float y_min, float y_max)
     }
 }
 
-std::pair<float, float> DataViewerState::yBounds() const
-{
+std::pair<float, float> DataViewerState::yBounds() const {
     return {_data.view.y_min, _data.view.y_max};
 }
 
-void DataViewerState::setVerticalPanOffset(float offset)
-{
+void DataViewerState::setVerticalPanOffset(float offset) {
     constexpr float epsilon = 1e-6f;
     if (std::abs(_data.view.vertical_pan_offset - offset) > epsilon) {
         _data.view.vertical_pan_offset = offset;
@@ -144,8 +131,7 @@ void DataViewerState::setVerticalPanOffset(float offset)
     }
 }
 
-void DataViewerState::setGlobalZoom(float zoom)
-{
+void DataViewerState::setGlobalZoom(float zoom) {
     constexpr float epsilon = 1e-6f;
     if (std::abs(_data.view.global_zoom - zoom) > epsilon) {
         _data.view.global_zoom = zoom;
@@ -154,8 +140,7 @@ void DataViewerState::setGlobalZoom(float zoom)
     }
 }
 
-void DataViewerState::setGlobalVerticalScale(float scale)
-{
+void DataViewerState::setGlobalVerticalScale(float scale) {
     constexpr float epsilon = 1e-6f;
     if (std::abs(_data.view.global_vertical_scale - scale) > epsilon) {
         _data.view.global_vertical_scale = scale;
@@ -164,8 +149,7 @@ void DataViewerState::setGlobalVerticalScale(float scale)
     }
 }
 
-void DataViewerState::setViewState(CorePlotting::TimeSeriesViewState const & view)
-{
+void DataViewerState::setViewState(CorePlotting::TimeSeriesViewState const & view) {
     constexpr float epsilon = 1e-6f;
     bool const time_changed = _data.view.time_start != view.time_start ||
                               _data.view.time_end != view.time_end;
@@ -184,8 +168,7 @@ void DataViewerState::setViewState(CorePlotting::TimeSeriesViewState const & vie
 
 // ==================== Theme ====================
 
-void DataViewerState::setTheme(DataViewerTheme theme)
-{
+void DataViewerState::setTheme(DataViewerTheme theme) {
     if (_data.theme.theme != theme) {
         _data.theme.theme = theme;
         markDirty();
@@ -193,8 +176,7 @@ void DataViewerState::setTheme(DataViewerTheme theme)
     }
 }
 
-void DataViewerState::setBackgroundColor(QString const & hex)
-{
+void DataViewerState::setBackgroundColor(QString const & hex) {
     std::string const hex_std = hex.toStdString();
     if (_data.theme.background_color != hex_std) {
         _data.theme.background_color = hex_std;
@@ -203,8 +185,7 @@ void DataViewerState::setBackgroundColor(QString const & hex)
     }
 }
 
-void DataViewerState::setAxisColor(QString const & hex)
-{
+void DataViewerState::setAxisColor(QString const & hex) {
     std::string const hex_std = hex.toStdString();
     if (_data.theme.axis_color != hex_std) {
         _data.theme.axis_color = hex_std;
@@ -213,8 +194,7 @@ void DataViewerState::setAxisColor(QString const & hex)
     }
 }
 
-void DataViewerState::setThemeState(DataViewerThemeState const & theme_state)
-{
+void DataViewerState::setThemeState(DataViewerThemeState const & theme_state) {
     if (_data.theme.theme != theme_state.theme ||
         _data.theme.background_color != theme_state.background_color ||
         _data.theme.axis_color != theme_state.axis_color) {
@@ -226,8 +206,7 @@ void DataViewerState::setThemeState(DataViewerThemeState const & theme_state)
 
 // ==================== Grid ====================
 
-void DataViewerState::setGridEnabled(bool enabled)
-{
+void DataViewerState::setGridEnabled(bool enabled) {
     if (_data.grid.enabled != enabled) {
         _data.grid.enabled = enabled;
         markDirty();
@@ -235,8 +214,7 @@ void DataViewerState::setGridEnabled(bool enabled)
     }
 }
 
-void DataViewerState::setGridSpacing(int spacing)
-{
+void DataViewerState::setGridSpacing(int spacing) {
     if (_data.grid.spacing != spacing) {
         _data.grid.spacing = spacing;
         markDirty();
@@ -244,8 +222,7 @@ void DataViewerState::setGridSpacing(int spacing)
     }
 }
 
-void DataViewerState::setGridState(DataViewerGridState const & grid_state)
-{
+void DataViewerState::setGridState(DataViewerGridState const & grid_state) {
     if (_data.grid.enabled != grid_state.enabled ||
         _data.grid.spacing != grid_state.spacing) {
         _data.grid = grid_state;
@@ -256,8 +233,7 @@ void DataViewerState::setGridState(DataViewerGridState const & grid_state)
 
 // ==================== UI Preferences ====================
 
-void DataViewerState::setZoomScalingMode(DataViewerZoomScalingMode mode)
-{
+void DataViewerState::setZoomScalingMode(DataViewerZoomScalingMode mode) {
     if (_data.ui.zoom_scaling_mode != mode) {
         _data.ui.zoom_scaling_mode = mode;
         markDirty();
@@ -265,8 +241,7 @@ void DataViewerState::setZoomScalingMode(DataViewerZoomScalingMode mode)
     }
 }
 
-void DataViewerState::setPropertiesPanelCollapsed(bool collapsed)
-{
+void DataViewerState::setPropertiesPanelCollapsed(bool collapsed) {
     if (_data.ui.properties_panel_collapsed != collapsed) {
         _data.ui.properties_panel_collapsed = collapsed;
         markDirty();
@@ -274,8 +249,7 @@ void DataViewerState::setPropertiesPanelCollapsed(bool collapsed)
     }
 }
 
-void DataViewerState::setUIPreferences(DataViewerUIPreferences const & prefs)
-{
+void DataViewerState::setUIPreferences(DataViewerUIPreferences const & prefs) {
     if (_data.ui.zoom_scaling_mode != prefs.zoom_scaling_mode ||
         _data.ui.properties_panel_collapsed != prefs.properties_panel_collapsed) {
         _data.ui = prefs;
@@ -286,11 +260,51 @@ void DataViewerState::setUIPreferences(DataViewerUIPreferences const & prefs)
 
 // ==================== Interaction ====================
 
-void DataViewerState::setInteractionMode(DataViewerInteractionMode mode)
-{
+void DataViewerState::setInteractionMode(DataViewerInteractionMode mode) {
     if (_data.interaction.mode != mode) {
         _data.interaction.mode = mode;
         markDirty();
         emit interactionModeChanged(mode);
+    }
+}
+
+// ==================== Group Scaling ====================
+
+void DataViewerState::setGroupScaling(std::string const & group_name, GroupScalingState const & state) {
+    _data.group_scaling[group_name] = state;
+    markDirty();
+    emit groupScalingChanged(QString::fromStdString(group_name));
+    emit stateChanged();
+}
+
+GroupScalingState const * DataViewerState::getGroupScaling(std::string const & group_name) const {
+    auto it = _data.group_scaling.find(group_name);
+    if (it != _data.group_scaling.end()) {
+        return &it->second;
+    }
+    return nullptr;
+}
+
+GroupScalingState * DataViewerState::getGroupScalingMutable(std::string const & group_name) {
+    auto it = _data.group_scaling.find(group_name);
+    if (it != _data.group_scaling.end()) {
+        return &it->second;
+    }
+    return nullptr;
+}
+
+bool DataViewerState::isGroupUnifiedScaling(std::string const & group_name) const {
+    auto const * gs = getGroupScaling(group_name);
+    // Default to true if no state exists yet
+    return gs == nullptr || gs->unified_scaling;
+}
+
+void DataViewerState::removeGroupScaling(std::string const & group_name) {
+    auto it = _data.group_scaling.find(group_name);
+    if (it != _data.group_scaling.end()) {
+        _data.group_scaling.erase(it);
+        markDirty();
+        emit groupScalingChanged(QString::fromStdString(group_name));
+        emit stateChanged();
     }
 }

@@ -18,11 +18,12 @@ namespace CorePlotting {
  *       accessed through const references.
  */
 struct SeriesDataCache {
-    mutable float cached_std_dev{0.0f};     ///< Cached standard deviation
-    mutable bool std_dev_cache_valid{false}; ///< Is std_dev cache valid?
+    mutable float cached_std_dev{0.0f};     ///< Cached standard deviation (may be overridden by group scaling)
+    mutable bool std_dev_cache_valid{false};///< Is std_dev cache valid?
     mutable float cached_mean{0.0f};        ///< Cached mean value
     mutable bool mean_cache_valid{false};   ///< Is mean cache valid?
     mutable float intrinsic_scale{1.0f};    ///< Computed normalization scale (e.g., 1/(3*std_dev))
+    mutable float individual_std_dev{0.0f}; ///< Per-series std_dev (never overridden by group scaling)
 
     /**
      * @brief Construct with invalid cache
@@ -49,6 +50,6 @@ struct SeriesDataCache {
     }
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_SERIESDATACACHE_HPP
+#endif// COREPLOTTING_SERIESDATACACHE_HPP
