@@ -227,23 +227,60 @@ TEST_CASE("DigitalEventSeries - Range with empty series", "[DataManager]") {
 }
 
 TEST_CASE("DigitalEventSeries - Range with duplicate events", "[DataManager]") {
-    // Note: DigitalEventSeries allows duplicates when constructed from vector
-    // (only addEvent() rejects duplicates)
+    // Duplicates in the input vector must be removed by the constructor
     std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(3), TimeFrameIndex(3)};
     DigitalEventSeries des(events);
     auto tf = makeTestTimeFrame(100);
     des.setTimeFrame(tf);
 
-    // All duplicates are preserved from the constructor
+    // size() must reflect the deduplicated count, not the input count
+    REQUIRE(des.size() == 3);
+
     auto range = des.viewTimesInRange(TimeFrameIndex(2), TimeFrameIndex(3), *tf);
     std::vector<TimeFrameIndex> collected;
     for (auto t : range) { collected.push_back(t); }
-    REQUIRE(collected.size() == 5);
+    REQUIRE(collected.size() == 2);
     REQUIRE(collected[0] == TimeFrameIndex(2));
-    REQUIRE(collected[1] == TimeFrameIndex(2));
-    REQUIRE(collected[2] == TimeFrameIndex(3));
-    REQUIRE(collected[3] == TimeFrameIndex(3));
-    REQUIRE(collected[4] == TimeFrameIndex(3));
+    REQUIRE(collected[1] == TimeFrameIndex(3));
+}
+
+TEST_CASE("DigitalEventSeries - Constructor deduplication", "[DataManager]") {
+    SECTION("All duplicates are removed, correct size reported") {
+        std::vector<TimeFrameIndex> events = {
+            TimeFrameIndex(5), TimeFrameIndex(5), TimeFrameIndex(5)
+        };
+        DigitalEventSeries des(events);
+        REQUIRE(des.size() == 1);
+        auto collected = std::vector<TimeFrameIndex>();
+        for (auto e : des.view()) { collected.push_back(e.time()); }
+        REQUIRE(collected[0] == TimeFrameIndex(5));
+    }
+
+    SECTION("Unsorted input with duplicates is sorted and deduplicated") {
+        std::vector<TimeFrameIndex> events = {
+            TimeFrameIndex(10), TimeFrameIndex(1), TimeFrameIndex(5),
+            TimeFrameIndex(1),  TimeFrameIndex(10), TimeFrameIndex(5)
+        };
+        DigitalEventSeries des(events);
+        REQUIRE(des.size() == 3);
+        std::vector<TimeFrameIndex> collected;
+        for (auto e : des.view()) { collected.push_back(e.time()); }
+        REQUIRE(collected[0] == TimeFrameIndex(1));
+        REQUIRE(collected[1] == TimeFrameIndex(5));
+        REQUIRE(collected[2] == TimeFrameIndex(10));
+    }
+
+    SECTION("No duplicates in input is unchanged") {
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(2), TimeFrameIndex(4), TimeFrameIndex(6)};
+        DigitalEventSeries des(events);
+        REQUIRE(des.size() == 3);
+    }
+
+    SECTION("Empty input produces empty series") {
+        std::vector<TimeFrameIndex> events;
+        DigitalEventSeries des(events);
+        REQUIRE(des.size() == 0);
+    }
 }
 
 TEST_CASE("DigitalEventSeries - Range interaction with add/remove", "[DataManager]") {

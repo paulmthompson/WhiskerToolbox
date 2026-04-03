@@ -128,6 +128,8 @@ std::pair<size_t, size_t> OwningDigitalEventStorage::getTimeRangeImpl(TimeFrameI
 
 void OwningDigitalEventStorage::_sortEvents() {
     std::ranges::sort(_events);
+    auto [first, last] = std::ranges::unique(_events);
+    _events.erase(first, last);
 }
 
 void OwningDigitalEventStorage::_sortEventsWithEntityIds() {
@@ -142,6 +144,10 @@ void OwningDigitalEventStorage::_sortEventsWithEntityIds() {
     sorted_ids.reserve(_entity_ids.size());
 
     for (size_t idx: indices) {
+        // Skip duplicates (same time as last inserted event)
+        if (!sorted_events.empty() && sorted_events.back() == _events[idx]) {
+            continue;
+        }
         sorted_events.push_back(_events[idx]);
         sorted_ids.push_back(_entity_ids[idx]);
     }
