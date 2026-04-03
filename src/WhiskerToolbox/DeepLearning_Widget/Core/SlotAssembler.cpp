@@ -922,15 +922,35 @@ void SlotAssembler::resetModel() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Device context initialization
+// Device context
 // ════════════════════════════════════════════════════════════════════════════
+
+bool SlotAssembler::isCudaAvailable() {
+    return dl::DeviceManager::cudaAvailable();
+}
+
+std::string SlotAssembler::currentDeviceName() {
+    auto const & dev = dl::DeviceManager::instance().device();
+    if (dev.type() == torch::kCUDA) {
+        return "GPU (CUDA)";
+    }
+    return "CPU";
+}
+
+void SlotAssembler::setDeviceByName(std::string const & name) {
+    if (name == "cuda") {
+        dl::DeviceManager::instance().setDevice(torch::Device(torch::kCUDA));
+    } else {
+        dl::DeviceManager::instance().setDevice(torch::Device(torch::kCPU));
+    }
+}
 
 void SlotAssembler::initDeviceForCurrentThread() {
     auto const & dev = dl::DeviceManager::instance().device();
     if (dev.type() != torch::kCPU) {
         // Allocating a small tensor on the target device forces the CUDA
         // runtime to initialize its per-thread context.
-        (void)torch::zeros({1}, torch::TensorOptions().device(dev));
+        (void) torch::zeros({1}, torch::TensorOptions().device(dev));
     }
 }
 

@@ -198,6 +198,28 @@ void DeepLearningPropertiesWidget::_buildUi() {
                 this, &DeepLearningPropertiesWidget::_onWeightsPathEdited);
     }
 
+    // ── Device (only shown when GPU is available) ──
+    if (SlotAssembler::isCudaAvailable()) {
+        auto * group = new QGroupBox(tr("Device"), this);
+        auto * form = new QFormLayout(group);
+
+        _device_combo = new QComboBox(group);
+        _device_combo->addItem(tr("GPU (CUDA)"), QStringLiteral("cuda"));
+        _device_combo->addItem(tr("CPU"), QStringLiteral("cpu"));
+
+        // Default to GPU (index 0) since CUDA is available
+        auto const dev_name = SlotAssembler::currentDeviceName();
+        _device_combo->setCurrentIndex(
+                dev_name.find("CUDA") != std::string::npos ? 0 : 1);
+
+        form->addRow(tr("Device:"), _device_combo);
+        main_layout->addWidget(group);
+
+        connect(_device_combo,
+                QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &DeepLearningPropertiesWidget::_onDeviceComboChanged);
+    }
+
     // ── Scroll area for dynamic slot panels ──
     {
         auto * scroll = new QScrollArea(this);
@@ -368,6 +390,14 @@ void DeepLearningPropertiesWidget::_onWeightsBrowseClicked() {
 void DeepLearningPropertiesWidget::_onWeightsPathEdited() {
     _state->setWeightsPath(_weights_path_edit->text().toStdString());
     _loadModelIfReady();
+}
+
+void DeepLearningPropertiesWidget::_onDeviceComboChanged(int index) {
+    if (!_device_combo) {
+        return;
+    }
+    auto const key = _device_combo->itemData(index).toString().toStdString();
+    SlotAssembler::setDeviceByName(key);
 }
 
 void DeepLearningPropertiesWidget::_loadModelIfReady() {

@@ -107,6 +107,7 @@ private slots:
     void _onModelComboChanged(int index);
     void _onWeightsBrowseClicked();
     void _onWeightsPathEdited();
+    void _onDeviceComboChanged(int index);
     void _onRunSingleFrame();
     void _onRunBatch();
     void _onRunRecurrentSequence();
@@ -150,6 +151,7 @@ private:
     QPushButton * _run_batch_btn = nullptr;
     QPushButton * _run_recurrent_btn = nullptr;
     QPushButton * _predict_current_frame_btn = nullptr;
+    QComboBox * _device_combo = nullptr;
 
     // Dynamic content container
     QVBoxLayout * _dynamic_layout = nullptr;

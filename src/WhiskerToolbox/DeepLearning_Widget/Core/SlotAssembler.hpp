@@ -229,6 +229,15 @@ public:
 
     // ── Instance: device context ─────────────────────────────────────────
 
+    /// Whether CUDA is available on this system (compile-time + runtime).
+    [[nodiscard]] static bool isCudaAvailable();
+
+    /// Human-readable name of the active device ("GPU (CUDA)" or "CPU").
+    [[nodiscard]] static std::string currentDeviceName();
+
+    /// Set the active device by name: "cuda" or "cpu".
+    static void setDeviceByName(std::string const & name);
+
     /// Initialize the deep-learning device context on the calling thread.
     ///
     /// On CUDA builds this ensures the CUDA runtime context is set for the
