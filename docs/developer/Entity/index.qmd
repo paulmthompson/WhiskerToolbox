@@ -136,6 +136,35 @@ The Lineage subsystem tracks data provenance—how derived data relates to sourc
 -   Invalidating derived data when sources change
 -   Visualizing data relationships in the UI
 
+### Container Classification
+
+Not all container types carry EntityIds. The table below summarises which containers can have their own identity and which can record parent lineage:
+
+| Container Type           | Has Own EntityIds | Can Have Parent Lineage | Notes                              |
+|--------------------------|:-----------------:|:-----------------------:|---------------------------------|
+| `MaskData`               | ✅ Yes            | ✅ Yes                  | Ragged, entity-bearing            |
+| `LineData`               | ✅ Yes            | ✅ Yes                  | Ragged, entity-bearing            |
+| `PointData`              | ✅ Yes            | ✅ Yes                  | Ragged, entity-bearing            |
+| `DigitalEventSeries`     | ✅ Yes            | ✅ Yes                  | Dense, entity-bearing             |
+| `DigitalIntervalSeries`  | ✅ Yes            | ✅ Yes                  | Dense, entity-bearing             |
+| `AnalogTimeSeries`       | ❌ No             | ✅ Yes                  | Dense, no entities                |
+| `TensorData`             | ❌ No             | ✅ Yes                  | Dense, no entities                |
+| `MediaData`              | ❌ No             | ❌ No                   | Special case                      |
+
+**Entity-bearing derived containers** hold both their own EntityIds *and* parent lineage, which serve distinct purposes:
+
+- **Own EntityId**: answers "what is this element's identity?" — used for grouping, selection, and element-specific operations.
+- **Parent lineage**: answers "where did this element come from?" — used for provenance, data-flow visualisation, and tracing.
+
+```
+// Example: LineData created by skeletonizing MaskData
+// MaskData "masks" — Time T0: Mask (EntityId=100)
+// LineData "skeleton_lines" — Time T0: Line (EntityId=200)
+//
+// skeleton_lines.getEntityIdsAtTime(T0) → [200]   (line's own identity)
+// resolver.resolveToSource("skeleton_lines", T0)   → [100]   (originating mask)
+```
+
 ### Lineage Types
 
 Located in `Entity/Lineage/LineageTypes.hpp`, defines 8 lineage strategies as a `std::variant`:
@@ -302,23 +331,99 @@ public:
 
 ## Integration with DataManager
 
-The DataManager library provides `DataManagerEntityDataSource` which implements `IEntityDataSource`, and `EntityResolver` as a convenience wrapper:
+Three concrete components in `DataManager/Lineage/` bridge the abstract Entity/Lineage system to the DataManager storage layer. None of them are part of the Entity library itself; they live in the DataManager library and depend on it.
+
+### DataManagerEntityDataSource
+
+`DataManagerEntityDataSource` (in `DataManager/Lineage/DataManagerEntityDataSource.hpp`) implements `IEntityDataSource` by dispatching on the container's runtime type. All DataManager-specific type knowledge is encapsulated here, keeping `LineageResolver` free of DataManager dependencies.
+
+Supported container types: `MaskData`, `LineData`, `PointData`, `DigitalEventSeries`, `DigitalIntervalSeries`, `AnalogTimeSeries` (RaggedAnalog backend), and `TensorData`.
+
+``` cpp
+#include "DataManager.hpp"
+#include "Lineage/DataManagerEntityDataSource.hpp"
+
+DataManager dm;
+WhiskerToolbox::Lineage::DataManagerEntityDataSource data_source(&dm);
+
+// Use directly with LineageResolver when you don't need the EntityResolver wrapper
+auto* registry = dm.getLineageRegistry();
+WhiskerToolbox::Entity::Lineage::LineageResolver resolver(&data_source, registry);
+auto ids = resolver.resolveToSource("mask_areas", TimeFrameIndex(10));
+```
+
+`DataManagerEntityDataSource` is non-copyable and non-movable. The `DataManager` pointer it holds is non-owning; callers must ensure the `DataManager` outlives the data source.
+
+### EntityResolver
+
+`EntityResolver` (in `DataManager/Lineage/EntityResolver.hpp`) is a high-level convenience wrapper that composes `DataManagerEntityDataSource` and `LineageResolver` internally. It exposes the same resolution API as `LineageResolver` without requiring callers to manage intermediate objects.
 
 ``` cpp
 #include "DataManager.hpp"
 #include "Lineage/EntityResolver.hpp"
 
-DataManager dm;
-// ... add data and register lineage via dm.getLineageRegistry() ...
+using namespace WhiskerToolbox::Entity::Lineage;
 
-// EntityResolver composes DataManagerEntityDataSource + LineageResolver internally
+DataManager dm;
 EntityResolver resolver(&dm);
 
-// All LineageResolver methods are available
-auto source_ids = resolver.resolveToSource("derived_data", TimeFrameIndex(10));
-auto root_ids = resolver.resolveToRoot("derived_data", TimeFrameIndex(10));
-auto chain = resolver.getLineageChain("derived_data");
+// Single-step resolution: derived → immediate source EntityIds
+auto ids = resolver.resolveToSource("mask_areas", TimeFrameIndex(5));
+
+// Full-chain resolution: derived → root source(s)
+// Handles multi-level chains: MaskData → areas → peaks
+auto root_ids = resolver.resolveToRoot("peaks", TimeFrameIndex(5));
+
+// Entity-bearing derived containers: resolve by EntityId
+auto parent_ids = resolver.resolveByEntityId("skeleton_lines", EntityId(200));
+auto root_entity_ids = resolver.resolveByEntityIdToRoot("skeleton_lines", EntityId(200));
+
+// Bulk queries
+auto all_sources = resolver.getAllSourceEntities("mask_areas");
+std::vector<std::string> chain = resolver.getLineageChain("peaks");
+// chain: ["peaks", "mask_areas", "masks"]
+
+// Metadata queries
+bool has_lin  = resolver.hasLineage("mask_areas");  // true
+bool is_src   = resolver.isSource("masks");          // true
 ```
+
+`EntityResolver` is the preferred entry point for lineage resolution in code that already holds a `DataManager*`.
+
+### LineageRecorder
+
+`LineageRecorder` (in `DataManager/Lineage/LineageRecorder.hpp`) is a static-method helper that bridges the transform-centric `TransformLineageType` enum (declared in `TransformsV2`) to the storage-centric `Lineage::Descriptor`. It is used after executing a v2 transform pipeline to record what lineage relationship was created.
+
+``` cpp
+#include "DataManager.hpp"
+#include "Entity/Lineage/LineageRegistry.hpp"
+#include "Lineage/LineageRecorder.hpp"
+#include "TransformsV2/extension/TransformTypes.hpp"
+
+using namespace WhiskerToolbox::Entity::Lineage;
+using namespace WhiskerToolbox::Transforms::V2;
+
+// After executing a transform and storing the result:
+LineageRecorder::record(
+    *dm->getLineageRegistry(),
+    "mask_areas",           // output key
+    "masks",                // input key
+    TransformLineageType::OneToOneByTime
+);
+
+// For multi-input transforms (e.g., LineMinPointDistance):
+LineageRecorder::recordMultiInput(
+    *dm->getLineageRegistry(),
+    "line_distances",
+    {"lines", "points"},
+    TransformLineageType::OneToOneByTime
+);
+
+// For original/loaded data:
+LineageRecorder::recordSource(*dm->getLineageRegistry(), "masks");
+```
+
+Every v2 transform registered in `TransformsV2/core/RegisteredTransforms.cpp` carries a `lineage_type` field in its `TransformMetadata`. Callers can query this field and pass it directly to `LineageRecorder::record()` to avoid hard-coding the lineage type at call sites.
 
 The separation allows the Entity library to be tested and used without DataManager dependency.
 
@@ -341,12 +446,14 @@ graph LR
 
 ## Thread Safety Summary
 
-| Component            | Thread Safety      | Notes                           |
-|----------------------|--------------------|---------------------------------|
-| `EntityRegistry`     | ✅ Thread-safe     | Uses internal mutex             |
-| `EntityGroupManager` | ❌ Not thread-safe | Caller must synchronize         |
-| `LineageRegistry`    | ❌ Not thread-safe | Caller must synchronize         |
-| `LineageResolver`    | ✅ Thread-safe\*   | \*If data source is thread-safe |
+| Component                    | Thread Safety      | Notes                                  |
+|------------------------------|--------------------|----------------------------------------|
+| `EntityRegistry`             | ✅ Thread-safe     | Uses internal mutex                    |
+| `EntityGroupManager`         | ❌ Not thread-safe | Caller must synchronize                |
+| `LineageRegistry`            | ❌ Not thread-safe | Caller must synchronize                |
+| `LineageResolver`            | ✅ Thread-safe\*   | \*If data source is thread-safe        |
+| `DataManagerEntityDataSource`| ❌ Not thread-safe | Shares DataManager's thread-safety constraints |
+| `EntityResolver`             | ❌ Not thread-safe | Inherits DataManager constraints       |
 
 ## Testing
 
@@ -355,12 +462,17 @@ Unit tests are co-located with source files in `src/Entity/`:
 -   `EntityRegistry.test.cpp` - ID allocation and lookup
 -   `EntityGroupManager.test.cpp` - Group CRUD and queries
 -   `Lineage/LineageRegistry.test.cpp` - Lineage storage and staleness
--   `Lineage/LineageResolver.test.cpp` - Resolution with mock data source
+-   `Lineage/LineageResolver.test.cpp` - Resolution with mock data source (40+ test cases)
 
-Integration tests are in `tests/DataManager/Lineage/`:
+DataManager-layer unit tests are co-located in `src/DataManager/Lineage/`:
 
--   `test_transform_lineage_integration.test.cpp` - Full pipeline tests (700+ lines)
--   `DataManagerEntityDataSource.test.cpp` - Type dispatch tests
+-   `EntityResolver.test.cpp` - Resolution strategies with real DataManager
+-   `DataManagerEntityDataSource.test.cpp` - Type dispatch across all supported container types (200+ tests)
+
+Integration tests live in `tests/DataManager/Lineage/`:
+
+-   `test_transform_lineage_integration.test.cpp` - Full pipeline tests (700+ lines): MaskData → MaskArea → SumReduction → EntityResolver
+-   `test_lineage_recorder.test.cpp` - LineageRecorder mapping from TransformLineageType to descriptors
 
 Run entity tests:
 
