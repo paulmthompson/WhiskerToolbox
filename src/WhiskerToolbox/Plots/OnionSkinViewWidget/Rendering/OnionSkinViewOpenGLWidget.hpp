@@ -105,6 +105,7 @@ protected:
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
+    void showEvent(QShowEvent * event) override;
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
@@ -125,7 +126,7 @@ private:
     CorePlotting::RenderableScene _scene;
 
     bool _scene_dirty{true};
-    bool _needs_bounds_update{true};  ///< True when bounds should be recalculated (data keys changed)
+    bool _needs_bounds_update{true};///< True when bounds should be recalculated (data keys changed)
     bool _opengl_initialized{false};
     int64_t _current_time{0};
 
@@ -154,10 +155,10 @@ private:
      * @return EntityId of nearest point, or std::nullopt if none within range
      */
     [[nodiscard]] std::optional<EntityId> findNearestPointAtCurrentTime(
-        QPointF const & world_pos, float max_distance_sq) const;
+            QPointF const & world_pos, float max_distance_sq) const;
 
     /// Cached current-frame points (temporal_distance == 0), rebuilt each scene
     std::vector<CorePlotting::TimedMappedElement> _current_frame_points;
 };
 
-#endif  // ONION_SKIN_VIEW_OPENGL_WIDGET_HPP
+#endif// ONION_SKIN_VIEW_OPENGL_WIDGET_HPP

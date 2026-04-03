@@ -7,11 +7,12 @@
 
 #include <QDebug>
 #include <QMouseEvent>
+#include <QShowEvent>
 #include <QWheelEvent>
+#include <utility>
 
 ThreeDPlotOpenGLWidget::ThreeDPlotOpenGLWidget(QWidget * parent)
-    : QOpenGLWidget(parent)
-{
+    : QOpenGLWidget(parent) {
     // Set widget attributes for OpenGL
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
@@ -21,14 +22,13 @@ ThreeDPlotOpenGLWidget::ThreeDPlotOpenGLWidget(QWidget * parent)
     QSurfaceFormat format;
     format.setVersion(4, 1);
     format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSamples(4); // Enable multisampling
+    format.setSamples(4);// Enable multisampling
     setFormat(format);
 }
 
-ThreeDPlotOpenGLWidget::~ThreeDPlotOpenGLWidget()
-{
+ThreeDPlotOpenGLWidget::~ThreeDPlotOpenGLWidget() {
     makeCurrent();
-    
+
     // Clean up OpenGL resources
     _vao.destroy();
     _vbo.destroy();
@@ -36,18 +36,17 @@ ThreeDPlotOpenGLWidget::~ThreeDPlotOpenGLWidget()
     _grid_vao.destroy();
     _grid_vbo.destroy();
     delete _grid_shader_program;
-    
+
     doneCurrent();
 }
 
-void ThreeDPlotOpenGLWidget::setState(std::shared_ptr<ThreeDPlotState> state)
-{
+void ThreeDPlotOpenGLWidget::setState(std::shared_ptr<ThreeDPlotState> state) {
     // Disconnect old state signals
     if (_state) {
         _state->disconnect(this);
     }
 
-    _state = state;
+    _state = std::move(state);
 
     if (_state) {
         // Connect to state signals
@@ -67,8 +66,7 @@ void ThreeDPlotOpenGLWidget::setState(std::shared_ptr<ThreeDPlotState> state)
 // OpenGL Lifecycle
 // =============================================================================
 
-void ThreeDPlotOpenGLWidget::initializeGL()
-{
+void ThreeDPlotOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
 
     // Set clear color (white background)
@@ -90,13 +88,12 @@ void ThreeDPlotOpenGLWidget::initializeGL()
     _updateViewMatrix();
 }
 
-void ThreeDPlotOpenGLWidget::paintGL()
-{
+void ThreeDPlotOpenGLWidget::paintGL() {
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Set up matrices
-    QMatrix4x4 mvp = _projection_matrix * _view_matrix;
+    QMatrix4x4 const mvp = _projection_matrix * _view_matrix;
 
     // Render grid first
     _renderGrid();
@@ -109,7 +106,7 @@ void ThreeDPlotOpenGLWidget::paintGL()
         }
 
         _shader_program->setUniformValue("u_mvp_matrix", mvp);
-        _shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));  // Black points on white background
+        _shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black points on white background
         _shader_program->setUniformValue("u_point_size", 5.0f);
 
         // Bind VAO and draw points
@@ -123,8 +120,7 @@ void ThreeDPlotOpenGLWidget::paintGL()
     }
 }
 
-void ThreeDPlotOpenGLWidget::resizeGL(int w, int h)
-{
+void ThreeDPlotOpenGLWidget::resizeGL(int w, int h) {
     _widget_width = w;
     _widget_height = h;
 
@@ -133,12 +129,16 @@ void ThreeDPlotOpenGLWidget::resizeGL(int w, int h)
     _updateViewMatrix();
 }
 
+void ThreeDPlotOpenGLWidget::showEvent(QShowEvent * event) {
+    QOpenGLWidget::showEvent(event);
+    update();
+}
+
 // =============================================================================
 // Mouse Interaction
 // =============================================================================
 
-void ThreeDPlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
-{
+void ThreeDPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     _last_mouse_pos = event->pos();
 
     if (event->button() == Qt::LeftButton) {
@@ -158,30 +158,29 @@ void ThreeDPlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
     event->accept();
 }
 
-void ThreeDPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
-{
-    QPoint current_pos = event->pos();
-    int delta_x = current_pos.x() - _last_mouse_pos.x();
-    int delta_y = current_pos.y() - _last_mouse_pos.y();
+void ThreeDPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
+    QPoint const current_pos = event->pos();
+    int const delta_x = current_pos.x() - _last_mouse_pos.x();
+    int const delta_y = current_pos.y() - _last_mouse_pos.y();
 
     if (_is_rotating && _active_button == Qt::LeftButton) {
         // Rotate camera: horizontal movement rotates azimuth, vertical rotates elevation
         _camera_azimuth += static_cast<float>(delta_x) * 0.5f;
         _camera_elevation += static_cast<float>(delta_y) * 0.5f;
-        
+
         // Clamp elevation to avoid gimbal lock
         _camera_elevation = qBound(-89.0f, _camera_elevation, 89.0f);
-        
+
         _updateViewMatrix();
         emit viewBoundsChanged();
         update();
     } else if (_is_panning && (_active_button == Qt::RightButton || _active_button == Qt::MiddleButton)) {
         // Pan camera: translate in the XY plane
         // Scale panning based on camera distance to keep panning speed consistent
-        float pan_scale = _camera_distance * 0.001f;
+        float const pan_scale = _camera_distance * 0.001f;
         _camera_pan.setX(_camera_pan.x() + static_cast<float>(delta_x) * pan_scale);
-        _camera_pan.setY(_camera_pan.y() - static_cast<float>(delta_y) * pan_scale);  // Invert Y for intuitive panning
-        
+        _camera_pan.setY(_camera_pan.y() - static_cast<float>(delta_y) * pan_scale);// Invert Y for intuitive panning
+
         _updateViewMatrix();
         emit viewBoundsChanged();
         update();
@@ -191,8 +190,7 @@ void ThreeDPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
     event->accept();
 }
 
-void ThreeDPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
-{
+void ThreeDPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == _active_button) {
         _is_rotating = false;
         _is_panning = false;
@@ -203,15 +201,14 @@ void ThreeDPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
     event->accept();
 }
 
-void ThreeDPlotOpenGLWidget::wheelEvent(QWheelEvent * event)
-{
+void ThreeDPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
     // Zoom camera: adjust distance from origin
-    float zoom_factor = 1.0f + (static_cast<float>(event->angleDelta().y()) * 0.001f);
+    float const zoom_factor = 1.0f + (static_cast<float>(event->angleDelta().y()) * 0.001f);
     _camera_distance *= zoom_factor;
-    
+
     // Clamp distance to reasonable bounds
     _camera_distance = qBound(10.0f, _camera_distance, 5000.0f);
-    
+
     _updateViewMatrix();
     emit viewBoundsChanged();
     update();
@@ -223,8 +220,7 @@ void ThreeDPlotOpenGLWidget::wheelEvent(QWheelEvent * event)
 // Private Slots
 // =============================================================================
 
-void ThreeDPlotOpenGLWidget::onStateChanged()
-{
+void ThreeDPlotOpenGLWidget::onStateChanged() {
     // Reload data if we have a valid time position and data manager
     if (_last_data_manager && _last_time_position.isValid()) {
         updateTime(_last_data_manager, _last_time_position);
@@ -234,9 +230,8 @@ void ThreeDPlotOpenGLWidget::onStateChanged()
     }
 }
 
-void ThreeDPlotOpenGLWidget::updateTime(std::shared_ptr<DataManager> data_manager,
-                                         TimePosition position)
-{
+void ThreeDPlotOpenGLWidget::updateTime(const std::shared_ptr<DataManager>& data_manager,
+                                        const TimePosition& position) {
     // Cache the data manager and time position for reloading when keys change
     _last_data_manager = data_manager;
     _last_time_position = position;
@@ -249,7 +244,7 @@ void ThreeDPlotOpenGLWidget::updateTime(std::shared_ptr<DataManager> data_manage
 
     // Get all plot data keys from state
     auto data_keys = _state->getPlotDataKeys();
-    
+
     if (data_keys.empty()) {
         _point_count = 0;
         update();
@@ -258,10 +253,10 @@ void ThreeDPlotOpenGLWidget::updateTime(std::shared_ptr<DataManager> data_manage
 
     // Collect points from all data keys
     std::vector<Point2D<float>> all_points;
-    
-    for (QString const & key_qstr : data_keys) {
-        std::string key = key_qstr.toStdString();
-        
+
+    for (QString const & key_qstr: data_keys) {
+        std::string const key = key_qstr.toStdString();
+
         // Get the PointData for this key
         auto point_data = data_manager->getData<PointData>(key);
         if (!point_data) {
@@ -270,13 +265,13 @@ void ThreeDPlotOpenGLWidget::updateTime(std::shared_ptr<DataManager> data_manage
 
         // Get points at the current time frame (returns a view)
         auto points_view = point_data->getAtTime(position.index);
-        
+
         // Add points to collection
         for (auto const & point: points_view) {
             all_points.push_back(point);
         }
     }
-    
+
     if (all_points.empty()) {
         _point_count = 0;
         update();
@@ -286,11 +281,11 @@ void ThreeDPlotOpenGLWidget::updateTime(std::shared_ptr<DataManager> data_manage
     // Convert Point2D to 3D (add z=0) and store in float array
     _point_data.clear();
     _point_data.reserve(all_points.size() * 3);
-    
+
     for (auto const & point: all_points) {
         _point_data.push_back(point.x);
         _point_data.push_back(point.y);
-        _point_data.push_back(0.0f);  // z = 0 for now
+        _point_data.push_back(0.0f);// z = 0 for now
     }
 
     _point_count = static_cast<int>(all_points.size());
@@ -311,8 +306,7 @@ void ThreeDPlotOpenGLWidget::updateTime(std::shared_ptr<DataManager> data_manage
     update();
 }
 
-void ThreeDPlotOpenGLWidget::_initializeShaders()
-{
+void ThreeDPlotOpenGLWidget::_initializeShaders() {
     _shader_program = new QOpenGLShaderProgram();
 
     // Vertex shader for 3D points
@@ -372,8 +366,7 @@ void ThreeDPlotOpenGLWidget::_initializeShaders()
     }
 }
 
-void ThreeDPlotOpenGLWidget::_initializeBuffers()
-{
+void ThreeDPlotOpenGLWidget::_initializeBuffers() {
     // Create vertex buffer
     _vbo.create();
     _vbo.bind();
@@ -391,8 +384,7 @@ void ThreeDPlotOpenGLWidget::_initializeBuffers()
     _vao.release();
 }
 
-void ThreeDPlotOpenGLWidget::_initializeGridBuffers()
-{
+void ThreeDPlotOpenGLWidget::_initializeGridBuffers() {
     // Create grid shader program
     _grid_shader_program = new QOpenGLShaderProgram();
 
@@ -444,10 +436,10 @@ void ThreeDPlotOpenGLWidget::_initializeGridBuffers()
 
     // Create grid lines at z=0 with 200 pixel spacing
     // Create a grid from -2000 to 2000 in both x and y directions
-    const float grid_spacing = 200.0f;
-    const float grid_min = -2000.0f;
-    const float grid_max = 2000.0f;
-    const float z_pos = 0.0f;
+    float const grid_spacing = 200.0f;
+    float const grid_min = -2000.0f;
+    float const grid_max = 2000.0f;
+    float const z_pos = 0.0f;
 
     _grid_data.clear();
 
@@ -490,8 +482,7 @@ void ThreeDPlotOpenGLWidget::_initializeGridBuffers()
     _grid_vao.release();
 }
 
-void ThreeDPlotOpenGLWidget::_renderGrid()
-{
+void ThreeDPlotOpenGLWidget::_renderGrid() {
     if (!_grid_shader_program || _grid_vertex_count == 0) {
         return;
     }
@@ -502,9 +493,9 @@ void ThreeDPlotOpenGLWidget::_renderGrid()
     }
 
     // Set up matrices
-    QMatrix4x4 mvp = _projection_matrix * _view_matrix;
+    QMatrix4x4 const mvp = _projection_matrix * _view_matrix;
     _grid_shader_program->setUniformValue("u_mvp_matrix", mvp);
-    _grid_shader_program->setUniformValue("u_color", QVector4D(0.7f, 0.7f, 0.7f, 1.0f));  // Light gray grid lines
+    _grid_shader_program->setUniformValue("u_color", QVector4D(0.7f, 0.7f, 0.7f, 1.0f));// Light gray grid lines
 
     // Bind grid VAO and draw lines
     _grid_vao.bind();
@@ -514,33 +505,31 @@ void ThreeDPlotOpenGLWidget::_renderGrid()
     _grid_shader_program->release();
 }
 
-void ThreeDPlotOpenGLWidget::_updateProjectionMatrix()
-{
+void ThreeDPlotOpenGLWidget::_updateProjectionMatrix() {
     if (_widget_width <= 0 || _widget_height <= 0) {
         return;
     }
 
     // Perspective projection
-    float aspect = static_cast<float>(_widget_width) / static_cast<float>(_widget_height);
-    float fov = 45.0f;
-    float near_plane = 0.1f;
-    float far_plane = 10000.0f;
+    float const aspect = static_cast<float>(_widget_width) / static_cast<float>(_widget_height);
+    float const fov = 45.0f;
+    float const near_plane = 0.1f;
+    float const far_plane = 10000.0f;
 
     _projection_matrix.setToIdentity();
     _projection_matrix.perspective(fov, aspect, near_plane, far_plane);
 }
 
-void ThreeDPlotOpenGLWidget::_updateViewMatrix()
-{
+void ThreeDPlotOpenGLWidget::_updateViewMatrix() {
     _view_matrix.setToIdentity();
-    
+
     // Apply pan offset first
     _view_matrix.translate(-_camera_pan);
-    
+
     // Rotate around origin: first elevation (around X), then azimuth (around Y)
     _view_matrix.rotate(_camera_elevation, 1.0f, 0.0f, 0.0f);
     _view_matrix.rotate(_camera_azimuth, 0.0f, 1.0f, 0.0f);
-    
+
     // Move camera back by distance
     _view_matrix.translate(0.0f, 0.0f, -_camera_distance);
 }

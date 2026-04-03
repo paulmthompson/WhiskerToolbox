@@ -24,6 +24,7 @@
 #include <QMenu>
 #include <QMouseEvent>
 #include <QOpenGLContext>
+#include <QShowEvent>
 #include <QString>
 #include <QSurfaceFormat>
 #include <QWheelEvent>
@@ -32,6 +33,7 @@
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 #include <unordered_set>
+#include <utility>
 
 LinePlotOpenGLWidget::LinePlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
@@ -61,7 +63,7 @@ void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state) {
         _state->disconnect(this);
     }
 
-    _state = state;
+    _state = std::move(state);
 
     if (_state) {
         _cached_view_state = _state->viewState();
@@ -116,7 +118,7 @@ void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state) {
                         // Clear overrides — upload transparent colors
                         auto const & cpu = _line_store.cpuData();
                         if (!cpu.empty()) {
-                            std::vector<glm::vec4> clear(cpu.numLines(), glm::vec4{0, 0, 0, 0});
+                            std::vector<glm::vec4> const clear(cpu.numLines(), glm::vec4{0, 0, 0, 0});
                             _line_renderer.updateLineColorOverrides(clear);
                         }
                     }
@@ -130,7 +132,7 @@ void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state) {
 }
 
 void LinePlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
-    _data_manager = data_manager;
+    _data_manager = std::move(data_manager);
     _scene_dirty = true;
     update();
 }
@@ -285,6 +287,11 @@ void LinePlotOpenGLWidget::resizeGL(int w, int h) {
     updateMatrices();
 }
 
+void LinePlotOpenGLWidget::showEvent(QShowEvent * event) {
+    QOpenGLWidget::showEvent(event);
+    update();
+}
+
 // =============================================================================
 // Mouse Interaction
 // =============================================================================
@@ -364,14 +371,14 @@ void LinePlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
             return;
         }
 
-        QPointF world = screenToWorld(event->pos());
+        QPointF const world = screenToWorld(event->pos());
 
         // world.x() is relative time (t=0 is the alignment point).
         // Convert to absolute time using the first trial's alignment time.
         // (All trials are overlaid, so we can't determine which trial was clicked.)
         if (!_cached_alignment_times.empty()) {
-            int64_t alignment_time = _cached_alignment_times.front();
-            int64_t absolute_time = alignment_time + static_cast<int64_t>(world.x());
+            int64_t const alignment_time = _cached_alignment_times.front();
+            int64_t const absolute_time = alignment_time + static_cast<int64_t>(world.x());
             emit plotDoubleClicked(absolute_time, QString::fromStdString(_cached_series_key));
         }
     }
@@ -449,7 +456,7 @@ void LinePlotOpenGLWidget::applyLineStyle() {
     }
 
     auto const & style = options->line_style;
-    glm::vec4 color = CorePlotting::hexColorToVec4(style.hex_color, style.alpha);
+    glm::vec4 const color = CorePlotting::hexColorToVec4(style.hex_color, style.alpha);
     _line_renderer.setGlobalColor(color);
     _line_renderer.setLineWidth(style.thickness);
 }
@@ -467,7 +474,7 @@ void LinePlotOpenGLWidget::rebuildScene() {
         return;
     }
 
-    GatherResult<AnalogTimeSeries> gathered = gatherTrialData();
+    GatherResult<AnalogTimeSeries> const gathered = gatherTrialData();
 
     if (gathered.empty()) {
         _scene_renderer.clearScene();
@@ -513,7 +520,7 @@ void LinePlotOpenGLWidget::rebuildScene() {
             continue;
         }
 
-        int64_t alignment_time = gathered.alignmentTimeAt(trial);
+        int64_t const alignment_time = gathered.alignmentTimeAt(trial);
         auto trial_tf = trial_view->getTimeFrame();
 
         auto all_samples = trial_view->view();
@@ -532,10 +539,10 @@ void LinePlotOpenGLWidget::rebuildScene() {
             continue;
         }
 
-        int64_t first_abs = trial_tf ? trial_tf->getTimeAtIndex(first_time) : first_time.getValue();
-        int64_t last_abs = trial_tf ? trial_tf->getTimeAtIndex(last_time) : last_time.getValue();
-        double rel_start = static_cast<double>(first_abs - alignment_time);
-        double rel_end = static_cast<double>(last_abs - alignment_time);
+        int64_t const first_abs = trial_tf ? trial_tf->getTimeAtIndex(first_time) : first_time.getValue();
+        int64_t const last_abs = trial_tf ? trial_tf->getTimeAtIndex(last_time) : last_time.getValue();
+        auto const rel_start = static_cast<double>(first_abs - alignment_time);
+        auto const rel_end = static_cast<double>(last_abs - alignment_time);
         x_min = std::min(x_min, rel_start);
         x_max = std::max(x_max, rel_end);
     }
@@ -584,7 +591,7 @@ void LinePlotOpenGLWidget::rebuildScene() {
 
     // Restore selection mask from previous selection (if trials still match)
     if (!_selected_trial_indices.empty()) {
-        std::unordered_set<std::uint32_t> selected_set(
+        std::unordered_set<std::uint32_t> const selected_set(
                 _selected_trial_indices.begin(), _selected_trial_indices.end());
         for (std::uint32_t i = 0; i < batch.numLines(); ++i) {
             if (selected_set.contains(batch.lines[i].trial_index)) {
@@ -675,7 +682,7 @@ void LinePlotOpenGLWidget::clearSelection() {
     // Clear selection mask on the GPU store
     auto const & cpu = _line_store.cpuData();
     if (!cpu.empty()) {
-        std::vector<std::uint32_t> mask(cpu.numLines(), 0);
+        std::vector<std::uint32_t> const mask(cpu.numLines(), 0);
         _line_store.updateSelectionMask(mask);
         _line_renderer.syncFromStore();
     }
@@ -756,7 +763,7 @@ void LinePlotOpenGLWidget::applyIntersectionResults(
 
     // Update selection mask on the store
     std::vector<std::uint32_t> mask(cpu.numLines(), 0);
-    std::unordered_set<std::uint32_t> selected_set(
+    std::unordered_set<std::uint32_t> const selected_set(
             _selected_trial_indices.begin(), _selected_trial_indices.end());
     for (std::uint32_t i = 0; i < cpu.numLines(); ++i) {
         if (selected_set.contains(cpu.lines[i].trial_index)) {

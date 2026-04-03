@@ -12,12 +12,14 @@
 
 #include <QDebug>
 #include <QMouseEvent>
+#include <QShowEvent>
 #include <QWheelEvent>
 
 #include <algorithm>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <utility>
 #include <vector>
 
 PSTHPlotOpenGLWidget::PSTHPlotOpenGLWidget(QWidget * parent)
@@ -47,7 +49,7 @@ void PSTHPlotOpenGLWidget::setState(std::shared_ptr<PSTHState> state) {
         _state->disconnect(this);
     }
 
-    _state = state;
+    _state = std::move(state);
 
     if (_state) {
         _cached_view_state = _state->viewState();
@@ -83,7 +85,7 @@ void PSTHPlotOpenGLWidget::setState(std::shared_ptr<PSTHState> state) {
 }
 
 void PSTHPlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
-    _data_manager = data_manager;
+    _data_manager = std::move(data_manager);
     _scene_dirty = true;
     update();
 }
@@ -150,6 +152,11 @@ void PSTHPlotOpenGLWidget::resizeGL(int w, int h) {
     _widget_height = std::max(1, h);
     glViewport(0, 0, _widget_width, _widget_height);
     updateMatrices();
+}
+
+void PSTHPlotOpenGLWidget::showEvent(QShowEvent * event) {
+    QOpenGLWidget::showEvent(event);
+    update();
 }
 
 // =============================================================================
@@ -255,8 +262,8 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
     }
 
     // Get window size from state
-    double window_size = _state->getWindowSize();
-    double half_window = window_size / 2.0;
+    double const window_size = _state->getWindowSize();
+    double const half_window = window_size / 2.0;
 
     // Extract bin size from estimation parameters
     // Currently only BinningParams is implemented; other methods use default bin_size
@@ -269,7 +276,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
     }
 
     // Calculate number of bins: from -window/2 to +window/2 with bin_size spacing
-    int num_bins = static_cast<int>(std::ceil(window_size / bin_size));
+    int const num_bins = static_cast<int>(std::ceil(window_size / bin_size));
     if (num_bins <= 0) {
         qDebug() << "PSTHPlotOpenGLWidget: Invalid bin configuration";
         return;
@@ -319,20 +326,20 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
 
             // Get the alignment time for this trial (center point)
             // alignmentTimeAt() returns absolute time directly
-            int64_t alignment_time = gathered.alignmentTimeAt(trial_idx);
-            int alignment_time_abs = static_cast<int>(alignment_time);
+            int64_t const alignment_time = gathered.alignmentTimeAt(trial_idx);
+            int const alignment_time_abs = static_cast<int>(alignment_time);
 
             // Iterate over events in this trial view
             for (auto const & event_with_id: trial_view->view()) {
                 // Get event time as TimeFrameIndex
-                TimeFrameIndex event_time_idx = event_with_id.event_time;
+                TimeFrameIndex const event_time_idx = event_with_id.event_time;
 
                 // Convert event time index to absolute time
-                int event_time_abs = time_frame->getTimeAtIndex(event_time_idx);
+                int const event_time_abs = time_frame->getTimeAtIndex(event_time_idx);
 
                 // Calculate relative time (normalized by alignment event)
                 // This gives us the time relative to the alignment point (t=0)
-                double relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
+                auto const relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
 
                 // Only include events within the window
                 if (relative_time < -half_window || relative_time >= half_window) {
@@ -341,7 +348,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
 
                 // Calculate which bin this event belongs to
                 // Bin 0 corresponds to -half_window, bin (num_bins-1) corresponds to +half_window
-                double bin_position = (relative_time + half_window) / bin_size;
+                double const bin_position = (relative_time + half_window) / bin_size;
                 int bin_index = static_cast<int>(std::floor(bin_position));
 
                 // Clamp bin index to valid range
@@ -366,7 +373,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
     // Print some statistics
     double total_events = 0.0;
     double max_count = 0.0;
-    for (double count: histogram) {
+    for (double const count: histogram) {
         total_events += count;
         max_count = std::max(max_count, count);
     }
@@ -384,7 +391,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
     // Build times vector (bin centers)
     rate_estimate.times.reserve(num_bins);
     for (int i = 0; i < num_bins; ++i) {
-        double bin_center = -half_window + (i + 0.5) * bin_size;
+        double const bin_center = -half_window + (i + 0.5) * bin_size;
         rate_estimate.times.push_back(bin_center);
     }
 
@@ -400,7 +407,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
 
     // Recompute max after scaling for Y-axis bounds
     max_count = 0.0;
-    for (double val: histogram) {
+    for (double const val: histogram) {
         max_count = std::max(max_count, val);
     }
     qDebug() << "  Max bin value (scaled):" << max_count;

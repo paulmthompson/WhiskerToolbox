@@ -17,8 +17,8 @@
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/DataTypes/HistogramData.hpp"
 #include "CorePlotting/Mappers/HistogramMapper.hpp"
-#include "PlottingOpenGL/SceneRenderer.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
@@ -59,9 +59,9 @@ public:
      * @param style Visual style (colors, thickness)
      */
     void setHistogramData(
-        CorePlotting::HistogramData const & data,
-        CorePlotting::HistogramDisplayMode mode = CorePlotting::HistogramDisplayMode::Bar,
-        CorePlotting::HistogramStyle const & style = {});
+            CorePlotting::HistogramData const & data,
+            CorePlotting::HistogramDisplayMode mode = CorePlotting::HistogramDisplayMode::Bar,
+            CorePlotting::HistogramStyle const & style = {});
 
     /**
      * @brief Clear any rendered histogram data
@@ -75,6 +75,7 @@ protected:
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
+    void showEvent(QShowEvent * event) override;
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
@@ -116,4 +117,4 @@ private:
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
 };
 
-#endif  // ACF_OPENGL_WIDGET_HPP
+#endif// ACF_OPENGL_WIDGET_HPP

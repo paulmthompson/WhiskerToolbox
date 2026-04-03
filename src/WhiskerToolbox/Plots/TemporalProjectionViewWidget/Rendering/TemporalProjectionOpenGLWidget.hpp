@@ -28,11 +28,11 @@
 #include "CorePlotting/LineBatch/LineBatchData.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "PlottingOpenGL/LineBatch/BatchLineRenderer.hpp"
 #include "PlottingOpenGL/LineBatch/BatchLineStore.hpp"
 #include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
-#include "Entity/EntityTypes.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
@@ -82,7 +82,7 @@ public:
      * @param group_manager Pointer to the GroupManager (not owned)
      */
     void setGroupManager(GroupManager * group_manager);
-    
+
     [[nodiscard]] std::pair<double, double> getViewBounds() const;
 
     /// Currently selected entity IDs (from points or lines)
@@ -101,6 +101,7 @@ protected:
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
+    void showEvent(QShowEvent * event) override;
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
@@ -190,4 +191,4 @@ private:
     void applyGroupColorsToScene();
 };
 
-#endif  // TEMPORAL_PROJECTION_OPENGL_WIDGET_HPP
+#endif// TEMPORAL_PROJECTION_OPENGL_WIDGET_HPP

@@ -5,13 +5,14 @@
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 
 #include <QMouseEvent>
+#include <QShowEvent>
 #include <QWheelEvent>
 
 #include <cmath>
+#include <utility>
 
 ACFOpenGLWidget::ACFOpenGLWidget(QWidget * parent)
-    : QOpenGLWidget(parent)
-{
+    : QOpenGLWidget(parent) {
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
@@ -22,19 +23,17 @@ ACFOpenGLWidget::ACFOpenGLWidget(QWidget * parent)
     setFormat(format);
 }
 
-ACFOpenGLWidget::~ACFOpenGLWidget()
-{
+ACFOpenGLWidget::~ACFOpenGLWidget() {
     makeCurrent();
     _scene_renderer.cleanup();
     doneCurrent();
 }
 
-void ACFOpenGLWidget::setState(std::shared_ptr<ACFState> state)
-{
+void ACFOpenGLWidget::setState(std::shared_ptr<ACFState> state) {
     if (_state) {
         _state->disconnect(this);
     }
-    _state = state;
+    _state = std::move(state);
     if (_state) {
         _cached_view_state = _state->viewState();
         connect(_state.get(), &ACFState::stateChanged,
@@ -47,10 +46,9 @@ void ACFOpenGLWidget::setState(std::shared_ptr<ACFState> state)
 }
 
 void ACFOpenGLWidget::setHistogramData(
-    CorePlotting::HistogramData const & data,
-    CorePlotting::HistogramDisplayMode mode,
-    CorePlotting::HistogramStyle const & style)
-{
+        CorePlotting::HistogramData const & data,
+        CorePlotting::HistogramDisplayMode mode,
+        CorePlotting::HistogramStyle const & style) {
     _histogram_data = data;
     _histogram_mode = mode;
     _histogram_style = style;
@@ -58,11 +56,11 @@ void ACFOpenGLWidget::setHistogramData(
 
     // Auto-fit axes to data if state is available; keep view state in sync via setXBounds/setYBounds
     if (_state && !data.counts.empty()) {
-        double max_val = data.maxCount();
+        double const max_val = data.maxCount();
         if (max_val > 0.0) {
             auto * vas = _state->verticalAxisState();
             if (vas) {
-                double new_y_max = max_val * 1.1;  // 10% padding
+                double const new_y_max = max_val * 1.1;// 10% padding
                 if (std::abs(vas->getYMax() - new_y_max) > 0.01) {
                     vas->setYMax(new_y_max);
                 }
@@ -80,15 +78,13 @@ void ACFOpenGLWidget::setHistogramData(
     update();
 }
 
-void ACFOpenGLWidget::clearHistogramData()
-{
+void ACFOpenGLWidget::clearHistogramData() {
     _histogram_data = {};
     _scene_dirty = true;
     update();
 }
 
-void ACFOpenGLWidget::initializeGL()
-{
+void ACFOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glEnable(GL_DEPTH_TEST);
@@ -108,8 +104,7 @@ void ACFOpenGLWidget::initializeGL()
     _opengl_initialized = true;
 }
 
-void ACFOpenGLWidget::paintGL()
-{
+void ACFOpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!_opengl_initialized) {
@@ -124,16 +119,19 @@ void ACFOpenGLWidget::paintGL()
     _scene_renderer.render(_view_matrix, _projection_matrix);
 }
 
-void ACFOpenGLWidget::resizeGL(int w, int h)
-{
+void ACFOpenGLWidget::resizeGL(int w, int h) {
     _widget_width = std::max(1, w);
     _widget_height = std::max(1, h);
     glViewport(0, 0, _widget_width, _widget_height);
     updateMatrices();
 }
 
-void ACFOpenGLWidget::mousePressEvent(QMouseEvent * event)
-{
+void ACFOpenGLWidget::showEvent(QShowEvent * event) {
+    QOpenGLWidget::showEvent(event);
+    update();
+}
+
+void ACFOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         _is_panning = false;
         _click_start_pos = event->pos();
@@ -142,8 +140,7 @@ void ACFOpenGLWidget::mousePressEvent(QMouseEvent * event)
     event->accept();
 }
 
-void ACFOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
-{
+void ACFOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (event->buttons() & Qt::LeftButton) {
         int const dx = event->pos().x() - _click_start_pos.x();
         int const dy = event->pos().y() - _click_start_pos.y();
@@ -162,8 +159,7 @@ void ACFOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
     event->accept();
 }
 
-void ACFOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
-{
+void ACFOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         if (_is_panning) {
             _is_panning = false;
@@ -173,13 +169,11 @@ void ACFOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
     event->accept();
 }
 
-void ACFOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
-{
+void ACFOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     QOpenGLWidget::mouseDoubleClickEvent(event);
 }
 
-void ACFOpenGLWidget::wheelEvent(QWheelEvent * event)
-{
+void ACFOpenGLWidget::wheelEvent(QWheelEvent * event) {
     float const delta = event->angleDelta().y() / 120.0f;
     bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
@@ -187,14 +181,12 @@ void ACFOpenGLWidget::wheelEvent(QWheelEvent * event)
     event->accept();
 }
 
-void ACFOpenGLWidget::onStateChanged()
-{
+void ACFOpenGLWidget::onStateChanged() {
     _scene_dirty = true;
     update();
 }
 
-void ACFOpenGLWidget::onViewStateChanged()
-{
+void ACFOpenGLWidget::onViewStateChanged() {
     if (_state) {
         _cached_view_state = _state->viewState();
     }
@@ -203,47 +195,42 @@ void ACFOpenGLWidget::onViewStateChanged()
     emit viewBoundsChanged();
 }
 
-void ACFOpenGLWidget::updateMatrices()
-{
+void ACFOpenGLWidget::updateMatrices() {
     _projection_matrix =
-        WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
-void ACFOpenGLWidget::handlePanning(int delta_x, int delta_y)
-{
+void ACFOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
     WhiskerToolbox::Plots::handlePanning(
-        *_state, _cached_view_state, delta_x, delta_y, _widget_width,
-        _widget_height);
+            *_state, _cached_view_state, delta_x, delta_y, _widget_width,
+            _widget_height);
 }
 
-void ACFOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
-{
+void ACFOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes) {
     if (!_state) {
         return;
     }
     WhiskerToolbox::Plots::handleZoom(
-        *_state, _cached_view_state, delta, y_only, both_axes);
+            *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
-QPointF ACFOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
-{
+QPointF ACFOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
     return WhiskerToolbox::Plots::screenToWorld(
-        _projection_matrix, _widget_width, _widget_height, screen_pos);
+            _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
-void ACFOpenGLWidget::uploadHistogramScene()
-{
+void ACFOpenGLWidget::uploadHistogramScene() {
     if (_histogram_data.counts.empty()) {
         _scene_renderer.clearScene();
         return;
     }
 
     auto scene = CorePlotting::HistogramMapper::buildScene(
-        _histogram_data, _histogram_mode, _histogram_style);
+            _histogram_data, _histogram_mode, _histogram_style);
 
     _scene_renderer.uploadScene(scene);
 }

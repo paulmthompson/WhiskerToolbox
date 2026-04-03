@@ -15,6 +15,7 @@
 
 #include <QDebug>
 #include <QMouseEvent>
+#include <QShowEvent>
 #include <QWheelEvent>
 
 #include <algorithm>
@@ -237,6 +238,11 @@ void EventPlotOpenGLWidget::resizeGL(int w, int h) {
 
     glViewport(0, 0, _widget_width, _widget_height);
     updateMatrices();
+}
+
+void EventPlotOpenGLWidget::showEvent(QShowEvent * event) {
+    QOpenGLWidget::showEvent(event);
+    update();
 }
 
 // =============================================================================

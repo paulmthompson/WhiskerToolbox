@@ -146,6 +146,7 @@ protected:
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
+    void showEvent(QShowEvent * event) override;
 
     // Mouse interaction
     void mousePressEvent(QMouseEvent * event) override;
@@ -287,7 +288,7 @@ private:
      */
     [[nodiscard]] static std::vector<size_t> computeSortIndices(
             GatherResult<DigitalEventSeries> const & gathered,
-            TrialSortMode mode) ;
+            TrialSortMode mode);
 
     /**
      * @brief Update OpenGL clear color from state background color

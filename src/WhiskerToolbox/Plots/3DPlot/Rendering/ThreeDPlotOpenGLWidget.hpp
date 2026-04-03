@@ -72,8 +72,8 @@ public:
      * @param data_manager Shared pointer to DataManager for data access
      * @param position The current TimePosition
      */
-    void updateTime(std::shared_ptr<DataManager> data_manager,
-                    TimePosition position);
+    void updateTime(const std::shared_ptr<DataManager>& data_manager,
+                    const TimePosition& position);
 
 signals:
     /**
@@ -86,6 +86,7 @@ protected:
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
+    void showEvent(QShowEvent * event) override;
 
     // Mouse interaction
     void mousePressEvent(QMouseEvent * event) override;
@@ -145,14 +146,14 @@ private:
     QOpenGLShaderProgram * _shader_program{nullptr};
     QOpenGLVertexArrayObject _vao;
     QOpenGLBuffer _vbo{QOpenGLBuffer::VertexBuffer};
-    std::vector<float> _point_data;  // 3D positions (x, y, z) as float array
+    std::vector<float> _point_data;// 3D positions (x, y, z) as float array
     int _point_count{0};
 
     // OpenGL resources for grid
     QOpenGLShaderProgram * _grid_shader_program{nullptr};
     QOpenGLVertexArrayObject _grid_vao;
     QOpenGLBuffer _grid_vbo{QOpenGLBuffer::VertexBuffer};
-    std::vector<float> _grid_data;  // Grid line vertices
+    std::vector<float> _grid_data;// Grid line vertices
     int _grid_vertex_count{0};
 
     // Matrices
@@ -160,10 +161,10 @@ private:
     QMatrix4x4 _view_matrix;
 
     // Camera state
-    float _camera_distance{500.0f};      // Distance from origin
-    float _camera_azimuth{0.0f};        // Rotation around Y axis (degrees)
-    float _camera_elevation{30.0f};     // Rotation around X axis (degrees)
-    QVector3D _camera_pan{0.0f, 0.0f, 0.0f};  // Pan offset in XY plane
+    float _camera_distance{500.0f};         // Distance from origin
+    float _camera_azimuth{0.0f};            // Rotation around Y axis (degrees)
+    float _camera_elevation{30.0f};         // Rotation around X axis (degrees)
+    QVector3D _camera_pan{0.0f, 0.0f, 0.0f};// Pan offset in XY plane
 
     // Mouse interaction state
     QPoint _last_mouse_pos;
@@ -172,4 +173,4 @@ private:
     Qt::MouseButton _active_button{Qt::NoButton};
 };
 
-#endif // THREE_D_PLOT_OPENGL_WIDGET_HPP
+#endif// THREE_D_PLOT_OPENGL_WIDGET_HPP

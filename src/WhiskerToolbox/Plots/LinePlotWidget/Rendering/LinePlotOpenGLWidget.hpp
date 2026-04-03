@@ -29,26 +29,26 @@
 #include "Core/LinePlotState.hpp"
 
 #include "CoreGeometry/boundingbox.hpp"
-#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Interaction/GlyphPreview.hpp"
 #include "CorePlotting/LineBatch/ILineBatchIntersector.hpp"
 #include "CorePlotting/LineBatch/LineBatchData.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
-#include "PlottingOpenGL/LineBatch/BatchLineStore.hpp"
 #include "PlottingOpenGL/LineBatch/BatchLineRenderer.hpp"
+#include "PlottingOpenGL/LineBatch/BatchLineStore.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "GatherResult/GatherResult.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 
-#include <glm/glm.hpp>
 #include <cstdint>
+#include <glm/glm.hpp>
 #include <memory>
 #include <optional>
 #include <unordered_set>
@@ -114,6 +114,7 @@ protected:
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
+    void showEvent(QShowEvent * event) override;
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
@@ -201,4 +202,4 @@ private:
     void applyGroupColorsToLines();
 };
 
-#endif // LINEPLOT_OPENGLWIDGET_HPP
+#endif// LINEPLOT_OPENGLWIDGET_HPP

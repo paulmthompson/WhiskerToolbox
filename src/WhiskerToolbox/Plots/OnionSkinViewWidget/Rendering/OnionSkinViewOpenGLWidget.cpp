@@ -2,9 +2,9 @@
 
 #include "Core/OnionSkinViewState.hpp"
 #include "CorePlotting/DataTypes/AlphaCurve.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
 #include "CorePlotting/Mappers/MaskContourMapper.hpp"
 #include "CorePlotting/Mappers/SpatialMapper_Window.hpp"
-#include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"
@@ -14,16 +14,17 @@
 
 #include <QDebug>
 #include <QMouseEvent>
+#include <QShowEvent>
 #include <QWheelEvent>
 
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <numeric>
+#include <utility>
 
 OnionSkinViewOpenGLWidget::OnionSkinViewOpenGLWidget(QWidget * parent)
-    : QOpenGLWidget(parent)
-{
+    : QOpenGLWidget(parent) {
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
@@ -34,19 +35,17 @@ OnionSkinViewOpenGLWidget::OnionSkinViewOpenGLWidget(QWidget * parent)
     setFormat(format);
 }
 
-OnionSkinViewOpenGLWidget::~OnionSkinViewOpenGLWidget()
-{
+OnionSkinViewOpenGLWidget::~OnionSkinViewOpenGLWidget() {
     makeCurrent();
     _scene_renderer.cleanup();
     doneCurrent();
 }
 
-void OnionSkinViewOpenGLWidget::setState(std::shared_ptr<OnionSkinViewState> state)
-{
+void OnionSkinViewOpenGLWidget::setState(std::shared_ptr<OnionSkinViewState> state) {
     if (_state) {
         _state->disconnect(this);
     }
-    _state = state;
+    _state = std::move(state);
     if (_state) {
         _cached_view_state = _state->viewState();
         connect(_state.get(), &OnionSkinViewState::stateChanged,
@@ -102,15 +101,13 @@ void OnionSkinViewOpenGLWidget::setState(std::shared_ptr<OnionSkinViewState> sta
     }
 }
 
-void OnionSkinViewOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager)
-{
-    _data_manager = data_manager;
+void OnionSkinViewOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    _data_manager = std::move(data_manager);
     _scene_dirty = true;
     update();
 }
 
-void OnionSkinViewOpenGLWidget::setCurrentTime(int64_t time_index)
-{
+void OnionSkinViewOpenGLWidget::setCurrentTime(int64_t time_index) {
     if (_current_time != time_index) {
         _current_time = time_index;
         _scene_dirty = true;
@@ -118,8 +115,7 @@ void OnionSkinViewOpenGLWidget::setCurrentTime(int64_t time_index)
     }
 }
 
-void OnionSkinViewOpenGLWidget::initializeGL()
-{
+void OnionSkinViewOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glEnable(GL_BLEND);
@@ -134,8 +130,7 @@ void OnionSkinViewOpenGLWidget::initializeGL()
     _opengl_initialized = true;
 }
 
-void OnionSkinViewOpenGLWidget::paintGL()
-{
+void OnionSkinViewOpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     if (!_state || !_opengl_initialized) {
@@ -150,16 +145,19 @@ void OnionSkinViewOpenGLWidget::paintGL()
     _scene_renderer.render(_projection_matrix, _view_matrix);
 }
 
-void OnionSkinViewOpenGLWidget::resizeGL(int w, int h)
-{
+void OnionSkinViewOpenGLWidget::resizeGL(int w, int h) {
     _widget_width = std::max(1, w);
     _widget_height = std::max(1, h);
     glViewport(0, 0, _widget_width, _widget_height);
     updateMatrices();
 }
 
-void OnionSkinViewOpenGLWidget::mousePressEvent(QMouseEvent * event)
-{
+void OnionSkinViewOpenGLWidget::showEvent(QShowEvent * event) {
+    QOpenGLWidget::showEvent(event);
+    update();
+}
+
+void OnionSkinViewOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         _is_panning = false;
         _click_start_pos = event->pos();
@@ -168,8 +166,7 @@ void OnionSkinViewOpenGLWidget::mousePressEvent(QMouseEvent * event)
     event->accept();
 }
 
-void OnionSkinViewOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
-{
+void OnionSkinViewOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (event->buttons() & Qt::LeftButton) {
         int const dx = event->pos().x() - _click_start_pos.x();
         int const dy = event->pos().y() - _click_start_pos.y();
@@ -188,8 +185,7 @@ void OnionSkinViewOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
     event->accept();
 }
 
-void OnionSkinViewOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
-{
+void OnionSkinViewOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         if (_is_panning) {
             _is_panning = false;
@@ -202,8 +198,8 @@ void OnionSkinViewOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
             float const pixel_radius = 15.0f;
             QPointF const origin_world = screenToWorld(QPoint(0, 0));
             QPointF const offset_world = screenToWorld(QPoint(static_cast<int>(pixel_radius), 0));
-            float const world_pick_dist = static_cast<float>(
-                std::abs(offset_world.x() - origin_world.x()));
+            auto const world_pick_dist = static_cast<float>(
+                    std::abs(offset_world.x() - origin_world.x()));
             float const max_dist_sq = world_pick_dist * world_pick_dist;
 
             auto hit = findNearestPointAtCurrentTime(world_pos, max_dist_sq);
@@ -215,15 +211,14 @@ void OnionSkinViewOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
     event->accept();
 }
 
-void OnionSkinViewOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
-{
+void OnionSkinViewOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         QPointF const world_pos = screenToWorld(event->pos());
         float const pixel_radius = 15.0f;
         QPointF const origin_world = screenToWorld(QPoint(0, 0));
         QPointF const offset_world = screenToWorld(QPoint(static_cast<int>(pixel_radius), 0));
-        float const world_pick_dist = static_cast<float>(
-            std::abs(offset_world.x() - origin_world.x()));
+        auto const world_pick_dist = static_cast<float>(
+                std::abs(offset_world.x() - origin_world.x()));
         float const max_dist_sq = world_pick_dist * world_pick_dist;
 
         auto hit = findNearestPointAtCurrentTime(world_pos, max_dist_sq);
@@ -234,8 +229,7 @@ void OnionSkinViewOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
     QOpenGLWidget::mouseDoubleClickEvent(event);
 }
 
-void OnionSkinViewOpenGLWidget::wheelEvent(QWheelEvent * event)
-{
+void OnionSkinViewOpenGLWidget::wheelEvent(QWheelEvent * event) {
     float const delta = event->angleDelta().y() / 120.0f;
     bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
@@ -243,14 +237,12 @@ void OnionSkinViewOpenGLWidget::wheelEvent(QWheelEvent * event)
     event->accept();
 }
 
-void OnionSkinViewOpenGLWidget::onStateChanged()
-{
+void OnionSkinViewOpenGLWidget::onStateChanged() {
     _scene_dirty = true;
     update();
 }
 
-void OnionSkinViewOpenGLWidget::onViewStateChanged()
-{
+void OnionSkinViewOpenGLWidget::onViewStateChanged() {
     if (_state) {
         _cached_view_state = _state->viewState();
     }
@@ -259,15 +251,13 @@ void OnionSkinViewOpenGLWidget::onViewStateChanged()
     emit viewBoundsChanged();
 }
 
-void OnionSkinViewOpenGLWidget::onDataKeysChanged()
-{
+void OnionSkinViewOpenGLWidget::onDataKeysChanged() {
     _scene_dirty = true;
     _needs_bounds_update = true;
     update();
 }
 
-void OnionSkinViewOpenGLWidget::rebuildScene()
-{
+void OnionSkinViewOpenGLWidget::rebuildScene() {
     if (!_state || !_data_manager) {
         return;
     }
@@ -282,7 +272,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     float const min_alpha = _state->getMinAlpha();
     float const max_alpha = _state->getMaxAlpha();
     CorePlotting::AlphaCurve const alpha_curve =
-        CorePlotting::alphaCurveFromString(_state->getAlphaCurve().toStdString());
+            CorePlotting::alphaCurveFromString(_state->getAlphaCurve().toStdString());
 
     // Half-width for alpha computation (max of behind, ahead)
     int const half_width = std::max(behind, ahead);
@@ -290,7 +280,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     TimeFrameIndex const center{_current_time};
 
     // Highlight colors (used when highlight_current is true)
-    glm::vec4 const current_highlight_color{1.0f, 0.3f, 0.1f, max_alpha};  // Bright orange-red
+    glm::vec4 const current_highlight_color{1.0f, 0.3f, 0.1f, max_alpha};// Bright orange-red
 
     // === Map all windowed data ===
     // Points — keyed by point data key so each key's glyph style can be applied independently
@@ -302,7 +292,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     std::vector<KeyedPoints> keyed_points;
     keyed_points.reserve(point_keys.size());
 
-    for (auto const & key_qstr : point_keys) {
+    for (auto const & key_qstr: point_keys) {
         auto point_data = _data_manager->getData<PointData>(key_qstr.toStdString());
         if (!point_data) {
             continue;
@@ -311,7 +301,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
         kp.key = key_qstr;
         kp.glyph_style = _state->getPointKeyGlyphStyle(key_qstr);
         kp.points = CorePlotting::SpatialMapper::mapPointsInWindow(
-            *point_data, center, behind, ahead);
+                *point_data, center, behind, ahead);
         keyed_points.push_back(std::move(kp));
     }
 
@@ -324,7 +314,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     std::vector<KeyedLines> keyed_lines;
     keyed_lines.reserve(line_keys.size());
 
-    for (auto const & key_qstr : line_keys) {
+    for (auto const & key_qstr: line_keys) {
         auto line_data = _data_manager->getData<LineData>(key_qstr.toStdString());
         if (!line_data) {
             continue;
@@ -333,7 +323,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
         kl.key = key_qstr;
         kl.line_style = _state->getLineKeyLineStyle(key_qstr);
         kl.lines = CorePlotting::SpatialMapper::mapLinesInWindow(
-            *line_data, center, behind, ahead);
+                *line_data, center, behind, ahead);
         keyed_lines.push_back(std::move(kl));
     }
 
@@ -346,7 +336,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     std::vector<KeyedMaskContours> keyed_mask_contours;
     keyed_mask_contours.reserve(mask_keys.size());
 
-    for (auto const & key_qstr : mask_keys) {
+    for (auto const & key_qstr: mask_keys) {
         auto mask_data = _data_manager->getData<MaskData>(key_qstr.toStdString());
         if (!mask_data) {
             continue;
@@ -355,7 +345,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
         kmc.key = key_qstr;
         kmc.line_style = _state->getMaskKeyLineStyle(key_qstr);
         kmc.contours = CorePlotting::SpatialMapper::mapMaskContoursInWindow(
-            *mask_data, center, behind, ahead);
+                *mask_data, center, behind, ahead);
         keyed_mask_contours.push_back(std::move(kmc));
     }
 
@@ -366,8 +356,8 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     float max_y = std::numeric_limits<float>::lowest();
     bool has_data = false;
 
-    for (auto const & kp : keyed_points) {
-        for (auto const & pt : kp.points) {
+    for (auto const & kp: keyed_points) {
+        for (auto const & pt: kp.points) {
             min_x = std::min(min_x, pt.x);
             min_y = std::min(min_y, pt.y);
             max_x = std::max(max_x, pt.x);
@@ -376,9 +366,9 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
         }
     }
 
-    for (auto const & kl : keyed_lines) {
-        for (auto const & line : kl.lines) {
-            for (auto const & v : line.vertices()) {
+    for (auto const & kl: keyed_lines) {
+        for (auto const & line: kl.lines) {
+            for (auto const & v: line.vertices()) {
                 min_x = std::min(min_x, v.x);
                 min_y = std::min(min_y, v.y);
                 max_x = std::max(max_x, v.x);
@@ -388,9 +378,9 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
         }
     }
 
-    for (auto const & kmc : keyed_mask_contours) {
-        for (auto const & contour : kmc.contours) {
-            for (auto const & v : contour.vertices()) {
+    for (auto const & kmc: keyed_mask_contours) {
+        for (auto const & contour: kmc.contours) {
+            for (auto const & v: contour.vertices()) {
                 min_x = std::min(min_x, v.x);
                 min_y = std::min(min_y, v.y);
                 max_x = std::max(max_x, v.x);
@@ -402,24 +392,26 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
 
     // Fallback to ImageSize or default
     if (!has_data) {
-        for (auto const & key_qstr : point_keys) {
+        for (auto const & key_qstr: point_keys) {
             auto pd = _data_manager->getData<PointData>(key_qstr.toStdString());
             if (pd) {
                 auto sz = pd->getImageSize();
                 if (sz.width > 0 && sz.height > 0) {
-                    min_x = 0.0f; min_y = 0.0f;
+                    min_x = 0.0f;
+                    min_y = 0.0f;
                     max_x = std::max(max_x, static_cast<float>(sz.width));
                     max_y = std::max(max_y, static_cast<float>(sz.height));
                     has_data = true;
                 }
             }
         }
-        for (auto const & key_qstr : line_keys) {
+        for (auto const & key_qstr: line_keys) {
             auto ld = _data_manager->getData<LineData>(key_qstr.toStdString());
             if (ld) {
                 auto sz = ld->getImageSize();
                 if (sz.width > 0 && sz.height > 0) {
-                    min_x = 0.0f; min_y = 0.0f;
+                    min_x = 0.0f;
+                    min_y = 0.0f;
                     max_x = std::max(max_x, static_cast<float>(sz.width));
                     max_y = std::max(max_y, static_cast<float>(sz.height));
                     has_data = true;
@@ -429,8 +421,10 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     }
 
     if (!has_data) {
-        min_x = 0.0f; min_y = 0.0f;
-        max_x = 100.0f; max_y = 100.0f;
+        min_x = 0.0f;
+        min_y = 0.0f;
+        max_x = 100.0f;
+        max_y = 100.0f;
     }
 
     // Add margin
@@ -460,30 +454,30 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     builder.setBounds(BoundingBox{min_x, min_y, max_x, max_y});
 
     // --- Render each point key with its own glyph style, sorted back-to-front ---
-    for (auto const & kp : keyed_points) {
+    for (auto const & kp: keyed_points) {
         if (kp.points.empty()) {
             continue;
         }
 
         glm::vec4 const base_color = CorePlotting::hexColorToVec4(
-            kp.glyph_style.hex_color, kp.glyph_style.alpha);
+                kp.glyph_style.hex_color, kp.glyph_style.alpha);
         float const point_size = kp.glyph_style.size;
         auto const glyph_type = CorePlotting::toRenderableGlyphType(kp.glyph_style.glyph_type);
 
         // Collect unique temporal distances and sort descending (farthest first)
         std::vector<int> point_distances;
         point_distances.reserve(kp.points.size());
-        for (auto const & pt : kp.points) {
+        for (auto const & pt: kp.points) {
             point_distances.push_back(pt.absTemporalDistance());
         }
         std::sort(point_distances.begin(), point_distances.end(), std::greater<>());
         point_distances.erase(
-            std::unique(point_distances.begin(), point_distances.end()),
-            point_distances.end());
+                std::unique(point_distances.begin(), point_distances.end()),
+                point_distances.end());
 
-        for (int const dist : point_distances) {
+        for (int const dist: point_distances) {
             float const alpha = CorePlotting::computeTemporalAlpha(
-                dist, half_width, alpha_curve, min_alpha, max_alpha);
+                    dist, half_width, alpha_curve, min_alpha, max_alpha);
 
             CorePlotting::RenderableGlyphBatch batch;
             batch.glyph_type = glyph_type;
@@ -492,16 +486,16 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
             bool const is_current = (dist == 0);
             batch.size = (is_current && highlight_current) ? point_size * 1.5f : point_size;
 
-            for (auto const & pt : kp.points) {
+            for (auto const & pt: kp.points) {
                 if (pt.absTemporalDistance() != dist) {
                     continue;
                 }
                 batch.positions.emplace_back(pt.x, pt.y);
                 batch.entity_ids.push_back(pt.entity_id);
 
-                glm::vec4 color = (is_current && highlight_current)
-                                      ? current_highlight_color
-                                      : glm::vec4{base_color.r, base_color.g, base_color.b, alpha};
+                glm::vec4 const color = (is_current && highlight_current)
+                                          ? current_highlight_color
+                                          : glm::vec4{base_color.r, base_color.g, base_color.b, alpha};
                 batch.colors.push_back(color);
             }
 
@@ -512,13 +506,13 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     }
 
     // --- Render each line key with its own style, sorted back-to-front ---
-    for (auto const & kl : keyed_lines) {
+    for (auto const & kl: keyed_lines) {
         if (kl.lines.empty()) {
             continue;
         }
 
         glm::vec4 const base_color = CorePlotting::hexColorToVec4(
-            kl.line_style.hex_color, kl.line_style.alpha);
+                kl.line_style.hex_color, kl.line_style.alpha);
         float const key_line_width = kl.line_style.thickness;
 
         // Sort lines by temporal distance (farthest first = back-to-front)
@@ -530,32 +524,32 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
                              kl.lines[b].absTemporalDistance();
                   });
 
-        for (size_t const idx : line_indices) {
+        for (size_t const idx: line_indices) {
             auto const & line = kl.lines[idx];
             int const dist = line.absTemporalDistance();
             float const alpha = CorePlotting::computeTemporalAlpha(
-                dist, half_width, alpha_curve, min_alpha,
-                kl.line_style.alpha);
+                    dist, half_width, alpha_curve, min_alpha,
+                    kl.line_style.alpha);
 
             bool const is_current = (dist == 0);
 
             CorePlotting::RenderablePolyLineBatch batch;
             batch.thickness = (is_current && highlight_current)
-                                  ? key_line_width * 1.5f
-                                  : key_line_width;
+                                      ? key_line_width * 1.5f
+                                      : key_line_width;
             batch.model_matrix = glm::mat4(1.0f);
             batch.entity_ids.push_back(line.entity_id);
 
-            glm::vec4 color = (is_current && highlight_current)
-                                  ? current_highlight_color
-                                  : glm::vec4{base_color.r, base_color.g,
-                                              base_color.b, alpha};
+            glm::vec4 const color = (is_current && highlight_current)
+                                      ? current_highlight_color
+                                      : glm::vec4{base_color.r, base_color.g,
+                                                  base_color.b, alpha};
             batch.colors.push_back(color);
 
             int32_t vertex_count = 0;
             batch.line_start_indices.push_back(0);
 
-            for (auto const & v : line.vertices()) {
+            for (auto const & v: line.vertices()) {
                 batch.vertices.push_back(v.x);
                 batch.vertices.push_back(v.y);
                 ++vertex_count;
@@ -569,13 +563,13 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     }
 
     // --- Render each mask contour key with its own style, sorted back-to-front ---
-    for (auto const & kmc : keyed_mask_contours) {
+    for (auto const & kmc: keyed_mask_contours) {
         if (kmc.contours.empty()) {
             continue;
         }
 
         glm::vec4 const base_color = CorePlotting::hexColorToVec4(
-            kmc.line_style.hex_color, kmc.line_style.alpha);
+                kmc.line_style.hex_color, kmc.line_style.alpha);
         float const key_line_width = kmc.line_style.thickness;
 
         // Sort contours by temporal distance (farthest first = back-to-front)
@@ -587,32 +581,32 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
                              kmc.contours[b].absTemporalDistance();
                   });
 
-        for (size_t const idx : contour_indices) {
+        for (size_t const idx: contour_indices) {
             auto const & contour = kmc.contours[idx];
             int const dist = contour.absTemporalDistance();
             float const alpha = CorePlotting::computeTemporalAlpha(
-                dist, half_width, alpha_curve, min_alpha,
-                kmc.line_style.alpha);
+                    dist, half_width, alpha_curve, min_alpha,
+                    kmc.line_style.alpha);
 
             bool const is_current = (dist == 0);
 
             CorePlotting::RenderablePolyLineBatch batch;
             batch.thickness = (is_current && highlight_current)
-                                  ? key_line_width * 1.5f
-                                  : key_line_width;
+                                      ? key_line_width * 1.5f
+                                      : key_line_width;
             batch.model_matrix = glm::mat4(1.0f);
             batch.entity_ids.push_back(contour.entity_id);
 
-            glm::vec4 color = (is_current && highlight_current)
-                                  ? current_highlight_color
-                                  : glm::vec4{base_color.r, base_color.g,
-                                              base_color.b, alpha};
+            glm::vec4 const color = (is_current && highlight_current)
+                                      ? current_highlight_color
+                                      : glm::vec4{base_color.r, base_color.g,
+                                                  base_color.b, alpha};
             batch.colors.push_back(color);
 
             int32_t vertex_count = 0;
             batch.line_start_indices.push_back(0);
 
-            for (auto const & v : contour.vertices()) {
+            for (auto const & v: contour.vertices()) {
                 batch.vertices.push_back(v.x);
                 batch.vertices.push_back(v.y);
                 ++vertex_count;
@@ -630,8 +624,8 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
 
     // Cache current-frame points for click selection
     _current_frame_points.clear();
-    for (auto const & kp : keyed_points) {
-        for (auto const & pt : kp.points) {
+    for (auto const & kp: keyed_points) {
+        for (auto const & pt: kp.points) {
             if (pt.temporal_distance == 0) {
                 _current_frame_points.push_back(pt);
             }
@@ -639,20 +633,19 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     }
 }
 
-void OnionSkinViewOpenGLWidget::updateMatrices()
-{
+void OnionSkinViewOpenGLWidget::updateMatrices() {
     // Inverted Y-axis projection: Y increases downward (image coordinates).
     // This matches MediaWidget convention where Y=0 is at the top.
     auto const & vs = _cached_view_state;
-    float const x_range = static_cast<float>(vs.x_max - vs.x_min);
+    auto const x_range = static_cast<float>(vs.x_max - vs.x_min);
     float const x_center = static_cast<float>(vs.x_min + vs.x_max) / 2.0f;
-    float const y_range = static_cast<float>(vs.y_max - vs.y_min);
+    auto const y_range = static_cast<float>(vs.y_max - vs.y_min);
     float const y_center = static_cast<float>(vs.y_min + vs.y_max) / 2.0f;
 
     float const zoomed_x = x_range / static_cast<float>(vs.x_zoom);
     float const zoomed_y = y_range / static_cast<float>(vs.y_zoom);
-    float const pan_x = static_cast<float>(vs.x_pan);
-    float const pan_y = static_cast<float>(vs.y_pan);
+    auto const pan_x = static_cast<float>(vs.x_pan);
+    auto const pan_y = static_cast<float>(vs.y_pan);
 
     float const left = x_center - zoomed_x / 2.0f + pan_x;
     float const right = x_center + zoomed_x / 2.0f + pan_x;
@@ -664,8 +657,7 @@ void OnionSkinViewOpenGLWidget::updateMatrices()
     _view_matrix = glm::mat4(1.0f);
 }
 
-void OnionSkinViewOpenGLWidget::handlePanning(int delta_x, int delta_y)
-{
+void OnionSkinViewOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
@@ -673,34 +665,31 @@ void OnionSkinViewOpenGLWidget::handlePanning(int delta_x, int delta_y)
     // screen-down corresponds to increasing world Y, but the standard
     // panning helper assumes screen-down corresponds to decreasing world Y).
     WhiskerToolbox::Plots::handlePanning(
-        *_state, _cached_view_state, delta_x, -delta_y, _widget_width,
-        _widget_height);
+            *_state, _cached_view_state, delta_x, -delta_y, _widget_width,
+            _widget_height);
 }
 
-void OnionSkinViewOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
-{
+void OnionSkinViewOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes) {
     if (!_state) {
         return;
     }
     WhiskerToolbox::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
 }
 
-QPointF OnionSkinViewOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
-{
+QPointF OnionSkinViewOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
     return WhiskerToolbox::Plots::screenToWorld(_projection_matrix, _widget_width,
-                                               _widget_height, screen_pos);
+                                                _widget_height, screen_pos);
 }
 
 std::optional<EntityId> OnionSkinViewOpenGLWidget::findNearestPointAtCurrentTime(
-    QPointF const & world_pos, float max_distance_sq) const
-{
+        QPointF const & world_pos, float max_distance_sq) const {
     float best_dist_sq = max_distance_sq;
     std::optional<EntityId> best_id;
 
-    float const wx = static_cast<float>(world_pos.x());
-    float const wy = static_cast<float>(world_pos.y());
+    auto const wx = static_cast<float>(world_pos.x());
+    auto const wy = static_cast<float>(world_pos.y());
 
-    for (auto const & pt : _current_frame_points) {
+    for (auto const & pt: _current_frame_points) {
         float const dx = pt.x - wx;
         float const dy = pt.y - wy;
         float const dist_sq = dx * dx + dy * dy;

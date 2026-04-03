@@ -25,8 +25,8 @@
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "GatherResult/GatherResult.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
@@ -70,6 +70,7 @@ protected:
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
+    void showEvent(QShowEvent * event) override;
 
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
@@ -120,4 +121,4 @@ private:
     CorePlotting::HistogramStyle _histogram_style;
 };
 
-#endif // PSTHPLOT_OPENGLWIDGET_HPP
+#endif// PSTHPLOT_OPENGLWIDGET_HPP

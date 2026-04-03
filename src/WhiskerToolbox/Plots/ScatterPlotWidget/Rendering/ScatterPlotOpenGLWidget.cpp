@@ -37,6 +37,7 @@
 #include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QShowEvent>
 #include <QWheelEvent>
 
 #include <algorithm>
@@ -234,6 +235,11 @@ void ScatterPlotOpenGLWidget::resizeGL(int w, int h) {
     _widget_height = std::max(1, h);
     glViewport(0, 0, _widget_width, _widget_height);
     updateMatrices();
+}
+
+void ScatterPlotOpenGLWidget::showEvent(QShowEvent * event) {
+    QOpenGLWidget::showEvent(event);
+    update();
 }
 
 void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {

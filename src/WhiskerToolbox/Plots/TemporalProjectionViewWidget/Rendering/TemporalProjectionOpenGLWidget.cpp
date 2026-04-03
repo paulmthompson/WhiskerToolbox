@@ -25,14 +25,15 @@
 #include <QKeyEvent>
 #include <QMenu>
 #include <QMouseEvent>
+#include <QShowEvent>
 #include <QWheelEvent>
 
 #include <cmath>
 #include <limits>
+#include <utility>
 
 TemporalProjectionOpenGLWidget::TemporalProjectionOpenGLWidget(QWidget * parent)
-    : QOpenGLWidget(parent)
-{
+    : QOpenGLWidget(parent) {
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
@@ -43,20 +44,18 @@ TemporalProjectionOpenGLWidget::TemporalProjectionOpenGLWidget(QWidget * parent)
     setFormat(format);
 }
 
-TemporalProjectionOpenGLWidget::~TemporalProjectionOpenGLWidget()
-{
+TemporalProjectionOpenGLWidget::~TemporalProjectionOpenGLWidget() {
     makeCurrent();
     _preview_renderer.cleanup();
     _scene_renderer.cleanup();
     doneCurrent();
 }
 
-void TemporalProjectionOpenGLWidget::setState(std::shared_ptr<TemporalProjectionViewState> state)
-{
+void TemporalProjectionOpenGLWidget::setState(std::shared_ptr<TemporalProjectionViewState> state) {
     if (_state) {
         _state->disconnect(this);
     }
-    _state = state;
+    _state = std::move(state);
     if (_state) {
         _cached_view_state = _state->viewState();
         connect(_state.get(), &TemporalProjectionViewState::stateChanged,
@@ -96,20 +95,17 @@ void TemporalProjectionOpenGLWidget::setState(std::shared_ptr<TemporalProjection
     }
 }
 
-void TemporalProjectionOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager)
-{
-    _data_manager = data_manager;
+void TemporalProjectionOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    _data_manager = std::move(data_manager);
     _scene_dirty = true;
     update();
 }
 
-std::pair<double, double> TemporalProjectionOpenGLWidget::getViewBounds() const
-{
+std::pair<double, double> TemporalProjectionOpenGLWidget::getViewBounds() const {
     return {_cached_view_state.x_min, _cached_view_state.x_max};
 }
 
-void TemporalProjectionOpenGLWidget::initializeGL()
-{
+void TemporalProjectionOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
     glClearColor(0.95f, 0.95f, 0.95f, 1.0f);
     glEnable(GL_DEPTH_TEST);
@@ -130,8 +126,8 @@ void TemporalProjectionOpenGLWidget::initializeGL()
 
     // Set visible colors for line states
     // These are defaults; will be updated from state after initialization
-    _line_renderer.setGlobalColor(glm::vec4{0.8f, 0.2f, 0.2f, 0.6f});   // Semi-transparent red for normal lines
-    _line_renderer.setSelectedColor(glm::vec4{1.0f, 0.8f, 0.0f, 1.0f}); // Bright yellow for selected lines
+    _line_renderer.setGlobalColor(glm::vec4{0.8f, 0.2f, 0.2f, 0.6f});  // Semi-transparent red for normal lines
+    _line_renderer.setSelectedColor(glm::vec4{1.0f, 0.8f, 0.0f, 1.0f});// Bright yellow for selected lines
     _line_renderer.setLineWidth(1.5f);
 
     // Apply state-based line style if state is already set
@@ -156,12 +152,11 @@ void TemporalProjectionOpenGLWidget::initializeGL()
     if (!_intersector) {
         _intersector = std::make_unique<CorePlotting::CpuLineBatchIntersector>();
         qDebug() << "TemporalProjectionOpenGLWidget: Using CPU intersector fallback";
-    }    
+    }
     _opengl_initialized = true;
 }
 
-void TemporalProjectionOpenGLWidget::paintGL()
-{
+void TemporalProjectionOpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!_state || !_opengl_initialized) {
@@ -198,16 +193,19 @@ void TemporalProjectionOpenGLWidget::paintGL()
     }
 }
 
-void TemporalProjectionOpenGLWidget::resizeGL(int w, int h)
-{
+void TemporalProjectionOpenGLWidget::resizeGL(int w, int h) {
     _widget_width = std::max(1, w);
     _widget_height = std::max(1, h);
     glViewport(0, 0, _widget_width, _widget_height);
     updateMatrices();
 }
 
-void TemporalProjectionOpenGLWidget::mousePressEvent(QMouseEvent * event)
-{
+void TemporalProjectionOpenGLWidget::showEvent(QShowEvent * event) {
+    QOpenGLWidget::showEvent(event);
+    update();
+}
+
+void TemporalProjectionOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         bool const ctrl_held = (event->modifiers() & Qt::ControlModifier) != 0;
         bool const shift_held = (event->modifiers() & Qt::ShiftModifier) != 0;
@@ -215,7 +213,7 @@ void TemporalProjectionOpenGLWidget::mousePressEvent(QMouseEvent * event)
         if (ctrl_held) {
             // Selection mode
             std::string const selection_mode = _state ? _state->getSelectionMode().toStdString() : "none";
-            
+
             if (selection_mode == "point") {
                 // Point selection is immediate on click
                 handleClickSelection(event->pos());
@@ -236,8 +234,7 @@ void TemporalProjectionOpenGLWidget::mousePressEvent(QMouseEvent * event)
     event->accept();
 }
 
-void TemporalProjectionOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
-{
+void TemporalProjectionOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (_is_selecting) {
         // Update line selection
         updateLineSelection(event->pos());
@@ -271,8 +268,7 @@ void TemporalProjectionOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
     event->accept();
 }
 
-void TemporalProjectionOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
-{
+void TemporalProjectionOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         if (_is_selecting) {
             completeLineSelection();
@@ -284,13 +280,11 @@ void TemporalProjectionOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
     event->accept();
 }
 
-void TemporalProjectionOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
-{
+void TemporalProjectionOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     QOpenGLWidget::mouseDoubleClickEvent(event);
 }
 
-void TemporalProjectionOpenGLWidget::wheelEvent(QWheelEvent * event)
-{
+void TemporalProjectionOpenGLWidget::wheelEvent(QWheelEvent * event) {
     float const delta = event->angleDelta().y() / 120.0f;
     bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
@@ -298,14 +292,12 @@ void TemporalProjectionOpenGLWidget::wheelEvent(QWheelEvent * event)
     event->accept();
 }
 
-void TemporalProjectionOpenGLWidget::onStateChanged()
-{
+void TemporalProjectionOpenGLWidget::onStateChanged() {
     _scene_dirty = true;
     update();
 }
 
-void TemporalProjectionOpenGLWidget::onViewStateChanged()
-{
+void TemporalProjectionOpenGLWidget::onViewStateChanged() {
     if (_state) {
         _cached_view_state = _state->viewState();
     }
@@ -314,14 +306,12 @@ void TemporalProjectionOpenGLWidget::onViewStateChanged()
     emit viewBoundsChanged();
 }
 
-void TemporalProjectionOpenGLWidget::onDataKeysChanged()
-{
+void TemporalProjectionOpenGLWidget::onDataKeysChanged() {
     _scene_dirty = true;
     update();
 }
 
-void TemporalProjectionOpenGLWidget::onLineStyleChanged()
-{
+void TemporalProjectionOpenGLWidget::onLineStyleChanged() {
     if (_opengl_initialized) {
         makeCurrent();
         applyLineStyle();
@@ -330,20 +320,18 @@ void TemporalProjectionOpenGLWidget::onLineStyleChanged()
     update();
 }
 
-void TemporalProjectionOpenGLWidget::applyLineStyle()
-{
+void TemporalProjectionOpenGLWidget::applyLineStyle() {
     if (!_state) {
         return;
     }
     auto const & line_style = _state->getLineStyle();
     glm::vec4 const color = CorePlotting::hexColorToVec4(
-        line_style.hex_color, line_style.alpha);
+            line_style.hex_color, line_style.alpha);
     _line_renderer.setGlobalColor(color);
     _line_renderer.setLineWidth(line_style.thickness);
 }
 
-void TemporalProjectionOpenGLWidget::rebuildScene()
-{
+void TemporalProjectionOpenGLWidget::rebuildScene() {
     if (!_state || !_data_manager) {
         return;
     }
@@ -360,7 +348,7 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     std::vector<PointBatchInfo> point_batches;
     point_batches.reserve(point_keys.size());
 
-    for (auto const & key_qstr : point_keys) {
+    for (auto const & key_qstr: point_keys) {
         std::string const key = key_qstr.toStdString();
         auto point_data = _data_manager->getData<PointData>(key);
         if (!point_data) {
@@ -384,8 +372,8 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     bool has_data = false;
 
     // Scan points
-    for (auto const & pb : point_batches) {
-        for (auto const & pt : pb.mapped) {
+    for (auto const & pb: point_batches) {
+        for (auto const & pt: pb.mapped) {
             min_x = std::min(min_x, pt.x);
             min_y = std::min(min_y, pt.y);
             max_x = std::max(max_x, pt.x);
@@ -395,15 +383,15 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     }
 
     // Scan line data from the raw LineData (iterate segments)
-    for (auto const & key_qstr : line_keys) {
+    for (auto const & key_qstr: line_keys) {
         std::string const key = key_qstr.toStdString();
         auto line_data = _data_manager->getData<LineData>(key);
         if (!line_data || line_data->getTotalEntryCount() == 0) {
             continue;
         }
-        for (auto const elem : line_data->elementsView()) {
+        for (auto const elem: line_data->elementsView()) {
             auto const & line = elem.data();
-            for (auto const & pt : line) {
+            for (auto const & pt: line) {
                 min_x = std::min(min_x, pt.x);
                 min_y = std::min(min_y, pt.y);
                 max_x = std::max(max_x, pt.x);
@@ -417,24 +405,26 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     // or use default 100×100
     if (!has_data) {
         // Try ImageSize as fallback
-        for (auto const & key_qstr : point_keys) {
+        for (auto const & key_qstr: point_keys) {
             auto pd = _data_manager->getData<PointData>(key_qstr.toStdString());
             if (pd) {
                 auto sz = pd->getImageSize();
                 if (sz.width > 0 && sz.height > 0) {
-                    min_x = 0.0f; min_y = 0.0f;
+                    min_x = 0.0f;
+                    min_y = 0.0f;
                     max_x = std::max(max_x, static_cast<float>(sz.width));
                     max_y = std::max(max_y, static_cast<float>(sz.height));
                     has_data = true;
                 }
             }
         }
-        for (auto const & key_qstr : line_keys) {
+        for (auto const & key_qstr: line_keys) {
             auto ld = _data_manager->getData<LineData>(key_qstr.toStdString());
             if (ld) {
                 auto sz = ld->getImageSize();
                 if (sz.width > 0 && sz.height > 0) {
-                    min_x = 0.0f; min_y = 0.0f;
+                    min_x = 0.0f;
+                    min_y = 0.0f;
                     max_x = std::max(max_x, static_cast<float>(sz.width));
                     max_y = std::max(max_y, static_cast<float>(sz.height));
                     has_data = true;
@@ -444,8 +434,10 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     }
 
     if (!has_data) {
-        min_x = 0.0f; min_y = 0.0f;
-        max_x = 100.0f; max_y = 100.0f;
+        min_x = 0.0f;
+        min_y = 0.0f;
+        max_x = 100.0f;
+        max_y = 100.0f;
     }
 
     // Add a small margin so points at edges aren't clipped
@@ -475,15 +467,15 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     // Lines are rendered exclusively via BatchLineRenderer (avoids double-rendering)
     CorePlotting::SceneBuilder builder;
     builder.setBounds(BoundingBox{min_x, min_y, max_x, max_y});
-    
+
     auto const & glyph_data = _state->glyphStyleState()->data();
 
-    for (auto const & pb : point_batches) {
+    for (auto const & pb: point_batches) {
         CorePlotting::GlyphStyle style;
         style.glyph_type = CorePlotting::toRenderableGlyphType(glyph_data.glyph_type);
         style.size = glyph_data.size;
         style.color = CorePlotting::hexColorToVec4(glyph_data.hex_color, glyph_data.alpha);
-        
+
         builder.addGlyphs("points_" + pb.key, pb.mapped, style);
     }
 
@@ -491,10 +483,10 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     _scene = builder.build();
 
     if (!_selected_entity_ids.empty()) {
-        for (auto & glyph_batch : _scene.glyph_batches) {
+        for (auto & glyph_batch: _scene.glyph_batches) {
             for (size_t i = 0; i < glyph_batch.entity_ids.size(); ++i) {
                 if (_selected_entity_ids.count(glyph_batch.entity_ids[i])) {
-                    glyph_batch.colors[i] = glm::vec4{1.0f, 0.6f, 0.0f, 0.9f}; // Orange for selected
+                    glyph_batch.colors[i] = glm::vec4{1.0f, 0.6f, 0.0f, 0.9f};// Orange for selected
                 }
             }
         }
@@ -509,7 +501,7 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     batch.canvas_width = static_cast<float>(_widget_width);
     batch.canvas_height = static_cast<float>(_widget_height);
 
-    for (auto const & key_qstr : line_keys) {
+    for (auto const & key_qstr: line_keys) {
         std::string const key = key_qstr.toStdString();
         auto line_data = _data_manager->getData<LineData>(key);
         if (!line_data || line_data->getTotalEntryCount() == 0) {
@@ -517,22 +509,22 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
         }
 
         auto key_batch = CorePlotting::buildLineBatchFromLineData(
-            *line_data,
-            static_cast<float>(_widget_width),
-            static_cast<float>(_widget_height));
+                *line_data,
+                static_cast<float>(_widget_width),
+                static_cast<float>(_widget_height));
 
         // Merge into the main batch
         std::uint32_t const offset_line_id = batch.numLines();
         std::uint32_t const offset_segment = batch.numSegments();
 
         batch.segments.insert(batch.segments.end(),
-                             key_batch.segments.begin(), key_batch.segments.end());
+                              key_batch.segments.begin(), key_batch.segments.end());
 
-        for (auto lid : key_batch.line_ids) {
+        for (auto lid: key_batch.line_ids) {
             batch.line_ids.push_back(lid + offset_line_id);
         }
 
-        for (auto info : key_batch.lines) {
+        for (auto info: key_batch.lines) {
             info.first_segment += offset_segment;
             batch.lines.push_back(info);
         }
@@ -558,39 +550,34 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     _line_renderer.syncFromStore();
 }
 
-void TemporalProjectionOpenGLWidget::updateMatrices()
-{
+void TemporalProjectionOpenGLWidget::updateMatrices() {
     _projection_matrix =
-        WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
-void TemporalProjectionOpenGLWidget::handlePanning(int delta_x, int delta_y)
-{
+void TemporalProjectionOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
     WhiskerToolbox::Plots::handlePanning(
-        *_state, _cached_view_state, delta_x, delta_y, _widget_width,
-        _widget_height);
+            *_state, _cached_view_state, delta_x, delta_y, _widget_width,
+            _widget_height);
 }
 
-void TemporalProjectionOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
-{
+void TemporalProjectionOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes) {
     if (!_state) {
         return;
     }
     WhiskerToolbox::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
 }
 
-QPointF TemporalProjectionOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
-{
+QPointF TemporalProjectionOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
     return WhiskerToolbox::Plots::screenToWorld(_projection_matrix, _widget_width,
-                                               _widget_height, screen_pos);
+                                                _widget_height, screen_pos);
 }
 
-void TemporalProjectionOpenGLWidget::keyPressEvent(QKeyEvent * event)
-{
+void TemporalProjectionOpenGLWidget::keyPressEvent(QKeyEvent * event) {
     if (_polygon_controller.isActive()) {
         if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
             completePolygonSelection();
@@ -615,8 +602,7 @@ void TemporalProjectionOpenGLWidget::keyPressEvent(QKeyEvent * event)
     QOpenGLWidget::keyPressEvent(event);
 }
 
-void TemporalProjectionOpenGLWidget::keyReleaseEvent(QKeyEvent * event)
-{
+void TemporalProjectionOpenGLWidget::keyReleaseEvent(QKeyEvent * event) {
     if (event->key() == Qt::Key_Escape && _is_selecting) {
         cancelLineSelection();
         event->accept();
@@ -629,19 +615,18 @@ void TemporalProjectionOpenGLWidget::keyReleaseEvent(QKeyEvent * event)
 // Selection
 // =============================================================================
 
-void TemporalProjectionOpenGLWidget::clearSelection()
-{
+void TemporalProjectionOpenGLWidget::clearSelection() {
     _selected_entity_ids.clear();
 
     // Clear line selection mask (cheap GPU update)
     auto const & batch = _line_store.cpuData();
     if (batch.numLines() > 0) {
-        std::vector<std::uint32_t> mask(batch.numLines(), 0);
+        std::vector<std::uint32_t> const mask(batch.numLines(), 0);
         _line_store.updateSelectionMask(mask);
         _line_renderer.syncFromStore();
     }
 
-    _scene_dirty = true;  // Need rebuild for point color reset
+    _scene_dirty = true;// Need rebuild for point color reset
     update();
     emit entitiesSelected(_selected_entity_ids);
     if (_state) {
@@ -649,41 +634,39 @@ void TemporalProjectionOpenGLWidget::clearSelection()
     }
 }
 
-glm::vec2 TemporalProjectionOpenGLWidget::screenToNDC(QPoint const & screen_pos) const
-{
+glm::vec2 TemporalProjectionOpenGLWidget::screenToNDC(QPoint const & screen_pos) const {
     return WhiskerToolbox::Plots::screenToNDC(screen_pos, _widget_width,
-                                             _widget_height);
+                                              _widget_height);
 }
 
-void TemporalProjectionOpenGLWidget::handleClickSelection(QPoint const & screen_pos)
-{
+void TemporalProjectionOpenGLWidget::handleClickSelection(QPoint const & screen_pos) {
     // Convert screen position to world coordinates
-    QPointF world = screenToWorld(screen_pos);
-    
+    QPointF const world = screenToWorld(screen_pos);
+
     // Configure hit tester with reasonable tolerance
-    float world_per_pixel_x = (_cached_view_state.x_max - _cached_view_state.x_min) /
+    float const world_per_pixel_x = (_cached_view_state.x_max - _cached_view_state.x_min) /
                               (_widget_width * _cached_view_state.x_zoom);
-    float world_tolerance = 10.0f * world_per_pixel_x;  // 10 pixel tolerance
-    
+    float const world_tolerance = 10.0f * world_per_pixel_x;// 10 pixel tolerance
+
     CorePlotting::HitTestConfig config;
     config.point_tolerance = world_tolerance;
     config.prioritize_discrete = true;
-    
-    CorePlotting::SceneHitTester tester(config);
-    
+
+    CorePlotting::SceneHitTester const tester(config);
+
     // Perform QuadTree query for point selection
     auto result = tester.queryQuadTree(
-        static_cast<float>(world.x()),
-        static_cast<float>(world.y()),
-        _scene);
-    
+            static_cast<float>(world.x()),
+            static_cast<float>(world.y()),
+            _scene);
+
     if (result.hasHit()) {
         // Toggle selection of the clicked entity
         if (!result.entity_id.has_value()) {
-            return; // No EntityId means it's not selectable (e.g. background hit)
+            return;// No EntityId means it's not selectable (e.g. background hit)
         }
         EntityId const entity_id = result.entity_id.value();
-        
+
         bool const shift_held = QApplication::keyboardModifiers() & Qt::ShiftModifier;
         if (shift_held) {
             // Remove mode: deselect the entity
@@ -696,7 +679,7 @@ void TemporalProjectionOpenGLWidget::handleClickSelection(QPoint const & screen_
                 _selected_entity_ids.insert(entity_id);
             }
         }
-        
+
         _scene_dirty = true;
         update();
         emit entitiesSelected(_selected_entity_ids);
@@ -706,8 +689,7 @@ void TemporalProjectionOpenGLWidget::handleClickSelection(QPoint const & screen_
     }
 }
 
-void TemporalProjectionOpenGLWidget::startLineSelection(QPoint const & screen_pos, bool remove_mode)
-{
+void TemporalProjectionOpenGLWidget::startLineSelection(QPoint const & screen_pos, bool remove_mode) {
     _is_selecting = true;
     _selection_remove_mode = remove_mode;
     _selection_start_ndc = screenToNDC(screen_pos);
@@ -718,15 +700,13 @@ void TemporalProjectionOpenGLWidget::startLineSelection(QPoint const & screen_po
     update();
 }
 
-void TemporalProjectionOpenGLWidget::updateLineSelection(QPoint const & screen_pos)
-{
+void TemporalProjectionOpenGLWidget::updateLineSelection(QPoint const & screen_pos) {
     _selection_end_ndc = screenToNDC(screen_pos);
     _selection_end_screen = screen_pos;
     update();
 }
 
-void TemporalProjectionOpenGLWidget::completeLineSelection()
-{
+void TemporalProjectionOpenGLWidget::completeLineSelection() {
     _is_selecting = false;
     setCursor(Qt::ArrowCursor);
 
@@ -735,48 +715,45 @@ void TemporalProjectionOpenGLWidget::completeLineSelection()
         return;
     }
     std::vector<CorePlotting::LineBatchIndex> const hit_indices =
-        WhiskerToolbox::Plots::runLineSelectionIntersection(
-            *_intersector, _line_store.cpuData(), _selection_start_ndc,
-            _selection_end_ndc, _projection_matrix, _view_matrix);
+            WhiskerToolbox::Plots::runLineSelectionIntersection(
+                    *_intersector, _line_store.cpuData(), _selection_start_ndc,
+                    _selection_end_ndc, _projection_matrix, _view_matrix);
     applyLineIntersectionResults(hit_indices, _selection_remove_mode);
     update();
 }
 
-void TemporalProjectionOpenGLWidget::cancelLineSelection()
-{
+void TemporalProjectionOpenGLWidget::cancelLineSelection() {
     _is_selecting = false;
     setCursor(Qt::ArrowCursor);
     update();
 }
 
 CorePlotting::Interaction::GlyphPreview
-TemporalProjectionOpenGLWidget::buildSelectionPreview() const
-{
+TemporalProjectionOpenGLWidget::buildSelectionPreview() const {
     auto preview = WhiskerToolbox::Plots::buildLineSelectionPreview(
-        _selection_start_screen, _selection_end_screen, _selection_remove_mode);
+            _selection_start_screen, _selection_end_screen, _selection_remove_mode);
     // Override stroke color: light background needs dark line (not white)
     if (!_selection_remove_mode) {
-        preview.stroke_color = glm::vec4{0.0f, 0.0f, 0.0f, 0.9f}; // Black
+        preview.stroke_color = glm::vec4{0.0f, 0.0f, 0.0f, 0.9f};// Black
     }
     return preview;
 }
 
 
 void TemporalProjectionOpenGLWidget::applyLineIntersectionResults(
-    std::vector<CorePlotting::LineBatchIndex> const & hit_indices,
-    bool remove)
-{
+        std::vector<CorePlotting::LineBatchIndex> const & hit_indices,
+        bool remove) {
     if (hit_indices.empty() && !remove) {
         return;
     }
 
     // Extract EntityIDs from the intersected lines
     auto const & batch = _line_store.cpuData();
-    
-    for (auto const line_idx : hit_indices) {
+
+    for (auto const line_idx: hit_indices) {
         if (line_idx < batch.lines.size()) {
             EntityId const entity_id = batch.lines[line_idx].entity_id;
-            
+
             if (remove) {
                 _selected_entity_ids.erase(entity_id);
             } else {
@@ -784,7 +761,7 @@ void TemporalProjectionOpenGLWidget::applyLineIntersectionResults(
             }
         }
     }
-    
+
     // Update selection mask on the store (cheap GPU-only update, no full rebuild)
     std::vector<std::uint32_t> mask(batch.numLines(), 0);
     for (std::uint32_t i = 0; i < batch.numLines(); ++i) {
@@ -805,8 +782,7 @@ void TemporalProjectionOpenGLWidget::applyLineIntersectionResults(
 // Group Manager Integration
 // =============================================================================
 
-void TemporalProjectionOpenGLWidget::setGroupManager(GroupManager * group_manager)
-{
+void TemporalProjectionOpenGLWidget::setGroupManager(GroupManager * group_manager) {
     // Disconnect from previous group manager if any
     if (_group_manager) {
         disconnect(_group_manager, nullptr, this, nullptr);
@@ -841,8 +817,7 @@ void TemporalProjectionOpenGLWidget::setGroupManager(GroupManager * group_manage
     }
 }
 
-void TemporalProjectionOpenGLWidget::createContextMenu()
-{
+void TemporalProjectionOpenGLWidget::createContextMenu() {
     _context_menu = new QMenu(this);
 
     // Create the group context menu handler
@@ -880,8 +855,7 @@ void TemporalProjectionOpenGLWidget::createContextMenu()
     });
 }
 
-void TemporalProjectionOpenGLWidget::contextMenuEvent(QContextMenuEvent * event)
-{
+void TemporalProjectionOpenGLWidget::contextMenuEvent(QContextMenuEvent * event) {
     if (!_context_menu || !_group_manager) {
         QOpenGLWidget::contextMenuEvent(event);
         return;
@@ -892,8 +866,7 @@ void TemporalProjectionOpenGLWidget::contextMenuEvent(QContextMenuEvent * event)
     event->accept();
 }
 
-void TemporalProjectionOpenGLWidget::applyGroupColorsToScene()
-{
+void TemporalProjectionOpenGLWidget::applyGroupColorsToScene() {
     if (!_state || !_state->colorByGroup() || !_group_manager) {
         return;
     }
@@ -903,7 +876,7 @@ void TemporalProjectionOpenGLWidget::applyGroupColorsToScene()
     //   2. Group color            — applied here
     //   3. Default glyph color    — already set by addGlyphs
 
-    for (auto & batch : _scene.glyph_batches) {
+    for (auto & batch: _scene.glyph_batches) {
         for (std::size_t i = 0; i < batch.entity_ids.size(); ++i) {
             EntityId const entity_id = batch.entity_ids[i];
 
@@ -914,7 +887,7 @@ void TemporalProjectionOpenGLWidget::applyGroupColorsToScene()
 
             int const group_id = _group_manager->getEntityGroup(entity_id);
             if (group_id == -1) {
-                continue;  // Not in any group — keep default color
+                continue;// Not in any group — keep default color
             }
 
             QColor const group_color = _group_manager->getEntityColor(entity_id, QColor());
@@ -923,10 +896,10 @@ void TemporalProjectionOpenGLWidget::applyGroupColorsToScene()
             }
 
             batch.colors[i] = glm::vec4(
-                static_cast<float>(group_color.redF()),
-                static_cast<float>(group_color.greenF()),
-                static_cast<float>(group_color.blueF()),
-                static_cast<float>(group_color.alphaF()));
+                    static_cast<float>(group_color.redF()),
+                    static_cast<float>(group_color.greenF()),
+                    static_cast<float>(group_color.blueF()),
+                    static_cast<float>(group_color.alphaF()));
         }
     }
 }
@@ -935,8 +908,7 @@ void TemporalProjectionOpenGLWidget::applyGroupColorsToScene()
 // Polygon Selection
 // =============================================================================
 
-void TemporalProjectionOpenGLWidget::handlePolygonCtrlClick(QMouseEvent * event)
-{
+void TemporalProjectionOpenGLWidget::handlePolygonCtrlClick(QMouseEvent * event) {
     auto const screen_x = static_cast<float>(event->pos().x());
     auto const screen_y = static_cast<float>(event->pos().y());
     QPointF const world = screenToWorld(event->pos());
@@ -945,12 +917,12 @@ void TemporalProjectionOpenGLWidget::handlePolygonCtrlClick(QMouseEvent * event)
         // Start a new polygon
         _polygon_vertices_world.clear();
         _polygon_vertices_world.emplace_back(
-            static_cast<float>(world.x()), static_cast<float>(world.y()));
+                static_cast<float>(world.x()), static_cast<float>(world.y()));
         _polygon_controller.start(screen_x, screen_y, "temporal_polygon_selection");
     } else {
         // Add a vertex
         _polygon_vertices_world.emplace_back(
-            static_cast<float>(world.x()), static_cast<float>(world.y()));
+                static_cast<float>(world.x()), static_cast<float>(world.y()));
         auto result = _polygon_controller.addVertex(screen_x, screen_y);
         if (result == CorePlotting::Interaction::AddVertexResult::ClosedPolygon) {
             completePolygonSelection();
@@ -960,8 +932,7 @@ void TemporalProjectionOpenGLWidget::handlePolygonCtrlClick(QMouseEvent * event)
     update();
 }
 
-void TemporalProjectionOpenGLWidget::completePolygonSelection()
-{
+void TemporalProjectionOpenGLWidget::completePolygonSelection() {
     if (!_state || _polygon_vertices_world.size() < 3) {
         cancelPolygonSelection();
         return;
@@ -970,24 +941,24 @@ void TemporalProjectionOpenGLWidget::completePolygonSelection()
     _polygon_controller.complete();
 
     // Run point-in-polygon selection on point glyph batches
-    for (auto const & batch : _scene.glyph_batches) {
+    for (auto const & batch: _scene.glyph_batches) {
         // Extract x and y from the batch positions
         std::vector<float> x_values;
         std::vector<float> y_values;
         x_values.reserve(batch.positions.size());
         y_values.reserve(batch.positions.size());
-        for (auto const & pos : batch.positions) {
+        for (auto const & pos: batch.positions) {
             x_values.push_back(pos.x);
             y_values.push_back(pos.y);
         }
 
         auto selection_result = CorePlotting::Selection::selectPointsInPolygon(
-            _polygon_vertices_world,
-            x_values,
-            y_values);
+                _polygon_vertices_world,
+                x_values,
+                y_values);
 
         // Add selected points to the entity selection (additive)
-        for (auto idx : selection_result.selected_indices) {
+        for (auto idx: selection_result.selected_indices) {
             if (idx < batch.entity_ids.size()) {
                 _selected_entity_ids.insert(batch.entity_ids[idx]);
             }
@@ -1003,8 +974,7 @@ void TemporalProjectionOpenGLWidget::completePolygonSelection()
     }
 }
 
-void TemporalProjectionOpenGLWidget::cancelPolygonSelection()
-{
+void TemporalProjectionOpenGLWidget::cancelPolygonSelection() {
     _polygon_controller.cancel();
     _polygon_vertices_world.clear();
     update();
