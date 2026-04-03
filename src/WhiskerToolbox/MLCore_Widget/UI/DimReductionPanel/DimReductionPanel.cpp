@@ -176,6 +176,14 @@ std::unique_ptr<MLCore::MLModelParametersBase> DimReductionPanel::currentParamet
         return params;
     }
 
+    if (name == "Supervised Robust PCA") {
+        auto params = std::make_unique<MLCore::SupervisedRobustPCAParameters>();
+        params->n_components = static_cast<std::size_t>(ui->rpcaComponentsSpinBox->value());
+        params->lambda = ui->rpcaLambdaSpinBox->value();
+        params->max_iter = static_cast<std::size_t>(ui->rpcaMaxIterSpinBox->value());
+        return params;
+    }
+
     return nullptr;
 }
 
@@ -459,13 +467,14 @@ void DimReductionPanel::_onAlgorithmChanged(int index) {
     if (isSupervisedMode()) {
         // Supervised PCA reuses the PCA params widget (n_components + scale)
         bool const is_spca = (name == "Supervised PCA");
+        bool const is_srpca = (name == "Supervised Robust PCA");
         ui->pcaParamsWidget->setVisible(is_spca);
         ui->tsneParamsWidget->setVisible(false);
-        ui->robustPcaParamsWidget->setVisible(false);
+        ui->robustPcaParamsWidget->setVisible(is_srpca);
 
         // Hide class name fields for non-discriminative algorithms (e.g. sPCA)
         // where output dimensions are user-controlled, not class-count-based.
-        bool const show_class_names = !is_spca;
+        bool const show_class_names = !is_spca && !is_srpca;
         ui->positiveClassLabel->setVisible(show_class_names);
         ui->positiveClassEdit->setVisible(show_class_names);
         ui->negativeClassLabel->setVisible(show_class_names);
@@ -736,13 +745,15 @@ void DimReductionPanel::_populateAlgorithms() {
             auto const first_name =
                     ui->algorithmComboBox->currentData().toString().toStdString();
             bool const is_spca = (first_name == "Supervised PCA");
+            bool const is_srpca = (first_name == "Supervised Robust PCA");
             ui->pcaParamsWidget->setVisible(is_spca);
+            ui->robustPcaParamsWidget->setVisible(is_srpca);
 
             // Hide class name fields for non-discriminative algorithms
-            ui->positiveClassLabel->setVisible(!is_spca);
-            ui->positiveClassEdit->setVisible(!is_spca);
-            ui->negativeClassLabel->setVisible(!is_spca);
-            ui->negativeClassEdit->setVisible(!is_spca);
+            ui->positiveClassLabel->setVisible(!is_spca && !is_srpca);
+            ui->positiveClassEdit->setVisible(!is_spca && !is_srpca);
+            ui->negativeClassLabel->setVisible(!is_spca && !is_srpca);
+            ui->negativeClassEdit->setVisible(!is_spca && !is_srpca);
         } else {
             ui->pcaParamsWidget->setVisible(false);
         }
@@ -990,6 +1001,8 @@ void DimReductionPanel::_updateOutputKeyFromInput() {
 
     if (isSupervisedMode() && algo == "Supervised PCA") {
         suffix = "spca";
+    } else if (isSupervisedMode() && algo == "Supervised Robust PCA") {
+        suffix = "srpca";
     } else if (isSupervisedMode()) {
         suffix = "logit";
     } else if (algo == "PCA") {

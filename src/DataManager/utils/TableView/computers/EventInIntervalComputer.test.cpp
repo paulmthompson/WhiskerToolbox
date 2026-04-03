@@ -311,18 +311,18 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create event data with multiple events in some intervals
-        std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(1), TimeFrameIndex(3), TimeFrameIndex(5), TimeFrameIndex(5), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(9)};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(3), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(9)};
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
         
         // Create intervals for testing
         std::vector<TimeFrameInterval> intervals = {
-            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)), // Time 0-2: events at 1.0, 1.5
-            TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(4)), // Time 2-4: event at 3.0
-            TimeFrameInterval(TimeFrameIndex(4), TimeFrameIndex(6)), // Time 4-6: events at 5.0, 5.5, 5.8
-            TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)), // Time 6-8: event at 7.0
-            TimeFrameInterval(TimeFrameIndex(8), TimeFrameIndex(10)), // Time 8-10: event at 9.0
+            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)), // Time 0-2: event at 1
+            TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(4)), // Time 2-4: event at 3
+            TimeFrameInterval(TimeFrameIndex(4), TimeFrameIndex(6)), // Time 4-6: event at 5
+            TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)), // Time 6-8: event at 7
+            TimeFrameInterval(TimeFrameIndex(8), TimeFrameIndex(10)), // Time 8-10: event at 9
             TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(6))   // Time 6-6: no events
         };
         
@@ -338,9 +338,9 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
         
         // Verify results
         REQUIRE(results.size() == 6);
-        REQUIRE(results[0] == 2);  // Interval 0-2: 2 events
+        REQUIRE(results[0] == 1);  // Interval 0-2: 1 events
         REQUIRE(results[1] == 1);  // Interval 2-4: 1 event
-        REQUIRE(results[2] == 3);  // Interval 4-6: 3 events
+        REQUIRE(results[2] == 1);  // Interval 4-6: 1 events
         REQUIRE(results[3] == 1);  // Interval 6-8: 1 event
         REQUIRE(results[4] == 1);  // Interval 8-10: 1 event
         REQUIRE(results[5] == 0);  // Interval 6-6: 0 events

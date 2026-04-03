@@ -12,6 +12,7 @@
 #include "supervised/RandomForestOperation.hpp"
 #include "supervised/SoftmaxRegressionOperation.hpp"
 #include "supervised/SupervisedPCAOperation.hpp"
+#include "supervised/SupervisedRobustPCAOperation.hpp"
 #include "unsupervised/DBSCANOperation.hpp"
 #include "unsupervised/GaussianMixtureOperation.hpp"
 #include "unsupervised/KMeansOperation.hpp"
@@ -34,6 +35,7 @@ MLModelRegistry::MLModelRegistry() {
     registerModel<LogisticRegressionOperation>();
     registerModel<LogitProjectionOperation>();
     registerModel<SupervisedPCAOperation>();
+    registerModel<SupervisedRobustPCAOperation>();
     registerModel<SoftmaxRegressionOperation>();
     registerModel<HiddenMarkovModelOperation>();
     registerModel<KMeansOperation>();

@@ -193,6 +193,21 @@ struct SupervisedPCAParameters : public MLModelParametersBase {
     bool scale = true;           ///< Standardize features (zero mean, unit variance) before PCA
 };
 
+/**
+ * @brief Parameters for Supervised Robust PCA dimensionality reduction
+ *
+ * Supervised Robust PCA fits ROSL (Robust Online Subspace Learning) on the
+ * labeled subset of observations only, decomposing into a low-rank component
+ * and sparse errors. The principal components capture the variance structure
+ * of the labeled data while being robust to outliers.
+ */
+struct SupervisedRobustPCAParameters : public MLModelParametersBase {
+    std::size_t n_components = 2;///< Number of output dimensions
+    double lambda = 0.0;         ///< Regularization (0 = auto-compute from data)
+    double tol = 1e-5;           ///< Convergence tolerance
+    std::size_t max_iter = 100;  ///< Maximum ALM iterations
+};
+
 // ============================================================================
 // Sequence model parameters
 // ============================================================================

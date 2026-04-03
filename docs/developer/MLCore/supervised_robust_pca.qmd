@@ -1,0 +1,109 @@
+---
+title: "Supervised Robust PCA Operation"
+description: "Robust PCA (ROSL) dimensionality reduction fitted on labeled data subset"
+---
+
+## Overview
+
+`SupervisedRobustPCAOperation` is a supervised dimensionality reduction technique that fits
+Robust PCA (via ROSL decomposition) exclusively on the labeled subset of observations. The
+ROSL algorithm decomposes the labeled data into a low-rank component and sparse errors, making
+the resulting principal components robust to outliers. All observations (labeled and unlabeled)
+are then projected into the resulting space.
+
+This is useful when the labeled data may contain outliers or corrupted observations, and the
+user wants the principal components to capture the underlying low-rank variance structure
+rather than being influenced by sparse noise.
+
+**Task type:** `SupervisedDimensionalityReduction`
+
+**Source files:**
+
+- Header: `src/MLCore/models/supervised/SupervisedRobustPCAOperation.hpp`
+- Implementation: `src/MLCore/models/supervised/SupervisedRobustPCAOperation.cpp`
+- Abstract base: `src/MLCore/models/MLSupervisedDimReductionOperation.hpp`
+- ROSL implementation: `src/MLCore/models/unsupervised/rosl.hpp`
+
+## Parameters
+
+`SupervisedRobustPCAParameters` in `MLModelParameters.hpp`:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `n_components` | `std::size_t` | 2 | Number of output dimensions. |
+| `lambda` | `double` | 0.0 | Regularization parameter (0 = auto-compute as $1/\sqrt{\max(m,n)}$). |
+| `tol` | `double` | 1e-5 | Convergence tolerance for ALM iterations. |
+| `max_iter` | `std::size_t` | 100 | Maximum number of ALM iterations. |
+
+## How It Differs from Related Operations
+
+| Aspect | Standard PCA | Robust PCA | Supervised Robust PCA |
+|---|---|---|---|
+| **Fitting data** | All observations | All observations | Labeled observations only |
+| **Outlier robustness** | No | Yes (ROSL) | Yes (ROSL) |
+| **Centering stats** | Mean/stddev of all data | Mean of all data | Mean of labeled subset |
+| **Output rows** | `n_components` | `n_components` | `n_components` |
+| **Use case** | General exploration | Outlier-robust exploration | Focus on labeled phenomenon, robust to outliers |
+
+## Architecture
+
+### Class Hierarchy
+
+```
+MLModelOperation (interface)
+  └── MLSupervisedDimReductionOperation (abstract base)
+        ├── LogitProjectionOperation
+        ├── SupervisedPCAOperation
+        └── SupervisedRobustPCAOperation (this class)
+```
+
+### Pimpl Pattern
+
+The `Impl` struct holds:
+
+- `eigenvectors` — $(D \times n\_components)$ projection matrix (from SVD of low-rank component)
+- `eigenvalues` — squared singular values / $(N-1)$, sorted descending
+- `mean` — per-feature mean (from labeled subset)
+- `total_variance` — sum of all eigenvalues (for variance ratio computation)
+
+## Algorithm
+
+### fitTransform
+
+1. **Validate** inputs (non-empty, matching dimensions, $\geq 2$ classes, `n_components` $\leq D$)
+2. **Compute mean** from labeled subset
+3. **Center** labeled data (subtract mean)
+4. **Auto-compute lambda** if not provided: $\lambda = 1/\sqrt{\max(m,n)}$
+5. **ROSL decomposition**: decompose centered labeled data into low-rank $A$ + sparse error $E$
+6. **SVD** on low-rank component $A$ to extract principal directions
+7. **Store** top `n_components` left-singular vectors as eigenvectors
+8. **Project ALL data** (not just labeled subset) onto the learned basis
+
+### transform
+
+1. **Center** new data using the stored labeled-subset mean
+2. **Project**: `result = eigenvectors.t() * centered`
+
+### Key Properties
+
+- `requiresAllClassesForFitting()` returns `false` — the pipeline subsets to the positive class
+- Output column names use the prefix `SRPCA:` (e.g., `SRPCA:0`, `SRPCA:1`, ...)
+- `explainedVarianceRatio()` returns the fraction of total variance explained per component
+
+## UI Integration
+
+The operation appears in the DimReductionPanel's supervised algorithm combo box. When selected,
+it shows the Robust PCA parameter widget (n_components, lambda, max_iter) and hides the class
+name fields (since it's non-discriminative, like Supervised PCA).
+
+The default output key suffix is `_srpca`.
+
+## Serialization
+
+Uses cereal binary archives. Saved state includes:
+
+- `n_components`, `n_features`, `num_classes`, `total_variance`
+- Column names
+- Eigenvectors (as flattened `std::vector<double>` with row/col dimensions)
+- Eigenvalues (as `std::vector<double>`)
+- Mean vector (as `std::vector<double>`)

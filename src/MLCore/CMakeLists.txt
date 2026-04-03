@@ -36,6 +36,8 @@ set(MLCore_SOURCES
     models/supervised/LogitProjectionOperation.hpp
     models/supervised/SupervisedPCAOperation.cpp
     models/supervised/SupervisedPCAOperation.hpp
+    models/supervised/SupervisedRobustPCAOperation.cpp
+    models/supervised/SupervisedRobustPCAOperation.hpp
     models/supervised/SoftmaxRegressionOperation.cpp
     models/supervised/SoftmaxRegressionOperation.hpp
     models/supervised/NaiveBayesOperation.cpp
