@@ -1,0 +1,29 @@
+---
+title: "Device Selector (GPU/CPU)"
+---
+
+## Overview
+
+The Deep Learning Properties Widget includes an optional device selector that allows users
+to switch between GPU (CUDA) and CPU inference at runtime. This group box only appears when
+CUDA is available at runtime (i.e., CUDA build + GPU detected). On CPU-only builds or
+systems without a GPU, the selector is hidden and inference runs on CPU automatically.
+
+## Architecture
+
+The `DeviceManager` singleton (`src/DeepLearning/device/DeviceManager.hpp`) owns the active
+`torch::Device`. Because the properties widget must not include `<torch/torch.h>` (to avoid
+the Qt `slots` macro conflict), three static proxy methods on `SlotAssembler` bridge the gap:
+
+| SlotAssembler static method | DeviceManager method called |
+|-----------------------------|-----------------------------|
+| `isCudaAvailable()`        | `DeviceManager::cudaAvailable()` |
+| `currentDeviceName()`      | `DeviceManager::instance().device()` (returns human-readable string) |
+| `setDeviceByName(name)`    | `DeviceManager::instance().setDevice(...)` |
+
+## UI Behaviour
+
+- **Default**: GPU is selected when CUDA is available.
+- **Hidden**: The "Device" group box is not created at all on CPU-only systems.
+- **Effect**: Changing the combo immediately updates `DeviceManager`. All subsequent
+  inference calls (single frame, batch, recurrent) use the new device.
