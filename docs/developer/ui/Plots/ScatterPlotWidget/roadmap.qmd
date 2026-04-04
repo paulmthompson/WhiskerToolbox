@@ -202,6 +202,183 @@ Extend the `PlotTooltipManager` text provider to query the cached `feature_value
 
 ---
 
+## Phase 8: SVG Export
+
+**Status**: Not started. Infrastructure exists in `PlottingSVG` library (proven with
+[EventPlotWidget](../EventPlotWidget/index.qmd) and [DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
+
+**Goal**: Export the current scatter plot view to SVG for publication-quality figures.
+
+### Architecture Assessment
+
+The ScatterPlotWidget rendering pipeline is **the most compatible** of all remaining widgets:
+
+- It already caches a `RenderableScene` as `_scene` (`std::unique_ptr<CorePlotting::RenderableScene>`)
+- The scene contains `RenderableGlyphBatch` entries (circles, squares, crosses for scatter points)
+  and optionally a `RenderablePolyLineBatch` (reference line). Both are fully supported by
+  `SVGGlyphRenderer` and `SVGPolyLineRenderer`.
+- Feature colors and group colors are pre-applied to `RenderableGlyphBatch::colors[]` during
+  `rebuildScene()`, so the SVG renderer sees the final per-point colors with no additional work.
+
+**Key issue**: Background color is hardcoded via `glClearColor(0.1f, 0.1f, 0.1f, 1.0f)` with
+no state accessor. Either add a `background_color` field to `ScatterPlotStateData` or use a
+default.
+
+### Step 8.1: Add `background_color` to `ScatterPlotStateData`
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPlotStateData.hpp` — add
+  `std::string background_color = "#1A1A1A";`
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPlotState.hpp` — add getter/setter
+  with `backgroundColorChanged()` signal
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp` — in
+  `initializeGL()`, read background color from state instead of hardcoding
+
+**Verify:** Build compiles.
+
+### Step 8.2: Add `exportToSVG()` to `ScatterPlotOpenGLWidget`
+
+Follow the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md). The scatter plot
+already caches the scene — this is the simplest integration.
+
+```cpp
+[[nodiscard]] QString exportToSVG();
+```
+
+**Implementation:**
+```cpp
+QString ScatterPlotOpenGLWidget::exportToSVG() {
+    if (!_scene || (_scene->glyph_batches.empty() && _scene->poly_line_batches.empty())) {
+        return {};
+    }
+
+    // Sync matrices from OpenGL state to scene
+    _scene->view_matrix = _view_matrix;
+    _scene->projection_matrix = _projection_matrix;
+
+    PlottingSVG::SVGSceneRenderer renderer;
+    renderer.setScene(*_scene);
+    renderer.setCanvasSize(_widget_width, _widget_height);
+
+    if (_state) {
+        renderer.setBackgroundColor(_state->getBackgroundColor().toStdString());
+    }
+
+    return QString::fromStdString(renderer.render());
+}
+```
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.hpp` — add
+  `exportToSVG()` declaration
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp` — implement
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/CMakeLists.txt` — add `PlottingSVG` to
+  `target_link_libraries` (PRIVATE)
+
+**Verify:** Build compiles.
+
+### Step 8.3: Add `exportSVGRequested` signal to `ScatterPlotPropertiesWidget`
+
+Add an "Export SVG" button to the properties panel.
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotPropertiesWidget.hpp` — add
+  `signals: void exportSVGRequested();`
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotPropertiesWidget.cpp` — create
+  a QPushButton in an "Export" collapsible section, connect `clicked` → `exportSVGRequested()`
+
+**Verify:** Build compiles. Button appears.
+
+### Step 8.4: Add `handleExportSVG()` to `ScatterPlotWidget`
+
+Follow the [EventPlotWidget::handleExportSVG()](../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp) pattern:
+
+```cpp
+void ScatterPlotWidget::handleExportSVG() {
+    QString const fileName = AppFileDialog::getSaveFileName(
+            this, QStringLiteral("export_scatter_plot_svg"),
+            tr("Export Scatter Plot to SVG"),
+            tr("SVG Files (*.svg);;All Files (*)"));
+    if (fileName.isEmpty()) return;
+
+    QString const svg = _opengl_widget->exportToSVG();
+    if (svg.isEmpty()) {
+        QMessageBox::warning(this, tr("Export Failed"),
+            tr("No scene to export. Load data and configure the plot first."));
+        return;
+    }
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(this, tr("Export Failed"),
+            tr("Could not open file for writing:\n%1").arg(fileName));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << svg;
+    file.close();
+
+    QMessageBox::information(this, tr("Export Successful"),
+        tr("Scatter plot exported to:\n%1").arg(fileName));
+}
+```
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotWidget.hpp` — add
+  `void handleExportSVG();` public slot
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotWidget.cpp` — implement
+
+**Verify:** Build compiles.
+
+### Step 8.5: Wire signals in `ScatterPlotWidgetRegistration`
+
+Connect the properties signal to the view slot in the `create_editor_custom` lambda:
+
+```cpp
+QObject::connect(props, &ScatterPlotPropertiesWidget::exportSVGRequested,
+                 view, &ScatterPlotWidget::handleExportSVG);
+```
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.cpp`
+
+**Verify:** Full build succeeds.
+
+### Step 8.6: Manual validation
+
+1. Load a dataset with scatter-compatible data (e.g., TensorData or paired AnalogTimeSeries)
+2. Open a ScatterPlotWidget, configure X/Y data sources
+3. Test with:
+   - Default uniform glyph coloring (circles)
+   - Feature coloring (continuous colormap mode)
+   - Feature coloring (threshold mode)
+   - Group coloring (color-by-group)
+   - Reference line enabled
+   - Point selection (polygon selection or single-click)
+4. Click "Export SVG" in the properties panel
+5. Open the resulting SVG in a web browser and/or Inkscape
+6. Verify:
+   - Glyph positions match on-screen points
+   - Per-point colors (feature/group) are correct
+   - Selected points have highlight color
+   - Reference line rendered as `<polyline>` (if enabled)
+   - Background color is correct
+   - Zoom/pan state is reflected
+
+### Design Notes
+
+- **No PlottingSVG extensions needed**: `RenderableGlyphBatch` (circles, squares, crosses,
+  ticks) and `RenderablePolyLineBatch` (reference line) are both fully supported.
+- **Selection highlights included**: Selected and navigated-highlight glyphs are separate
+  `GlyphBatch` entries in the scene with their own colors/sizes, so they export automatically.
+- **Polygon selection overlay NOT exported**: The `PolygonInteractionController` preview is
+  rendered via `PreviewRenderer` (not part of the `RenderableScene`), so the in-progress
+  polygon outline will not appear in the SVG. This is desirable — the polygon is transient
+  interaction state, not a data visualization element.
+
+---
+
 # See Also
 
 - [ScatterPlotWidget Documentation](index.qmd) — Full architecture and feature documentation

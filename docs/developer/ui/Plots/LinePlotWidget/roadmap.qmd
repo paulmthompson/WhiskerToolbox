@@ -303,83 +303,263 @@ struct TooltipConfig {
 
 ## Phase 5: SVG Export
 
-**Status**: Not started. New shared infrastructure needed.
+**Status**: Not started. Infrastructure exists in `PlottingSVG` library (proven with
+[EventPlotWidget](../EventPlotWidget/index.qmd) and [DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
 
 **Goal**: Allow the user to save the current plot view as an SVG file for publication-quality figures.
 
-### 5.1 SVG Generation
+### Architecture Assessment
 
-SVG export should produce a vector graphics representation of the current view:
+The LinePlotWidget rendering pipeline is **not directly compatible** with `PlottingSVG`. Unlike
+other plot widgets that build a `RenderableScene`, LinePlotWidget uses a specialized
+`BatchLineRenderer` + `BatchLineStore` pipeline for GPU performance. The scene is stored as
+`LineBatchData` (segments, line IDs, selection/visibility masks) — not as a `RenderableScene`.
 
-- All trial lines (with current colors, thicknesses, and opacity)
-- Selected lines highlighted
-- Summary line and confidence interval (if enabled)
-- Axis labels and tick marks
-- Background
+**Key issues to address:**
 
-### 5.2 Implementation Approaches
+1. **No `RenderableScene`**: Trial lines are rendered via `BatchLineRenderer`, bypassing the
+   standard `SceneRenderer` → `RenderableScene` path entirely. `_scene_renderer` is only used
+   for the selection preview overlay and is otherwise cleared/empty.
+2. **`LineBatchData` → `RenderablePolyLineBatch` conversion needed**: A helper function must
+   reconstruct polylines from the segment-based `LineBatchData` format. CPU-side data is always
+   available via `_line_store.cpuData()`.
+3. **Per-line colors stored in GPU VBO**: Group colors and feature colors are applied via the
+   `BatchLineRenderer`'s color override VBO, not stored in `LineBatchData`. The conversion helper
+   must also extract per-line colors from the renderer's color state.
+4. **Background color hardcoded**: Set via `glClearColor(0.1f, 0.1f, 0.1f, 1.0f)` with no
+   state accessor. A `background_color` field must be added to `LinePlotStateData`.
 
-**Option A: QPainter-based SVG** (recommended initial approach)
+### Step 5.1: Create `LineBatchData` → `RenderablePolyLineBatch` converter
 
-Use `QSvgGenerator` with `QPainter` to re-render the scene:
+Create a reusable conversion helper in `CorePlotting/LineBatch/`. This enables any widget using
+`LineBatchData` (LinePlotWidget, [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd),
+[OnionSkinViewWidget](../OnionSkinViewWidget/index.qmd)) to produce SVG.
 
 ```cpp
-void LinePlotWidget::exportToSvg(QString const & file_path) {
-    QSvgGenerator generator;
-    generator.setFileName(file_path);
-    generator.setSize(size());
-    generator.setViewBox(QRect(0, 0, width(), height()));
+/// @file LineBatchDataConverter.hpp
+namespace CorePlotting {
 
-    QPainter painter(&generator);
-    // Re-render all lines via QPainter rather than OpenGL
-    renderToQPainter(painter);
-    painter.end();
+/// Convert a LineBatchData to a RenderablePolyLineBatch suitable for SVG export.
+///
+/// Reconstructs continuous polylines from the segment-based storage format.
+/// Applies visibility and selection masks: invisible lines are excluded,
+/// selected lines use @p selected_color, unselected use @p default_color.
+///
+/// @param batch         CPU-side line batch data (from BatchLineStore::cpuData())
+/// @param default_color Color for unselected lines
+/// @param selected_color Color for selected lines
+/// @param per_line_colors Optional per-line color overrides (e.g., from group coloring).
+///                        If non-empty, overrides default_color for each visible line.
+/// @return PolyLine batch ready for PlottingSVG::SVGPolyLineRenderer
+[[nodiscard]] RenderablePolyLineBatch convertLineBatchToPolyLines(
+    LineBatchData const & batch,
+    glm::vec4 default_color = {1.0f, 1.0f, 1.0f, 1.0f},
+    glm::vec4 selected_color = {1.0f, 0.6f, 0.0f, 0.9f},
+    std::vector<glm::vec4> const & per_line_colors = {});
+
+} // namespace CorePlotting
+```
+
+**Algorithm:**
+1. Iterate over `batch.lines` (logical lines)
+2. Skip lines where `visibility_mask[line_idx] == 0`
+3. For each visible line, extract segments from `batch.segments` using
+   `LineInfo::first_segment` and `segment_count`
+4. Reconstruct polyline vertices: first segment's start vertex, then each segment's end vertex
+   (segments share endpoints, so `{x1,y1,x2,y2}` → vertex chain is `{x1,y1, x2,y2}` for
+   the first segment, then `{x2,y2}` for subsequent segments)
+5. Populate `line_start_indices` and `line_vertex_counts` per polyline
+6. Assign color from `per_line_colors[line_idx]` (if available), `selected_color` (if selected),
+   or `default_color`
+
+**Files to create:**
+- `src/CorePlotting/LineBatch/LineBatchDataConverter.hpp`
+- `src/CorePlotting/LineBatch/LineBatchDataConverter.cpp`
+
+**Files to modify:**
+- `src/CorePlotting/CMakeLists.txt` — add new source files
+
+**Tests to create:**
+- `tests/CorePlotting/LineBatchDataConverter.test.cpp` — verify conversion with known segment
+  data, visibility masks, selection masks, and per-line colors
+
+**Verify:** Build compiles. Tests pass.
+
+### Step 5.2: Add `background_color` to `LinePlotStateData`
+
+Add a background color field to the state, matching the EventPlot/Heatmap pattern.
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/LinePlotWidget/Core/LinePlotStateData.hpp` — add
+  `std::string background_color = "#1A1A1A";`
+- `src/WhiskerToolbox/Plots/LinePlotWidget/Core/LinePlotState.hpp` — add getter/setter with
+  `backgroundColorChanged()` signal
+- `src/WhiskerToolbox/Plots/LinePlotWidget/Rendering/LinePlotOpenGLWidget.cpp` — in
+  `initializeGL()`, read background color from state instead of hardcoding
+
+**Verify:** Build compiles. Background color driven by state.
+
+### Step 5.3: Add `exportToSVG()` to `LinePlotOpenGLWidget`
+
+Build a temporary `RenderableScene` from the cached `LineBatchData` and current matrices.
+
+```cpp
+[[nodiscard]] QString exportToSVG();
+```
+
+**Implementation:**
+```cpp
+QString LinePlotOpenGLWidget::exportToSVG() {
+    auto const & cpu_data = _line_store.cpuData();
+    if (cpu_data.numLines() == 0) {
+        return {};
+    }
+
+    // Extract per-line colors from BatchLineRenderer's color override state
+    auto const per_line_colors = _line_renderer.getPerLineColors();
+
+    // Convert LineBatchData → RenderablePolyLineBatch
+    glm::vec4 default_color{1.0f, 1.0f, 1.0f, 1.0f};  // Or from line style state
+    glm::vec4 selected_color{1.0f, 0.6f, 0.0f, 0.9f};
+    auto poly_batch = CorePlotting::convertLineBatchToPolyLines(
+        cpu_data, default_color, selected_color, per_line_colors);
+
+    // Build temporary RenderableScene
+    CorePlotting::RenderableScene scene;
+    scene.poly_line_batches.push_back(std::move(poly_batch));
+    scene.view_matrix = _view_matrix;
+    scene.projection_matrix = _projection_matrix;
+
+    PlottingSVG::SVGSceneRenderer renderer;
+    renderer.setScene(scene);
+    renderer.setCanvasSize(_widget_width, _widget_height);
+
+    if (_state) {
+        renderer.setBackgroundColor(_state->getBackgroundColor().toStdString());
+    }
+
+    return QString::fromStdString(renderer.render());
 }
 ```
 
-This requires a separate `renderToQPainter()` code path that iterates over the `LineBatchData` and draws lines using `QPainter::drawPolyline()`.
+**Note on `getPerLineColors()`**: The `BatchLineRenderer` applies per-line color overrides
+via a GPU VBO (e.g., from group coloring). A `getPerLineColors()` accessor must be added to
+expose the CPU-side color array. If group coloring is not active, this returns an empty vector
+and the converter falls back to `default_color`.
 
-**Option B: Direct SVG string generation**
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/LinePlotWidget/Rendering/LinePlotOpenGLWidget.hpp` — add
+  `exportToSVG()` declaration
+- `src/WhiskerToolbox/Plots/LinePlotWidget/Rendering/LinePlotOpenGLWidget.cpp` — implement
+- `src/PlottingOpenGL/LineBatch/BatchLineRenderer.hpp` — add `getPerLineColors()` accessor
+  (returns the CPU-side `std::vector<glm::vec4>` used for color overrides)
+- `src/WhiskerToolbox/Plots/LinePlotWidget/CMakeLists.txt` — add `PlottingSVG` to
+  `target_link_libraries` (PRIVATE)
 
-Build the SVG XML directly from `LineBatchData`, which gives more control over SVG structure and styling but requires manual coordinate transformation.
+**Verify:** Build compiles.
 
-### 5.3 Shared Export Infrastructure
+### Step 5.4: Add `exportSVGRequested` signal to `LinePlotPropertiesWidget`
 
-SVG export is useful for all plot widgets. A shared utility in `Plots/Common/Export/` could provide:
+Add an "Export SVG" button to the properties panel.
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/LinePlotWidget/UI/LinePlotPropertiesWidget.hpp` — add
+  `signals: void exportSVGRequested();`
+- `src/WhiskerToolbox/Plots/LinePlotWidget/UI/LinePlotPropertiesWidget.cpp` — create a
+  QPushButton in an "Export" collapsible section, connect `clicked` → `exportSVGRequested()`
+
+**Verify:** Build compiles. Button appears.
+
+### Step 5.5: Add `handleExportSVG()` to `LinePlotWidget`
+
+Follow the [EventPlotWidget::handleExportSVG()](../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp) pattern:
 
 ```cpp
-namespace WhiskerToolbox::Plots::Export {
+void LinePlotWidget::handleExportSVG() {
+    QString const fileName = AppFileDialog::getSaveFileName(
+            this, QStringLiteral("export_line_plot_svg"),
+            tr("Export Line Plot to SVG"),
+            tr("SVG Files (*.svg);;All Files (*)"));
+    if (fileName.isEmpty()) return;
 
-/// Export a LineBatchData to SVG
-void exportLineBatchToSvg(
-    QString const & file_path,
-    CorePlotting::LineBatchData const & batch,
-    CorePlotting::ViewStateData const & view_state,
-    ExportOptions const & options);
+    QString const svg = _opengl_widget->exportToSVG();
+    if (svg.isEmpty()) {
+        QMessageBox::warning(this, tr("Export Failed"),
+            tr("No scene to export. Load data and configure the plot first."));
+        return;
+    }
 
-/// Export a RenderableScene to SVG
-void exportSceneToSvg(
-    QString const & file_path,
-    CorePlotting::RenderableScene const & scene,
-    CorePlotting::ViewStateData const & view_state,
-    ExportOptions const & options);
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(this, tr("Export Failed"),
+            tr("Could not open file for writing:\n%1").arg(fileName));
+        return;
+    }
 
-struct ExportOptions {
-    QSize image_size = {800, 600};
-    bool include_axes = true;
-    bool include_background = true;
-    QString title;
-};
+    QTextStream out(&file);
+    out << svg;
+    file.close();
 
+    QMessageBox::information(this, tr("Export Successful"),
+        tr("Line plot exported to:\n%1").arg(fileName));
 }
 ```
 
-### 5.4 UI
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/LinePlotWidget/UI/LinePlotWidget.hpp` — add `void handleExportSVG();`
+  public slot
+- `src/WhiskerToolbox/Plots/LinePlotWidget/UI/LinePlotWidget.cpp` — implement
 
-Add to `LinePlotPropertiesWidget` or toolbar:
+**Verify:** Build compiles.
 
-- **"Export SVG" button** — opens a file save dialog, then calls the export function
-- Optional: **"Copy to Clipboard"** — renders as SVG/PNG and copies to clipboard
+### Step 5.6: Wire signals in `LinePlotWidgetRegistration`
+
+Connect the properties signal to the view slot in the `create_editor_custom` lambda:
+
+```cpp
+QObject::connect(props, &LinePlotPropertiesWidget::exportSVGRequested,
+                 view, &LinePlotWidget::handleExportSVG);
+```
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/LinePlotWidget/LinePlotWidgetRegistration.cpp`
+
+**Verify:** Full build succeeds.
+
+### Step 5.7: Manual validation
+
+1. Load a dataset with `AnalogTimeSeries` data
+2. Open a LinePlotWidget, configure alignment and add a series
+3. Test with:
+   - Default uniform coloring
+   - Group coloring enabled (color-by-group checkbox)
+   - Trial selection (Ctrl+Click drag to select trials)
+4. Click "Export SVG" in the properties panel
+5. Open the resulting SVG in a web browser and/or Inkscape
+6. Verify:
+   - Trial lines match on-screen positions
+   - Visible/hidden trial filtering is correct
+   - Selected trials have the correct highlight color
+   - Group colors are applied when color-by-group is active
+   - Background color is correct
+   - Zoom/pan state is reflected
+
+### Design Notes — LineBatchData Conversion
+
+The `LineBatchData` format stores line segments as flat `{x1, y1, x2, y2}` tuples with
+per-segment line IDs, while `RenderablePolyLineBatch` stores polylines as continuous vertex
+chains. The conversion reconstructs polylines by:
+
+- Iterating over each logical line's contiguous segment range
+- Extracting the first segment's start point, then each segment's end point
+- Building `line_start_indices[]` and `line_vertex_counts[]`
+
+This is a pure CPU operation on already-available data (`BatchLineStore::cpuData()` always
+maintains a CPU mirror regardless of GPU state).
+
+**Reuse**: The `convertLineBatchToPolyLines()` helper benefits
+[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) and
+[OnionSkinViewWidget](../OnionSkinViewWidget/index.qmd), which also use `BatchLineRenderer`.
 
 ---
 

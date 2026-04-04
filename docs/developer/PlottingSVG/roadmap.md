@@ -201,22 +201,43 @@ Where `ExportConfig` is a plain struct with canvas size, scalebar settings, axis
 
 ## Phase 5: Extend to Additional Widgets
 
-Once PlottingSVG is proven with EventPlot and DataViewer, extend to other widgets. Priority order:
+PlottingSVG is proven with EventPlot and DataViewer. Detailed step-by-step plans for each
+remaining widget are documented in their respective roadmap files.
 
-| Widget | Complexity | Notes |
-|--------|-----------|-------|
-| PSTHWidget | Low | Already produces `RenderableScene` — same pattern as EventPlot |
-| LinePlotWidget | Medium | Trial-aligned lines + summary statistics |
-| OnionSkinViewWidget | Medium | Spatial overlay with alpha fading |
-| TemporalProjectionViewWidget | Medium | Full spatial overlay |
-| HeatmapWidget | High | Needs `SVGHeatmapRenderer` for cell grids — new batch type or `<rect>` grid |
-| ScatterPlotWidget | Medium | Glyph-based — straightforward |
-| SpectrogramWidget | High | Raster image data — may need SVG `<image>` element |
+| Widget | Complexity | Roadmap Link | Key Challenge |
+|--------|-----------|-------------|---------------|
+| **ScatterPlotWidget** | **Low** | [ScatterPlot Roadmap Phase 8](../docs/developer/ui/Plots/ScatterPlotWidget/roadmap.qmd) | Already caches `_scene`; add background color to state |
+| **HeatmapWidget** | **Low** | [Heatmap Roadmap Phase 5](../docs/developer/ui/Plots/HeatmapWidget/roadmap.qmd) | Uses `RenderableRectangleBatch` (supported); cache scene as member |
+| **PSTHWidget** | **Low** | [PSTH Roadmap Phase 5](../docs/developer/ui/Plots/PSTHWidget/roadmap.qmd) | Uses `RenderableRectangleBatch`/`PolyLineBatch` (supported); cache scene + add bg color |
+| **LinePlotWidget** | **Medium** | [LinePlot Roadmap Phase 5](../docs/developer/ui/Plots/LinePlotWidget/roadmap.qmd) | Uses `BatchLineRenderer` (not `RenderableScene`); needs `LineBatchData` → `RenderablePolyLineBatch` converter |
+| OnionSkinViewWidget | Medium | *(not yet planned)* | Uses `BatchLineRenderer`; reuse converter from LinePlot |
+| TemporalProjectionViewWidget | Medium | *(not yet planned)* | Uses `BatchLineRenderer`; reuse converter from LinePlot |
+| SpectrogramWidget | High | *(not yet planned)* | Raster image data — may need SVG `<image>` element |
 
-For each widget, the pattern is identical to Phase 2:
-1. Add `exportToSVG()` method to the OpenGL widget
-2. Add export button to properties widget
-3. Wire signal in registration
+### Shared Prerequisites
+
+All four widget integrations follow the same five-step pattern (identical to Phase 2 EventPlot):
+
+1. **Cache scene** — ensure `RenderableScene` is available as a member (not just a local in `rebuildScene()`)
+2. **Add `exportToSVG()`** — sync matrices, create `SVGSceneRenderer`, render, return string
+3. **Add export button** — "Export SVG" QPushButton with `exportSVGRequested()` signal
+4. **Add `handleExportSVG()`** — file dialog + write file in top-level widget
+5. **Wire signals** — connect properties → view in registration
+
+### LinePlot-Specific Infrastructure
+
+The LinePlotWidget requires a new `CorePlotting::convertLineBatchToPolyLines()` helper that
+reconstructs `RenderablePolyLineBatch` from the segment-based `LineBatchData` format. This
+helper is reusable by OnionSkinViewWidget and TemporalProjectionViewWidget. See the
+[LinePlot Roadmap Phase 5](../docs/developer/ui/Plots/LinePlotWidget/roadmap.qmd) for the
+full API design and algorithm.
+
+### Background Color Normalization
+
+Three widgets (PSTH, LinePlot, ScatterPlot) currently hardcode their background color in
+`initializeGL()` as `{0.1, 0.1, 0.1}`. Each integration adds a `background_color` field to
+the widget's state data struct, matching the pattern already used by EventPlotWidget and
+HeatmapWidget.
 
 ---
 
@@ -232,4 +253,7 @@ For each widget, the pattern is identical to Phase 2:
 - [x] **Phase 2.5:** Manual validation
 - [x] **Phase 3:** Refactor DataViewer SVGExporter to use PlottingSVG
 - [ ] **Phase 4.1:** Shared ExportWidget (optional, deferred)
-- [ ] **Phase 5:** Extend to PSTHWidget, LinePlotWidget, etc.
+- [ ] **Phase 5.1:** ScatterPlotWidget SVG export (Low complexity)
+- [ ] **Phase 5.2:** HeatmapWidget SVG export (Low complexity)
+- [ ] **Phase 5.3:** PSTHWidget SVG export (Low complexity)
+- [ ] **Phase 5.4:** LinePlotWidget SVG export (Medium — needs LineBatchData converter)

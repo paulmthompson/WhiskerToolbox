@@ -197,77 +197,12 @@ This infrastructure is shared with [HeatmapWidget](../HeatmapWidget/index.qmd) w
 
 ---
 
-## Phase 6: Cross-Widget Linking
-
-**Status**: Design complete. `pinned` field exists in state. Implementation needed.
-
-**Goal**: Enable EventPlot, [PSTHWidget](../PSTHWidget/index.qmd), and [HeatmapWidget](../HeatmapWidget/index.qmd) to synchronize on active unit selection.
-
-### SelectionContext Integration
-
-Following the existing `SelectionContext` pattern used by DataInspector widgets:
-
-```cpp
-// In EventPlotPropertiesWidget constructor
-connect(_selection_context, &SelectionContext::selectionChanged,
-        this, &EventPlotPropertiesWidget::_onSelectionChanged);
-
-void EventPlotPropertiesWidget::_onSelectionChanged(SelectionSource const& source) {
-    if (_state && _state->isPinned()) return;
-
-    if (_state && source.editor_instance_id.toString() == _state->getInstanceId()) return;
-    
-    if (_selection_context) {
-        auto const selected = _selection_context->primarySelectedData();
-        if (selected.isValid()) {
-            auto type = _data_manager->getType(selected.toString().toStdString());
-            if (type == DM_DataType::DigitalEventSeries) {
-                updateDisplayedEventSeries(selected.toString());
-            }
-        }
-    }
-}
-```
-
-### Pin Button UI
-
-Add a pin/unpin toggle button to the properties panel toolbar. When pinned, the widget ignores `SelectionContext` changes. The pinned state is serialized for workspace restoration.
-
-### Heatmap → Raster/PSTH Flow
-
-The primary cross-widget workflow:
-
-```
-HeatmapWidget row click
-        ↓
-SelectionContext::setSelectedData("unit_42", source)
-        ↓  
-EventPlotWidget (if not pinned) receives selectionChanged
-        ↓
-Checks type == DigitalEventSeries → updates plot
-        ↓
-PSTHWidget (if not pinned) also receives selectionChanged
-        ↓
-Updates histogram for same unit
-```
-
-This enables rapid exploration of neural data: click through units in the heatmap while the raster plot and PSTH update in sync.
-
-### Shared Alignment State (Future Consideration)
-
-Currently, each trial-aligned widget (EventPlot, PSTH, Heatmap) maintains its own independent `PlotAlignmentState`. A future enhancement could allow these widgets to **share** a single alignment state so that changing the alignment event or window size in one widget updates all linked widgets simultaneously.
-
-This is distinct from `SelectionContext` (which handles data key selection) — shared alignment would synchronize the trial structure itself.
-
----
-
 ## Implementation Priority
 
 ### Next Up
 
 1. **Phase 3.1–3.2**: Extended glyph options and properties panel controls
 2. **Phase 3.3**: Axis label rendering
-3. **Phase 6**: Cross-widget linking implementation
 
 ### Following
 

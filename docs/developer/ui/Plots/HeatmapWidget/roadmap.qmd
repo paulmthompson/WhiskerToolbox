@@ -80,87 +80,6 @@ which also needs a color legend for its power spectrum display.
 
 ---
 
-## Phase 7: Cross-Widget Linking
-
-**Status**: Design complete.
-Related to [EventPlot Roadmap](../EventPlotWidget/roadmap.qmd) Phase 6 and
-[PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 4.
-
-**Goal**: Clicking a heatmap row updates [PSTHWidget](../PSTHWidget/index.qmd) and
-[EventPlotWidget](../EventPlotWidget/index.qmd) to show the selected unit's data.
-
-### 7.1 SelectionContext Integration
-
-Following the existing `SelectionContext` pattern used by DataInspector widgets:
-
-```cpp
-// When user clicks a heatmap row:
-void HeatmapOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
-    if (!_is_panning) {
-        int unit_index = worldToUnitIndex(screenToWorld(event->pos()));
-        auto const & unit_config = _state->units().at(unit_index);
-        // Emit via SelectionContext:
-        SelectionContext::instance().setSelectedData(
-            unit_config.event_key, SelectionSource::HeatmapWidget);
-    }
-}
-```
-
-### 7.2 Receiving Widgets
-
-In [PSTHWidget](../PSTHWidget/index.qmd) and [EventPlotWidget](../EventPlotWidget/index.qmd)
-(if not pinned):
-
-```cpp
-void PSTHPropertiesWidget::_onSelectionChanged(SelectionSource const & source) {
-    if (source.type != SelectionSourceType::HeatmapWidget) return;
-    if (_state->isPinned()) return;
-    auto key = source.data_key;
-    auto type = _data_manager->getDataType(key);
-    if (type == DataType::DigitalEventSeries) {
-        _state->clearPlotEvents();
-        _state->addPlotEvent(key, PSTHEventOptions{.event_key = key});
-        // Scene rebuilds automatically via stateChanged()
-    }
-}
-```
-
-### 7.3 Row Click → Unit Selection Flow
-
-The primary cross-widget workflow:
-
-```
-HeatmapWidget row click
-        ↓
-SelectionContext::setSelectedData("unit_42", source)
-        ↓
-PSTHWidget (if not pinned) receives selectionChanged
-        ↓
-Clears existing events, adds "unit_42" → rebuilds histogram
-        ↓
-EventPlotWidget (if not pinned) also receives selectionChanged
-        ↓
-Updates raster plot for "unit_42"
-```
-
-This enables rapid exploration of neural data: click through units in the heatmap while
-the PSTH and raster plot update in sync. See [EventPlot Roadmap](../EventPlotWidget/roadmap.qmd)
-Phase 6 and [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 4 for the complementary
-receiver implementations.
-
-### 7.4 Visual Row Highlighting
-
-When a row is selected (either by click or via incoming `SelectionContext`), highlight
-the selected row with a border or background overlay to provide visual feedback.
-
-### 7.5 Pin Button
-
-Add a `pinned` field to `HeatmapStateData` and a pin/unpin toggle button to the properties
-panel toolbar. When pinned, the widget ignores `SelectionContext` changes, preserving its
-current view. The pinned state is serialized for workspace restoration.
-
----
-
 ## Phase 8: Tooltip with Stacked PSTH + Raster
 
 **Status**: In progress. Basic tooltip wiring is complete — hovering over a heatmap row shows
@@ -346,11 +265,190 @@ The dialog should offer:
 - Include axes checkbox
 - Include colorbar checkbox
 
-### 10.5 SVG Export (Future)
+### 10.5 SVG Export
 
-The [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 5 proposes shared SVG export infrastructure
-for all plot widgets using `SceneRenderer`. The HeatmapWidget should adopt this when available,
-as SVG provides resolution-independent output for publications.
+SVG export for the HeatmapWidget is now covered by [Phase 5: SVG Export](#phase-5-svg-export)
+using the `PlottingSVG` library infrastructure. See that phase for the step-by-step plan.
+
+---
+
+## Phase 5: SVG Export
+
+**Status**: Not started. Infrastructure exists in `PlottingSVG` library (proven with
+[EventPlotWidget](../EventPlotWidget/index.qmd) and [DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
+
+**Goal**: Export the current heatmap view to SVG for publication-quality figures.
+
+### Architecture Assessment
+
+The HeatmapWidget rendering pipeline is **fully compatible** with `PlottingSVG`:
+
+- `HeatmapMapper::buildScene()` produces a `RenderableRectangleBatch` — one rectangle per
+  heatmap cell, with pre-computed colormap colors. `SVGRectangleRenderer` already handles this
+  batch type.
+- The scene uses orthographic projection from `ViewStateData`, matching the `SVGSceneRenderer`
+  coordinate transform pipeline.
+- Background color is stored in `HeatmapStateData::background_color` (accessible via
+  `HeatmapState::getBackgroundColor()`).
+
+**Key issue**: The `RenderableScene` built in `rebuildScene()` is currently a local variable
+passed directly to `_scene_renderer.uploadScene()`. It is not cached as a member. The SVG
+export path needs access to the scene, so it must be cached.
+
+### Step 5.1: Cache `RenderableScene` in `HeatmapOpenGLWidget`
+
+Add a `RenderableScene` member to `HeatmapOpenGLWidget` so the scene is available for SVG
+export without rebuilding.
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/HeatmapWidget/Rendering/HeatmapOpenGLWidget.hpp` — add
+  `CorePlotting::RenderableScene _scene;` member
+- `src/WhiskerToolbox/Plots/HeatmapWidget/Rendering/HeatmapOpenGLWidget.cpp` — in
+  `rebuildScene()`, store the scene in `_scene` before uploading:
+  ```cpp
+  auto scene = HeatmapMapper::toRectangleBatch(...);
+  // ... existing scene building code ...
+  _scene = scene;                        // Cache for SVG export
+  _scene_renderer.uploadScene(_scene);   // Upload from cached copy
+  ```
+
+**Verify:** Build compiles. Existing OpenGL rendering is unchanged.
+
+### Step 5.2: Add `exportToSVG()` to `HeatmapOpenGLWidget`
+
+Follow the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md):
+
+```cpp
+[[nodiscard]] QString exportToSVG();
+```
+
+**Implementation:**
+```cpp
+QString HeatmapOpenGLWidget::exportToSVG() {
+    if (_scene.rectangle_batches.empty()) {
+        return {};
+    }
+
+    // Sync matrices from OpenGL state to scene
+    _scene.view_matrix = _view_matrix;
+    _scene.projection_matrix = _projection_matrix;
+
+    PlottingSVG::SVGSceneRenderer renderer;
+    renderer.setScene(_scene);
+    renderer.setCanvasSize(_widget_width, _widget_height);
+
+    if (_state) {
+        renderer.setBackgroundColor(_state->getBackgroundColor().toStdString());
+    }
+
+    return QString::fromStdString(renderer.render());
+}
+```
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/HeatmapWidget/Rendering/HeatmapOpenGLWidget.hpp` — add declaration
+- `src/WhiskerToolbox/Plots/HeatmapWidget/Rendering/HeatmapOpenGLWidget.cpp` — implement
+- `src/WhiskerToolbox/Plots/HeatmapWidget/CMakeLists.txt` — add `PlottingSVG` to
+  `target_link_libraries` (PRIVATE)
+
+**Verify:** Build compiles.
+
+### Step 5.3: Add `exportSVGRequested` signal to `HeatmapPropertiesWidget`
+
+Add an "Export SVG" button to the properties panel.
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapPropertiesWidget.hpp` — add
+  `signals: void exportSVGRequested();`
+- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapPropertiesWidget.cpp` — create a
+  QPushButton in an "Export" collapsible section and connect its `clicked` signal to
+  `exportSVGRequested()`
+- Optionally update `HeatmapPropertiesWidget.ui` if using Qt Designer
+
+**Verify:** Build compiles. Button appears in properties panel.
+
+### Step 5.4: Add `handleExportSVG()` to `HeatmapWidget`
+
+Follow the [EventPlotWidget::handleExportSVG()](../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp) pattern:
+
+```cpp
+void HeatmapWidget::handleExportSVG() {
+    QString const fileName = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("export_heatmap_svg"),
+            tr("Export Heatmap to SVG"),
+            tr("SVG Files (*.svg);;All Files (*)"));
+    if (fileName.isEmpty()) return;
+
+    QString const svg = _opengl_widget->exportToSVG();
+    if (svg.isEmpty()) {
+        QMessageBox::warning(this, tr("Export Failed"),
+            tr("No scene to export. Add units and configure alignment first."));
+        return;
+    }
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(this, tr("Export Failed"),
+            tr("Could not open file for writing:\n%1").arg(fileName));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << svg;
+    file.close();
+
+    QMessageBox::information(this, tr("Export Successful"),
+        tr("Heatmap exported to:\n%1").arg(fileName));
+}
+```
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapWidget.hpp` — add `void handleExportSVG();`
+  public slot
+- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapWidget.cpp` — implement
+
+**Verify:** Build compiles.
+
+### Step 5.5: Wire signals in `HeatmapWidgetRegistration`
+
+Connect the properties signal to the view slot in the `create_editor_custom` lambda:
+
+```cpp
+QObject::connect(props, &HeatmapPropertiesWidget::exportSVGRequested,
+                 view, &HeatmapWidget::handleExportSVG);
+```
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/HeatmapWidget/HeatmapWidgetRegistration.cpp`
+
+**Verify:** Full build succeeds. Clicking "Export SVG" opens file dialog and produces valid
+SVG file.
+
+### Step 5.6: Manual validation
+
+1. Load a dataset with `DigitalEventSeries` data
+2. Open a HeatmapWidget, add multiple units, configure alignment
+3. Click "Export SVG" in the properties panel
+4. Open the resulting SVG in a web browser and/or Inkscape
+5. Verify:
+   - Rectangle cells match the on-screen heatmap
+   - Colors correspond to the active colormap and scaling mode
+   - Row ordering matches the current sort mode
+   - Background color is correct
+   - Zoom/pan state is reflected (exported view matches what the user sees)
+
+### Design Notes
+
+- **No PlottingSVG extensions needed**: Heatmap cells render as `RenderableRectangleBatch`,
+  which is a batch type already fully supported by `SVGRectangleRenderer`.
+- **Colorbar not included**: The colorbar ([Phase 4](#phase-4-colorbar-display)) is a separate
+  Qt widget and is not part of the `RenderableScene`. A future `SVGColorbarDecoration` could
+  be added to `PlottingSVG/Decorations/` to render a colorbar legend in the SVG.
+- **Axis annotation**: Row unit labels and time axis labels are rendered by Qt axis widgets,
+  not by the OpenGL pipeline. Future `SVGAxisRenderer` decorations could add these. The
+  existing `PlottingSVG::SVGAxisRenderer` decoration could be configured for the X axis;
+  a new Y-axis label decoration (unit names) would require a new decoration class.
 
 ---
 

@@ -89,128 +89,196 @@ Add controls to `PSTHPropertiesWidget`:
 
 ---
 
-## Phase 4: Cross-Widget Linking
-
-**Status**: Design complete. `pinned` field exists in [EventPlotWidget](../EventPlotWidget/index.qmd) state. Implementation needed for PSTHWidget.
-
-**Goal**: Enable PSTH, [EventPlotWidget](../EventPlotWidget/index.qmd), and [HeatmapWidget](../HeatmapWidget/index.qmd) to synchronize on active unit selection.
-
-### 4.1 SelectionContext Integration
-
-Following the existing `SelectionContext` pattern used by DataInspector widgets and described in the [EventPlot Roadmap](../EventPlotWidget/roadmap.qmd):
-
-```cpp
-void PSTHPropertiesWidget::_onSelectionChanged(SelectionSource const & source) {
-    if (_state && _state->isPinned()) return;
-    if (_state && source.editor_instance_id.toString() == _state->getInstanceId()) return;
-
-    if (_selection_context) {
-        auto const selected = _selection_context->primarySelectedData();
-        if (selected.isValid()) {
-            auto type = _data_manager->getType(selected.toString().toStdString());
-            if (type == DM_DataType::DigitalEventSeries) {
-                updateDisplayedEventSeries(selected.toString());
-            }
-        }
-    }
-}
-```
-
-### 4.2 Pin Button
-
-Add a `pinned` field to `PSTHStateData` and a pin/unpin toggle button to the properties panel toolbar:
-
-```cpp
-struct PSTHStateData {
-    // ... existing fields ...
-    bool pinned = false;
-};
-```
-
-When pinned, the widget ignores `SelectionContext` changes, preserving its current view. This enables workflows where one PSTH is locked to a specific unit while another follows the user's selection.
-
-The pinned state should be serialized for workspace restoration.
-
-### 4.3 Heatmap → PSTH + Raster Flow
-
-The primary cross-widget workflow:
-
-```
-HeatmapWidget row click
-        ↓
-SelectionContext::setSelectedData("unit_42", source)
-        ↓
-PSTHWidget (if not pinned) receives selectionChanged
-        ↓
-Checks type == DigitalEventSeries → updates histogram
-        ↓
-EventPlotWidget (if not pinned) also receives selectionChanged
-        ↓
-Updates raster plot for same unit
-```
-
-This enables rapid exploration of neural data: click through units in the heatmap while the PSTH and raster plot update in sync. See the [EventPlot Roadmap](../EventPlotWidget/roadmap.qmd) Phase 6 for the complementary EventPlot implementation.
-
-### 4.4 Shared Alignment State (Future Consideration)
-
-Currently, each trial-aligned widget (EventPlot, PSTH, Heatmap) maintains its own independent `PlotAlignmentState`. A future enhancement could allow these widgets to **share** a single alignment state so that changing the alignment event or window size in one widget updates all linked widgets simultaneously. See [EventPlot Roadmap](../EventPlotWidget/roadmap.qmd) Phase 6 for discussion.
-
----
-
 ## Phase 5: SVG Export
 
-**Status**: Infrastructure exists in `PlottingSVG`. Implementation needed for PSTHWidget.
+**Status**: Not started. Infrastructure exists in `PlottingSVG` library (proven with
+[EventPlotWidget](../EventPlotWidget/index.qmd) and [DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
 
 **Goal**: Export the current PSTH plot to SVG for publication-quality figures.
 
-### 5.1 Existing Infrastructure
+### Architecture Assessment
 
-The project has SVG export infrastructure in `PlottingSVG` (e.g. `PlottingSVG/SVGExport.hpp` and `SVGSceneRenderer`):
+The PSTHWidget rendering pipeline is **fully compatible** with `PlottingSVG`:
 
-- `PlottingSVG::buildSVGDocument(RenderableScene, SVGExportParams)` — full flat SVG document
-- `PlottingSVG::SVGSceneRenderer` — layered SVG via `SVGDocument` and per-batch renderers
-- `PlottingSVG::renderSceneToSVG()` — all batch types in draw order (uses `SVG*Renderer` internally)
+- `HistogramMapper::buildScene()` produces either a `RenderableRectangleBatch` (bar mode) or
+  a `RenderablePolyLineBatch` (step-function line mode). Both batch types are already handled
+  by `SVGRectangleRenderer` and `SVGPolyLineRenderer` respectively.
+- The scene uses orthographic projection from `ViewStateData`, matching the `SVGSceneRenderer`
+  coordinate transform pipeline.
 
-The `DataViewerWidget` already uses this infrastructure via a bespoke `SVGExporter` class that builds scenes from the DataViewer's specific state format.
+**Key issues to address:**
 
-### 5.2 Shared SVG Export for Plot Widgets
+1. **Scene not cached**: The `RenderableScene` built in `rebuildScene()` is a local variable
+   passed directly to `_scene_renderer.uploadScene()`. It must be cached as a member for SVG
+   export.
+2. **Background color hardcoded**: The background is set via `glClearColor(0.1f, 0.1f, 0.1f, 1.0f)`
+   in `initializeGL()` with no state accessor. Either add a `background_color` field to
+   `PSTHStateData` (matching `HeatmapStateData` and `EventPlotStateData`) or use a sensible
+   default (e.g., `"#1A1A1A"` matching the hardcoded value, or `"#FFFFFF"` for publication).
 
-Rather than building another bespoke exporter, a shared SVG export mechanism should be created for all plot widgets that use `SceneRenderer`. Since the PSTH, EventPlot, and other OpenGL widgets all produce `RenderableScene` objects, the export path is:
+### Step 5.1: Add `background_color` to `PSTHStateData`
+
+Add a background color field so the SVG exporter can read it, matching the
+`EventPlotStateData` / `HeatmapStateData` pattern.
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/Core/PSTHState.hpp` (or `PSTHStateData.hpp`) — add
+  `std::string background_color = "#1A1A1A";` to `PSTHStateData`
+- `src/WhiskerToolbox/Plots/PSTHWidget/Core/PSTHState.cpp` — add getter/setter with signal
+  `backgroundColorChanged()`
+- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.cpp` — in `initializeGL()`,
+  read the background color from state instead of hardcoding
+
+**Verify:** Build compiles. Background color is driven by state.
+
+### Step 5.2: Cache `RenderableScene` in `PSTHPlotOpenGLWidget`
+
+Add a `RenderableScene` member so the scene persists for SVG export.
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.hpp` — add
+  `CorePlotting::RenderableScene _scene;` member
+- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.cpp` — in
+  `rebuildScene()`, store the scene before uploading:
+  ```cpp
+  _scene = CorePlotting::HistogramMapper::buildScene(histogram_data, display_mode, style);
+  _scene_renderer.uploadScene(_scene);
+  ```
+
+**Verify:** Build compiles. Existing OpenGL rendering unchanged.
+
+### Step 5.3: Add `exportToSVG()` to `PSTHPlotOpenGLWidget`
+
+Follow the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md):
 
 ```cpp
-namespace Plots::Export {
-    QString exportPlotToSVG(
-        RenderableScene const & scene,
-        glm::mat4 const & view_matrix,
-        glm::mat4 const & projection_matrix,
-        PlottingSVG::SVGExportParams const & params);
+[[nodiscard]] QString exportToSVG();
+```
+
+**Implementation:**
+```cpp
+QString PSTHPlotOpenGLWidget::exportToSVG() {
+    if (_scene.rectangle_batches.empty() && _scene.poly_line_batches.empty()) {
+        return {};
+    }
+
+    _scene.view_matrix = _view_matrix;
+    _scene.projection_matrix = _projection_matrix;
+
+    PlottingSVG::SVGSceneRenderer renderer;
+    renderer.setScene(_scene);
+    renderer.setCanvasSize(_widget_width, _widget_height);
+
+    if (_state) {
+        renderer.setBackgroundColor(_state->getBackgroundColor().toStdString());
+    }
+
+    return QString::fromStdString(renderer.render());
 }
 ```
 
-This can be shared across [EventPlotWidget](../EventPlotWidget/index.qmd), PSTHWidget, [ACFWidget](../ACFWidget/index.qmd), and any future OpenGL plot widget.
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.hpp` — add declaration
+- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.cpp` — implement
+- `src/WhiskerToolbox/Plots/PSTHWidget/CMakeLists.txt` — add `PlottingSVG` to
+  `target_link_libraries` (PRIVATE)
 
-### 5.3 UI Integration
+**Verify:** Build compiles.
 
-Add an "Export SVG..." action to the PSTH properties panel or a right-click context menu on the plot. The action should:
+### Step 5.4: Add `exportSVGRequested` signal to `PSTHPropertiesWidget`
 
-1. Open a file save dialog
-2. Build the SVG from the cached `RenderableScene` and current view/projection matrices
-3. Optionally include axis labels, title, and scalebar
-4. Save to the chosen path
+Add an "Export SVG" button to the properties panel.
 
-### 5.4 Export Options
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHPropertiesWidget.hpp` — add
+  `signals: void exportSVGRequested();`
+- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHPropertiesWidget.cpp` — create a QPushButton
+  in an "Export" collapsible section, connect `clicked` → `exportSVGRequested()`
+
+**Verify:** Build compiles. Button appears.
+
+### Step 5.5: Add `handleExportSVG()` to `PSTHWidget`
+
+Follow the [EventPlotWidget::handleExportSVG()](../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp) pattern:
 
 ```cpp
-struct PlotSVGExportOptions {
-    int width = 1920;
-    int height = 1080;
-    bool include_axes = true;
-    bool include_title = true;
-    bool include_scalebar = false;
-    int scalebar_length = 100;      // in time units
-    std::string background_color = "#FFFFFF";  // White for publication
-};
+void PSTHWidget::handleExportSVG() {
+    QString const fileName = AppFileDialog::getSaveFileName(
+            this, QStringLiteral("export_psth_svg"),
+            tr("Export PSTH to SVG"),
+            tr("SVG Files (*.svg);;All Files (*)"));
+    if (fileName.isEmpty()) return;
+
+    QString const svg = _opengl_widget->exportToSVG();
+    if (svg.isEmpty()) {
+        QMessageBox::warning(this, tr("Export Failed"),
+            tr("No scene to export. Load data and configure the plot first."));
+        return;
+    }
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(this, tr("Export Failed"),
+            tr("Could not open file for writing:\n%1").arg(fileName));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << svg;
+    file.close();
+
+    QMessageBox::information(this, tr("Export Successful"),
+        tr("PSTH exported to:\n%1").arg(fileName));
+}
 ```
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHWidget.hpp` — add `void handleExportSVG();`
+  public slot
+- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHWidget.cpp` — implement
+
+**Verify:** Build compiles.
+
+### Step 5.6: Wire signals in `PSTHWidgetRegistration`
+
+Connect the properties signal to the view slot in the `create_editor_custom` lambda:
+
+```cpp
+QObject::connect(props, &PSTHPropertiesWidget::exportSVGRequested,
+                 view, &PSTHWidget::handleExportSVG);
+```
+
+**Files to modify:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/PSTHWidgetRegistration.cpp`
+
+**Verify:** Full build succeeds. Clicking "Export SVG" opens file dialog and produces valid
+SVG file.
+
+### Step 5.7: Manual validation
+
+1. Load a dataset with `DigitalEventSeries` data
+2. Open a PSTHWidget, configure alignment and event series
+3. Test both bar mode and line mode display styles
+4. Click "Export SVG" in the properties panel
+5. Open the resulting SVG in a web browser and/or Inkscape
+6. Verify:
+   - Bar mode: rectangles match on-screen bars (positions, heights, colors)
+   - Line mode: step-function polyline matches on-screen line
+   - Background color is correct
+   - Zoom/pan state is reflected
+
+### Design Notes
+
+- **No PlottingSVG extensions needed**: Both `RenderableRectangleBatch` (bars) and
+  `RenderablePolyLineBatch` (step-function line) are already supported by PlottingSVG.
+- **Multiple event series**: Currently all events are binned into a single histogram. When
+  [Phase 7](#phase-7-per-series-histograms-and-multi-color-overlay) implements per-series
+  histograms, each series will produce its own batch in the `RenderableScene`, and SVG export
+  will automatically render them with distinct colors.
+- **Confidence bands**: When [Phase 3](#phase-3-variability-and-confidence-intervals) adds
+  confidence bands, their rendering as filled semi-transparent polygons will require a new
+  batch type (filled polygon / triangle strip) in `CorePlotting` and a corresponding
+  `SVGFilledPolygonRenderer` in `PlottingSVG`. This is a future extension.
 
 ---
 
@@ -309,8 +377,7 @@ The existing per-event `hex_color` in `PSTHEventOptions` should be applied to th
 
 1. **Phase 2** (remaining): Migrate `PSTHPlotOpenGLWidget::rebuildScene()` to use
    `EventRateEstimation` library's `estimateRate()`; then add Gaussian kernel and other smoothing methods
-2. **Phase 4**: Cross-widget linking with pin support
-3. **Phase 5**: SVG export (infrastructure already exists)
+3. **Phase 5**: SVG export (PlottingSVG infrastructure proven; concrete step-by-step plan ready)
 
 ### Following
 
