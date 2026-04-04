@@ -65,6 +65,7 @@ website:
               contents:
                 - developer/PlottingSVG/SVGExport.qmd
                 - developer/PlottingSVG/SVGUtils.qmd
+                - developer/PlottingSVG/decorations.qmd
                 - developer/PlottingSVG/roadmap.md
             - developer/Entity/index.qmd
             - section: "Deep Learning"

@@ -213,6 +213,8 @@ public:
 
 **Verify:** Build compiles.
 
+**Completed:** `SVGDecoration` unchanged. `SVGScalebar` implements full geometry (configurable corner, padding, thickness, tick height, font size, colors); `PlottingSVG::createScalebarSVG` delegates to it. `SVGAxisRenderer` draws spine, optional uniform ticks with labels, and title for `AxisPosition::Bottom` or `Left` (rotated title). See [decorations.qmd](decorations.qmd).
+
 ---
 
 ### Step 1.7: Write tests
@@ -476,7 +478,7 @@ For each widget, the pattern is identical to Phase 2:
 - [x] **Phase 1.3:** Per-batch renderers (PolyLine, Glyph, Rectangle)
 - [x] **Phase 1.4:** SVGDocument (XML assembly with layers) *(class done; DataViewer still uses flat `SVGExport::buildSVGDocument` until optional migration)*
 - [x] **Phase 1.5:** SVGSceneRenderer (main entry point) *(orchestrates real batch renderers + `SVGDocument`)*
-- [ ] **Phase 1.6:** Decorations (SVGScalebar, SVGAxisRenderer)
+- [x] **Phase 1.6:** Decorations (SVGScalebar, SVGAxisRenderer)
 - [ ] **Phase 1.7:** Tests (all renderer classes + document + scene)
 - [x] **Phase 1.8:** Remove SVGPrimitives from CorePlotting *(removed; no forwarding header)*
 - [ ] **Phase 2.1:** EventPlotOpenGLWidget::exportToSVG()

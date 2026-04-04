@@ -1,0 +1,28 @@
+---
+title: "PlottingSVG — Decorations"
+format: html
+---
+
+## Overview
+
+Decorations implement `SVGDecoration`: they emit SVG fragments in **canvas pixel space** (not scene/world coordinates). `SVGSceneRenderer::addDecoration` merges their output into the `decorations` layer.
+
+## SVGScalebar
+
+- **Constructor:** `SVGScalebar(int length_time_units, float time_start, float time_end)` — maps bar width to pixels using the same rule as `createScalebarSVG` (full canvas width ↔ visible time span).
+- **Output:** main horizontal `<line>`, end ticks, centered `<text>` label (numeric length).
+- **Options:** `setCorner` (`ScalebarCorner`: bottom/top × left/right), `setPadding`, `setBarThickness`, `setTickHeight`, `setLabelFontSize`, `setStrokeColor`, `setLabelFillColor`.
+
+`PlottingSVG::createScalebarSVG` delegates to a default-configured `SVGScalebar` so DataViewer and decoration users share one implementation.
+
+## SVGAxisRenderer
+
+- **Constructor:** `SVGAxisRenderer(float range_min, float range_max, float tick_interval, std::string axis_title)`.
+- **Positions:** `AxisPosition::Bottom` — spine along the bottom inner margin, ticks downward; `Left` — spine on the left, ticks to the left, title rotated −90° about the label anchor.
+- **Options:** `setMargin`, `setFontSize`, `setTickLength`, `setAxisColor`, `setLabelColor`.
+- Tick values start at the first multiple of `tick_interval` at or above `range_min` (via `ceil`). Title and tick labels use minimal XML character escaping (`&`, `<`, `>`).
+
+## See also
+
+- [PlottingSVG index](index.qmd)
+- [Roadmap](roadmap.md) — Step 1.6

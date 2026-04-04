@@ -5,6 +5,7 @@
 
 #include "PlottingSVG/SVGExport.hpp"
 
+#include "PlottingSVG/Decorations/SVGScalebar.hpp"
 #include "PlottingSVG/Renderers/SVGGlyphRenderer.hpp"
 #include "PlottingSVG/Renderers/SVGPolyLineRenderer.hpp"
 #include "PlottingSVG/Renderers/SVGRectangleRenderer.hpp"
@@ -76,46 +77,8 @@ std::vector<std::string> createScalebarSVG(
         int scalebar_length,
         ScalebarTimeRange time_range,
         SVGExportParams const & params) {
-    std::vector<std::string> elements;
-
-    int const padding = 50;
-    int const bar_height = 4;
-    int const tick_height = 8;
-    float const tick_half = 0.5F * static_cast<float>(tick_height);
-
-    float const time_span = time_range.end - time_range.start;
-    float const time_to_pixel = static_cast<float>(params.canvas_width) / time_span;
-    float const bar_width_pixels = static_cast<float>(scalebar_length) * time_to_pixel;
-
-    float const bar_x = static_cast<float>(params.canvas_width) - bar_width_pixels - static_cast<float>(padding);
-    float const bar_y = static_cast<float>(params.canvas_height) - static_cast<float>(padding);
-
-    std::ostringstream bar;
-    bar << R"(<line x1=")" << bar_x << R"(" y1=")" << bar_y << R"(" x2=")" << (bar_x + bar_width_pixels)
-        << R"(" y2=")" << bar_y << R"(" stroke="#000000" stroke-width=")" << bar_height
-        << R"(" stroke-linecap="butt"/>)";
-    elements.push_back(bar.str());
-
-    std::ostringstream left_tick;
-    left_tick << R"(<line x1=")" << bar_x << R"(" y1=")" << (bar_y - tick_half) << R"(" x2=")" << bar_x
-              << R"(" y2=")" << (bar_y + tick_half) << R"(" stroke="#000000" stroke-width="2"/>)";
-    elements.push_back(left_tick.str());
-
-    std::ostringstream right_tick;
-    right_tick << R"(<line x1=")" << (bar_x + bar_width_pixels) << R"(" y1=")" << (bar_y - tick_half)
-               << R"(" x2=")" << (bar_x + bar_width_pixels) << R"(" y2=")" << (bar_y + tick_half)
-               << R"(" stroke="#000000" stroke-width="2"/>)";
-    elements.push_back(right_tick.str());
-
-    float const label_x = bar_x + bar_width_pixels / 2.0f;
-    float const label_y = bar_y - 10.0f;
-    std::ostringstream label;
-    label << R"(<text x=")" << label_x << R"(" y=")" << label_y
-          << R"(" font-family="Arial, sans-serif" font-size="14" fill="#000000" text-anchor="middle">)"
-          << scalebar_length << R"(</text>)";
-    elements.push_back(label.str());
-
-    return elements;
+    SVGScalebar const scalebar(scalebar_length, time_range.start, time_range.end);
+    return scalebar.render(params.canvas_width, params.canvas_height);
 }
 
 }// namespace PlottingSVG
