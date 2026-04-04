@@ -4,216 +4,18 @@ Step-by-step plan for building the `PlottingSVG` library and integrating SVG exp
 
 ## Phase 1: Create PlottingSVG Library Foundation
 
-### Step 1.1: Create directory structure and CMakeLists.txt
+### Steps 1.1–1.6: Core Library (Completed)
 
-Create `src/PlottingSVG/` with the following layout:
+All foundational components are implemented and verified:
 
-```
-src/PlottingSVG/
-├── CMakeLists.txt
-├── SVGDocument.hpp
-├── SVGDocument.cpp
-├── SVGSceneRenderer.hpp
-├── SVGSceneRenderer.cpp
-├── SVGUtils.hpp
-├── SVGUtils.cpp
-├── Renderers/
-│   ├── SVGPolyLineRenderer.hpp
-│   ├── SVGPolyLineRenderer.cpp
-│   ├── SVGGlyphRenderer.hpp
-│   ├── SVGGlyphRenderer.cpp
-│   ├── SVGRectangleRenderer.hpp
-│   └── SVGRectangleRenderer.cpp
-└── Decorations/
-    ├── SVGDecoration.hpp
-    ├── SVGAxisRenderer.hpp
-    ├── SVGAxisRenderer.cpp
-    ├── SVGScalebar.hpp
-    └── SVGScalebar.cpp
-```
-
-Create `CMakeLists.txt` as a static library with dependencies on `CorePlotting` and `glm::glm` only. No Qt dependency. Model on `src/PlottingOpenGL/CMakeLists.txt` but remove all Qt/OpenGL linkage.
-
-Register in `src/CMakeLists.txt` by adding `add_subdirectory(PlottingSVG)` **outside** the `if (ENABLE_UI)` block, placed after `add_subdirectory(CorePlotting)`.
-
-**Files to create:**
-- `src/PlottingSVG/CMakeLists.txt`
-
-**Files to modify:**
-- `src/CMakeLists.txt` — add `add_subdirectory(PlottingSVG)`
-
-**Verify:** `cmake --preset linux-clang-release` configures without errors.
-
-**Completed:** The layout above is in place under `src/PlottingSVG/`. `CMakeLists.txt` builds a static `PlottingSVG` target with `PUBLIC` linkage to `CorePlotting` and `glm::glm` only (no Qt/OpenGL), `set_target_compiler_warnings(PlottingSVG)`, and `enable_whiskertoolbox_pch(PlottingSVG)`. `src/CMakeLists.txt` calls `add_subdirectory(PlottingSVG)` immediately after `add_subdirectory(CorePlotting)`, outside `if (ENABLE_UI)`.
-
-To keep the library linkable and compiles cleanly, initial **stub** sources were added beyond the bare CMake skeleton: `SVGDocument` assembles a minimal valid SVG (background rect, named `<g>` layers, `<desc>`); `SVGSceneRenderer` walks `RenderableScene` batches in rectangle → polyline → glyph order and calls stub renderers; `SVGPolyLineRenderer`, `SVGGlyphRenderer`, and `SVGRectangleRenderer` return empty element lists; `SVGDecoration`, `SVGAxisRenderer`, and `SVGScalebar` are stub overlays. `SVGUtils` holds shared math (Step 1.2). Configure/build and the full test suite have been verified on the project preset.
-
----
-
-### Step 1.2: Implement SVGUtils (shared utilities)
-
-Migrate `transformVertexToSVG()` and `colorToSVGHex()` from `src/CorePlotting/Export/SVGPrimitives.cpp` into `src/PlottingSVG/SVGUtils.hpp/.cpp` under the `PlottingSVG` namespace.
-
-These are pure math functions with no dependencies beyond `<glm/glm.hpp>` and `<string>`.
-
-**Source reference:** `src/CorePlotting/Export/SVGPrimitives.cpp` lines 10-45
-
-**Functions to migrate:**
-- `transformVertexToSVG(glm::vec4, glm::mat4 mvp, int w, int h) → glm::vec2`
-- `colorToSVGHex(glm::vec4) → std::string`
-
-**Files to create:**
-- `src/PlottingSVG/SVGUtils.hpp`
-- `src/PlottingSVG/SVGUtils.cpp`
-
-**Verify:** Build compiles.
-
-**Completed:** `transformVertexToSVG` and `colorToSVGHex` are declared in `PlottingSVG/SVGUtils.hpp` and defined in `SVGUtils.cpp` (non-inline). See [SVGUtils.qmd](SVGUtils.qmd).
-
----
-
-### Step 1.3: Implement per-batch SVG renderers
-
-Migrate the three batch rendering functions from `CorePlotting/Export/SVGPrimitives.cpp` into dedicated renderer classes in `src/PlottingSVG/Renderers/`.
-
-Each renderer is a stateless class with a single `render()` method that takes a batch, view/projection matrices, and canvas dimensions, returning a vector of SVG element strings.
-
-#### SVGPolyLineRenderer
-- Migrate from `CorePlotting::renderPolyLineBatchToSVG()`
-- Input: `RenderablePolyLineBatch`, view matrix, projection matrix, canvas size
-- Output: `vector<string>` of `<polyline>` elements
-- Handles per-line colors, stroke width, line join/cap
-
-**Source reference:** `src/CorePlotting/Export/SVGPrimitives.cpp` — `renderPolyLineBatchToSVG()`
-
-#### SVGGlyphRenderer
-- Migrate from `CorePlotting::renderGlyphBatchToSVG()`
-- Input: `RenderableGlyphBatch`, view matrix, projection matrix, canvas size
-- Output: `vector<string>` of glyph SVG elements
-- Handles all glyph types: Tick (`<line>`), Circle (`<circle>`), Square (`<rect>`), Cross (two `<line>` elements)
-- Per-glyph colors and opacity
-
-**Source reference:** `src/CorePlotting/Export/SVGPrimitives.cpp` — `renderGlyphBatchToSVG()`
-
-#### SVGRectangleRenderer
-- Migrate from `CorePlotting::renderRectangleBatchToSVG()`
-- Input: `RenderableRectangleBatch`, view matrix, projection matrix, canvas size
-- Output: `vector<string>` of `<rect>` elements
-- Handles per-rectangle colors with fill-opacity
-
-**Source reference:** `src/CorePlotting/Export/SVGPrimitives.cpp` — `renderRectangleBatchToSVG()`
-
-**Files to create:**
-- `src/PlottingSVG/Renderers/SVGPolyLineRenderer.hpp` / `.cpp`
-- `src/PlottingSVG/Renderers/SVGGlyphRenderer.hpp` / `.cpp`
-- `src/PlottingSVG/Renderers/SVGRectangleRenderer.hpp` / `.cpp`
-
-**Verify:** Build compiles. Write unit tests for each renderer class (Step 1.7).
-
-**Completed:** Logic lives in `Renderers/SVGPolyLineRenderer.cpp`, `SVGGlyphRenderer.cpp`, and `SVGRectangleRenderer.cpp`, using `PlottingSVG::transformVertexToSVG` / `colorToSVGHex`. The legacy flat document path `buildSVGDocument` / `renderSceneToSVG` / `createScalebarSVG` and structs `SVGExportParams` / `ScalebarTimeRange` are in `PlottingSVG/SVGExport.hpp/.cpp`. `CorePlotting/Export/SVGPrimitives` was removed; `DataViewer_Widget` links `PlottingSVG` and includes `PlottingSVG/SVGExport.hpp`.
-
----
-
-### Step 1.4: Implement SVGDocument
-
-Create the SVG XML document assembly class. Manages the SVG header (XML declaration, `<svg>` tag with viewBox), background rect, named `<g>` layer groups, and the closing `</svg>` tag.
-
-The layered `SVGDocument` class exists (see Step 1.1 skeleton). The **flat** `buildSVGDocument` used by DataViewer remains in `PlottingSVG/SVGExport.cpp` until callers migrate to `SVGSceneRenderer` / `SVGDocument` only.
-
-**API:**
-```cpp
-SVGDocument(int width, int height);
-void setBackground(std::string const & hex_color);
-void setDescription(std::string const & desc);
-void addElements(std::string const & layer_name, std::vector<std::string> const & elements);
-[[nodiscard]] std::string build() const;
-```
-
-**Improvements over existing `buildSVGDocument()`:**
-- Named `<g>` layers for logical grouping (e.g., `<g id="intervals">`, `<g id="events">`, `<g id="decorations">`)
-- Configurable description text (default: "WhiskerToolbox Export")
-- Layer ordering preserved by insertion order
-
-**Source reference:** `src/CorePlotting/Export/SVGPrimitives.cpp` — `buildSVGDocument()`
-
-**Files to create:**
-- `src/PlottingSVG/SVGDocument.hpp`
-- `src/PlottingSVG/SVGDocument.cpp`
-
-**Verify:** Build compiles.
-
----
-
-### Step 1.5: Implement SVGSceneRenderer
-
-Create the main public API class that orchestrates batch rendering and document assembly. This is the primary class consumers interact with.
-
-**Responsibilities:**
-1. Accept a `RenderableScene` (by const reference)
-2. Configure canvas size and background color
-3. Accept decorations via `addDecoration()`
-4. Render by:
-   a. Creating an `SVGDocument`
-   b. Iterating scene batches in render order (rectangles → polylines → glyphs)
-   c. Calling the appropriate per-batch renderer for each batch
-   d. Adding elements to named document layers
-   e. Calling each decoration's `render()` and adding to a "decorations" layer
-   f. Returning `SVGDocument::build()` result
-
-**API:**
-```cpp
-void setScene(CorePlotting::RenderableScene const & scene);
-void setCanvasSize(int width, int height);
-void setBackgroundColor(std::string const & hex_color);
-void addDecoration(std::unique_ptr<SVGDecoration> decoration);
-void clearDecorations();
-[[nodiscard]] std::string render() const;
-[[nodiscard]] bool renderToFile(std::filesystem::path const & path) const;
-```
-
-**Files to create:**
-- `src/PlottingSVG/SVGSceneRenderer.hpp`
-- `src/PlottingSVG/SVGSceneRenderer.cpp`
-
-**Verify:** Build compiles. Can render a trivial `RenderableScene` to a valid SVG string.
-
----
-
-### Step 1.6: Implement Decorations
-
-#### SVGDecoration interface
-
-```cpp
-class SVGDecoration {
-public:
-    virtual ~SVGDecoration() = default;
-    [[nodiscard]] virtual std::vector<std::string>
-    render(int canvas_width, int canvas_height) const = 0;
-};
-```
-
-#### SVGScalebar
-- Migrate from `CorePlotting::createScalebarSVG()`
-- Constructor takes: scalebar length (time units), time range start/end
-- Configurable: position (default: bottom-right), bar thickness, tick height, label font size, colors
-- Produces: `<line>` for bar and ticks, `<text>` for label
-
-**Source reference:** `src/CorePlotting/Export/SVGPrimitives.cpp` — `createScalebarSVG()`
-
-#### SVGAxisRenderer
-- New implementation (no existing code to migrate)
-- Constructor takes: axis range (min, max), tick interval, label text
-- Configuration: position (Left or Bottom), font size, tick length, colors
-- Produces: `<line>` for axis spine and ticks, `<text>` for tick labels and axis title
-
-**Files to create:**
-- `src/PlottingSVG/Decorations/SVGDecoration.hpp`
-- `src/PlottingSVG/Decorations/SVGScalebar.hpp` / `.cpp`
-- `src/PlottingSVG/Decorations/SVGAxisRenderer.hpp` / `.cpp`
-
-**Verify:** Build compiles.
-
-**Completed:** `SVGDecoration` unchanged. `SVGScalebar` implements full geometry (configurable corner, padding, thickness, tick height, font size, colors); `PlottingSVG::createScalebarSVG` delegates to it. `SVGAxisRenderer` draws spine, optional uniform ticks with labels, and title for `AxisPosition::Bottom` or `Left` (rotated title). See [decorations.qmd](decorations.qmd).
+| Step | Component | Summary |
+|------|-----------|---------|
+| 1.1 | Directory + CMake | Static `PlottingSVG` target linking `CorePlotting` and `glm::glm` (no Qt/OpenGL). Registered in `src/CMakeLists.txt` outside `if (ENABLE_UI)`. |
+| 1.2 | `SVGUtils` | `transformVertexToSVG()` (MVP→canvas pixels) and `colorToSVGHex()` (RGBA→`#RRGGBB`). |
+| 1.3 | Per-batch renderers | `SVGPolyLineRenderer`, `SVGGlyphRenderer`, `SVGRectangleRenderer` — stateless `render()` methods producing SVG element strings. Legacy `SVGExport.hpp/.cpp` provides flat `buildSVGDocument` / `createScalebarSVG` for DataViewer. `CorePlotting/Export/SVGPrimitives` removed. |
+| 1.4 | `SVGDocument` | UTF-8 SVG 1.1 assembly with `<?xml>`, `<svg>` viewBox, background `<rect>`, `<desc>`, and ordered `<g id="…">` layers. |
+| 1.5 | `SVGSceneRenderer` | Main entry point: binds `RenderableScene`, iterates batches (rectangles→polylines→glyphs) into named layers, appends decorations, delegates to `SVGDocument::build()`. Includes `renderToFile()`. |
+| 1.6 | Decorations | `SVGDecoration` interface; `SVGScalebar` (bar + ticks + label, configurable corner/padding/style); `SVGAxisRenderer` (spine + uniform ticks + title, Bottom/Left positions). |
 
 ---
 
@@ -255,18 +57,9 @@ Create `tests/PlottingSVG/` with a `CMakeLists.txt` and test files.
 
 ### Step 1.8: Update CorePlotting — remove Export/SVGPrimitives
 
-After PlottingSVG is built and tested, remove the original SVG code from CorePlotting.
+### Step 1.8: Remove SVGPrimitives from CorePlotting (Completed)
 
-**Option A (recommended for this step):** Leave a forwarding header at `src/CorePlotting/Export/SVGPrimitives.hpp` that includes the new PlottingSVG headers and has `[[deprecated]]` attributes on the old function declarations. This prevents breaking any in-flight code during the transition.
-
-**Option B (later cleanup):** Remove `Export/SVGPrimitives.hpp` and `Export/SVGPrimitives.cpp` entirely once all consumers are migrated.
-
-**Files to modify:**
-- `src/CorePlotting/Export/SVGPrimitives.hpp` — replace with forwarding/deprecation header
-- `src/CorePlotting/Export/SVGPrimitives.cpp` — remove (forwarding header handles it)
-- `src/CorePlotting/CMakeLists.txt` — remove `Export/SVGPrimitives.cpp` from sources, add `PlottingSVG` dependency if using forwarding approach
-
-**Verify:** Full build succeeds. All existing tests pass. DataViewer SVG export still works (it still includes the forwarding header).
+`CorePlotting/Export/SVGPrimitives.hpp/.cpp` removed outright — no forwarding header needed. `DataViewer_Widget` links `PlottingSVG` and includes `PlottingSVG/SVGExport.hpp` directly.
 
 ---
 
@@ -374,53 +167,9 @@ QObject::connect(props, &EventPlotPropertiesWidget::exportSVGRequested,
 
 ---
 
-## Phase 3: Refactor DataViewer SVGExporter
+## Phase 3: Refactor DataViewer SVGExporter (Completed)
 
-### Step 3.1: Update SVGExporter to use PlottingSVG
-
-Replace the direct call to `CorePlotting::buildSVGDocument()` in `SVGExporter::exportToSVG()` with `PlottingSVG::SVGSceneRenderer::render()`. The existing `buildScene()` method stays unchanged — it already produces a `RenderableScene`.
-
-**Before:**
-```cpp
-CorePlotting::SVGExportParams params;
-params.canvas_width = svg_width_;
-std::string svg_content = CorePlotting::buildSVGDocument(scene, params);
-// ... manual string insertion for scalebar
-```
-
-**After:**
-```cpp
-PlottingSVG::SVGSceneRenderer renderer;
-renderer.setScene(scene);
-renderer.setCanvasSize(svg_width_, svg_height_);
-renderer.setBackgroundColor(gl_widget_->getBackgroundColor());
-if (scalebar_enabled_) {
-    renderer.addDecoration(
-        std::make_unique<PlottingSVG::SVGScalebar>(scalebar_length_, start_time, end_time));
-}
-std::string svg_content = renderer.render();
-```
-
-**Files to modify:**
-- `src/WhiskerToolbox/DataViewer_Widget/Rendering/SVGExporter.cpp` — replace `buildSVGDocument()` call
-- `src/WhiskerToolbox/DataViewer_Widget/Rendering/SVGExporter.hpp` — update includes
-- `src/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt` — add `PlottingSVG` dependency (if not already inherited)
-
-**Verify:** DataViewer SVG export produces identical (or visually equivalent) output to the pre-refactor version.
-
----
-
-### Step 3.2: Remove CorePlotting forwarding header
-
-Once no consumers directly include `CorePlotting/Export/SVGPrimitives.hpp`, remove the forwarding header entirely.
-
-**Files to remove:**
-- `src/CorePlotting/Export/SVGPrimitives.hpp`
-
-**Files to modify:**
-- `src/CorePlotting/CMakeLists.txt` — remove any remaining references to the Export/ directory
-
-**Verify:** Full build succeeds. `grep -r "SVGPrimitives" src/` returns no hits outside PlottingSVG.
+`DataViewer_Widget` links `PlottingSVG` and uses `PlottingSVG::buildSVGDocument` / `createScalebarSVG` from `SVGExport.hpp` (legacy flat API). `CorePlotting/Export/SVGPrimitives` removed entirely — no forwarding header. Optional future migration to `SVGSceneRenderer`-only path.
 
 ---
 
@@ -473,20 +222,14 @@ For each widget, the pattern is identical to Phase 2:
 
 ## Summary Checklist
 
-- [x] **Phase 1.1:** Directory structure + CMakeLists.txt + register in build *(done; stub document/scene/renderer/decoration sources included for a compiling target)*
-- [x] **Phase 1.2:** SVGUtils (coordinate transform, color conversion)
-- [x] **Phase 1.3:** Per-batch renderers (PolyLine, Glyph, Rectangle)
-- [x] **Phase 1.4:** SVGDocument (XML assembly with layers) *(class done; DataViewer still uses flat `SVGExport::buildSVGDocument` until optional migration)*
-- [x] **Phase 1.5:** SVGSceneRenderer (main entry point) *(orchestrates real batch renderers + `SVGDocument`)*
-- [x] **Phase 1.6:** Decorations (SVGScalebar, SVGAxisRenderer)
-- [ ] **Phase 1.7:** Tests (all renderer classes + document + scene)
-- [x] **Phase 1.8:** Remove SVGPrimitives from CorePlotting *(removed; no forwarding header)*
+- [x] **Phase 1.1–1.6:** Core library foundation (directory, CMake, SVGUtils, renderers, SVGDocument, SVGSceneRenderer, decorations)
+- [x] **Phase 1.7:** Tests (all renderer classes + document + scene)
+- [x] **Phase 1.8:** Remove SVGPrimitives from CorePlotting
 - [ ] **Phase 2.1:** EventPlotOpenGLWidget::exportToSVG()
 - [ ] **Phase 2.2:** Export button in EventPlotPropertiesWidget
 - [ ] **Phase 2.3:** EventPlotWidget::handleExportSVG()
 - [ ] **Phase 2.4:** Wire signals in EventPlotWidgetRegistration
 - [ ] **Phase 2.5:** Manual validation
-- [x] **Phase 3.1:** Refactor DataViewer SVGExporter to use PlottingSVG *(links `PlottingSVG`, uses `SVGExport` / batch renderers; optional: switch to `SVGSceneRenderer` only)*
-- [x] **Phase 3.2:** Remove CorePlotting forwarding header *(N/A — primitives removed outright)*
+- [x] **Phase 3:** Refactor DataViewer SVGExporter to use PlottingSVG
 - [ ] **Phase 4.1:** Shared ExportWidget (optional, deferred)
 - [ ] **Phase 5:** Extend to PSTHWidget, LinePlotWidget, etc.

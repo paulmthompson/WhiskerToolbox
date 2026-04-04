@@ -28,6 +28,8 @@ add_subdirectory(DataSynthesizer)
 
 add_subdirectory(MLCore)
 
+add_subdirectory(PlottingSVG)
+
 add_subdirectory(DeepLearning)
 add_subdirectory(python_bindings)
 add_subdirectory(Commands)
