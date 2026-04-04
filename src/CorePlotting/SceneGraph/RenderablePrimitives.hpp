@@ -121,9 +121,18 @@ struct RenderableScene {
     std::vector<RenderableRectangleBatch> rectangle_batches;
     std::vector<RenderableGlyphBatch> glyph_batches;
 
-    // Shared transformation matrices (apply to all batches)
-    glm::mat4 view_matrix{1.0f};      // Camera pan/zoom
-    glm::mat4 projection_matrix{1.0f};// World → NDC mapping
+    /// Shared view matrix (camera pan/zoom). Default is identity.
+    /// @note Renderers (including `PlottingSVG::SVGSceneRenderer`) compute
+    ///       `projection_matrix * view_matrix * batch.model_matrix` per batch.
+    ///       Identity defaults produce a 1:1 world→NDC mapping that is almost
+    ///       never the correct camera for a plot widget. Callers that build a
+    ///       scene via `SceneBuilder` should copy the widget's view/projection
+    ///       matrices onto the scene before rendering or exporting.
+    glm::mat4 view_matrix{1.0f};
+
+    /// Shared projection matrix (world → NDC mapping). Default is identity.
+    /// See `view_matrix` note on identity defaults.
+    glm::mat4 projection_matrix{1.0f};
 
     // Spatial index for hit testing
     // Built alongside geometry to ensure synchronization

@@ -226,6 +226,26 @@
    </item>
    <!-- Glyph style controls are inserted programmatically in a collapsible Section -->
    <item>
+    <widget class="QLabel" name="export_label">
+     <property name="text">
+      <string>Export:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="export_svg_button">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Export SVG...</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="vertical_spacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

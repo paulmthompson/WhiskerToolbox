@@ -22,14 +22,15 @@
 #include <QVBoxLayout>
 
 #include <algorithm>
+#include <utility>
 
 EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotState> state,
                                                      std::shared_ptr<DataManager> data_manager,
                                                      QWidget * parent)
     : QWidget(parent),
       ui(new Ui::EventPlotPropertiesWidget),
-      _state(state),
-      _data_manager(data_manager),
+      _state(std::move(std::move(state))),
+      _data_manager(std::move(std::move(data_manager))),
       _alignment_widget(nullptr),
       _plot_widget(nullptr),
       _range_controls(nullptr),
@@ -42,7 +43,7 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
     // Create and add PlotAlignmentWidget
     _alignment_widget = new PlotAlignmentWidget(_state->alignmentState(), _data_manager, this);
     // Replace the placeholder widget with the alignment widget
-    int alignment_index = ui->main_layout->indexOf(ui->alignment_widget_placeholder);
+    int const alignment_index = ui->main_layout->indexOf(ui->alignment_widget_placeholder);
     ui->main_layout->removeWidget(ui->alignment_widget_placeholder);
     ui->alignment_widget_placeholder->deleteLater();
     ui->main_layout->insertWidget(alignment_index, _alignment_widget);
@@ -71,6 +72,8 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
             this, &EventPlotPropertiesWidget::_onBackgroundColorButtonClicked);
     connect(ui->sorting_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &EventPlotPropertiesWidget::_onSortingModeChanged);
+    connect(ui->export_svg_button, &QPushButton::clicked,
+            this, &EventPlotPropertiesWidget::exportSVGRequested);
 
     // === Glyph Style Options collapsible section ===
     // Inserted after the add event widget. The GlyphStyleControls are
@@ -87,7 +90,7 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
     }
     // Insert after the add event widget
     {
-        int insert_idx = ui->main_layout->indexOf(ui->add_event_widget) + 1;
+        int const insert_idx = ui->main_layout->indexOf(ui->add_event_widget) + 1;
         ui->main_layout->insertWidget(insert_idx, _glyph_style_section);
     }
 
@@ -108,7 +111,7 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
         edge_layout->addWidget(_edge_selector_combo, 1);
 
         // Insert between the add_event_widget combo row and the glyph section
-        int insert_idx = ui->main_layout->indexOf(ui->add_event_widget) + 1;
+        int const insert_idx = ui->main_layout->indexOf(ui->add_event_widget) + 1;
         ui->main_layout->insertWidget(insert_idx, _edge_selector_widget);
         _edge_selector_widget->setVisible(false);
 
@@ -158,15 +161,15 @@ void EventPlotPropertiesWidget::setPlotWidget(EventPlotWidget * plot_widget) {
         if (time_axis_state) {
             // Create a collapsible section for the range controls
             _range_controls_section = new Section(this, "Time Axis Range Controls");
-            
+
             // Create new range controls that use the RelativeTimeAxisState
             _range_controls = new RelativeTimeAxisRangeControls(time_axis_state, _range_controls_section);
 
             // Set up the collapsible section (it starts collapsed by default)
             _range_controls_section->autoSetContentLayout();
-            
+
             // Add the section to the main layout (after alignment widget)
-            int insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
+            int const insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
             ui->main_layout->insertWidget(insert_index, _range_controls_section);
         }
     }
@@ -180,14 +183,14 @@ void EventPlotPropertiesWidget::setPlotWidget(EventPlotWidget * plot_widget) {
 
         // Create new range controls that use the VerticalAxisState
         auto vertical_axis_with_controls = createVerticalAxisWithRangeControls(
-            vertical_axis_state, nullptr, _vertical_range_controls_section);
+                vertical_axis_state, nullptr, _vertical_range_controls_section);
         _vertical_range_controls = vertical_axis_with_controls.range_controls;
 
         // Set up the collapsible section (it starts collapsed by default)
         _vertical_range_controls_section->autoSetContentLayout();
 
         // Add the section to the main layout (after time axis range controls)
-        int insert_index = _range_controls_section
+        int const insert_index = _range_controls_section
                                    ? ui->main_layout->indexOf(_range_controls_section) + 1
                                    : ui->main_layout->indexOf(_alignment_widget) + 1;
         ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
@@ -227,8 +230,8 @@ void EventPlotPropertiesWidget::_populateAddEventComboBox() {
     // Add DigitalIntervalSeries keys (prefixed to distinguish in the combo)
     for (auto const & key: interval_keys) {
         ui->add_event_combo->addItem(
-            QString::fromStdString(key) + QStringLiteral(" [interval]"),
-            QString::fromStdString(key));
+                QString::fromStdString(key) + QStringLiteral(" [interval]"),
+                QString::fromStdString(key));
     }
 }
 
@@ -237,14 +240,14 @@ void EventPlotPropertiesWidget::_onAddEventClicked() {
         return;
     }
 
-    QString event_key = ui->add_event_combo->currentData().toString();
+    QString const event_key = ui->add_event_combo->currentData().toString();
     if (event_key.isEmpty()) {
         return;
     }
 
     // Determine if this is an interval series and get the edge type
     std::optional<IntervalAlignmentType> interval_edge;
-    DM_DataType type = _data_manager->getType(event_key.toStdString());
+    DM_DataType const type = _data_manager->getType(event_key.toStdString());
     if (type == DM_DataType::DigitalInterval) {
         int edge_val = _edge_selector_combo->currentData().toInt();
         interval_edge = static_cast<IntervalAlignmentType>(edge_val);
@@ -254,8 +257,8 @@ void EventPlotPropertiesWidget::_onAddEventClicked() {
     QString event_name = event_key;
     if (interval_edge.has_value()) {
         event_name += (*interval_edge == IntervalAlignmentType::Beginning)
-                          ? QStringLiteral(" [start]")
-                          : QStringLiteral(" [end]");
+                              ? QStringLiteral(" [start]")
+                              : QStringLiteral(" [end]");
     }
 
     _state->addPlotEvent(event_name, event_key, interval_edge);
@@ -271,10 +274,10 @@ void EventPlotPropertiesWidget::_onRemoveEventClicked() {
         return;
     }
 
-    int row = selected.first()->row();
+    int const row = selected.first()->row();
     QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
     if (name_item) {
-        QString event_name = name_item->text();
+        QString const event_name = name_item->text();
         // Detach glyph controls from the state BEFORE it gets freed
         // by removePlotEvent(). Otherwise setGlyphStyleState(nullptr)
         // in the signal handler will dereference a dangling pointer.
@@ -290,19 +293,19 @@ void EventPlotPropertiesWidget::_onAddEventComboChanged(int /*index*/) {
         return;
     }
 
-    QString event_key = ui->add_event_combo->currentData().toString();
+    QString const event_key = ui->add_event_combo->currentData().toString();
     if (event_key.isEmpty()) {
         _edge_selector_widget->setVisible(false);
         return;
     }
 
-    DM_DataType type = _data_manager->getType(event_key.toStdString());
+    DM_DataType const type = _data_manager->getType(event_key.toStdString());
     _edge_selector_widget->setVisible(type == DM_DataType::DigitalInterval);
 }
 
 void EventPlotPropertiesWidget::_onPlotEventSelectionChanged() {
-    QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
-    bool has_selection = !selected.isEmpty();
+    QList<QTableWidgetItem *> const selected = ui->plot_events_table->selectedItems();
+    bool const has_selection = !selected.isEmpty();
     ui->remove_event_button->setEnabled(has_selection);
     _updateGlyphStyleControls();
 }
@@ -314,7 +317,7 @@ void EventPlotPropertiesWidget::_updatePlotEventsTable() {
 
     // Block signals while rebuilding the table to prevent selectionChanged
     // from firing mid-update and accessing stale/freed GlyphStyleState pointers.
-    QSignalBlocker blocker(ui->plot_events_table);
+    QSignalBlocker const blocker(ui->plot_events_table);
 
     ui->plot_events_table->setRowCount(0);
 
@@ -325,14 +328,14 @@ void EventPlotPropertiesWidget::_updatePlotEventsTable() {
             continue;
         }
 
-        int row = ui->plot_events_table->rowCount();
+        int const row = ui->plot_events_table->rowCount();
         ui->plot_events_table->insertRow(row);
 
-        QTableWidgetItem * name_item = new QTableWidgetItem(event_name);
+        auto * name_item = new QTableWidgetItem(event_name);
         name_item->setFlags(name_item->flags() & ~Qt::ItemIsEditable);
         ui->plot_events_table->setItem(row, 0, name_item);
 
-        QTableWidgetItem * key_item = new QTableWidgetItem(QString::fromStdString(options->event_key));
+        auto * key_item = new QTableWidgetItem(QString::fromStdString(options->event_key));
         key_item->setFlags(key_item->flags() & ~Qt::ItemIsEditable);
         ui->plot_events_table->setItem(row, 1, key_item);
     }
@@ -340,16 +343,16 @@ void EventPlotPropertiesWidget::_updatePlotEventsTable() {
     // Resize table to fit content dynamically
     ui->plot_events_table->resizeRowsToContents();
 
-    int row_count = ui->plot_events_table->rowCount();
+    int const row_count = ui->plot_events_table->rowCount();
     if (row_count == 0) {
         // If no rows, set minimum height to just show header
         ui->plot_events_table->setMinimumHeight(ui->plot_events_table->horizontalHeader()->height());
         ui->plot_events_table->setMaximumHeight(ui->plot_events_table->horizontalHeader()->height());
     } else {
         // Calculate height: header + (row height * row count)
-        int header_height = ui->plot_events_table->horizontalHeader()->height();
-        int row_height = ui->plot_events_table->rowHeight(0);
-        int total_height = header_height + (row_height * row_count);
+        int const header_height = ui->plot_events_table->horizontalHeader()->height();
+        int const row_height = ui->plot_events_table->rowHeight(0);
+        int const total_height = header_height + (row_height * row_count);
 
         ui->plot_events_table->setMinimumHeight(total_height);
         ui->plot_events_table->setMaximumHeight(total_height);
@@ -403,8 +406,7 @@ void EventPlotPropertiesWidget::_updateUIFromState() {
     ui->sorting_combo->blockSignals(false);
 }
 
-void EventPlotPropertiesWidget::_updateGlyphStyleControls()
-{
+void EventPlotPropertiesWidget::_updateGlyphStyleControls() {
     if (!_glyph_style_controls || !_state) {
         return;
     }
@@ -438,13 +440,13 @@ void EventPlotPropertiesWidget::_onBackgroundColorButtonClicked() {
     }
 
     // Get current background color
-    QColor current_color = QColor(_state->getBackgroundColor());
+    QColor const current_color = QColor(_state->getBackgroundColor());
 
     // Open color dialog
-    QColor color = QColorDialog::getColor(current_color, this, "Choose Background Color");
+    QColor const color = QColorDialog::getColor(current_color, this, "Choose Background Color");
 
     if (color.isValid()) {
-        QString hex_color = color.name();
+        QString const hex_color = color.name();
         _updateBackgroundColorDisplay(hex_color);
         _state->setBackgroundColor(hex_color);
     }

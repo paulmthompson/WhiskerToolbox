@@ -73,6 +73,12 @@ public:
      */
     void setPlotWidget(EventPlotWidget * plot_widget);
 
+signals:
+    /**
+     * @brief Emitted when the user clicks the "Export SVG" button
+     */
+    void exportSVGRequested();
+
 private slots:
     /**
      * @brief Handle add event button click
@@ -177,8 +183,8 @@ private:
     Section * _range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;
     Section * _vertical_range_controls_section;
-    QWidget * _edge_selector_widget = nullptr;    ///< Container for edge selector (shown for interval keys)
-    QComboBox * _edge_selector_combo = nullptr;   ///< Combo box for selecting interval edge (Start/End)
+    QWidget * _edge_selector_widget = nullptr; ///< Container for edge selector (shown for interval keys)
+    QComboBox * _edge_selector_combo = nullptr;///< Combo box for selecting interval edge (Start/End)
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;

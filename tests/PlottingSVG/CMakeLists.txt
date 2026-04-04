@@ -13,11 +13,13 @@ add_executable(test_PlottingSVG
     SVGSceneRenderer.test.cpp
     SVGScalebar.test.cpp
     SVGAxisRenderer.test.cpp
+    EventPlotExportIntegration.test.cpp
 )
 
 target_link_libraries(test_PlottingSVG PRIVATE
     Catch2::Catch2WithMain
     PlottingSVG
+    Entity
     glm::glm
 )
 

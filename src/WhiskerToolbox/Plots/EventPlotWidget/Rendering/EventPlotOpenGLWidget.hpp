@@ -107,6 +107,18 @@ public:
      */
     void setTooltipsEnabled(bool enabled);
 
+    /**
+     * @brief Export the current scene to an SVG document string.
+     *
+     * Renders the cached scene using `PlottingSVG::SVGSceneRenderer` with the
+     * current widget dimensions as the canvas size and the state background color.
+     * This method is non-mutating: it does NOT trigger a scene rebuild.
+     *
+     * @return SVG document as a `QString`. Returns an empty `QString` if no scene
+     *         has been built yet (e.g., before the first `paintGL()` call).
+     */
+    [[nodiscard]] QString exportToSVG();
+
 signals:
     /**
      * @brief Emitted when user single-clicks on an event to select it

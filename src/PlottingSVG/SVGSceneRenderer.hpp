@@ -35,8 +35,19 @@ public:
     /**
      * @brief Bind the scene whose batches and view/projection matrices are exported on `render()`.
      *
+     * The renderer reads `scene.view_matrix` and `scene.projection_matrix` at `render()` time
+     * to compute the final MVP (`projection * view * batch.model_matrix`) for every batch.
+     * Callers **must** ensure these matrices reflect the desired camera state before calling
+     * `render()`. The `RenderableScene` defaults are identity, which maps world coordinates
+     * directly to NDC — this is almost never the correct camera for a plot widget. Typically
+     * the caller copies the same view/projection matrices used by the live OpenGL renderer
+     * onto the scene before exporting.
+     *
      * @pre `scene` must remain valid (not destroyed) for every subsequent call to `render()` or
      *      `renderToFile()` while this pointer is still stored (enforcement: none) [CRITICAL]
+     * @pre `scene.view_matrix` and `scene.projection_matrix` should reflect the intended camera
+     *      transform (enforcement: none — identity produces valid but usually incorrect output)
+     *      [IMPORTANT]
      */
     void setScene(CorePlotting::RenderableScene const & scene);
 

@@ -11,17 +11,22 @@
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Rendering/EventPlotOpenGLWidget.hpp"
+#include "StateManagement/AppFileDialog.hpp"
 
+#include <QFile>
 #include <QHBoxLayout>
+#include <QMessageBox>
 #include <QResizeEvent>
+#include <QTextStream>
 #include <QVBoxLayout>
+#include <utility>
 
 #include "ui_EventPlotWidget.h"
 
 EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
                                  QWidget * parent)
     : QWidget(parent),
-      _data_manager(data_manager),
+      _data_manager(std::move(std::move(data_manager))),
       ui(new Ui::EventPlotWidget),
       _opengl_widget(nullptr),
       _axis_widget(nullptr),
@@ -66,9 +71,9 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
 
     // Replace the main layout
     QLayout * old_layout = layout();
-    if (old_layout) {
+    
         delete old_layout;
-    }
+    
     setLayout(vertical_layout);
 
     // Forward signals from OpenGL widget
@@ -111,7 +116,7 @@ EventPlotWidget::~EventPlotWidget() {
 }
 
 void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
-    _state = state;
+    _state = std::move(state);
 
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
@@ -305,6 +310,44 @@ EventPlotState * EventPlotWidget::state() {
 
 RelativeTimeAxisRangeControls * EventPlotWidget::getRangeControls() const {
     return _range_controls;
+}
+
+void EventPlotWidget::handleExportSVG() {
+    QString const fileName = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("export_event_plot_svg"),
+            tr("Export Event Plot to SVG"),
+            tr("SVG Files (*.svg);;All Files (*)"));
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    QString const svg = _opengl_widget->exportToSVG();
+    if (svg.isEmpty()) {
+        QMessageBox::warning(
+                this,
+                tr("Export Failed"),
+                tr("No scene to export. Load data and configure the plot first."));
+        return;
+    }
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(
+                this,
+                tr("Export Failed"),
+                tr("Could not open file for writing:\n%1").arg(fileName));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << svg;
+    file.close();
+
+    QMessageBox::information(
+            this,
+            tr("Export Successful"),
+            tr("Event plot exported to:\n%1").arg(fileName));
 }
 
 

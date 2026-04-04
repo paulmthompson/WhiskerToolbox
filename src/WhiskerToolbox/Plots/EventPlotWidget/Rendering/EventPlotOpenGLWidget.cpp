@@ -12,6 +12,7 @@
 #include "GatherResult/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "PlottingSVG/SVGSceneRenderer.hpp"
 
 #include <QDebug>
 #include <QMouseEvent>
@@ -173,6 +174,30 @@ void EventPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
     _tooltip_mgr->setEnabled(enabled);
 }
 
+QString EventPlotOpenGLWidget::exportToSVG() {
+    if (_scene.glyph_batches.empty() && _scene.poly_line_batches.empty() &&
+        _scene.rectangle_batches.empty()) {
+        return {};
+    }
+
+    // Ensure the cached scene carries the current camera matrices.
+    // rebuildScene() produces identity matrices; the OpenGL path passes
+    // matrices directly to the shader, but SVGSceneRenderer reads them
+    // from the scene struct.
+    _scene.view_matrix = _view_matrix;
+    _scene.projection_matrix = _projection_matrix;
+
+    PlottingSVG::SVGSceneRenderer renderer;
+    renderer.setScene(_scene);
+    renderer.setCanvasSize(_widget_width, _widget_height);
+
+    if (_state) {
+        renderer.setBackgroundColor(_state->getBackgroundColor().toStdString());
+    }
+
+    return QString::fromStdString(renderer.render());
+}
+
 // =============================================================================
 // OpenGL Lifecycle
 // =============================================================================
@@ -222,6 +247,11 @@ void EventPlotOpenGLWidget::paintGL() {
     if (_scene_dirty) {
         rebuildScene();
         _scene_dirty = false;
+
+        // Sync current camera matrices into the cached scene so that
+        // exportToSVG() (which reads from _scene) uses the right transform.
+        _scene.view_matrix = _view_matrix;
+        _scene.projection_matrix = _projection_matrix;
     }
 
     // Render the scene
@@ -574,6 +604,10 @@ void EventPlotOpenGLWidget::updateMatrices() {
     _projection_matrix =
             WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
+
+    // Keep the cached scene in sync so exportToSVG() uses current matrices.
+    _scene.view_matrix = _view_matrix;
+    _scene.projection_matrix = _projection_matrix;
 }
 
 QPointF EventPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {

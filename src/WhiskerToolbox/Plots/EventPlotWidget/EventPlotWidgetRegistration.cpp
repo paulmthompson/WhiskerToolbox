@@ -9,6 +9,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <iostream>
+#include <utility>
 
 namespace EventPlotWidgetModule {
 
@@ -21,7 +22,7 @@ void registerTypes(EditorRegistry * registry,
     }
 
     // Capture dependencies for lambdas
-    auto dm = data_manager;
+    const auto& dm = std::move(data_manager);
     auto reg = registry;
 
     registry->registerType({.type_id = QStringLiteral("EventPlotWidget"),
@@ -39,7 +40,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<EventPlotState>(); },
 
                             // View factory - creates EventPlotWidget (the view component)
-                            .create_view = [dm, reg](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_view = [dm, reg](const std::shared_ptr<EditorState>& state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<EventPlotState>(state);
                                 if (!plot_state) {
                                     std::cerr << "EventPlotWidgetModule: Failed to cast state to EventPlotState" << std::endl;
@@ -53,7 +54,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Properties factory - creates EventPlotPropertiesWidget
-                            .create_properties = [dm](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_properties = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<EventPlotState>(state);
                                 if (!plot_state) {
                                     std::cerr << "EventPlotWidgetModule: Failed to cast state to EventPlotState for properties" << std::endl;
@@ -81,11 +82,15 @@ void registerTypes(EditorRegistry * registry,
                                 // Connect properties widget to view widget (for range controls)
                                 props->setPlotWidget(view);
 
+                                // Connect export button in properties to the view's export handler
+                                QObject::connect(props, &EventPlotPropertiesWidget::exportSVGRequested,
+                                                 view, &EventPlotWidget::handleExportSVG);
+
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the event plot to navigate to a specific time position
                                 if (reg) {
                                     QObject::connect(view, &EventPlotWidget::timePositionSelected,
-                                                     [reg](TimePosition position) {
+                                                     [reg](const TimePosition& position) {
                                                          // Update EditorRegistry time (triggers timeChanged signal for other widgets)
                                                          reg->setCurrentTime(position);
                                                      });

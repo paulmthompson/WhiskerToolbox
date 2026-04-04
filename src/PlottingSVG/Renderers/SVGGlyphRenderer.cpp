@@ -7,6 +7,8 @@
 
 #include "PlottingSVG/SVGUtils.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <sstream>
 
 namespace PlottingSVG {
@@ -43,8 +45,11 @@ SVGGlyphRenderer::render(CorePlotting::RenderableGlyphBatch const & batch,
 
         switch (batch.glyph_type) {
             case CorePlotting::RenderableGlyphBatch::GlyphType::Tick: {
-                glm::vec4 const bottom_vertex(pos.x, -1.0f, 0.0f, 1.0f);
-                glm::vec4 const top_vertex(pos.x, 1.0f, 0.0f, 1.0f);
+                // Tick extends ±size/2 from the glyph center in world-space Y,
+                // matching the OpenGL instanced shader: world_pos = geometry * u_glyph_size + instance_pos.
+                float const half_size = batch.size / 2.0f;
+                glm::vec4 const bottom_vertex(pos.x, pos.y - half_size, 0.0f, 1.0f);
+                glm::vec4 const top_vertex(pos.x, pos.y + half_size, 0.0f, 1.0f);
                 glm::vec2 const svg_bottom =
                         transformVertexToSVG(bottom_vertex, mvp, canvas_width, canvas_height);
                 glm::vec2 const svg_top =
@@ -52,35 +57,60 @@ SVGGlyphRenderer::render(CorePlotting::RenderableGlyphBatch const & batch,
 
                 element << R"(<line x1=")" << svg_bottom.x << R"(" y1=")" << svg_bottom.y
                         << R"(" x2=")" << svg_top.x << R"(" y2=")" << svg_top.y
-                        << R"(" stroke=")" << color_hex << R"(" stroke-width=")" << batch.size
-                        << R"(" stroke-opacity=")" << alpha << R"("/>)";
+                        << R"(" stroke=")" << color_hex
+                        << R"(" stroke-width="1" stroke-opacity=")" << alpha << R"("/>)";
                 break;
             }
             case CorePlotting::RenderableGlyphBatch::GlyphType::Circle: {
+                // Circle size is in screen pixels (set by widget as _widget_height / num_trials).
                 element << R"(<circle cx=")" << svg_pos.x << R"(" cy=")" << svg_pos.y
                         << R"(" r=")" << batch.size / 2.0f << R"(" fill=")" << color_hex
                         << R"(" fill-opacity=")" << alpha << R"("/>)";
                 break;
             }
             case CorePlotting::RenderableGlyphBatch::GlyphType::Square: {
+                // Square extends ±size/2 in both X and Y in world space.
                 float const half_size = batch.size / 2.0f;
-                element << R"(<rect x=")" << (svg_pos.x - half_size) << R"(" y=")"
-                        << (svg_pos.y - half_size) << R"(" width=")" << batch.size
-                        << R"(" height=")" << batch.size << R"(" fill=")" << color_hex
+                glm::vec4 const tl_vertex(pos.x - half_size, pos.y + half_size, 0.0f, 1.0f);
+                glm::vec4 const br_vertex(pos.x + half_size, pos.y - half_size, 0.0f, 1.0f);
+                glm::vec2 const svg_tl =
+                        transformVertexToSVG(tl_vertex, mvp, canvas_width, canvas_height);
+                glm::vec2 const svg_br =
+                        transformVertexToSVG(br_vertex, mvp, canvas_width, canvas_height);
+                float const w = std::abs(svg_br.x - svg_tl.x);
+                float const h = std::abs(svg_br.y - svg_tl.y);
+                float const min_x = std::min(svg_tl.x, svg_br.x);
+                float const min_y = std::min(svg_tl.y, svg_br.y);
+                element << R"(<rect x=")" << min_x << R"(" y=")" << min_y << R"(" width=")" << w
+                        << R"(" height=")" << h << R"(" fill=")" << color_hex
                         << R"(" fill-opacity=")" << alpha << R"("/>)";
                 break;
             }
             case CorePlotting::RenderableGlyphBatch::GlyphType::Cross: {
+                // Cross: two lines through center, each ±size/2 in world space.
                 float const half_size = batch.size / 2.0f;
-                element << R"(<line x1=")" << (svg_pos.x - half_size) << R"(" y1=")" << svg_pos.y
-                        << R"(" x2=")" << (svg_pos.x + half_size) << R"(" y2=")" << svg_pos.y
+                glm::vec4 const left_v(pos.x - half_size, pos.y, 0.0f, 1.0f);
+                glm::vec4 const right_v(pos.x + half_size, pos.y, 0.0f, 1.0f);
+                glm::vec4 const bot_v(pos.x, pos.y - half_size, 0.0f, 1.0f);
+                glm::vec4 const top_v(pos.x, pos.y + half_size, 0.0f, 1.0f);
+                glm::vec2 const svg_left =
+                        transformVertexToSVG(left_v, mvp, canvas_width, canvas_height);
+                glm::vec2 const svg_right =
+                        transformVertexToSVG(right_v, mvp, canvas_width, canvas_height);
+                glm::vec2 const svg_bot =
+                        transformVertexToSVG(bot_v, mvp, canvas_width, canvas_height);
+                glm::vec2 const svg_top =
+                        transformVertexToSVG(top_v, mvp, canvas_width, canvas_height);
+
+                element << R"(<line x1=")" << svg_left.x << R"(" y1=")" << svg_left.y
+                        << R"(" x2=")" << svg_right.x << R"(" y2=")" << svg_right.y
                         << R"(" stroke=")" << color_hex
                         << R"(" stroke-width="1" stroke-opacity=")" << alpha << R"("/>)";
                 elements.push_back(element.str());
 
                 std::ostringstream element2;
-                element2 << R"(<line x1=")" << svg_pos.x << R"(" y1=")" << (svg_pos.y - half_size)
-                         << R"(" x2=")" << svg_pos.x << R"(" y2=")" << (svg_pos.y + half_size)
+                element2 << R"(<line x1=")" << svg_bot.x << R"(" y1=")" << svg_bot.y
+                         << R"(" x2=")" << svg_top.x << R"(" y2=")" << svg_top.y
                          << R"(" stroke=")" << color_hex
                          << R"(" stroke-width="1" stroke-opacity=")" << alpha << R"("/>)";
                 elements.push_back(element2.str());

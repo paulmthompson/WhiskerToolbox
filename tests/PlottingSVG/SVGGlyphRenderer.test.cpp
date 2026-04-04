@@ -49,9 +49,15 @@ TEST_CASE("SVGGlyphRenderer Tick produces line element",
     REQUIRE_THAT(elements[0], ContainsSubstring("stroke-opacity=\"0.8\""));
 }
 
-TEST_CASE("SVGGlyphRenderer Tick draws from y=-1 to y=+1 in world space",
+TEST_CASE("SVGGlyphRenderer Tick draws ±size/2 from glyph center",
           "[PlottingSVG][SVGGlyphRenderer]") {
-    auto batch = makeSingleGlyphBatch(GlyphType::Tick);
+    CorePlotting::RenderableGlyphBatch batch;
+    batch.positions = {glm::vec2{0.0f, 0.0f}};
+    batch.colors = {glm::vec4{1.0f, 0.0f, 0.0f, 0.8f}};
+    batch.glyph_type = GlyphType::Tick;
+    batch.size = 1.0f;// ±0.5 in world (fits within NDC with identity MVP)
+    batch.model_matrix = glm::mat4{1.0f};
+
     glm::mat4 const I{1.0f};
     int const W = 100;
     int const H = 100;
@@ -59,11 +65,11 @@ TEST_CASE("SVGGlyphRenderer Tick draws from y=-1 to y=+1 in world space",
     auto const elements = PlottingSVG::SVGGlyphRenderer::render(batch, I, I, W, H);
     REQUIRE(elements.size() == 1);
 
-    // y=-1 → svg_y = 100*(1-(-1))/2 = 100 (bottom)
-    // y=+1 → svg_y = 100*(1-1)/2 = 0 (top)
-    // x=0 for both → svg_x = 100*(0+1)/2 = 50
-    REQUIRE_THAT(elements[0], ContainsSubstring("y1=\"100\""));
-    REQUIRE_THAT(elements[0], ContainsSubstring("y2=\"0\""));
+    // pos.y=0, half_size=0.5, so bottom=(0,-0.5), top=(0,+0.5)
+    // y=-0.5 → svg_y = 100*(1-(-0.5))/2 = 75 (lower)
+    // y=+0.5 → svg_y = 100*(1-0.5)/2 = 25 (upper)
+    REQUIRE_THAT(elements[0], ContainsSubstring("y1=\"75\""));
+    REQUIRE_THAT(elements[0], ContainsSubstring("y2=\"25\""));
 }
 
 TEST_CASE("SVGGlyphRenderer Circle produces circle element",
@@ -81,15 +87,25 @@ TEST_CASE("SVGGlyphRenderer Circle produces circle element",
 
 TEST_CASE("SVGGlyphRenderer Square produces rect element",
           "[PlottingSVG][SVGGlyphRenderer]") {
-    auto batch = makeSingleGlyphBatch(GlyphType::Square);
-    glm::mat4 const I{1.0f};
+    CorePlotting::RenderableGlyphBatch batch;
+    batch.positions = {glm::vec2{0.0f, 0.0f}};
+    batch.colors = {glm::vec4{1.0f, 0.0f, 0.0f, 0.8f}};
+    batch.glyph_type = GlyphType::Square;
+    batch.size = 0.5f;// ±0.25 in world (fits within NDC with identity MVP)
+    batch.model_matrix = glm::mat4{1.0f};
 
-    auto const elements = PlottingSVG::SVGGlyphRenderer::render(batch, I, I, 200, 200);
+    glm::mat4 const I{1.0f};
+    int const W = 200;
+    int const H = 200;
+
+    auto const elements = PlottingSVG::SVGGlyphRenderer::render(batch, I, I, W, H);
     REQUIRE(elements.size() == 1);
     REQUIRE_THAT(elements[0], ContainsSubstring("<rect"));
     REQUIRE_THAT(elements[0], ContainsSubstring(R"(fill="#FF0000")"));
-    REQUIRE_THAT(elements[0], ContainsSubstring("width=\"10\""));// batch.size
-    REQUIRE_THAT(elements[0], ContainsSubstring("height=\"10\""));
+    // Size 0.5 world → ±0.25 world → spans 0.5 NDC units.
+    // In pixels: 200 * 0.5/2 = 50 px in each axis.
+    REQUIRE_THAT(elements[0], ContainsSubstring("width=\"50\""));
+    REQUIRE_THAT(elements[0], ContainsSubstring("height=\"50\""));
 }
 
 TEST_CASE("SVGGlyphRenderer Cross produces two line elements",

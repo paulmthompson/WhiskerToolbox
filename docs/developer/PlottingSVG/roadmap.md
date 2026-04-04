@@ -225,11 +225,11 @@ For each widget, the pattern is identical to Phase 2:
 - [x] **Phase 1.1–1.6:** Core library foundation (directory, CMake, SVGUtils, renderers, SVGDocument, SVGSceneRenderer, decorations)
 - [x] **Phase 1.7:** Tests (all renderer classes + document + scene)
 - [x] **Phase 1.8:** Remove SVGPrimitives from CorePlotting
-- [ ] **Phase 2.1:** EventPlotOpenGLWidget::exportToSVG()
-- [ ] **Phase 2.2:** Export button in EventPlotPropertiesWidget
-- [ ] **Phase 2.3:** EventPlotWidget::handleExportSVG()
-- [ ] **Phase 2.4:** Wire signals in EventPlotWidgetRegistration
-- [ ] **Phase 2.5:** Manual validation
+- [x] **Phase 2.1:** EventPlotOpenGLWidget::exportToSVG()
+- [x] **Phase 2.2:** Export button in EventPlotPropertiesWidget
+- [x] **Phase 2.3:** EventPlotWidget::handleExportSVG()
+- [x] **Phase 2.4:** Wire signals in EventPlotWidgetRegistration
+- [x] **Phase 2.5:** Manual validation
 - [x] **Phase 3:** Refactor DataViewer SVGExporter to use PlottingSVG
 - [ ] **Phase 4.1:** Shared ExportWidget (optional, deferred)
 - [ ] **Phase 5:** Extend to PSTHWidget, LinePlotWidget, etc.

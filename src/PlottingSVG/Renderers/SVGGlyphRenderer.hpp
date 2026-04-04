@@ -29,6 +29,12 @@ public:
      *
      * @param batch           Glyph instances: `positions` in world space; optional parallel `colors`
      *                        (per-glyph RGBA when `colors.size() > i`, otherwise white).
+     *                        `batch.size` has different coordinate-space semantics per glyph type:
+     *                        - **Tick / Square / Cross**: world-space units. Corners/endpoints are
+     *                          computed at `pos ± size/2` (in X and/or Y), then transformed through
+     *                          the MVP to canvas pixels.
+     *                        - **Circle**: screen pixels. The radius `size / 2` is emitted directly
+     *                          in the `<circle r="...">` attribute (no MVP transform on size).
      * @param view            Shared view matrix (same convention as OpenGL rendering).
      * @param projection      Shared projection matrix.
      * @param canvas_width    Target SVG width in pixels.
