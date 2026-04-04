@@ -159,18 +159,17 @@ Currently, each trial-aligned widget (EventPlot, PSTH, Heatmap) maintains its ow
 
 ## Phase 5: SVG Export
 
-**Status**: Infrastructure exists in `CorePlotting::Export`. Implementation needed for PSTHWidget.
+**Status**: Infrastructure exists in `PlottingSVG`. Implementation needed for PSTHWidget.
 
 **Goal**: Export the current PSTH plot to SVG for publication-quality figures.
 
 ### 5.1 Existing Infrastructure
 
-The project already has SVG export infrastructure in `CorePlotting/Export/SVGPrimitives.hpp`:
+The project has SVG export infrastructure in `PlottingSVG` (e.g. `PlottingSVG/SVGExport.hpp` and `SVGSceneRenderer`):
 
-- `buildSVGDocument(RenderableScene, SVGExportParams)` — generates a complete SVG from any `RenderableScene`
-- `renderRectangleBatchToSVG()` — converts bar charts to `<rect>` elements
-- `renderPolyLineBatchToSVG()` — converts line plots to `<polyline>` elements
-- `renderSceneToSVG()` — renders a full scene including all batch types
+- `PlottingSVG::buildSVGDocument(RenderableScene, SVGExportParams)` — full flat SVG document
+- `PlottingSVG::SVGSceneRenderer` — layered SVG via `SVGDocument` and per-batch renderers
+- `PlottingSVG::renderSceneToSVG()` — all batch types in draw order (uses `SVG*Renderer` internally)
 
 The `DataViewerWidget` already uses this infrastructure via a bespoke `SVGExporter` class that builds scenes from the DataViewer's specific state format.
 
@@ -184,7 +183,7 @@ namespace Plots::Export {
         RenderableScene const & scene,
         glm::mat4 const & view_matrix,
         glm::mat4 const & projection_matrix,
-        SVGExportParams const & params);
+        PlottingSVG::SVGExportParams const & params);
 }
 ```
 
