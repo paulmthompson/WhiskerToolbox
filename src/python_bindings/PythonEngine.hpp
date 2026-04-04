@@ -86,7 +86,7 @@ public:
      *
      * @param dir  Absolute path to the directory.
      */
-    void setWorkingDirectory(std::filesystem::path const & dir);
+    void setWorkingDirectory(std::filesystem::path const & dir) const;
 
     /**
      * @brief Get the current Python working directory.
@@ -101,7 +101,7 @@ public:
      *
      * @param args  Space-separated argument string.
      */
-    void setSysArgv(std::string const & args);
+    void setSysArgv(std::string const & args) const;
 
     /**
      * @brief Execute a prelude code string.
@@ -131,8 +131,8 @@ public:
      * @param extra_paths  Additional directories to scan.
      * @return List of discovered venv root paths.
      */
-    [[nodiscard]] std::vector<std::filesystem::path>
-    discoverVenvs(std::vector<std::filesystem::path> const & extra_paths = {}) const;
+    [[nodiscard]] static std::vector<std::filesystem::path>
+    discoverVenvs(std::vector<std::filesystem::path> const & extra_paths = {}) ;
 
     /**
      * @brief Validate that a virtual environment is compatible.
@@ -244,7 +244,7 @@ private:
     [[nodiscard]] std::filesystem::path _findSitePackages(std::filesystem::path const & venv_root) const;
 
     /// Read the Python version from a venv's pyvenv.cfg.
-    [[nodiscard]] std::pair<int, int> _readVenvPythonVersion(std::filesystem::path const & venv_root) const;
+    [[nodiscard]] static std::pair<int, int> _readVenvPythonVersion(std::filesystem::path const & venv_root) ;
 
     /// Check if a path looks like a valid venv (has pyvenv.cfg or bin/python).
     [[nodiscard]] static bool _looksLikeVenv(std::filesystem::path const & path);
