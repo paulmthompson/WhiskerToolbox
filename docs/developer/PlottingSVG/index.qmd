@@ -1,0 +1,305 @@
+---
+title: "PlottingSVG Library"
+format: html
+---
+
+## A Qt-free SVG rendering backend for CorePlotting scenes.
+
+**PlottingSVG** is a static library that converts `CorePlotting::RenderableScene` objects into publication-quality SVG documents. It is the SVG counterpart to `PlottingOpenGL` — both consume the same CorePlotting scene graph but produce different output: OpenGL draw calls vs. SVG strings.
+
+## Key Features
+
+- **Symmetric with PlottingOpenGL:** Same input (`RenderableScene`), different output. Any widget that builds a `RenderableScene` can export to SVG with no additional scene-building code.
+- **No Qt Dependency:** Pure C++ string output using `<sstream>` and `<fstream>`. Can be used in headless/batch workflows without a GUI.
+- **Decoration System:** Extensible overlay mechanism for axes, scalebars, center lines, and other SVG-specific annotations that have no OpenGL equivalent.
+- **Per-Batch Renderers:** Dedicated renderer classes for each primitive type (polylines, glyphs, rectangles), matching the PlottingOpenGL renderer organization.
+
+## Motivation
+
+Prior to this library, SVG export code lived in two places:
+
+1. `CorePlotting/Export/SVGPrimitives` — batch-to-SVG conversion functions (rendering logic inside a framework-agnostic library).
+2. `DataViewer_Widget/Rendering/SVGExporter` — a bespoke class that builds a `RenderableScene` from DataViewer-specific state, then calls `CorePlotting::buildSVGDocument()`.
+
+This arrangement had two problems:
+
+- **Architectural asymmetry:** OpenGL rendering lives in its own library (`PlottingOpenGL`), but SVG rendering was embedded in `CorePlotting`. CorePlotting should contain no rendering backend code.
+- **No reuse path:** Each new widget that wanted SVG export would need its own bespoke exporter class, duplicating the scene-to-SVG conversion and document assembly logic.
+
+PlottingSVG fixes both issues by extracting SVG rendering into a proper library that any widget can consume.
+
+## Architecture
+
+### Position in the Stack
+
+```
+CorePlotting (data types, layout, scene building)
+    ├── PlottingOpenGL  (RenderableScene → OpenGL draw calls)
+    └── PlottingSVG     (RenderableScene → SVG strings)
+```
+
+Both rendering backends depend on `CorePlotting` but not on each other. Widget code depends on `PlottingOpenGL` for live rendering and optionally on `PlottingSVG` for export.
+
+### Directory Structure
+
+```
+src/PlottingSVG/
+├── CMakeLists.txt
+├── SVGDocument.hpp              # SVG XML document assembly
+├── SVGDocument.cpp
+├── SVGSceneRenderer.hpp         # Main public API
+├── SVGSceneRenderer.cpp
+├── SVGUtils.hpp                 # Shared utilities (coordinate transform, color conversion)
+├── SVGUtils.cpp
+├── Renderers/
+│   ├── SVGPolyLineRenderer.hpp  # RenderablePolyLineBatch → <polyline>
+│   ├── SVGPolyLineRenderer.cpp
+│   ├── SVGGlyphRenderer.hpp     # RenderableGlyphBatch → <circle>/<line>/<rect>
+│   ├── SVGGlyphRenderer.cpp
+│   ├── SVGRectangleRenderer.hpp # RenderableRectangleBatch → <rect>
+│   └── SVGRectangleRenderer.cpp
+└── Decorations/
+    ├── SVGDecoration.hpp        # Base concept/interface for decorations
+    ├── SVGAxisRenderer.hpp      # Axis labels + tick marks
+    ├── SVGAxisRenderer.cpp
+    ├── SVGScalebar.hpp          # Scalebar with tick marks and label
+    └── SVGScalebar.cpp
+```
+
+### Component Overview
+
+| Component | Responsibility |
+|-----------|---------------|
+| `SVGSceneRenderer` | Main entry point — accepts a `RenderableScene`, coordinates batch rendering, assembles final SVG |
+| `SVGDocument` | SVG XML structure — manages header, viewBox, background, `<g>` layer groups, footer |
+| `SVGUtils` | Shared math — MVP vertex transform to SVG coordinates, RGBA → hex color conversion |
+| `SVGPolyLineRenderer` | Converts `RenderablePolyLineBatch` → `<polyline>` elements with stroke styling |
+| `SVGGlyphRenderer` | Converts `RenderableGlyphBatch` → `<circle>`, `<line>`, `<rect>` per glyph type |
+| `SVGRectangleRenderer` | Converts `RenderableRectangleBatch` → `<rect>` elements with fill/opacity |
+| `SVGDecoration` | Interface for SVG-only overlays (axes, scalebar, center lines) |
+| `SVGAxisRenderer` | Renders axis tick marks and labels as `<line>` + `<text>` |
+| `SVGScalebar` | Renders a scalebar with tick marks and unit label |
+
+### Dependencies
+
+```
+PlottingSVG
+├── CorePlotting   (RenderableScene, RenderableBatch types)
+└── glm::glm       (matrix math for MVP transforms)
+```
+
+No Qt, no OpenGL, no other project libraries. This is intentional — the library is pure computation producing strings.
+
+## Public API
+
+### SVGSceneRenderer
+
+The main class mirrors `PlottingOpenGL::SceneRenderer` in spirit:
+
+```cpp
+namespace PlottingSVG {
+
+class SVGSceneRenderer {
+public:
+    SVGSceneRenderer();
+
+    /// Set the scene to render (stores const reference)
+    void setScene(CorePlotting::RenderableScene const & scene);
+
+    /// Set SVG canvas dimensions (default: 1920×1080)
+    void setCanvasSize(int width, int height);
+
+    /// Set background color as hex string (default: "#FFFFFF")
+    void setBackgroundColor(std::string const & hex_color);
+
+    /// Add a decoration overlay (axes, scalebar, center line, etc.)
+    void addDecoration(std::unique_ptr<SVGDecoration> decoration);
+
+    /// Clear all decorations
+    void clearDecorations();
+
+    /// Render scene to complete SVG document string
+    [[nodiscard]] std::string render() const;
+
+    /// Convenience: render and write to file
+    [[nodiscard]] bool renderToFile(std::filesystem::path const & path) const;
+};
+
+} // namespace PlottingSVG
+```
+
+### Comparison with PlottingOpenGL::SceneRenderer
+
+| PlottingOpenGL | PlottingSVG | Notes |
+|---------------|-------------|-------|
+| `uploadScene(scene)` | `setScene(scene)` | OpenGL uploads to GPU; SVG stores reference |
+| `render()` | `render() → string` | OpenGL draws to framebuffer; SVG returns document |
+| `initialize()` / `cleanup()` | *(none)* | No GPU resources to manage |
+| `setRenderOrder(order)` | *(same default)* | Rectangles → PolyLines → Glyphs |
+| *(none)* | `addDecoration(...)` | SVG-specific overlays (axes, scalebar) |
+| *(none)* | `setCanvasSize(w, h)` | SVG needs explicit canvas dimensions |
+| *(none)* | `renderToFile(path)` | Convenience for file output |
+
+### SVGDocument
+
+Handles SVG XML structure:
+
+```cpp
+namespace PlottingSVG {
+
+class SVGDocument {
+public:
+    SVGDocument(int width, int height);
+
+    void setBackground(std::string const & hex_color);
+    void setDescription(std::string const & desc);
+
+    /// Add elements to a named layer group (<g> element)
+    void addElements(std::string const & layer_name,
+                     std::vector<std::string> const & elements);
+
+    /// Build complete SVG document string
+    [[nodiscard]] std::string build() const;
+};
+
+} // namespace PlottingSVG
+```
+
+Layers are emitted in insertion order as `<g id="layer_name">` groups, providing logical structure in the SVG output (useful when editing in Inkscape or Illustrator).
+
+## Usage Pattern
+
+### Widget SVG Export
+
+Any widget that already builds a `RenderableScene` for OpenGL rendering can export to SVG with minimal additional code:
+
+```cpp
+#include "PlottingSVG/SVGSceneRenderer.hpp"
+#include "PlottingSVG/Decorations/SVGScalebar.hpp"
+
+std::string MyPlotWidget::exportToSVG() const {
+    PlottingSVG::SVGSceneRenderer renderer;
+    renderer.setScene(_cached_scene);           // Same scene used for OpenGL
+    renderer.setCanvasSize(1920, 1080);
+    renderer.setBackgroundColor("#FFFFFF");
+
+    // Add optional decorations
+    renderer.addDecoration(
+        std::make_unique<PlottingSVG::SVGScalebar>(100, time_start, time_end));
+
+    return renderer.render();
+}
+```
+
+The widget only needs to expose its cached `RenderableScene` — all SVG rendering logic is handled by `PlottingSVG`.
+
+### Standalone / Batch Export
+
+Because PlottingSVG has no Qt dependency, it can be used for headless export:
+
+```cpp
+// Build scene programmatically
+auto scene = CorePlotting::SceneBuilder()
+    .setBounds(bounds)
+    .addGlyphs("events", mapped_events, glyph_style)
+    .build();
+
+// Export to file
+PlottingSVG::SVGSceneRenderer renderer;
+renderer.setScene(scene);
+renderer.renderToFile("output.svg");
+```
+
+## Rendering Pipeline
+
+The internal rendering flow mirrors PlottingOpenGL's approach:
+
+```
+SVGSceneRenderer::render()
+    │
+    ├── SVGDocument::setBackground()
+    │
+    ├── For each batch type (in render order):
+    │   ├── SVGRectangleRenderer::render(batch, V, P, canvas) → elements
+    │   ├── SVGPolyLineRenderer::render(batch, V, P, canvas) → elements
+    │   └── SVGGlyphRenderer::render(batch, V, P, canvas) → elements
+    │
+    ├── For each decoration:
+    │   └── decoration->render(canvas_width, canvas_height) → elements
+    │
+    └── SVGDocument::build() → complete SVG string
+```
+
+### Coordinate Transform
+
+Each per-batch renderer computes `MVP = Projection × View × Model` and transforms world-space vertices to SVG pixel coordinates:
+
+1. Apply MVP: `ndc = MVP * vertex`
+2. Perspective divide: `ndc /= ndc.w`
+3. Map NDC → SVG: `svg_x = width * (ndc.x + 1) / 2`, `svg_y = height * (1 - ndc.y) / 2`
+
+This is identical to the transform in the existing `CorePlotting::transformVertexToSVG()`, ensuring pixel-perfect correspondence between OpenGL and SVG output.
+
+## Decoration System
+
+Decorations are SVG-specific overlays that have no OpenGL equivalent. They render directly in SVG canvas coordinates (not world coordinates), making them resolution-independent.
+
+```cpp
+namespace PlottingSVG {
+
+/// Interface for SVG-specific decorations
+class SVGDecoration {
+public:
+    virtual ~SVGDecoration() = default;
+
+    /// Render decoration to SVG elements
+    [[nodiscard]] virtual std::vector<std::string>
+    render(int canvas_width, int canvas_height) const = 0;
+};
+
+} // namespace PlottingSVG
+```
+
+### Built-in Decorations
+
+| Decoration | Output | Configuration |
+|-----------|--------|---------------|
+| `SVGScalebar` | Horizontal bar + tick marks + label | Length (time units), position, color |
+| `SVGAxisRenderer` | Axis lines + tick marks + labels | Range, tick interval, label text, position (left/bottom) |
+
+Widgets can create custom decorations (e.g., a vertical center line at t=0 for raster plots) by implementing the `SVGDecoration` interface.
+
+## Testing Strategy
+
+Tests reside in `tests/PlottingSVG/` and verify:
+
+| Test Category | What It Verifies |
+|--------------|-----------------|
+| Coordinate transform | `transformVertexToSVG()` produces correct SVG pixel positions for known MVP inputs |
+| Color conversion | `colorToSVGHex()` handles edge cases (0, 1, out-of-range clamping) |
+| Glyph rendering | Each glyph type (Tick, Circle, Square, Cross) produces correct SVG elements |
+| PolyLine rendering | Multi-segment lines with per-line colors produce correct `<polyline>` elements |
+| Rectangle rendering | Rectangles with alpha produce correct `<rect>` elements with `fill-opacity` |
+| Scene rendering | Full scene with mixed batch types produces elements in correct layer order |
+| Document structure | Output contains valid XML header, viewBox, background rect, closing tag |
+| Decoration rendering | Scalebar and axis decorations produce positioned elements in canvas coordinates |
+| Round-trip consistency | Same `RenderableScene` produces same SVG output across multiple `render()` calls |
+
+Tests use Catch2 and do not require an OpenGL context or Qt event loop.
+
+## Relationship to Other Libraries
+
+| Library | Relationship |
+|---------|-------------|
+| `CorePlotting` | Upstream — provides `RenderableScene` and all batch types |
+| `PlottingOpenGL` | Sibling — consumes same input, produces OpenGL output |
+| `DataViewer_Widget/SVGExporter` | Consumer — will be refactored to use `PlottingSVG::SVGSceneRenderer` |
+| `EventPlotWidget` | Consumer — first new widget to add SVG export via PlottingSVG |
+| `PSTHWidget`, `LinePlotWidget`, etc. | Future consumers — any widget producing `RenderableScene` |
+
+## See Also
+
+- [CorePlotting Library](../coreplotting/index.qmd) — The upstream scene graph and layout engine
+- [Building Custom Plot Widgets](../coreplotting/implementation_guide.qmd) — How widgets build `RenderableScene` objects
+- [PlottingSVG Roadmap](roadmap.md) — Step-by-step implementation plan
+- [EventPlot Widget](../ui/Plots/EventPlotWidget/index.qmd) — First widget to use PlottingSVG for export

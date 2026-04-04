@@ -60,6 +60,10 @@ website:
               href: developer/coreplotting/index.qmd
               contents:
                 - developer/coreplotting/feature_color.qmd
+            - section: "PlottingSVG"
+              href: developer/PlottingSVG/index.qmd
+              contents:
+                - developer/PlottingSVG/roadmap.md
             - developer/Entity/index.qmd
             - section: "Deep Learning"
               href: developer/DeepLearning/index.qmd
