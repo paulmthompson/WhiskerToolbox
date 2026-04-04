@@ -66,6 +66,20 @@ void ScatterPlotState::setDisplayName(QString const & name) {
     }
 }
 
+QString ScatterPlotState::getBackgroundColor() const {
+    return QString::fromStdString(_data.background_color);
+}
+
+void ScatterPlotState::setBackgroundColor(QString const & hex_color) {
+    std::string const hex_str = hex_color.toStdString();
+    if (_data.background_color != hex_str) {
+        _data.background_color = hex_str;
+        markDirty();
+        emit backgroundColorChanged(hex_color);
+        emit stateChanged();
+    }
+}
+
 void ScatterPlotState::setXZoom(double zoom) {
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;

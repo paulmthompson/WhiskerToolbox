@@ -48,6 +48,8 @@ enum class ScatterSelectionMode {
 struct ScatterPlotStateData {
     std::string instance_id;
     std::string display_name = "Scatter Plot";
+    /// Background color as #RRGGBB (OpenGL clear and future SVG export)
+    std::string background_color = "#1A1A1A";
     CorePlotting::ViewStateData view_state;
     HorizontalAxisStateData horizontal_axis;
     VerticalAxisStateData vertical_axis;
@@ -88,6 +90,11 @@ public:
     [[nodiscard]] QString getTypeName() const override { return QStringLiteral("ScatterPlotWidget"); }
     [[nodiscard]] QString getDisplayName() const override;
     void setDisplayName(QString const & name) override;
+
+    /// @brief Get the plot background color (#RRGGBB)
+    [[nodiscard]] QString getBackgroundColor() const;
+    /// @brief Set the plot background color (#RRGGBB)
+    void setBackgroundColor(QString const & hex_color);
 
     // === Axis state access (for widgets and serialization) ===
     [[nodiscard]] HorizontalAxisState * horizontalAxisState() { return _horizontal_axis_state.get(); }
@@ -157,6 +164,9 @@ signals:
     void selectionModeChanged();
     void selectionChanged();
     void colorConfigChanged();
+    /// @brief Emitted when the plot background color changes
+    /// @param hex_color New background color as hex string
+    void backgroundColorChanged(QString const & hex_color);
 
 private:
     ScatterPlotStateData _data;

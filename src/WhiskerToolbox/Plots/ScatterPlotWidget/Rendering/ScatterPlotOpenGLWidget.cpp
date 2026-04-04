@@ -19,6 +19,7 @@
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"// RenderableScene
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CorePlotting/Selection/PolygonSelection.hpp"
+#include "CoreUtilities/color.hpp"
 #include "DataManager/DataManager.hpp"
 #include "EditorState/ContextAction.hpp"
 #include "EditorState/SelectionContext.hpp"
@@ -149,6 +150,11 @@ void ScatterPlotOpenGLWidget::setState(std::shared_ptr<ScatterPlotState> state) 
                 this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &ScatterPlotState::colorConfigChanged,
                 this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &ScatterPlotState::backgroundColorChanged,
+                this, [this]() {
+                    updateBackgroundColor();
+                    update();
+                });
         connect(_state.get(), &ScatterPlotState::clusterLabelsChanged,
                 this, [this]() { update(); });
         connect(_state.get(), &ScatterPlotState::selectionChanged,
@@ -174,7 +180,7 @@ void ScatterPlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_m
 
 void ScatterPlotOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    updateBackgroundColor();
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_BLEND);
@@ -194,6 +200,7 @@ void ScatterPlotOpenGLWidget::initializeGL() {
 }
 
 void ScatterPlotOpenGLWidget::paintGL() {
+    updateBackgroundColor();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!_opengl_initialized) {
@@ -415,6 +422,32 @@ void ScatterPlotOpenGLWidget::onViewStateChanged() {
     }
     update();
     emit viewBoundsChanged();
+}
+
+void ScatterPlotOpenGLWidget::updateBackgroundColor() {
+    if (!_state) {
+        int r = 0;
+        int g = 0;
+        int b = 0;
+        hexToRGB("#1A1A1A", r, g, b);
+        glClearColor(
+                static_cast<float>(r) / 255.0f,
+                static_cast<float>(g) / 255.0f,
+                static_cast<float>(b) / 255.0f,
+                1.0f);
+        return;
+    }
+
+    QString const hex_color = _state->getBackgroundColor();
+    int r = 0;
+    int g = 0;
+    int b = 0;
+    hexToRGB(hex_color.toStdString(), r, g, b);
+    glClearColor(
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            1.0f);
 }
 
 void ScatterPlotOpenGLWidget::updateMatrices() {

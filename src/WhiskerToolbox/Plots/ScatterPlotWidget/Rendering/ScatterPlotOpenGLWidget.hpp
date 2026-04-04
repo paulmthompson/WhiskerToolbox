@@ -185,6 +185,12 @@ private:
     KeymapSystem::KeyActionAdapter * _key_adapter{nullptr};
 
     void updateMatrices();
+
+    /**
+     * @brief Update OpenGL clear color from state background color
+     */
+    void updateBackgroundColor();
+
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;

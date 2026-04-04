@@ -204,10 +204,20 @@ Extend the `PlotTooltipManager` text provider to query the cached `feature_value
 
 ## Phase 8: SVG Export
 
-**Status**: Not started. Infrastructure exists in `PlottingSVG` library (proven with
+**Status**: In progress — step **8.1** complete; **8.2**–**8.6** not started. Infrastructure
+exists in `PlottingSVG` (proven with
 [EventPlotWidget](../EventPlotWidget/index.qmd) and [DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
 
 **Goal**: Export the current scatter plot view to SVG for publication-quality figures.
+
+| Step | Description | Status |
+|------|-------------|--------|
+| 8.1 | `background_color` in state + OpenGL clear from state | **Done** |
+| 8.2 | `exportToSVG()` on `ScatterPlotOpenGLWidget` | Not started |
+| 8.3 | Export button + `exportSVGRequested` in properties | Not started |
+| 8.4 | `handleExportSVG()` on `ScatterPlotWidget` | Not started |
+| 8.5 | Wire signals in `ScatterPlotWidgetRegistration` | Not started |
+| 8.6 | Manual validation | Not started |
 
 ### Architecture Assessment
 
@@ -220,21 +230,24 @@ The ScatterPlotWidget rendering pipeline is **the most compatible** of all remai
 - Feature colors and group colors are pre-applied to `RenderableGlyphBatch::colors[]` during
   `rebuildScene()`, so the SVG renderer sees the final per-point colors with no additional work.
 
-**Key issue**: Background color is hardcoded via `glClearColor(0.1f, 0.1f, 0.1f, 1.0f)` with
-no state accessor. Either add a `background_color` field to `ScatterPlotStateData` or use a
-default.
+**Background color**: `ScatterPlotStateData` includes `background_color` (default `#1A1A1A`,
+serializable). `ScatterPlotOpenGLWidget` uses `updateBackgroundColor()` (`CoreUtilities::hexToRGB`)
+in `initializeGL()` and `paintGL()`, and listens for `backgroundColorChanged()`. A properties-panel
+color control (like EventPlot) is optional and not required for SVG export.
 
-### Step 8.1: Add `background_color` to `ScatterPlotStateData`
+### Step 8.1: Add `background_color` to `ScatterPlotStateData` — **Complete**
 
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPlotStateData.hpp` — add
-  `std::string background_color = "#1A1A1A";`
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPlotState.hpp` — add getter/setter
-  with `backgroundColorChanged()` signal
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp` — in
-  `initializeGL()`, read background color from state instead of hardcoding
+**Implemented in:**
 
-**Verify:** Build compiles.
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPlotState.hpp` — on
+  `ScatterPlotStateData`: `std::string background_color = "#1A1A1A"`; on `ScatterPlotState`:
+  `getBackgroundColor()` / `setBackgroundColor()` and `backgroundColorChanged(QString)` signal
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Core/ScatterPlotState.cpp` — setter implementation
+- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp` —
+  `updateBackgroundColor()`, called from `initializeGL()` and `paintGL()`; connection to
+  `backgroundColorChanged` in `setState()`
+
+**Verify:** Build compiles; scatter plot tests pass.
 
 ### Step 8.2: Add `exportToSVG()` to `ScatterPlotOpenGLWidget`
 
