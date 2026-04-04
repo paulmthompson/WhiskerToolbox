@@ -1,6 +1,6 @@
 /**
  * @file SVGSceneRenderer.cpp
- * @brief Scene-level SVG export orchestration (stubs completed in roadmap 1.3–1.5).
+ * @brief Scene-level SVG export orchestration via `SVGDocument` and per-batch renderers.
  */
 
 #include "PlottingSVG/SVGSceneRenderer.hpp"
@@ -21,7 +21,8 @@ void SVGSceneRenderer::setScene(CorePlotting::RenderableScene const & scene) {
     _scene = &scene;
 }
 
-void SVGSceneRenderer::setCanvasSize(int width, int height) {
+void SVGSceneRenderer::setCanvasSize(int width,// NOLINT(bugprone-easily-swappable-parameters)
+                                     int height) {
     _canvas_width = width;
     _canvas_height = height;
 }

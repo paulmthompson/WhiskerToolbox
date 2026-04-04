@@ -8,11 +8,11 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
-#include "CorePlotting/Export/SVGPrimitives.hpp"
 #include "CoreUtilities/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "PlottingSVG/SVGExport.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <glm/glm.hpp>
@@ -39,24 +39,27 @@ QString SVGExporter::exportToSVG() {
               << std::endl;
 
     // Build scene from current plot state
-    CorePlotting::RenderableScene scene = buildScene(start_time, end_time);
+    CorePlotting::RenderableScene const scene = buildScene(
+            static_cast<int>(start_time),
+            static_cast<int>(end_time));
 
     // Set up SVG export parameters
-    CorePlotting::SVGExportParams params;
+    PlottingSVG::SVGExportParams params;
     params.canvas_width = svg_width_;
     params.canvas_height = svg_height_;
     params.background_color = gl_widget_->getBackgroundColor();
 
     // Render scene to SVG
-    std::string svg_content = CorePlotting::buildSVGDocument(scene, params);
+    std::string svg_content = PlottingSVG::buildSVGDocument(scene, params);
 
     // If scalebar is enabled, we need to add it to the document
     if (scalebar_enabled_) {
         // Insert scalebar elements before the closing </svg> tag
-        auto scalebar_elements = CorePlotting::createScalebarSVG(
+        auto scalebar_elements = PlottingSVG::createScalebarSVG(
                 scalebar_length_,
-                static_cast<float>(start_time),
-                static_cast<float>(end_time),
+                PlottingSVG::ScalebarTimeRange{
+                        static_cast<float>(start_time),
+                        static_cast<float>(end_time)},
                 params);
 
         // Find position to insert (before </svg>)
@@ -156,19 +159,19 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
         CorePlotting::LayoutTransform const & layout_transform,
         CorePlotting::SeriesDataCache const & data_cache,
         AnalogSeriesOptionsData const & options,
-        int start_time,
+        int start_time,// NOLINT(bugprone-easily-swappable-parameters)
         int end_time) const {
 
     auto const view_state = gl_widget_->getViewState();
 
     // Create layout from layout_transform
-    CorePlotting::SeriesLayout layout{
+    CorePlotting::SeriesLayout const layout{
             "",// key not needed for matrix generation
             layout_transform,
             0};
 
     // Compose Y transform using the new LayoutTransform-based pattern
-    CorePlotting::LayoutTransform y_transform = DataViewer::composeAnalogYTransform(
+    CorePlotting::LayoutTransform const y_transform = DataViewer::composeAnalogYTransform(
             layout,
             data_cache.cached_mean,
             data_cache.cached_std_dev,
@@ -179,7 +182,7 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
             view_state.global_vertical_scale);
 
     // Create model matrix from composed transform
-    glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
+    glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
 
     // Convert hex color to glm::vec4
     int r, g, b;
@@ -211,7 +214,7 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
         std::shared_ptr<DigitalEventSeries> const & series,
         CorePlotting::LayoutTransform const & layout_transform,
         DigitalEventSeriesOptionsData const & options,
-        int start_time,
+        int start_time,// NOLINT(bugprone-easily-swappable-parameters)
         int end_time) const {
 
     auto const view_state = gl_widget_->getViewState();
@@ -220,7 +223,7 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     auto const y_max = view_state.y_max;
 
     // Create layout from layout_transform
-    CorePlotting::SeriesLayout layout{
+    CorePlotting::SeriesLayout const layout{
             "",
             layout_transform,
             0};
@@ -234,7 +237,7 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     }
 
     // Create model matrix from composed transform
-    glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
+    glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
 
     // Convert hex color to glm::vec4
     int r, g, b;
@@ -270,26 +273,26 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
         std::shared_ptr<DigitalIntervalSeries> const & series,
         CorePlotting::LayoutTransform const & layout_transform,
         DigitalIntervalSeriesOptionsData const & options,
-        float start_time,
+        float start_time,// NOLINT(bugprone-easily-swappable-parameters)
         float end_time) const {
 
     auto const view_state = gl_widget_->getViewState();
 
     // Create layout from layout_transform
-    CorePlotting::SeriesLayout layout{
+    CorePlotting::SeriesLayout const layout{
             "",
             layout_transform,
             0};
 
     // Compose Y transform for intervals
-    CorePlotting::LayoutTransform y_transform = DataViewer::composeIntervalYTransform(
+    CorePlotting::LayoutTransform const y_transform = DataViewer::composeIntervalYTransform(
             layout,
             options.margin_factor,
             view_state.global_zoom,
             view_state.global_vertical_scale);
 
     // Create model matrix from composed transform
-    glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
+    glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
 
     // Convert hex color to glm::vec4 with alpha
     int r, g, b;

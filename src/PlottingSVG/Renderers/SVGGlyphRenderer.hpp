@@ -3,7 +3,7 @@
 
 /**
  * @file SVGGlyphRenderer.hpp
- * @brief RenderableGlyphBatch to SVG primitives (stub; roadmap 1.3).
+ * @brief RenderableGlyphBatch to SVG primitives (tick, circle, square, cross).
  */
 
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"

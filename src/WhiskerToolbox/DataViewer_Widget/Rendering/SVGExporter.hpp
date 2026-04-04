@@ -1,7 +1,6 @@
 #ifndef SVGEXPORTER_HPP
 #define SVGEXPORTER_HPP
 
-#include "CorePlotting/Export/SVGPrimitives.hpp"
 #include "CorePlotting/Layout/LayoutTransform.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 
@@ -29,13 +28,13 @@ struct SeriesDataCache;
  * @brief SVG export utility for DataViewer plots
  * 
  * Exports the current plot state to SVG format by building a RenderableScene
- * from the DataViewer series data and rendering it to SVG using CorePlotting.
+ * from the DataViewer series data and rendering it to SVG via PlottingSVG.
  * This ensures that the SVG output matches the on-screen visualization exactly,
  * as it uses the same batch building and coordinate transformation code.
- * 
+ *
  * Architecture:
  * - Builds RenderableBatches from series data (same as OpenGL rendering)
- * - Uses CorePlotting::renderSceneToSVG() for SVG generation
+ * - Uses PlottingSVG::buildSVGDocument() for SVG generation
  * - Shared View/Projection matrices ensure coordinate consistency
  * 
  * Features:
@@ -57,7 +56,7 @@ public:
      * @brief Export current plot to SVG format
      * 
      * Builds a RenderableScene from the current plot state and converts
-     * it to SVG using CorePlotting export functions.
+     * it to SVG using PlottingSVG export functions.
      * 
      * @return QString containing complete SVG document
      */

@@ -83,9 +83,6 @@ set(COREPLOTTING_SOURCES
     # Selection (polygon containment, shared across plot widgets)
     Selection/PolygonSelection.hpp
     Selection/PolygonSelection.cpp
-    # Export
-    Export/SVGPrimitives.hpp
-    Export/SVGPrimitives.cpp
     # LineBatch (batch line rendering & selection)
     LineBatch/LineBatchData.hpp
     LineBatch/LineBatchData.cpp

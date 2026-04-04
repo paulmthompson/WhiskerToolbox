@@ -1,0 +1,18 @@
+---
+title: "PlottingSVG — SVGUtils"
+format: html
+---
+
+## Role
+
+`PlottingSVG/SVGUtils.hpp` declares shared helpers for SVG export:
+
+- **`transformVertexToSVG`** — apply an MVP matrix, perspective divide, then map NDC \([-1,1]^2\) to SVG pixel coordinates with the Y axis flipped (top = 0).
+- **`colorToSVGHex`** — clamp RGB to 8-bit channels and format an uppercase `#RRGGBB` string (alpha is not embedded; use SVG opacity attributes separately).
+
+Implementations live in `SVGUtils.cpp` (non-inline) and are linked via the `PlottingSVG` target.
+
+## See also
+
+- [PlottingSVG index](index.qmd)
+- [Roadmap](roadmap.md) — Steps 1.2–1.3

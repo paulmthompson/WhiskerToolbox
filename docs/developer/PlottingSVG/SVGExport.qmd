@@ -1,0 +1,17 @@
+---
+title: "PlottingSVG — SVGExport (legacy flat document)"
+format: html
+---
+
+## Role
+
+`PlottingSVG/SVGExport.hpp` provides the **flat** SVG document path used by DataViewer: `buildSVGDocument`, `renderSceneToSVG`, and `createScalebarSVG`, plus `SVGExportParams` and `ScalebarTimeRange`.
+
+It composes the per-batch renderers (`SVGPolyLineRenderer`, `SVGGlyphRenderer`, `SVGRectangleRenderer`) and matches the historical XML layout (single list of elements under `<svg>`, DataViewer `<desc>` text).
+
+New widgets should prefer `SVGSceneRenderer` and `SVGDocument` (named layers); this module remains for parity with existing exports.
+
+## See also
+
+- [PlottingSVG index](index.qmd)
+- [Roadmap](roadmap.md)

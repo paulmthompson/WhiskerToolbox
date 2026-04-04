@@ -3,7 +3,7 @@
 
 /**
  * @file SVGPolyLineRenderer.hpp
- * @brief RenderablePolyLineBatch to SVG `<polyline>` elements (stub; roadmap 1.3).
+ * @brief RenderablePolyLineBatch to SVG `<polyline>` elements.
  */
 
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"

@@ -19,6 +19,8 @@ set(PLOTTINGSVG_SOURCES
     Renderers/SVGRectangleRenderer.hpp
     SVGDocument.cpp
     SVGDocument.hpp
+    SVGExport.cpp
+    SVGExport.hpp
     SVGSceneRenderer.cpp
     SVGSceneRenderer.hpp
     SVGUtils.cpp

@@ -8,7 +8,8 @@
 namespace PlottingSVG {
 
 std::vector<std::string>
-SVGScalebar::render(int canvas_width, int canvas_height) const {
+SVGScalebar::render(int canvas_width,// NOLINT(bugprone-easily-swappable-parameters)
+                    int canvas_height) const {
     (void) canvas_width;
     (void) canvas_height;
     return {};

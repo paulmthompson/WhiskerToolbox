@@ -63,6 +63,8 @@ website:
             - section: "PlottingSVG"
               href: developer/PlottingSVG/index.qmd
               contents:
+                - developer/PlottingSVG/SVGExport.qmd
+                - developer/PlottingSVG/SVGUtils.qmd
                 - developer/PlottingSVG/roadmap.md
             - developer/Entity/index.qmd
             - section: "Deep Learning"

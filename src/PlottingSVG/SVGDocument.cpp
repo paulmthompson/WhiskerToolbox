@@ -10,7 +10,8 @@
 
 namespace PlottingSVG {
 
-SVGDocument::SVGDocument(int width, int height)
+SVGDocument::SVGDocument(int width,// NOLINT(bugprone-easily-swappable-parameters)
+                         int height)
     : _width(width),
       _height(height) {
 }
@@ -31,7 +32,7 @@ void SVGDocument::addElements(std::string const & layer_name,
         _layer_elements.push_back(elements);
         return;
     }
-    std::size_t const index = static_cast<std::size_t>(std::distance(_layer_order.begin(), it));
+    auto const index = static_cast<std::size_t>(std::distance(_layer_order.begin(), it));
     auto & dest = _layer_elements.at(index);
     dest.insert(dest.end(), elements.begin(), elements.end());
 }
@@ -45,7 +46,7 @@ std::string SVGDocument::build() const {
     if (!_description.empty()) {
         oss << "  <desc>" << _description << "</desc>\n";
     }
-    oss << "  <rect width=\"100%\" height=\"100%\" fill=\"" << _background_hex << "\"/>\n";
+    oss << R"(  <rect width="100%" height="100%" fill=")" << _background_hex << R"("/>)" << '\n';
     for (std::size_t i = 0; i < _layer_order.size(); ++i) {
         oss << "  <g id=\"" << _layer_order[i] << "\">\n";
         for (std::string const & element: _layer_elements.at(i)) {

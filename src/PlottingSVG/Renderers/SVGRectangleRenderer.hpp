@@ -3,7 +3,7 @@
 
 /**
  * @file SVGRectangleRenderer.hpp
- * @brief RenderableRectangleBatch to SVG `<rect>` elements (stub; roadmap 1.3).
+ * @brief RenderableRectangleBatch to SVG `<rect>` elements.
  */
 
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"

@@ -46,7 +46,7 @@ Register in `src/CMakeLists.txt` by adding `add_subdirectory(PlottingSVG)` **out
 
 **Completed:** The layout above is in place under `src/PlottingSVG/`. `CMakeLists.txt` builds a static `PlottingSVG` target with `PUBLIC` linkage to `CorePlotting` and `glm::glm` only (no Qt/OpenGL), `set_target_compiler_warnings(PlottingSVG)`, and `enable_whiskertoolbox_pch(PlottingSVG)`. `src/CMakeLists.txt` calls `add_subdirectory(PlottingSVG)` immediately after `add_subdirectory(CorePlotting)`, outside `if (ENABLE_UI)`.
 
-To keep the library linkable and compiles cleanly, initial **stub** sources were added beyond the bare CMake skeleton: `SVGDocument` assembles a minimal valid SVG (background rect, named `<g>` layers, `<desc>`); `SVGSceneRenderer` walks `RenderableScene` batches in rectangle → polyline → glyph order and calls stub renderers; `SVGPolyLineRenderer`, `SVGGlyphRenderer`, and `SVGRectangleRenderer` return empty element lists; `SVGDecoration`, `SVGAxisRenderer`, and `SVGScalebar` are stub overlays. `SVGUtils` is a placeholder until Step 1.2. Configure/build and the full test suite have been verified on the project preset.
+To keep the library linkable and compiles cleanly, initial **stub** sources were added beyond the bare CMake skeleton: `SVGDocument` assembles a minimal valid SVG (background rect, named `<g>` layers, `<desc>`); `SVGSceneRenderer` walks `RenderableScene` batches in rectangle → polyline → glyph order and calls stub renderers; `SVGPolyLineRenderer`, `SVGGlyphRenderer`, and `SVGRectangleRenderer` return empty element lists; `SVGDecoration`, `SVGAxisRenderer`, and `SVGScalebar` are stub overlays. `SVGUtils` holds shared math (Step 1.2). Configure/build and the full test suite have been verified on the project preset.
 
 ---
 
@@ -67,6 +67,8 @@ These are pure math functions with no dependencies beyond `<glm/glm.hpp>` and `<
 - `src/PlottingSVG/SVGUtils.cpp`
 
 **Verify:** Build compiles.
+
+**Completed:** `transformVertexToSVG` and `colorToSVGHex` are declared in `PlottingSVG/SVGUtils.hpp` and defined in `SVGUtils.cpp` (non-inline). See [SVGUtils.qmd](SVGUtils.qmd).
 
 ---
 
@@ -108,13 +110,15 @@ Each renderer is a stateless class with a single `render()` method that takes a 
 
 **Verify:** Build compiles. Write unit tests for each renderer class (Step 1.7).
 
+**Completed:** Logic lives in `Renderers/SVGPolyLineRenderer.cpp`, `SVGGlyphRenderer.cpp`, and `SVGRectangleRenderer.cpp`, using `PlottingSVG::transformVertexToSVG` / `colorToSVGHex`. The legacy flat document path `buildSVGDocument` / `renderSceneToSVG` / `createScalebarSVG` and structs `SVGExportParams` / `ScalebarTimeRange` are in `PlottingSVG/SVGExport.hpp/.cpp`. `CorePlotting/Export/SVGPrimitives` was removed; `DataViewer_Widget` links `PlottingSVG` and includes `PlottingSVG/SVGExport.hpp`.
+
 ---
 
 ### Step 1.4: Implement SVGDocument
 
 Create the SVG XML document assembly class. Manages the SVG header (XML declaration, `<svg>` tag with viewBox), background rect, named `<g>` layer groups, and the closing `</svg>` tag.
 
-Migrate and improve the document assembly logic from `CorePlotting::buildSVGDocument()`.
+The layered `SVGDocument` class exists (see Step 1.1 skeleton). The **flat** `buildSVGDocument` used by DataViewer remains in `PlottingSVG/SVGExport.cpp` until callers migrate to `SVGSceneRenderer` / `SVGDocument` only.
 
 **API:**
 ```cpp
@@ -468,19 +472,19 @@ For each widget, the pattern is identical to Phase 2:
 ## Summary Checklist
 
 - [x] **Phase 1.1:** Directory structure + CMakeLists.txt + register in build *(done; stub document/scene/renderer/decoration sources included for a compiling target)*
-- [ ] **Phase 1.2:** SVGUtils (coordinate transform, color conversion)
-- [ ] **Phase 1.3:** Per-batch renderers (PolyLine, Glyph, Rectangle)
-- [ ] **Phase 1.4:** SVGDocument (XML assembly with layers)
-- [ ] **Phase 1.5:** SVGSceneRenderer (main entry point)
+- [x] **Phase 1.2:** SVGUtils (coordinate transform, color conversion)
+- [x] **Phase 1.3:** Per-batch renderers (PolyLine, Glyph, Rectangle)
+- [x] **Phase 1.4:** SVGDocument (XML assembly with layers) *(class done; DataViewer still uses flat `SVGExport::buildSVGDocument` until optional migration)*
+- [x] **Phase 1.5:** SVGSceneRenderer (main entry point) *(orchestrates real batch renderers + `SVGDocument`)*
 - [ ] **Phase 1.6:** Decorations (SVGScalebar, SVGAxisRenderer)
 - [ ] **Phase 1.7:** Tests (all renderer classes + document + scene)
-- [ ] **Phase 1.8:** Remove SVGPrimitives from CorePlotting (forwarding header)
+- [x] **Phase 1.8:** Remove SVGPrimitives from CorePlotting *(removed; no forwarding header)*
 - [ ] **Phase 2.1:** EventPlotOpenGLWidget::exportToSVG()
 - [ ] **Phase 2.2:** Export button in EventPlotPropertiesWidget
 - [ ] **Phase 2.3:** EventPlotWidget::handleExportSVG()
 - [ ] **Phase 2.4:** Wire signals in EventPlotWidgetRegistration
 - [ ] **Phase 2.5:** Manual validation
-- [ ] **Phase 3.1:** Refactor DataViewer SVGExporter to use PlottingSVG
-- [ ] **Phase 3.2:** Remove CorePlotting forwarding header
+- [x] **Phase 3.1:** Refactor DataViewer SVGExporter to use PlottingSVG *(links `PlottingSVG`, uses `SVGExport` / batch renderers; optional: switch to `SVGSceneRenderer` only)*
+- [x] **Phase 3.2:** Remove CorePlotting forwarding header *(N/A — primitives removed outright)*
 - [ ] **Phase 4.1:** Shared ExportWidget (optional, deferred)
 - [ ] **Phase 5:** Extend to PSTHWidget, LinePlotWidget, etc.

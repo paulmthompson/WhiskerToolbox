@@ -16,10 +16,7 @@ format: html
 
 ## Motivation
 
-Prior to this library, SVG export code lived in two places:
-
-1. `CorePlotting/Export/SVGPrimitives` — batch-to-SVG conversion functions (rendering logic inside a framework-agnostic library).
-2. `DataViewer_Widget/Rendering/SVGExporter` — a bespoke class that builds a `RenderableScene` from DataViewer-specific state, then calls `CorePlotting::buildSVGDocument()`.
+Prior to this library, SVG export logic lived inside `CorePlotting/Export/SVGPrimitives` (now removed). `DataViewer_Widget/Rendering/SVGExporter` still builds a `RenderableScene` from DataViewer-specific state, but links **`PlottingSVG`** and calls `PlottingSVG::buildSVGDocument()` / `createScalebarSVG()`.
 
 This arrangement had two problems:
 
@@ -238,7 +235,7 @@ Each per-batch renderer computes `MVP = Projection × View × Model` and transfo
 2. Perspective divide: `ndc /= ndc.w`
 3. Map NDC → SVG: `svg_x = width * (ndc.x + 1) / 2`, `svg_y = height * (1 - ndc.y) / 2`
 
-This is identical to the transform in the existing `CorePlotting::transformVertexToSVG()`, ensuring pixel-perfect correspondence between OpenGL and SVG output.
+This is identical to the transform in `PlottingSVG::transformVertexToSVG()` (re-exported as `CorePlotting::transformVertexToSVG()` for legacy callers), ensuring pixel-perfect correspondence between OpenGL and SVG output.
 
 ## Decoration System
 
