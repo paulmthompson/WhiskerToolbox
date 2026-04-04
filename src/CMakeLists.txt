@@ -36,6 +36,7 @@ add_subdirectory(MLCore)
 
 add_subdirectory(python_bindings)
 add_subdirectory(CorePlotting)
+add_subdirectory(PlottingSVG)
 add_subdirectory(DeepLearning)
 
 add_subdirectory(Commands)

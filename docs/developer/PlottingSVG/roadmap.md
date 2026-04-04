@@ -44,6 +44,10 @@ Register in `src/CMakeLists.txt` by adding `add_subdirectory(PlottingSVG)` **out
 
 **Verify:** `cmake --preset linux-clang-release` configures without errors.
 
+**Completed:** The layout above is in place under `src/PlottingSVG/`. `CMakeLists.txt` builds a static `PlottingSVG` target with `PUBLIC` linkage to `CorePlotting` and `glm::glm` only (no Qt/OpenGL), `set_target_compiler_warnings(PlottingSVG)`, and `enable_whiskertoolbox_pch(PlottingSVG)`. `src/CMakeLists.txt` calls `add_subdirectory(PlottingSVG)` immediately after `add_subdirectory(CorePlotting)`, outside `if (ENABLE_UI)`.
+
+To keep the library linkable and compiles cleanly, initial **stub** sources were added beyond the bare CMake skeleton: `SVGDocument` assembles a minimal valid SVG (background rect, named `<g>` layers, `<desc>`); `SVGSceneRenderer` walks `RenderableScene` batches in rectangle → polyline → glyph order and calls stub renderers; `SVGPolyLineRenderer`, `SVGGlyphRenderer`, and `SVGRectangleRenderer` return empty element lists; `SVGDecoration`, `SVGAxisRenderer`, and `SVGScalebar` are stub overlays. `SVGUtils` is a placeholder until Step 1.2. Configure/build and the full test suite have been verified on the project preset.
+
 ---
 
 ### Step 1.2: Implement SVGUtils (shared utilities)
@@ -463,7 +467,7 @@ For each widget, the pattern is identical to Phase 2:
 
 ## Summary Checklist
 
-- [ ] **Phase 1.1:** Directory structure + CMakeLists.txt + register in build
+- [x] **Phase 1.1:** Directory structure + CMakeLists.txt + register in build *(done; stub document/scene/renderer/decoration sources included for a compiling target)*
 - [ ] **Phase 1.2:** SVGUtils (coordinate transform, color conversion)
 - [ ] **Phase 1.3:** Per-batch renderers (PolyLine, Glyph, Rectangle)
 - [ ] **Phase 1.4:** SVGDocument (XML assembly with layers)
