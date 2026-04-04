@@ -106,7 +106,9 @@ findSlot(std::vector<dl::TensorSlotDescriptor> const & slot_vec,
 /// per-element shape is {3, 256, 256} — the shape of one frame in the
 /// sequence. This is used for encoding individual sequence entries.
 ///
-/// @pre slot.hasSequenceDim()
+/// @pre slot.hasSequenceDim() must be true; calling with a non-sequence slot
+///      triggers an assert and would cause size_t underflow in reserve()
+///      (enforcement: assert) [CRITICAL]
 std::vector<int64_t> perElementShape(dl::TensorSlotDescriptor const & slot) {
     assert(slot.hasSequenceDim() && "perElementShape: slot must have a sequence dim");
     std::vector<int64_t> shape;
@@ -121,7 +123,10 @@ std::vector<int64_t> perElementShape(dl::TensorSlotDescriptor const & slot) {
 
 /// Get the sequence length from a slot's shape.
 ///
-/// @pre slot.hasSequenceDim()
+/// @pre slot.hasSequenceDim() must be true; without it, slot.sequence_dim is
+///      negative and the cast to std::size_t wraps to a huge index, causing
+///      out-of-bounds access on slot.shape
+///      (enforcement: assert) [CRITICAL]
 int64_t sequenceLength(dl::TensorSlotDescriptor const & slot) {
     assert(slot.hasSequenceDim() && "sequenceLength: slot must have a sequence dim");
     return slot.shape[static_cast<std::size_t>(slot.sequence_dim)];
@@ -157,6 +162,16 @@ dl::EncoderContext makeEncoderContext(
 /// @param source_image_size Original image dimensions (for coordinate scaling of masks/points/lines)
 /// @param media_overrides Optional map of data_key -> cloned MediaData for
 ///        thread-safe frame reading (nullptr = use DataManager only)
+///
+/// @pre frame >= 0; for ImageEncoder, negative frames are passed directly to
+///      MediaData::LoadFrame() whose behavior is implementation-defined and
+///      potentially unsafe; for other encoders a negative TimeFrameIndex
+///      returns empty data silently; all callers enforce via computeEncodingFrame()
+///      clamping (enforcement: none) [IMPORTANT]
+/// @pre batch_index >= 0; it is used inside encoder implementations to index
+///      the batch dimension of tensor, causing out-of-bounds tensor access if
+///      negative; all callers pass a loop variable b >= 0 or hardcoded 0
+///      (enforcement: none) [CRITICAL]
 void encodeDynamicSlot(
         DataManager & dm,
         SlotBindingData const & binding,
@@ -286,6 +301,15 @@ recurrentClaimedPositions(
     return result;
 }
 
+/// Build the full input tensor map for a model forward pass.
+///
+/// @pre current_frame >= 0; negative values are silently clamped to 0 by
+///      every internal computeEncodingFrame() call, producing incorrect
+///      temporal alignment (enforcement: none) [IMPORTANT]
+/// @pre batch_size >= 1; batch_size=0 produces empty tensors that cause a
+///      downstream error in model forward(); batch_size<0 throws from
+///      LibTorch when creating tensors with a negative leading dimension;
+///      all callers clamp to >= 1 before calling (enforcement: none) [IMPORTANT]
 std::unordered_map<std::string, torch::Tensor>
 assembleInputs(
         DataManager & dm,
@@ -587,6 +611,16 @@ assembleInputs(
     return result;
 }
 
+/// Decode model output tensors and write results into DataManager.
+///
+/// @pre current_frame >= 0; a negative value is stored as a negative-indexed
+///      key in the data objects, producing silently mislabeled output frames;
+///      all callers derive current_frame from start_frame >= 0
+///      (enforcement: none) [IMPORTANT]
+/// @pre batch_index >= 0; it is passed to decoder internals as a tensor
+///      batch-dimension index, causing out-of-bounds tensor access if negative;
+///      all callers pass a loop variable b >= 0 or the default 0
+///      (enforcement: none) [CRITICAL]
 void decodeOutputs(
         DataManager & dm,
         std::unordered_map<std::string, torch::Tensor> const & outputs,
@@ -718,6 +752,15 @@ void decodeOutputs(
 
 /// Decode model outputs into FrameResult entries instead of writing to
 /// DataManager. Returns a vector of decoded results for the given frame.
+///
+/// @pre current_frame >= 0; a negative value is stored directly in
+///      FrameResult.frame, silently mislabeling the result frame;
+///      the sole caller derives current_frame from chunk_start >= 0
+///      (enforcement: none) [IMPORTANT]
+/// @pre batch_index >= 0; it is passed to decoder internals as a tensor
+///      batch-dimension index, causing out-of-bounds tensor access if negative;
+///      the sole caller passes loop variable b >= 0
+///      (enforcement: none) [CRITICAL]
 std::vector<FrameResult> decodeOutputsToBuffer(
         std::unordered_map<std::string, torch::Tensor> const & outputs,
         std::vector<OutputBindingData> const & output_bindings,
