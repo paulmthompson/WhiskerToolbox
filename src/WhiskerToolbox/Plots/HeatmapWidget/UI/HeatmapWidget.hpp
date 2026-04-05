@@ -48,6 +48,15 @@ public:
 signals:
     void timePositionSelected(TimePosition position);
 
+public slots:
+    /**
+     * @brief Open a file dialog and write the current heatmap scene to an SVG file.
+     *
+     * Uses `AppFileDialog` with dialog id `"export_heatmap_svg"`. Shows a message box on
+     * success or failure. Does nothing if the scene is empty or the user cancels.
+     */
+    void handleExportSVG();
+
 protected:
     void resizeEvent(QResizeEvent * event) override;
 

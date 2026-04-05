@@ -10,9 +10,13 @@
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Rendering/HeatmapOpenGLWidget.hpp"
+#include "StateManagement/AppFileDialog.hpp"
 
+#include <QFile>
 #include <QHBoxLayout>
+#include <QMessageBox>
 #include <QResizeEvent>
+#include <QTextStream>
 #include <QVBoxLayout>
 #include <utility>
 
@@ -21,7 +25,7 @@
 HeatmapWidget::HeatmapWidget(std::shared_ptr<DataManager> data_manager,
                              QWidget * parent)
     : QWidget(parent),
-      _data_manager(std::move(std::move(data_manager))),
+      _data_manager(std::move(data_manager)),
       ui(new Ui::HeatmapWidget),
       _opengl_widget(nullptr),
       _axis_widget(nullptr),
@@ -292,4 +296,42 @@ VerticalAxisRangeControls * HeatmapWidget::getVerticalRangeControls() const {
 
 VerticalAxisState * HeatmapWidget::getVerticalAxisState() const {
     return _state ? _state->verticalAxisState() : nullptr;
+}
+
+void HeatmapWidget::handleExportSVG() {
+    QString const fileName = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("export_heatmap_svg"),
+            tr("Export Heatmap to SVG"),
+            tr("SVG Files (*.svg);;All Files (*)"));
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    QString const svg = _opengl_widget->exportToSVG();
+    if (svg.isEmpty()) {
+        QMessageBox::warning(
+                this,
+                tr("Export Failed"),
+                tr("No scene to export. Add units and configure alignment first."));
+        return;
+    }
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(
+                this,
+                tr("Export Failed"),
+                tr("Could not open file for writing:\n%1").arg(fileName));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << svg;
+    file.close();
+
+    QMessageBox::information(
+            this,
+            tr("Export Successful"),
+            tr("Heatmap exported to:\n%1").arg(fileName));
 }

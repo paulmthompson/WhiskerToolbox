@@ -201,14 +201,15 @@ Where `ExportConfig` is a plain struct with canvas size, scalebar settings, axis
 
 ## Phase 5: Extend to Additional Widgets
 
-PlottingSVG is proven with EventPlot, DataViewer, and **ScatterPlotWidget** (Phase 8 complete in
-[ScatterPlot roadmap](../docs/developer/ui/Plots/ScatterPlotWidget/roadmap.qmd)). Detailed
-step-by-step plans for each remaining widget are documented in their respective roadmap files.
+PlottingSVG is proven with EventPlot, DataViewer, **ScatterPlotWidget** (Phase 8 in
+[ScatterPlot roadmap](../ui/Plots/ScatterPlotWidget/roadmap.qmd)), and **HeatmapWidget** (Phase 5 in
+[Heatmap roadmap](../ui/Plots/HeatmapWidget/roadmap.qmd)). Detailed step-by-step plans for each
+remaining widget are documented in their respective roadmap files.
 
 | Widget | Complexity | Roadmap Link | Key Challenge |
 |--------|-----------|-------------|---------------|
-| **ScatterPlotWidget** | **Low** | [ScatterPlot Roadmap Phase 8](../docs/developer/ui/Plots/ScatterPlotWidget/roadmap.qmd) | **Done** — `_scene` + `background_color` in state; export wired in UI |
-| **HeatmapWidget** | **Low** | [Heatmap Roadmap Phase 5](../docs/developer/ui/Plots/HeatmapWidget/roadmap.qmd) | Uses `RenderableRectangleBatch` (supported); cache scene as member |
+| **ScatterPlotWidget** | **Low** | [ScatterPlot Roadmap Phase 8](../ui/Plots/ScatterPlotWidget/roadmap.qmd) | **Done** — `_scene` + `background_color` in state; export wired in UI |
+| **HeatmapWidget** | **Low** | [Heatmap Roadmap Phase 5](../ui/Plots/HeatmapWidget/roadmap.qmd) | **Done** — cached `_scene`, `exportToSVG()`, properties + `handleExportSVG()`, registration; manual validation complete |
 | **PSTHWidget** | **Low** | [PSTH Roadmap Phase 5](../docs/developer/ui/Plots/PSTHWidget/roadmap.qmd) | Uses `RenderableRectangleBatch`/`PolyLineBatch` (supported); cache scene + add bg color |
 | **LinePlotWidget** | **Medium** | [LinePlot Roadmap Phase 5](../docs/developer/ui/Plots/LinePlotWidget/roadmap.qmd) | Uses `BatchLineRenderer` (not `RenderableScene`); needs `LineBatchData` → `RenderablePolyLineBatch` converter |
 | OnionSkinViewWidget | Medium | *(not yet planned)* | Uses `BatchLineRenderer`; reuse converter from LinePlot |
@@ -218,7 +219,8 @@ step-by-step plans for each remaining widget are documented in their respective 
 ### Shared Prerequisites
 
 Remaining widget integrations follow the same five-step pattern (identical to Phase 2 EventPlot;
-**ScatterPlotWidget** has completed this path):
+**ScatterPlotWidget** and **HeatmapWidget** have completed this path, plus manual validation in
+their roadmaps):
 
 1. **Cache scene** — ensure `RenderableScene` is available as a member (not just a local in `rebuildScene()`)
 2. **Add `exportToSVG()`** — sync matrices, create `SVGSceneRenderer`, render, return string
@@ -256,6 +258,6 @@ HeatmapWidget.
 - [x] **Phase 3:** Refactor DataViewer SVGExporter to use PlottingSVG
 - [ ] **Phase 4.1:** Shared ExportWidget (optional, deferred)
 - [x] **Phase 5.1:** ScatterPlotWidget SVG export (Low complexity)
-- [ ] **Phase 5.2:** HeatmapWidget SVG export (Low complexity) — OpenGL `exportToSVG()` done; UI steps in [Heatmap roadmap](../ui/Plots/HeatmapWidget/roadmap.qmd)
+- [x] **Phase 5.2:** HeatmapWidget SVG export (Low complexity) — full integration + manual validation; [Heatmap roadmap Phase 5](../ui/Plots/HeatmapWidget/roadmap.qmd)
 - [ ] **Phase 5.3:** PSTHWidget SVG export (Low complexity)
 - [ ] **Phase 5.4:** LinePlotWidget SVG export (Medium — needs LineBatchData converter)

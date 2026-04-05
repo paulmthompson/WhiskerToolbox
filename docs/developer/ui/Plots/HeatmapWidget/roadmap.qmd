@@ -274,16 +274,16 @@ using the `PlottingSVG` library infrastructure. See that phase for the step-by-s
 
 ## Phase 5: SVG Export
 
-**Status**: In progress — steps 5.1–5.3 done; top-level handler + registration (5.4–5.5) and
-manual validation (5.6) remain. Infrastructure exists in `PlottingSVG` (see
+**Status**: **Complete** (steps 5.1–5.6). Heatmap SVG export uses `PlottingSVG` end-to-end; see also
 [EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/index.qmd),
-[DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
+[DataViewer_Widget](../../DataViewer_Widget/index.qmd), and the library-wide
+[PlottingSVG roadmap](../../../PlottingSVG/roadmap.md).
 
 **Goal**: Export the current heatmap view to SVG for publication-quality figures.
 
-**Progress:** 5.1–5.3 implemented and verified (project builds; Heatmap-related tests pass). Steps
-5.4–5.6 not yet done — the **Export SVG...** button does nothing until registration connects
-`exportSVGRequested` to `HeatmapWidget::handleExportSVG()` (see 5.4–5.5).
+**Progress:** Steps **5.1–5.6** done — cached scene, `exportToSVG()`, properties **Export SVG...**,
+`handleExportSVG()`, registration `QObject::connect`, and manual validation (browser/Inkscape vs
+on-screen heatmap).
 
 ### Architecture Assessment
 
@@ -369,10 +369,9 @@ Add an "Export SVG" button to the properties panel.
 
 **Verify:** Build compiles. Button appears in properties panel.
 
-**Verified:** Yes — full build and Heatmap test suite pass. *End-to-end export still requires
-5.4–5.5 (button signal not wired yet).*
+**Verified:** Yes — full build and Heatmap test suite pass.
 
-### Step 5.4: Add `handleExportSVG()` to `HeatmapWidget`
+### Step 5.4: Add `handleExportSVG()` to `HeatmapWidget` — **Done**
 
 Follow the [EventPlotWidget::handleExportSVG()](../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp) pattern:
 
@@ -408,33 +407,41 @@ void HeatmapWidget::handleExportSVG() {
 }
 ```
 
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapWidget.hpp` — add `void handleExportSVG();`
-  public slot
-- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapWidget.cpp` — implement
+**Files modified:**
+- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapWidget.hpp` — `public slots:` `handleExportSVG()`
+- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapWidget.cpp` — implementation; includes
+  `StateManagement/AppFileDialog.hpp`, `QFile`, `QMessageBox`, `QTextStream`
+- `src/WhiskerToolbox/Plots/HeatmapWidget/CMakeLists.txt` — `PRIVATE WhiskerToolbox::StateManagement`
+  (for `AppFileDialog`)
 
 **Verify:** Build compiles.
 
-### Step 5.5: Wire signals in `HeatmapWidgetRegistration`
+**Verified:** Yes — full project build and Heatmap test suite pass (including after linking
+`WhiskerToolbox::StateManagement` for `AppFileDialog`).
 
-Connect the properties signal to the view slot in the `create_editor_custom` lambda:
+### Step 5.5: Wire signals in `HeatmapWidgetRegistration` — **Done**
+
+Connect the properties signal to the view slot in the `create_editor_custom` lambda (after
+`props->setPlotWidget(view)`), matching [EventPlotWidgetRegistration](../../../../src/WhiskerToolbox/Plots/EventPlotWidget/EventPlotWidgetRegistration.cpp):
 
 ```cpp
 QObject::connect(props, &HeatmapPropertiesWidget::exportSVGRequested,
                  view, &HeatmapWidget::handleExportSVG);
 ```
 
-**Files to modify:**
+**Files modified:**
 - `src/WhiskerToolbox/Plots/HeatmapWidget/HeatmapWidgetRegistration.cpp`
 
-**Verify:** Full build succeeds. Clicking "Export SVG" opens file dialog and produces valid
-SVG file.
+**Verify:** Full build succeeds. Clicking **Export SVG...** opens the save dialog and writes an SVG
+when the scene has data.
 
-### Step 5.6: Manual validation
+**Verified:** Yes — full build and tests; end-to-end export exercised (see 5.6).
+
+### Step 5.6: Manual validation — **Done**
 
 1. Load a dataset with `DigitalEventSeries` data
 2. Open a HeatmapWidget, add multiple units, configure alignment
-3. Click "Export SVG" in the properties panel
+3. Click **Export SVG...** in the properties panel (Export section)
 4. Open the resulting SVG in a web browser and/or Inkscape
 5. Verify:
    - Rectangle cells match the on-screen heatmap
@@ -442,6 +449,9 @@ SVG file.
    - Row ordering matches the current sort mode
    - Background color is correct
    - Zoom/pan state is reflected (exported view matches what the user sees)
+
+**Verified:** Yes — manual checks passed (SVG matches interactive view for cells, colormap,
+ordering, background, and camera).
 
 ### Design Notes
 

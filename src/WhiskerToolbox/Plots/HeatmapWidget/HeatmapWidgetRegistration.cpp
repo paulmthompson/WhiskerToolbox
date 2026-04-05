@@ -108,7 +108,7 @@ void registerContextActions(EditorRegistry * registry,
 }// namespace
 
 void registerTypes(EditorRegistry * registry,
-                   const std::shared_ptr<DataManager>& data_manager) {
+                   std::shared_ptr<DataManager> const & data_manager) {
 
     if (!registry) {
         std::cerr << "HeatmapWidgetModule::registerTypes: registry is null" << std::endl;
@@ -116,7 +116,7 @@ void registerTypes(EditorRegistry * registry,
     }
 
     // Capture dependencies for lambdas
-    auto const & dm = std::move(data_manager);
+    auto const & dm = data_manager;
     auto reg = registry;
 
     registry->registerType({.type_id = QStringLiteral("HeatmapWidget"),
@@ -181,6 +181,9 @@ void registerTypes(EditorRegistry * registry,
                                 // Create the properties widget with the shared state
                                 auto * props = new HeatmapPropertiesWidget(state, dm);
                                 props->setPlotWidget(view);
+
+                                QObject::connect(props, &HeatmapPropertiesWidget::exportSVGRequested,
+                                                 view, &HeatmapWidget::handleExportSVG);
 
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the heatmap plot to navigate to a specific time position

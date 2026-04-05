@@ -57,6 +57,7 @@ target_link_libraries(HeatmapWidget PRIVATE EventRateEstimation)
 target_link_libraries(HeatmapWidget PRIVATE RateEstimationControls)
 target_link_libraries(HeatmapWidget PRIVATE ColormapControls)
 target_link_libraries(HeatmapWidget PRIVATE TooltipManager)
+target_link_libraries(HeatmapWidget PRIVATE WhiskerToolbox::StateManagement)
 target_link_libraries(HeatmapWidget PRIVATE EventPlotWidget)
 target_link_libraries(HeatmapWidget PRIVATE PSTHWidget)
 
