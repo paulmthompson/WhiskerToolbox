@@ -6,6 +6,7 @@
 #include "EditorState/SelectionContext.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "Plots/HeatmapWidget/Core/HeatmapDataPipeline.hpp"
+#include "PlottingSVG/SVGSceneRenderer.hpp"
 
 #include <QAction>
 #include <QMenu>
@@ -95,6 +96,25 @@ CorePlotting::ViewStateData const & HeatmapOpenGLWidget::viewState() const {
 
 void HeatmapOpenGLWidget::setSelectionContext(SelectionContext * selection_context) {
     _selection_context = selection_context;
+}
+
+QString HeatmapOpenGLWidget::exportToSVG() {
+    if (_scene.rectangle_batches.empty()) {
+        return {};
+    }
+
+    _scene.view_matrix = _view_matrix;
+    _scene.projection_matrix = _projection_matrix;
+
+    PlottingSVG::SVGSceneRenderer renderer;
+    renderer.setScene(_scene);
+    renderer.setCanvasSize(_widget_width, _widget_height);
+
+    if (_state) {
+        renderer.setBackgroundColor(_state->getBackgroundColor().toStdString());
+    }
+
+    return QString::fromStdString(renderer.render());
 }
 
 void HeatmapOpenGLWidget::resetView() {
@@ -217,7 +237,7 @@ void HeatmapOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 }
 
 void HeatmapOpenGLWidget::wheelEvent(QWheelEvent * event) {
-    float const delta = event->angleDelta().y() / 120.0f;
+    float const delta = static_cast<float>(event->angleDelta().y()) / 120.0f;
     bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
     handleZoom(delta, y_only, both_axes);
@@ -314,14 +334,19 @@ void HeatmapOpenGLWidget::onViewStateChanged() {
 void HeatmapOpenGLWidget::rebuildScene() {
     _tooltip_mgr->hide();
 
-    if (!_state || !_data_manager) {
+    auto const clearCachedScene = [this]() {
+        _scene = CorePlotting::RenderableScene{};
         _scene_renderer.clearScene();
+    };
+
+    if (!_state || !_data_manager) {
+        clearCachedScene();
         return;
     }
 
     auto const & unit_keys = _state->unitKeys();
     if (unit_keys.empty()) {
-        _scene_renderer.clearScene();
+        clearCachedScene();
         _display_unit_keys.clear();
         emit unitCountChanged(0);
         return;
@@ -329,13 +354,13 @@ void HeatmapOpenGLWidget::rebuildScene() {
 
     auto * alignment_state = _state->alignmentState();
     if (!alignment_state) {
-        _scene_renderer.clearScene();
+        clearCachedScene();
         return;
     }
 
     double const window_size = _state->getWindowSize();
     if (window_size <= 0.0) {
-        _scene_renderer.clearScene();
+        clearCachedScene();
         return;
     }
 
@@ -351,7 +376,7 @@ void HeatmapOpenGLWidget::rebuildScene() {
             _data_manager, unit_keys, alignment_state->data(), config);
 
     if (!pipeline_result.success || pipeline_result.rows.empty()) {
-        _scene_renderer.clearScene();
+        clearCachedScene();
         _display_unit_keys.clear();
         emit unitCountChanged(0);
         return;
@@ -393,10 +418,10 @@ void HeatmapOpenGLWidget::rebuildScene() {
             break;
     }
 
-    auto scene = CorePlotting::HeatmapMapper::buildScene(
+    _scene = CorePlotting::HeatmapMapper::buildScene(
             pipeline_result.rows, colormap, mapper_range);
 
-    _scene_renderer.uploadScene(scene);
+    _scene_renderer.uploadScene(_scene);
 
     // Update Y-axis to reflect unit count
     auto const num_units = pipeline_result.rows.size();

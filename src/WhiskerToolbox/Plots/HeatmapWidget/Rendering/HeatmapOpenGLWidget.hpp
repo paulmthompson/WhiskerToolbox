@@ -19,6 +19,7 @@
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+#include <QString>
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -57,6 +58,12 @@ public:
      */
     void setSelectionContext(SelectionContext * selection_context);
 
+    /**
+     * @brief Serialize the current cached scene to SVG (widget pixel size, current camera).
+     * @return UTF-8 SVG document, or empty if there is no rectangle geometry to export.
+     */
+    [[nodiscard]] QString exportToSVG();
+
 signals:
     void plotDoubleClicked(int64_t time_frame_index);
     void viewBoundsChanged();
@@ -85,6 +92,8 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
     PlottingOpenGL::SceneRenderer _scene_renderer;
+    /** @brief Cached scene (same geometry as GPU); reserved for SVG export */
+    CorePlotting::RenderableScene _scene;
     bool _opengl_initialized{false};
     bool _scene_dirty{true};
 

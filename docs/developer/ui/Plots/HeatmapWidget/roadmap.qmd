@@ -274,8 +274,10 @@ using the `PlottingSVG` library infrastructure. See that phase for the step-by-s
 
 ## Phase 5: SVG Export
 
-**Status**: Not started. Infrastructure exists in `PlottingSVG` library (proven with
-[EventPlotWidget](../EventPlotWidget/index.qmd) and [DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
+**Status**: In progress — steps 5.1–5.2 done; UI wiring (5.3–5.5) and manual validation (5.6)
+remain. Infrastructure exists in `PlottingSVG` (see
+[EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/index.qmd),
+[DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
 
 **Goal**: Export the current heatmap view to SVG for publication-quality figures.
 
@@ -290,12 +292,10 @@ The HeatmapWidget rendering pipeline is **fully compatible** with `PlottingSVG`:
   coordinate transform pipeline.
 - Background color is stored in `HeatmapStateData::background_color` (accessible via
   `HeatmapState::getBackgroundColor()`).
+- `HeatmapOpenGLWidget` caches the built `RenderableScene` in `_scene` (kept in sync with the
+  OpenGL upload in `rebuildScene()`).
 
-**Key issue**: The `RenderableScene` built in `rebuildScene()` is currently a local variable
-passed directly to `_scene_renderer.uploadScene()`. It is not cached as a member. The SVG
-export path needs access to the scene, so it must be cached.
-
-### Step 5.1: Cache `RenderableScene` in `HeatmapOpenGLWidget`
+### Step 5.1: Cache `RenderableScene` in `HeatmapOpenGLWidget` — **Done**
 
 Add a `RenderableScene` member to `HeatmapOpenGLWidget` so the scene is available for SVG
 export without rebuilding.
@@ -314,7 +314,7 @@ export without rebuilding.
 
 **Verify:** Build compiles. Existing OpenGL rendering is unchanged.
 
-### Step 5.2: Add `exportToSVG()` to `HeatmapOpenGLWidget`
+### Step 5.2: Add `exportToSVG()` to `HeatmapOpenGLWidget` — **Done**
 
 Follow the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md):
 

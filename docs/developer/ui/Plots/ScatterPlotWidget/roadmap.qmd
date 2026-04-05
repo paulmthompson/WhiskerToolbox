@@ -202,10 +202,11 @@ Extend the `PlotTooltipManager` text provider to query the cached `feature_value
 
 ---
 
-## Phase 8: SVG Export
+## Phase 8: SVG Export — **Complete**
 
-**Status**: In progress — steps **8.1**–**8.5** complete; **8.6** (manual validation) remaining. Infrastructure
-exists in `PlottingSVG` (proven with
+**Status**: **Complete.** End-to-end export (state background color, `exportToSVG()`, properties
+button, `handleExportSVG()`, registration wiring) is implemented; manual validation in the running
+app has been performed. Uses `PlottingSVG` (same stack as
 [EventPlotWidget](../EventPlotWidget/index.qmd) and [DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
 
 **Goal**: Export the current scatter plot view to SVG for publication-quality figures.
@@ -217,11 +218,10 @@ exists in `PlottingSVG` (proven with
 | 8.3 | Export button + `exportSVGRequested` in properties | **Done** |
 | 8.4 | `handleExportSVG()` on `ScatterPlotWidget` | **Done** |
 | 8.5 | Wire signals in `ScatterPlotWidgetRegistration` | **Done** |
-| 8.6 | Manual validation | Not started |
+| 8.6 | Manual validation | **Done** |
 
-**Verified:** Steps **8.1**–**8.5** build cleanly and pass the scatter plot `ctest` targets. **Export SVG...**
-in the properties panel is wired to `ScatterPlotWidget::handleExportSVG` inside `create_editor_custom`
-(same pattern as EventPlot). Use **8.6** for interactive checks in the running app.
+**Verified:** Project build; scatter plot `ctest` targets; interactive export exercised in the app
+(**8.6** checklist below).
 
 ### Architecture Assessment
 
@@ -332,9 +332,11 @@ QObject::connect(props, &ScatterPlotPropertiesWidget::exportSVGRequested,
 from the `create_view` lambda (was triggering `-Wunused-lambda-capture`).
 
 **Verify:** Project build; scatter plot tests pass; in the app, **Export SVG...** opens the save
-dialog and produces SVG when the plot has geometry (full **8.6** checklist optional).
+dialog and produces SVG when the plot has geometry.
 
-### Step 8.6: Manual validation
+### Step 8.6: Manual validation — **Complete**
+
+Checklist used for sign-off (spot-check as needed for regressions):
 
 1. Load a dataset with scatter-compatible data (e.g., TensorData or paired AnalogTimeSeries)
 2. Open a ScatterPlotWidget, configure X/Y data sources
