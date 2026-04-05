@@ -204,7 +204,7 @@ Extend the `PlotTooltipManager` text provider to query the cached `feature_value
 
 ## Phase 8: SVG Export
 
-**Status**: In progress — step **8.1** complete; **8.2**–**8.6** not started. Infrastructure
+**Status**: In progress — steps **8.1**–**8.5** complete; **8.6** (manual validation) remaining. Infrastructure
 exists in `PlottingSVG` (proven with
 [EventPlotWidget](../EventPlotWidget/index.qmd) and [DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
 
@@ -213,11 +213,15 @@ exists in `PlottingSVG` (proven with
 | Step | Description | Status |
 |------|-------------|--------|
 | 8.1 | `background_color` in state + OpenGL clear from state | **Done** |
-| 8.2 | `exportToSVG()` on `ScatterPlotOpenGLWidget` | Not started |
-| 8.3 | Export button + `exportSVGRequested` in properties | Not started |
-| 8.4 | `handleExportSVG()` on `ScatterPlotWidget` | Not started |
-| 8.5 | Wire signals in `ScatterPlotWidgetRegistration` | Not started |
+| 8.2 | `exportToSVG()` on `ScatterPlotOpenGLWidget` | **Done** |
+| 8.3 | Export button + `exportSVGRequested` in properties | **Done** |
+| 8.4 | `handleExportSVG()` on `ScatterPlotWidget` | **Done** |
+| 8.5 | Wire signals in `ScatterPlotWidgetRegistration` | **Done** |
 | 8.6 | Manual validation | Not started |
+
+**Verified:** Steps **8.1**–**8.5** build cleanly and pass the scatter plot `ctest` targets. **Export SVG...**
+in the properties panel is wired to `ScatterPlotWidget::handleExportSVG` inside `create_editor_custom`
+(same pattern as EventPlot). Use **8.6** for interactive checks in the running app.
 
 ### Architecture Assessment
 
@@ -247,25 +251,28 @@ color control (like EventPlot) is optional and not required for SVG export.
   `updateBackgroundColor()`, called from `initializeGL()` and `paintGL()`; connection to
   `backgroundColorChanged` in `setState()`
 
-**Verify:** Build compiles; scatter plot tests pass.
+**Verify:** Project build; scatter plot tests pass.
 
-### Step 8.2: Add `exportToSVG()` to `ScatterPlotOpenGLWidget`
+### Step 8.2: Add `exportToSVG()` to `ScatterPlotOpenGLWidget` — **Complete**
 
-Follow the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md). The scatter plot
-already caches the scene — this is the simplest integration.
+Follows the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md). The scatter plot
+caches `_scene` as `std::unique_ptr<RenderableScene>`; live view/projection matrices are copied
+onto the scene before export (the OpenGL path passes matrices into `SceneRenderer::render()`,
+so the CPU scene would otherwise keep identity defaults).
 
-```cpp
-[[nodiscard]] QString exportToSVG();
-```
+**Declaration:** `[[nodiscard]] QString exportToSVG();` (non-`const` — mutates scene matrices for export).
 
-**Implementation:**
+**Implementation (reference):**
 ```cpp
 QString ScatterPlotOpenGLWidget::exportToSVG() {
-    if (!_scene || (_scene->glyph_batches.empty() && _scene->poly_line_batches.empty())) {
+    if (!_scene) {
+        return {};
+    }
+    if (_scene->glyph_batches.empty() && _scene->poly_line_batches.empty() &&
+        _scene->rectangle_batches.empty()) {
         return {};
     }
 
-    // Sync matrices from OpenGL state to scene
     _scene->view_matrix = _view_matrix;
     _scene->projection_matrix = _projection_matrix;
 
@@ -281,82 +288,51 @@ QString ScatterPlotOpenGLWidget::exportToSVG() {
 }
 ```
 
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.hpp` — add
-  `exportToSVG()` declaration
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/Rendering/ScatterPlotOpenGLWidget.cpp` — implement
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/CMakeLists.txt` — add `PlottingSVG` to
-  `target_link_libraries` (PRIVATE)
+**Implemented in:**
+- `Rendering/ScatterPlotOpenGLWidget.hpp` / `.cpp` — `exportToSVG()`, `#include <QString>`,
+  `PlottingSVG/SVGSceneRenderer.hpp`
+- `CMakeLists.txt` — `target_link_libraries(ScatterPlotWidget PRIVATE PlottingSVG)`
 
-**Verify:** Build compiles.
+**Verify:** Project build; scatter plot tests pass.
 
-### Step 8.3: Add `exportSVGRequested` signal to `ScatterPlotPropertiesWidget`
+### Step 8.3: Add `exportSVGRequested` signal to `ScatterPlotPropertiesWidget` — **Complete**
 
-Add an "Export SVG" button to the properties panel.
+Collapsible **Export** section with **Export SVG...** button (`QSizePolicy::Expanding` width),
+inserted before the bottom spacer; `clicked` connected to `exportSVGRequested()`.
 
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotPropertiesWidget.hpp` — add
-  `signals: void exportSVGRequested();`
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotPropertiesWidget.cpp` — create
-  a QPushButton in an "Export" collapsible section, connect `clicked` → `exportSVGRequested()`
+**Implemented in:** `UI/ScatterPlotPropertiesWidget.hpp` (signal + `_createExportUI()`),
+`UI/ScatterPlotPropertiesWidget.cpp`.
 
-**Verify:** Build compiles. Button appears.
+**Verify:** Project build; button visible in properties; scatter plot tests pass.
 
-### Step 8.4: Add `handleExportSVG()` to `ScatterPlotWidget`
+### Step 8.4: Add `handleExportSVG()` to `ScatterPlotWidget` — **Complete**
 
-Follow the [EventPlotWidget::handleExportSVG()](../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp) pattern:
+Same pattern as [EventPlotWidget::handleExportSVG()](../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp):
+`AppFileDialog::getSaveFileName` (id `export_scatter_plot_svg`), `_opengl_widget->exportToSVG()`,
+`QMessageBox` on empty scene / I/O failure / success.
 
-```cpp
-void ScatterPlotWidget::handleExportSVG() {
-    QString const fileName = AppFileDialog::getSaveFileName(
-            this, QStringLiteral("export_scatter_plot_svg"),
-            tr("Export Scatter Plot to SVG"),
-            tr("SVG Files (*.svg);;All Files (*)"));
-    if (fileName.isEmpty()) return;
+**Implemented in:**
+- `UI/ScatterPlotWidget.hpp` — `public slots: void handleExportSVG();`
+- `UI/ScatterPlotWidget.cpp` — implementation; includes `StateManagement/AppFileDialog.hpp`,
+  `QFile`, `QMessageBox`, `QTextStream`
+- `CMakeLists.txt` — `target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::StateManagement)`
 
-    QString const svg = _opengl_widget->exportToSVG();
-    if (svg.isEmpty()) {
-        QMessageBox::warning(this, tr("Export Failed"),
-            tr("No scene to export. Load data and configure the plot first."));
-        return;
-    }
+**Verify:** Project build; scatter plot tests pass.
 
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::critical(this, tr("Export Failed"),
-            tr("Could not open file for writing:\n%1").arg(fileName));
-        return;
-    }
+### Step 8.5: Wire signals in `ScatterPlotWidgetRegistration` — **Complete**
 
-    QTextStream out(&file);
-    out << svg;
-    file.close();
-
-    QMessageBox::information(this, tr("Export Successful"),
-        tr("Scatter plot exported to:\n%1").arg(fileName));
-}
-```
-
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotWidget.hpp` — add
-  `void handleExportSVG();` public slot
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/UI/ScatterPlotWidget.cpp` — implement
-
-**Verify:** Build compiles.
-
-### Step 8.5: Wire signals in `ScatterPlotWidgetRegistration`
-
-Connect the properties signal to the view slot in the `create_editor_custom` lambda:
+In `create_editor_custom`, after `props->setPlotWidget(view)`:
 
 ```cpp
 QObject::connect(props, &ScatterPlotPropertiesWidget::exportSVGRequested,
                  view, &ScatterPlotWidget::handleExportSVG);
 ```
 
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.cpp`
+**Implemented in:** `ScatterPlotWidgetRegistration.cpp`. Also removed an unused `registry` capture
+from the `create_view` lambda (was triggering `-Wunused-lambda-capture`).
 
-**Verify:** Full build succeeds.
+**Verify:** Project build; scatter plot tests pass; in the app, **Export SVG...** opens the save
+dialog and produces SVG when the plot has geometry (full **8.6** checklist optional).
 
 ### Step 8.6: Manual validation
 

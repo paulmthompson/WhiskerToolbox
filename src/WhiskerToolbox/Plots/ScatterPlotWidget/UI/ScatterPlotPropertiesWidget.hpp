@@ -60,8 +60,15 @@ public:
      */
     void setPlotWidget(ScatterPlotWidget * plot_widget);
 
+signals:
+    /**
+     * @brief Emitted when the user clicks the "Export SVG" button
+     */
+    void exportSVGRequested();
+
 private:
     void _createDataSourceUI();
+    void _createExportUI();
     void _populateKeyComboBoxes();
     void _populateColumnComboBox(QComboBox * combo, std::string const & data_key);
     void _onXKeyChanged();
@@ -126,6 +133,9 @@ private:
     Section * _selection_section{nullptr};
     QComboBox * _selection_mode_combo{nullptr};
     QLabel * _selection_instructions_label{nullptr};
+
+    // Export
+    Section * _export_section{nullptr};
 
     // Axis range controls
     HorizontalAxisRangeControls * _horizontal_range_controls{nullptr};

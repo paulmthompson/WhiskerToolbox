@@ -58,9 +58,11 @@ target_link_libraries(ScatterPlotWidget PRIVATE GlyphStyleWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE ColormapControls)
 target_link_libraries(ScatterPlotWidget PRIVATE CorePlotting)
 target_link_libraries(ScatterPlotWidget PRIVATE PlottingOpenGL)
+target_link_libraries(ScatterPlotWidget PRIVATE PlottingSVG)
 target_link_libraries(ScatterPlotWidget PRIVATE TooltipManager)
 target_link_libraries(ScatterPlotWidget PRIVATE GroupContextMenu)
 target_link_libraries(ScatterPlotWidget PRIVATE KeymapSystem)
+target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::StateManagement)
 
 
 target_include_directories(ScatterPlotWidget PUBLIC

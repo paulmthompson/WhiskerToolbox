@@ -26,6 +26,7 @@
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+#include <QString>
 #include <glm/glm.hpp>
 
 #include <memory>
@@ -110,6 +111,17 @@ public:
      * @param manager Pointer to the KeymapManager (can be nullptr)
      */
     void setKeymapManager(KeymapSystem::KeymapManager * manager);
+
+    /**
+     * @brief Export the current cached scene to an SVG document string
+     *
+     * Copies the same view and projection matrices used for OpenGL into the scene, then
+     * renders. Geometry matches the last built scene; if the widget has not yet painted,
+     * matrices still reflect the current view state.
+     *
+     * @return UTF-8 SVG string, or empty if there is no drawable batch geometry
+     */
+    [[nodiscard]] QString exportToSVG();
 
 signals:
     void viewBoundsChanged();

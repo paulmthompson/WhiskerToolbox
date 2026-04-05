@@ -26,6 +26,7 @@
 #include <QFormLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QSizePolicy>
 #include <QSpinBox>
 #include <QVBoxLayout>
 
@@ -71,6 +72,7 @@ ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(std::shared_ptr<Scatter
 
     _createDataSourceUI();
     _createPointColoringUI();
+    _createExportUI();
 
     if (_data_manager) {
         _dm_observer_id = _data_manager->addObserver([this]() {
@@ -255,6 +257,30 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI() {
 
     // Populate initial data
     _populateKeyComboBoxes();
+}
+
+void ScatterPlotPropertiesWidget::_createExportUI() {
+    _export_section = new Section(this, "Export");
+
+    auto * export_layout = new QVBoxLayout();
+    export_layout->setContentsMargins(4, 4, 4, 4);
+    export_layout->setSpacing(4);
+
+    auto * export_button = new QPushButton(tr("Export SVG..."));
+    export_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    export_layout->addWidget(export_button);
+
+    _export_section->setContentLayout(*export_layout);
+
+    int const spacer_idx = ui->main_layout->indexOf(ui->vertical_spacer);
+    if (spacer_idx >= 0) {
+        ui->main_layout->insertWidget(spacer_idx, _export_section);
+    } else {
+        ui->main_layout->addWidget(_export_section);
+    }
+
+    connect(export_button, &QPushButton::clicked,
+            this, &ScatterPlotPropertiesWidget::exportSVGRequested);
 }
 
 void ScatterPlotPropertiesWidget::_populateKeyComboBoxes() {

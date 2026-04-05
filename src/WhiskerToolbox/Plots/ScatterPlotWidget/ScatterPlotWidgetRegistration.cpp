@@ -131,7 +131,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<ScatterPlotState>(); },
 
                             // View factory - creates ScatterPlotWidget (the view component)
-                            .create_view = [dm, registry, gm, km](std::shared_ptr<EditorState> const & state) -> QWidget * {
+                            .create_view = [dm, gm, km](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<ScatterPlotState>(state);
                                 if (!plot_state) {
                                     std::cerr << "ScatterPlotWidgetModule: Failed to cast state to ScatterPlotState" << std::endl;
@@ -185,6 +185,9 @@ void registerTypes(EditorRegistry * registry,
                                 // Create the properties widget with the shared state
                                 auto * props = new ScatterPlotPropertiesWidget(state, dm);
                                 props->setPlotWidget(view);
+
+                                QObject::connect(props, &ScatterPlotPropertiesWidget::exportSVGRequested,
+                                                 view, &ScatterPlotWidget::handleExportSVG);
 
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the scatter plot to navigate to a specific time position

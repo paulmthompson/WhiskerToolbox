@@ -31,6 +31,7 @@
 #include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
+#include "PlottingSVG/SVGSceneRenderer.hpp"
 #include "Tensors/TensorData.hpp"
 
 #include <QContextMenuEvent>
@@ -176,6 +177,31 @@ void ScatterPlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_m
     _data_manager = std::move(data_manager);
     _scene_dirty = true;
     update();
+}
+
+QString ScatterPlotOpenGLWidget::exportToSVG() {
+    if (!_scene) {
+        return {};
+    }
+    if (_scene->glyph_batches.empty() && _scene->poly_line_batches.empty() &&
+        _scene->rectangle_batches.empty()) {
+        return {};
+    }
+
+    // OpenGL passes matrices to SceneRenderer::render(); the CPU scene keeps defaults unless
+    // we copy the live camera here (required for correct SVG projection).
+    _scene->view_matrix = _view_matrix;
+    _scene->projection_matrix = _projection_matrix;
+
+    PlottingSVG::SVGSceneRenderer renderer;
+    renderer.setScene(*_scene);
+    renderer.setCanvasSize(_widget_width, _widget_height);
+
+    if (_state) {
+        renderer.setBackgroundColor(_state->getBackgroundColor().toStdString());
+    }
+
+    return QString::fromStdString(renderer.render());
 }
 
 void ScatterPlotOpenGLWidget::initializeGL() {
