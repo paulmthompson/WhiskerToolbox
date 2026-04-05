@@ -19,6 +19,7 @@
 #include <QComboBox>
 #include <QFormLayout>
 #include <QLabel>
+#include <QPushButton>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
@@ -29,8 +30,8 @@ HeatmapPropertiesWidget::HeatmapPropertiesWidget(std::shared_ptr<HeatmapState> s
                                                  QWidget * parent)
     : QWidget(parent),
       ui(new Ui::HeatmapPropertiesWidget),
-      _state(std::move(std::move(state))),
-      _data_manager(std::move(std::move(data_manager))),
+      _state(std::move(state)),
+      _data_manager(std::move(data_manager)),
       _alignment_widget(nullptr),
       _unit_tree_widget(nullptr),
       _plot_widget(nullptr),
@@ -55,6 +56,8 @@ HeatmapPropertiesWidget::HeatmapPropertiesWidget(std::shared_ptr<HeatmapState> s
 
     // Set up the sorting section
     _setupSortingSection();
+
+    _setupExportSection();
 }
 
 HeatmapPropertiesWidget::~HeatmapPropertiesWidget() {
@@ -377,4 +380,32 @@ void HeatmapPropertiesWidget::_syncSortingFromState() {
     }
 
     _sort_ascending_check->setChecked(_state->sortAscending());
+}
+
+// =============================================================================
+// Export
+// =============================================================================
+
+void HeatmapPropertiesWidget::_setupExportSection() {
+    _export_section = new Section(this, "Export");
+
+    auto * export_layout = new QVBoxLayout();
+    export_layout->setContentsMargins(4, 4, 4, 4);
+    export_layout->setSpacing(4);
+
+    auto * export_button = new QPushButton(tr("Export SVG..."));
+    export_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    export_layout->addWidget(export_button);
+
+    _export_section->setContentLayout(*export_layout);
+
+    int const spacer_index = ui->main_layout->indexOf(ui->vertical_spacer);
+    if (spacer_index >= 0) {
+        ui->main_layout->insertWidget(spacer_index, _export_section);
+    } else {
+        ui->main_layout->addWidget(_export_section);
+    }
+
+    connect(export_button, &QPushButton::clicked,
+            this, &HeatmapPropertiesWidget::exportSVGRequested);
 }

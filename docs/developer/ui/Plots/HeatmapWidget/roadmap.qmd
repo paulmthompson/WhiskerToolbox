@@ -274,12 +274,16 @@ using the `PlottingSVG` library infrastructure. See that phase for the step-by-s
 
 ## Phase 5: SVG Export
 
-**Status**: In progress — steps 5.1–5.2 done; UI wiring (5.3–5.5) and manual validation (5.6)
-remain. Infrastructure exists in `PlottingSVG` (see
+**Status**: In progress — steps 5.1–5.3 done; top-level handler + registration (5.4–5.5) and
+manual validation (5.6) remain. Infrastructure exists in `PlottingSVG` (see
 [EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/index.qmd),
 [DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
 
 **Goal**: Export the current heatmap view to SVG for publication-quality figures.
+
+**Progress:** 5.1–5.3 implemented and verified (project builds; Heatmap-related tests pass). Steps
+5.4–5.6 not yet done — the **Export SVG...** button does nothing until registration connects
+`exportSVGRequested` to `HeatmapWidget::handleExportSVG()` (see 5.4–5.5).
 
 ### Architecture Assessment
 
@@ -304,15 +308,12 @@ export without rebuilding.
 - `src/WhiskerToolbox/Plots/HeatmapWidget/Rendering/HeatmapOpenGLWidget.hpp` — add
   `CorePlotting::RenderableScene _scene;` member
 - `src/WhiskerToolbox/Plots/HeatmapWidget/Rendering/HeatmapOpenGLWidget.cpp` — in
-  `rebuildScene()`, store the scene in `_scene` before uploading:
-  ```cpp
-  auto scene = HeatmapMapper::toRectangleBatch(...);
-  // ... existing scene building code ...
-  _scene = scene;                        // Cache for SVG export
-  _scene_renderer.uploadScene(_scene);   // Upload from cached copy
-  ```
+  `rebuildScene()`, assign into `_scene` before `uploadScene` (and clear `_scene` on every
+  `clearScene()` path via a small helper).
 
 **Verify:** Build compiles. Existing OpenGL rendering is unchanged.
+
+**Verified:** Yes — full build and Heatmap test suite pass.
 
 ### Step 5.2: Add `exportToSVG()` to `HeatmapOpenGLWidget` — **Done**
 
@@ -353,19 +354,23 @@ QString HeatmapOpenGLWidget::exportToSVG() {
 
 **Verify:** Build compiles.
 
-### Step 5.3: Add `exportSVGRequested` signal to `HeatmapPropertiesWidget`
+**Verified:** Yes — full build and Heatmap test suite pass.
+
+### Step 5.3: Add `exportSVGRequested` signal to `HeatmapPropertiesWidget` — **Done**
 
 Add an "Export SVG" button to the properties panel.
 
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapPropertiesWidget.hpp` — add
-  `signals: void exportSVGRequested();`
-- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapPropertiesWidget.cpp` — create a
-  QPushButton in an "Export" collapsible section and connect its `clicked` signal to
-  `exportSVGRequested()`
-- Optionally update `HeatmapPropertiesWidget.ui` if using Qt Designer
+**Files modified:**
+- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapPropertiesWidget.hpp` —
+  `exportSVGRequested` signal; `Section * _export_section`; `_setupExportSection()`
+- `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapPropertiesWidget.cpp` — `_setupExportSection()`
+  adds a collapsible **Export** `Section` with **Export SVG...** (`QPushButton`), inserted
+  above the bottom spacer (same pattern as `ScatterPlotPropertiesWidget`). No `.ui` change.
 
 **Verify:** Build compiles. Button appears in properties panel.
+
+**Verified:** Yes — full build and Heatmap test suite pass. *End-to-end export still requires
+5.4–5.5 (button signal not wired yet).*
 
 ### Step 5.4: Add `handleExportSVG()` to `HeatmapWidget`
 

@@ -70,6 +70,12 @@ public:
      */
     void setPlotWidget(HeatmapWidget * plot_widget);
 
+signals:
+    /**
+     * @brief Emitted when the user requests SVG export from the properties panel
+     */
+    void exportSVGRequested();
+
 private:
     Ui::HeatmapPropertiesWidget * ui;
     std::shared_ptr<HeatmapState> _state;
@@ -93,6 +99,8 @@ private:
     QComboBox * _sort_mode_combo{nullptr};
     QCheckBox * _sort_ascending_check{nullptr};
 
+    Section * _export_section{nullptr};
+
     void _setupUnitTree();
     void _connectUnitTreeSignals();
     void _syncTreeFromState();
@@ -100,6 +108,7 @@ private:
     void _syncScalingFromState();
     void _setupSortingSection();
     void _syncSortingFromState();
+    void _setupExportSection();
 };
 
 #endif// HEATMAP_PROPERTIES_WIDGET_HPP
