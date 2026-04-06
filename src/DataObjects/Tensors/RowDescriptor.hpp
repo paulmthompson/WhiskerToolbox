@@ -10,8 +10,6 @@
  * indices with no time semantics. RowDescriptor captures this as a
  * discriminated variant with factory constructors and type-specific accessors.
  *
- * Part of the TensorData refactor (step 1).
- * @see tensor_data_refactor_proposal.md §5 for design rationale.
  */
 
 #include "TimeFrame/TimeFrameIndex.hpp"  // TimeFrameIndex
@@ -71,6 +69,10 @@ public:
     /**
      * @brief Create an ordinal row descriptor (no temporal meaning)
      * @param count Number of rows
+     *
+     * @note No preconditions — all `std::size_t` values are valid, including zero.
+     *       Zero is used as a sentinel/empty-state (e.g., before data is loaded).
+     *       Contrast with `setOrdinalCount()`, which rejects zero.
      */
     static RowDescriptor ordinal(std::size_t count);
 
@@ -79,6 +81,9 @@ public:
      * @param storage TimeIndexStorage mapping array positions to TimeFrameIndex values
      * @param time_frame The TimeFrame providing absolute time reference (may be nullptr;
      *        DataManager will assign the correct TimeFrame when the tensor is registered)
+     *
+     * @pre storage != nullptr (enforcement: exception)
+     *
      * @throws std::invalid_argument if storage is null
      */
     static RowDescriptor fromTimeIndices(

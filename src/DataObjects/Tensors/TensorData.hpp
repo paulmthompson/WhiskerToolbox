@@ -138,6 +138,13 @@ public:
      * @param time_frame Shared TimeFrame for absolute time reference (may be nullptr;
      *        DataManager assigns the correct TimeFrame when registered)
      * @param column_names Optional column labels (size must match num_cols if provided)
+     *
+     * @pre time_storage != nullptr (enforcement: exception)
+     * @pre time_storage->size() == num_rows (enforcement: exception)
+     * @pre data.size() == num_rows * num_cols (enforcement: exception)
+     * @pre column_names.empty() || column_names.size() == num_cols (enforcement: exception)
+     * @pre num_rows * num_cols does not overflow std::size_t (enforcement: none) [LOW]
+     *
      * @throws std::invalid_argument on size mismatches or null time_storage
      */
     [[nodiscard]] static TensorData createTimeSeries2D(
@@ -160,6 +167,12 @@ public:
      * @param time_frame Shared TimeFrame for time reference (may be nullptr;
      *        DataManager assigns the correct TimeFrame when registered)
      * @param column_names Optional column labels
+     *
+     * @pre intervals.size() == num_rows (enforcement: exception)
+     * @pre data.size() == num_rows * num_cols (enforcement: exception)
+     * @pre column_names.empty() || column_names.size() == num_cols (enforcement: exception)
+     * @pre num_rows * num_cols does not overflow std::size_t (enforcement: none) [LOW]
+     *
      * @throws std::invalid_argument on size mismatches
      */
     [[nodiscard]] static TensorData createFromIntervals(
@@ -178,6 +191,11 @@ public:
      *
      * @param data Flat row-major data
      * @param axes Ordered axis descriptors (outermost first)
+     *
+     * @pre !axes.empty() (enforcement: exception)
+     * @pre data.size() == product of all ax.size in axes (enforcement: exception)
+     * @pre product of all ax.size does not overflow std::size_t (enforcement: none) [LOW]
+     *
      * @throws std::invalid_argument if data size doesn't match total elements
      */
     [[nodiscard]] static TensorData createND(
@@ -191,6 +209,9 @@ public:
      *
      * @param matrix Armadillo float matrix (moved into storage)
      * @param column_names Optional column labels
+     *
+     * @pre matrix.n_rows > 0 && matrix.n_cols > 0 (enforcement: exception)
+     * @pre column_names.empty() || column_names.size() == matrix.n_cols (enforcement: exception)
      */
     [[nodiscard]] static TensorData createFromArmadillo(
             arma::fmat matrix,
@@ -202,6 +223,14 @@ public:
      * @param cube Armadillo float cube (moved into storage)
      * @param axes Optional axis descriptors; if empty, defaults to
      *        {"dim0", nslices}, {"dim1", nrows}, {"dim2", ncols}
+     *
+     * @pre cube.n_slices > 0 && cube.n_rows > 0 && cube.n_cols > 0 (enforcement: exception)
+     * @pre axes.empty() || axes.size() == 3 (enforcement: none) [IMPORTANT]
+     * @pre If !axes.empty(): axes[0].size == cube.n_slices, axes[1].size == cube.n_rows,
+     *      axes[2].size == cube.n_cols — mismatched sizes will make dims.shape() lie
+     *      silently (enforcement: none) [IMPORTANT]
+     * @pre No zero-size axes and no duplicate axis names in provided axes
+     *      (enforcement: exception)
      */
     [[nodiscard]] static TensorData createFromArmadillo(
             arma::fcube cube,

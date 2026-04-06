@@ -10,8 +10,6 @@
  * and axis-lookup-by-name). These are pure value types with no external dependencies,
  * used by TensorData and TensorStorageBase to describe tensor shape and axis semantics.
  *
- * Part of the TensorData refactor (step 1).
- * @see tensor_data_refactor_proposal.md §4 for design rationale.
  */
 
 #include <cstddef>      // size_t
