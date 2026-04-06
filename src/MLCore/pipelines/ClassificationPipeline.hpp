@@ -459,6 +459,12 @@ struct ClassificationPipelineResult {
  * @param config Full pipeline configuration
  * @param progress Optional callback for progress reporting
  * @return Complete pipeline result with metrics, outputs, and trained model
+ *
+ * @pre config.conversion_config.zscore_normalize should be true for
+ *      scale-sensitive classifiers (Logistic Regression, Softmax Regression).
+ *      Tree-based methods (Random Forest) are scale-invariant.
+ *      This is the sole mechanism for feature scaling — individual algorithms
+ *      no longer scale internally. (enforcement: none) [IMPORTANT]
  */
 [[nodiscard]] ClassificationPipelineResult runClassificationPipeline(
         DataManager & dm,

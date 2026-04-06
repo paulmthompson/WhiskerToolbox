@@ -114,6 +114,14 @@ public:
      *                  type expected by this model.
      * @return true if training succeeded
      *
+     * @pre features must not be empty (enforcement: runtime_check)
+     * @pre features must not contain NaN or Inf values (enforcement: none) [IMPORTANT]
+     * @pre labels.n_elem must equal features.n_cols (enforcement: none) [IMPORTANT]
+     * @pre Features are expected to be z-score normalized for scale-sensitive
+     *      classifiers (Logistic Regression, Softmax Regression).
+     *      Tree-based methods (Random Forest) are scale-invariant.
+     *      (enforcement: none) [IMPORTANT]
+     *
      * After successful training, `isTrained()` returns true, and `numClasses()`
      * and `numFeatures()` reflect the training data dimensions.
      *
@@ -136,8 +144,13 @@ public:
      * @param predictions  [out] Predicted label row vector (1 × observations)
      * @return true if prediction succeeded
      *
-     * Requires `isTrained() == true`. The number of feature rows must match
-     * the training data dimensionality (`numFeatures()`).
+     * @pre isTrained() must be true (enforcement: runtime_check)
+     * @pre features.n_rows must equal numFeatures() (enforcement: none) [IMPORTANT]
+     * @pre features must not contain NaN or Inf values (enforcement: none) [IMPORTANT]
+     * @pre Features must be z-score normalized using the SAME parameters (mean/std)
+     *      that were used for the training data passed to train().
+     *      Use FeatureConverter::applyZscoreNormalization() with stored parameters.
+     *      (enforcement: none) [IMPORTANT]
      *
      * The default implementation returns false (unsupervised models).
      */
@@ -345,6 +358,12 @@ public:
      * @param params    Algorithm-specific parameters (K, epsilon, etc.)
      * @return true if fitting succeeded
      *
+     * @pre features must not be empty (enforcement: runtime_check)
+     * @pre features must not contain NaN or Inf values (enforcement: none) [IMPORTANT]
+     * @pre Features are expected to be z-score normalized for distance-based
+     *      clustering algorithms (K-Means, DBSCAN, GMM).
+     *      (enforcement: none) [IMPORTANT]
+     *
      * After successful fitting, `isTrained()` returns true (the model is
      * ready for `assignClusters()`), and `numClasses()` returns the number
      * of clusters found/requested.
@@ -367,7 +386,13 @@ public:
      *                     Each element is a cluster index in [0, K).
      * @return true if assignment succeeded
      *
-     * Requires `isTrained() == true` (model has been fit).
+     * @pre isTrained() must be true (enforcement: runtime_check)
+     * @pre features.n_rows must equal numFeatures() (enforcement: none) [IMPORTANT]
+     * @pre features must not contain NaN or Inf values (enforcement: none) [IMPORTANT]
+     * @pre Features must be z-score normalized using the SAME parameters (mean/std)
+     *      that were used for the training data passed to fit().
+     *      Use FeatureConverter::applyZscoreNormalization() with stored parameters.
+     *      (enforcement: none) [IMPORTANT]
      *
      * The default implementation returns false (supervised models).
      */

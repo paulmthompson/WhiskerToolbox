@@ -367,12 +367,17 @@ struct ClusteringPipelineResult {
  * @param config Full pipeline configuration
  * @param progress Optional callback for progress reporting
  * @return Complete pipeline result with cluster info, outputs, and fitted model
+ *
+ * @pre config.conversion_config.zscore_normalize should be true for
+ *      distance-based clustering algorithms (K-Means, DBSCAN, GMM).
+ *      This is the sole mechanism for feature scaling — individual algorithms
+ *      no longer scale internally. (enforcement: none) [IMPORTANT]
  */
 [[nodiscard]] ClusteringPipelineResult runClusteringPipeline(
         DataManager & dm,
         MLModelRegistry const & registry,
         ClusteringPipelineConfig const & config,
-        const ClusteringProgressCallback& progress = nullptr);
+        ClusteringProgressCallback const & progress = nullptr);
 
 }// namespace MLCore
 

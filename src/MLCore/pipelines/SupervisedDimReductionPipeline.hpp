@@ -247,6 +247,11 @@ struct SupervisedDimReductionPipelineResult {
  * @param config    Full pipeline configuration
  * @param progress  Optional callback for progress reporting
  * @return Complete pipeline result
+ *
+ * @pre config.conversion_config.zscore_normalize should be true for
+ *      supervised projection algorithms (Logit Projection, Supervised PCA).
+ *      This is the sole mechanism for feature scaling — individual algorithms
+ *      no longer scale internally. (enforcement: none) [IMPORTANT]
  */
 [[nodiscard]] SupervisedDimReductionPipelineResult runSupervisedDimReductionPipeline(
         DataManager & dm,

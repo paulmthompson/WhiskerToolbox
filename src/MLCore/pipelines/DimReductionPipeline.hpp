@@ -175,6 +175,11 @@ struct DimReductionPipelineResult {
  * @param config Full pipeline configuration
  * @param progress Optional callback for progress reporting
  * @return Complete pipeline result
+ *
+ * @pre config.conversion_config.zscore_normalize should be true for PCA-family
+ *      algorithms that compare across features. This is the sole mechanism for
+ *      feature scaling — individual algorithms no longer scale internally.
+ *      (enforcement: none) [IMPORTANT]
  */
 [[nodiscard]] DimReductionPipelineResult runDimReductionPipeline(
         DataManager & dm,

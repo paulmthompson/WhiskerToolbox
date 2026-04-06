@@ -157,7 +157,7 @@ No separate HMM/Sequence tab exists. HMM models are trained through the **Classi
 
 If a dedicated Sequence tab is added in future, it should follow the same pattern: a SequencePanel with a `zscoreCheckBox`, a `sequence_zscore_normalize` state field, and a `_buildSequencePipelineConfig()` reading from the panel.
 
-### Step 8: Precondition documentation (following Precondition Protocol) — PARTIAL
+### Step 8: Precondition documentation (following Precondition Protocol) ✓ DONE
 
 Apply the [Precondition Documentation Protocol](../analysis/precondition_protocol.qmd) to all
 MLCore operation interfaces. This step is documentation-only — no asserts or control flow changes.
@@ -169,9 +169,14 @@ MLCore operation interfaces. This step is documentation-only — no asserts or c
 | `PCAOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
 | `SupervisedPCAOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
 | `LogitProjectionOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
-| `MLDimReductionOperation.hpp` | `fitTransform()`, `transform()` | `fitTransform` has partial base-class `@pre`; `transform` has minimal `@pre` — needs expansion |
-| `MLSupervisedDimReductionOperation.hpp` | `fitTransform()`, `transform()` | Not started |
-| `MLModelOperation.hpp` | `train()`, `predict()`, `fit()`, `assignClusters()` | Not started |
+| `MLDimReductionOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
+| `MLSupervisedDimReductionOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
+| `MLModelOperation.hpp` | `train()`, `predict()`, `fit()`, `assignClusters()` | ✓ Done |
+| `FeatureConverter.hpp` | `convertTensorToArma()` | ✓ Done (`@post` added) |
+| `DimReductionPipeline.hpp` | `runDimReductionPipeline()` | ✓ Done (`@pre` propagated) |
+| `SupervisedDimReductionPipeline.hpp` | `runSupervisedDimReductionPipeline()` | ✓ Done (`@pre` propagated) |
+| `ClassificationPipeline.hpp` | `runClassificationPipeline()` | ✓ Done (`@pre` propagated) |
+| `ClusteringPipeline.hpp` | `runClusteringPipeline()` | ✓ Done (`@pre` propagated) |
 
 **Caller propagation findings from `PCAOperation` analysis:**
 
@@ -192,15 +197,9 @@ MLCore operation interfaces. This step is documentation-only — no asserts or c
 | `SupervisedDimReductionPipeline` (transform) | `SupervisedDimReductionPipeline.cpp:447` | `isTrained()`: **guaranteed** (successful fitTransform precedes); dimension match: **guaranteed** (same FeatureConverter output) | None critical |
 | `SupervisedDimReductionPipeline` (both) | Both sites | NaN/Inf: **pass-through** — FeatureConverter drops NaN only when `remove_nan=true` | NaN guard is future hardening |
 
-**Remaining target interfaces** (headers only):
+**Remaining target interfaces**: None — all headers annotated.
 
-| Header | Functions to annotate |
-|---|---|
-| `MLDimReductionOperation.hpp` | `fitTransform()`, `transform()` (expand existing) |
-| `MLSupervisedDimReductionOperation.hpp` | `fitTransform()`, `transform()` |
-| `MLModelOperation.hpp` | `train()`, `predict()`, `fit()`, `assignClusters()` |
-
-**New `@pre` tags to add** (with enforcement classification per protocol):
+**Applied `@pre` tags** (with enforcement classification per protocol):
 
 For `MLDimReductionOperation::fitTransform()` and `MLSupervisedDimReductionOperation::fitTransform()`:
 ```cpp
@@ -229,22 +228,23 @@ For `MLModelOperation::train()` and `MLModelOperation::predict()` (classificatio
 ///      (enforcement: none) [IMPORTANT]
 ```
 
-**Caller propagation** (Step 6 of protocol):
-
-Trace callers to verify the precondition is established:
+**Caller propagation** (Step 6 of protocol) — all actions completed:
 
 | Caller | File | Precondition Status | Action |
 |---|---|---|---|
-| `runDimReductionPipeline()` | `DimReductionPipeline.cpp` | **Establishes** — calls `convertTensorToArma()` with `ConversionConfig` | Document `@post` on `convertTensorToArma` |
-| `runSupervisedDimReductionPipeline()` | `SupervisedDimReductionPipeline.cpp` | **Establishes** — same pattern | Document `@post` |
-| `runClassificationPipeline()` | `ClassificationPipeline.cpp` | **Pass-through** — reads from config | Needs `@pre` propagated |
-| `runClusteringPipeline()` | `ClusteringPipeline.cpp` | **Establishes** — reads from config | Document `@post` |
+| `runDimReductionPipeline()` | `DimReductionPipeline.hpp` | **Establishes** — calls `convertTensorToArma()` with `ConversionConfig` | ✓ `@post` on `convertTensorToArma`, `@pre` on pipeline |
+| `runSupervisedDimReductionPipeline()` | `SupervisedDimReductionPipeline.hpp` | **Establishes** — same pattern | ✓ `@pre` on pipeline |
+| `runClassificationPipeline()` | `ClassificationPipeline.hpp` | **Establishes** — reads from config | ✓ `@pre` on pipeline |
+| `runClusteringPipeline()` | `ClusteringPipeline.hpp` | **Establishes** — reads from config | ✓ `@pre` on pipeline |
 
-Also add a `@post` to `convertTensorToArma()`:
+`@post` added to `convertTensorToArma()` in `FeatureConverter.hpp`:
 ```cpp
-/// @post If config.zscore_normalize is true, result.matrix has per-feature
-///       mean≈0 and std≈1, and result.zscore_means/zscore_stds are populated
-///       for re-application to new data.
+/// @post If config.drop_nan is true, result.matrix contains no NaN or Inf values
+/// @post If config.zscore_normalize is true, each row (feature) of result.matrix
+///       has mean≈0 and std≈1, and result.zscore_means / result.zscore_stds are
+///       populated for re-application to new data via applyZscoreNormalization()
+/// @post result.valid_row_indices maps each matrix column back to the original
+///       tensor row index
 ```
 
 ### Step 9: Enforcement in tests

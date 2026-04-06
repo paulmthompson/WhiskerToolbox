@@ -53,8 +53,13 @@ public:
      * @param result    Output: reduced matrix (n_components × observations)
      * @return true on success
      *
-     * @pre features must not be empty
-     * @pre params must be of the correct concrete type for this operation
+     * @pre features must not be empty (enforcement: runtime_check)
+     * @pre features must not contain NaN or Inf values (enforcement: none) [IMPORTANT]
+     * @pre params must be of the correct concrete type for this operation (enforcement: none)
+     * @pre Features are expected to be z-score normalized (mean≈0, std≈1 per feature)
+     *      when scale-sensitive comparison across features is desired.
+     *      Normalization is the caller's responsibility (via FeatureConverter).
+     *      Centering is handled internally by each algorithm. (enforcement: none) [IMPORTANT]
      * @post isTrained() returns true on success
      * @post result has n_components rows and features.n_cols columns
      */
@@ -70,7 +75,13 @@ public:
      * @param result    Output: reduced matrix (n_components × observations)
      * @return true on success, false if not fitted or projection unsupported
      *
-     * @pre isTrained() must be true
+     * @pre isTrained() must be true (enforcement: runtime_check)
+     * @pre features.n_rows must equal numFeatures() (enforcement: none) [IMPORTANT]
+     * @pre features must not contain NaN or Inf values (enforcement: none) [IMPORTANT]
+     * @pre Features must be z-score normalized using the SAME parameters (mean/std)
+     *      that were used for the training data passed to fitTransform().
+     *      Use FeatureConverter::applyZscoreNormalization() with stored parameters.
+     *      (enforcement: none) [IMPORTANT]
      */
     virtual bool transform(
             arma::mat const & features,

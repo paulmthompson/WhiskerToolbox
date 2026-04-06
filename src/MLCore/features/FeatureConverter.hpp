@@ -115,6 +115,13 @@ struct ConvertedFeatures {
  * @param config Conversion parameters
  * @return ConvertedFeatures with the matrix and metadata
  * @throws std::invalid_argument if tensor is empty or not 2D
+ *
+ * @post If config.drop_nan is true, result.matrix contains no NaN or Inf values
+ * @post If config.zscore_normalize is true, each row (feature) of result.matrix
+ *       has mean≈0 and std≈1, and result.zscore_means / result.zscore_stds are
+ *       populated for re-application to new data via applyZscoreNormalization()
+ * @post result.valid_row_indices maps each matrix column back to the original
+ *       tensor row index
  */
 [[nodiscard]] ConvertedFeatures convertTensorToArma(
         TensorData const & tensor,
