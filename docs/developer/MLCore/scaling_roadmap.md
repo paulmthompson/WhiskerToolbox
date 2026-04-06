@@ -46,7 +46,7 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 - `src/MLCore/models/unsupervised/PCAOperation.cpp` — ~~Internal centering + scaling~~ **Centering only** ✓
 - `src/MLCore/models/supervised/SupervisedPCAOperation.cpp` — ~~Internal centering + scaling from labeled subset~~ **Centering only (labeled-subset mean)** ✓
 - `src/MLCore/models/supervised/LogitProjectionOperation.cpp` — ~~Internal `computeScaling()`/`applyScaling()` + weight rescaling~~ **No internal scaling** ✓
-- `src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.cpp` — Z-score checkbox + per-algorithm scale checkbox
+- `src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.cpp` — Z-score checkbox only (scale checkbox removed ✓)
 - `src/WhiskerToolbox/MLCore_Widget/MLCoreWidget.cpp` — Pipeline config assembly (lines 760-761 hardcode classification zscore off)
 
 ## Design Goal
@@ -107,42 +107,55 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 - Updated `LogitProjectionOperation.hpp` class doc to state that scaling is the caller's responsibility.
 - Build clean, all tests pass.
 
-### Step 4: Remove per-algorithm "Scale features" checkbox from UI
+### ~~Step 4: Remove per-algorithm "Scale features" checkbox from UI~~ ✓ DONE
 
-**Files**: `DimReductionPanel.cpp`, `DimReductionPanel.ui`, `DimReductionPanel.hpp`, `MLCoreWidgetState.hpp`, `MLCoreWidgetState.cpp`
+**Files**: `DimReductionPanel.cpp`, `DimReductionPanel.ui`, `DimReductionPanel.hpp`, `MLCoreWidgetState.hpp`, `MLCoreWidgetState.cpp`, `MLCoreWidgetStateData.hpp`
 
-1. Remove the `scaleCheckBox` from the `.ui` file (inside `pcaParamsWidget`).
-2. Remove `DimReductionPanel::scaleFeatures()` method.
-3. Remove `MLCoreWidgetState::dim_reduction_scale` and its getter/setter/signal.
-4. In `DimReductionPanel::currentParameters()`:
-   - For PCA: stop setting `params->scale` (field no longer exists).
-   - For Supervised PCA: same.
-5. Remove state save/restore code for `dim_reduction_scale`.
+**Completed.** Changes made:
 
-### Step 5: Default z-score normalize to ON for Dim Reduction
+- Removed `scaleCheckBox` widget from `DimReductionPanel.ui` (was row 1 of `pcaParamsWidget` grid).
+- Removed `DimReductionPanel::scaleFeatures()` declaration and implementation.
+- Removed `connect(ui->scaleCheckBox ...)` signal connection.
+- Removed `ui->scaleCheckBox->setChecked(...)` in `_restoreFromState()`.
+- Removed `_state->setDimReductionScale(scaleFeatures())` from `_syncToState()`.
+- Removed `bool dim_reduction_scale` field from `MLCoreWidgetStateData`.
+- Removed `setDimReductionScale()`/`dimReductionScale()` getter/setter and `dimReductionScaleChanged` signal from `MLCoreWidgetState`.
+- Removed the `emit dimReductionScaleChanged(...)` call in `fromJson()`.
+- `currentParameters()` was already clean — no `params->scale` assignments remained after Steps 1–2.
+- Build clean, all tests pass.
 
-**Files**: `MLCoreWidgetState.hpp` (or its data struct), `DimReductionPanel.cpp`
+### ~~Step 5: Default z-score normalize to ON for Dim Reduction~~ ✓ DONE
 
-1. Change the default value of `dim_reduction_zscore_normalize` from `false` to `true`.
-2. Ensure the checkbox in `DimReductionPanel` reflects this default on first launch.
-3. Existing persisted state will still override the default, so users with saved sessions keep their setting.
+**Files**: `MLCoreWidgetStateData.hpp`, `DimReductionPanel.ui`
 
-### Step 6: Expose z-score normalize for Classification tab
+**Completed.** Changes made:
 
-**Files**: `MLCoreWidget.cpp`, `ClassificationPanel.hpp`/`.cpp`/`.ui` (or `LabelPanel`), `MLCoreWidgetState.hpp`/`.cpp`
+- Changed `dim_reduction_zscore_normalize` default from `false` to `true` in `MLCoreWidgetStateData.hpp`.
+- Changed `zscoreCheckBox` `checked` property from `false` to `true` in `DimReductionPanel.ui` so the checkbox initializes checked on first launch (before any saved state is restored).
+- Existing persisted workspace state continues to override the default, so users with saved sessions keep their setting.
+- Build clean.
 
-Currently classification hardcodes `config.conversion_config.zscore_normalize = false` (line 761 in `MLCoreWidget.cpp`).
+### Step 6: Expose z-score normalize for Classification tab ✓ DONE
 
-1. Add a z-score checkbox to the classification panel UI (matching the pattern in Clustering/DimReduction panels).
-2. Add `classification_zscore_normalize` state field to `MLCoreWidgetState`.
-3. Wire the checkbox to state and read it during pipeline config assembly.
-4. Default to `true`.
+**Files**: `MLCoreWidget.cpp`, `FeatureSelectionPanel.hpp`/`.cpp`/`.ui`, `MLCoreWidgetState.hpp`/`.cpp`, `MLCoreWidgetStateData.hpp`
 
-### Step 7: Expose z-score normalize for Sequence (HMM) tab
+No separate ClassificationPanel exists — the classification tab is assembled from sub-panels directly in `MLCoreWidget`. The z-score checkbox was added to `FeatureSelectionPanel` (the data source panel), matching the pattern in `ClusteringPanel` and `DimReductionPanel`.
 
-**Files**: `MLCoreWidget.cpp`, `SequencePanel.hpp`/`.cpp`/`.ui`, `MLCoreWidgetState.hpp`/`.cpp`
+**Changes applied:**
 
-Same pattern as Step 6 for the sequence/HMM workflow. HMM with Gaussian emissions is sensitive to feature scale.
+1. `FeatureSelectionPanel.ui`: Added `zscoreCheckBox` (checked=true, with tooltip) after `hintLabel` in `featureGroupBox`.
+2. `MLCoreWidgetStateData.hpp`: Added `bool classification_zscore_normalize = true;` after `feature_tensor_key`.
+3. `MLCoreWidgetState.hpp/.cpp`: Added `setClassificationZscoreNormalize()`/`classificationZscoreNormalize()` getter/setter and `classificationZscoreNormalizeChanged` signal; `fromJson()` emits the signal on restore.
+4. `FeatureSelectionPanel.hpp/.cpp`: Added `zscoreNormalize()` accessor; constructor restores checkbox from state; `_setupConnections()` wires checkbox → state (toggled) and state → checkbox (signal).
+5. `MLCoreWidget.cpp` (line ~761): Changed `zscore_normalize = false` → `zscore_normalize = _feature_panel->zscoreNormalize()`.
+
+Build clean, clang-tidy clean (2 pre-existing warnings unrelated to these changes).
+
+### Step 7: Expose z-score normalize for Sequence (HMM) tab — N/A (deferred)
+
+No separate HMM/Sequence tab exists. HMM models are trained through the **Classification** tab via `isSequenceModel()` in `PredictionPanel`. The Classification pipeline already reads z-score from `_feature_panel->zscoreNormalize()` (Step 6). No additional changes are needed here.
+
+If a dedicated Sequence tab is added in future, it should follow the same pattern: a SequencePanel with a `zscoreCheckBox`, a `sequence_zscore_normalize` state field, and a `_buildSequencePipelineConfig()` reading from the panel.
 
 ### Step 8: Precondition documentation (following Precondition Protocol) — PARTIAL
 

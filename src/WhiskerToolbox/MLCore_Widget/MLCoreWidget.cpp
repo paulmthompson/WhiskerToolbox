@@ -756,9 +756,9 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
         config.label_event_key = _label_panel->selectedEventKey();
     }
 
-    // -- Feature conversion (use sensible defaults) --
+    // -- Feature conversion --
     config.conversion_config.drop_nan = true;
-    config.conversion_config.zscore_normalize = false;
+    config.conversion_config.zscore_normalize = _feature_panel->zscoreNormalize();
 
     // -- Training region --
     if (_training_region_panel && !_training_region_panel->isAllFramesChecked()) {

@@ -46,6 +46,9 @@ struct MLCoreWidgetStateData {
     /// DataManager key of the TensorData to use as the feature matrix
     std::string feature_tensor_key;
 
+    /// Whether to z-score normalize features before classification
+    bool classification_zscore_normalize = true;
+
     // === Region configuration ===
 
     /// DigitalIntervalSeries key defining the training region
@@ -165,11 +168,8 @@ struct MLCoreWidgetStateData {
     /// Number of output components
     int dim_reduction_n_components = 2;
 
-    /// Whether to scale features before reduction
-    bool dim_reduction_scale = true;
-
     /// Whether to z-score normalize features before reduction
-    bool dim_reduction_zscore_normalize = false;
+    bool dim_reduction_zscore_normalize = true;
 
     /// Whether the dim reduction panel is in supervised mode
     bool dim_reduction_supervised = false;

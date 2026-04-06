@@ -97,10 +97,6 @@ int DimReductionPanel::nComponents() const {
     return ui->nComponentsSpinBox->value();
 }
 
-bool DimReductionPanel::scaleFeatures() const {
-    return ui->scaleCheckBox->isChecked();
-}
-
 bool DimReductionPanel::zscoreNormalize() const {
     return ui->zscoreCheckBox->isChecked();
 }
@@ -623,13 +619,6 @@ void DimReductionPanel::_setupConnections() {
                 }
             });
 
-    connect(ui->scaleCheckBox, &QCheckBox::toggled,
-            this, [this](bool checked) {
-                if (!_updating && _state) {
-                    _state->setDimReductionScale(checked);
-                }
-            });
-
     connect(ui->outputKeyLineEdit, &QLineEdit::textChanged,
             this, [this](QString const & text) {
                 if (!_updating && _state) {
@@ -890,7 +879,6 @@ void DimReductionPanel::_restoreFromState() {
 
     // Restore parameters
     ui->nComponentsSpinBox->setValue(_state->dimReductionNComponents());
-    ui->scaleCheckBox->setChecked(_state->dimReductionScale());
     ui->zscoreCheckBox->setChecked(_state->dimReductionZscoreNormalize());
 
     auto const & output_key = _state->dimReductionOutputKey();
@@ -969,7 +957,6 @@ void DimReductionPanel::_syncToState() {
     _state->setDimReductionModelName(selectedAlgorithmName());
     _state->setDimReductionOutputKey(outputKey());
     _state->setDimReductionNComponents(nComponents());
-    _state->setDimReductionScale(scaleFeatures());
     _state->setDimReductionZscoreNormalize(zscoreNormalize());
     _state->setDimReductionSupervised(isSupervisedMode());
 

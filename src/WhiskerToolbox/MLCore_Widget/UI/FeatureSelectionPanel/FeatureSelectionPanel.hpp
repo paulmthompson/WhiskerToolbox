@@ -73,6 +73,11 @@ public:
      */
     [[nodiscard]] std::string selectedTensorKey() const;
 
+    /**
+     * @brief Whether z-score normalization is enabled
+     */
+    [[nodiscard]] bool zscoreNormalize() const;
+
 public slots:
     /**
      * @brief Refresh the list of available TensorData keys from DataManager

@@ -38,6 +38,7 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         }
         emit stateChanged();
         emit featureTensorKeyChanged(QString::fromStdString(_data.feature_tensor_key));
+        emit classificationZscoreNormalizeChanged(_data.classification_zscore_normalize);
         emit trainingRegionKeyChanged(QString::fromStdString(_data.training_region_key));
         emit predictionRegionKeyChanged(QString::fromStdString(_data.prediction_region_key));
         emit validationRegionKeyChanged(QString::fromStdString(_data.validation_region_key));
@@ -74,7 +75,6 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit dimReductionModelNameChanged(QString::fromStdString(_data.dim_reduction_model_name));
         emit dimReductionOutputKeyChanged(QString::fromStdString(_data.dim_reduction_output_key));
         emit dimReductionNComponentsChanged(_data.dim_reduction_n_components);
-        emit dimReductionScaleChanged(_data.dim_reduction_scale);
         emit dimReductionZscoreNormalizeChanged(_data.dim_reduction_zscore_normalize);
         emit dimReductionSupervisedChanged(_data.dim_reduction_supervised);
         emit dimReductionLabelSourceTypeChanged(QString::fromStdString(_data.dim_reduction_label_source_type));
@@ -491,6 +491,18 @@ bool MLCoreWidgetState::clusteringWriteProbabilities() const {
     return _data.clustering_write_probabilities;
 }
 
+void MLCoreWidgetState::setClassificationZscoreNormalize(bool enabled) {
+    if (_data.classification_zscore_normalize != enabled) {
+        _data.classification_zscore_normalize = enabled;
+        markDirty();
+        emit classificationZscoreNormalizeChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::classificationZscoreNormalize() const {
+    return _data.classification_zscore_normalize;
+}
+
 void MLCoreWidgetState::setClusteringZscoreNormalize(bool enabled) {
     if (_data.clustering_zscore_normalize != enabled) {
         _data.clustering_zscore_normalize = enabled;
@@ -551,18 +563,6 @@ void MLCoreWidgetState::setDimReductionNComponents(int n) {
 
 int MLCoreWidgetState::dimReductionNComponents() const {
     return _data.dim_reduction_n_components;
-}
-
-void MLCoreWidgetState::setDimReductionScale(bool enabled) {
-    if (_data.dim_reduction_scale != enabled) {
-        _data.dim_reduction_scale = enabled;
-        markDirty();
-        emit dimReductionScaleChanged(enabled);
-    }
-}
-
-bool MLCoreWidgetState::dimReductionScale() const {
-    return _data.dim_reduction_scale;
 }
 
 void MLCoreWidgetState::setDimReductionZscoreNormalize(bool enabled) {

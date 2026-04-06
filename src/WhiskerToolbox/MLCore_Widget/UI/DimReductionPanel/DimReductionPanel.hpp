@@ -12,7 +12,7 @@
  *    Shows shape info. Optional z-score normalization.
  *
  * 2. **Algorithm Configuration** — Algorithm combo (currently PCA) with
- *    n_components and scale parameters.
+ *    n_components parameter.
  *
  * 3. **Output Configuration** — Output key for the reduced TensorData.
  *
@@ -66,9 +66,6 @@ public:
 
     /// Get the number of output components
     [[nodiscard]] int nComponents() const;
-
-    /// Whether to scale features (PCA-specific)
-    [[nodiscard]] bool scaleFeatures() const;
 
     /// Whether to z-score normalize features
     [[nodiscard]] bool zscoreNormalize() const;

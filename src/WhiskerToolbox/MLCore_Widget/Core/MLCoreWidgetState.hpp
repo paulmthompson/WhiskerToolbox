@@ -60,6 +60,9 @@ public:
     void setFeatureTensorKey(std::string const & key);
     [[nodiscard]] std::string const & featureTensorKey() const;
 
+    void setClassificationZscoreNormalize(bool enabled);
+    [[nodiscard]] bool classificationZscoreNormalize() const;
+
     // === Region configuration ===
 
     void setTrainingRegionKey(std::string const & key);
@@ -184,9 +187,6 @@ public:
     void setDimReductionNComponents(int n);
     [[nodiscard]] int dimReductionNComponents() const;
 
-    void setDimReductionScale(bool enabled);
-    [[nodiscard]] bool dimReductionScale() const;
-
     void setDimReductionZscoreNormalize(bool enabled);
     [[nodiscard]] bool dimReductionZscoreNormalize() const;
 
@@ -218,6 +218,7 @@ public:
 
 signals:
     void featureTensorKeyChanged(QString const & key);
+    void classificationZscoreNormalizeChanged(bool enabled);
     void trainingRegionKeyChanged(QString const & key);
     void predictionRegionKeyChanged(QString const & key);
     void validationRegionKeyChanged(QString const & key);
@@ -254,7 +255,6 @@ signals:
     void dimReductionModelNameChanged(QString const & name);
     void dimReductionOutputKeyChanged(QString const & key);
     void dimReductionNComponentsChanged(int n);
-    void dimReductionScaleChanged(bool enabled);
     void dimReductionZscoreNormalizeChanged(bool enabled);
     void dimReductionSupervisedChanged(bool enabled);
     void dimReductionLabelSourceTypeChanged(QString const & type);

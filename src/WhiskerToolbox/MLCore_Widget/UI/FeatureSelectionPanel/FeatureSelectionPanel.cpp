@@ -36,6 +36,13 @@ FeatureSelectionPanel::FeatureSelectionPanel(
             }
         }
     }
+
+    // Restore z-score checkbox from state
+    if (_state) {
+        ui->zscoreCheckBox->blockSignals(true);
+        ui->zscoreCheckBox->setChecked(_state->classificationZscoreNormalize());
+        ui->zscoreCheckBox->blockSignals(false);
+    }
 }
 
 FeatureSelectionPanel::~FeatureSelectionPanel() {
@@ -59,6 +66,10 @@ std::string FeatureSelectionPanel::selectedTensorKey() const {
         return data.toString().toStdString();
     }
     return ui->tensorComboBox->currentText().toStdString();
+}
+
+bool FeatureSelectionPanel::zscoreNormalize() const {
+    return ui->zscoreCheckBox->isChecked();
 }
 
 void FeatureSelectionPanel::refreshTensorList() {
@@ -91,9 +102,9 @@ void FeatureSelectionPanel::refreshTensorList() {
         auto tensor = _data_manager->getData<TensorData>(key);
         if (tensor) {
             QString const display = QStringLiteral("%1 (%2×%3)")
-                                      .arg(QString::fromStdString(key))
-                                      .arg(tensor->numRows())
-                                      .arg(tensor->numColumns());
+                                            .arg(QString::fromStdString(key))
+                                            .arg(tensor->numRows())
+                                            .arg(tensor->numColumns());
             ui->tensorComboBox->addItem(display, QString::fromStdString(key));
         } else {
             ui->tensorComboBox->addItem(QString::fromStdString(key),
@@ -152,6 +163,13 @@ void FeatureSelectionPanel::_setupConnections() {
     connect(ui->refreshButton, &QPushButton::clicked,
             this, &FeatureSelectionPanel::refreshTensorList);
 
+    connect(ui->zscoreCheckBox, &QCheckBox::toggled,
+            this, [this](bool checked) {
+                if (_state) {
+                    _state->setClassificationZscoreNormalize(checked);
+                }
+            });
+
     // React to external state changes (e.g., from JSON restore)
     if (_state) {
         connect(_state.get(), &MLCoreWidgetState::featureTensorKeyChanged,
@@ -170,6 +188,9 @@ void FeatureSelectionPanel::_setupConnections() {
                     // Key not found — may need refresh
                     refreshTensorList();
                 });
+
+        connect(_state.get(), &MLCoreWidgetState::classificationZscoreNormalizeChanged,
+                ui->zscoreCheckBox, &QCheckBox::setChecked);
     }
 }
 
