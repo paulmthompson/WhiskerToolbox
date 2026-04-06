@@ -28,19 +28,23 @@ SlotBindingData fromDynamicInputParams(
         if constexpr (std::is_same_v<T, dl::ImageEncoderParams>) {
             binding.encoder_id = "ImageEncoder";
             binding.mode = "Raw";
+            binding.normalize = enc.normalize;
         } else if constexpr (std::is_same_v<T, dl::Point2DEncoderParams>) {
             binding.encoder_id = "Point2DEncoder";
             binding.mode =
                     (enc.mode == dl::RasterMode::Heatmap) ? "Heatmap" : "Binary";
             binding.gaussian_sigma = enc.gaussian_sigma;
+            binding.normalize = enc.normalize;
         } else if constexpr (std::is_same_v<T, dl::Mask2DEncoderParams>) {
             binding.encoder_id = "Mask2DEncoder";
             binding.mode = "Binary";
+            binding.normalize = enc.normalize;
         } else if constexpr (std::is_same_v<T, dl::Line2DEncoderParams>) {
             binding.encoder_id = "Line2DEncoder";
             binding.mode =
                     (enc.mode == dl::RasterMode::Heatmap) ? "Heatmap" : "Binary";
             binding.gaussian_sigma = enc.gaussian_sigma;
+            binding.normalize = enc.normalize;
         }
     });
 
@@ -171,14 +175,14 @@ dl::widget::DynamicInputSlotParams toDynamicInputParams(
     } else if (binding.encoder_id == "Point2DEncoder") {
         p.encoder = dl::Point2DEncoderParams{
                 .mode = (binding.mode == "Heatmap") ? dl::RasterMode::Heatmap
-                                                   : dl::RasterMode::Binary,
+                                                    : dl::RasterMode::Binary,
                 .gaussian_sigma = binding.gaussian_sigma};
     } else if (binding.encoder_id == "Mask2DEncoder") {
         p.encoder = dl::Mask2DEncoderParams{};
     } else if (binding.encoder_id == "Line2DEncoder") {
         p.encoder = dl::Line2DEncoderParams{
                 .mode = (binding.mode == "Heatmap") ? dl::RasterMode::Heatmap
-                                                   : dl::RasterMode::Binary,
+                                                    : dl::RasterMode::Binary,
                 .gaussian_sigma = binding.gaussian_sigma};
     } else {
         p.encoder = dl::ImageEncoderParams{};
@@ -197,7 +201,7 @@ dl::widget::StaticInputSlotParams toStaticInputParams(
     } else {
         p.capture_mode =
                 dl::widget::RelativeCaptureParams{.time_offset =
-                                                         binding.time_offset};
+                                                          binding.time_offset};
     }
     return p;
 }

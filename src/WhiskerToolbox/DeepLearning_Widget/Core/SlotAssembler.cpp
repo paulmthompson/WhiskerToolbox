@@ -208,7 +208,7 @@ void encodeDynamicSlot(
         auto const image_size = media->getImageSize();
 
         dl::ImageEncoder const encoder;
-        dl::ImageEncoderParams const params{.normalize = true};
+        dl::ImageEncoderParams const params{.normalize = binding.normalize};
         if (media->is8Bit()) {
             auto const & data = media->getRawData8(frame);
             dl::ImageEncoder::encode(data, image_size, channels, tensor, ctx, params);
@@ -227,7 +227,8 @@ void encodeDynamicSlot(
         dl::Point2DEncoder const encoder;
         dl::Point2DEncoderParams const params{
                 .mode = modeFromString(binding.mode),
-                .gaussian_sigma = binding.gaussian_sigma};
+                .gaussian_sigma = binding.gaussian_sigma,
+                .normalize = binding.normalize};
 
         // Get points at the requested frame
         auto points_at_frame = point_data->getAtTime(TimeFrameIndex(frame));
@@ -246,7 +247,8 @@ void encodeDynamicSlot(
                                                   : ImageSize{ctx.width, ctx.height};
         dl::Mask2DEncoder const encoder;
         dl::Mask2DEncoderParams const params{
-                .mode = modeFromString(binding.mode)};
+                .mode = modeFromString(binding.mode),
+                .normalize = binding.normalize};
 
         // Get masks at the requested frame, use the first one if available
         auto masks_at_frame = mask_data->getAtTime(TimeFrameIndex(frame));
@@ -267,7 +269,8 @@ void encodeDynamicSlot(
         dl::Line2DEncoder const encoder;
         dl::Line2DEncoderParams const params{
                 .mode = modeFromString(binding.mode),
-                .gaussian_sigma = binding.gaussian_sigma};
+                .gaussian_sigma = binding.gaussian_sigma,
+                .normalize = binding.normalize};
 
         // Get lines at the requested frame, use the first one if available
         auto lines_at_frame = line_data->getAtTime(TimeFrameIndex(frame));

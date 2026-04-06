@@ -21,6 +21,7 @@ struct SlotBindingData {
     std::string encoder_id;     ///< Encoder factory key (e.g. "ImageEncoder")
     std::string mode = "Raw";   ///< "Raw", "Binary", "Heatmap"
     float gaussian_sigma = 2.0f;///< Gaussian sigma (Heatmap mode only)
+    bool normalize = true;      ///< Normalize encoder output to [0, 1]
     int time_offset = 0;        ///< Temporal offset applied per frame (e.g. -1 for previous frame)
 };
 
