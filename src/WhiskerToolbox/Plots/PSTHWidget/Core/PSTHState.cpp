@@ -1,9 +1,9 @@
 #include "PSTHState.hpp"
 
+#include "CorePlotting/CoordinateTransform/NumericSafety.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
-#include "CorePlotting/CoordinateTransform/NumericSafety.hpp"
 
 #include <rfl/json.hpp>
 
@@ -21,8 +21,8 @@ PSTHState::PSTHState(QObject * parent)
     _data.alignment = _alignment_state->data();
 
     // Initialize time axis range from window size (centered at 0)
-    double window_size = _data.alignment.window_size;
-    double half_window = window_size / 2.0;
+    double const window_size = _data.alignment.window_size;
+    double const half_window = window_size / 2.0;
     _relative_time_axis_state->setRangeSilent(-half_window, half_window);
     _data.time_axis = _relative_time_axis_state->data();
 
@@ -45,7 +45,7 @@ PSTHState::PSTHState(QObject * parent)
     connect(_alignment_state.get(), &PlotAlignmentState::windowSizeChanged,
             this, [this](double window_size) {
                 // Update view state data bounds when window size changes
-                double half_window = window_size / 2.0;
+                double const half_window = window_size / 2.0;
                 _data.view_state.x_min = -half_window;
                 _data.view_state.x_max = half_window;
                 // Reset zoom/pan when the window changes
@@ -68,7 +68,7 @@ PSTHState::PSTHState(QObject * parent)
         _data.time_axis = _relative_time_axis_state->data();
         // Update window size to match range (centered at 0)
         // Use safe_range to prevent overflow → infinity when bounds are extreme
-        double range = CorePlotting::safe_range(_data.time_axis.min_range,
+        double const range = CorePlotting::safe_range(_data.time_axis.min_range,
                                                 _data.time_axis.max_range);
         if (std::abs(range - _data.alignment.window_size) > 0.01) {
             _data.alignment.window_size = range;
@@ -158,8 +158,8 @@ void PSTHState::setWindowSize(double window_size) {
 }
 
 void PSTHState::addPlotEvent(QString const & event_name, QString const & event_key) {
-    std::string name_str = event_name.toStdString();
-    std::string key_str = event_key.toStdString();
+    std::string const name_str = event_name.toStdString();
+    std::string const key_str = event_key.toStdString();
 
     PSTHEventOptions options;
     options.event_key = key_str;
@@ -171,7 +171,7 @@ void PSTHState::addPlotEvent(QString const & event_name, QString const & event_k
 }
 
 void PSTHState::removePlotEvent(QString const & event_name) {
-    std::string name_str = event_name.toStdString();
+    std::string const name_str = event_name.toStdString();
     auto it = _data.plot_events.find(name_str);
     if (it != _data.plot_events.end()) {
         _data.plot_events.erase(it);
@@ -191,7 +191,7 @@ std::vector<QString> PSTHState::getPlotEventNames() const {
 }
 
 std::optional<PSTHEventOptions> PSTHState::getPlotEventOptions(QString const & event_name) const {
-    std::string name_str = event_name.toStdString();
+    std::string const name_str = event_name.toStdString();
     auto it = _data.plot_events.find(name_str);
     if (it != _data.plot_events.end()) {
         return it->second;
@@ -200,7 +200,7 @@ std::optional<PSTHEventOptions> PSTHState::getPlotEventOptions(QString const & e
 }
 
 void PSTHState::updatePlotEventOptions(QString const & event_name, PSTHEventOptions const & options) {
-    std::string name_str = event_name.toStdString();
+    std::string const name_str = event_name.toStdString();
     auto it = _data.plot_events.find(name_str);
     if (it != _data.plot_events.end()) {
         it->second = options;
@@ -245,6 +245,20 @@ void PSTHState::setScaling(WhiskerToolbox::Plots::ScalingMode mode) {
         _data.scaling = mode;
         markDirty();
         emit scalingChanged(mode);
+        emit stateChanged();
+    }
+}
+
+QString PSTHState::getBackgroundColor() const {
+    return QString::fromStdString(_data.background_color);
+}
+
+void PSTHState::setBackgroundColor(QString const & hex_color) {
+    std::string const hex_str = hex_color.toStdString();
+    if (_data.background_color != hex_str) {
+        _data.background_color = hex_str;
+        markDirty();
+        emit backgroundColorChanged(hex_color);
         emit stateChanged();
     }
 }

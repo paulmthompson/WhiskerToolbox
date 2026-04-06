@@ -10,9 +10,13 @@
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Rendering/PSTHPlotOpenGLWidget.hpp"
+#include "StateManagement/AppFileDialog.hpp"
 
+#include <QFile>
 #include <QHBoxLayout>
+#include <QMessageBox>
 #include <QResizeEvent>
+#include <QTextStream>
 #include <QVBoxLayout>
 
 #include "ui_PSTHWidget.h"
@@ -271,6 +275,44 @@ RelativeTimeAxisRangeControls * PSTHWidget::getRangeControls() const {
 
 VerticalAxisRangeControls * PSTHWidget::getVerticalRangeControls() const {
     return _vertical_range_controls;
+}
+
+void PSTHWidget::handleExportSVG() {
+    QString const fileName = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("export_psth_svg"),
+            tr("Export PSTH to SVG"),
+            tr("SVG Files (*.svg);;All Files (*)"));
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    QString const svg = _opengl_widget->exportToSVG();
+    if (svg.isEmpty()) {
+        QMessageBox::warning(
+                this,
+                tr("Export Failed"),
+                tr("No scene to export. Load data and configure the plot first."));
+        return;
+    }
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(
+                this,
+                tr("Export Failed"),
+                tr("Could not open file for writing:\n%1").arg(fileName));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << svg;
+    file.close();
+
+    QMessageBox::information(
+            this,
+            tr("Export Successful"),
+            tr("PSTH exported to:\n%1").arg(fileName));
 }
 
 void PSTHWidget::resizeEvent(QResizeEvent * event) {

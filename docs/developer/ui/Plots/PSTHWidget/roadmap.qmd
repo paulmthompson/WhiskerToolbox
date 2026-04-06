@@ -91,8 +91,9 @@ Add controls to `PSTHPropertiesWidget`:
 
 ## Phase 5: SVG Export
 
-**Status**: Not started. Infrastructure exists in `PlottingSVG` library (proven with
-[EventPlotWidget](../EventPlotWidget/index.qmd) and [DataViewer_Widget](../../DataViewer_Widget/index.qmd)).
+**Status**: **Complete** (Steps 5.1–5.7). End-to-end export from properties → `PlottingSVG::SVGSceneRenderer`
+is implemented and manually validated (bar and line modes). Shared patterns match
+[EventPlotWidget](../EventPlotWidget/index.qmd) and [DataViewer_Widget](../../DataViewer_Widget/index.qmd).
 
 **Goal**: Export the current PSTH plot to SVG for publication-quality figures.
 
@@ -108,153 +109,96 @@ The PSTHWidget rendering pipeline is **fully compatible** with `PlottingSVG`:
 
 **Key issues to address:**
 
-1. **Scene not cached**: The `RenderableScene` built in `rebuildScene()` is a local variable
-   passed directly to `_scene_renderer.uploadScene()`. It must be cached as a member for SVG
-   export.
-2. **Background color hardcoded**: The background is set via `glClearColor(0.1f, 0.1f, 0.1f, 1.0f)`
-   in `initializeGL()` with no state accessor. Either add a `background_color` field to
-   `PSTHStateData` (matching `HeatmapStateData` and `EventPlotStateData`) or use a sensible
-   default (e.g., `"#1A1A1A"` matching the hardcoded value, or `"#FFFFFF"` for publication).
+1. ~~**Scene not cached**~~ **Done (5.2)**: Member `CorePlotting::RenderableScene _scene` on
+   `PSTHPlotOpenGLWidget`; `uploadHistogramScene()` (invoked from `rebuildScene()`) assigns
+   `_scene = HistogramMapper::buildScene(...)` then `_scene_renderer.uploadScene(_scene)`; empty
+   histogram resets `_scene` before `clearScene()`.
+2. ~~**Background color hardcoded**~~ **Done (5.1)**: `PSTHStateData::background_color` (default
+   `"#1A1A1A"`), `getBackgroundColor()` / `setBackgroundColor()` / `backgroundColorChanged()` on
+   `PSTHState`, and `PSTHPlotOpenGLWidget::updateBackgroundColor()` (from state via
+   `CoreUtilities/color.hpp::hexToRGB`) called from `initializeGL()`, `paintGL()`, and on
+   `backgroundColorChanged` in `setState()`.
 
-### Step 5.1: Add `background_color` to `PSTHStateData`
+### Step 5.1: Add `background_color` to `PSTHStateData` — **Done**
 
 Add a background color field so the SVG exporter can read it, matching the
 `EventPlotStateData` / `HeatmapStateData` pattern.
 
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/PSTHWidget/Core/PSTHState.hpp` (or `PSTHStateData.hpp`) — add
-  `std::string background_color = "#1A1A1A";` to `PSTHStateData`
-- `src/WhiskerToolbox/Plots/PSTHWidget/Core/PSTHState.cpp` — add getter/setter with signal
-  `backgroundColorChanged()`
-- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.cpp` — in `initializeGL()`,
-  read the background color from state instead of hardcoding
+**Files modified:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/Core/PSTHState.hpp` — `std::string background_color = "#1A1A1A";` on `PSTHStateData`; accessors and `backgroundColorChanged` signal on `PSTHState`
+- `src/WhiskerToolbox/Plots/PSTHWidget/Core/PSTHState.cpp` — `getBackgroundColor()` / `setBackgroundColor()`
+- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.hpp` / `.cpp` — `updateBackgroundColor()`; `initializeGL()` and `paintGL()` use it; `setState()` connects `backgroundColorChanged`
 
 **Verify:** Build compiles. Background color is driven by state.
 
-### Step 5.2: Cache `RenderableScene` in `PSTHPlotOpenGLWidget`
+### Step 5.2: Cache `RenderableScene` in `PSTHPlotOpenGLWidget` — **Done**
 
 Add a `RenderableScene` member so the scene persists for SVG export.
 
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.hpp` — add
-  `CorePlotting::RenderableScene _scene;` member
+**Files modified:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.hpp` — member
+  `CorePlotting::RenderableScene _scene`
 - `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.cpp` — in
-  `rebuildScene()`, store the scene before uploading:
-  ```cpp
-  _scene = CorePlotting::HistogramMapper::buildScene(histogram_data, display_mode, style);
-  _scene_renderer.uploadScene(_scene);
-  ```
+  `uploadHistogramScene()` (called at the end of `rebuildScene()`): assign `_scene` from
+  `HistogramMapper::buildScene(_histogram_data, mode, _histogram_style)` then
+  `_scene_renderer.uploadScene(_scene)`; if counts are empty, `_scene = RenderableScene{}` then
+  `clearScene()`
 
 **Verify:** Build compiles. Existing OpenGL rendering unchanged.
 
-### Step 5.3: Add `exportToSVG()` to `PSTHPlotOpenGLWidget`
+### Step 5.3: Add `exportToSVG()` to `PSTHPlotOpenGLWidget` — **Done**
 
-Follow the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md):
+Follows the [EventPlotOpenGLWidget pattern](../../PlottingSVG/roadmap.md): empty early-out when both
+`rectangle_batches` and `poly_line_batches` are empty; copies `_view_matrix` / `_projection_matrix`
+onto `_scene`; `PlottingSVG::SVGSceneRenderer` with widget canvas size and
+`_state->getBackgroundColor()` when state is set.
 
-```cpp
-[[nodiscard]] QString exportToSVG();
-```
-
-**Implementation:**
-```cpp
-QString PSTHPlotOpenGLWidget::exportToSVG() {
-    if (_scene.rectangle_batches.empty() && _scene.poly_line_batches.empty()) {
-        return {};
-    }
-
-    _scene.view_matrix = _view_matrix;
-    _scene.projection_matrix = _projection_matrix;
-
-    PlottingSVG::SVGSceneRenderer renderer;
-    renderer.setScene(_scene);
-    renderer.setCanvasSize(_widget_width, _widget_height);
-
-    if (_state) {
-        renderer.setBackgroundColor(_state->getBackgroundColor().toStdString());
-    }
-
-    return QString::fromStdString(renderer.render());
-}
-```
-
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.hpp` — add declaration
-- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.cpp` — implement
-- `src/WhiskerToolbox/Plots/PSTHWidget/CMakeLists.txt` — add `PlottingSVG` to
-  `target_link_libraries` (PRIVATE)
+**Files modified:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.hpp` — `exportToSVG()` declaration (and `#include <QString>`)
+- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.cpp` — implementation; `#include "PlottingSVG/SVGSceneRenderer.hpp"`
+- `src/WhiskerToolbox/Plots/PSTHWidget/CMakeLists.txt` — `PlottingSVG` in `target_link_libraries` (PRIVATE)
 
 **Verify:** Build compiles.
 
-### Step 5.4: Add `exportSVGRequested` signal to `PSTHPropertiesWidget`
+### Step 5.4: Add `exportSVGRequested` signal to `PSTHPropertiesWidget` — **Done**
 
 Add an "Export SVG" button to the properties panel.
 
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHPropertiesWidget.hpp` — add
-  `signals: void exportSVGRequested();`
-- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHPropertiesWidget.cpp` — create a QPushButton
-  in an "Export" collapsible section, connect `clicked` → `exportSVGRequested()`
+**Files modified:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHPropertiesWidget.hpp` — `signals: void exportSVGRequested();` with Doxygen; private `Section * _export_section`
+- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHPropertiesWidget.cpp` — collapsible `Section` titled
+  "Export" with `QPushButton` "Export SVG..." (`Expanding` horizontal size policy), inserted before
+  `vertical_spacer`; `clicked` → `exportSVGRequested()`
 
 **Verify:** Build compiles. Button appears.
 
-### Step 5.5: Add `handleExportSVG()` to `PSTHWidget`
+### Step 5.5: Add `handleExportSVG()` to `PSTHWidget` — **Done**
 
-Follow the [EventPlotWidget::handleExportSVG()](../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp) pattern:
+Same flow as [EventPlotWidget::handleExportSVG()](../../../../src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotWidget.cpp):
+`AppFileDialog` (`export_psth_svg`), `_opengl_widget->exportToSVG()`, empty/write failure message
+boxes, `QTextStream` write, success message.
 
-```cpp
-void PSTHWidget::handleExportSVG() {
-    QString const fileName = AppFileDialog::getSaveFileName(
-            this, QStringLiteral("export_psth_svg"),
-            tr("Export PSTH to SVG"),
-            tr("SVG Files (*.svg);;All Files (*)"));
-    if (fileName.isEmpty()) return;
-
-    QString const svg = _opengl_widget->exportToSVG();
-    if (svg.isEmpty()) {
-        QMessageBox::warning(this, tr("Export Failed"),
-            tr("No scene to export. Load data and configure the plot first."));
-        return;
-    }
-
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::critical(this, tr("Export Failed"),
-            tr("Could not open file for writing:\n%1").arg(fileName));
-        return;
-    }
-
-    QTextStream out(&file);
-    out << svg;
-    file.close();
-
-    QMessageBox::information(this, tr("Export Successful"),
-        tr("PSTH exported to:\n%1").arg(fileName));
-}
-```
-
-**Files to modify:**
-- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHWidget.hpp` — add `void handleExportSVG();`
-  public slot
-- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHWidget.cpp` — implement
+**Files modified:**
+- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHWidget.hpp` — `public slots: void handleExportSVG();`
+- `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHWidget.cpp` — implementation; includes for
+  `AppFileDialog`, `QFile`, `QMessageBox`, `QTextStream`
+- `src/WhiskerToolbox/Plots/PSTHWidget/CMakeLists.txt` — `WhiskerToolbox::StateManagement` (PRIVATE)
+  for `AppFileDialog`
 
 **Verify:** Build compiles.
 
-### Step 5.6: Wire signals in `PSTHWidgetRegistration`
+### Step 5.6: Wire signals in `PSTHWidgetRegistration` — **Done**
 
-Connect the properties signal to the view slot in the `create_editor_custom` lambda:
+In `create_editor_custom`, after `props->setPlotWidget(view)`:
 
-```cpp
-QObject::connect(props, &PSTHPropertiesWidget::exportSVGRequested,
-                 view, &PSTHWidget::handleExportSVG);
-```
+`QObject::connect(props, &PSTHPropertiesWidget::exportSVGRequested, view, &PSTHWidget::handleExportSVG);`
 
-**Files to modify:**
+**Files modified:**
 - `src/WhiskerToolbox/Plots/PSTHWidget/PSTHWidgetRegistration.cpp`
 
-**Verify:** Full build succeeds. Clicking "Export SVG" opens file dialog and produces valid
-SVG file.
+**Verify:** Clicking "Export SVG" opens the save dialog and writes SVG (when a scene exists).
 
-### Step 5.7: Manual validation
+### Step 5.7: Manual validation — **Done**
 
 1. Load a dataset with `DigitalEventSeries` data
 2. Open a PSTHWidget, configure alignment and event series
@@ -266,6 +210,8 @@ SVG file.
    - Line mode: step-function polyline matches on-screen line
    - Background color is correct
    - Zoom/pan state is reflected
+
+**Outcome:** Manual checks passed (export workflow, bar/line modes, background, view matrices in SVG).
 
 ### Design Notes
 

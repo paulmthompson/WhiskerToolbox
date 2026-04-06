@@ -81,6 +81,10 @@ void registerTypes(EditorRegistry * registry,
                                 // Connect properties widget to view widget (for range controls)
                                 props->setPlotWidget(view);
 
+                                // Connect export button in properties to the view's export handler
+                                QObject::connect(props, &PSTHPropertiesWidget::exportSVGRequested,
+                                                 view, &PSTHWidget::handleExportSVG);
+
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the PSTH plot to navigate to a specific time position
                                 if (reg) {

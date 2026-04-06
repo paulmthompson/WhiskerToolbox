@@ -1,6 +1,7 @@
 #include "PSTHPlotOpenGLWidget.hpp"
 
 #include "CorePlotting/Mappers/HistogramMapper.hpp"
+#include "CoreUtilities/color.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "GatherResult/GatherResult.hpp"
@@ -8,6 +9,7 @@
 #include "Plots/Common/EventRateEstimation/RateNormalization.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "PlottingSVG/SVGSceneRenderer.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QDebug>
@@ -78,6 +80,11 @@ void PSTHPlotOpenGLWidget::setState(std::shared_ptr<PSTHState> state) {
                     _scene_dirty = true;
                     update();
                 });
+        connect(_state.get(), &PSTHState::backgroundColorChanged,
+                this, [this]() {
+                    updateBackgroundColor();
+                    update();
+                });
 
         _scene_dirty = true;
         updateMatrices();
@@ -98,6 +105,25 @@ std::pair<double, double> PSTHPlotOpenGLWidget::getViewBounds() const {
     return {vs.x_min, vs.x_max};
 }
 
+QString PSTHPlotOpenGLWidget::exportToSVG() {
+    if (_scene.rectangle_batches.empty() && _scene.poly_line_batches.empty()) {
+        return {};
+    }
+
+    _scene.view_matrix = _view_matrix;
+    _scene.projection_matrix = _projection_matrix;
+
+    PlottingSVG::SVGSceneRenderer renderer;
+    renderer.setScene(_scene);
+    renderer.setCanvasSize(_widget_width, _widget_height);
+
+    if (_state) {
+        renderer.setBackgroundColor(_state->getBackgroundColor().toStdString());
+    }
+
+    return QString::fromStdString(renderer.render());
+}
+
 // =============================================================================
 // OpenGL Lifecycle
 // =============================================================================
@@ -105,8 +131,7 @@ std::pair<double, double> PSTHPlotOpenGLWidget::getViewBounds() const {
 void PSTHPlotOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
 
-    // Set clear color (dark theme)
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    updateBackgroundColor();
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
@@ -130,7 +155,35 @@ void PSTHPlotOpenGLWidget::initializeGL() {
     _opengl_initialized = true;
 }
 
+/// @brief Applies `_state` background to `glClearColor`, or `#1A1A1A` when state is unset.
+void PSTHPlotOpenGLWidget::updateBackgroundColor() {
+    if (!_state) {
+        int r = 0;
+        int g = 0;
+        int b = 0;
+        hexToRGB("#1A1A1A", r, g, b);
+        glClearColor(
+                static_cast<float>(r) / 255.0f,
+                static_cast<float>(g) / 255.0f,
+                static_cast<float>(b) / 255.0f,
+                1.0f);
+        return;
+    }
+
+    QString const hex_color = _state->getBackgroundColor();
+    int r = 0;
+    int g = 0;
+    int b = 0;
+    hexToRGB(hex_color.toStdString(), r, g, b);
+    glClearColor(
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            1.0f);
+}
+
 void PSTHPlotOpenGLWidget::paintGL() {
+    updateBackgroundColor();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!_opengl_initialized) {
@@ -214,7 +267,7 @@ void PSTHPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 }
 
 void PSTHPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
-    float const delta = event->angleDelta().y() / 120.0f;
+    float const delta = static_cast<float>(event->angleDelta().y()) / 120.0f;
     bool const shift_pressed = event->modifiers() & Qt::ShiftModifier;
     bool const ctrl_pressed = event->modifiers() & Qt::ControlModifier;
     handleZoom(delta, shift_pressed, ctrl_pressed);
@@ -438,6 +491,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
 
 void PSTHPlotOpenGLWidget::uploadHistogramScene() {
     if (_histogram_data.counts.empty()) {
+        _scene = CorePlotting::RenderableScene{};
         _scene_renderer.clearScene();
         return;
     }
@@ -448,10 +502,9 @@ void PSTHPlotOpenGLWidget::uploadHistogramScene() {
         mode = CorePlotting::HistogramDisplayMode::Line;
     }
 
-    auto scene = CorePlotting::HistogramMapper::buildScene(
+    _scene = CorePlotting::HistogramMapper::buildScene(
             _histogram_data, mode, _histogram_style);
-
-    _scene_renderer.uploadScene(scene);
+    _scene_renderer.uploadScene(_scene);
 }
 
 QPointF PSTHPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {

@@ -48,8 +48,10 @@ target_link_libraries(PSTHWidget PRIVATE Collapsible_Widget)
 target_link_libraries(PSTHWidget PRIVATE CorePlotting)
 target_link_libraries(PSTHWidget PRIVATE NEURALYZER_GEOMETRY)
 target_link_libraries(PSTHWidget PRIVATE PlottingOpenGL)
+target_link_libraries(PSTHWidget PRIVATE PlottingSVG)
 target_link_libraries(PSTHWidget PRIVATE glm::glm)
 target_link_libraries(PSTHWidget PRIVATE GatherResult)
+target_link_libraries(PSTHWidget PRIVATE WhiskerToolbox::StateManagement)
 
 target_include_directories(PSTHWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

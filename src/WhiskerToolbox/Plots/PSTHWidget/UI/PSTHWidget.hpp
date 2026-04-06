@@ -88,6 +88,17 @@ signals:
      */
     void timePositionSelected(TimePosition position);
 
+public slots:
+    /**
+     * @brief Open a file dialog and write the current scene to an SVG file.
+     *
+     * Uses `AppFileDialog` for session-aware path memory (dialog id
+     * `"export_psth_svg"`). Shows an informational message box on success and an
+     * error message box on failure. Does nothing if the scene is empty or the user
+     * cancels the dialog.
+     */
+    void handleExportSVG();
+
 protected:
     void resizeEvent(QResizeEvent * event) override;
 

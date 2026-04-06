@@ -1,5 +1,6 @@
 #include "PSTHPropertiesWidget.hpp"
 
+#include "Collapsible_Widget/Section.hpp"
 #include "Core/PSTHState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -8,25 +9,28 @@
 #include "Plots/Common/RateEstimationControls/ScalingModeControls.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
-#include "Collapsible_Widget/Section.hpp"
 #include "UI/PSTHWidget.hpp"
 
 #include "ui_PSTHPropertiesWidget.h"
 
 #include <QColorDialog>
 #include <QHeaderView>
+#include <QPushButton>
+#include <QSizePolicy>
 #include <QTableWidget>
 #include <QTableWidgetItem>
+#include <QVBoxLayout>
 
 #include <algorithm>
+#include <utility>
 
 PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
-                                            std::shared_ptr<DataManager> data_manager,
-                                            QWidget * parent)
+                                           std::shared_ptr<DataManager> data_manager,
+                                           QWidget * parent)
     : QWidget(parent),
       ui(new Ui::PSTHPropertiesWidget),
-      _state(state),
-      _data_manager(data_manager),
+      _state(std::move(std::move(state))),
+      _data_manager(std::move(std::move(data_manager))),
       _alignment_widget(nullptr),
       _estimation_controls(nullptr),
       _scaling_controls(nullptr),
@@ -35,14 +39,14 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
       _range_controls_section(nullptr),
       _vertical_range_controls(nullptr),
       _vertical_range_controls_section(nullptr),
-      _dm_observer_id(-1)
-{
+      _export_section(nullptr),
+      _dm_observer_id(-1) {
     ui->setupUi(this);
 
     // Create and add PlotAlignmentWidget
     _alignment_widget = new PlotAlignmentWidget(_state->alignmentState(), _data_manager, this);
     // Replace the placeholder widget with the alignment widget
-    int alignment_index = ui->main_layout->indexOf(ui->alignment_widget_placeholder);
+    int const alignment_index = ui->main_layout->indexOf(ui->alignment_widget_placeholder);
     ui->main_layout->removeWidget(ui->alignment_widget_placeholder);
     ui->alignment_widget_placeholder->deleteLater();
     ui->main_layout->insertWidget(alignment_index, _alignment_widget);
@@ -72,10 +76,22 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
     connect(ui->style_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &PSTHPropertiesWidget::_onStyleChanged);
 
+    _export_section = new Section(this, tr("Export"));
+    auto * export_layout = new QVBoxLayout();
+    export_layout->setContentsMargins(4, 4, 4, 4);
+    auto * export_svg_button = new QPushButton(tr("Export SVG..."), _export_section);
+    export_svg_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    export_layout->addWidget(export_svg_button);
+    _export_section->setContentLayout(*export_layout);
+    int const export_insert = ui->main_layout->indexOf(ui->vertical_spacer);
+    ui->main_layout->insertWidget(export_insert, _export_section);
+    connect(export_svg_button, &QPushButton::clicked,
+            this, &PSTHPropertiesWidget::exportSVGRequested);
+
     // Create and insert EstimationMethodControls in place of bin_size widgets
     _estimation_controls = new EstimationMethodControls(this);
     // Find and replace bin_size_label placeholder
-    int estimation_index = ui->main_layout->indexOf(ui->estimation_placeholder);
+    int const estimation_index = ui->main_layout->indexOf(ui->estimation_placeholder);
     ui->main_layout->removeWidget(ui->estimation_placeholder);
     ui->estimation_placeholder->deleteLater();
     ui->main_layout->insertWidget(estimation_index, _estimation_controls);
@@ -87,7 +103,7 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
     // Create and insert ScalingModeControls after estimation controls
     _scaling_controls = new ScalingModeControls(this);
     _scaling_controls->setScalingMode(_state->scaling());
-    int scaling_index = ui->main_layout->indexOf(ui->scaling_placeholder);
+    int const scaling_index = ui->main_layout->indexOf(ui->scaling_placeholder);
     ui->main_layout->removeWidget(ui->scaling_placeholder);
     ui->scaling_placeholder->deleteLater();
     ui->main_layout->insertWidget(scaling_index, _scaling_controls);
@@ -136,8 +152,7 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
     }
 }
 
-PSTHPropertiesWidget::~PSTHPropertiesWidget()
-{
+PSTHPropertiesWidget::~PSTHPropertiesWidget() {
     // Remove DataManager observer callback
     if (_data_manager && _dm_observer_id != -1) {
         _data_manager->removeObserver(_dm_observer_id);
@@ -145,8 +160,7 @@ PSTHPropertiesWidget::~PSTHPropertiesWidget()
     delete ui;
 }
 
-void PSTHPropertiesWidget::setPlotWidget(PSTHWidget * plot_widget)
-{
+void PSTHPropertiesWidget::setPlotWidget(PSTHWidget * plot_widget) {
     _plot_widget = plot_widget;
 
     if (!_plot_widget) {
@@ -159,15 +173,15 @@ void PSTHPropertiesWidget::setPlotWidget(PSTHWidget * plot_widget)
         if (time_axis_state) {
             // Create a collapsible section for the range controls
             _range_controls_section = new Section(this, "Time Axis Range Controls");
-            
+
             // Create new range controls that use the RelativeTimeAxisState
             _range_controls = new RelativeTimeAxisRangeControls(time_axis_state, _range_controls_section);
-        
+
             // Set up the collapsible section (it starts collapsed by default)
             _range_controls_section->autoSetContentLayout();
-            
+
             // Add the section to the main layout (after alignment widget)
-            int insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
+            int const insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
             ui->main_layout->insertWidget(insert_index, _range_controls_section);
         }
     }
@@ -178,24 +192,23 @@ void PSTHPropertiesWidget::setPlotWidget(PSTHWidget * plot_widget)
         if (vertical_axis_state) {
             // Create a collapsible section for the vertical axis range controls
             _vertical_range_controls_section = new Section(this, "Vertical Axis Range Controls");
-            
+
             // Create new range controls that use the VerticalAxisState
             _vertical_range_controls = new VerticalAxisRangeControls(vertical_axis_state, _vertical_range_controls_section);
-            
+
             // Set up the collapsible section (it starts collapsed by default)
             _vertical_range_controls_section->autoSetContentLayout();
-            
+
             // Add the section to the main layout (after time axis range controls)
-            int insert_index = _range_controls_section 
-                ? ui->main_layout->indexOf(_range_controls_section) + 1
-                : ui->main_layout->indexOf(_alignment_widget) + 1;
+            int const insert_index = _range_controls_section
+                                       ? ui->main_layout->indexOf(_range_controls_section) + 1
+                                       : ui->main_layout->indexOf(_alignment_widget) + 1;
             ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
         }
     }
 }
 
-void PSTHPropertiesWidget::_populateAddEventComboBox()
-{
+void PSTHPropertiesWidget::_populateAddEventComboBox() {
     ui->add_event_combo->clear();
 
     if (!_data_manager) {
@@ -218,24 +231,22 @@ void PSTHPropertiesWidget::_populateAddEventComboBox()
     }
 }
 
-void PSTHPropertiesWidget::_onAddEventClicked()
-{
+void PSTHPropertiesWidget::_onAddEventClicked() {
     if (!_state || !_data_manager) {
         return;
     }
 
-    QString event_key = ui->add_event_combo->currentData().toString();
+    QString const event_key = ui->add_event_combo->currentData().toString();
     if (event_key.isEmpty()) {
         return;
     }
 
     // Use the event key as the name (could be made more sophisticated)
-    QString event_name = event_key;
+    QString const event_name = event_key;
     _state->addPlotEvent(event_name, event_key);
 }
 
-void PSTHPropertiesWidget::_onRemoveEventClicked()
-{
+void PSTHPropertiesWidget::_onRemoveEventClicked() {
     if (!_state) {
         return;
     }
@@ -245,26 +256,25 @@ void PSTHPropertiesWidget::_onRemoveEventClicked()
         return;
     }
 
-    int row = selected.first()->row();
+    int const row = selected.first()->row();
     QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
     if (name_item) {
-        QString event_name = name_item->text();
+        QString const event_name = name_item->text();
         _state->removePlotEvent(event_name);
     }
 }
 
-void PSTHPropertiesWidget::_onPlotEventSelectionChanged()
-{
+void PSTHPropertiesWidget::_onPlotEventSelectionChanged() {
     QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
-    bool has_selection = !selected.isEmpty();
+    bool const has_selection = !selected.isEmpty();
     ui->remove_event_button->setEnabled(has_selection);
     ui->event_options_widget->setEnabled(has_selection);
 
     if (has_selection && _state) {
-        int row = selected.first()->row();
+        int const row = selected.first()->row();
         QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
         if (name_item) {
-            QString event_name = name_item->text();
+            QString const event_name = name_item->text();
             _updateEventOptions(event_name);
         }
     } else {
@@ -273,15 +283,14 @@ void PSTHPropertiesWidget::_onPlotEventSelectionChanged()
     }
 }
 
-void PSTHPropertiesWidget::_updatePlotEventsTable()
-{
+void PSTHPropertiesWidget::_updatePlotEventsTable() {
     if (!_state) {
         return;
     }
 
     // Block signals while rebuilding the table to prevent selectionChanged
     // from firing mid-update and accessing stale/freed GlyphStyleState pointers.
-    QSignalBlocker blocker(ui->plot_events_table);
+    QSignalBlocker const blocker(ui->plot_events_table);
 
     ui->plot_events_table->setRowCount(0);
 
@@ -292,14 +301,14 @@ void PSTHPropertiesWidget::_updatePlotEventsTable()
             continue;
         }
 
-        int row = ui->plot_events_table->rowCount();
+        int const row = ui->plot_events_table->rowCount();
         ui->plot_events_table->insertRow(row);
 
-        QTableWidgetItem * name_item = new QTableWidgetItem(event_name);
+        auto * name_item = new QTableWidgetItem(event_name);
         name_item->setFlags(name_item->flags() & ~Qt::ItemIsEditable);
         ui->plot_events_table->setItem(row, 0, name_item);
 
-        QTableWidgetItem * key_item = new QTableWidgetItem(QString::fromStdString(options->event_key));
+        auto * key_item = new QTableWidgetItem(QString::fromStdString(options->event_key));
         key_item->setFlags(key_item->flags() & ~Qt::ItemIsEditable);
         ui->plot_events_table->setItem(row, 1, key_item);
     }
@@ -307,24 +316,23 @@ void PSTHPropertiesWidget::_updatePlotEventsTable()
     // Resize table to fit content dynamically
     ui->plot_events_table->resizeRowsToContents();
 
-    int row_count = ui->plot_events_table->rowCount();
+    int const row_count = ui->plot_events_table->rowCount();
     if (row_count == 0) {
         // If no rows, set minimum height to just show header
         ui->plot_events_table->setMinimumHeight(ui->plot_events_table->horizontalHeader()->height());
         ui->plot_events_table->setMaximumHeight(ui->plot_events_table->horizontalHeader()->height());
     } else {
         // Calculate height: header + (row height * row count)
-        int header_height = ui->plot_events_table->horizontalHeader()->height();
-        int row_height = ui->plot_events_table->rowHeight(0);
-        int total_height = header_height + (row_height * row_count);
+        int const header_height = ui->plot_events_table->horizontalHeader()->height();
+        int const row_height = ui->plot_events_table->rowHeight(0);
+        int const total_height = header_height + (row_height * row_count);
 
         ui->plot_events_table->setMinimumHeight(total_height);
         ui->plot_events_table->setMaximumHeight(total_height);
     }
 }
 
-void PSTHPropertiesWidget::_updateEventOptions(QString const & event_name)
-{
+void PSTHPropertiesWidget::_updateEventOptions(QString const & event_name) {
     if (!_state) {
         return;
     }
@@ -336,14 +344,12 @@ void PSTHPropertiesWidget::_updateEventOptions(QString const & event_name)
     }
 }
 
-void PSTHPropertiesWidget::_onStatePlotEventAdded(QString const & event_name)
-{
+void PSTHPropertiesWidget::_onStatePlotEventAdded(QString const & event_name) {
     Q_UNUSED(event_name)
     _updatePlotEventsTable();
 }
 
-void PSTHPropertiesWidget::_onStatePlotEventRemoved(QString const & event_name)
-{
+void PSTHPropertiesWidget::_onStatePlotEventRemoved(QString const & event_name) {
     Q_UNUSED(event_name)
     _updatePlotEventsTable();
     // Clear selection if the removed event was selected
@@ -352,13 +358,12 @@ void PSTHPropertiesWidget::_onStatePlotEventRemoved(QString const & event_name)
     ui->event_options_widget->setEnabled(false);
 }
 
-void PSTHPropertiesWidget::_onStatePlotEventOptionsChanged(QString const & event_name)
-{
+void PSTHPropertiesWidget::_onStatePlotEventOptionsChanged(QString const & event_name) {
     // Update the table and options if this event is selected
     _updatePlotEventsTable();
     QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
     if (!selected.isEmpty()) {
-        int row = selected.first()->row();
+        int const row = selected.first()->row();
         QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
         if (name_item && name_item->text() == event_name) {
             _updateEventOptions(event_name);
@@ -366,8 +371,7 @@ void PSTHPropertiesWidget::_onStatePlotEventOptionsChanged(QString const & event
     }
 }
 
-void PSTHPropertiesWidget::_updateUIFromState()
-{
+void PSTHPropertiesWidget::_updateUIFromState() {
     if (!_state) {
         return;
     }
@@ -393,31 +397,28 @@ void PSTHPropertiesWidget::_updateUIFromState()
     _updatePlotEventsTable();
 }
 
-QString PSTHPropertiesWidget::_getSelectedEventName() const
-{
+QString PSTHPropertiesWidget::_getSelectedEventName() const {
     QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
     if (selected.isEmpty()) {
-        return QString();
+        return {};
     }
 
-    int row = selected.first()->row();
+    int const row = selected.first()->row();
     QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
     if (name_item) {
         return name_item->text();
     }
-    return QString();
+    return {};
 }
 
-void PSTHPropertiesWidget::_updateColorDisplay(QString const & hex_color)
-{
+void PSTHPropertiesWidget::_updateColorDisplay(QString const & hex_color) {
     // Update the color display button with the new color
     ui->color_display_button->setStyleSheet(
             QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color));
 }
 
-void PSTHPropertiesWidget::_onColorButtonClicked()
-{
-    QString event_name = _getSelectedEventName();
+void PSTHPropertiesWidget::_onColorButtonClicked() {
+    QString const event_name = _getSelectedEventName();
     if (event_name.isEmpty() || !_state) {
         return;
     }
@@ -432,22 +433,21 @@ void PSTHPropertiesWidget::_onColorButtonClicked()
     }
 
     // Open color dialog
-    QColor color = QColorDialog::getColor(current_color, this, "Choose Color");
+    QColor const color = QColorDialog::getColor(current_color, this, "Choose Color");
 
     if (color.isValid() && options) {
-        QString hex_color = color.name();
+        QString const hex_color = color.name();
         _updateColorDisplay(hex_color);
         options->hex_color = hex_color.toStdString();
         _state->updatePlotEventOptions(event_name, *options);
     }
 }
 
-void PSTHPropertiesWidget::_onStyleChanged(int index)
-{
+void PSTHPropertiesWidget::_onStyleChanged(int index) {
     if (!_state) {
         return;
     }
 
-    PSTHStyle style = (index == 0) ? PSTHStyle::Bar : PSTHStyle::Line;
+    PSTHStyle const style = (index == 0) ? PSTHStyle::Bar : PSTHStyle::Line;
     _state->setStyle(style);
 }

@@ -50,8 +50,8 @@ public:
      * @param parent Parent widget
      */
     explicit PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
-                                   std::shared_ptr<DataManager> data_manager,
-                                   QWidget * parent = nullptr);
+                                  std::shared_ptr<DataManager> data_manager,
+                                  QWidget * parent = nullptr);
 
     ~PSTHPropertiesWidget() override;
 
@@ -72,6 +72,12 @@ public:
      * @param plot_widget The PSTHWidget instance
      */
     void setPlotWidget(PSTHWidget * plot_widget);
+
+signals:
+    /**
+     * @brief Emitted when the user clicks the "Export SVG..." button
+     */
+    void exportSVGRequested();
 
 private slots:
     /**
@@ -163,6 +169,7 @@ private:
     Section * _range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;
     Section * _vertical_range_controls_section;
+    Section * _export_section;
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;

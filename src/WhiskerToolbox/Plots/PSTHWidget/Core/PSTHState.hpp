@@ -54,14 +54,15 @@ struct PSTHEventOptions {
 struct PSTHStateData {
     std::string instance_id;
     std::string display_name = "PSTH Plot";
-    PlotAlignmentData alignment;                        ///< Alignment settings (event key, interval type, offset, window size)
-    std::map<std::string, PSTHEventOptions> plot_events;///< Map of event names to their plot options
-    PSTHStyle style = PSTHStyle::Bar;                   ///< Plot style (bar or line)
-    WhiskerToolbox::Plots::EstimationParams estimation_params;  ///< Rate estimation parameters (default: BinningParams{})
-    WhiskerToolbox::Plots::ScalingMode scaling = WhiskerToolbox::Plots::ScalingMode::RawCount;  ///< Normalization mode
-    CorePlotting::ViewStateData view_state;             ///< Zoom, pan, data bounds
-    RelativeTimeAxisStateData time_axis;                ///< Time axis settings (min_range, max_range)
-    VerticalAxisStateData vertical_axis;                ///< Vertical axis settings (y_min, y_max)
+    std::string background_color = "#1A1A1A";                                                 ///< Background color as hex string (matches default OpenGL clear)
+    PlotAlignmentData alignment;                                                              ///< Alignment settings (event key, interval type, offset, window size)
+    std::map<std::string, PSTHEventOptions> plot_events;                                      ///< Map of event names to their plot options
+    PSTHStyle style = PSTHStyle::Bar;                                                         ///< Plot style (bar or line)
+    WhiskerToolbox::Plots::EstimationParams estimation_params;                                ///< Rate estimation parameters (default: BinningParams{})
+    WhiskerToolbox::Plots::ScalingMode scaling = WhiskerToolbox::Plots::ScalingMode::RawCount;///< Normalization mode
+    CorePlotting::ViewStateData view_state;                                                   ///< Zoom, pan, data bounds
+    RelativeTimeAxisStateData time_axis;                                                      ///< Time axis settings (min_range, max_range)
+    VerticalAxisStateData vertical_axis;                                                      ///< Vertical axis settings (y_min, y_max)
 };
 
 /**
@@ -252,6 +253,18 @@ public:
      */
     void setScaling(WhiskerToolbox::Plots::ScalingMode mode);
 
+    /**
+     * @brief Get the OpenGL / export background color
+     * @return Hex color string (e.g. "#1A1A1A")
+     */
+    [[nodiscard]] QString getBackgroundColor() const;
+
+    /**
+     * @brief Set the OpenGL / export background color
+     * @param hex_color CSS-style hex color (e.g. "#RRGGBB")
+     */
+    void setBackgroundColor(QString const & hex_color);
+
     // === View State (Zoom / Pan / Bounds) ===
 
     /** @brief Get the current view state */
@@ -352,6 +365,12 @@ signals:
      * @param mode New scaling mode
      */
     void scalingChanged(WhiskerToolbox::Plots::ScalingMode mode);
+
+    /**
+     * @brief Emitted when the plot background color changes
+     * @param hex_color New hex color
+     */
+    void backgroundColorChanged(QString const & hex_color);
 
     /**
      * @brief Emitted when view state changes (zoom, pan, or bounds)

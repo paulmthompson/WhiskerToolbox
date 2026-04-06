@@ -30,6 +30,7 @@
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+#include <QString>
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -62,6 +63,17 @@ public:
 
     [[nodiscard]] std::pair<double, double> getViewBounds() const;
 
+    /**
+     * @brief Export the current scene to an SVG document string.
+     *
+     * Renders the cached `RenderableScene` using `PlottingSVG::SVGSceneRenderer` with the
+     * current widget dimensions as the canvas size and the state background color. Does not
+     * trigger a scene rebuild.
+     *
+     * @return SVG document as a `QString`, or empty if no histogram geometry is cached yet.
+     */
+    [[nodiscard]] QString exportToSVG();
+
 signals:
     void plotDoubleClicked(int64_t time_frame_index);
     void viewBoundsChanged();
@@ -88,6 +100,8 @@ private:
 
     // Rendering
     PlottingOpenGL::SceneRenderer _scene_renderer;
+    /// @brief Last uploaded scene (CPU copy for SVG export and upload path)
+    CorePlotting::RenderableScene _scene;
     bool _opengl_initialized{false};
     bool _scene_dirty{true};
 
@@ -111,6 +125,7 @@ private:
 
     void rebuildScene();
     void uploadHistogramScene();
+    void updateBackgroundColor();
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);
