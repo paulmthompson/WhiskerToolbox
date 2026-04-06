@@ -289,14 +289,18 @@ methods). Instead, enforce via **test coverage**:
 5. **Robustness**: Verify that Robust PCA, t-SNE, and all classification algorithms work
    correctly with pre-scaled input (no NaN, no crashes, reasonable output).
 
-### Step 10: Update developer documentation
+### Step 10: Update developer documentation ✓ DONE
 
-**Files**: `docs/developer/MLCore/dim_reduction.qmd`, `features.qmd`, `models.qmd`
+**Files**: `docs/developer/MLCore/dim_reduction.qmd`, `features.qmd`, `models.qmd`, `logit_projection.qmd`, `supervised_pca.qmd`, `widget.qmd`
 
-1. Document that scaling is a pipeline-level concern, not an algorithm-level concern.
-2. Update the FeatureConverter documentation to note that z-score normalization is the recommended default.
-3. Remove references to per-algorithm `scale` parameters from algorithm docs.
-4. Reference the precondition protocol and link to this roadmap for the rationale.
+**Completed.** Changes made:
+
+1. **`dim_reduction.qmd`**: Removed `scale` from PCA parameters table, PCA algorithm steps, and both `TensorPCAParams` tables. Added note that scaling is the caller's responsibility with link to roadmap.
+2. **`features.qmd`**: Noted z-score normalization is the recommended default and sole scaling mechanism. Added context about UI checkbox defaults.
+3. **`models.qmd`**: Added "Feature Scaling Precondition" section explaining that scaling is a pipeline-level concern with link to roadmap.
+4. **`logit_projection.qmd`**: Removed `scale_features` from parameters table, removed "Feature Scaling Absorption" section (no longer applicable), updated code example, updated test description.
+5. **`supervised_pca.qmd`**: Removed `scale` from parameters table, updated algorithm steps to remove optional scaling, removed `stddev` from Impl struct description, updated `transform()` description.
+6. **`widget.qmd`**: Removed `dim_reduction_scale` from state fields table (field was deleted in Step 4), removed "Scale features" checkbox from UI diagram, updated `DimReductionPanel` description.
 
 ## Migration Notes
 

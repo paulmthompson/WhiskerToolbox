@@ -31,7 +31,10 @@ rather than variance.
 |---|---|---|---|
 | `lambda` | `double` | 0.0001 | L2 regularization strength. |
 | `max_iterations` | `std::size_t` | 10000 | Maximum L-BFGS optimizer iterations. |
-| `scale_features` | `bool` | `false` | Standardize features before training (zero mean, unit variance). |
+
+**Feature scaling** (z-score normalization) is the caller's responsibility and should be
+applied via `FeatureConverter` before calling `fitTransform()`. The operation no longer
+performs internal scaling. See the [Feature Scaling Roadmap](scaling_roadmap.md) for rationale.
 
 ## Architecture
 
@@ -92,20 +95,6 @@ bias = model->Parameters().col(0);           // (C,)
 weight_matrix = model->Parameters().cols(1, D);  // (C, D)
 ```
 
-### Feature Scaling Absorption
-
-When `scale_features=true`, features are standardized before training, but rather than storing the
-scaling parameters separately, the scaling is **absorbed into $W$ and $b$** at training time:
-
-$$W_{\text{eff}} = W \oslash \sigma^T, \quad b_{\text{eff}} = b - W_{\text{eff}} \cdot \mu$$
-
-where $\mu$ and $\sigma$ are the per-feature mean and standard deviation. This means `transform()`
-is always simply:
-
-$$\text{result} = W \cdot X + b_{\text{broadcast}}$$
-
-with no scaling logic at inference time, regardless of whether `scale_features` was set.
-
 ### Logit Computation
 
 The forward pass for new data $X \in \mathbb{R}^{D \times N}$:
@@ -142,7 +131,6 @@ using namespace MLCore;
 LogitProjectionOperation lp;
 LogitProjectionParameters params;
 params.lambda = 0.001;
-params.scale_features = true;
 
 arma::mat logits;  // (C × N) output
 lp.fitTransform(features, labels, &params, logits);
@@ -191,7 +179,7 @@ The test file `tests/MLCore/LogitProjectionOperation.test.cpp` covers:
 - **Multi-class (3-class) fitTransform**: output shape, class separation >95%
 - **transform consistency**: logits from `transform()` are numerically identical to `fitTransform()` output
 - **Error handling**: all failure modes above
-- **scale_features**: succeeds and `transform()` is consistent
+- **scale_features**: (removed — scaling is now the caller's responsibility via FeatureConverter)
 - **Save/load round-trip**: identical transforms after reload
 - **Registry integration**: create by name, use via `train()`
 

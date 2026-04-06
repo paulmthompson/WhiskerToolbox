@@ -41,23 +41,25 @@ MLCore uses the **mlpack convention**: matrices are `(features × observations)`
 Implements PCA via manual eigendecomposition on the covariance matrix:
 
 1. Center data by subtracting column means
-2. Optionally scale by dividing by column standard deviations
-3. Compute covariance matrix
-4. Eigendecomposition via `arma::eig_sym`
-5. Sort eigenvectors in descending eigenvalue order
-6. Truncate to `n_components`
-7. Project: `eigenvectors.t() * centered_data`
+2. Compute covariance matrix
+3. Eigendecomposition via `arma::eig_sym`
+4. Sort eigenvectors in descending eigenvalue order
+5. Truncate to `n_components`
+6. Project: `eigenvectors.t() * centered_data`
+
+**Feature scaling** (z-score normalization) is the caller's responsibility and should be
+applied before calling `fitTransform()`. PCA only centers internally — it no longer
+scales internally. See the [Feature Scaling Roadmap](scaling_roadmap.md) for rationale.
 
 ### Parameters
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `n_components` | `size_t` | 2 | Number of principal components to retain |
-| `scale` | `bool` | `true` | Standardize features before PCA |
 
 ### Save/Load
 
-Uses cereal binary serialization, matching the pattern established by `KMeansOperation`. Stores eigenvectors, eigenvalues, mean, standard deviation, and total variance.
+Uses cereal binary serialization, matching the pattern established by `KMeansOperation`. Stores eigenvectors, eigenvalues, mean, and total variance.
 
 ### Edge Cases
 
@@ -65,7 +67,6 @@ Uses cereal binary serialization, matching the pattern established by `KMeansOpe
 - Fewer than 2 observations → returns `false`
 - `n_components > features` → returns `false`
 - `n_components = 0` → returns `false`
-- Zero-variance features during scaling → stddev replaced with 1.0
 
 ## TransformsV2 Integration
 
@@ -80,7 +81,6 @@ The `TensorPCA` container transform (`src/TransformsV2/algorithms/TensorPCA/`) p
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `n_components` | `optional<size_t>` | 2 | Number of PCs |
-| `scale` | `optional<bool>` | `true` | Standardize first |
 
 ## TSNEOperation
 
@@ -212,7 +212,6 @@ The `TensorPCA` container transform (`src/TransformsV2/algorithms/TensorPCA/`) p
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `n_components` | `optional<size_t>` | 2 | Number of PCs |
-| `scale` | `optional<bool>` | `true` | Standardize first |
 
 ## Tests
 

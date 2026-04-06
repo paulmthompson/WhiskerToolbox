@@ -30,7 +30,11 @@ phenomenon rather than variance across the full recording.
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `n_components` | `std::size_t` | 2 | Number of principal components to retain. |
-| `scale` | `bool` | `true` | Standardize features (zero mean, unit variance) before PCA. Statistics computed from labeled subset. |
+
+**Feature scaling** (z-score normalization) is the caller's responsibility and should be
+applied via `FeatureConverter` before calling `fitTransform()`. The operation only centers
+internally (using the labeled subset mean) — it no longer scales internally.
+See the [Feature Scaling Roadmap](scaling_roadmap.md) for rationale.
 
 ## How It Differs from Standard PCA
 
@@ -67,7 +71,6 @@ The `Impl` struct holds:
 - `eigenvectors` — $(D \times n\_components)$ projection matrix
 - `eigenvalues` — sorted descending
 - `mean` — per-feature mean (from labeled subset)
-- `stddev` — per-feature std dev (from labeled subset, if `scale=true`)
 - `total_variance` — sum of all eigenvalues (for variance ratio computation)
 
 ## Algorithm
@@ -75,16 +78,16 @@ The `Impl` struct holds:
 ### fitTransform
 
 1. **Validate** inputs (non-empty, matching dimensions, ≥ 2 classes, n_components ≤ D)
-2. **Compute statistics** from labeled subset: per-feature mean and (optional) standard deviation
-3. **Center** labeled data (subtract mean, optionally divide by stddev)
+2. **Compute statistics** from labeled subset: per-feature mean
+3. **Center** labeled data (subtract mean)
 4. **Covariance** matrix from centered labeled data: $\Sigma = \frac{1}{N-1} X_c X_c^T$
 5. **Eigendecomposition** via `arma::eig_sym`, reversed to descending order
 6. **Truncate** to top `n_components` eigenvectors
-7. **Project ALL data** (not just labeled) using the fitted eigenvectors, mean, and stddev
+7. **Project ALL data** (not just labeled) using the fitted eigenvectors and mean
 
 ### transform
 
-Uses the stored eigenvectors, mean, and stddev to project new data without retraining.
+Uses the stored eigenvectors and mean to project new data without retraining.
 
 ## Column Names
 

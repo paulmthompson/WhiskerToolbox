@@ -37,6 +37,14 @@ All methods operate on armadillo matrices in **mlpack convention**:
 - Label rows: `(1 × observations)` — each element is a class index `[0, num_classes)`
 - Probability matrices: `(num_classes × observations)` — each column sums to 1.0
 
+### Feature Scaling Precondition
+
+Feature scaling (z-score normalization) is a **pipeline-level concern**, not an algorithm-level
+concern. Individual algorithms do not scale features internally — they only center when
+mathematically required (e.g., PCA subtracts the mean). Callers are expected to z-score normalize
+features via `FeatureConverter::convertTensorToArma()` with `zscore_normalize=true` before passing
+data to any operation. See the [Feature Scaling Roadmap](scaling_roadmap.md) for the full rationale.
+
 ### Interface Methods
 
 | Category | Method | Description |

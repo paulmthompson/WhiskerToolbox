@@ -46,8 +46,14 @@ if (!result.valid) {
 
 1. **Float → double**: TensorData uses `float`; mlpack requires `double`
 2. **NaN/Inf dropping**: Rows with NaN or Inf values are removed, with row index tracking
-3. **Z-score normalization** (optional): `(x - mean) / std` per column
+3. **Z-score normalization** (optional but recommended): `(x - mean) / std` per column
 4. **Transpose**: WhiskerToolbox stores `(observations × features)`; mlpack expects `(features × observations)`
+
+Z-score normalization is the **sole mechanism for feature scaling** in the ML pipeline.
+Individual algorithms no longer perform internal scaling — they only center (subtract mean)
+when mathematically required (e.g., PCA). This avoids double-scaling and ensures consistent
+behavior across all algorithms. See the [Feature Scaling Roadmap](scaling_roadmap.md) for
+the full rationale.
 
 ### Result Type
 
@@ -65,10 +71,14 @@ The `valid_row_indices` vector is critical for mapping predictions back to the o
 
 ```cpp
 struct ConversionConfig {
-    bool drop_nan_rows = true;   // Remove rows with NaN/Inf
-    bool zscore_normalize = false; // Apply z-score normalization
+    bool drop_nan_rows = true;    // Remove rows with NaN/Inf
+    bool zscore_normalize = false; // Apply z-score normalization (recommended: true)
 };
 ```
+
+The z-score normalize flag defaults to `false` in the struct, but the UI checkboxes in
+`DimReductionPanel`, `ClusteringPanel`, and `FeatureSelectionPanel` default to **checked**,
+so users get z-score normalization by default when running from the GUI.
 
 ### Usage
 

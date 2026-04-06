@@ -102,8 +102,7 @@ MLCore_Widget
 | `dim_reduction_model_name` | `string` | Algorithm name (default: `"PCA"`) |
 | `dim_reduction_output_key` | `string` | Output TensorData key (default: `"reduced"`) |
 | `dim_reduction_n_components` | `int` | Number of output components (default: 2) |
-| `dim_reduction_scale` | `bool` | Scale features before reduction (default: true) |
-| `dim_reduction_zscore_normalize` | `bool` | Z-score normalize before reduction (default: false) |
+| `dim_reduction_zscore_normalize` | `bool` | Z-score normalize before reduction (default: true) |
 | `dim_reduction_supervised` | `bool` | Supervised mode toggle (default: false) |
 | `dim_reduction_label_source_type` | `string` | `"intervals"`, `"groups"`, `"entity_groups"`, or `"events"` |
 | `dim_reduction_label_interval_key` | `string` | Interval series key (interval mode) |
@@ -209,7 +208,6 @@ The Dim Reduction tab supports both unsupervised (PCA, t-SNE, Robust PCA) and su
 └───────────────────────────────────────────────┘
 ┌─── Algorithm ────────────────────────────────┐
 │ Algorithm: [combo ▼]  Components: [spinbox]   │
-│ ☐ Scale features                              │
 └───────────────────────────────────────────────┘
 ┌─── Output ───────────────────────────────────┐
 │ Output key: [text]                            │
@@ -264,7 +262,7 @@ When "Supervised" is selected, the algorithm list switches to `MLTaskType::Super
 
 | Panel | Purpose |
 |---|---|
-| `DimReductionPanel` | TensorData selection, mode toggle (unsupervised/supervised), algorithm combo filtered by task type, n_components spinbox, scale/z-score checkboxes, label source configuration (supervised mode), output key, run button. Shows explained variance ratio per component (unsupervised) or class-specific training stats (supervised) after completion. |
+| `DimReductionPanel` | TensorData selection, mode toggle (unsupervised/supervised), algorithm combo filtered by task type, n_components spinbox, z-score checkbox, label source configuration (supervised mode), output key, run button. Shows explained variance ratio per component (unsupervised) or class-specific training stats (supervised) after completion. |
 
 ### Label Source Configuration (Supervised Mode)
 
