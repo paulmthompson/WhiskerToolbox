@@ -97,7 +97,6 @@ TEST_CASE("PCAOperation metadata", "[MLCore][PCA]") {
         auto const * pca_params = dynamic_cast<PCAParameters const *>(params.get());
         REQUIRE(pca_params != nullptr);
         REQUIRE(pca_params->n_components == 2);
-        REQUIRE(pca_params->scale == true);
     }
 
     SECTION("not trained initially") {
@@ -116,7 +115,6 @@ TEST_CASE("PCAOperation fitTransform basic", "[MLCore][PCA]") {
     PCAOperation pca;
     PCAParameters params;
     params.n_components = 1;
-    params.scale = false;
 
     auto data = makeHighVarianceXData(100);
 
@@ -145,7 +143,6 @@ TEST_CASE("PCAOperation fitTransform 2 components", "[MLCore][PCA]") {
     PCAOperation pca;
     PCAParameters params;
     params.n_components = 2;
-    params.scale = false;
 
     auto data = makeHighVarianceXData(200);
 
@@ -161,30 +158,10 @@ TEST_CASE("PCAOperation fitTransform 2 components", "[MLCore][PCA]") {
     REQUIRE_THAT(ratios[0] + ratios[1], WithinAbs(1.0, 1e-10));
 }
 
-TEST_CASE("PCAOperation fitTransform with scaling", "[MLCore][PCA]") {
-    PCAOperation pca;
-    PCAParameters params;
-    params.n_components = 2;
-    params.scale = true;
-
-    auto data = makeHighVarianceXData(200);
-
-    arma::mat result;
-    REQUIRE(pca.fitTransform(data, &params, result));
-
-    SECTION("scaling equalizes variance — ratios closer to 0.5") {
-        auto ratios = pca.explainedVarianceRatio();
-        // With scaling, both features have unit variance, so both PCs
-        // should explain roughly equal variance
-        REQUIRE(ratios[0] < 0.8);// much less dominant than unscaled
-    }
-}
-
 TEST_CASE("PCAOperation reduce 3D to 2D", "[MLCore][PCA]") {
     PCAOperation pca;
     PCAParameters params;
     params.n_components = 2;
-    params.scale = false;
 
     auto data = make3DData(300);
 
@@ -210,7 +187,6 @@ TEST_CASE("PCAOperation transform reprojects new data", "[MLCore][PCA]") {
     PCAOperation pca;
     PCAParameters params;
     params.n_components = 2;
-    params.scale = false;
 
     auto train_data = makeHighVarianceXData(200);
     arma::mat train_result;
@@ -300,7 +276,6 @@ TEST_CASE("PCAOperation save and load round-trip", "[MLCore][PCA]") {
     PCAOperation pca;
     PCAParameters params;
     params.n_components = 2;
-    params.scale = true;
 
     auto data = make3DData(200);
     arma::mat result;

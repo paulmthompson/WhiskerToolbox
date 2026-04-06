@@ -24,7 +24,7 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 
 | Algorithm | Z-score checkbox? | Internal scaling? | Internal default | Double-scale risk |
 |---|---|---|---|---|
-| PCA | Yes (off by default) | Yes (`scale`) | **ON** | **YES** |
+| PCA | Yes (off by default) | ~~Yes (`scale`)~~ **No (centering only)** ✓ | N/A | **No** ✓ |
 | Robust PCA | Yes (off by default) | No (centering only) | N/A | No |
 | t-SNE | Yes (off by default) | No | N/A | No |
 | Supervised PCA | Yes (off by default) | Yes (`scale`) | **ON** | **YES** |
@@ -42,8 +42,8 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 ### Key Files
 
 - `src/MLCore/features/FeatureConverter.hpp` — `ConversionConfig::zscore_normalize`, `zscoreNormalize()`, `applyZscoreNormalization()`
-- `src/MLCore/models/MLModelParameters.hpp` — `PCAParameters::scale`, `SupervisedPCAParameters::scale`, `LogitProjectionParameters::scale_features`
-- `src/MLCore/models/unsupervised/PCAOperation.cpp` — Internal centering + scaling in `fitTransform()` and `transform()`
+- `src/MLCore/models/MLModelParameters.hpp` — ~~`PCAParameters::scale`~~, `SupervisedPCAParameters::scale`, `LogitProjectionParameters::scale_features`
+- `src/MLCore/models/unsupervised/PCAOperation.cpp` — ~~Internal centering + scaling~~ **Centering only** ✓
 - `src/MLCore/models/supervised/SupervisedPCAOperation.cpp` — Internal centering + scaling from labeled subset
 - `src/MLCore/models/supervised/LogitProjectionOperation.cpp` — Internal `computeScaling()`/`applyScaling()` + weight rescaling
 - `src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.cpp` — Z-score checkbox + per-algorithm scale checkbox
@@ -59,19 +59,21 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 
 ## Implementation Steps
 
-### Step 1: Remove internal scaling from PCA
+### ~~Step 1: Remove internal scaling from PCA~~ ✓ DONE
 
 **Files**: `PCAOperation.cpp`, `PCAOperation.hpp`, `MLModelParameters.hpp`
 
-1. Remove `PCAParameters::scale` field.
-2. In `PCAOperation::fitTransform()`:
-   - Keep centering (`mean` subtraction) — PCA requires centering.
-   - Remove the conditional stddev computation and division (lines ~101-106).
-   - Remove `_impl->stddev` and `_impl->scaled` fields.
-3. In `PCAOperation::transform()`:
-   - Keep centering.
-   - Remove the conditional `centered.each_col() /= _impl->stddev` block.
-4. Update serialization (`save`/`load`) to remove stddev and scaled fields. Bump the version if applicable.
+**Completed.** Changes made:
+
+- Removed `PCAParameters::scale` field from `MLModelParameters.hpp`.
+- Removed `_impl->stddev` and `_impl->scaled` fields from `PCAOperation::Impl`.
+- Removed stddev computation and conditional scaling from `fitTransform()` and `transform()`.
+- Updated `save()`/`load()` — no longer serializes `scaled` or `stddev`. Old saved models are incompatible.
+- Updated `PCAOperation.hpp` doc block to explicitly state that scaling is the caller's responsibility.
+- Removed `params->scale` assignment in `DimReductionPanel::currentParameters()` for PCA.
+- Removed `TensorPCAParams::scale` field and its usage in `TensorPCA.cpp`.
+- Removed/rewrote obsolete scale-related test cases in `PCAOperation.test.cpp` and `PCA_HMM_Equivalence.test.cpp`.
+- Build clean, all tests pass.
 
 ### Step 2: Remove internal scaling from Supervised PCA
 
@@ -130,16 +132,36 @@ Currently classification hardcodes `config.conversion_config.zscore_normalize = 
 
 Same pattern as Step 6 for the sequence/HMM workflow. HMM with Gaussian emissions is sensitive to feature scale.
 
-### Step 8: Precondition documentation (following Precondition Protocol)
+### Step 8: Precondition documentation (following Precondition Protocol) — PARTIAL
 
 Apply the [Precondition Documentation Protocol](../analysis/precondition_protocol.qmd) to all
 MLCore operation interfaces. This step is documentation-only — no asserts or control flow changes.
 
-**Target interfaces** (headers only):
+**Progress:**
+
+| Header | Functions annotated | Status |
+|---|---|---|
+| `PCAOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
+| `MLDimReductionOperation.hpp` | `fitTransform()`, `transform()` | `fitTransform` has partial base-class `@pre`; `transform` has minimal `@pre` — needs expansion |
+| `MLSupervisedDimReductionOperation.hpp` | `fitTransform()`, `transform()` | Not started |
+| `MLModelOperation.hpp` | `train()`, `predict()`, `fit()`, `assignClusters()` | Not started |
+
+**Caller propagation findings from `PCAOperation` analysis:**
+
+| Caller | File | NaN Precondition established? | Action |
+|---|---|---|---|
+| `DimReductionPipeline` | `DimReductionPipeline.cpp:274` | Yes — `convertTensorToArma` drops NaN/Inf | None |
+| `SupervisedDimReductionPipeline` (fitTransform) | `SupervisedDimReductionPipeline.cpp:438` | Yes — same conversion path | None |
+| `SupervisedDimReductionPipeline` (transform) | `SupervisedDimReductionPipeline.cpp:447` | Yes — same converted matrix | None |
+| `tensorPCA` (TransformsV2) | `TensorPCA.cpp:65` | **No** — raw tensor, no NaN filtering | Bug: add NaN check |
+| `tensorTSNE` (TransformsV2) | `TensorTSNE.cpp:66` | **No** — same pattern | Bug: add NaN check |
+| `tensorRobustPCA` (TransformsV2) | `TensorRobustPCA.cpp:67` | **No** — same pattern | Bug: add NaN check |
+
+**Remaining target interfaces** (headers only):
 
 | Header | Functions to annotate |
 |---|---|
-| `MLDimReductionOperation.hpp` | `fitTransform()`, `transform()` |
+| `MLDimReductionOperation.hpp` | `fitTransform()`, `transform()` (expand existing) |
 | `MLSupervisedDimReductionOperation.hpp` | `fitTransform()`, `transform()` |
 | `MLModelOperation.hpp` | `train()`, `predict()`, `fit()`, `assignClusters()` |
 

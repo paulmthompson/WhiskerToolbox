@@ -138,7 +138,6 @@ TEST_CASE("PCA all components reconstructs original data", "[MLCore][PCA][equiva
     PCAOperation pca;
     PCAParameters params;
     params.n_components = n_features;// ALL components
-    params.scale = false;
 
     arma::mat pca_result;
     REQUIRE(pca.fitTransform(features, &params, pca_result));
@@ -178,138 +177,6 @@ TEST_CASE("PCA all components reconstructs original data", "[MLCore][PCA][equiva
 }
 
 // ============================================================================
-// PCA scale=true changes distances (not equivalent to original)
-// ============================================================================
-
-TEST_CASE("PCA scale=true changes pairwise distances", "[MLCore][PCA][equivalence]") {
-    constexpr std::size_t n_features = 10;
-    constexpr std::size_t n_obs = 100;
-    arma::arma_rng::set_seed(42);
-
-    arma::mat features(n_features, n_obs, arma::fill::randn);
-    // Drastically different scales to make the effect obvious
-    for (std::size_t f = 0; f < n_features; ++f) {
-        features.row(f) *= std::pow(10.0, static_cast<double>(f) / n_features * 3.0);
-    }
-
-    // PCA with scale=false (rotation only)
-    PCAOperation pca_noscale;
-    PCAParameters params_noscale;
-    params_noscale.n_components = n_features;
-    params_noscale.scale = false;
-
-    arma::mat result_noscale;
-    REQUIRE(pca_noscale.fitTransform(features, &params_noscale, result_noscale));
-
-    // PCA with scale=true (standardize + rotation)
-    PCAOperation pca_scaled;
-    PCAParameters params_scaled;
-    params_scaled.n_components = n_features;
-    params_scaled.scale = true;
-
-    arma::mat result_scaled;
-    REQUIRE(pca_scaled.fitTransform(features, &params_scaled, result_scaled));
-
-    // Distances should be DIFFERENT between scaled and unscaled
-    arma::mat dist_noscale = pairwiseDistances(result_noscale);
-    arma::mat dist_scaled = pairwiseDistances(result_scaled);
-
-    // They should NOT be approximately equal (scaling changes geometry)
-    double max_diff = arma::abs(dist_noscale - dist_scaled).max();
-    REQUIRE(max_diff > 1.0);// substantially different
-}
-
-// ============================================================================
-// Z-score before PCA vs PCA scale=true produce equivalent results
-// ============================================================================
-
-TEST_CASE("Z-score then PCA(scale=false) equivalent to PCA(scale=true)", "[MLCore][PCA][equivalence]") {
-    constexpr std::size_t n_features = 8;
-    constexpr std::size_t n_obs = 200;
-    arma::arma_rng::set_seed(42);
-
-    arma::mat features(n_features, n_obs, arma::fill::randn);
-    for (std::size_t f = 0; f < n_features; ++f) {
-        features.row(f) *= (1.0 + 5.0 * static_cast<double>(f));
-        features.row(f) += static_cast<double>(f) * 10.0;// add offset
-    }
-
-    // Path A: Z-score normalize, then PCA with scale=false
-    arma::mat features_zscored = features;
-    zscoreNormalize(features_zscored, 0.0);// epsilon=0 for exact comparison
-
-    PCAOperation pca_a;
-    PCAParameters params_a;
-    params_a.n_components = n_features;
-    params_a.scale = false;
-
-    arma::mat result_a;
-    REQUIRE(pca_a.fitTransform(features_zscored, &params_a, result_a));
-
-    // Path B: PCA with scale=true (no prior z-score)
-    PCAOperation pca_b;
-    PCAParameters params_b;
-    params_b.n_components = n_features;
-    params_b.scale = true;
-
-    arma::mat result_b;
-    REQUIRE(pca_b.fitTransform(features, &params_b, result_b));
-
-    // Both paths should produce the same pairwise distances
-    // (they operate on the same standardized data, just computed differently)
-    arma::mat dist_a = pairwiseDistances(result_a);
-    arma::mat dist_b = pairwiseDistances(result_b);
-    REQUIRE(arma::approx_equal(dist_a, dist_b, "absdiff", 1e-6));
-
-    // Explained variance ratios should also match
-    auto ratios_a = pca_a.explainedVarianceRatio();
-    auto ratios_b = pca_b.explainedVarianceRatio();
-    REQUIRE(ratios_a.size() == ratios_b.size());
-    for (std::size_t i = 0; i < ratios_a.size(); ++i) {
-        REQUIRE_THAT(ratios_a[i], WithinAbs(ratios_b[i], 1e-6));
-    }
-}
-
-// ============================================================================
-// Double standardization (z-score + PCA scale) is redundant
-// ============================================================================
-
-TEST_CASE("Z-score then PCA(scale=true) is redundant but not harmful", "[MLCore][PCA][equivalence]") {
-    constexpr std::size_t n_features = 6;
-    constexpr std::size_t n_obs = 150;
-    arma::arma_rng::set_seed(42);
-
-    arma::mat features(n_features, n_obs, arma::fill::randn);
-    for (std::size_t f = 0; f < n_features; ++f) {
-        features.row(f) *= (1.0 + 3.0 * static_cast<double>(f));
-        features.row(f) += static_cast<double>(f) * 5.0;
-    }
-
-    // Path A: PCA(scale=true) only
-    PCAOperation pca_a;
-    PCAParameters params;
-    params.n_components = n_features;
-    params.scale = true;
-
-    arma::mat result_a;
-    REQUIRE(pca_a.fitTransform(features, &params, result_a));
-
-    // Path B: z-score THEN PCA(scale=true) — double standardization
-    arma::mat features_zscored = features;
-    zscoreNormalize(features_zscored, 0.0);
-
-    PCAOperation pca_b;
-    arma::mat result_b;
-    REQUIRE(pca_b.fitTransform(features_zscored, &params, result_b));
-
-    // Both should produce the same pairwise distances and variance ratios
-    // because z-scoring already-standardized data is a no-op
-    arma::mat dist_a = pairwiseDistances(result_a);
-    arma::mat dist_b = pairwiseDistances(result_b);
-    REQUIRE(arma::approx_equal(dist_a, dist_b, "absdiff", 1e-6));
-}
-
-// ============================================================================
 // Z-scoring PCA output destroys variance ranking
 // ============================================================================
 
@@ -326,7 +193,6 @@ TEST_CASE("Z-scoring PCA output equalizes PC variances", "[MLCore][PCA][equivale
     PCAOperation pca;
     PCAParameters params;
     params.n_components = n_features;
-    params.scale = false;
 
     arma::mat pca_result;
     REQUIRE(pca.fitTransform(features, &params, pca_result));
@@ -372,7 +238,6 @@ TEST_CASE("Float round-trip preserves PCA output within tolerance", "[MLCore][PC
     PCAOperation pca;
     PCAParameters params;
     params.n_components = n_features;
-    params.scale = false;
 
     arma::mat pca_result;
     REQUIRE(pca.fitTransform(features, &params, pca_result));
@@ -429,11 +294,10 @@ TEST_CASE("HMM on PCA-all-components has equivalent log-likelihood (full cov)",
         REQUIRE(hmm_orig.trainSequences(seqs, label_seqs, &hmm_params));
     }
 
-    // Apply PCA with ALL components and scale=false (pure rotation)
+    // Apply PCA with ALL components (pure rotation)
     PCAOperation pca;
     PCAParameters pca_params;
     pca_params.n_components = n_features;
-    pca_params.scale = false;
 
     arma::mat pca_features;
     REQUIRE(pca.fitTransform(data.features, &pca_params, pca_features));
@@ -532,7 +396,6 @@ TEST_CASE("HMM diagonal covariance is NOT rotation-invariant",
     PCAOperation pca;
     PCAParameters pca_params;
     pca_params.n_components = n_features;
-    pca_params.scale = false;
 
     arma::mat pca_features;
     REQUIRE(pca.fitTransform(data.features, &pca_params, pca_features));
@@ -598,7 +461,6 @@ TEST_CASE("PCA all-components preserves distances at realistic dimensionality",
     PCAOperation pca;
     PCAParameters params;
     params.n_components = n_features;
-    params.scale = false;
 
     arma::mat pca_result;
     REQUIRE(pca.fitTransform(features, &params, pca_result));
@@ -629,50 +491,6 @@ TEST_CASE("PCA all-components preserves distances at realistic dimensionality",
 }
 
 // ============================================================================
-// PCA scale=true with all components: z-score normalization difference
-// ============================================================================
-
-TEST_CASE("PCA scale changes eigenvalue spectrum even with all components",
-          "[MLCore][PCA][equivalence]") {
-    constexpr std::size_t n_features = 8;
-    constexpr std::size_t n_obs = 200;
-    arma::arma_rng::set_seed(42);
-
-    arma::mat features(n_features, n_obs, arma::fill::randn);
-    // Make first feature have much more variance than the rest (exponential decay)
-    for (std::size_t f = 0; f < n_features; ++f) {
-        features.row(f) *= std::pow(10.0, 2.0 - static_cast<double>(f) * 0.5);
-    }
-
-    // Unscaled PCA: eigenspectrum reflects raw variance differences
-    PCAOperation pca_unscaled;
-    PCAParameters params_unscaled;
-    params_unscaled.n_components = n_features;
-    params_unscaled.scale = false;
-
-    arma::mat result_unscaled;
-    REQUIRE(pca_unscaled.fitTransform(features, &params_unscaled, result_unscaled));
-    auto ratios_unscaled = pca_unscaled.explainedVarianceRatio();
-
-    // Scaled PCA: eigenspectrum reflects correlation structure
-    PCAOperation pca_scaled;
-    PCAParameters params_scaled;
-    params_scaled.n_components = n_features;
-    params_scaled.scale = true;
-
-    arma::mat result_scaled;
-    REQUIRE(pca_scaled.fitTransform(features, &params_scaled, result_scaled));
-    auto ratios_scaled = pca_scaled.explainedVarianceRatio();
-
-    // Unscaled: PC1 dominates (high-variance feature drives it)
-    REQUIRE(ratios_unscaled[0] > 0.8);
-
-    // Scaled: more evenly distributed (all features equalized first)
-    // PC1 should explain less variance than in the unscaled case
-    REQUIRE(ratios_scaled[0] < ratios_unscaled[0]);
-}
-
-// ============================================================================
 // REAL-WORLD SCENARIO: Reproduce user's problem
 //
 // User workflow:
@@ -685,14 +503,12 @@ TEST_CASE("PCA scale changes eigenvalue spectrum even with all components",
 //   TensorData(float) → double → HMM
 //
 // Pipeline data path (via PCA):
-//   TensorData(float) → double → [z-score?] → PCA(scale?) → double
+//   TensorData(float) → double → [z-score?] → PCA → double
 //   → TensorData(float) → double → HMM
 //
 // Possible degradation sources:
-//   A. PCA scale=true (default!) changes geometry even with all components
-//   B. Z-score before PCA compounds the scaling
-//   C. Float round-trip: double→float→double adds ~1e-7 relative error
-//   D. With high-dim noise PCs, float precision loss in trailing PCs
+//   A. Float round-trip: double→float→double adds ~1e-7 relative error
+//   B. With high-dim noise PCs, float precision loss in trailing PCs
 //      → HMM covariance estimation becomes ill-conditioned
 // ============================================================================
 
@@ -746,7 +562,7 @@ arma::mat simulateFloatRoundTrip(arma::mat const & data) {
 
 }// namespace
 
-TEST_CASE("Reproducing user scenario: PCA(all components) + HMM degrades with scale=true",
+TEST_CASE("Reproducing user scenario: PCA(all components) + float round-trip + HMM",
           "[MLCore][PCA][HMM][equivalence][scenario]") {
 
     // Simulate ~192-dimension feature vector (use 50 for test speed, same effect)
@@ -760,78 +576,48 @@ TEST_CASE("Reproducing user scenario: PCA(all components) + HMM degrades with sc
     REQUIRE(acc_direct > 0.90);
 
     // ========================================================================
-    // Step 2: PCA(all, scale=true) → float round-trip → HMM
-    // This is what happens when the user uses DimReductionPanel with defaults:
-    //   - "Scale features" checkbox is ON (default)
-    //   - n_components = 50 (all features)
-    //   - Result stored as TensorData (float32)
+    // Step 2: PCA(all) → float round-trip → HMM
+    // PCA is now center-only (no internal scaling). Scaling is the
+    // caller's responsibility via FeatureConverter z-score.
     // ========================================================================
-    PCAOperation pca_scaled;
-    PCAParameters pca_params_scaled;
-    pca_params_scaled.n_components = n_features;
-    pca_params_scaled.scale = true;// DEFAULT — this is likely the user's setting
+    PCAOperation pca;
+    PCAParameters pca_params;
+    pca_params.n_components = n_features;
 
-    arma::mat pca_scaled_result;
-    REQUIRE(pca_scaled.fitTransform(data.features, &pca_params_scaled, pca_scaled_result));
+    arma::mat pca_result;
+    REQUIRE(pca.fitTransform(data.features, &pca_params, pca_result));
 
     // Simulate TensorData storage round-trip
-    arma::mat pca_scaled_roundtripped = simulateFloatRoundTrip(pca_scaled_result);
+    arma::mat pca_roundtripped = simulateFloatRoundTrip(pca_result);
 
-    double const acc_scaled_pca = computeHMMAccuracy(pca_scaled_roundtripped, data.labels, false);
-
-    // ========================================================================
-    // Step 3: PCA(all, scale=false) → float round-trip → HMM
-    // Pure rotation — should be equivalent to direct
-    // ========================================================================
-    PCAOperation pca_unscaled;
-    PCAParameters pca_params_unscaled;
-    pca_params_unscaled.n_components = n_features;
-    pca_params_unscaled.scale = false;
-
-    arma::mat pca_unscaled_result;
-    REQUIRE(pca_unscaled.fitTransform(data.features, &pca_params_unscaled, pca_unscaled_result));
-
-    arma::mat pca_unscaled_roundtripped = simulateFloatRoundTrip(pca_unscaled_result);
-
-    double const acc_unscaled_pca = computeHMMAccuracy(pca_unscaled_roundtripped, data.labels, false);
+    double const acc_pca_float_rt = computeHMMAccuracy(pca_roundtripped, data.labels, false);
 
     // ========================================================================
-    // Step 4: PCA(all, scale=false) WITHOUT float round-trip → HMM
+    // Step 3: PCA(all) WITHOUT float round-trip → HMM
     // Pure rotation in double precision — theoretically identical to direct
     // ========================================================================
-    double const acc_unscaled_pca_double = computeHMMAccuracy(pca_unscaled_result, data.labels, false);
+    double const acc_pca_double = computeHMMAccuracy(pca_result, data.labels, false);
 
     // ========================================================================
-    // Assertions: document the degradation sources
+    // Assertions
     // ========================================================================
 
     // Direct HMM should work well
     REQUIRE(acc_direct > 0.90);
 
-    // PCA(scale=false) in double precision should match direct
+    // PCA in double precision should match direct
     // (pure orthogonal rotation preserves Gaussian log-likelihoods)
-    REQUIRE(acc_unscaled_pca_double > 0.90);
+    REQUIRE(acc_pca_double > 0.90);
 
-    // PCA(scale=false) with float round-trip should still be close
-    REQUIRE(acc_unscaled_pca > 0.85);
+    // PCA with float round-trip should still be close
+    REQUIRE(acc_pca_float_rt > 0.85);
 
-    // PCA(scale=true) may degrade because scaling changes the data geometry
-    // even though all components are kept. The HMM is fitting a different
-    // covariance structure.
-    // We document this rather than asserting a specific threshold, since
-    // the effect magnitude depends on the data.
-    INFO("Direct HMM accuracy:                   " << acc_direct);
-    INFO("PCA(scale=false, double) HMM accuracy:  " << acc_unscaled_pca_double);
-    INFO("PCA(scale=false, float RT) HMM accuracy: " << acc_unscaled_pca);
-    INFO("PCA(scale=true, float RT) HMM accuracy:  " << acc_scaled_pca);
-
-    // The key insight: all paths should achieve reasonable accuracy
-    // if the data is well-separated. The degradation from scale=true
-    // is that it changes which features dominate the Gaussian fit.
-    REQUIRE(acc_scaled_pca > 0.70);
+    INFO("Direct HMM accuracy:               " << acc_direct);
+    INFO("PCA(double) HMM accuracy:           " << acc_pca_double);
+    INFO("PCA(float RT) HMM accuracy:         " << acc_pca_float_rt);
 }
 
-TEST_CASE("Reproducing user scenario: z-score + PCA(scale=true) double-standardization",
+TEST_CASE("Reproducing user scenario: z-score before PCA vs raw PCA",
           "[MLCore][PCA][HMM][equivalence][scenario]") {
 
     constexpr std::size_t n_features = 50;
@@ -841,72 +627,39 @@ TEST_CASE("Reproducing user scenario: z-score + PCA(scale=true) double-standardi
     double const acc_direct = computeHMMAccuracy(data.features, data.labels, false);
     REQUIRE(acc_direct > 0.90);
 
-    // Path A: z-score → PCA(scale=false) → float RT → HMM
-    // User enables "Z-score normalize" checkbox in DimReductionPanel,
-    // and disables "Scale features"
-    arma::mat zscored_features = data.features;
-    zscoreNormalize(zscored_features);
-
+    // Path A: PCA on raw features → float RT → HMM
     PCAOperation pca_a;
     PCAParameters params_a;
     params_a.n_components = n_features;
-    params_a.scale = false;
 
     arma::mat result_a;
-    REQUIRE(pca_a.fitTransform(zscored_features, &params_a, result_a));
+    REQUIRE(pca_a.fitTransform(data.features, &params_a, result_a));
     arma::mat result_a_rt = simulateFloatRoundTrip(result_a);
-    double const acc_zscore_pca_noscale = computeHMMAccuracy(result_a_rt, data.labels, false);
+    double const acc_pca_raw = computeHMMAccuracy(result_a_rt, data.labels, false);
 
-    // Path B: PCA(scale=true) → float RT → HMM
-    // User enables "Scale features" checkbox (the default), no z-score
+    // Path B: z-score → PCA → float RT → HMM
+    // User enables "Z-score normalize" checkbox in DimReductionPanel
+    arma::mat zscored_features = data.features;
+    zscoreNormalize(zscored_features);
+
     PCAOperation pca_b;
     PCAParameters params_b;
     params_b.n_components = n_features;
-    params_b.scale = true;
 
     arma::mat result_b;
-    REQUIRE(pca_b.fitTransform(data.features, &params_b, result_b));
+    REQUIRE(pca_b.fitTransform(zscored_features, &params_b, result_b));
     arma::mat result_b_rt = simulateFloatRoundTrip(result_b);
-    double const acc_pca_scale = computeHMMAccuracy(result_b_rt, data.labels, false);
-
-    // Path C: z-score → PCA(scale=true) → float RT → HMM
-    // User enables BOTH checkboxes — double standardization
-    PCAOperation pca_c;
-    PCAParameters params_c;
-    params_c.n_components = n_features;
-    params_c.scale = true;
-
-    arma::mat result_c;
-    REQUIRE(pca_c.fitTransform(zscored_features, &params_c, result_c));
-    arma::mat result_c_rt = simulateFloatRoundTrip(result_c);
-    double const acc_zscore_pca_scale = computeHMMAccuracy(result_c_rt, data.labels, false);
-
-    // Path D: PCA(scale=false) → float RT → HMM  (the correct path)
-    PCAOperation pca_d;
-    PCAParameters params_d;
-    params_d.n_components = n_features;
-    params_d.scale = false;
-
-    arma::mat result_d;
-    REQUIRE(pca_d.fitTransform(data.features, &params_d, result_d));
-    arma::mat result_d_rt = simulateFloatRoundTrip(result_d);
-    double const acc_pca_noscale = computeHMMAccuracy(result_d_rt, data.labels, false);
+    double const acc_zscore_pca = computeHMMAccuracy(result_b_rt, data.labels, false);
 
     INFO("Direct HMM:                    " << acc_direct);
-    INFO("PCA(scale=false) + float RT:   " << acc_pca_noscale);
-    INFO("z-score + PCA(scale=false):    " << acc_zscore_pca_noscale);
-    INFO("PCA(scale=true):               " << acc_pca_scale);
-    INFO("z-score + PCA(scale=true):     " << acc_zscore_pca_scale);
+    INFO("PCA(raw) + float RT:           " << acc_pca_raw);
+    INFO("z-score + PCA + float RT:      " << acc_zscore_pca);
 
-    // z-score + PCA(scale=false) ≈ PCA(scale=true) — they're equivalent transforms
-    // (both standardize before rotation, just computed differently)
-    CHECK(std::abs(acc_zscore_pca_noscale - acc_pca_scale) < 0.15);
+    // PCA on raw features (center-only) should be closest to direct HMM
+    CHECK(std::abs(acc_pca_raw - acc_direct) < 0.15);
 
-    // z-score + PCA(scale=true) ≈ PCA(scale=true) — double standardization is a no-op
-    CHECK(std::abs(acc_zscore_pca_scale - acc_pca_scale) < 0.15);
-
-    // PCA(scale=false) should be closest to direct HMM
-    CHECK(std::abs(acc_pca_noscale - acc_direct) < 0.15);
+    // z-score + PCA changes geometry but should still achieve reasonable accuracy
+    CHECK(acc_zscore_pca > 0.70);
 }
 
 TEST_CASE("High-dimensional float round-trip + PCA trailing PC precision loss",
@@ -930,7 +683,6 @@ TEST_CASE("High-dimensional float round-trip + PCA trailing PC precision loss",
     PCAOperation pca;
     PCAParameters params;
     params.n_components = n_features;
-    params.scale = false;
 
     arma::mat pca_result;
     REQUIRE(pca.fitTransform(features, &params, pca_result));
@@ -1004,7 +756,6 @@ TEST_CASE("PCA TensorData round-trip preserves observation norms",
     PCAOperation pca;
     PCAParameters params;
     params.n_components = n_components;
-    params.scale = false;
 
     arma::mat reduced;
     REQUIRE(pca.fitTransform(features, &params, reduced));

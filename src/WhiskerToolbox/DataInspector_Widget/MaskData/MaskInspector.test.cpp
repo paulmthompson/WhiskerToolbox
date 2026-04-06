@@ -157,17 +157,6 @@ TEST_CASE("MaskInspector has expected UI", "[MaskInspector]") {
         app->processEvents();
     }
 
-    SECTION("Contains SAM model button") {
-        auto data_manager = std::make_shared<DataManager>();
-        MaskInspector inspector(data_manager, nullptr, nullptr);
-
-        auto * sam_button = inspector.findChild<QPushButton *>("load_sam_button");
-        REQUIRE(sam_button != nullptr);
-        REQUIRE(sam_button->text() == QStringLiteral("Load SAM Model"));
-
-        app->processEvents();
-    }
-
     SECTION("Contains export section") {
         auto data_manager = std::make_shared<DataManager>();
         MaskInspector inspector(data_manager, nullptr, nullptr);

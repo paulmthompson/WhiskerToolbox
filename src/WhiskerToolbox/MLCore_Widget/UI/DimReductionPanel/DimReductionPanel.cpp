@@ -149,7 +149,6 @@ std::unique_ptr<MLCore::MLModelParametersBase> DimReductionPanel::currentParamet
     if (name == "PCA") {
         auto params = std::make_unique<MLCore::PCAParameters>();
         params->n_components = static_cast<std::size_t>(nComponents());
-        params->scale = scaleFeatures();
         return params;
     }
 

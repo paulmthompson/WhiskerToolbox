@@ -26,11 +26,8 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 struct TensorPCAParams {
     /// Number of principal components to retain
     std::optional<std::size_t> n_components;
-    /// Standardize features (zero mean, unit variance) before PCA
-    std::optional<bool> scale;
 
     [[nodiscard]] std::size_t getNComponents() const { return n_components.value_or(2); }
-    [[nodiscard]] bool getScale() const { return scale.value_or(true); }
 };
 
 /**

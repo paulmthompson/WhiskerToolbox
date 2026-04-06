@@ -19,11 +19,9 @@ struct PCAOperation::Impl {
     arma::mat eigenvectors;     // (features × n_components) projection matrix
     arma::vec eigenvalues;      // Eigenvalues (sorted descending)
     arma::vec mean;             // Feature means (for centering)
-    arma::vec stddev;           // Feature std devs (for scaling, empty if scale=false)
     double total_variance = 0.0;// Sum of all eigenvalues (for variance ratio)
     std::size_t n_components = 0;
     std::size_t n_features = 0;
-    bool scaled = false;
     bool trained = false;
 };
 
@@ -68,7 +66,6 @@ bool PCAOperation::fitTransform(
     }
 
     std::size_t const n_components = pca_params->n_components;
-    bool const scale = pca_params->scale;
 
     if (n_components == 0) {
         std::cerr << "PCAOperation::fitTransform: n_components must be > 0.\n";
@@ -90,20 +87,9 @@ bool PCAOperation::fitTransform(
         _impl->mean = arma::mean(features, 1);// mean per feature (row)
 
         // 2. Center the data
-        arma::mat centered = features.each_col() - _impl->mean;
+        arma::mat const centered = features.each_col() - _impl->mean;
 
-        // 3. Optionally scale to unit variance
-        _impl->scaled = scale;
-        if (scale) {
-            _impl->stddev = arma::stddev(features, 0, 1);// per-feature std dev
-            // Replace zero std devs with 1 to avoid division by zero
-            _impl->stddev.replace(0.0, 1.0);
-            centered.each_col() /= _impl->stddev;
-        } else {
-            _impl->stddev.reset();
-        }
-
-        // 4. Compute covariance matrix and eigendecomposition
+        // 3. Compute covariance matrix and eigendecomposition
         arma::mat const cov = centered * centered.t() / static_cast<double>(features.n_cols - 1);
 
         arma::vec eigenvalues;
@@ -128,7 +114,7 @@ bool PCAOperation::fitTransform(
         _impl->n_features = features.n_rows;
         _impl->trained = true;
 
-        // 5. Project: result = eigenvectors^T * centered
+        // 4. Project: result = eigenvectors^T * centered
         result = _impl->eigenvectors.t() * centered;
 
         return true;
@@ -160,11 +146,7 @@ bool PCAOperation::transform(
 
     try {
         // Center
-        arma::mat centered = features.each_col() - _impl->mean;
-        // Scale (if fitted with scaling)
-        if (_impl->scaled) {
-            centered.each_col() /= _impl->stddev;
-        }
+        arma::mat const centered = features.each_col() - _impl->mean;
         // Project
         result = _impl->eigenvectors.t() * centered;
         return true;
@@ -201,7 +183,6 @@ bool PCAOperation::save(std::ostream & out) const {
 
         ar(cereal::make_nvp("n_components", _impl->n_components));
         ar(cereal::make_nvp("n_features", _impl->n_features));
-        ar(cereal::make_nvp("scaled", _impl->scaled));
         ar(cereal::make_nvp("total_variance", _impl->total_variance));
 
         // Eigenvectors
@@ -227,15 +208,6 @@ bool PCAOperation::save(std::ostream & out) const {
                                       _impl->mean.memptr() + mean_n);
         ar(cereal::make_nvp("mean", mean_data));
 
-        // Stddev (if scaled)
-        if (_impl->scaled) {
-            auto const std_n = _impl->stddev.n_elem;
-            ar(cereal::make_nvp("stddev_n", std_n));
-            std::vector<double> std_data(_impl->stddev.memptr(),
-                                         _impl->stddev.memptr() + std_n);
-            ar(cereal::make_nvp("stddev", std_data));
-        }
-
         return out.good();
 
     } catch (std::exception const & e) {
@@ -250,12 +222,10 @@ bool PCAOperation::load(std::istream & in) {
 
         std::size_t n_components = 0;
         std::size_t n_features = 0;
-        bool scaled = false;
         double total_variance = 0.0;
 
         ar(cereal::make_nvp("n_components", n_components));
         ar(cereal::make_nvp("n_features", n_features));
-        ar(cereal::make_nvp("scaled", scaled));
         ar(cereal::make_nvp("total_variance", total_variance));
 
         // Eigenvectors
@@ -290,28 +260,12 @@ bool PCAOperation::load(std::istream & in) {
             return false;
         }
 
-        // Stddev
-        arma::vec stddev;
-        if (scaled) {
-            std::size_t std_n = 0;
-            ar(cereal::make_nvp("stddev_n", std_n));
-            std::vector<double> std_data;
-            ar(cereal::make_nvp("stddev", std_data));
-            if (std_data.size() != std_n) {
-                std::cerr << "PCAOperation::load: stddev data size mismatch.\n";
-                return false;
-            }
-            stddev = arma::vec(std_data.data(), std_n);
-        }
-
         // Commit
         _impl->eigenvectors = arma::mat(ev_data.data(), ev_rows, ev_cols);
         _impl->eigenvalues = arma::vec(val_data.data(), val_n);
         _impl->mean = arma::vec(mean_data.data(), mean_n);
-        _impl->stddev = stddev;
         _impl->n_components = n_components;
         _impl->n_features = n_features;
-        _impl->scaled = scaled;
         _impl->total_variance = total_variance;
         _impl->trained = true;
         return true;

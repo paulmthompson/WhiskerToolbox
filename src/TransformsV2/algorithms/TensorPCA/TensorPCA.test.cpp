@@ -135,7 +135,6 @@ TEST_CASE("TensorPCA reduces ordinal tensor", "[TransformsV2][TensorPCA]") {
 
     TensorPCAParams params;
     params.n_components = 2;
-    params.scale = false;
 
     auto result = registry.executeContainerTransform<TensorData, TensorData, TensorPCAParams>(
             "TensorPCA", input, params, ctx);

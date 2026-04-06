@@ -60,7 +60,6 @@ auto tensorPCA(
     MLCore::PCAOperation pca;
     MLCore::PCAParameters mlparams;
     mlparams.n_components = n_components;
-    mlparams.scale = params.getScale();
 
     arma::mat result;
     if (!pca.fitTransform(features, &mlparams, result)) {
