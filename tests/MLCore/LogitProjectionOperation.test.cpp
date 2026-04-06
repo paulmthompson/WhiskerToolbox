@@ -9,7 +9,6 @@
  * - Column names ("Logit:0", "Logit:1", ...)
  * - transform() on new data (consistent with fitTransform)
  * - Error handling (untrained, empty, dimension mismatch, single class)
- * - scale_features=true variant
  * - Save / load round-trip (logits identical after reload)
  * - Registry integration (create by name "Logit Projection")
  */
@@ -74,7 +73,7 @@ SyntheticData makeCircularData(std::size_t num_classes = 3,
 // ============================================================================
 
 TEST_CASE("LogitProjectionOperation - metadata", "[MLCore][LogitProjection]") {
-    LogitProjectionOperation lp;
+    LogitProjectionOperation const lp;
 
     SECTION("name is 'Logit Projection'") {
         CHECK(lp.getName() == "Logit Projection");
@@ -95,7 +94,6 @@ TEST_CASE("LogitProjectionOperation - metadata", "[MLCore][LogitProjection]") {
         CHECK_THAT(lp_params->lambda,
                    Catch::Matchers::WithinAbs(0.0001, 1e-12));
         CHECK(lp_params->max_iterations == 10000);
-        CHECK(lp_params->scale_features == false);
     }
 
     SECTION("untrained state") {
@@ -236,35 +234,35 @@ TEST_CASE("LogitProjectionOperation - error handling", "[MLCore][LogitProjection
     LogitProjectionParameters params;
 
     SECTION("transform fails when untrained") {
-        arma::mat features(2, 10, arma::fill::randn);
+        arma::mat const features(2, 10, arma::fill::randn);
         arma::mat result;
         CHECK(lp.transform(features, result) == false);
     }
 
     SECTION("fitTransform fails with empty features") {
-        arma::mat empty_features;
-        arma::Row<std::size_t> labels(10, arma::fill::zeros);
+        arma::mat const empty_features;
+        arma::Row<std::size_t> const labels(10, arma::fill::zeros);
         arma::mat result;
         CHECK(lp.fitTransform(empty_features, labels, &params, result) == false);
     }
 
     SECTION("fitTransform fails with empty labels") {
-        arma::mat features(2, 10, arma::fill::randn);
-        arma::Row<std::size_t> empty_labels;
+        arma::mat const features(2, 10, arma::fill::randn);
+        arma::Row<std::size_t> const empty_labels;
         arma::mat result;
         CHECK(lp.fitTransform(features, empty_labels, &params, result) == false);
     }
 
     SECTION("fitTransform fails with size mismatch") {
-        arma::mat features(2, 10, arma::fill::randn);
-        arma::Row<std::size_t> labels(5, arma::fill::zeros);
+        arma::mat const features(2, 10, arma::fill::randn);
+        arma::Row<std::size_t> const labels(5, arma::fill::zeros);
         arma::mat result;
         CHECK(lp.fitTransform(features, labels, &params, result) == false);
     }
 
     SECTION("fitTransform fails with single class") {
-        arma::mat features(2, 10, arma::fill::randn);
-        arma::Row<std::size_t> labels(10, arma::fill::zeros);// all class 0
+        arma::mat const features(2, 10, arma::fill::randn);
+        arma::Row<std::size_t> const labels(10, arma::fill::zeros);// all class 0
         arma::mat result;
         CHECK(lp.fitTransform(features, labels, &params, result) == false);
     }
@@ -274,59 +272,9 @@ TEST_CASE("LogitProjectionOperation - error handling", "[MLCore][LogitProjection
         arma::mat logits;
         REQUIRE(lp.fitTransform(data.features, data.labels, &params, logits));
 
-        arma::mat wrong_dim_features(5, 10, arma::fill::randn);// wrong number of rows
+        arma::mat const wrong_dim_features(5, 10, arma::fill::randn);// wrong number of rows
         arma::mat result;
         CHECK(lp.transform(wrong_dim_features, result) == false);
-    }
-}
-
-// ============================================================================
-// scale_features option
-// ============================================================================
-
-TEST_CASE("LogitProjectionOperation - scale_features", "[MLCore][LogitProjection]") {
-    // Create data with very different feature scales
-    arma::arma_rng::set_seed(42);
-    std::size_t const N = 100;
-    arma::mat features(2, N);
-
-    // Feature 0: centered at ±100, feature 1: centered at ±0.01
-    for (std::size_t i = 0; i < N / 2; ++i) {
-        features(0, i) = 100.0 + arma::randn() * 1.0;
-        features(1, i) = 0.01 + arma::randn() * 0.001;
-    }
-    for (std::size_t i = N / 2; i < N; ++i) {
-        features(0, i) = -100.0 + arma::randn() * 1.0;
-        features(1, i) = -0.01 + arma::randn() * 0.001;
-    }
-
-    arma::Row<std::size_t> labels(N);
-    for (std::size_t i = 0; i < N / 2; ++i) { labels(i) = 0; }
-    for (std::size_t i = N / 2; i < N; ++i) { labels(i) = 1; }
-
-    LogitProjectionOperation lp;
-    LogitProjectionParameters params;
-    params.scale_features = true;
-
-    arma::mat logits;
-    bool const ok = lp.fitTransform(features, labels, &params, logits);
-
-    SECTION("fitTransform succeeds with scaling") {
-        CHECK(ok == true);
-    }
-
-    SECTION("output shape correct with scaling") {
-        REQUIRE(ok);
-        CHECK(logits.n_rows == 2);
-        CHECK(logits.n_cols == N);
-    }
-
-    SECTION("transform is consistent after scale_features") {
-        REQUIRE(ok);
-        arma::mat logits2;
-        REQUIRE(lp.transform(features, logits2));
-        double const max_diff = arma::max(arma::max(arma::abs(logits2 - logits)));
-        CHECK(max_diff < 1e-10);
     }
 }
 
@@ -365,7 +313,7 @@ TEST_CASE("LogitProjectionOperation - save/load round-trip", "[MLCore][LogitProj
     }
 
     SECTION("loaded model transforms identically to original") {
-        arma::mat new_features = data.features;// reuse training data for comparison
+        arma::mat const new_features = data.features;// reuse training data for comparison
 
         arma::mat orig_result;
         REQUIRE(original.transform(new_features, orig_result));
@@ -379,7 +327,7 @@ TEST_CASE("LogitProjectionOperation - save/load round-trip", "[MLCore][LogitProj
 }
 
 TEST_CASE("LogitProjectionOperation - save fails when untrained", "[MLCore][LogitProjection]") {
-    LogitProjectionOperation lp;
+    LogitProjectionOperation const lp;
     std::ostringstream oss;
     CHECK(lp.save(oss) == false);
 }
@@ -403,7 +351,7 @@ TEST_CASE("LogitProjectionOperation - registry integration", "[MLCore][LogitProj
 
         auto data = makeCircularData(2, 40, 77);
         LogitProjectionParameters params;
-        arma::mat logits;
+        arma::mat const logits;
 
         bool const ok = model->train(data.features, data.labels, &params);
         CHECK(ok == true);

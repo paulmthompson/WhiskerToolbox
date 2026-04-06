@@ -177,7 +177,6 @@ struct RobustPCAParameters : public MLModelParametersBase {
 struct LogitProjectionParameters : public MLModelParametersBase {
     double lambda = 0.0001;            ///< L2 regularization strength (same as SoftmaxRegressionParameters)
     std::size_t max_iterations = 10000;///< Maximum L-BFGS optimizer iterations
-    bool scale_features = false;       ///< Standardize features (zero mean, unit variance) before fitting
 };
 
 /**

@@ -57,6 +57,10 @@ namespace MLCore {
  * auto names = lp.outputColumnNames();
  * ```
  *
+ * Feature scaling (z-score normalization) is intentionally NOT performed
+ * here — it is the caller's responsibility to pre-scale via FeatureConverter
+ * if desired.
+ *
  * @note Output convention: (C × N), each column is one observation. This
  * matches the mlpack convention used throughout MLCore.
  */
@@ -94,11 +98,13 @@ public:
      * @param result    (C × N) output logit matrix
      * @return true on success
      *
-     * @pre features must not be empty
-     * @pre labels.n_elem == features.n_cols
-     * @pre At least 2 distinct classes in labels
+     * @pre features must not be empty (enforcement: runtime_check)
+     * @pre labels.n_elem == features.n_cols (enforcement: runtime_check)
+     * @pre labels must contain at least 2 distinct classes (enforcement: runtime_check)
+     * @pre params is nullptr or points to a valid MLModelParametersBase (enforcement: runtime_check)
+     * @pre all values in features are finite — no NaN or Inf (enforcement: none) [IMPORTANT]
      * @post isTrained() returns true on success
-     * @post result.n_rows == numClasses(), result.n_cols == features.n_cols
+     * @post result.n_rows == numClasses(), result.n_cols == features.n_cols on success
      */
     bool fitTransform(
             arma::mat const & features,
@@ -115,8 +121,11 @@ public:
      * @param result    (C × N) logit output
      * @return true on success
      *
-     * @pre isTrained() must be true
-     * @pre features.n_rows == numFeatures()
+     * @pre isTrained() must be true (enforcement: runtime_check)
+     * @pre features must not be empty (enforcement: runtime_check)
+     * @pre features.n_rows == numFeatures() (enforcement: runtime_check)
+     * @pre all values in features are finite — no NaN or Inf (enforcement: none) [IMPORTANT]
+     * @post result.n_rows == numClasses(), result.n_cols == features.n_cols on success
      */
     bool transform(
             arma::mat const & features,

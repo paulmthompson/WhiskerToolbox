@@ -29,7 +29,7 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 | t-SNE | Yes (off by default) | No | N/A | No |
 | Supervised PCA | Yes (off by default) | ~~Yes (`scale`)~~ **No (centering only)** ✓ | N/A | **No** ✓ |
 | Supervised Robust PCA | Yes (off by default) | No (centering only) | N/A | No |
-| Logit Projection | Yes (off by default) | Yes (`scale_features`) | OFF | Low |
+| Logit Projection | Yes (off by default) | ~~Yes (`scale_features`)~~ **No** ✓ | N/A | **No** ✓ |
 | K-Means | Yes (off by default) | No | N/A | No |
 | DBSCAN | Yes (off by default) | No | N/A | No |
 | GMM | Yes (off by default) | No | N/A | No |
@@ -45,7 +45,7 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 - `src/MLCore/models/MLModelParameters.hpp` — ~~`PCAParameters::scale`~~, ~~`SupervisedPCAParameters::scale`~~, `LogitProjectionParameters::scale_features`
 - `src/MLCore/models/unsupervised/PCAOperation.cpp` — ~~Internal centering + scaling~~ **Centering only** ✓
 - `src/MLCore/models/supervised/SupervisedPCAOperation.cpp` — ~~Internal centering + scaling from labeled subset~~ **Centering only (labeled-subset mean)** ✓
-- `src/MLCore/models/supervised/LogitProjectionOperation.cpp` — Internal `computeScaling()`/`applyScaling()` + weight rescaling
+- `src/MLCore/models/supervised/LogitProjectionOperation.cpp` — ~~Internal `computeScaling()`/`applyScaling()` + weight rescaling~~ **No internal scaling** ✓
 - `src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.cpp` — Z-score checkbox + per-algorithm scale checkbox
 - `src/WhiskerToolbox/MLCore_Widget/MLCoreWidget.cpp` — Pipeline config assembly (lines 760-761 hardcode classification zscore off)
 
@@ -91,15 +91,21 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 - Removed/updated `params.scale` lines in `SupervisedPCAOperation.test.cpp`.
 - Build clean, all tests pass.
 
-### Step 3: Remove internal scaling from Logit Projection
+### ~~Step 3: Remove internal scaling from Logit Projection~~ ✓ DONE
 
 **Files**: `LogitProjectionOperation.cpp`, `LogitProjectionOperation.hpp`, `MLModelParameters.hpp`
 
-1. Remove `LogitProjectionParameters::scale_features` field.
-2. Remove the `computeScaling()` / `applyScaling()` helper functions.
-3. Remove the weight matrix rescaling block (`_impl->weight_matrix.each_row() /= scaling.std.t()` etc.).
-4. `fitTransform()` trains directly on the input features (no internal standardization).
-5. `transform()` remains unchanged (it already does `W * X + b` with no scaling).
+**Completed.** Changes made:
+
+- Removed `LogitProjectionParameters::scale_features` field from `MLModelParameters.hpp`.
+- Removed the anonymous-namespace `ScalingParams`, `computeScaling()`, and `applyScaling()` helpers from `LogitProjectionOperation.cpp`.
+- Removed `bool const scale = lp_params->scale_features` and the conditional scaling block in `fitTransform()`.
+- Removed the weight matrix / bias rescaling block (`_impl->weight_matrix.each_row() /= scaling.std.t()` etc.) — `fitTransform()` now trains directly on the input features.
+- `transform()` unchanged — already computed `W * X + b` with no scaling logic.
+- `save()`/`load()` unchanged — no scaling fields were ever serialized.
+- Removed `scale_features=true` variant from doc comment and test file; removed `CHECK(lp_params->scale_features == false)` from metadata test.
+- Updated `LogitProjectionOperation.hpp` class doc to state that scaling is the caller's responsibility.
+- Build clean, all tests pass.
 
 ### Step 4: Remove per-algorithm "Scale features" checkbox from UI
 
@@ -149,6 +155,7 @@ MLCore operation interfaces. This step is documentation-only — no asserts or c
 |---|---|---|
 | `PCAOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
 | `SupervisedPCAOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
+| `LogitProjectionOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
 | `MLDimReductionOperation.hpp` | `fitTransform()`, `transform()` | `fitTransform` has partial base-class `@pre`; `transform` has minimal `@pre` — needs expansion |
 | `MLSupervisedDimReductionOperation.hpp` | `fitTransform()`, `transform()` | Not started |
 | `MLModelOperation.hpp` | `train()`, `predict()`, `fit()`, `assignClusters()` | Not started |
@@ -163,6 +170,14 @@ MLCore operation interfaces. This step is documentation-only — no asserts or c
 | `tensorPCA` (TransformsV2) | `TensorPCA.cpp:65` | **No** — raw tensor, no NaN filtering | Bug: add NaN check |
 | `tensorTSNE` (TransformsV2) | `TensorTSNE.cpp:66` | **No** — same pattern | Bug: add NaN check |
 | `tensorRobustPCA` (TransformsV2) | `TensorRobustPCA.cpp:67` | **No** — same pattern | Bug: add NaN check |
+
+**Caller propagation findings from `LogitProjectionOperation` analysis:**
+
+| Caller | File | Precondition Status | Action |
+|---|---|---|---|
+| `SupervisedDimReductionPipeline` (fitTransform) | `SupervisedDimReductionPipeline.cpp:438` | features not empty: **pass-through** (not explicitly checked before call); labels match: **guaranteed** by parallel subset ops | Add empty guard before fit call |
+| `SupervisedDimReductionPipeline` (transform) | `SupervisedDimReductionPipeline.cpp:447` | `isTrained()`: **guaranteed** (successful fitTransform precedes); dimension match: **guaranteed** (same FeatureConverter output) | None critical |
+| `SupervisedDimReductionPipeline` (both) | Both sites | NaN/Inf: **pass-through** — FeatureConverter drops NaN only when `remove_nan=true` | NaN guard is future hardening |
 
 **Remaining target interfaces** (headers only):
 

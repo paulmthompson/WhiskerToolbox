@@ -69,35 +69,6 @@ std::unique_ptr<MLModelParametersBase> LogitProjectionOperation::getDefaultParam
 }
 
 // ============================================================================
-// Helpers — feature scaling
-// ============================================================================
-
-namespace {
-
-/// Standardize each row (feature) to zero mean and unit variance.
-/// Returns the per-row mean and std — needed to apply the same scaling at
-/// transform time.
-struct ScalingParams {
-    arma::vec mean;///< (D,) mean per feature
-    arma::vec std; ///< (D,) standard deviation per feature (≥ epsilon)
-};
-
-ScalingParams computeScaling(arma::mat const & features) {
-    ScalingParams s;
-    s.mean = arma::mean(features, 1);    // mean along columns → (D,)
-    s.std = arma::stddev(features, 0, 1);// stddev (N-1 norm) along columns → (D,)
-    // Clamp std to avoid division by zero
-    s.std.transform([](double v) { return v < 1e-10 ? 1.0 : v; });
-    return s;
-}
-
-arma::mat applyScaling(arma::mat const & features, ScalingParams const & s) {
-    return (features.each_col() - s.mean).each_col() / s.std;
-}
-
-}// anonymous namespace
-
-// ============================================================================
 // FitTransform
 // ============================================================================
 
@@ -134,22 +105,13 @@ bool LogitProjectionOperation::fitTransform(
 
     // Extract parameters
     auto const * lp_params = dynamic_cast<LogitProjectionParameters const *>(params);
-    LogitProjectionParameters defaults;
+    LogitProjectionParameters const defaults;
     if (!lp_params) {
         lp_params = &defaults;
     }
 
     double const lambda = std::max(lp_params->lambda, 0.0);
     std::size_t const max_iterations = lp_params->max_iterations;
-    bool const scale = lp_params->scale_features;
-
-    // Optionally scale features
-    arma::mat scaled_features = features;
-    ScalingParams scaling;
-    if (scale) {
-        scaling = computeScaling(features);
-        scaled_features = applyScaling(features, scaling);
-    }
 
     try {
         // Train softmax regression with fitIntercept=true for best expressiveness
@@ -159,7 +121,7 @@ bool LogitProjectionOperation::fitTransform(
         optimizer.MaxIterations() = max_iterations;
 
         _impl->model = std::make_unique<SRModel>(
-                scaled_features,
+                features,
                 labels,
                 num_classes,
                 optimizer,
@@ -182,17 +144,6 @@ bool LogitProjectionOperation::fitTransform(
         _impl->col_names.resize(num_classes);
         for (std::size_t c = 0; c < num_classes; ++c) {
             _impl->col_names[c] = "Logit:" + std::to_string(c);
-        }
-
-        // Store scaling params in bias/weight rescaling if scale_features is on.
-        // When scale=true, effective transform is: W * diag(1/std) * (X - mean) + b
-        //   = (W * diag(1/std)) * X + (b - W * diag(1/std) * mean)
-        // Pre-compute the rescaled W and effective bias for fast transform().
-        if (scale) {
-            // Rescale W: divide each column j by std[j]
-            _impl->weight_matrix.each_row() /= scaling.std.t();
-            // Adjust bias: b -= W_rescaled * mean
-            _impl->bias -= _impl->weight_matrix * scaling.mean;
         }
 
         // Compute output for the training data
