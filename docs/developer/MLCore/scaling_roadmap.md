@@ -27,7 +27,7 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 | PCA | Yes (off by default) | ~~Yes (`scale`)~~ **No (centering only)** ✓ | N/A | **No** ✓ |
 | Robust PCA | Yes (off by default) | No (centering only) | N/A | No |
 | t-SNE | Yes (off by default) | No | N/A | No |
-| Supervised PCA | Yes (off by default) | Yes (`scale`) | **ON** | **YES** |
+| Supervised PCA | Yes (off by default) | ~~Yes (`scale`)~~ **No (centering only)** ✓ | N/A | **No** ✓ |
 | Supervised Robust PCA | Yes (off by default) | No (centering only) | N/A | No |
 | Logit Projection | Yes (off by default) | Yes (`scale_features`) | OFF | Low |
 | K-Means | Yes (off by default) | No | N/A | No |
@@ -42,9 +42,9 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 ### Key Files
 
 - `src/MLCore/features/FeatureConverter.hpp` — `ConversionConfig::zscore_normalize`, `zscoreNormalize()`, `applyZscoreNormalization()`
-- `src/MLCore/models/MLModelParameters.hpp` — ~~`PCAParameters::scale`~~, `SupervisedPCAParameters::scale`, `LogitProjectionParameters::scale_features`
+- `src/MLCore/models/MLModelParameters.hpp` — ~~`PCAParameters::scale`~~, ~~`SupervisedPCAParameters::scale`~~, `LogitProjectionParameters::scale_features`
 - `src/MLCore/models/unsupervised/PCAOperation.cpp` — ~~Internal centering + scaling~~ **Centering only** ✓
-- `src/MLCore/models/supervised/SupervisedPCAOperation.cpp` — Internal centering + scaling from labeled subset
+- `src/MLCore/models/supervised/SupervisedPCAOperation.cpp` — ~~Internal centering + scaling from labeled subset~~ **Centering only (labeled-subset mean)** ✓
 - `src/MLCore/models/supervised/LogitProjectionOperation.cpp` — Internal `computeScaling()`/`applyScaling()` + weight rescaling
 - `src/WhiskerToolbox/MLCore_Widget/UI/DimReductionPanel/DimReductionPanel.cpp` — Z-score checkbox + per-algorithm scale checkbox
 - `src/WhiskerToolbox/MLCore_Widget/MLCoreWidget.cpp` — Pipeline config assembly (lines 760-761 hardcode classification zscore off)
@@ -75,15 +75,21 @@ Feature scaling (z-score normalization) is currently handled inconsistently acro
 - Removed/rewrote obsolete scale-related test cases in `PCAOperation.test.cpp` and `PCA_HMM_Equivalence.test.cpp`.
 - Build clean, all tests pass.
 
-### Step 2: Remove internal scaling from Supervised PCA
+### ~~Step 2: Remove internal scaling from Supervised PCA~~ ✓ DONE
 
 **Files**: `SupervisedPCAOperation.cpp`, `SupervisedPCAOperation.hpp`, `MLModelParameters.hpp`
 
-Same pattern as Step 1:
-1. Remove `SupervisedPCAParameters::scale` field.
-2. Remove stddev computation and scaling from `fitTransform()` and `transform()`.
-3. Keep centering (from labeled subset statistics — this is correct behavior for supervised PCA).
-4. Update serialization.
+**Completed.** Changes made:
+
+- Removed `SupervisedPCAParameters::scale` field from `MLModelParameters.hpp`.
+- Removed `_impl->stddev` and `_impl->scaled` fields from `SupervisedPCAOperation::Impl`.
+- Removed stddev computation and conditional scaling from `fitTransform()` and `transform()`.
+- Made `centered` and `all_centered` local variables `const` (clang-tidy).
+- Updated `save()`/`load()` — no longer serializes `scaled` or `stddev`. Old saved models are incompatible.
+- Updated `SupervisedPCAOperation.hpp` doc block to state that scaling is the caller's responsibility.
+- Removed `params->scale = scaleFeatures()` in `DimReductionPanel::currentParameters()` for Supervised PCA.
+- Removed/updated `params.scale` lines in `SupervisedPCAOperation.test.cpp`.
+- Build clean, all tests pass.
 
 ### Step 3: Remove internal scaling from Logit Projection
 
@@ -142,6 +148,7 @@ MLCore operation interfaces. This step is documentation-only — no asserts or c
 | Header | Functions annotated | Status |
 |---|---|---|
 | `PCAOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
+| `SupervisedPCAOperation.hpp` | `fitTransform()`, `transform()` | ✓ Done |
 | `MLDimReductionOperation.hpp` | `fitTransform()`, `transform()` | `fitTransform` has partial base-class `@pre`; `transform` has minimal `@pre` — needs expansion |
 | `MLSupervisedDimReductionOperation.hpp` | `fitTransform()`, `transform()` | Not started |
 | `MLModelOperation.hpp` | `train()`, `predict()`, `fit()`, `assignClusters()` | Not started |

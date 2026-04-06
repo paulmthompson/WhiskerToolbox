@@ -189,7 +189,6 @@ struct LogitProjectionParameters : public MLModelParametersBase {
  */
 struct SupervisedPCAParameters : public MLModelParametersBase {
     std::size_t n_components = 2;///< Number of principal components to retain
-    bool scale = true;           ///< Standardize features (zero mean, unit variance) before PCA
 };
 
 /**

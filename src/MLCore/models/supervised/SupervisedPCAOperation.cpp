@@ -25,12 +25,10 @@ struct SupervisedPCAOperation::Impl {
     arma::mat eigenvectors;     ///< (D × n_components) projection matrix
     arma::vec eigenvalues;      ///< Eigenvalues (sorted descending)
     arma::vec mean;             ///< Feature means (from labeled subset)
-    arma::vec stddev;           ///< Feature std devs (from labeled subset, empty if !scaled)
     double total_variance = 0.0;///< Sum of all eigenvalues
     std::size_t n_components = 0;
     std::size_t n_features = 0;
     std::size_t num_classes = 0;
-    bool scaled = false;
     bool trained = false;
     std::vector<std::string> col_names;///< "SPCA:0", "SPCA:1", ...
 };
@@ -109,7 +107,6 @@ bool SupervisedPCAOperation::fitTransform(
     }
 
     std::size_t const n_components = spca_params->n_components;
-    bool const scale = spca_params->scale;
 
     if (n_components == 0) {
         std::cerr << "SupervisedPCAOperation::fitTransform: n_components must be > 0.\n";
@@ -139,20 +136,11 @@ bool SupervisedPCAOperation::fitTransform(
 
     try {
         // ------------------------------------------------------------------
-        // 1. Compute mean and (optional) stddev from labeled subset
+        // 1. Compute mean from labeled subset
         // ------------------------------------------------------------------
         _impl->mean = arma::mean(labeled_features, 1);// mean per feature row
 
-        arma::mat centered = labeled_features.each_col() - _impl->mean;
-
-        _impl->scaled = scale;
-        if (scale) {
-            _impl->stddev = arma::stddev(labeled_features, 0, 1);
-            _impl->stddev.replace(0.0, 1.0);// avoid division by zero
-            centered.each_col() /= _impl->stddev;
-        } else {
-            _impl->stddev.reset();
-        }
+        arma::mat const centered = labeled_features.each_col() - _impl->mean;
 
         // ------------------------------------------------------------------
         // 2. Covariance and eigendecomposition on labeled subset
@@ -191,10 +179,7 @@ bool SupervisedPCAOperation::fitTransform(
         // ------------------------------------------------------------------
         // 3. Project ALL data (not just labeled subset)
         // ------------------------------------------------------------------
-        arma::mat all_centered = features.each_col() - _impl->mean;
-        if (scale) {
-            all_centered.each_col() /= _impl->stddev;
-        }
+        arma::mat const all_centered = features.each_col() - _impl->mean;
         result = _impl->eigenvectors.t() * all_centered;
 
         return true;
@@ -229,10 +214,7 @@ bool SupervisedPCAOperation::transform(
     }
 
     try {
-        arma::mat centered = features.each_col() - _impl->mean;
-        if (_impl->scaled) {
-            centered.each_col() /= _impl->stddev;
-        }
+        arma::mat const centered = features.each_col() - _impl->mean;
         result = _impl->eigenvectors.t() * centered;
         return true;
     } catch (std::exception const & e) {
@@ -290,7 +272,6 @@ bool SupervisedPCAOperation::save(std::ostream & out) const {
         ar(cereal::make_nvp("n_components", _impl->n_components));
         ar(cereal::make_nvp("n_features", _impl->n_features));
         ar(cereal::make_nvp("num_classes", _impl->num_classes));
-        ar(cereal::make_nvp("scaled", _impl->scaled));
         ar(cereal::make_nvp("total_variance", _impl->total_variance));
         ar(cereal::make_nvp("col_names", _impl->col_names));
 
@@ -317,15 +298,6 @@ bool SupervisedPCAOperation::save(std::ostream & out) const {
                                       _impl->mean.memptr() + mean_n);
         ar(cereal::make_nvp("mean", mean_data));
 
-        // Stddev (if scaled)
-        if (_impl->scaled) {
-            auto const std_n = _impl->stddev.n_elem;
-            ar(cereal::make_nvp("stddev_n", std_n));
-            std::vector<double> std_data(_impl->stddev.memptr(),
-                                         _impl->stddev.memptr() + std_n);
-            ar(cereal::make_nvp("stddev", std_data));
-        }
-
         return out.good();
 
     } catch (std::exception const & e) {
@@ -341,14 +313,12 @@ bool SupervisedPCAOperation::load(std::istream & in) {
         std::size_t n_components = 0;
         std::size_t n_features = 0;
         std::size_t num_classes = 0;
-        bool scaled = false;
         double total_variance = 0.0;
         std::vector<std::string> col_names;
 
         ar(cereal::make_nvp("n_components", n_components));
         ar(cereal::make_nvp("n_features", n_features));
         ar(cereal::make_nvp("num_classes", num_classes));
-        ar(cereal::make_nvp("scaled", scaled));
         ar(cereal::make_nvp("total_variance", total_variance));
         ar(cereal::make_nvp("col_names", col_names));
 
@@ -384,31 +354,15 @@ bool SupervisedPCAOperation::load(std::istream & in) {
             return false;
         }
 
-        // Stddev
-        arma::vec stddev;
-        if (scaled) {
-            std::size_t std_n = 0;
-            ar(cereal::make_nvp("stddev_n", std_n));
-            std::vector<double> std_data;
-            ar(cereal::make_nvp("stddev", std_data));
-            if (std_data.size() != std_n) {
-                std::cerr << "SupervisedPCAOperation::load: stddev data size mismatch.\n";
-                return false;
-            }
-            stddev = arma::vec(std_data.data(), std_n);
-        }
-
         // Commit all state atomically
         _impl->n_components = n_components;
         _impl->n_features = n_features;
         _impl->num_classes = num_classes;
-        _impl->scaled = scaled;
         _impl->total_variance = total_variance;
         _impl->col_names = std::move(col_names);
         _impl->eigenvectors = arma::mat(ev_data.data(), ev_rows, ev_cols);
         _impl->eigenvalues = arma::vec(val_data.data(), val_n);
         _impl->mean = arma::vec(mean_data.data(), mean_n);
-        _impl->stddev = std::move(stddev);
         _impl->trained = true;
         return true;
 

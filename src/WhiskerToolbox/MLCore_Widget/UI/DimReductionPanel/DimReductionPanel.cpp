@@ -171,7 +171,6 @@ std::unique_ptr<MLCore::MLModelParametersBase> DimReductionPanel::currentParamet
     if (name == "Supervised PCA") {
         auto params = std::make_unique<MLCore::SupervisedPCAParameters>();
         params->n_components = static_cast<std::size_t>(nComponents());
-        params->scale = scaleFeatures();
         return params;
     }
 

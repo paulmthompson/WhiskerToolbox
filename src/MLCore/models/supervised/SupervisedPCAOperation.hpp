@@ -44,7 +44,6 @@ namespace MLCore {
  * SupervisedPCAOperation spca;
  * SupervisedPCAParameters params;
  * params.n_components = 10;
- * params.scale = true;
  *
  * arma::mat result;
  * spca.fitTransform(features, labels, &params, result);
@@ -93,18 +92,34 @@ public:
      * Only the observations whose indices appear with any label in [0, C)
      * are used to compute the covariance matrix and eigenvectors. The
      * resulting projection is then applied to ALL columns in features.
+     * Internally centers on the labeled-subset mean before eigendecomposition.
+     * Feature scaling (z-score) is intentionally NOT performed here — it is
+     * the caller's responsibility to pre-scale via FeatureConverter if desired.
      *
      * @param features  (D × N) feature matrix in mlpack convention
      * @param labels    (N,) label row with class indices in [0, C)
      * @param params    SupervisedPCAParameters or nullptr for defaults
      * @param result    (n_components × N) output — all observations projected
-     * @return true on success
+     * @return true on success, false on validation failure or eigendecomposition error
      *
-     * @pre features must not be empty
-     * @pre labels.n_elem == features.n_cols
-     * @pre At least 2 distinct classes in labels
-     * @post isTrained() returns true on success
-     * @post result.n_rows == outputDimensions(), result.n_cols == features.n_cols
+     * @pre features must not be empty (enforcement: runtime_check)
+     * @pre features must have at least 2 columns (observations) (enforcement: runtime_check)
+     * @pre features must not contain NaN or Inf — covariance computation and
+     *      eigendecomposition produce garbage otherwise (enforcement: none) [IMPORTANT]
+     * @pre labels must not be empty (enforcement: runtime_check)
+     * @pre labels.n_elem must equal features.n_cols (enforcement: runtime_check)
+     * @pre labels must contain at least 2 distinct class values (enforcement: runtime_check)
+     * @pre label values must be class indices and must not overflow std::size_t
+     *      (enforcement: none) [LOW]
+     * @pre params, if non-null, must be dynamic_castable to SupervisedPCAParameters
+     *      (enforcement: runtime_check — falls back to defaults if cast fails)
+     * @pre SupervisedPCAParameters::n_components must be > 0 (enforcement: runtime_check)
+     * @pre SupervisedPCAParameters::n_components must be <= features.n_rows (enforcement: runtime_check)
+     *
+     * @post On success: isTrained() == true, result has n_components rows and
+     *       features.n_cols columns, numFeatures() == features.n_rows
+     * @post On failure: isTrained() unchanged (may be set to false),
+     *       result is unmodified
      */
     bool fitTransform(
             arma::mat const & features,
@@ -115,12 +130,24 @@ public:
     /**
      * @brief Project new data using the fitted eigenvectors
      *
+     * Centers the input using the labeled-subset mean computed during fitting,
+     * then projects through the stored eigenvectors.
+     *
      * @param features  (D × N) feature matrix — D must match training data
      * @param result    (n_components × N) output
-     * @return true on success
+     * @return true on success, false if not trained or dimension mismatch
      *
-     * @pre isTrained() must be true
-     * @pre features.n_rows == numFeatures()
+     * @pre isTrained() must be true (enforcement: runtime_check)
+     * @pre features must not be empty (enforcement: runtime_check)
+     * @pre features.n_rows must equal numFeatures() (the feature count used
+     *      during fitting) (enforcement: runtime_check)
+     * @pre features must not contain NaN or Inf — they propagate directly
+     *      into the projected result (enforcement: none) [IMPORTANT]
+     * @pre If the training data was z-score normalized, features should be
+     *      normalized with the SAME mean/std via FeatureConverter::applyZscoreNormalization()
+     *      (enforcement: none) [IMPORTANT]
+     *
+     * @post result has outputDimensions() rows and features.n_cols columns
      */
     bool transform(
             arma::mat const & features,

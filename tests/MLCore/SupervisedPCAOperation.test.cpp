@@ -10,7 +10,6 @@
  * - Explained variance ratio sums to <= 1.0
  * - transform() on new data (consistent with fitTransform)
  * - Error handling (untrained, empty, dimension mismatch, single class)
- * - scale=true variant
  * - Save / load round-trip
  * - Registry integration (create by name "Supervised PCA")
  */
@@ -89,7 +88,6 @@ TEST_CASE("SupervisedPCAOperation - metadata", "[MLCore][SupervisedPCA]") {
         REQUIRE(sp != nullptr);
 
         CHECK(sp->n_components == 2);
-        CHECK(sp->scale == true);
     }
 
     SECTION("not trained initially") {
@@ -110,7 +108,6 @@ TEST_CASE("SupervisedPCAOperation - fitTransform basic", "[MLCore][SupervisedPCA
     SupervisedPCAOperation spca;
     SupervisedPCAParameters params;
     params.n_components = 3;
-    params.scale = true;
 
     arma::mat result;
     REQUIRE(spca.fitTransform(data.features, data.labels, &params, result));
@@ -159,7 +156,6 @@ TEST_CASE("SupervisedPCAOperation - fitTransform binary (2-class)", "[MLCore][Su
     SupervisedPCAOperation spca;
     SupervisedPCAParameters params;
     params.n_components = 2;
-    params.scale = false;
 
     arma::mat result;
     REQUIRE(spca.fitTransform(data.features, data.labels, &params, result));
@@ -196,7 +192,6 @@ TEST_CASE("SupervisedPCAOperation - PCA captures labeled variance", "[MLCore][Su
     SupervisedPCAOperation spca;
     SupervisedPCAParameters params;
     params.n_components = 2;
-    params.scale = false;
 
     arma::mat result;
     REQUIRE(spca.fitTransform(features, labels, &params, result));
@@ -315,7 +310,6 @@ TEST_CASE("SupervisedPCAOperation - save/load round-trip", "[MLCore][SupervisedP
     SupervisedPCAOperation spca;
     SupervisedPCAParameters params;
     params.n_components = 3;
-    params.scale = true;
 
     arma::mat original_result;
     REQUIRE(spca.fitTransform(data.features, data.labels, &params, original_result));
