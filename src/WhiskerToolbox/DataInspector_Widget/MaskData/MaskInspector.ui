@@ -186,13 +186,6 @@
     </layout>
    </item>
    <item>
-    <widget class="QPushButton" name="load_sam_button">
-     <property name="text">
-      <string>Load SAM Model</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="Section" name="export_section" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">

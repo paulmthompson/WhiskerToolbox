@@ -72,7 +72,6 @@ public:
     void setDataView(MaskTableView * view);
 
 private slots:
-    void _loadSamModel();
     void _onDataChanged();
 
     // Export slots

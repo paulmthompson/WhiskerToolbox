@@ -92,7 +92,6 @@ void MaskInspector::updateView() {
 }
 
 void MaskInspector::_connectSignals() {
-    connect(ui->load_sam_button, &QPushButton::clicked, this, &MaskInspector::_loadSamModel);
 
     // Connect export functionality
     connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -239,10 +238,6 @@ void MaskInspector::_connectSignals() {
 
 void MaskInspector::_onDataChanged() {
     _updateImageSizeDisplay();
-}
-
-void MaskInspector::_loadSamModel() {
-    // SAM model loading functionality (currently disabled)
 }
 
 void MaskInspector::_onExportTypeChanged(int index) {

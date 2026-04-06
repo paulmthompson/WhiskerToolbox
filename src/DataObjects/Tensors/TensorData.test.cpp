@@ -726,103 +726,6 @@ TEST_CASE("TensorData dimensions() provides axis lookup", "[TensorData]") {
 
 #include "Tensors/storage/LibTorchTensorStorage.hpp"
 
-TEST_CASE("TensorData createFromTorch basic", "[TensorData][LibTorch]") {
-    auto torch_tensor = torch::tensor({{1.0f, 2.0f, 3.0f},
-                                       {4.0f, 5.0f, 6.0f}});
-
-    auto tensor = TensorData::createFromTorch(torch_tensor);
-
-    CHECK(tensor.ndim() == 2);
-    CHECK(tensor.numRows() == 2);
-    CHECK(tensor.numColumns() == 3);
-    CHECK_FALSE(tensor.isEmpty());
-    CHECK(tensor.isContiguous());
-
-    auto s = tensor.shape();
-    REQUIRE(s.size() == 2);
-    CHECK(s[0] == 2);
-    CHECK(s[1] == 3);
-
-    // Auto-generated axis names
-    auto const & dims = tensor.dimensions();
-    CHECK(dims.axis(0).name == "dim0");
-    CHECK(dims.axis(1).name == "dim1");
-
-    // Row type is ordinal
-    CHECK(tensor.rowType() == RowType::Ordinal);
-}
-
-TEST_CASE("TensorData createFromTorch with named axes", "[TensorData][LibTorch]") {
-    auto torch_tensor = torch::arange(24.0f).reshape({2, 3, 4});
-
-    auto tensor = TensorData::createFromTorch(
-            torch_tensor,
-            {{"batch", 2}, {"height", 3}, {"width", 4}});
-
-    CHECK(tensor.ndim() == 3);
-    CHECK(tensor.numRows() == 2);
-
-    auto const & dims = tensor.dimensions();
-    CHECK(dims.axis(0).name == "batch");
-    CHECK(dims.axis(1).name == "height");
-    CHECK(dims.axis(2).name == "width");
-}
-
-TEST_CASE("TensorData createFromTorch element access", "[TensorData][LibTorch]") {
-    auto torch_tensor = torch::tensor({{10.0f, 20.0f},
-                                       {30.0f, 40.0f},
-                                       {50.0f, 60.0f}});
-
-    auto tensor = TensorData::createFromTorch(torch_tensor);
-
-    // Element access
-    CHECK_THAT(tensor.at(std::vector<std::size_t>{0, 0}), WithinAbs(10.0f, 1e-5f));
-    CHECK_THAT(tensor.at(std::vector<std::size_t>{1, 1}), WithinAbs(40.0f, 1e-5f));
-    CHECK_THAT(tensor.at(std::vector<std::size_t>{2, 0}), WithinAbs(50.0f, 1e-5f));
-
-    // Row access
-    auto row1 = tensor.row(1);
-    REQUIRE(row1.size() == 2);
-    CHECK_THAT(row1[0], WithinAbs(30.0f, 1e-5f));
-    CHECK_THAT(row1[1], WithinAbs(40.0f, 1e-5f));
-
-    // Column access
-    auto col0 = tensor.getColumn(0);
-    REQUIRE(col0.size() == 3);
-    CHECK_THAT(col0[0], WithinAbs(10.0f, 1e-5f));
-    CHECK_THAT(col0[1], WithinAbs(30.0f, 1e-5f));
-    CHECK_THAT(col0[2], WithinAbs(50.0f, 1e-5f));
-}
-
-TEST_CASE("TensorData createFromTorch 4D (model I/O)", "[TensorData][LibTorch]") {
-    // Simulate batch × channel × height × width
-    auto torch_tensor = torch::arange(120.0f).reshape({2, 3, 4, 5});
-
-    auto tensor = TensorData::createFromTorch(
-            torch_tensor,
-            {{"batch", 2}, {"channel", 3}, {"height", 4}, {"width", 5}});
-
-    CHECK(tensor.ndim() == 4);
-    CHECK(tensor.numRows() == 2);
-    CHECK(tensor.storage().getStorageType() == TensorStorageType::LibTorch);
-
-    // Access element [1, 2, 3, 4] = 1*60 + 2*20 + 3*5 + 4 = 119
-    CHECK_THAT(tensor.at(std::vector<std::size_t>{1, 2, 3, 4}), WithinAbs(119.0f, 1e-5f));
-}
-
-TEST_CASE("TensorData asTorchTensor zero-copy", "[TensorData][LibTorch]") {
-    auto torch_tensor = torch::tensor({{1.0f, 2.0f}, {3.0f, 4.0f}});
-    auto tensor = TensorData::createFromTorch(torch_tensor);
-
-    auto const & recovered = tensor.asTorchTensor();
-    CHECK(recovered.size(0) == 2);
-    CHECK(recovered.size(1) == 2);
-    CHECK(recovered.scalar_type() == torch::kFloat32);
-
-    // Verify data matches
-    CHECK(recovered[0][0].item<float>() == 1.0f);
-    CHECK(recovered[1][1].item<float>() == 4.0f);
-}
 
 TEST_CASE("TensorData toLibTorch from Armadillo backend", "[TensorData][LibTorch]") {
     // Create with Armadillo backend, then convert
@@ -839,15 +742,6 @@ TEST_CASE("TensorData toLibTorch from Armadillo backend", "[TensorData][LibTorch
     CHECK_THAT(torch_tensor.at(std::vector<std::size_t>{0, 2}), WithinAbs(3.0f, 1e-5f));
     CHECK_THAT(torch_tensor.at(std::vector<std::size_t>{1, 0}), WithinAbs(4.0f, 1e-5f));
     CHECK_THAT(torch_tensor.at(std::vector<std::size_t>{1, 2}), WithinAbs(6.0f, 1e-5f));
-}
-
-TEST_CASE("TensorData toLibTorch is no-op for LibTorch backend", "[TensorData][LibTorch]") {
-    auto torch_tensor = torch::tensor({{1.0f, 2.0f}, {3.0f, 4.0f}});
-    auto tensor = TensorData::createFromTorch(torch_tensor);
-
-    auto converted = tensor.toLibTorch();
-    CHECK(converted.storage().getStorageType() == TensorStorageType::LibTorch);
-    // Should be the same data (shallow copy)
 }
 
 TEST_CASE("TensorData toLibTorch preserves metadata", "[TensorData][LibTorch]") {
@@ -870,82 +764,7 @@ TEST_CASE("TensorData toLibTorch preserves metadata", "[TensorData][LibTorch]") 
     CHECK(torch_tensor.numColumns() == 3);
 }
 
-TEST_CASE("TensorData materializeFlat from LibTorch backend", "[TensorData][LibTorch]") {
-    auto torch_tensor = torch::tensor({{1.0f, 2.0f, 3.0f},
-                                       {4.0f, 5.0f, 6.0f}});
-    auto tensor = TensorData::createFromTorch(torch_tensor);
 
-    auto flat = tensor.materializeFlat();
-    REQUIRE(flat.size() == 6);
-
-    // LibTorch is row-major (C contiguous), so materializeFlat should give
-    // the same order as the original data
-    CHECK_THAT(flat[0], WithinAbs(1.0f, 1e-5f));
-    CHECK_THAT(flat[1], WithinAbs(2.0f, 1e-5f));
-    CHECK_THAT(flat[2], WithinAbs(3.0f, 1e-5f));
-    CHECK_THAT(flat[3], WithinAbs(4.0f, 1e-5f));
-    CHECK_THAT(flat[4], WithinAbs(5.0f, 1e-5f));
-    CHECK_THAT(flat[5], WithinAbs(6.0f, 1e-5f));
-}
-
-TEST_CASE("TensorData createFromTorch error handling", "[TensorData][LibTorch]") {
-    SECTION("undefined tensor") {
-        torch::Tensor undefined;
-        CHECK_THROWS_AS(TensorData::createFromTorch(undefined), std::invalid_argument);
-    }
-
-    SECTION("scalar tensor") {
-        auto scalar = torch::tensor(42.0f);
-        CHECK_THROWS_AS(TensorData::createFromTorch(scalar), std::invalid_argument);
-    }
-
-    SECTION("axes count mismatch") {
-        auto t = torch::tensor({{1.0f, 2.0f}, {3.0f, 4.0f}});
-        CHECK_THROWS_AS(
-                TensorData::createFromTorch(t, {{"only_one", 2}}),
-                std::invalid_argument);
-    }
-}
-
-TEST_CASE("TensorData asTorchTensor errors", "[TensorData][LibTorch]") {
-    SECTION("empty tensor throws") {
-        TensorData empty;
-        CHECK_THROWS_AS(empty.asTorchTensor(), std::logic_error);
-    }
-
-    SECTION("non-LibTorch backend throws") {
-        auto tensor = TensorData::createOrdinal2D(
-                {1.0f, 2.0f, 3.0f, 4.0f}, 2, 2);
-        CHECK_THROWS_AS(tensor.asTorchTensor(), std::logic_error);
-    }
-}
-
-TEST_CASE("TensorData LibTorch backend with tryGetAs", "[TensorData][LibTorch]") {
-    auto torch_tensor = torch::tensor({{1.0f, 2.0f}, {3.0f, 4.0f}});
-    auto tensor = TensorData::createFromTorch(torch_tensor);
-
-    auto const * libtorch = tensor.storage().tryGetAs<LibTorchTensorStorage>();
-    REQUIRE(libtorch != nullptr);
-    CHECK(libtorch->isCpu());
-    CHECK(libtorch->ndim() == 2);
-
-    auto const * arma = tensor.storage().tryGetAs<ArmadilloTensorStorage>();
-    CHECK(arma == nullptr);
-}
-
-TEST_CASE("TensorData createFromTorch auto-converts double to float", "[TensorData][LibTorch]") {
-    // Create a double tensor — createFromTorch should convert to float
-    auto double_tensor = torch::tensor({{1.0, 2.0}, {3.0, 4.0}}, torch::kFloat64);
-
-    auto tensor = TensorData::createFromTorch(double_tensor);
-    CHECK(tensor.ndim() == 2);
-    CHECK_THAT(tensor.at(std::vector<std::size_t>{0, 0}), WithinAbs(1.0f, 1e-5f));
-    CHECK_THAT(tensor.at(std::vector<std::size_t>{1, 1}), WithinAbs(4.0f, 1e-5f));
-
-    // Underlying storage should be float
-    auto const & t = tensor.asTorchTensor();
-    CHECK(t.scalar_type() == torch::kFloat32);
-}
 
 #endif// TENSOR_BACKEND_LIBTORCH
 

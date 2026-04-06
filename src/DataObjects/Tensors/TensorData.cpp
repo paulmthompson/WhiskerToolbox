@@ -303,55 +303,6 @@ TensorData TensorData::createOrdinal2D(
 }
 
 // =============================================================================
-// Factory: createFromTorch (LibTorch)
-// =============================================================================
-
-#ifdef TENSOR_BACKEND_LIBTORCH
-TensorData TensorData::createFromTorch(
-        torch::Tensor tensor,
-        std::vector<AxisDescriptor> axes) {
-    if (!tensor.defined()) {
-        throw std::invalid_argument(
-                "TensorData::createFromTorch: tensor must be defined");
-    }
-
-    // Convert to float32 if needed (e.g., from double inference output)
-    if (tensor.scalar_type() != torch::kFloat32) {
-        tensor = tensor.to(torch::kFloat32);
-    }
-
-    auto const nd = tensor.dim();
-    if (nd == 0) {
-        throw std::invalid_argument(
-                "TensorData::createFromTorch: scalar tensors (0-dim) not supported");
-    }
-
-    // Auto-generate axis descriptors if not provided
-    if (axes.empty()) {
-        axes.reserve(static_cast<std::size_t>(nd));
-        for (int d = 0; d < nd; ++d) {
-            axes.push_back({"dim" + std::to_string(d),
-                            static_cast<std::size_t>(tensor.size(d))});
-        }
-    }
-
-    if (static_cast<int>(axes.size()) != nd) {
-        throw std::invalid_argument(
-                "TensorData::createFromTorch: axes count (" +
-                std::to_string(axes.size()) +
-                ") doesn't match tensor dims (" + std::to_string(nd) + ")");
-    }
-
-    DimensionDescriptor dims{axes};
-    auto rows = RowDescriptor::ordinal(static_cast<std::size_t>(tensor.size(0)));
-    auto storage = TensorStorageWrapper{LibTorchTensorStorage{std::move(tensor)}};
-
-    return TensorData{std::move(dims), std::move(rows),
-                      std::move(storage), nullptr};
-}
-#endif// TENSOR_BACKEND_LIBTORCH
-
-// =============================================================================
 // Factory: createFromLazyColumns
 // =============================================================================
 
@@ -659,18 +610,6 @@ TensorData TensorData::toLibTorch() const {
                       _time_frame};
 }
 
-torch::Tensor const & TensorData::asTorchTensor() const {
-    if (!_storage.isValid()) {
-        throw std::logic_error("TensorData::asTorchTensor: empty tensor");
-    }
-    auto const * torch_storage = _storage.tryGetAs<LibTorchTensorStorage>();
-    if (!torch_storage) {
-        throw std::logic_error(
-                "TensorData::asTorchTensor: storage is not LibTorch-backed "
-                "(use toLibTorch() first)");
-    }
-    return torch_storage->tensor();
-}
 #endif// TENSOR_BACKEND_LIBTORCH
 
 // =============================================================================

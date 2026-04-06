@@ -45,15 +45,6 @@
 #include <string_view>
 #include <vector>
 
-#ifdef TENSOR_BACKEND_LIBTORCH
-// torch's c10 logging defines a CHECK macro that conflicts with testing
-// frameworks (Catch2) and other libraries. Save the current CHECK definition
-// (if any), include torch, then restore it.
-#pragma push_macro("CHECK")
-#include <torch/torch.h>
-#pragma pop_macro("CHECK")
-#endif
-
 class TimeIndexStorage;
 class LazyColumnTensorStorage;
 class TensorData;
@@ -253,18 +244,6 @@ public:
             std::size_t num_cols,
             std::vector<std::string> column_names = {});
 
-#ifdef TENSOR_BACKEND_LIBTORCH
-    /**
-     * @brief Create from a LibTorch tensor
-     *
-     * @param tensor torch::Tensor (moved into LibTorchTensorStorage)
-     * @param axes Optional axis descriptors; if empty, auto-generated
-     */
-    [[nodiscard]] static TensorData createFromTorch(
-            torch::Tensor tensor,
-            std::vector<AxisDescriptor> axes = {});
-#endif
-
     /**
      * @brief Create a 2D tensor with lazily-computed columns
      *
@@ -441,14 +420,9 @@ public:
      * Otherwise, materializes flat data and wraps in torch::Tensor.
      */
     [[nodiscard]] TensorData toLibTorch() const;
+    
+#endif // TENSOR_BACKEND_LIBTORCH
 
-    /**
-     * @brief Direct access to the underlying torch::Tensor
-     *
-     * @throws std::logic_error if not LibTorch-backed
-     */
-    [[nodiscard]] torch::Tensor const & asTorchTensor() const;
-#endif
 
     // ========== Mutation ==========
 
