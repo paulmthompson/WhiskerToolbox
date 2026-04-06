@@ -167,7 +167,7 @@ static std::unique_ptr<py::scoped_interpreter> createInterpreter() {
     // the system Python or linked-in paths, so we skip this override to
     // avoid interfering with a working configuration.
 #ifdef _WIN32
-    auto const python_home = _findPythonHome();
+    auto const python_home = findPythonHome();
     if (!python_home.empty()) {
         s_python_home = python_home.wstring();
         Py_SetPythonHome(s_python_home.c_str());
