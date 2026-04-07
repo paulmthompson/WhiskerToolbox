@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_V2_DATAMANAGER_INTEGRATION_HPP
 #define WHISKERTOOLBOX_V2_DATAMANAGER_INTEGRATION_HPP
 
-#include "DataManager/DataManagerTypes.hpp" // DataTypeVariant
+#include "DataManager/DataManagerTypes.hpp"// DataTypeVariant
 
 #include <nlohmann/json.hpp>
 #include <rfl.hpp>
@@ -73,6 +73,10 @@ struct DataManagerStepDescriptor {
     // Raw JSON parameters - will be parsed based on transform_name
     std::optional<rfl::Generic> parameters;
 
+    // TimeKey to associate with the output data (must pre-exist in DataManager).
+    // If not set, the output inherits the input's TimeKey.
+    std::optional<std::string> output_time_key;
+
     // Optional fields for organization and control
     std::optional<std::string> description;
     std::optional<bool> enabled;
@@ -89,7 +93,7 @@ struct DataManagerStepDescriptor {
         std::vector<std::string> keys;
         keys.push_back(input_key);
         if (additional_input_keys.has_value()) {
-            for (auto const & key : *additional_input_keys) {
+            for (auto const & key: *additional_input_keys) {
                 keys.push_back(key);
             }
         }
@@ -281,7 +285,7 @@ public:
      *       invoked with step_index=-1 (completion sentinel). Callbacks should
      *       handle negative step_index values (enforcement: none) [LOW]
      */
-    V2PipelineResult execute(V2PipelineProgressCallback progress_callback = nullptr);
+    V2PipelineResult execute(const V2PipelineProgressCallback& progress_callback = nullptr);
 
     /**
      * @brief Execute a single step by index
@@ -314,7 +318,7 @@ public:
      *      present in DataManager or temporary_data_ (enforcement: runtime_check —
      *      propagated through executeMultiInputStep())
      */
-    V2StepResult executeStep(size_t step_index, std::function<void(int)> progress_callback = nullptr);
+    V2StepResult executeStep(size_t step_index, const std::function<void(int)>& progress_callback = nullptr);
 
     /**
      * @brief Validate the loaded pipeline configuration
@@ -379,12 +383,12 @@ public:
      * - Time-grouped and container transforms force materialization
      */
     struct PipelineSegment {
-        size_t start_step;       // First step index (inclusive)
-        size_t end_step;         // Last step index (exclusive)
-        bool is_multi_input;     // First step has multiple inputs
-        std::vector<std::string> input_keys;  // All input keys for this segment
-        std::string output_key;  // Output key (from last step in segment)
-        bool requires_materialization;  // True if segment contains non-fusible transform
+        size_t start_step;                  // First step index (inclusive)
+        size_t end_step;                    // Last step index (exclusive)
+        bool is_multi_input;                // First step has multiple inputs
+        std::vector<std::string> input_keys;// All input keys for this segment
+        std::string output_key;             // Output key (from last step in segment)
+        bool requires_materialization;      // True if segment contains non-fusible transform
     };
 
     /**
@@ -475,10 +479,20 @@ private:
 
     /**
      * @brief Store output data to DataManager
+     *
+     * @param output_key Key to store the output data under
+     * @param data The output data variant to store
+     * @param step_id Step identifier for error reporting
+     * @param input_key Primary input key (used to propagate TimeKey when output_time_key is empty)
+     * @param output_time_key If set, the output is stored under this TimeKey (must pre-exist).
+     *                        If empty, the input's TimeKey is propagated.
+     * @return Empty string on success, or an error message on failure
      */
-    void storeOutputData(std::string const & output_key,
-                         DataTypeVariant const & data,
-                         std::string const & step_id);
+    std::string storeOutputData(std::string const & output_key,
+                                DataTypeVariant const & data,
+                                std::string const & step_id,
+                                std::string const & input_key,
+                                std::optional<std::string> const & output_time_key);
 
     /**
      * @brief Execute a transform on the input data using the V2 system
@@ -493,7 +507,7 @@ private:
      * 
      * Helper for executeTransform when the transform is a container transform.
      */
-    std::optional<DataTypeVariant> executeContainerTransformDynamic(
+    static std::optional<DataTypeVariant> executeContainerTransformDynamic(
             std::string const & transform_name,
             DataTypeVariant const & input_data,
             std::optional<rfl::Generic> const & parameters);

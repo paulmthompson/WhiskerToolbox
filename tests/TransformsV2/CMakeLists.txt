@@ -31,6 +31,7 @@ add_executable(test_TransformsV2
         test_nonanalog_column_builders.test.cpp
         test_phase1_3_4_reductions_transforms.test.cpp
         test_multistep_column_builders.test.cpp
+        test_executor_timekey.test.cpp
 
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.test.cpp

@@ -21,6 +21,7 @@
 #include "Media/Media_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "Tensors/TensorData.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -128,7 +129,7 @@ bool DataManagerPipelineExecutor::parseJsonFormat(nlohmann::json const & json_co
 
             if (step_json.contains("parameters") && step_json["parameters"].is_object()) {
                 // Convert nlohmann::json to rfl::Generic
-                std::string params_str = step_json["parameters"].dump();
+                std::string const params_str = step_json["parameters"].dump();
                 auto generic_result = rfl::json::read<rfl::Generic>(params_str);
                 if (generic_result) {
                     step.parameters = generic_result.value();
@@ -137,6 +138,10 @@ bool DataManagerPipelineExecutor::parseJsonFormat(nlohmann::json const & json_co
 
             if (step_json.contains("description") && step_json["description"].is_string()) {
                 step.description = step_json["description"].get<std::string>();
+            }
+
+            if (step_json.contains("output_time_key") && step_json["output_time_key"].is_string()) {
+                step.output_time_key = step_json["output_time_key"].get<std::string>();
             }
 
             if (step_json.contains("enabled") && step_json["enabled"].is_boolean()) {
@@ -157,7 +162,7 @@ bool DataManagerPipelineExecutor::parseJsonFormat(nlohmann::json const & json_co
     return false;
 }
 
-V2PipelineResult DataManagerPipelineExecutor::execute(V2PipelineProgressCallback progress_callback) {
+V2PipelineResult DataManagerPipelineExecutor::execute(V2PipelineProgressCallback const & progress_callback) {
     auto start_time = std::chrono::high_resolution_clock::now();
 
     V2PipelineResult result;
@@ -178,7 +183,7 @@ V2PipelineResult DataManagerPipelineExecutor::execute(V2PipelineProgressCallback
 
             // Report progress
             if (progress_callback) {
-                int overall_progress = static_cast<int>((i * 100) / steps_.size());
+                int const overall_progress = static_cast<int>((i * 100) / steps_.size());
                 progress_callback(static_cast<int>(i), step.transform_name, 0, overall_progress);
             }
 
@@ -218,7 +223,7 @@ V2PipelineResult DataManagerPipelineExecutor::execute(V2PipelineProgressCallback
 
 V2StepResult DataManagerPipelineExecutor::executeStep(
         size_t step_index,
-        std::function<void(int)> progress_callback) {
+        std::function<void(int)> const & progress_callback) {
     auto start_time = std::chrono::high_resolution_clock::now();
 
     V2StepResult result;
@@ -265,7 +270,14 @@ V2StepResult DataManagerPipelineExecutor::executeStep(
 
         // 3. Store output data
         if (step.output_key.has_value() && !step.output_key.value().empty()) {
-            storeOutputData(step.output_key.value(), output_data.value(), step.step_id);
+            auto store_error = storeOutputData(
+                    step.output_key.value(), output_data.value(),
+                    step.step_id, step.input_key, step.output_time_key);
+            if (!store_error.empty()) {
+                result.success = false;
+                result.error_message = store_error;
+                return result;
+            }
         } else {
             // Store as temporary data using step_id as key
             temporary_data_[step.step_id] = output_data.value();
@@ -324,18 +336,75 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::getInputData(std::st
     // Then check DataManager
     auto data_variant = data_manager_->getDataVariant(input_key);
     if (data_variant.has_value()) {
-        return data_variant.value();
+        return data_variant;
     }
 
     return std::nullopt;
 }
 
-void DataManagerPipelineExecutor::storeOutputData(
+namespace {
+
+/// @brief Get the sample count from a data variant for size validation.
+/// Returns std::nullopt for types where 1:1 sample-to-frame validation is not meaningful.
+std::optional<int64_t> getOutputSampleCount(DataTypeVariant const & data) {
+    return std::visit([](auto const & data_ptr) -> std::optional<int64_t> {
+        if (!data_ptr) {
+            return std::nullopt;
+        }
+        using T = std::remove_cv_t<std::remove_reference_t<decltype(*data_ptr)>>;
+        if constexpr (std::is_same_v<T, AnalogTimeSeries>) {
+            return static_cast<int64_t>(data_ptr->getNumSamples());
+        } else if constexpr (std::is_same_v<T, TensorData>) {
+            return static_cast<int64_t>(data_ptr->numRows());
+        } else {
+            return std::nullopt;
+        }
+    },
+                      data);
+}
+
+}// anonymous namespace
+
+std::string DataManagerPipelineExecutor::storeOutputData(
         std::string const & output_key,
         DataTypeVariant const & data,
-        std::string const & step_id) {
-    // Get the default TimeKey from the DataManager
+        std::string const & step_id,
+        std::string const & input_key,
+        std::optional<std::string> const & output_time_key) {
+
+    // Determine the TimeKey to use
     TimeKey time_key("default");
+
+    if (output_time_key.has_value() && !output_time_key->empty()) {
+        // Explicit output TimeKey requested — validate it exists
+        TimeKey const target_key(output_time_key.value());
+        auto target_timeframe = data_manager_->getTime(target_key);
+        if (!target_timeframe) {
+            return "Step '" + step_id + "': output_time_key '" +
+                   output_time_key.value() + "' does not exist in DataManager";
+        }
+
+        // Validate output size matches target TimeFrame (for applicable types)
+        auto sample_count = getOutputSampleCount(data);
+        if (sample_count.has_value()) {
+            auto expected = static_cast<int64_t>(target_timeframe->getTotalFrameCount());
+            if (sample_count.value() != expected) {
+                return "Step '" + step_id + "': output has " +
+                       std::to_string(sample_count.value()) +
+                       " samples but target TimeFrame '" +
+                       output_time_key.value() + "' has " +
+                       std::to_string(expected) + " entries";
+            }
+        }
+
+        time_key = target_key;
+    } else {
+        // Propagate input's TimeKey
+        TimeKey const input_time_key = data_manager_->getTimeKey(input_key);
+        if (!input_time_key.empty()) {
+            time_key = input_time_key;
+        }
+    }
 
     // Visit the variant and store in DataManager
     std::visit([this, &output_key, &time_key](auto const & data_ptr) {
@@ -345,6 +414,8 @@ void DataManagerPipelineExecutor::storeOutputData(
         }
     },
                data);
+
+    return {};
 }
 
 std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeTransform(
@@ -371,7 +442,7 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeTransform(
 
     // Load parameters if provided
     if (parameters.has_value()) {
-        std::string params_json = rfl::json::write(parameters.value());
+        std::string const params_json = rfl::json::write(parameters.value());
         auto params_any = Examples::loadParametersForTransform(transform_name, params_json);
         if (!params_any.has_value()) {
             std::cerr << "Failed to load parameters for transform '" << transform_name << "'" << std::endl;
@@ -432,7 +503,7 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeContainerTran
 
         // Load parameters if provided, otherwise use default
         if (parameters.has_value()) {
-            std::string params_json = rfl::json::write(parameters.value());
+            std::string const params_json = rfl::json::write(parameters.value());
             params_any = Examples::loadParametersForTransform(transform_name, params_json);
             if (!params_any.has_value()) {
                 std::cerr << "Failed to load parameters for container transform '" << transform_name << "'" << std::endl;
@@ -448,7 +519,7 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeContainerTran
         }
 
         // Execute using the registry's dynamic container execution
-        ComputeContext ctx;
+        ComputeContext const ctx;
         auto result = registry.executeContainerTransformDynamic(transform_name, input_data, params_any, ctx);
         return result;
 
@@ -519,7 +590,7 @@ auto executeBinaryTransformImpl(
         auto const & next_step = steps[i];
         std::any next_params;
         if (next_step.parameters.has_value()) {
-            std::string params_json = rfl::json::write(next_step.parameters.value());
+            std::string const params_json = rfl::json::write(next_step.parameters.value());
             next_params = Examples::loadParametersForTransform(next_step.transform_name, params_json);
         } else {
             next_params = Examples::loadParametersForTransform(next_step.transform_name, "{}");
@@ -823,7 +894,7 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeMultiInputSte
     // Load parameters
     std::any params_any;
     if (step.parameters.has_value()) {
-        std::string params_json = rfl::json::write(step.parameters.value());
+        std::string const params_json = rfl::json::write(step.parameters.value());
         params_any = Examples::loadParametersForTransform(step.transform_name, params_json);
     } else {
         params_any = Examples::loadParametersForTransform(step.transform_name, "{}");
@@ -903,7 +974,7 @@ bool DataManagerPipelineExecutor::stepsAreChained(size_t prev_step, size_t curr_
     auto const & curr = steps_[curr_step];
 
     // Current step's input must come from previous step
-    std::string prev_output = prev.output_key.value_or(prev.step_id);
+    std::string const prev_output = prev.output_key.value_or(prev.step_id);
     return curr.input_key == prev_output;
 }
 
