@@ -299,11 +299,11 @@ TEST_CASE("Symmetric boundary has smaller edge artifacts than zero padding",
 
     SincInterpolationParams sym_params;
     sym_params.upsampling_factor = 4;
-    sym_params.boundary_mode = "SymmetricExtension";
+    sym_params.boundary_mode = BoundaryMode::SymmetricExtension;
 
     SincInterpolationParams zero_params;
     zero_params.upsampling_factor = 4;
-    zero_params.boundary_mode = "ZeroPad";
+    zero_params.boundary_mode = BoundaryMode::ZeroPad;
 
     auto const sym_result = sincInterpolation(*input, sym_params, ctx);
     auto const zero_result = sincInterpolation(*input, zero_params, ctx);
@@ -434,11 +434,14 @@ TEST_CASE("SincInterpolation all window types produce valid output",
     auto const sine_data = makeSineWave(50.0f, 500.0f, 50);
     auto const input = makeATS(sine_data);
 
-    for (auto const & wt: {"Lanczos", "Hann", "Blackman"}) {
-        SECTION(std::string("Window: ") + wt) {
+    for (auto const & [wt_name, wt_val]: std::vector<std::pair<std::string, SincWindowType>>{
+                 {"Lanczos", SincWindowType::Lanczos},
+                 {"Hann", SincWindowType::Hann},
+                 {"Blackman", SincWindowType::Blackman}}) {
+        SECTION(std::string("Window: ") + wt_name) {
             SincInterpolationParams params;
             params.upsampling_factor = 4;
-            params.window_type = std::string(wt);
+            params.window_type = wt_val;
 
             auto const result = sincInterpolation(*input, params, ctx);
             REQUIRE(result != nullptr);
@@ -447,7 +450,7 @@ TEST_CASE("SincInterpolation all window types produce valid output",
             // All outputs should be finite
             auto const out = result->getAnalogTimeSeries();
             for (size_t i = 0; i < out.size(); ++i) {
-                INFO("Window=" << wt << " sample=" << i);
+                INFO("Window=" << wt_name << " sample=" << i);
                 REQUIRE(std::isfinite(out[i]));
             }
         }
@@ -477,11 +480,9 @@ TEST_CASE("SincInterpolationParams JSON loading",
         REQUIRE(params.kernel_half_width.has_value());
         REQUIRE(params.kernel_half_width.value() == 16);
         REQUIRE(params.window_type.has_value());
-        REQUIRE(params.window_type.value() == "Blackman");
+        REQUIRE(params.window_type.value() == SincWindowType::Blackman);
         REQUIRE(params.boundary_mode.has_value());
-        REQUIRE(params.boundary_mode.value() == "ZeroPad");
-        REQUIRE(params.getWindowType() == SincWindowType::Blackman);
-        REQUIRE(params.getBoundaryMode() == BoundaryMode::ZeroPad);
+        REQUIRE(params.boundary_mode.value() == BoundaryMode::ZeroPad);
     }
 
     SECTION("Empty JSON fails (upsampling_factor is required)") {
@@ -492,7 +493,7 @@ TEST_CASE("SincInterpolationParams JSON loading",
         REQUIRE_FALSE(result);
     }
 
-    SECTION("Minimal JSON with only upsampling_factor uses defaults for optionals") {
+    SECTION("Minimal JSON with only upsampling_factor uses defaults") {
         std::string const json = R"({"upsampling_factor": 1})";
 
         auto result = loadParametersFromJson<SincInterpolationParams>(json);
@@ -525,8 +526,8 @@ TEST_CASE("SincInterpolationParams JSON loading",
         SincInterpolationParams original;
         original.upsampling_factor = 6;
         original.kernel_half_width = 12;
-        original.window_type = "Hann";
-        original.boundary_mode = "ZeroPad";
+        original.window_type = SincWindowType::Hann;
+        original.boundary_mode = BoundaryMode::ZeroPad;
 
         std::string const json = saveParametersToJson(original);
         INFO("Serialized JSON: " << json);
@@ -537,8 +538,8 @@ TEST_CASE("SincInterpolationParams JSON loading",
 
         REQUIRE(recovered.upsampling_factor == 6);
         REQUIRE(recovered.kernel_half_width.value() == 12);
-        REQUIRE(recovered.window_type.value() == "Hann");
-        REQUIRE(recovered.boundary_mode.value() == "ZeroPad");
+        REQUIRE(recovered.window_type.value() == SincWindowType::Hann);
+        REQUIRE(recovered.boundary_mode.value() == BoundaryMode::ZeroPad);
     }
 
     SECTION("Registry-based loadParametersForTransform works") {
@@ -549,7 +550,7 @@ TEST_CASE("SincInterpolationParams JSON loading",
 
         auto params = std::any_cast<SincInterpolationParams>(params_any);
         REQUIRE(params.upsampling_factor == 4);
-        REQUIRE(params.window_type.value() == "Hann");
+        REQUIRE(params.window_type.value() == SincWindowType::Hann);
     }
 
     SECTION("Registry-based loadParametersForTransform with empty JSON fails") {

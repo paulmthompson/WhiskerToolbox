@@ -11,7 +11,6 @@
 
 #include <memory>
 #include <optional>
-#include <string>
 
 #include <rfl.hpp>
 
@@ -43,6 +42,7 @@ enum class BoundaryMode {
  * @brief Parameters for sinc interpolation upsampling
  *
  * Uses reflect-cpp for automatic JSON serialization/deserialization.
+ * Enum fields are automatically detected by AutoParamWidget and shown as combo boxes.
  *
  * Example JSON:
  * ```json
@@ -62,26 +62,21 @@ struct SincInterpolationParams {
     std::optional<int> kernel_half_width;
 
     /// Window function applied to the sinc kernel (default: Lanczos)
-    std::optional<std::string> window_type;
+    std::optional<SincWindowType> window_type;
 
     /// Boundary handling mode (default: SymmetricExtension)
-    std::optional<std::string> boundary_mode;
+    std::optional<BoundaryMode> boundary_mode;
 
     [[nodiscard]] int getKernelHalfWidth() const {
         return kernel_half_width.value_or(8);
     }
 
     [[nodiscard]] SincWindowType getWindowType() const {
-        auto const wt = window_type.value_or("Lanczos");
-        if (wt == "Hann") return SincWindowType::Hann;
-        if (wt == "Blackman") return SincWindowType::Blackman;
-        return SincWindowType::Lanczos;
+        return window_type.value_or(SincWindowType::Lanczos);
     }
 
     [[nodiscard]] BoundaryMode getBoundaryMode() const {
-        auto const bm = boundary_mode.value_or("SymmetricExtension");
-        if (bm == "ZeroPad") return BoundaryMode::ZeroPad;
-        return BoundaryMode::SymmetricExtension;
+        return boundary_mode.value_or(BoundaryMode::SymmetricExtension);
     }
 };
 

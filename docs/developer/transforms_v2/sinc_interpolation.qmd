@@ -58,14 +58,14 @@ The denominator in the formula above normalizes the kernel weights to sum to 1. 
 
 ```cpp
 struct SincInterpolationParams {
-    int upsampling_factor;                       // Required. Must be >= 1.
-    std::optional<int> kernel_half_width;         // Default: 8
-    std::optional<std::string> window_type;       // Default: "Lanczos"
-    std::optional<std::string> boundary_mode;     // Default: "SymmetricExtension"
+    int upsampling_factor;                          // Required. Must be >= 1.
+    std::optional<int> kernel_half_width;            // Default: 8
+    std::optional<SincWindowType> window_type;       // Default: Lanczos
+    std::optional<BoundaryMode> boundary_mode;       // Default: SymmetricExtension
 };
 ```
 
-The string-based `window_type` and `boundary_mode` fields are used for JSON serialization via reflect-cpp. Helper methods `getWindowType()`, `getBoundaryMode()`, and `getKernelHalfWidth()` convert to the corresponding enum values.
+The enum-typed `window_type` and `boundary_mode` fields are automatically detected by `extractParameterSchema` and rendered as combo boxes in AutoParamWidget. Helper methods `getWindowType()`, `getBoundaryMode()`, and `getKernelHalfWidth()` return the value or its default.
 
 ## Registration
 
