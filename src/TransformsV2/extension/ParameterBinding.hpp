@@ -55,6 +55,7 @@
 #include "core/PipelineValueStore.hpp" // For PipelineValueStore
 
 #include <rfl.hpp>
+#include <rfl/DefaultIfMissing.hpp>
 #include <rfl/json.hpp>
 #include <nlohmann/json.hpp>
 
@@ -124,7 +125,7 @@ Params applyBindings(
 
     // Deserialize back to Params
     std::string modified_json = json_obj.dump();
-    auto result = rfl::json::read<Params>(modified_json);
+    auto result = rfl::json::read<Params, rfl::DefaultIfMissing>(modified_json);
 
     if (!result) {
         throw std::runtime_error(

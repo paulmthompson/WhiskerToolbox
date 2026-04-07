@@ -485,12 +485,15 @@ TEST_CASE("SincInterpolationParams JSON loading",
         REQUIRE(params.boundary_mode.value() == BoundaryMode::ZeroPad);
     }
 
-    SECTION("Empty JSON fails (upsampling_factor is required)") {
+    SECTION("Empty JSON uses defaults (DefaultIfMissing fills upsampling_factor)") {
         std::string const json = "{}";
 
         auto result = loadParametersFromJson<SincInterpolationParams>(json);
-        // upsampling_factor is a non-optional int, so rfl requires it in JSON
-        REQUIRE_FALSE(result);
+        // With rfl::DefaultIfMissing, all fields get their default values
+        REQUIRE(result);
+
+        auto params = result.value();
+        REQUIRE(params.upsampling_factor == 1);
     }
 
     SECTION("Minimal JSON with only upsampling_factor uses defaults") {
@@ -553,10 +556,13 @@ TEST_CASE("SincInterpolationParams JSON loading",
         REQUIRE(params.window_type.value() == SincWindowType::Hann);
     }
 
-    SECTION("Registry-based loadParametersForTransform with empty JSON fails") {
-        // upsampling_factor is required in JSON, so empty JSON fails
+    SECTION("Registry-based loadParametersForTransform with empty JSON uses defaults") {
+        // With rfl::DefaultIfMissing, empty JSON succeeds with default values
         auto params_any = loadParametersForTransform("SincInterpolation", "{}");
-        REQUIRE_FALSE(params_any.has_value());
+        REQUIRE(params_any.has_value());
+
+        auto params = std::any_cast<SincInterpolationParams>(params_any);
+        REQUIRE(params.upsampling_factor == 1);
     }
 
     SECTION("Registry-based loadParametersForTransform with minimal JSON") {

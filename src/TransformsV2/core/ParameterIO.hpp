@@ -2,6 +2,7 @@
 #define WHISKERTOOLBOX_V2_PARAMETER_IO_HPP
 
 #include <rfl.hpp>
+#include <rfl/DefaultIfMissing.hpp>
 #include <rfl/json.hpp>
 
 #include <any>
@@ -31,7 +32,7 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  */
 template<typename ParamsT>
 rfl::Result<ParamsT> loadParametersFromJson(std::string const& json_str) {
-    return rfl::json::read<ParamsT>(json_str);
+    return rfl::json::read<ParamsT, rfl::DefaultIfMissing>(json_str);
 }
 
 /**

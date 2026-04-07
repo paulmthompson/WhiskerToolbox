@@ -17,6 +17,7 @@
 
 
 #include <rfl.hpp>
+#include <rfl/DefaultIfMissing.hpp>
 #include <rfl/json.hpp>
 
 #include <any>
@@ -932,7 +933,7 @@ private:
         if (param_deserializers_.find(type_idx) == param_deserializers_.end()) {
             // 1. Register JSON deserializer using reflect-cpp
             param_deserializers_[type_idx] = [](std::string const & json_str) -> std::any {
-                auto result = rfl::json::read<Params>(json_str);
+                auto result = rfl::json::read<Params, rfl::DefaultIfMissing>(json_str);
                 if (result) {
                     return std::any{result.value()};
                 }
@@ -1031,7 +1032,7 @@ private:
         auto type_idx = std::type_index(typeid(Params));
         if (param_deserializers_.find(type_idx) == param_deserializers_.end()) {
             param_deserializers_[type_idx] = [](std::string const & json_str) -> std::any {
-                auto result = rfl::json::read<Params>(json_str);
+                auto result = rfl::json::read<Params, rfl::DefaultIfMissing>(json_str);
                 return result ? std::any{result.value()} : std::any{};
             };
 

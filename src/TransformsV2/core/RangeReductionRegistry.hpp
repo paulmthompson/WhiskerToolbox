@@ -46,6 +46,7 @@
 #include "extension/RangeReductionTypes.hpp"
 
 #include <rfl.hpp>
+#include <rfl/DefaultIfMissing.hpp>
 #include <rfl/json.hpp>
 
 #include <any>
@@ -567,7 +568,7 @@ private:
         // Register factory that creates executor from JSON
         // Capture the reduction by value (shared_ptr copy)
         param_executor_factories_[name] = [reduction](std::string const & json) {
-            auto params = rfl::json::read<Params>(json);
+            auto params = rfl::json::read<Params, rfl::DefaultIfMissing>(json);
             if (!params) {
                 throw std::runtime_error("Failed to parse reduction parameters: " +
                                          std::string(params.error()->what()));
@@ -580,7 +581,7 @@ private:
         auto params_type_index = std::type_index(typeid(Params));
         if (param_deserializers_.find(params_type_index) == param_deserializers_.end()) {
             param_deserializers_[params_type_index] = [](std::string const & json) -> std::any {
-                auto result = rfl::json::read<Params>(json);
+                auto result = rfl::json::read<Params, rfl::DefaultIfMissing>(json);
                 if (!result) {
                     throw std::runtime_error("Failed to parse parameters: " +
                                              std::string(result.error()->what()));
