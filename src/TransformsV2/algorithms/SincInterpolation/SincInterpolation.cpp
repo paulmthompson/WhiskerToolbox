@@ -105,6 +105,7 @@ std::shared_ptr<AnalogTimeSeries> sincInterpolation(
     }
 
     auto const data = input.getAnalogTimeSeries();
+    auto const input_times = input.getTimeSeries();
     auto const n = static_cast<int64_t>(data.size());
 
     if (n == 0) {
@@ -114,13 +115,16 @@ std::shared_ptr<AnalogTimeSeries> sincInterpolation(
     // Factor == 1: identity (copy)
     if (factor == 1) {
         std::vector<float> output(data.begin(), data.end());
-        return std::make_shared<AnalogTimeSeries>(std::move(output), output.size());
+        std::vector<TimeFrameIndex> out_times(input_times.begin(), input_times.end());
+        return std::make_shared<AnalogTimeSeries>(std::move(output), std::move(out_times));
     }
 
     // Single sample: no interpolation possible, just return a copy
     if (n == 1) {
         std::vector<float> output = {data[0]};
-        return std::make_shared<AnalogTimeSeries>(std::move(output), output.size());
+        std::vector<TimeFrameIndex> out_times = {
+                TimeFrameIndex(input_times[0].getValue() * factor)};
+        return std::make_shared<AnalogTimeSeries>(std::move(output), std::move(out_times));
     }
 
     int const K = params.getKernelHalfWidth();
@@ -180,8 +184,26 @@ std::shared_ptr<AnalogTimeSeries> sincInterpolation(
     // Report completion
     ctx.reportProgress(100);
 
-    auto const output_size = output.size();
-    return std::make_shared<AnalogTimeSeries>(std::move(output), output_size);
+    // Compute upsampled TimeFrameIndex values:
+    // Original index t_i → t_i * factor; intermediate positions are linearly interpolated
+    std::vector<TimeFrameIndex> out_times;
+    out_times.reserve(static_cast<size_t>(m_total));
+    for (int64_t m = 0; m < m_total; ++m) {
+        auto const seg = m / factor; // segment index (which pair of original samples)
+        auto const frac = m % factor;// fractional position within segment
+        if (frac == 0) {
+            // Exact original sample position
+            out_times.emplace_back(input_times[static_cast<size_t>(seg)].getValue() * factor);
+        } else {
+            // Linearly interpolate TimeFrameIndex between seg and seg+1
+            auto const t0 = input_times[static_cast<size_t>(seg)].getValue() * factor;
+            auto const t1 = input_times[static_cast<size_t>(seg + 1)].getValue() * factor;
+            auto const t = t0 + (t1 - t0) * frac / factor;
+            out_times.emplace_back(t);
+        }
+    }
+
+    return std::make_shared<AnalogTimeSeries>(std::move(output), std::move(out_times));
 }
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples

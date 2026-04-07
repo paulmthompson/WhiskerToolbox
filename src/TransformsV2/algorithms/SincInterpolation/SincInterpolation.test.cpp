@@ -26,6 +26,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
+#include "DataManager/utils/DerivedTimeFrame.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -869,5 +870,408 @@ TEST_CASE("SincInterpolation load_data_from_json_config_v2",
         std::filesystem::remove_all(test_dir);
     } catch (std::exception const & e) {
         std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+}
+
+// ============================================================================
+// Sinc + Upsampled TimeFrame Alignment Tests
+// ============================================================================
+
+TEST_CASE("SincInterpolation output aligns with createUpsampledTimeFrame",
+          "[transforms][v2][sinc][alignment]") {
+
+    int const factor = 4;
+
+    // Source TimeFrame: 5 entries with realistic clock values (e.g. 30kHz ticks)
+    std::vector<int> const source_times = {0, 60, 120, 180, 240};
+    auto const source_tf = std::make_shared<TimeFrame>(source_times);
+    int const n = static_cast<int>(source_times.size());
+
+    // Create upsampled TimeFrame via createUpsampledTimeFrame
+    DerivedTimeFrameFromUpsamplingOptions upsample_opts;
+    upsample_opts.source_timeframe = source_tf;
+    upsample_opts.upsampling_factor = factor;
+    auto const upsampled_tf = createUpsampledTimeFrame(upsample_opts);
+    REQUIRE(upsampled_tf != nullptr);
+
+    // Create sinc-interpolated signal
+    std::vector<float> const signal = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
+    auto const input = std::make_shared<AnalogTimeSeries>(std::vector<float>(signal), signal.size());
+
+    ComputeContext const ctx;
+    SincInterpolationParams params;
+    params.upsampling_factor = factor;
+
+    auto const sinc_output = sincInterpolation(*input, params, ctx);
+    REQUIRE(sinc_output != nullptr);
+
+    // Both must produce the same output count: (N-1)*factor+1
+    int const expected_count = (n - 1) * factor + 1;
+    REQUIRE(upsampled_tf->getTotalFrameCount() == expected_count);
+    REQUIRE(static_cast<int>(sinc_output->getNumSamples()) == expected_count);
+
+    SECTION("First time value matches original first time") {
+        // The upsampled TimeFrame's first entry should be the original first time
+        REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)) == source_times[0]);
+    }
+
+    SECTION("Last time value matches original last time") {
+        // The upsampled TimeFrame's last entry should be the original last time
+        REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(expected_count - 1)) == source_times.back());
+    }
+
+    SECTION("Original sample positions in upsampled TimeFrame match source") {
+        // Every factor-th entry in the upsampled TimeFrame should match the source
+        for (int i = 0; i < n; ++i) {
+            int const upsampled_idx = i * factor;
+            INFO("Original index " << i << " → upsampled index " << upsampled_idx);
+            REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(upsampled_idx)) == source_times[static_cast<size_t>(i)]);
+        }
+    }
+
+    SECTION("Sinc output at original positions matches input signal") {
+        auto const out = sinc_output->getAnalogTimeSeries();
+        for (int i = 0; i < n; ++i) {
+            int const upsampled_idx = i * factor;
+            INFO("Original index " << i << " → upsampled index " << upsampled_idx);
+            REQUIRE_THAT(out[static_cast<size_t>(upsampled_idx)],
+                         Catch::Matchers::WithinAbs(signal[static_cast<size_t>(i)], 1e-6));
+        }
+    }
+
+    SECTION("End-to-end: DataManager stores with correct TimeKey and values align") {
+        auto dm = std::make_unique<DataManager>();
+
+        // Register source TimeFrame and data
+        dm->setTime(TimeKey("source"), source_tf);
+        dm->setData<AnalogTimeSeries>("signal", input, TimeKey("source"));
+
+        // Register upsampled TimeFrame
+        dm->setTime(TimeKey("upsampled"), upsampled_tf);
+
+        // Execute sinc interpolation via DataManagerPipelineExecutor
+        nlohmann::json const config = {
+                {"steps",
+                 {{{"step_id", "upsample_signal"},
+                   {"transform_name", "SincInterpolation"},
+                   {"input_key", "signal"},
+                   {"output_key", "signal_upsampled"},
+                   {"output_time_key", "upsampled"},
+                   {"parameters", {{"upsampling_factor", factor}}}}}}};
+
+        DataManagerPipelineExecutor executor(dm.get());
+        REQUIRE(executor.loadFromJson(config));
+
+        auto const result = executor.execute();
+        INFO("Error: " << result.error_message);
+        REQUIRE(result.success);
+
+        // Verify stored under correct TimeKey
+        TimeKey const stored_tk = dm->getTimeKey("signal_upsampled");
+        REQUIRE(stored_tk.str() == "upsampled");
+
+        // Verify the output has the correct size
+        auto const output = dm->getData<AnalogTimeSeries>("signal_upsampled");
+        REQUIRE(output != nullptr);
+        REQUIRE(static_cast<int>(output->getNumSamples()) == expected_count);
+
+        // Verify first and last output values match first and last input values
+        auto const out = output->getAnalogTimeSeries();
+        REQUIRE_THAT(out[0],
+                     Catch::Matchers::WithinAbs(static_cast<double>(signal.front()), 1e-6));
+        REQUIRE_THAT(out[static_cast<size_t>(expected_count - 1)],
+                     Catch::Matchers::WithinAbs(static_cast<double>(signal.back()), 1e-6));
+
+        // Verify all original sample positions are preserved
+        for (int i = 0; i < n; ++i) {
+            int const idx = i * factor;
+            INFO("Original sample " << i << " at upsampled index " << idx);
+            REQUIRE_THAT(out[static_cast<size_t>(idx)],
+                         Catch::Matchers::WithinAbs(static_cast<double>(signal[static_cast<size_t>(i)]), 1e-6));
+        }
+    }
+
+    SECTION("Non-uniform source TimeFrame alignment") {
+        // Non-uniform clock: e.g. jittery acquisition
+        std::vector<int> const jittery_times = {0, 58, 122, 179, 241};
+        auto const jittery_tf = std::make_shared<TimeFrame>(jittery_times);
+
+        DerivedTimeFrameFromUpsamplingOptions jittery_opts;
+        jittery_opts.source_timeframe = jittery_tf;
+        jittery_opts.upsampling_factor = factor;
+        auto const jittery_upsampled = createUpsampledTimeFrame(jittery_opts);
+        REQUIRE(jittery_upsampled != nullptr);
+
+        int const jittery_expected = (static_cast<int>(jittery_times.size()) - 1) * factor + 1;
+        REQUIRE(jittery_upsampled->getTotalFrameCount() == jittery_expected);
+        REQUIRE(static_cast<int>(sinc_output->getNumSamples()) == jittery_expected);
+
+        // First and last entries must match original first and last times
+        REQUIRE(jittery_upsampled->getTimeAtIndex(TimeFrameIndex(0)) == jittery_times[0]);
+        REQUIRE(jittery_upsampled->getTimeAtIndex(TimeFrameIndex(jittery_expected - 1)) == jittery_times.back());
+
+        // Original positions must match
+        for (int i = 0; i < static_cast<int>(jittery_times.size()); ++i) {
+            int const idx = i * factor;
+            REQUIRE(jittery_upsampled->getTimeAtIndex(TimeFrameIndex(idx)) == jittery_times[static_cast<size_t>(i)]);
+        }
+    }
+}
+
+// ============================================================================
+// Offset TimeFrame: widget-path simulation
+// ============================================================================
+
+TEST_CASE("SincInterpolation with offset TimeFrame mirrors widget workflow",
+          "[transforms][v2][sinc][alignment][offset]") {
+
+    // Simulate the exact workflow:
+    //   1. User has data on a TimeFrame starting at offset 500
+    //   2. User creates upsampled TimeFrame via DataManager widget (createUpsampledTimeFrame)
+    //   3. User runs sinc interpolation via TransformsV2 widget (loadPipelineFromJson + executePipeline)
+    //   4. User stores result with the upsampled TimeKey
+
+    int const factor = 4;
+
+    // Source TimeFrame with offset (e.g. camera timestamps starting at 500)
+    std::vector<int> const source_times = {500, 600, 700, 800, 900};
+    auto const source_tf = std::make_shared<TimeFrame>(source_times);
+    int const n = static_cast<int>(source_times.size());
+    int const expected_count = (n - 1) * factor + 1;// 17
+
+    // Step 1: create upsampled TimeFrame (widget path)
+    DerivedTimeFrameFromUpsamplingOptions upsample_opts;
+    upsample_opts.source_timeframe = source_tf;
+    upsample_opts.upsampling_factor = factor;
+    auto const upsampled_tf = createUpsampledTimeFrame(upsample_opts);
+    REQUIRE(upsampled_tf != nullptr);
+    REQUIRE(upsampled_tf->getTotalFrameCount() == expected_count);
+
+    // Verify the upsampled TimeFrame clock values are correct
+    // First must be 500, last must be 900
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)) == 500);
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(expected_count - 1)) == 900);
+
+    // Original positions must map to exact source clock values
+    for (int i = 0; i < n; ++i) {
+        int const idx = i * factor;
+        INFO("Source index " << i << " → upsampled index " << idx
+                             << ", expected clock " << source_times[static_cast<size_t>(i)]);
+        REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(idx)) == source_times[static_cast<size_t>(i)]);
+    }
+
+    // Interpolated positions should have correct intermediate clock values
+    // Between 500 and 600, step = 100/4 = 25: expect 500, 525, 550, 575, 600
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)) == 500);
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(1)) == 525);
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(2)) == 550);
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(3)) == 575);
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(4)) == 600);
+
+    // Step 2: create input signal and sinc-interpolate via loadPipelineFromJson + executePipeline
+    // (this is the exact code path the TransformsV2 widget uses)
+    std::vector<float> const signal = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+    auto const input_ats = std::make_shared<AnalogTimeSeries>(std::vector<float>(signal), signal.size());
+
+    std::string const pipeline_json = R"({
+        "steps": [{
+            "step_id": "sinc_upsample",
+            "transform_name": "SincInterpolation",
+            "parameters": {
+                "upsampling_factor": 4
+            }
+        }]
+    })";
+
+    auto pipeline_result = loadPipelineFromJson(pipeline_json);
+    REQUIRE(pipeline_result);
+
+    DataTypeVariant const input_variant = input_ats;
+    auto result_variant = executePipeline(input_variant, pipeline_result.value());
+    auto const sinc_output = std::get<std::shared_ptr<AnalogTimeSeries>>(result_variant);
+    REQUIRE(sinc_output != nullptr);
+    REQUIRE(static_cast<int>(sinc_output->getNumSamples()) == expected_count);
+
+    // Step 3: simulate dm->setData(output_key, result, upsampled_time_key)
+    // The widget does exactly this. Verify the output makes sense.
+    auto dm = std::make_unique<DataManager>();
+    dm->setTime(TimeKey("source"), source_tf);
+    dm->setData<AnalogTimeSeries>("input_signal", input_ats, TimeKey("source"));
+    dm->setTime(TimeKey("upsampled"), upsampled_tf);
+    dm->setData<AnalogTimeSeries>("output_signal", sinc_output, TimeKey("upsampled"));
+
+    // Verify stored TimeKey
+    REQUIRE(dm->getTimeKey("output_signal").str() == "upsampled");
+
+    // Step 4: verify alignment
+    // The output signal's sample[i] should be the value at upsampled TimeFrame index i.
+    // At original sample positions (every factor-th index), values must match exactly.
+    auto const out = sinc_output->getAnalogTimeSeries();
+    for (int i = 0; i < n; ++i) {
+        int const idx = i * factor;
+        int const clock = upsampled_tf->getTimeAtIndex(TimeFrameIndex(idx));
+        INFO("Original sample " << i << ": value=" << signal[static_cast<size_t>(i)]
+                                << " at upsampled index " << idx
+                                << " (clock=" << clock << ")");
+        // Value must match original
+        REQUIRE_THAT(out[static_cast<size_t>(idx)],
+                     Catch::Matchers::WithinAbs(static_cast<double>(signal[static_cast<size_t>(i)]), 1e-6));
+        // Clock must match source TimeFrame
+        REQUIRE(clock == source_times[static_cast<size_t>(i)]);
+    }
+
+    // Verify first output value is at the first source clock time (500), not at 0
+    REQUIRE_THAT(out[0],
+                 Catch::Matchers::WithinAbs(static_cast<double>(signal[0]), 1e-6));
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)) == 500);
+
+    // Verify last output value is at the last source clock time (900)
+    REQUIRE_THAT(out[static_cast<size_t>(expected_count - 1)],
+                 Catch::Matchers::WithinAbs(static_cast<double>(signal.back()), 1e-6));
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(expected_count - 1)) == 900);
+
+    // Verify monotonicity of interpolated values (linear ramp → should be monotonically increasing)
+    for (size_t i = 1; i < out.size(); ++i) {
+        INFO("Sample " << i << ": " << out[i] << " >= " << out[i - 1]);
+        REQUIRE(out[i] >= out[i - 1] - 0.01f);// small tolerance for sinc ringing
+    }
+}
+
+// ============================================================================
+// TimeFrameIndex propagation: sinc output must carry upsampled indices
+// ============================================================================
+
+TEST_CASE("SincInterpolation output carries upsampled TimeFrameIndex values",
+          "[transforms][v2][sinc][timeframeindex]") {
+
+    using namespace WhiskerToolbox::Transforms::V2::Examples;
+
+    int const factor = 4;
+
+    SECTION("Consecutive indices starting at offset are scaled by factor") {
+        // Input: samples at TimeFrameIndex 2150, 2151, 2152, 2153, 2154
+        std::vector<TimeFrameIndex> const input_times = {
+                TimeFrameIndex(2150), TimeFrameIndex(2151), TimeFrameIndex(2152),
+                TimeFrameIndex(2153), TimeFrameIndex(2154)};
+        std::vector<float> const input_values = {156.87f, 157.16f, 157.12f, 156.86f, 157.20f};
+
+        auto const input_ats = std::make_shared<AnalogTimeSeries>(
+                std::vector<float>(input_values), std::vector<TimeFrameIndex>(input_times));
+
+        SincInterpolationParams params;
+        params.upsampling_factor = factor;
+        ComputeContext const ctx;
+
+        auto const result = sincInterpolation(*input_ats, params, ctx);
+        REQUIRE(result != nullptr);
+
+        int const n = static_cast<int>(input_values.size());
+        int const expected_count = (n - 1) * factor + 1;// 17
+        REQUIRE(static_cast<int>(result->getNumSamples()) == expected_count);
+
+        auto const result_times = result->getTimeSeries();
+        REQUIRE(static_cast<int>(result_times.size()) == expected_count);
+
+        // First output TimeFrameIndex must be 2150 * 4 = 8600
+        REQUIRE(result_times[0].getValue() == 2150 * factor);
+
+        // Last output TimeFrameIndex must be 2154 * 4 = 8616
+        REQUIRE(result_times[static_cast<size_t>(expected_count - 1)].getValue() == 2154 * factor);
+
+        // At every factor-th position, TimeFrameIndex = original * factor
+        for (int i = 0; i < n; ++i) {
+            auto const idx = static_cast<size_t>(i * factor);
+            INFO("Original sample " << i << ": expected TFI "
+                                    << input_times[static_cast<size_t>(i)].getValue() * factor
+                                    << ", got " << result_times[idx].getValue());
+            REQUIRE(result_times[idx].getValue() == input_times[static_cast<size_t>(i)].getValue() * factor);
+        }
+
+        // Intermediate positions: between 8600 and 8604, expect 8601, 8602, 8603
+        REQUIRE(result_times[1].getValue() == 8601);
+        REQUIRE(result_times[2].getValue() == 8602);
+        REQUIRE(result_times[3].getValue() == 8603);
+
+        // Values at original positions must pass through
+        for (int i = 0; i < n; ++i) {
+            auto const idx = static_cast<size_t>(i * factor);
+            REQUIRE_THAT(result->getAnalogTimeSeries()[idx],
+                         Catch::Matchers::WithinAbs(
+                                 static_cast<double>(input_values[static_cast<size_t>(i)]), 1e-6));
+        }
+    }
+
+    SECTION("Factor 1 preserves original TimeFrameIndex") {
+        std::vector<TimeFrameIndex> const input_times = {
+                TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102)};
+        std::vector<float> const input_values = {1.0f, 2.0f, 3.0f};
+
+        auto const input_ats = std::make_shared<AnalogTimeSeries>(
+                std::vector<float>(input_values), std::vector<TimeFrameIndex>(input_times));
+
+        SincInterpolationParams params;
+        params.upsampling_factor = 1;
+        ComputeContext const ctx;
+
+        auto const result = sincInterpolation(*input_ats, params, ctx);
+        REQUIRE(result != nullptr);
+        auto const result_times = result->getTimeSeries();
+        REQUIRE(result_times.size() == input_times.size());
+        for (size_t i = 0; i < input_times.size(); ++i) {
+            REQUIRE(result_times[i].getValue() == input_times[i].getValue());
+        }
+    }
+
+    SECTION("Single sample scales its TimeFrameIndex") {
+        std::vector<TimeFrameIndex> const input_times = {TimeFrameIndex(500)};
+        std::vector<float> const input_values = {42.0f};
+
+        auto const input_ats = std::make_shared<AnalogTimeSeries>(
+                std::vector<float>(input_values), std::vector<TimeFrameIndex>(input_times));
+
+        SincInterpolationParams params;
+        params.upsampling_factor = 4;
+        ComputeContext const ctx;
+
+        auto const result = sincInterpolation(*input_ats, params, ctx);
+        REQUIRE(result != nullptr);
+        auto const result_times = result->getTimeSeries();
+        REQUIRE(result_times.size() == 1);
+        REQUIRE(result_times[0].getValue() == 500 * 4);
+    }
+
+    SECTION("Pipeline JSON path also carries upsampled TimeFrameIndex") {
+        // Same workflow as widget: loadPipelineFromJson + executePipeline
+        std::vector<TimeFrameIndex> const input_times = {
+                TimeFrameIndex(2150), TimeFrameIndex(2151), TimeFrameIndex(2152),
+                TimeFrameIndex(2153), TimeFrameIndex(2154)};
+        std::vector<float> const input_values = {156.87f, 157.16f, 157.12f, 156.86f, 157.20f};
+
+        auto const input_ats = std::make_shared<AnalogTimeSeries>(
+                std::vector<float>(input_values), std::vector<TimeFrameIndex>(input_times));
+
+        std::string const pipeline_json = R"({
+            "steps": [{
+                "step_id": "sinc_upsample",
+                "transform_name": "SincInterpolation",
+                "parameters": {
+                    "upsampling_factor": 4
+                }
+            }]
+        })";
+
+        auto pipeline_result = loadPipelineFromJson(pipeline_json);
+        REQUIRE(pipeline_result);
+
+        DataTypeVariant const input_variant = input_ats;
+        auto result_variant = executePipeline(input_variant, pipeline_result.value());
+        auto const sinc_output = std::get<std::shared_ptr<AnalogTimeSeries>>(result_variant);
+        REQUIRE(sinc_output != nullptr);
+
+        auto const result_times = sinc_output->getTimeSeries();
+        // First index: 2150 * 4 = 8600
+        REQUIRE(result_times[0].getValue() == 8600);
+        // Original sample 1 position: 2151 * 4 = 8604
+        REQUIRE(result_times[4].getValue() == 8604);
     }
 }
