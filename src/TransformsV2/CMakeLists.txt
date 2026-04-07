@@ -7,6 +7,7 @@ set(TRANSFORM_V2_SOURCES
 
         core/DataManagerIntegration.hpp
         core/DataManagerIntegration.cpp
+        core/ElementRegistry.cpp
         core/ElementRegistry.hpp 
         core/ParameterIO.hpp
         core/ParameterIO.cpp
