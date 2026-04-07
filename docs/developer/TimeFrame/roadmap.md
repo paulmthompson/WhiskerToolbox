@@ -8,7 +8,7 @@
 |-------|--------|-------|
 | **Phase 1:** Upsampled TimeFrame Creation | **Complete** | `createUpsampledTimeFrame()` utility + 6 test cases, 73 assertions |
 | **Phase 2:** Pipeline Executor TimeKey Fix | **Complete** | `output_time_key` field + propagate input TimeKey (fixes hardcoded `"default"` bug) |
-| **Phase 3:** Sinc Interpolation Transform | Not Started | Pure data transform: N samples → M samples. No TimeFrame awareness. |
+| **Phase 3:** Sinc Interpolation Transform | **Complete** | Windowed-sinc container transform with kernel normalization, 3 window types, 2 boundary modes, 11 test sections |
 | **Phase 4:** DataManager Widget Integration | Not Started | UI for creating upsampled TimeFrames interactively |
 | **Phase 5:** Float TimeFrame | Not Started | Future: `std::vector<double>` for sub-clock-cycle precision |
 

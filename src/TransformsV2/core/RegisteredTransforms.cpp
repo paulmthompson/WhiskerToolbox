@@ -20,6 +20,7 @@
 #include "algorithms/TensorPCA/TensorPCA.hpp"
 #include "algorithms/TensorRobustPCA/TensorRobustPCA.hpp"
 #include "algorithms/TensorTSNE/TensorTSNE.hpp"
+#include "algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
 #include "core/PipelineLoader.hpp"  // registerPipelineStepFactoryFor
@@ -68,6 +69,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
     registerPipelineStepFactoryFor<IntervalReductionParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
+    registerPipelineStepFactoryFor<SincInterpolationParams>();
     registerPipelineStepFactoryFor<TensorPCAParams>();
     registerPipelineStepFactoryFor<TensorRobustPCAParams>();
     return true;
@@ -686,6 +688,20 @@ auto const register_tensor_robust_pca = RegisterContainerTransform<TensorData, T
                 .input_type_name = "TensorData",
                 .output_type_name = "TensorData",
                 .params_type_name = "TensorRobustPCAParams",
+                .is_expensive = true,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+auto const register_sinc_interpolation = RegisterContainerTransform<
+        AnalogTimeSeries, AnalogTimeSeries, SincInterpolationParams>(
+        "SincInterpolation",
+        sincInterpolation,
+        ContainerTransformMetadata{
+                .description = "Band-limited sinc interpolation (Nyquist upsampling)",
+                .category = "Signal Processing",
+                .input_type_name = "AnalogTimeSeries",
+                .output_type_name = "AnalogTimeSeries",
+                .params_type_name = "SincInterpolationParams",
                 .is_expensive = true,
                 .is_deterministic = true,
                 .supports_cancellation = true});

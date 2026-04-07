@@ -1,0 +1,133 @@
+---
+title: "Sinc Interpolation Transform"
+---
+
+## Overview
+
+The `SincInterpolation` transform performs band-limited Nyquist upsampling on `AnalogTimeSeries` data using windowed-sinc interpolation. It is a pure data container transform with no TimeFrame awareness — it takes N input samples and produces `(N-1) * factor + 1` output samples.
+
+This is the core algorithm for aligning signals recorded at different sampling rates (e.g., 500 Hz camera data → 30 kHz electrophysiology).
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `src/TransformsV2/algorithms/SincInterpolation/SincInterpolation.hpp` | Parameter structs, enums, and function declaration |
+| `src/TransformsV2/algorithms/SincInterpolation/SincInterpolation.cpp` | Algorithm implementation |
+| `src/TransformsV2/algorithms/SincInterpolation/SincInterpolation.test.cpp` | Unit tests (11 sections) |
+
+## Algorithm
+
+For each output sample position $m \in [0, M-1]$ where $M = (N-1) \cdot \text{factor} + 1$:
+
+1. Compute fractional input position: $x = m / \text{factor}$
+2. If $x$ is an exact integer (i.e., $m \bmod \text{factor} = 0$), pass through the original sample directly.
+3. Otherwise, compute the windowed-sinc interpolation:
+
+$$
+y(m) = \frac{\sum_{n=\lfloor x \rfloor - K + 1}^{\lfloor x \rfloor + K} w(x-n) \cdot \text{sinc}(x-n) \cdot s(n)}{\sum_{n=\lfloor x \rfloor - K + 1}^{\lfloor x \rfloor + K} w(x-n) \cdot \text{sinc}(x-n)}
+$$
+
+where:
+
+- $\text{sinc}(t) = \sin(\pi t) / (\pi t)$, with $\text{sinc}(0) = 1$
+- $w(t)$ is the window function (Lanczos, Hann, or Blackman)
+- $K$ is the kernel half-width
+- $s(n)$ is the input sample at index $n$ (with boundary handling)
+
+### Kernel Normalization
+
+The denominator in the formula above normalizes the kernel weights to sum to 1. This is essential because the windowed-sinc kernel, when truncated to a finite support $[-K, K]$, does not naturally sum to 1 everywhere. Without normalization, DC signals would exhibit small amplitude errors (~0.7–1.3%).
+
+### Window Functions
+
+| Window | Formula (for $|t| < a$) | Properties |
+|--------|------------------------|------------|
+| **Lanczos** | $\text{sinc}(t/a)$ | Best sidelobe suppression-to-width ratio |
+| **Hann** | $0.5(1 + \cos(\pi t / a))$ | Smooth, good general purpose |
+| **Blackman** | $0.42 + 0.5\cos(\pi t/a) + 0.08\cos(2\pi t/a)$ | Lowest sidelobes, wider main lobe |
+
+### Boundary Modes
+
+| Mode | Behavior |
+|------|----------|
+| **SymmetricExtension** | Reflects signal at boundaries (e.g., index -1 maps to index 1). Preserves signal continuity and produces smaller edge artifacts. |
+| **ZeroPad** | Pads with zeros outside the input range. Simple but introduces edge discontinuities. |
+
+## Parameters
+
+```cpp
+struct SincInterpolationParams {
+    int upsampling_factor;                       // Required. Must be >= 1.
+    std::optional<int> kernel_half_width;         // Default: 8
+    std::optional<std::string> window_type;       // Default: "Lanczos"
+    std::optional<std::string> boundary_mode;     // Default: "SymmetricExtension"
+};
+```
+
+The string-based `window_type` and `boundary_mode` fields are used for JSON serialization via reflect-cpp. Helper methods `getWindowType()`, `getBoundaryMode()`, and `getKernelHalfWidth()` convert to the corresponding enum values.
+
+## Registration
+
+Registered in `RegisteredTransforms.cpp` as:
+
+```cpp
+RegisterContainerTransform<AnalogTimeSeries, AnalogTimeSeries, SincInterpolationParams>(
+    "SincInterpolation", sincInterpolation,
+    ContainerTransformMetadata{
+        .name = "SincInterpolation",
+        .description = "Band-limited sinc interpolation (Nyquist upsampling)",
+        .category = "Signal Processing",
+        .is_expensive = true,
+        .supports_cancellation = true
+    });
+```
+
+The transform supports progress reporting (~20 updates during execution) and cancellation via `ComputeContext`.
+
+## Pipeline Usage
+
+```json
+{
+  "steps": [{
+    "step_id": "upsample",
+    "transform_name": "SincInterpolation",
+    "input_key": "camera_trace",
+    "output_key": "camera_trace_upsampled",
+    "output_time_key": "ephys_time",
+    "parameters": {
+      "upsampling_factor": 60,
+      "kernel_half_width": 16,
+      "window_type": "Lanczos",
+      "boundary_mode": "SymmetricExtension"
+    }
+  }]
+}
+```
+
+The `output_time_key` assigns the upsampled output to a pre-created upsampled TimeFrame. The user must ensure the TimeFrame has the correct number of samples: $(N-1) \cdot \text{factor} + 1$.
+
+## Edge Cases
+
+| Input | Behavior |
+|-------|----------|
+| `factor < 1` | Returns `nullptr` |
+| Empty input | Returns `nullptr` |
+| Single sample | Returns a copy of the single sample |
+| `factor == 1` | Returns an exact copy (identity) |
+
+## Tests
+
+The test file contains 11 sections covering:
+
+1. **Output size correctness** — verifies $(N-1) \cdot \text{factor} + 1$ for multiple factor/input combinations
+2. **Identity** — factor=1 produces exact copy
+3. **DC preservation** — constant signal preserved within $10^{-4}$ tolerance everywhere (validates kernel normalization)
+4. **Original sample pass-through** — samples at integer positions match input exactly
+5. **Sine wave reconstruction** — 50 Hz sine at 500 Hz upsampled 4× matches analytical sine within 1% max error
+6. **Kernel width comparison** — larger kernel produces more accurate reconstruction
+7. **Boundary mode comparison** — symmetric extension error ≤ zero-pad error
+8. **Edge cases** — empty, single sample, invalid factor
+9. **All window types** — Lanczos, Hann, Blackman all produce finite output
+10. **Pipeline integration** — end-to-end JSON pipeline with `output_time_key`
+11. **Cancellation** — cancelled context returns `nullptr`

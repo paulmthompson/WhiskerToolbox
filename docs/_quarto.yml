@@ -91,6 +91,7 @@ website:
               contents:
                 - developer/transforms_v2/architecture.qmd
                 - developer/transforms_v2/adding_transforms.qmd
+                - developer/transforms_v2/sinc_interpolation.qmd
             - section: "ParameterSchema"
               href: developer/ParameterSchema/index.qmd
               contents:
