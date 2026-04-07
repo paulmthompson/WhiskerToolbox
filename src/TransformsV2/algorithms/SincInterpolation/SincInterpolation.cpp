@@ -127,9 +127,9 @@ std::shared_ptr<AnalogTimeSeries> sincInterpolation(
         return std::make_shared<AnalogTimeSeries>(std::move(output), std::move(out_times));
     }
 
-    int const K = params.getKernelHalfWidth();
-    SincWindowType const window = params.getWindowType();
-    BoundaryMode const boundary = params.getBoundaryMode();
+    int const K = params.kernel_half_width;
+    SincWindowType const window = params.window_type;
+    BoundaryMode const boundary = params.boundary_mode;
 
     // Output size: (N-1) * factor + 1
     auto const m_total = static_cast<int64_t>((n - 1) * factor + 1);

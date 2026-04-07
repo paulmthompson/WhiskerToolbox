@@ -10,9 +10,6 @@
 #define WHISKERTOOLBOX_V2_SINC_INTERPOLATION_HPP
 
 #include <memory>
-#include <optional>
-
-#include <rfl.hpp>
 
 class AnalogTimeSeries;
 namespace WhiskerToolbox::Transforms::V2 {
@@ -58,26 +55,15 @@ struct SincInterpolationParams {
     /// Integer upsampling factor (must be >= 1)
     int upsampling_factor = 1;
 
-    /// Half-width of the sinc kernel in input samples (default: 8)
-    std::optional<int> kernel_half_width;
+    /// Half-width of the sinc kernel in input samples
+    int kernel_half_width = 8;
 
-    /// Window function applied to the sinc kernel (default: Lanczos)
-    std::optional<SincWindowType> window_type;
+    /// Window function applied to the sinc kernel 
+    SincWindowType window_type = SincWindowType::Lanczos;
 
-    /// Boundary handling mode (default: SymmetricExtension)
-    std::optional<BoundaryMode> boundary_mode;
+    /// Boundary handling mode
+    BoundaryMode boundary_mode = BoundaryMode::SymmetricExtension;
 
-    [[nodiscard]] int getKernelHalfWidth() const {
-        return kernel_half_width.value_or(8);
-    }
-
-    [[nodiscard]] SincWindowType getWindowType() const {
-        return window_type.value_or(SincWindowType::Lanczos);
-    }
-
-    [[nodiscard]] BoundaryMode getBoundaryMode() const {
-        return boundary_mode.value_or(BoundaryMode::SymmetricExtension);
-    }
 };
 
 /**

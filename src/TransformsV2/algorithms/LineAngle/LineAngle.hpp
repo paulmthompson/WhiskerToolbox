@@ -1,14 +1,6 @@
 #ifndef WHISKERTOOLBOX_V2_LINE_ANGLE_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_LINE_ANGLE_TRANSFORM_HPP
 
-#include "extension/ElementTransform.hpp"
-
-#include <rfl.hpp>
-#include <rfl/json.hpp>
-
-#include <optional>
-#include <string>
-
 class Line2D;
 
 namespace WhiskerToolbox::Transforms::V2 {

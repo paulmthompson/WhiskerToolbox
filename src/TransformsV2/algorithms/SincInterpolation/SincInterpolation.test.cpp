@@ -477,12 +477,9 @@ TEST_CASE("SincInterpolationParams JSON loading",
 
         auto params = result.value();
         REQUIRE(params.upsampling_factor == 8);
-        REQUIRE(params.kernel_half_width.has_value());
-        REQUIRE(params.kernel_half_width.value() == 16);
-        REQUIRE(params.window_type.has_value());
-        REQUIRE(params.window_type.value() == SincWindowType::Blackman);
-        REQUIRE(params.boundary_mode.has_value());
-        REQUIRE(params.boundary_mode.value() == BoundaryMode::ZeroPad);
+        REQUIRE(params.kernel_half_width == 16);
+        REQUIRE(params.window_type == SincWindowType::Blackman);
+        REQUIRE(params.boundary_mode == BoundaryMode::ZeroPad);
     }
 
     SECTION("Empty JSON uses defaults (DefaultIfMissing fills upsampling_factor)") {
@@ -504,12 +501,9 @@ TEST_CASE("SincInterpolationParams JSON loading",
 
         auto params = result.value();
         REQUIRE(params.upsampling_factor == 1);
-        REQUIRE_FALSE(params.kernel_half_width.has_value());
-        REQUIRE_FALSE(params.window_type.has_value());
-        REQUIRE_FALSE(params.boundary_mode.has_value());
-        REQUIRE(params.getKernelHalfWidth() == 8);
-        REQUIRE(params.getWindowType() == SincWindowType::Lanczos);
-        REQUIRE(params.getBoundaryMode() == BoundaryMode::SymmetricExtension);
+        REQUIRE(params.kernel_half_width == 8);
+        REQUIRE(params.window_type == SincWindowType::Lanczos);
+        REQUIRE(params.boundary_mode == BoundaryMode::SymmetricExtension);
     }
 
     SECTION("Load with only upsampling_factor set") {
@@ -520,9 +514,9 @@ TEST_CASE("SincInterpolationParams JSON loading",
 
         auto params = result.value();
         REQUIRE(params.upsampling_factor == 4);
-        REQUIRE_FALSE(params.kernel_half_width.has_value());
-        REQUIRE_FALSE(params.window_type.has_value());
-        REQUIRE_FALSE(params.boundary_mode.has_value());
+        REQUIRE(params.kernel_half_width == 8);
+        REQUIRE(params.window_type == SincWindowType::Lanczos);
+        REQUIRE(params.boundary_mode == BoundaryMode::SymmetricExtension);
     }
 
     SECTION("JSON round-trip preserves values") {
@@ -540,9 +534,9 @@ TEST_CASE("SincInterpolationParams JSON loading",
         auto recovered = result.value();
 
         REQUIRE(recovered.upsampling_factor == 6);
-        REQUIRE(recovered.kernel_half_width.value() == 12);
-        REQUIRE(recovered.window_type.value() == SincWindowType::Hann);
-        REQUIRE(recovered.boundary_mode.value() == BoundaryMode::ZeroPad);
+        REQUIRE(recovered.kernel_half_width == 12);
+        REQUIRE(recovered.window_type == SincWindowType::Hann);
+        REQUIRE(recovered.boundary_mode == BoundaryMode::ZeroPad);
     }
 
     SECTION("Registry-based loadParametersForTransform works") {
@@ -553,7 +547,7 @@ TEST_CASE("SincInterpolationParams JSON loading",
 
         auto params = std::any_cast<SincInterpolationParams>(params_any);
         REQUIRE(params.upsampling_factor == 4);
-        REQUIRE(params.window_type.value() == SincWindowType::Hann);
+        REQUIRE(params.window_type == SincWindowType::Hann);
     }
 
     SECTION("Registry-based loadParametersForTransform with empty JSON uses defaults") {
