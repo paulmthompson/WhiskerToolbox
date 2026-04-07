@@ -17,12 +17,11 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 
 void LineAngleParams::validate() {
     // Clamp position to [0, 1]
-    float pos = getPosition();
-    position = std::max(0.0f, std::min(pos, 1.0f));
+    position = std::max(0.0f, std::min(position, 1.0f));
 
     // Normalize reference vector
-    float ref_x = getReferenceX();
-    float ref_y = getReferenceY();
+    float ref_x = reference_x;
+    float ref_y = reference_y;
     
     if (ref_x != 0.0f || ref_y != 0.0f) {
         float length = std::sqrt(ref_x * ref_x + ref_y * ref_y);
@@ -49,19 +48,19 @@ float calculateLineAngle(
         return std::numeric_limits<float>::quiet_NaN();
     }
 
-    if (params.getMethod() == LineAngleMethod::DirectPoints) {
+    if (params.method == LineAngleMethod::DirectPoints) {
         return calculate_direct_angle(
             line, 
-            params.getPosition(), 
-            params.getReferenceX(), 
-            params.getReferenceY());
+            params.position, 
+            params.reference_x, 
+            params.reference_y);
     } else {
         return calculate_polynomial_angle(
             line, 
-            params.getPosition(), 
-            params.getPolynomialOrder(), 
-            params.getReferenceX(), 
-            params.getReferenceY());
+            params.position, 
+            params.polynomial_order, 
+            params.reference_x, 
+            params.reference_y);
     }
 }
 

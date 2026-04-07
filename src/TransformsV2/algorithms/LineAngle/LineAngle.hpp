@@ -44,29 +44,17 @@ enum class LineAngleMethod {
  */
 struct LineAngleParams {
     // Position along the line (0.0-1.0) where 0 is start, 1 is end
-    std::optional<float> position;
+    float position = 0.2f;
 
     // Angle calculation method: "DirectPoints" or "PolynomialFit"
-    std::optional<std::string> method;
+    LineAngleMethod method = LineAngleMethod::DirectPoints;
 
     // Polynomial order for PolynomialFit method (1-9)
-    std::optional<int> polynomial_order;
+    int polynomial_order = 3;
 
     // Reference vector components (angle is measured from this direction)
-    std::optional<float> reference_x;
-    std::optional<float> reference_y;
-
-    // Helper methods with defaults
-    float getPosition() const { return position.value_or(0.2f); }
-    
-    LineAngleMethod getMethod() const {
-        auto m = method.value_or("DirectPoints");
-        return (m == "PolynomialFit") ? LineAngleMethod::PolynomialFit : LineAngleMethod::DirectPoints;
-    }
-    
-    int getPolynomialOrder() const { return polynomial_order.value_or(3); }
-    float getReferenceX() const { return reference_x.value_or(1.0f); }
-    float getReferenceY() const { return reference_y.value_or(0.0f); }
+    float reference_x = 1.0f;
+    float reference_y = 0.0f;
 
     /**
      * @brief Normalize and clamp parameters in-place

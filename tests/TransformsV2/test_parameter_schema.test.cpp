@@ -138,19 +138,16 @@ TEST_CASE("extractParameterSchema - LineAngleParams", "[transforms][v2][schema][
     REQUIRE(position != nullptr);
     CHECK(position->display_name == "Position");
     CHECK(position->type_name == "float");
-    CHECK(position->is_optional);
 
     auto * method = schema.field("method");
     REQUIRE(method != nullptr);
     CHECK(method->display_name == "Method");
-    // Method is a std::optional<std::string>
-    CHECK(method->is_optional);
+
 
     auto * poly_order = schema.field("polynomial_order");
     REQUIRE(poly_order != nullptr);
     CHECK(poly_order->display_name == "Polynomial Order");
     CHECK(poly_order->type_name == "int");
-    CHECK(poly_order->is_optional);
 
     auto * ref_x = schema.field("reference_x");
     REQUIRE(ref_x != nullptr);

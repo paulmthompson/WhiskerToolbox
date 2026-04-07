@@ -58,7 +58,7 @@ TEST_CASE("V2 Element Transform: LineAngle - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.33f;
-        params.method = "DirectPoints";
+        params.method = LineAngleMethod::DirectPoints;
         
         float angle = calculateLineAngle(line, params);
         
@@ -71,7 +71,7 @@ TEST_CASE("V2 Element Transform: LineAngle - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.25f;
-        params.method = "DirectPoints";
+        params.method = LineAngleMethod::DirectPoints;
         
         float angle = calculateLineAngle(line, params);
         
@@ -84,7 +84,7 @@ TEST_CASE("V2 Element Transform: LineAngle - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.5f;
-        params.method = "DirectPoints";
+        params.method = LineAngleMethod::DirectPoints;
         
         float angle = calculateLineAngle(line, params);
         
@@ -97,7 +97,7 @@ TEST_CASE("V2 Element Transform: LineAngle - Core Functionality",
         auto line = getLineAt(line_data.get(), timestamp);
         
         params.position = 0.4f;
-        params.method = "PolynomialFit";
+        params.method = LineAngleMethod::PolynomialFit;
         params.polynomial_order = 2;
         
         float angle = calculateLineAngle(line, params);
@@ -115,17 +115,17 @@ TEST_CASE("V2 Element Transform: LineAngle - Core Functionality",
         
         LineAngleParams params1;
         params1.position = 0.5f;
-        params1.method = "PolynomialFit";
+        params1.method = LineAngleMethod::PolynomialFit;
         params1.polynomial_order = 1;
         
         LineAngleParams params3;
         params3.position = 0.5f;
-        params3.method = "PolynomialFit";
+        params3.method = LineAngleMethod::PolynomialFit;
         params3.polynomial_order = 3;
         
         LineAngleParams params5;
         params5.position = 0.5f;
-        params5.method = "PolynomialFit";
+        params5.method = LineAngleMethod::PolynomialFit;
         params5.polynomial_order = 5;
         
         float angle1 = calculateLineAngle(line, params1);
@@ -201,7 +201,7 @@ TEST_CASE("V2 Element Transform: LineAngle - Reference Vector",
         // Horizontal reference
         LineAngleParams params1;
         params1.position = 0.5f;
-        params1.method = "PolynomialFit";
+        params1.method = LineAngleMethod::PolynomialFit;
         params1.polynomial_order = 2;
         params1.reference_x = 1.0f;
         params1.reference_y = 0.0f;
@@ -209,7 +209,7 @@ TEST_CASE("V2 Element Transform: LineAngle - Reference Vector",
         // Vertical reference
         LineAngleParams params2;
         params2.position = 0.5f;
-        params2.method = "PolynomialFit";
+        params2.method = LineAngleMethod::PolynomialFit;
         params2.polynomial_order = 2;
         params2.reference_x = 0.0f;
         params2.reference_y = 1.0f;
@@ -265,7 +265,7 @@ TEST_CASE("V2 Element Transform: LineAngle - Edge Cases",
         TimeFrameIndex timestamp(40);
         auto line = getLineAt(line_data.get(), timestamp);
         
-        params.method = "PolynomialFit";
+        params.method = LineAngleMethod::PolynomialFit;
         params.polynomial_order = 3;  // Requires at least 4 points
         
         float angle = calculateLineAngle(line, params);
@@ -279,7 +279,7 @@ TEST_CASE("V2 Element Transform: LineAngle - Edge Cases",
         TimeFrameIndex timestamp(50);
         auto line = getLineAt(line_data.get(), timestamp);
         
-        params.method = "PolynomialFit";
+        params.method = LineAngleMethod::PolynomialFit;
         params.polynomial_order = 3;
         
         float angle = calculateLineAngle(line, params);
@@ -309,13 +309,13 @@ TEST_CASE("V2 Element Transform: LineAngle - Edge Cases",
         // Direct method
         LineAngleParams params_direct;
         params_direct.position = 0.5f;
-        params_direct.method = "DirectPoints";
+        params_direct.method = LineAngleMethod::DirectPoints;
         float angle_direct = calculateLineAngle(line, params_direct);
         
         // Polynomial method
         LineAngleParams params_poly;
         params_poly.position = 0.5f;
-        params_poly.method = "PolynomialFit";
+        params_poly.method = LineAngleMethod::PolynomialFit;
         params_poly.polynomial_order = 3;
         float angle_poly = calculateLineAngle(line, params_poly);
         
@@ -346,11 +346,11 @@ TEST_CASE("V2 Element Transform: LineAngleParams - JSON Loading",
         REQUIRE(result);
         auto params = result.value();
         
-        REQUIRE_THAT(params.getPosition(), WithinAbs(0.5f, 0.001f));
-        REQUIRE(params.getMethod() == LineAngleMethod::PolynomialFit);
-        REQUIRE(params.getPolynomialOrder() == 5);
-        REQUIRE_THAT(params.getReferenceX(), WithinAbs(0.0f, 0.001f));
-        REQUIRE_THAT(params.getReferenceY(), WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(params.position, WithinAbs(0.5f, 0.001f));
+        REQUIRE(params.method == LineAngleMethod::PolynomialFit);
+        REQUIRE(params.polynomial_order == 5);
+        REQUIRE_THAT(params.reference_x, WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(params.reference_y, WithinAbs(1.0f, 0.001f));
     }
     
     SECTION("Load empty JSON (uses defaults)") {
@@ -361,17 +361,17 @@ TEST_CASE("V2 Element Transform: LineAngleParams - JSON Loading",
         REQUIRE(result);
         auto params = result.value();
         
-        REQUIRE_THAT(params.getPosition(), WithinAbs(0.2f, 0.001f));
-        REQUIRE(params.getMethod() == LineAngleMethod::DirectPoints);
-        REQUIRE(params.getPolynomialOrder() == 3);
-        REQUIRE_THAT(params.getReferenceX(), WithinAbs(1.0f, 0.001f));
-        REQUIRE_THAT(params.getReferenceY(), WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(params.position, WithinAbs(0.2f, 0.001f));
+        REQUIRE(params.method == LineAngleMethod::DirectPoints);
+        REQUIRE(params.polynomial_order == 3);
+        REQUIRE_THAT(params.reference_x, WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(params.reference_y, WithinAbs(0.0f, 0.001f));
     }
     
     SECTION("JSON round-trip preserves values") {
         LineAngleParams original;
         original.position = 0.75f;
-        original.method = "PolynomialFit";
+        original.method = LineAngleMethod::PolynomialFit;
         original.polynomial_order = 4;
         original.reference_x = 0.707f;
         original.reference_y = 0.707f;
@@ -385,11 +385,11 @@ TEST_CASE("V2 Element Transform: LineAngleParams - JSON Loading",
         auto recovered = result.value();
         
         // Verify values match
-        REQUIRE_THAT(recovered.getPosition(), WithinAbs(0.75f, 0.001f));
-        REQUIRE(recovered.getMethod() == LineAngleMethod::PolynomialFit);
-        REQUIRE(recovered.getPolynomialOrder() == 4);
-        REQUIRE_THAT(recovered.getReferenceX(), WithinAbs(0.707f, 0.001f));
-        REQUIRE_THAT(recovered.getReferenceY(), WithinAbs(0.707f, 0.001f));
+        REQUIRE_THAT(recovered.position, WithinAbs(0.75f, 0.001f));
+        REQUIRE(recovered.method == LineAngleMethod::PolynomialFit);
+        REQUIRE(recovered.polynomial_order == 4);
+        REQUIRE_THAT(recovered.reference_x, WithinAbs(0.707f, 0.001f));
+        REQUIRE_THAT(recovered.reference_y, WithinAbs(0.707f, 0.001f));
     }
 }
 
