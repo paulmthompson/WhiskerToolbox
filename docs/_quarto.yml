@@ -124,6 +124,9 @@ website:
                     - developer/DataSynthesizer/Generators/DigitalInterval.qmd
                     - developer/DataSynthesizer/Generators/Spatial.qmd
                     - developer/DataSynthesizer/Generators/MotionModels.qmd
+        - section: "TimeFrame"
+          contents:
+            - developer/TimeFrame/roadmap.md
         - section: "Media Processing Pipeline"
           href: developer/MediaProcessingPipeline/index.qmd
         - section: "Data Inspectors"
