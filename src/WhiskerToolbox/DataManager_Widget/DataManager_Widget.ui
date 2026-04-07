@@ -175,6 +175,40 @@
      </widget>
     </item>
     <item>
+     <widget class="Section" name="new_timeframe_section" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QVBoxLayout" name="new_timeframe_section_layout">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="NewTimeFrameWidget" name="new_timeframe_widget" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
      <widget class="QLabel" name="selected_feature_label">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
@@ -239,6 +273,12 @@
    <class>NewDataWidget</class>
    <extends>QWidget</extends>
    <header>DataManager_Widget/NewDataWidget/NewDataWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NewTimeFrameWidget</class>
+   <extends>QWidget</extends>
+   <header>DataManager_Widget/NewTimeFrameWidget/NewTimeFrameWidget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

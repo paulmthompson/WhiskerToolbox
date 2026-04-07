@@ -41,6 +41,7 @@ struct TransformsV2StateData {
 
     // Phase 3: Output configuration
     std::optional<std::string> output_data_key; ///< Output data key for execution results
+    std::optional<std::string> output_time_key; ///< TimeKey for output data (empty = inherit input's)
     std::string execution_mode = "data_manager";///< "data_manager" or "json_only"
 
     // Phase 2: UI preferences
@@ -84,6 +85,10 @@ public:
     // Phase 3: Output data key
     void setOutputDataKey(std::string const & key);
     [[nodiscard]] std::optional<std::string> outputDataKey() const { return _data.output_data_key; }
+
+    // Phase 3: Output TimeKey
+    void setOutputTimeKey(std::string const & key);
+    [[nodiscard]] std::optional<std::string> outputTimeKey() const { return _data.output_time_key; }
 
     // Phase 3: Execution mode
     void setExecutionMode(std::string const & mode);

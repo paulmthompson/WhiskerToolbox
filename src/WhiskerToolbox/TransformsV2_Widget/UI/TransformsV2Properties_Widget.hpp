@@ -164,6 +164,11 @@ private:
     void updateExecuteButtonState();
 
     /**
+     * @brief Refresh the output TimeKey combo box with keys from DataManager
+     */
+    void refreshTimeKeyCombo();
+
+    /**
      * @brief Attempt to deliver the current pipeline JSON to a pending consumer
      *
      * If there is a pending operation for "TransformsV2Widget", delivers
@@ -222,6 +227,7 @@ private:
     // Output & Execution
     QGroupBox * _output_group = nullptr;
     QLineEdit * _output_key_edit = nullptr;
+    QComboBox * _output_time_key_combo = nullptr;///< TimeKey selector for output data
     QComboBox * _execution_mode_combo = nullptr;
     QPushButton * _execute_button = nullptr;
     QProgressBar * _progress_bar = nullptr;

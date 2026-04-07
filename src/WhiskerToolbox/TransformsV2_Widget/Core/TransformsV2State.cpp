@@ -67,6 +67,13 @@ void TransformsV2State::setOutputDataKey(std::string const & key) {
     }
 }
 
+void TransformsV2State::setOutputTimeKey(std::string const & key) {
+    if (_data.output_time_key != key) {
+        _data.output_time_key = key;
+        markDirty();
+    }
+}
+
 void TransformsV2State::setExecutionMode(std::string const & mode) {
     if (_data.execution_mode != mode) {
         _data.execution_mode = mode;

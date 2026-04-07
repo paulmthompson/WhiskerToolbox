@@ -9,7 +9,7 @@
 | **Phase 1:** Upsampled TimeFrame Creation | **Complete** | `createUpsampledTimeFrame()` utility + 6 test cases, 73 assertions |
 | **Phase 2:** Pipeline Executor TimeKey Fix | **Complete** | `output_time_key` field + propagate input TimeKey (fixes hardcoded `"default"` bug) |
 | **Phase 3:** Sinc Interpolation Transform | **Complete** | Windowed-sinc container transform with kernel normalization, 3 window types, 2 boundary modes, 11 test sections |
-| **Phase 4:** DataManager Widget Integration | Not Started | UI for creating upsampled TimeFrames interactively |
+| **Phase 4:** DataManager Widget Integration | **Complete** | NewTimeFrameWidget with method combo, source/factor selection, live preview, auto-name suggestion |
 | **Phase 5:** Float TimeFrame | Not Started | Future: `std::vector<double>` for sub-clock-cycle precision |
 
 ---
@@ -316,21 +316,218 @@ auto const register_sinc = RegisterContainerTransform<
 
 **Goal:** Let users create upsampled TimeFrames interactively through the UI.
 
-### 5.1 UI Elements
+### 5.1 Placement in DataManager Widget
 
-Add to the DataManager widget (or a TimeFrame management sub-widget):
+The `DataManager_Widget` has the following vertical layout (top to bottom):
 
-- **Source TimeFrame dropdown**: lists all registered TimeKeys
-- **Upsampling factor**: integer spinbox (min: 2)
-- **New TimeKey name**: text field with auto-suggestion (e.g., `source_name_Nx`)
-- **Preview label**: "Source has N entries → output will have M entries"
-- **Create button**: calls `createUpsampledTimeFrame()` + `dm->setTime()`
+1. `Feature_Table_Widget` — data object table
+2. `TimeFrame_Table_Widget` — TimeFrame table
+3. `Section("Output Directory")` — collapsible, wraps `OutputDirectoryWidget`
+4. `Section("Create New Data")` — collapsible, wraps `NewDataWidget`
+5. `selected_feature_label` — "No Feature Selected"
+6. `QStackedWidget` — per-type detail panels
 
-### 5.2 Files to Create/Modify
+A new collapsible section **"Create New TimeFrame"** is added between items 4 and 5
+(after "Create New Data", before the feature detail area). This follows the existing
+`Section` pattern used by "Output Directory" and "Create New Data".
+
+### 5.2 NewTimeFrameWidget
+
+A new widget `NewTimeFrameWidget` lives in
+`src/WhiskerToolbox/DataManager_Widget/NewTimeFrameWidget/`. It follows the same
+pattern as `NewDataWidget`: a self-contained widget with a `.ui` file, wrapped in a
+`Section` collapsible container.
+
+#### UI Layout
+
+```
+┌─ Create New TimeFrame ──────────────────────────┐
+│                                                  │
+│  Method:      [ Upsample          ▼]             │
+│                                                  │
+│  ┌─ Upsample Settings ───────────────────────┐   │
+│  │  Source:     [ camera_time      ▼]         │   │
+│  │  Factor:     [ 4            ↕]             │   │
+│  │                                            │   │
+│  │  Preview: 1000 entries → 3997 entries      │   │
+│  └────────────────────────────────────────────┘   │
+│                                                  │
+│  Name:        [ camera_time_4x       ]           │
+│                                                  │
+│  [ Create TimeFrame ]                            │
+│                                                  │
+└──────────────────────────────────────────────────┘
+```
+
+#### Widget Components
+
+| Component | Qt Type | Name | Purpose |
+|-----------|---------|------|---------|
+| Method combo | `QComboBox` | `method_combo` | Creation method. Initially only "Upsample". Extensible for future methods (e.g., "Downsample", "Subset", "Merge"). |
+| Source combo | `QComboBox` | `source_timeframe_combo` | Lists available TimeKeys from `DataManager::getTimeFrameKeys()` |
+| Factor spinbox | `QSpinBox` | `upsampling_factor_spin` | Integer, min: 2, max: 1000, default: 2 |
+| Preview label | `QLabel` | `preview_label` | Shows "N entries → M entries" computed on-the-fly |
+| Name field | `QLineEdit` | `new_timeframe_name` | User-specified TimeKey name |
+| Create button | `QPushButton` | `create_timeframe_button` | Triggers creation |
+
+The "Upsample Settings" group (source combo, factor spinbox, preview label) can be
+placed inside a `QGroupBox` or a plain `QWidget` container. When additional methods
+are added in the future, a `QStackedWidget` keyed by `method_combo` index can swap
+between method-specific settings panels. For now, only the upsample panel exists.
+
+#### Behavior
+
+1. **Method selection** — `method_combo` currently has only "Upsample". Changing the
+   method would swap the settings panel (future extensibility).
+
+2. **Preview update** — Whenever `source_timeframe_combo` or `upsampling_factor_spin`
+   changes, recompute and display:
+   ```
+   Source entries: N = source_timeframe->getTotalFrameCount()
+   Output entries: M = (N - 1) * factor + 1
+   Preview text: "N entries → M entries"
+   ```
+   If source has 0 or 1 entries, show "Cannot upsample (too few entries)".
+
+3. **Auto-suggest name** — When the source or factor changes, auto-populate the name
+   field with `"{source_name}_{factor}x"` (e.g., `"camera_time_4x"`). The user can
+   override this. Only auto-suggest if the name field hasn't been manually edited or
+   still matches the previous auto-suggestion.
+
+4. **Create button** — On click:
+   - Validate: name not empty, name not already a registered TimeKey
+   - Call `createUpsampledTimeFrame()` from `DerivedTimeFrame.hpp`
+   - Call `_data_manager->setTime(TimeKey(name), upsampled_tf)`
+   - Show error (e.g., a `QLabel` or status text) if creation fails (nullptr return)
+   - On success, refresh `source_timeframe_combo` (the new TimeFrame is now available
+     as a source for further derivations) and clear the name field
+
+5. **Refresh on DataManager changes** — `populateTimeframes()` is called when the
+   DataManager adds/removes TimeFrames. This keeps the source combo up to date.
+   Use the same observer callback pattern as `NewDataWidget`.
+
+#### Signal/Slot Chain
+
+```
+User clicks "Create TimeFrame" button
+    ↓
+NewTimeFrameWidget::_createTimeFrame() (private slot)
+    ↓
+    Validates inputs (name non-empty, name not duplicate)
+    ↓
+Emits: createTimeFrame(std::string name,
+                        std::string source_timeframe_key,
+                        int upsampling_factor)
+    ↓ (connected in DataManager_Widget constructor)
+DataManager_Widget::_createNewTimeFrame()
+    ↓
+    Calls createUpsampledTimeFrame(options)
+    Calls _data_manager->setTime(TimeKey(name), result)
+    Refreshes TimeFrame_Table_Widget
+```
+
+### 5.3 Integration in DataManager_Widget
+
+#### DataManager_Widget.ui Changes
+
+Add a new `Section` widget named `new_timeframe_section` in the vertical layout after
+`new_data_section` and before `selected_feature_label`. The Section wraps a
+`NewTimeFrameWidget` named `new_timeframe_widget`, following the identical pattern
+used by `new_data_section` / `new_data_widget`.
+
+```xml
+<item>
+  <widget class="Section" name="new_timeframe_section" native="true">
+    <layout class="QVBoxLayout" name="new_timeframe_section_layout">
+      <item>
+        <widget class="NewTimeFrameWidget" name="new_timeframe_widget" native="true"/>
+      </item>
+    </layout>
+  </widget>
+</item>
+```
+
+Register the custom widget in the `<customwidgets>` block:
+
+```xml
+<customwidget>
+  <class>NewTimeFrameWidget</class>
+  <extends>QWidget</extends>
+  <header>DataManager_Widget/NewTimeFrameWidget/NewTimeFrameWidget.hpp</header>
+  <container>1</container>
+</customwidget>
+```
+
+#### DataManager_Widget.cpp Changes
+
+In the constructor, after the `new_data_section` setup:
+
+```cpp
+ui->new_timeframe_section->autoSetContentLayout();
+ui->new_timeframe_section->setTitle("Create New TimeFrame");
+ui->new_timeframe_widget->setDataManager(_data_manager);
+ui->new_timeframe_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+connect(ui->new_timeframe_widget, &NewTimeFrameWidget::createTimeFrame,
+        this, &DataManager_Widget::_createNewTimeFrame);
+```
+
+Add the slot:
+
+```cpp
+void DataManager_Widget::_createNewTimeFrame(
+        std::string const & name,
+        std::string const & source_key,
+        int upsampling_factor) {
+
+    auto source_tf = _data_manager->getTime(TimeKey(source_key));
+    if (!source_tf) return;
+
+    DerivedTimeFrameFromUpsamplingOptions opts;
+    opts.source_timeframe = source_tf;
+    opts.upsampling_factor = upsampling_factor;
+
+    auto result = createUpsampledTimeFrame(opts);
+    if (!result) return;
+
+    _data_manager->setTime(TimeKey(name), result);
+    ui->timeframe_table_widget->populateTable();
+    ui->new_data_widget->populateTimeframes();
+    ui->new_timeframe_widget->populateTimeframes();
+}
+```
+
+### 5.4 New Files
+
+| File | Purpose |
+|------|---------|
+| `src/WhiskerToolbox/DataManager_Widget/NewTimeFrameWidget/NewTimeFrameWidget.hpp` | Widget class declaration |
+| `src/WhiskerToolbox/DataManager_Widget/NewTimeFrameWidget/NewTimeFrameWidget.cpp` | Widget implementation |
+| `src/WhiskerToolbox/DataManager_Widget/NewTimeFrameWidget/NewTimeFrameWidget.ui` | Qt Designer form |
+
+### 5.5 Files to Modify
 
 | File | Change |
 |------|--------|
-| DataManager widget (TBD) | Add "Create Upsampled TimeFrame" section |
+| `DataManager_Widget.ui` | Add `new_timeframe_section` Section + `NewTimeFrameWidget` |
+| `DataManager_Widget.hpp` | Add `_createNewTimeFrame()` slot declaration |
+| `DataManager_Widget.cpp` | Section init, signal connection, slot implementation |
+| `src/WhiskerToolbox/CMakeLists.txt` | Add NewTimeFrameWidget sources |
+
+### 5.6 Tests
+
+UI widget tests are not in scope for Phase 4 (no existing widget test infrastructure).
+The underlying `createUpsampledTimeFrame()` function is already tested in Phase 1.
+Manual verification:
+
+| Scenario | Expected |
+|----------|----------|
+| Select source TimeFrame, set factor, click create | New TimeFrame appears in TimeFrame_Table_Widget |
+| Preview label updates on source/factor change | Shows correct "N → M entries" |
+| Duplicate name | Create button shows error / is disabled |
+| Empty name | Create button disabled or shows error |
+| Source with 0 or 1 entries | Preview shows warning; create still works (returns copy) |
+| New TimeFrame appears in NewDataWidget combo | Can immediately use it when creating new data |
 
 ---
 

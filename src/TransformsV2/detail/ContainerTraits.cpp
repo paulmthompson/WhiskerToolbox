@@ -76,7 +76,14 @@ std::type_index TypeIndexMapper::stringToContainer(std::string const & name) {
             {"AnalogTimeSeries", typeid(AnalogTimeSeries)},
             {"RaggedAnalogTimeSeries", typeid(RaggedAnalogTimeSeries)},
             {"DigitalEventSeries", typeid(DigitalEventSeries)},
-            {"DigitalIntervalSeries", typeid(DigitalIntervalSeries)}};
+            {"DigitalIntervalSeries", typeid(DigitalIntervalSeries)},
+            // Short-format aliases (from convert_data_type_to_string)
+            {"mask", typeid(MaskData)},
+            {"line", typeid(LineData)},
+            {"points", typeid(PointData)},
+            {"analog", typeid(AnalogTimeSeries)},
+            {"digital_event", typeid(DigitalEventSeries)},
+            {"digital_interval", typeid(DigitalIntervalSeries)}};
 
     auto it = map.find(name);
     if (it != map.end()) {

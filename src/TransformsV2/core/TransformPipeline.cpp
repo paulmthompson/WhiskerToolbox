@@ -88,6 +88,50 @@ std::function<ElementVariant(ElementVariant)> TransformPipeline::buildTypeErased
 }
 
 DataTypeVariant executePipeline(DataTypeVariant const & input, TransformPipeline const & pipeline) {
+    if (pipeline.empty()) {
+        throw std::runtime_error("Pipeline has no steps");
+    }
+
+    auto & registry = ElementRegistry::instance();
+
+    // Check if any step is a container transform — if so, execute sequentially
+    // via the container executor rather than the element-wise pipeline.
+    bool has_container_step = false;
+    for (size_t i = 0; i < pipeline.size(); ++i) {
+        if (registry.isContainerTransform(pipeline.getStep(i).transform_name)) {
+            has_container_step = true;
+            break;
+        }
+    }
+
+    if (has_container_step) {
+        // Execute steps sequentially, dispatching container transforms to
+        // executeContainerTransformDynamic and element steps to the normal pipeline.
+        DataTypeVariant current = input;
+        for (size_t i = 0; i < pipeline.size(); ++i) {
+            auto const & step = pipeline.getStep(i);
+            if (registry.isContainerTransform(step.transform_name)) {
+                current = registry.executeContainerTransformDynamic(
+                        step.transform_name, current, step.params);
+            } else {
+                // Build a single-step pipeline for element transforms
+                TransformPipeline single_step_pipeline;
+                single_step_pipeline.addStep(step);
+                current = std::visit([&](auto const & ptr) -> DataTypeVariant {
+                    using T = typename std::remove_reference_t<decltype(*ptr)>;
+                    if constexpr (TypeTraits::HasDataTraits<T>) {
+                        return single_step_pipeline.execute<T>(*ptr);
+                    } else {
+                        throw std::runtime_error("Unsupported input container type in variant");
+                    }
+                },
+                                     current);
+            }
+        }
+        return current;
+    }
+
+    // All steps are element transforms — use the optimized fused pipeline
     return std::visit([&](auto const & ptr) -> DataTypeVariant {
         using T = typename std::remove_reference_t<decltype(*ptr)>;
         // Check if T is a valid input container (has DataTraits)
@@ -173,7 +217,7 @@ DataTypeVariant TransformPipeline::execute(InputContainer const & input) const {
     for (auto & seg: segments) {
         if (seg.is_element_wise) {
             std::vector<std::function<ElementVariant(ElementVariant)>> chain;
-            for (size_t idx: seg.step_indices) {
+            for (size_t const idx: seg.step_indices) {
                 auto const & step = steps_[idx];
                 auto const * meta = registry.getMetadata(step.transform_name);
                 chain.push_back(buildTypeErasedFunction(step, meta));
@@ -190,7 +234,7 @@ DataTypeVariant TransformPipeline::execute(InputContainer const & input) const {
     }
 
     // 3. Determine output container type and dispatch
-    std::type_index final_type = segments.back().output_type;
+    std::type_index const final_type = segments.back().output_type;
 
     if (final_type == typeid(float)) {
         if (is_ragged) {

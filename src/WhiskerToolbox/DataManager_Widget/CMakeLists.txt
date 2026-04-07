@@ -17,6 +17,10 @@ set(DATA_MANAGER_WIDGET_SOURCES
         NewDataWidget/NewDataWidget.hpp
         NewDataWidget/NewDataWidget.cpp
         NewDataWidget/NewDataWidget.ui
+
+        NewTimeFrameWidget/NewTimeFrameWidget.hpp
+        NewTimeFrameWidget/NewTimeFrameWidget.cpp
+        NewTimeFrameWidget/NewTimeFrameWidget.ui
         )
 
 add_library(DataManager_Widget STATIC ${DATA_MANAGER_WIDGET_SOURCES})

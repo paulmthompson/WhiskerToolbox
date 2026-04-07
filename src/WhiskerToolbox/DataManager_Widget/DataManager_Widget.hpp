@@ -106,6 +106,15 @@ private slots:
     void _createNewData(const std::string& key, const std::string& type, const std::string& timeframe_key);
 
     /**
+     * @brief Create a new upsampled TimeFrame from an existing source
+     *
+     * @param name The unique name for the new TimeFrame
+     * @param source_key The key of the source TimeFrame to upsample
+     * @param upsampling_factor The integer upsampling factor
+     */
+    void _createNewTimeFrame(std::string const & name, std::string const & source_key, int upsampling_factor);
+
+    /**
      * @brief Handle deletion of data from the feature table
      * 
      * This method deletes the specified data from the DataManager and handles

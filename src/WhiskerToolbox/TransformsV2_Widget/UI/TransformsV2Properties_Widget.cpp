@@ -104,6 +104,7 @@ void TransformsV2Properties_Widget::onDataFocusChanged(
 
     // Update output key and execute button state
     updateOutputKeyFromPipeline();
+    refreshTimeKeyCombo();
     updateExecuteButtonState();
 }
 
@@ -250,6 +251,26 @@ void TransformsV2Properties_Widget::setupUI() {
         _output_key_user_edited = true;
     }
 
+    // Output TimeKey selector
+    auto * time_key_layout = new QHBoxLayout();
+    auto * time_key_label = new QLabel(tr("Output TimeKey:"), _output_group);
+    _output_time_key_combo = new QComboBox(_output_group);
+    _output_time_key_combo->setToolTip(
+            tr("TimeKey for the output data. '(Same as input)' inherits the input's TimeKey.\n"
+               "For transforms that change the number of samples (e.g. upsampling),\n"
+               "select a TimeKey whose frame count matches the output size."));
+    _output_time_key_combo->addItem(tr("(Same as input)"), QString());
+    time_key_layout->addWidget(time_key_label);
+    time_key_layout->addWidget(_output_time_key_combo, 1);
+    output_layout->addLayout(time_key_layout);
+
+    // Restore saved output time key if available
+    if (auto saved_tk = _state->outputTimeKey(); saved_tk.has_value() && !saved_tk->empty()) {
+        // Will be selected after refreshTimeKeyCombo() populates the combo
+        // Store it so we can restore after population
+        _output_time_key_combo->setProperty("pending_restore", QString::fromStdString(*saved_tk));
+    }
+
     // Execution mode combo
     auto * mode_layout = new QHBoxLayout();
     auto * mode_label = new QLabel(tr("Mode:"), _output_group);
@@ -385,6 +406,11 @@ void TransformsV2Properties_Widget::setupUI() {
             this, &TransformsV2Properties_Widget::onExecuteClicked);
     connect(_output_key_edit, &QLineEdit::textEdited,
             this, &TransformsV2Properties_Widget::onOutputKeyEdited);
+    connect(_output_time_key_combo, &QComboBox::currentIndexChanged,
+            this, [this](int /*index*/) {
+                auto tk = _output_time_key_combo->currentData().toString().toStdString();
+                _state->setOutputTimeKey(tk);
+            });
     connect(_execution_mode_combo, &QComboBox::currentIndexChanged,
             this, [this](int /*index*/) {
                 auto mode = _execution_mode_combo->currentData().toString().toStdString();
@@ -676,6 +702,45 @@ void TransformsV2Properties_Widget::updateExecuteButtonState() {
     _execute_button->setEnabled(can_execute);
 }
 
+void TransformsV2Properties_Widget::refreshTimeKeyCombo() {
+    auto * dm = _state->dataManager().get();
+    if (!dm || !_output_time_key_combo) {
+        return;
+    }
+
+    // Remember current selection
+    auto current_data = _output_time_key_combo->currentData().toString();
+
+    // Check for a pending restore from state
+    auto pending = _output_time_key_combo->property("pending_restore").toString();
+    if (!pending.isEmpty()) {
+        current_data = pending;
+        _output_time_key_combo->setProperty("pending_restore", QVariant());
+    }
+
+    _output_time_key_combo->blockSignals(true);
+    _output_time_key_combo->clear();
+    _output_time_key_combo->addItem(tr("(Same as input)"), QString());
+
+    auto const time_keys = dm->getTimeFrameKeys();
+    for (auto const & tk: time_keys) {
+        auto const tf = dm->getTime(tk);
+        int const frame_count = tf ? tf->getTotalFrameCount() : 0;
+        auto display = QString::fromStdString(tk.str()) + QString(" (%1 frames)").arg(frame_count);
+        _output_time_key_combo->addItem(display, QString::fromStdString(tk.str()));
+    }
+
+    // Restore selection
+    if (!current_data.isEmpty()) {
+        int const idx = _output_time_key_combo->findData(current_data);
+        if (idx >= 0) {
+            _output_time_key_combo->setCurrentIndex(idx);
+        }
+    }
+
+    _output_time_key_combo->blockSignals(false);
+}
+
 // ============================================================================
 // Execution Slots
 // ============================================================================
@@ -764,12 +829,10 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
     _execute_button->setEnabled(false);
     QApplication::processEvents();
 
-    // Execute the pipeline
+    // Execute the pipeline (uses fusion for element-wise chains)
     auto start_time = std::chrono::steady_clock::now();
 
     try {
-        // Update progress for each step (the executePipeline free function doesn't
-        // provide per-step callbacks, so we show overall progress at start/end)
         for (int i = 0; i < total_steps; ++i) {
             _progress_bar->setValue(i);
             _progress_label->setText(
@@ -787,14 +850,15 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
                                   end_time - start_time)
                                   .count();
 
-        // Store the result in DataManager using the same time key as the input
-        auto time_key = dm->getTimeKey(_input_data_key);
+        // Determine TimeKey: use output_time_key combo if set, otherwise inherit from input
+        std::string const otk = _output_time_key_combo
+                                        ? _output_time_key_combo->currentData().toString().toStdString()
+                                        : std::string{};
+        TimeKey time_key = otk.empty() ? dm->getTimeKey(_input_data_key) : TimeKey(otk);
         dm->setData(output_key, result, time_key);
 
-        // Store the output key in state
         _state->setOutputDataKey(output_key);
 
-        // Show success
         _progress_bar->setValue(total_steps);
         _progress_label->setVisible(false);
         _error_label->setStyleSheet("color: green; font-weight: bold; padding: 4px;");
@@ -922,7 +986,7 @@ bool TransformsV2Properties_Widget::tryDeliverPipeline() {
             EditorLib::DataChannels::TransformPipeline,
             envelope_str);
 
-    return _operation_context->deliverResult(tv2_type, std::move(result));
+    return _operation_context->deliverResult(tv2_type, result);
 }
 
 void TransformsV2Properties_Widget::updateDeliverButtonState() {

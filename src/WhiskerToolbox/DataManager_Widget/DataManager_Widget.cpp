@@ -21,8 +21,11 @@
 #define slots Q_SLOTS
 
 #include "NewDataWidget/NewDataWidget.hpp"
+#include "NewTimeFrameWidget/NewTimeFrameWidget.hpp"
 #include "OutputDirectoryWidget/OutputDirectoryWidget.hpp"
 #include "TimeFrame_Table_Widget/TimeFrame_Table_Widget.hpp"
+
+#include "DataManager/utils/DerivedTimeFrame.hpp"
 
 #include <QAction>
 #include <QFileDialog>
@@ -74,15 +77,21 @@ DataManager_Widget::DataManager_Widget(
     // Set the DataManager for the NewDataWidget that was created from the UI file
     ui->new_data_widget->setDataManager(_data_manager);
 
+    ui->new_timeframe_section->autoSetContentLayout();
+    ui->new_timeframe_section->setTitle("Create New TimeFrame");
+    ui->new_timeframe_widget->setDataManager(_data_manager);
+
     // Configure size policies for child widgets to ensure they fit within container
     ui->output_dir_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     ui->new_data_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    ui->new_timeframe_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     ui->selected_feature_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
     ui->stackedWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     connect(ui->output_dir_widget, &OutputDirectoryWidget::dirChanged, this, &DataManager_Widget::_changeOutputDir);
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataManager_Widget::_handleFeatureSelected);
     connect(ui->new_data_widget, &NewDataWidget::createNewData, this, &DataManager_Widget::_createNewData);
+    connect(ui->new_timeframe_widget, &NewTimeFrameWidget::createTimeFrame, this, &DataManager_Widget::_createNewTimeFrame);
 
     // === Phase 2.3: Editor State Integration ===
     // Initialize state and register with EditorRegistry for serialization and inter-widget communication
@@ -315,6 +324,31 @@ void DataManager_Widget::_createNewData(const std::string& key, const std::strin
         std::cout << "Unsupported data type" << std::endl;
         return;
     }
+}
+
+void DataManager_Widget::_createNewTimeFrame(
+        std::string const & name,
+        std::string const & source_key,
+        int upsampling_factor) {
+
+    auto source_tf = _data_manager->getTime(TimeKey(source_key));
+    if (!source_tf) {
+        return;
+    }
+
+    DerivedTimeFrameFromUpsamplingOptions opts;
+    opts.source_timeframe = source_tf;
+    opts.upsampling_factor = upsampling_factor;
+
+    auto result = createUpsampledTimeFrame(opts);
+    if (!result) {
+        return;
+    }
+
+    _data_manager->setTime(TimeKey(name), result);
+    ui->timeframe_table_widget->populateTable();
+    ui->new_data_widget->populateTimeframes();
+    ui->new_timeframe_widget->populateTimeframes();
 }
 
 void DataManager_Widget::_deleteData(QString const & feature) {

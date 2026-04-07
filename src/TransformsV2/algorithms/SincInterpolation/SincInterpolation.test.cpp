@@ -11,12 +11,18 @@
  * - Window type comparison (larger kernel → better reconstruction)
  * - Boundary modes (symmetric vs zero-pad)
  * - Edge cases (empty, single sample, invalid factor)
+ * - JSON parameter loading / round-trip
+ * - Registry integration
  * - DataManager pipeline integration via JSON
+ * - load_data_from_json_config_v2 integration
  */
 
 #include "TransformsV2/algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "TransformsV2/core/ComputeContext.hpp"
 #include "TransformsV2/core/DataManagerIntegration.hpp"
+#include "TransformsV2/core/ElementRegistry.hpp"
+#include "TransformsV2/core/ParameterIO.hpp"
+#include "TransformsV2/core/PipelineLoader.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
@@ -26,6 +32,9 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <memory>
 #include <numbers>
 #include <vector>
@@ -441,5 +450,424 @@ TEST_CASE("SincInterpolation all window types produce valid output",
                 REQUIRE(std::isfinite(out[i]));
             }
         }
+    }
+}
+
+// ============================================================================
+// JSON Parameter Loading Tests
+// ============================================================================
+
+TEST_CASE("SincInterpolationParams JSON loading",
+          "[transforms][v2][sinc][params][json]") {
+
+    SECTION("Load valid JSON with all fields") {
+        std::string const json = R"({
+            "upsampling_factor": 8,
+            "kernel_half_width": 16,
+            "window_type": "Blackman",
+            "boundary_mode": "ZeroPad"
+        })";
+
+        auto result = loadParametersFromJson<SincInterpolationParams>(json);
+        REQUIRE(result);
+
+        auto params = result.value();
+        REQUIRE(params.upsampling_factor == 8);
+        REQUIRE(params.kernel_half_width.has_value());
+        REQUIRE(params.kernel_half_width.value() == 16);
+        REQUIRE(params.window_type.has_value());
+        REQUIRE(params.window_type.value() == "Blackman");
+        REQUIRE(params.boundary_mode.has_value());
+        REQUIRE(params.boundary_mode.value() == "ZeroPad");
+        REQUIRE(params.getWindowType() == SincWindowType::Blackman);
+        REQUIRE(params.getBoundaryMode() == BoundaryMode::ZeroPad);
+    }
+
+    SECTION("Empty JSON fails (upsampling_factor is required)") {
+        std::string const json = "{}";
+
+        auto result = loadParametersFromJson<SincInterpolationParams>(json);
+        // upsampling_factor is a non-optional int, so rfl requires it in JSON
+        REQUIRE_FALSE(result);
+    }
+
+    SECTION("Minimal JSON with only upsampling_factor uses defaults for optionals") {
+        std::string const json = R"({"upsampling_factor": 1})";
+
+        auto result = loadParametersFromJson<SincInterpolationParams>(json);
+        REQUIRE(result);
+
+        auto params = result.value();
+        REQUIRE(params.upsampling_factor == 1);
+        REQUIRE_FALSE(params.kernel_half_width.has_value());
+        REQUIRE_FALSE(params.window_type.has_value());
+        REQUIRE_FALSE(params.boundary_mode.has_value());
+        REQUIRE(params.getKernelHalfWidth() == 8);
+        REQUIRE(params.getWindowType() == SincWindowType::Lanczos);
+        REQUIRE(params.getBoundaryMode() == BoundaryMode::SymmetricExtension);
+    }
+
+    SECTION("Load with only upsampling_factor set") {
+        std::string const json = R"({"upsampling_factor": 4})";
+
+        auto result = loadParametersFromJson<SincInterpolationParams>(json);
+        REQUIRE(result);
+
+        auto params = result.value();
+        REQUIRE(params.upsampling_factor == 4);
+        REQUIRE_FALSE(params.kernel_half_width.has_value());
+        REQUIRE_FALSE(params.window_type.has_value());
+        REQUIRE_FALSE(params.boundary_mode.has_value());
+    }
+
+    SECTION("JSON round-trip preserves values") {
+        SincInterpolationParams original;
+        original.upsampling_factor = 6;
+        original.kernel_half_width = 12;
+        original.window_type = "Hann";
+        original.boundary_mode = "ZeroPad";
+
+        std::string const json = saveParametersToJson(original);
+        INFO("Serialized JSON: " << json);
+
+        auto result = loadParametersFromJson<SincInterpolationParams>(json);
+        REQUIRE(result);
+        auto recovered = result.value();
+
+        REQUIRE(recovered.upsampling_factor == 6);
+        REQUIRE(recovered.kernel_half_width.value() == 12);
+        REQUIRE(recovered.window_type.value() == "Hann");
+        REQUIRE(recovered.boundary_mode.value() == "ZeroPad");
+    }
+
+    SECTION("Registry-based loadParametersForTransform works") {
+        std::string const json = R"({"upsampling_factor": 4, "window_type": "Hann"})";
+
+        auto params_any = loadParametersForTransform("SincInterpolation", json);
+        REQUIRE(params_any.has_value());
+
+        auto params = std::any_cast<SincInterpolationParams>(params_any);
+        REQUIRE(params.upsampling_factor == 4);
+        REQUIRE(params.window_type.value() == "Hann");
+    }
+
+    SECTION("Registry-based loadParametersForTransform with empty JSON fails") {
+        // upsampling_factor is required in JSON, so empty JSON fails
+        auto params_any = loadParametersForTransform("SincInterpolation", "{}");
+        REQUIRE_FALSE(params_any.has_value());
+    }
+
+    SECTION("Registry-based loadParametersForTransform with minimal JSON") {
+        auto params_any = loadParametersForTransform("SincInterpolation", R"({"upsampling_factor": 1})");
+        REQUIRE(params_any.has_value());
+
+        auto params = std::any_cast<SincInterpolationParams>(params_any);
+        REQUIRE(params.upsampling_factor == 1);
+    }
+}
+
+// ============================================================================
+// Registry Integration Tests
+// ============================================================================
+
+TEST_CASE("SincInterpolation registry integration",
+          "[transforms][v2][sinc][registry][container]") {
+
+    auto & registry = ElementRegistry::instance();
+
+    SECTION("Transform is registered as container transform") {
+        REQUIRE(registry.isContainerTransform("SincInterpolation"));
+        REQUIRE_FALSE(registry.hasElementTransform("SincInterpolation"));
+    }
+
+    SECTION("Can retrieve container metadata") {
+        auto const * metadata = registry.getContainerMetadata("SincInterpolation");
+        REQUIRE(metadata != nullptr);
+        REQUIRE(metadata->name == "SincInterpolation");
+        REQUIRE(metadata->category == "Signal Processing");
+        REQUIRE(metadata->is_deterministic == true);
+        REQUIRE(metadata->supports_cancellation == true);
+    }
+
+    SECTION("Can find transform by input type") {
+        auto transforms = registry.getContainerTransformsForInputType(typeid(AnalogTimeSeries));
+        REQUIRE_FALSE(transforms.empty());
+        REQUIRE(std::find(transforms.begin(), transforms.end(), "SincInterpolation") != transforms.end());
+    }
+
+    SECTION("Can execute via registry") {
+        auto const input = makeATS({0.0f, 1.0f, 2.0f, 3.0f, 4.0f});
+        SincInterpolationParams params;
+        params.upsampling_factor = 2;
+        ComputeContext const ctx;
+
+        auto result = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, SincInterpolationParams>(
+                "SincInterpolation", *input, params, ctx);
+
+        REQUIRE(result != nullptr);
+        REQUIRE(result->getNumSamples() == 9);// (5-1)*2+1
+    }
+}
+
+// ============================================================================
+// loadPipelineFromJson Tests (TransformsV2 Widget path)
+// ============================================================================
+
+TEST_CASE("SincInterpolation loadPipelineFromJson",
+          "[transforms][v2][sinc][pipeline_loader]") {
+
+    SECTION("Pipeline JSON with parameters succeeds") {
+        std::string const json = R"({
+            "steps": [{
+                "step_id": "step_1",
+                "transform_name": "SincInterpolation",
+                "parameters": {
+                    "upsampling_factor": 4
+                }
+            }]
+        })";
+
+        auto pipeline_result = loadPipelineFromJson(json);
+        INFO("Error: " << (pipeline_result ? "" : pipeline_result.error()->what()));
+        REQUIRE(pipeline_result);
+    }
+
+    SECTION("Pipeline JSON with all parameters succeeds") {
+        std::string const json = R"({
+            "steps": [{
+                "step_id": "step_1",
+                "transform_name": "SincInterpolation",
+                "parameters": {
+                    "upsampling_factor": 4,
+                    "kernel_half_width": 12,
+                    "window_type": "Hann",
+                    "boundary_mode": "ZeroPad"
+                }
+            }]
+        })";
+
+        auto pipeline_result = loadPipelineFromJson(json);
+        INFO("Error: " << (pipeline_result ? "" : pipeline_result.error()->what()));
+        REQUIRE(pipeline_result);
+    }
+
+    SECTION("Pipeline JSON without parameters falls back to default") {
+        std::string const json = R"({
+            "steps": [{
+                "step_id": "step_1",
+                "transform_name": "SincInterpolation"
+            }]
+        })";
+
+        // loadPipelineFromJson should still succeed — if empty-JSON deserialization
+        // fails, it falls back to a default PipelineStep with NoParams
+        auto pipeline_result = loadPipelineFromJson(json);
+        INFO("Error: " << (pipeline_result ? "" : pipeline_result.error()->what()));
+        REQUIRE(pipeline_result);
+    }
+
+    SECTION("Pipeline can execute on AnalogTimeSeries data") {
+        std::string const json = R"({
+            "steps": [{
+                "step_id": "step_1",
+                "transform_name": "SincInterpolation",
+                "parameters": {
+                    "upsampling_factor": 2
+                }
+            }]
+        })";
+
+        auto pipeline_result = loadPipelineFromJson(json);
+        REQUIRE(pipeline_result);
+
+        // Create input data
+        auto input = makeATS({0.0f, 1.0f, 2.0f, 3.0f, 4.0f});
+        DataTypeVariant const input_variant = input;
+
+        auto result = executePipeline(input_variant, pipeline_result.value());
+        auto output = std::get<std::shared_ptr<AnalogTimeSeries>>(result);
+        REQUIRE(output != nullptr);
+        REQUIRE(output->getNumSamples() == 9);// (5-1)*2+1
+    }
+}
+
+// ============================================================================
+// load_data_from_json_config_v2 Tests
+// ============================================================================
+
+TEST_CASE("SincInterpolation load_data_from_json_config_v2",
+          "[transforms][v2][sinc][json_config]") {
+
+    using namespace WhiskerToolbox::Transforms::V2;
+
+    DataManager dm;
+
+    // Create a time frame and input data
+    auto const tf = std::make_shared<TimeFrame>(std::vector<int>{0, 100, 200, 300, 400});
+    dm.setTime(TimeKey("sinc_test_time"), tf);
+
+    // Create a simple ramp signal [0, 1, 2, 3, 4]
+    std::vector<float> const ramp_data = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
+    auto const ramp = std::make_shared<AnalogTimeSeries>(std::vector<float>(ramp_data), ramp_data.size());
+    dm.setData<AnalogTimeSeries>("sinc_ramp", ramp, TimeKey("sinc_test_time"));
+
+    // Create upsampled time frame: (5-1)*4+1 = 17 samples
+    std::vector<int> up_times;
+    up_times.reserve(17);
+    for (int i = 0; i < 17; ++i) {
+        up_times.push_back(i * 25);
+    }
+    auto const up_tf = std::make_shared<TimeFrame>(up_times);
+    dm.setTime(TimeKey("sinc_upsampled_time"), up_tf);
+
+    // Create temporary directory for JSON config files
+    std::filesystem::path const test_dir =
+            std::filesystem::temp_directory_path() / "sinc_interpolation_v2_test";
+    std::filesystem::create_directories(test_dir);
+
+    SECTION("Basic sinc interpolation via JSON config") {
+        char const * json_config =
+                "[\n"
+                "{\n"
+                "    \"transformations\": {\n"
+                "        \"metadata\": {\n"
+                "            \"name\": \"Sinc Interpolation Pipeline\",\n"
+                "            \"version\": \"2.0\"\n"
+                "        },\n"
+                "        \"steps\": [\n"
+                "            {\n"
+                "                \"step_id\": \"upsample\",\n"
+                "                \"transform_name\": \"SincInterpolation\",\n"
+                "                \"input_key\": \"sinc_ramp\",\n"
+                "                \"output_key\": \"sinc_ramp_upsampled\",\n"
+                "                \"output_time_key\": \"sinc_upsampled_time\",\n"
+                "                \"parameters\": {\n"
+                "                    \"upsampling_factor\": 4\n"
+                "                }\n"
+                "            }\n"
+                "        ]\n"
+                "    }\n"
+                "}\n"
+                "]";
+
+        std::filesystem::path const json_filepath = test_dir / "sinc_basic_config.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config;
+        }
+
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+
+        auto const output = dm.getData<AnalogTimeSeries>("sinc_ramp_upsampled");
+        REQUIRE(output != nullptr);
+        REQUIRE(output->getNumSamples() == 17);
+
+        // Verify output is stored under the correct TimeKey
+        TimeKey const output_tk = dm.getTimeKey("sinc_ramp_upsampled");
+        REQUIRE(output_tk.str() == "sinc_upsampled_time");
+
+        // Verify original samples are preserved at integer positions
+        auto const out = output->getAnalogTimeSeries();
+        for (size_t i = 0; i < ramp_data.size(); ++i) {
+            size_t const out_idx = i * 4;
+            INFO("Original sample " << i << " at output index " << out_idx);
+            REQUIRE_THAT(out[out_idx], Catch::Matchers::WithinAbs(ramp_data[i], 1e-6f));
+        }
+    }
+
+    SECTION("Sinc interpolation with all parameters via JSON config") {
+        char const * json_config =
+                "[\n"
+                "{\n"
+                "    \"transformations\": {\n"
+                "        \"steps\": [\n"
+                "            {\n"
+                "                \"step_id\": \"upsample_full\",\n"
+                "                \"transform_name\": \"SincInterpolation\",\n"
+                "                \"input_key\": \"sinc_ramp\",\n"
+                "                \"output_key\": \"sinc_ramp_full_params\",\n"
+                "                \"output_time_key\": \"sinc_upsampled_time\",\n"
+                "                \"parameters\": {\n"
+                "                    \"upsampling_factor\": 4,\n"
+                "                    \"kernel_half_width\": 12,\n"
+                "                    \"window_type\": \"Hann\",\n"
+                "                    \"boundary_mode\": \"SymmetricExtension\"\n"
+                "                }\n"
+                "            }\n"
+                "        ]\n"
+                "    }\n"
+                "}\n"
+                "]";
+
+        std::filesystem::path const json_filepath = test_dir / "sinc_full_params_config.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config;
+        }
+
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+
+        auto const output = dm.getData<AnalogTimeSeries>("sinc_ramp_full_params");
+        REQUIRE(output != nullptr);
+        REQUIRE(output->getNumSamples() == 17);
+
+        auto const out = output->getAnalogTimeSeries();
+        for (size_t i = 0; i < ramp_data.size(); ++i) {
+            size_t const out_idx = i * 4;
+            INFO("Original sample " << i << " at output index " << out_idx);
+            REQUIRE_THAT(out[out_idx], Catch::Matchers::WithinAbs(ramp_data[i], 1e-6f));
+        }
+    }
+
+    SECTION("Sinc interpolation with zero-pad boundary via JSON config") {
+        char const * json_config =
+                "[\n"
+                "{\n"
+                "    \"transformations\": {\n"
+                "        \"steps\": [\n"
+                "            {\n"
+                "                \"step_id\": \"upsample_zeropad\",\n"
+                "                \"transform_name\": \"SincInterpolation\",\n"
+                "                \"input_key\": \"sinc_ramp\",\n"
+                "                \"output_key\": \"sinc_ramp_zeropad\",\n"
+                "                \"output_time_key\": \"sinc_upsampled_time\",\n"
+                "                \"parameters\": {\n"
+                "                    \"upsampling_factor\": 4,\n"
+                "                    \"boundary_mode\": \"ZeroPad\"\n"
+                "                }\n"
+                "            }\n"
+                "        ]\n"
+                "    }\n"
+                "}\n"
+                "]";
+
+        std::filesystem::path const json_filepath = test_dir / "sinc_zeropad_config.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config;
+        }
+
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+
+        auto const output = dm.getData<AnalogTimeSeries>("sinc_ramp_zeropad");
+        REQUIRE(output != nullptr);
+        REQUIRE(output->getNumSamples() == 17);
+
+        // Verify all output values are finite
+        auto const out = output->getAnalogTimeSeries();
+        for (size_t i = 0; i < out.size(); ++i) {
+            INFO("Sample " << i);
+            REQUIRE(std::isfinite(out[i]));
+        }
+    }
+
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (std::exception const & e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
     }
 }

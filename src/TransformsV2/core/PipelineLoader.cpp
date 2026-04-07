@@ -1,8 +1,8 @@
 
 #include "PipelineLoader.hpp"
 
-#include "core/ElementRegistry.hpp" // elmentRegistry
-#include "core/ParameterIO.hpp" // loadParametersForTransform
+#include "core/ElementRegistry.hpp"// elmentRegistry
+#include "core/ParameterIO.hpp"    // loadParametersForTransform
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 
@@ -10,18 +10,28 @@ PipelineStep createPipelineStepFromRegistry(
         ElementRegistry const & registry,
         std::string const & transform_name,
         std::any const & params_any) {
-    auto const * meta = registry.getMetadata(transform_name);
-    if (!meta) {
-        throw std::runtime_error("Transform '" + transform_name + "' not found");
+    // Check both element and container transform registries
+    std::type_index params_type = typeid(void);
+
+    auto const * element_meta = registry.getMetadata(transform_name);
+    if (element_meta) {
+        params_type = element_meta->params_type;
+    } else {
+        auto const * container_meta = registry.getContainerMetadata(transform_name);
+        if (container_meta) {
+            params_type = container_meta->params_type;
+        } else {
+            throw std::runtime_error("Transform '" + transform_name + "' not found");
+        }
     }
 
     auto & factory_registry = getPipelineStepFactoryRegistry();
-    auto it = factory_registry.find(meta->params_type);
+    auto it = factory_registry.find(params_type);
 
     if (it == factory_registry.end()) {
         throw std::runtime_error(
                 "No PipelineStep factory registered for parameter type: " +
-                std::string(meta->params_type.name()));
+                std::string(params_type.name()));
     }
 
     return it->second(transform_name, params_any);
@@ -30,9 +40,10 @@ PipelineStep createPipelineStepFromRegistry(
 rfl::Result<PipelineStep> loadStepFromDescriptor(PipelineStepDescriptor const & descriptor) {
     auto & registry = ElementRegistry::instance();
 
-    // Validate transform exists
-    auto const * metadata = registry.getMetadata(descriptor.transform_name);
-    if (!metadata) {
+    // Validate transform exists (check both element and container registries)
+    auto const * element_metadata = registry.getMetadata(descriptor.transform_name);
+    auto const * container_metadata = registry.getContainerMetadata(descriptor.transform_name);
+    if (!element_metadata && !container_metadata) {
         return rfl::Error("Transform '" + descriptor.transform_name + "' not found in registry");
     }
 
@@ -81,7 +92,7 @@ rfl::Result<PipelineStep> loadStepFromDescriptor(PipelineStepDescriptor const & 
 
     // Apply param_bindings if provided
     if (descriptor.param_bindings.has_value()) {
-        for (auto const & [param_name, store_key] : descriptor.param_bindings.value()) {
+        for (auto const & [param_name, store_key]: descriptor.param_bindings.value()) {
             step.param_bindings[param_name] = store_key;
         }
     }
@@ -103,7 +114,7 @@ rfl::Result<ReductionStep> loadPreReductionFromDescriptor(
     ReductionStep reduction;
     reduction.reduction_name = descriptor.reduction_name;
     reduction.output_key = descriptor.output_key;
-    
+
     // Copy type information from metadata
     reduction.input_type = metadata->input_type;
     reduction.output_type = metadata->output_type;
@@ -128,7 +139,7 @@ rfl::Result<ReductionStep> loadPreReductionFromDescriptor(
 
     // Apply param_bindings if provided
     if (descriptor.param_bindings.has_value()) {
-        for (auto const & [param_name, store_key] : descriptor.param_bindings.value()) {
+        for (auto const & [param_name, store_key]: descriptor.param_bindings.value()) {
             reduction.param_bindings[param_name] = store_key;
         }
     }
@@ -239,8 +250,8 @@ rfl::Result<TransformPipeline> loadPipelineFromFile(std::string const & filepath
             return rfl::Error("Failed to open file: " + filepath);
         }
 
-        std::string json_str((std::istreambuf_iterator<char>(file)),
-                             std::istreambuf_iterator<char>());
+        std::string const json_str((std::istreambuf_iterator<char>(file)),
+                                   std::istreambuf_iterator<char>());
 
         return loadPipelineFromJson(json_str);
     } catch (std::exception const & e) {
