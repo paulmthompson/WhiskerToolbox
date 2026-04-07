@@ -31,6 +31,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TimeIndexExtractor.test.cpp
 
         test_filename_timeframe.cpp
+        test_upsampled_timeframe.cpp
         test_tableview.cpp
         test_data_manager_fixtures.cpp
         test_entitygroupmanager.cpp

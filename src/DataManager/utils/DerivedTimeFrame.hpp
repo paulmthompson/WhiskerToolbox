@@ -12,25 +12,25 @@ class DigitalEventSeries;
  * @brief Mode for selecting which edge of intervals to use when creating derived TimeFrames
  */
 enum class IntervalEdge {
-    START,  ///< Use the start time of each interval
-    END     ///< Use the end time of each interval
+    START,///< Use the start time of each interval
+    END   ///< Use the end time of each interval
 };
 
 /**
  * @brief Options for creating a derived TimeFrame from a DigitalIntervalSeries
  */
 struct DerivedTimeFrameFromIntervalsOptions {
-    std::shared_ptr<TimeFrame> source_timeframe;            ///< The source TimeFrame to sample from
-    std::shared_ptr<DigitalIntervalSeries> interval_series; ///< The intervals defining which indices to sample
-    IntervalEdge edge = IntervalEdge::START;                ///< Which edge of intervals to use
+    std::shared_ptr<TimeFrame> source_timeframe;           ///< The source TimeFrame to sample from
+    std::shared_ptr<DigitalIntervalSeries> interval_series;///< The intervals defining which indices to sample
+    IntervalEdge edge = IntervalEdge::START;               ///< Which edge of intervals to use
 };
 
 /**
  * @brief Options for creating a derived TimeFrame from a DigitalEventSeries
  */
 struct DerivedTimeFrameFromEventsOptions {
-    std::shared_ptr<TimeFrame> source_timeframe;       ///< The source TimeFrame to sample from
-    std::shared_ptr<DigitalEventSeries> event_series;  ///< The events defining which indices to sample
+    std::shared_ptr<TimeFrame> source_timeframe;     ///< The source TimeFrame to sample from
+    std::shared_ptr<DigitalEventSeries> event_series;///< The events defining which indices to sample
 };
 
 /**
@@ -85,4 +85,39 @@ std::shared_ptr<TimeFrame> createDerivedTimeFrame(DerivedTimeFrameFromIntervalsO
  */
 std::shared_ptr<TimeFrame> createDerivedTimeFrame(DerivedTimeFrameFromEventsOptions const & options);
 
-#endif // DERIVED_TIMEFRAME_HPP
+/**
+ * @brief Options for creating an upsampled TimeFrame by interpolating between source clock values
+ */
+struct DerivedTimeFrameFromUpsamplingOptions {
+    std::shared_ptr<TimeFrame> source_timeframe;///< The source TimeFrame to upsample
+    int upsampling_factor;                      ///< Integer upsampling factor (must be > 0)
+};
+
+/**
+ * @brief Create an upsampled TimeFrame by linearly interpolating between consecutive clock values
+ *
+ * Given a source TimeFrame with N entries and clock values [t_0, t_1, ..., t_{N-1}],
+ * produces a new TimeFrame with (N-1) * factor + 1 entries by inserting factor - 1
+ * evenly spaced values between each consecutive pair.
+ *
+ * Non-integer interpolation results are rounded to the nearest integer tick.
+ *
+ * @pre options.source_timeframe must not be null
+ * @pre options.upsampling_factor must be > 0
+ *
+ * @param options Configuration including source timeframe and upsampling factor
+ * @return A shared pointer to the created TimeFrame, or nullptr on invalid input
+ *
+ * @example
+ * ```cpp
+ * // Source: [0, 60, 120], factor = 4
+ * // Output: [0, 15, 30, 45, 60, 75, 90, 105, 120] (9 entries)
+ * DerivedTimeFrameFromUpsamplingOptions opts;
+ * opts.source_timeframe = source;
+ * opts.upsampling_factor = 4;
+ * auto upsampled = createUpsampledTimeFrame(opts);
+ * ```
+ */
+std::shared_ptr<TimeFrame> createUpsampledTimeFrame(DerivedTimeFrameFromUpsamplingOptions const & options);
+
+#endif// DERIVED_TIMEFRAME_HPP
