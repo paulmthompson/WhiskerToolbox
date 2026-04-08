@@ -22,6 +22,7 @@ add_subdirectory(StateEstimation)
 add_subdirectory(DataManager)
 add_subdirectory(TriageSession)
 add_subdirectory(GatherResult)
+add_subdirectory(PlotDataExport)
 
 add_subdirectory(TransformsV2)
 add_subdirectory(DataSynthesizer)

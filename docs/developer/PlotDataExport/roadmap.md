@@ -7,7 +7,7 @@ the plot widgets. Steps within a phase can be done in parallel unless noted.
 
 ## Phase 1: Core Library (`src/PlotDataExport/`)
 
-### Step 1.1 — Create library skeleton
+### Step 1.1 — Create library skeleton ✅
 
 1. Create `src/PlotDataExport/CMakeLists.txt`:
    - Define as an `INTERFACE` library (header-only, no `.cpp` files).
@@ -18,7 +18,7 @@ the plot widgets. Steps within a phase can be done in parallel unless noted.
 
 3. Verify the build still succeeds (empty library, no consumers yet).
 
-### Step 1.2 — Raster CSV export
+### Step 1.2 — Raster CSV export ✅
 
 Create `src/PlotDataExport/RasterCSVExport.hpp`.
 
@@ -56,7 +56,7 @@ struct RasterExportMetadata {
 **Reference code:** `EventPlotOpenGLWidget.cpp` lines 544–590 (the scene building
 loop that iterates trials/events and computes relative time from alignment).
 
-### Step 1.3 — Histogram CSV export
+### Step 1.3 — Histogram CSV export ✅
 
 Create `src/PlotDataExport/HistogramCSVExport.hpp`.
 
@@ -90,7 +90,7 @@ struct HistogramExportMetadata {
    - `double center = data.binCenter(i)`
    - Append row: `center<delim>event_key<delim>data.counts[i]`.
 
-### Step 1.4 — Heatmap CSV export
+### Step 1.4 — Heatmap CSV export ✅
 
 Create `src/PlotDataExport/HeatmapCSVExport.hpp`.
 
@@ -133,7 +133,13 @@ struct HeatmapExportMetadata {
 3. For each unit → for each trial → for each time bin:
    - Append row from `rate_data[unit].trials.per_trial_values[trial][bin]`.
 
-### Step 1.5 — Build verification
+> **Implementation note:** The per-trial function takes `vector<PerTrialHeatmapInput>`
+> rather than `vector<RateEstimateWithTrials>` directly. `EventRateEstimation` lives
+> under the UI layer (gated by `ENABLE_UI`) so adding it as a dependency of
+> `PlotDataExport` would break non-UI builds and tests. Widgets convert
+> `RateEstimateWithTrials → PerTrialHeatmapInput` before calling the export API.
+
+### Step 1.5 — Build verification ✅
 
 ```bash
 cmake --build --preset linux-clang-release > build_log.txt 2>&1
@@ -146,29 +152,31 @@ CMake integration is correct.
 
 ## Phase 2: Unit Tests (`tests/PlotDataExport/`)
 
-### Step 2.1 — Test scaffolding
+### Step 2.1 — Test scaffolding ✅
 
-1. Create `tests/PlotDataExport/CMakeLists.txt`.
+1. [x] Create `tests/PlotDataExport/CMakeLists.txt`.
    - Define test executable linking `PlotDataExport` and Catch2.
    - Note: since `PlotDataExport` depends on `GatherResult` which depends on
      `TransformsV2`, `--whole-archive` linker flags are needed (same pattern as
      `tests/TransformsV2/CMakeLists.txt`).
-2. Add `add_subdirectory(PlotDataExport)` to `tests/CMakeLists.txt`.
+2. [x] Add `add_subdirectory(PlotDataExport)` to `tests/CMakeLists.txt`.
+3. [x] Add stub `TEST_CASE` to each `.cpp` (scaffold tests pass with ctest).
 
-### Step 2.2 — Raster export tests
+### Step 2.2 — Raster export tests ✅
 
 Create `tests/PlotDataExport/test_RasterCSVExport.cpp`.
 
 Test cases:
-- **Empty gather result** → CSV has only header + metadata comments.
-- **Single series, single trial, single event** → verify exact CSV row values.
-- **Multiple series** → verify interleaving and correct event_key per row.
-- **Sorted gather result** → trial_index in CSV matches reordered trial indices.
-- **Custom delimiter** → verify tab-separated output.
-
-Construction pattern: build `DigitalEventSeries` with known events at known
-`TimeFrameIndex` values, create `DigitalIntervalSeries` for trial intervals,
-call `gather()` to produce `GatherResult`, then pass to `exportRasterToCSV()`.
+- [x] **Empty series vector** → CSV has only header + metadata comments.
+- [x] **Empty GatherResult** → CSV has only header (no data rows, no crash).
+- [x] **Single series, single trial, single event** → verify exact CSV row values.
+- [x] **Single series, single trial, multiple events** → all relative times correct.
+- [x] **Multiple trials** → trial_index column increments correctly.
+- [x] **Trial with no events** → that trial produces no data row.
+- [x] **Multiple series** → verify interleaving and correct event_key per row.
+- [x] **Custom delimiter** → verify tab-separated output.
+- [x] **Metadata comment header** → verify `#` lines present with correct values.
+- [x] **Metadata not written when empty** → alignment_key/window_size lines absent.
 
 ### Step 2.3 — Histogram export tests
 
@@ -344,11 +352,11 @@ Add a one-sentence description of `PlotDataExport` to the **Project Architecture
 
 ## Checklist Summary
 
-- [ ] `src/PlotDataExport/CMakeLists.txt`
-- [ ] `src/PlotDataExport/RasterCSVExport.hpp`
-- [ ] `src/PlotDataExport/HistogramCSVExport.hpp`
-- [ ] `src/PlotDataExport/HeatmapCSVExport.hpp`
-- [ ] `src/CMakeLists.txt` updated
+- [x] `src/PlotDataExport/CMakeLists.txt`
+- [x] `src/PlotDataExport/RasterCSVExport.hpp`
+- [x] `src/PlotDataExport/HistogramCSVExport.hpp`
+- [x] `src/PlotDataExport/HeatmapCSVExport.hpp`
+- [x] `src/CMakeLists.txt` updated
 - [ ] `tests/PlotDataExport/CMakeLists.txt`
 - [ ] `tests/PlotDataExport/test_RasterCSVExport.cpp`
 - [ ] `tests/PlotDataExport/test_HistogramCSVExport.cpp`
