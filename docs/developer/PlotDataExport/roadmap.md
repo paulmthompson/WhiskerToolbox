@@ -178,30 +178,52 @@ Test cases:
 - [x] **Metadata comment header** → verify `#` lines present with correct values.
 - [x] **Metadata not written when empty** → alignment_key/window_size lines absent.
 
-### Step 2.3 — Histogram export tests
+### Step 2.3 — Histogram export tests ✅
 
 Create `tests/PlotDataExport/test_HistogramCSVExport.cpp`.
 
 Test cases:
-- **Single series, known bins** → verify `bin_center` and `value` for each row.
-- **Multiple series** → verify both series appear with correct event_key.
-- **Zero-count bins** → they should still appear in output (no row omission).
+- [x] **Empty series vector** → CSV has only header + metadata comment.
+- [x] **Empty HistogramData** → 0 data rows, no crash.
+- [x] **Single series, single bin** → exact `bin_center` and `value` in row.
+- [x] **Multiple bins** → all 3 bin centers correct (including negative bin_start).
+- [x] **Zero-count bins appear** → middle bin with 0 count still emits a row.
+- [x] **Multiple series** → each row carries the correct `event_key`.
+- [x] **Series with different bin counts** → independent bin counts per series.
+- [x] **Custom delimiter** → tab-separated header and data.
+- [x] **Full metadata comment header** → all four optional fields written.
+- [x] **Empty metadata suppressed** → no extra `#` lines for default-constructed metadata.
 
-### Step 2.4 — Heatmap export tests
+### Step 2.4 — Heatmap export tests ✅
 
 Create `tests/PlotDataExport/test_HeatmapCSVExport.cpp`.
 
-Test cases:
-- **Aggregate: single unit, known values** → verify wide matrix dimensions and values.
-- **Aggregate: multiple units** → one row per unit, values match.
-- **Per-trial: single unit, two trials** → verify long-form tidy output.
-- **Metadata comment header** → verify `#` lines are present and parseable.
+**Aggregate (`exportHeatmapToCSV`) test cases:**
+- [x] Empty rows → comment + `unit_key` header only.
+- [x] Single unit, single bin → header contains bin center, data row matches.
+- [x] Single unit, multiple bins → all bin centers in header, all values in row.
+- [x] Multiple units → each unit gets its own row, shared header.
+- [x] Custom delimiter → tab-separated header and data.
+- [x] Full metadata header → all four optional `#` fields written.
+- [x] Empty metadata suppressed → no extra `#` lines.
 
-### Step 2.5 — Run tests
+**Per-trial (`exportHeatmapPerTrialToCSV`) test cases:**
+- [x] Empty data → comment + column header only.
+- [x] Single unit, single trial, single bin → exact row content.
+- [x] Single unit, multiple trials → correct `trial_index` column.
+- [x] Multiple units → both units present with correct `unit_key`.
+- [x] Custom delimiter → tab-separated output.
+- [x] Metadata comment header → `alignment_key` and `window_size` written.
+- [x] Unit with no trials → zero data rows emitted.
+- [x] Row count check → 2 units × 3 trials × 2 bins = 14 total newlines.
+
+### Step 2.5 — Run tests ✅
 
 ```bash
 ctest --preset linux-clang-release -R "PlotDataExport" --output-on-failure > test_log.txt 2>&1
 ```
+
+Result: **100% tests passed** (1 test — `test_PlotDataExport_all` — bundles all 3 test files).
 
 ---
 

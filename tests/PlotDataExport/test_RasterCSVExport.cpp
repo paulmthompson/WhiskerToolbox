@@ -69,8 +69,8 @@ TEST_CASE("exportRasterToCSV - empty series vector produces headers only",
           "[PlotDataExport][RasterCSVExport]") {
     std::string const csv = PlotDataExport::exportRasterToCSV({});
 
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("# export_type: raster"));
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("trial_index,event_key,relative_time"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("# export_type: raster"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("trial_index,event_key,relative_time"));
 
     // Exactly 2 lines: comment + header, no data rows
     int newlines = 0;
@@ -79,7 +79,7 @@ TEST_CASE("exportRasterToCSV - empty series vector produces headers only",
             ++newlines;
         }
     }
-    CHECK(newlines == 2);
+    REQUIRE(newlines == 2);
 }
 
 TEST_CASE("exportRasterToCSV - empty GatherResult produces headers only",
@@ -90,7 +90,7 @@ TEST_CASE("exportRasterToCSV - empty GatherResult produces headers only",
     PlotDataExport::RasterSeriesInput const input{"spikes", &empty_gathered, tf.get()};
     std::string const csv = PlotDataExport::exportRasterToCSV({input});
 
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("trial_index,event_key,relative_time"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("trial_index,event_key,relative_time"));
 
     int newlines = 0;
     for (char const c: csv) {
@@ -98,7 +98,7 @@ TEST_CASE("exportRasterToCSV - empty GatherResult produces headers only",
             ++newlines;
         }
     }
-    CHECK(newlines == 2);
+    REQUIRE(newlines == 2);
 }
 
 // =============================================================================
@@ -118,8 +118,8 @@ TEST_CASE("exportRasterToCSV - single series, single trial, single event",
     std::string const csv =
             PlotDataExport::exportRasterToCSV({input});
 
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("trial_index,event_key,relative_time\n"));
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,5\n"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("trial_index,event_key,relative_time\n"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,5\n"));
 }
 
 TEST_CASE("exportRasterToCSV - single series, single trial, multiple events",
@@ -134,9 +134,9 @@ TEST_CASE("exportRasterToCSV - single series, single trial, multiple events",
 
     std::string const csv = PlotDataExport::exportRasterToCSV({input});
 
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,1\n"));
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,5\n"));
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,8\n"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,1\n"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,5\n"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,8\n"));
 }
 
 TEST_CASE("exportRasterToCSV - single series, multiple trials",
@@ -152,8 +152,8 @@ TEST_CASE("exportRasterToCSV - single series, multiple trials",
 
     std::string const csv = PlotDataExport::exportRasterToCSV({input});
 
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,5\n"));
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("1,spikes,5\n"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,5\n"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("1,spikes,5\n"));
 }
 
 TEST_CASE("exportRasterToCSV - trial with no events produces no data row",
@@ -168,8 +168,8 @@ TEST_CASE("exportRasterToCSV - trial with no events produces no data row",
 
     std::string const csv = PlotDataExport::exportRasterToCSV({input});
 
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,5\n"));
-    CHECK(csv.find("1,spikes,") == std::string::npos);
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,5\n"));
+    REQUIRE(csv.find("1,spikes,") == std::string::npos);
 }
 
 // =============================================================================
@@ -193,8 +193,8 @@ TEST_CASE("exportRasterToCSV - multiple series, correct event_key per row",
             PlotDataExport::exportRasterToCSV({in_spikes, in_licks});
 
     // spikes: 15 - 10 = 5  |  licks: 12 - 10 = 2
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,5\n"));
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("0,licks,2\n"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("0,spikes,5\n"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("0,licks,2\n"));
 }
 
 // =============================================================================
@@ -213,10 +213,10 @@ TEST_CASE("exportRasterToCSV - custom tab delimiter",
     std::string const csv =
             PlotDataExport::exportRasterToCSV({input}, {}, "\t");
 
-    CHECK_THAT(csv,
+    REQUIRE_THAT(csv,
                Catch::Matchers::ContainsSubstring(
                        "trial_index\tevent_key\trelative_time"));
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("0\tspikes\t5\n"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("0\tspikes\t5\n"));
 }
 
 // =============================================================================
@@ -231,9 +231,9 @@ TEST_CASE("exportRasterToCSV - metadata comment header is written",
 
     std::string const csv = PlotDataExport::exportRasterToCSV({}, meta);
 
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("# export_type: raster"));
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("# alignment_key: stimulus"));
-    CHECK_THAT(csv, Catch::Matchers::ContainsSubstring("# window_size: 1000"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("# export_type: raster"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("# alignment_key: stimulus"));
+    REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("# window_size: 1000"));
 }
 
 TEST_CASE("exportRasterToCSV - metadata not written when empty",
@@ -241,6 +241,6 @@ TEST_CASE("exportRasterToCSV - metadata not written when empty",
     // Default metadata: empty key and zero window — neither extra line should appear
     std::string const csv = PlotDataExport::exportRasterToCSV({});
 
-    CHECK(csv.find("# alignment_key:") == std::string::npos);
-    CHECK(csv.find("# window_size:") == std::string::npos);
+    REQUIRE(csv.find("# alignment_key:") == std::string::npos);
+    REQUIRE(csv.find("# window_size:") == std::string::npos);
 }
