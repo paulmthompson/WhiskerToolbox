@@ -76,6 +76,11 @@ signals:
      */
     void exportSVGRequested();
 
+    /**
+     * @brief Emitted when the user requests CSV export from the properties panel
+     */
+    void exportCSVRequested();
+
 private:
     Ui::HeatmapPropertiesWidget * ui;
     std::shared_ptr<HeatmapState> _state;

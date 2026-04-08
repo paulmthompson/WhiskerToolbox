@@ -67,6 +67,10 @@ website:
                 - developer/PlottingSVG/SVGUtils.qmd
                 - developer/PlottingSVG/decorations.qmd
                 - developer/PlottingSVG/roadmap.md
+            - section: "PlotDataExport"
+              href: developer/PlotDataExport/index.qmd
+              contents:
+                - developer/PlotDataExport/roadmap.md
             - developer/Entity/index.qmd
             - section: "Deep Learning"
               href: developer/DeepLearning/index.qmd
@@ -371,6 +375,7 @@ website:
         - section: "Export"
           contents:
             - user_guide/export/video_export.qmd
+            - user_guide/export/csv_plot_export.qmd
         - section: "Behavioral Modules"
           contents:
             - user_guide/behaviors/whisker.qmd

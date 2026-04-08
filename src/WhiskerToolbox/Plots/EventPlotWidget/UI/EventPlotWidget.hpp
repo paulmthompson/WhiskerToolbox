@@ -114,6 +114,15 @@ public slots:
      */
     void handleExportSVG();
 
+    /**
+     * @brief Open a file dialog and write raster event data to a CSV file.
+     *
+     * Uses `AppFileDialog` for session-aware path memory (dialog id
+     * `"export_event_plot_csv"`). Re-gathers trial-aligned data and calls
+     * `PlotDataExport::exportRasterToCSV()`.
+     */
+    void handleExportCSV();
+
 protected:
     void resizeEvent(QResizeEvent * event) override;
 

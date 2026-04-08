@@ -246,6 +246,19 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="export_csv_button">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Export CSV...</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="vertical_spacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

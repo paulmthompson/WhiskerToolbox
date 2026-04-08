@@ -82,11 +82,16 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
     auto * export_svg_button = new QPushButton(tr("Export SVG..."), _export_section);
     export_svg_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     export_layout->addWidget(export_svg_button);
+    auto * export_csv_button = new QPushButton(tr("Export CSV..."), _export_section);
+    export_csv_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    export_layout->addWidget(export_csv_button);
     _export_section->setContentLayout(*export_layout);
     int const export_insert = ui->main_layout->indexOf(ui->vertical_spacer);
     ui->main_layout->insertWidget(export_insert, _export_section);
     connect(export_svg_button, &QPushButton::clicked,
             this, &PSTHPropertiesWidget::exportSVGRequested);
+    connect(export_csv_button, &QPushButton::clicked,
+            this, &PSTHPropertiesWidget::exportCSVRequested);
 
     // Create and insert EstimationMethodControls in place of bin_size widgets
     _estimation_controls = new EstimationMethodControls(this);

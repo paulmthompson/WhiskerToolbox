@@ -4,6 +4,9 @@
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "DataManager/DataManager.hpp"
+#include "PlotDataExport/HistogramCSVExport.hpp"
+#include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
+#include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
@@ -18,13 +21,14 @@
 #include <QResizeEvent>
 #include <QTextStream>
 #include <QVBoxLayout>
+#include <utility>
 
 #include "ui_PSTHWidget.h"
 
 PSTHWidget::PSTHWidget(std::shared_ptr<DataManager> data_manager,
                        QWidget * parent)
     : QWidget(parent),
-      _data_manager(data_manager),
+      _data_manager(std::move(std::move(data_manager))),
       ui(new Ui::PSTHWidget),
       _opengl_widget(nullptr),
       _axis_widget(nullptr),
@@ -62,9 +66,9 @@ PSTHWidget::PSTHWidget(std::shared_ptr<DataManager> data_manager,
 
     // Replace the main layout
     QLayout * old_layout = layout();
-    if (old_layout) {
+    
         delete old_layout;
-    }
+    
     setLayout(vertical_layout);
 
     // Forward signals from OpenGL widget
@@ -79,7 +83,7 @@ PSTHWidget::~PSTHWidget() {
 }
 
 void PSTHWidget::setState(std::shared_ptr<PSTHState> state) {
-    _state = state;
+    _state = std::move(state);
 
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
@@ -313,6 +317,66 @@ void PSTHWidget::handleExportSVG() {
             this,
             tr("Export Successful"),
             tr("PSTH exported to:\n%1").arg(fileName));
+}
+
+void PSTHWidget::handleExportCSV() {
+    QString const fileName = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("export_psth_csv"),
+            tr("Export PSTH to CSV"),
+            tr("CSV Files (*.csv);;All Files (*)"));
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    auto bundle = _opengl_widget->collectHistogramExportData();
+    if (bundle.inputs.empty()) {
+        QMessageBox::warning(
+                this,
+                tr("Export Failed"),
+                tr("No data to export. Load data and configure the plot first."));
+        return;
+    }
+
+    PlotDataExport::HistogramExportMetadata metadata;
+    if (_state) {
+        metadata.alignment_key = _state->getAlignmentEventKey().toStdString();
+        metadata.window_size = _state->getWindowSize();
+        metadata.scaling_mode = scalingLabel(_state->scaling());
+
+        auto const & params = _state->estimationParams();
+        std::visit([&metadata](auto const & p) {
+            using T = std::decay_t<decltype(p)>;
+            if constexpr (std::is_same_v<T, WhiskerToolbox::Plots::BinningParams>) {
+                metadata.estimation_method = "Binning";
+            } else if constexpr (std::is_same_v<T, WhiskerToolbox::Plots::GaussianKernelParams>) {
+                metadata.estimation_method = "GaussianKernel";
+            } else if constexpr (std::is_same_v<T, WhiskerToolbox::Plots::CausalExponentialParams>) {
+                metadata.estimation_method = "CausalExponential";
+            }
+        },
+                   params);
+    }
+
+    std::string const csv = PlotDataExport::exportHistogramToCSV(bundle.inputs, metadata);
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(
+                this,
+                tr("Export Failed"),
+                tr("Could not open file for writing:\n%1").arg(fileName));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << QString::fromStdString(csv);
+    file.close();
+
+    QMessageBox::information(
+            this,
+            tr("Export Successful"),
+            tr("PSTH CSV exported to:\n%1").arg(fileName));
 }
 
 void PSTHWidget::resizeEvent(QResizeEvent * event) {

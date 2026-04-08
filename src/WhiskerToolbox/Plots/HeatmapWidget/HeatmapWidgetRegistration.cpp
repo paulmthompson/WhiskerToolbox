@@ -185,6 +185,9 @@ void registerTypes(EditorRegistry * registry,
                                 QObject::connect(props, &HeatmapPropertiesWidget::exportSVGRequested,
                                                  view, &HeatmapWidget::handleExportSVG);
 
+                                QObject::connect(props, &HeatmapPropertiesWidget::exportCSVRequested,
+                                                 view, &HeatmapWidget::handleExportCSV);
+
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the heatmap plot to navigate to a specific time position
                                 if (reg) {

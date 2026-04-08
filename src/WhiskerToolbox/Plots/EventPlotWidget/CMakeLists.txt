@@ -52,6 +52,7 @@ target_link_libraries(EventPlotWidget PRIVATE PlottingSVG)
 target_link_libraries(EventPlotWidget PRIVATE Collapsible_Widget)
 target_link_libraries(EventPlotWidget PRIVATE glm::glm)
 target_link_libraries(EventPlotWidget PRIVATE GatherResult)
+target_link_libraries(EventPlotWidget PRIVATE PlotDataExport)
 target_link_libraries(EventPlotWidget PRIVATE CoreUtilities)
 target_link_libraries(EventPlotWidget PRIVATE WhiskerToolbox::StateManagement)
 

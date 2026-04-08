@@ -229,7 +229,7 @@ Result: **100% tests passed** (1 test — `test_PlotDataExport_all` — bundles 
 
 ## Phase 3: Widget Integration
 
-### Step 3.1 — EventPlotWidget CSV export
+### Step 3.1 — EventPlotWidget CSV export ✅
 
 **Files to modify:**
 - `src/WhiskerToolbox/Plots/EventPlotWidget/UI/EventPlotPropertiesWidget.hpp` — add `exportCSVRequested()` signal
@@ -249,7 +249,7 @@ Result: **100% tests passed** (1 test — `test_PlotDataExport_all` — bundles 
 5. Calls `exportRasterToCSV(data)`
 6. Writes string to file
 
-### Step 3.2 — PSTHWidget CSV export (parallel with 3.1)
+### Step 3.2 — PSTHWidget CSV export (parallel with 3.1) ✅
 
 **Files to modify:**
 - `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHPropertiesWidget.hpp` — add `exportCSVRequested()` signal
@@ -260,7 +260,7 @@ Result: **100% tests passed** (1 test — `test_PlotDataExport_all` — bundles 
 - `src/WhiskerToolbox/Plots/PSTHWidget/UI/PSTHWidget.cpp` — implement handler
 - `src/WhiskerToolbox/Plots/PSTHWidget/PSTHWidgetRegistration.cpp` — connect signal
 
-### Step 3.3 — HeatmapWidget CSV export (parallel with 3.1)
+### Step 3.3 — HeatmapWidget CSV export (parallel with 3.1) ✅
 
 **Files to modify:**
 - `src/WhiskerToolbox/Plots/HeatmapWidget/UI/HeatmapPropertiesWidget.hpp` — add `exportCSVRequested(bool include_per_trial)` signal, add per-trial checkbox
@@ -277,12 +277,12 @@ pipeline needs to call `estimateRateWithTrials()` instead. Options:
   
   Recommendation: option (b) to avoid changing the hot rendering path.
 
-### Step 3.4 — CMake link updates
+### Step 3.4 — CMake link updates ✅
 
 Add `PlotDataExport` to the `target_link_libraries` for the WhiskerToolbox
 executable target (or to each widget's CMakeLists if they have separate ones).
 
-### Step 3.5 — Build and smoke test
+### Step 3.5 — Build and smoke test ✅
 
 ```bash
 cmake --build --preset linux-clang-release > build_log.txt 2>&1
@@ -328,7 +328,7 @@ ctest --preset linux-clang-release -R "PlotDataExport" --output-on-failure > tes
 
 ## Phase 5: Documentation
 
-### Step 5.1 — Developer docs
+### Step 5.1 — Developer docs ✅
 
 Already done (this directory). Ensure `index.qmd` is up to date with final API.
 
@@ -337,7 +337,7 @@ Add per-header `.qmd` files if the API surface warrants detailed docs:
 - `docs/developer/PlotDataExport/HistogramCSVExport.qmd`
 - `docs/developer/PlotDataExport/HeatmapCSVExport.qmd`
 
-### Step 5.2 — User guide
+### Step 5.2 — User guide ✅
 
 Create `docs/user_guide/export/csv_plot_export.qmd` with:
 
@@ -354,13 +354,13 @@ Create `docs/user_guide/export/csv_plot_export.qmd` with:
    - PSTH: `ggplot(aes(x=bin_center, y=value, color=event_key)) + geom_line()`
    - Heatmap: `ggplot(aes(x=bin_center, y=unit_key, fill=value)) + geom_tile()`
 
-### Step 5.3 — Register in quarto navigation
+### Step 5.3 — Register in quarto navigation ✅
 
 Update `docs/_quarto.yml`:
 - Add `user_guide/export/csv_plot_export.qmd` under the "Export" section.
 - Add `developer/PlotDataExport/index.qmd` under the developer section.
 
-### Step 5.4 — Update copilot-instructions.md
+### Step 5.4 — Update copilot-instructions.md ✅
 
 Add a one-sentence description of `PlotDataExport` to the **Project Architecture
 (Libraries)** section in `.github/copilot-instructions.md`:
@@ -379,19 +379,19 @@ Add a one-sentence description of `PlotDataExport` to the **Project Architecture
 - [x] `src/PlotDataExport/HistogramCSVExport.hpp`
 - [x] `src/PlotDataExport/HeatmapCSVExport.hpp`
 - [x] `src/CMakeLists.txt` updated
-- [ ] `tests/PlotDataExport/CMakeLists.txt`
-- [ ] `tests/PlotDataExport/test_RasterCSVExport.cpp`
-- [ ] `tests/PlotDataExport/test_HistogramCSVExport.cpp`
-- [ ] `tests/PlotDataExport/test_HeatmapCSVExport.cpp`
-- [ ] `tests/CMakeLists.txt` updated
-- [ ] All tests pass
-- [ ] EventPlotWidget: Export CSV button + handler
-- [ ] PSTHWidget: Export CSV button + handler
-- [ ] HeatmapWidget: Export CSV button + per-trial checkbox + handler
-- [ ] WhiskerToolbox CMake link updated
-- [ ] clang-format on all new/modified files
-- [ ] clang-tidy on all new/modified files
-- [ ] `docs/developer/PlotDataExport/index.qmd` finalized
-- [ ] `docs/user_guide/export/csv_plot_export.qmd` created
-- [ ] `docs/_quarto.yml` updated
-- [ ] `.github/copilot-instructions.md` updated
+- [x] `tests/PlotDataExport/CMakeLists.txt`
+- [x] `tests/PlotDataExport/test_RasterCSVExport.cpp`
+- [x] `tests/PlotDataExport/test_HistogramCSVExport.cpp`
+- [x] `tests/PlotDataExport/test_HeatmapCSVExport.cpp`
+- [x] `tests/CMakeLists.txt` updated
+- [x] All tests pass
+- [x] EventPlotWidget: Export CSV button + handler
+- [x] PSTHWidget: Export CSV button + handler
+- [x] HeatmapWidget: Export CSV button + handler (aggregate; per-trial deferred to Phase 5)
+- [x] Widget CMakeLists link updated (EventPlotWidget, PSTHWidget, HeatmapWidget)
+- [x] clang-format on all new/modified files
+- [x] clang-tidy on all new/modified files
+- [x] `docs/developer/PlotDataExport/index.qmd` finalized
+- [x] `docs/user_guide/export/csv_plot_export.qmd` created
+- [x] `docs/_quarto.yml` updated
+- [x] `.github/copilot-instructions.md` updated

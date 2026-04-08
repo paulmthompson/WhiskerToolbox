@@ -85,6 +85,8 @@ void registerTypes(EditorRegistry * registry,
                                 // Connect export button in properties to the view's export handler
                                 QObject::connect(props, &EventPlotPropertiesWidget::exportSVGRequested,
                                                  view, &EventPlotWidget::handleExportSVG);
+                                QObject::connect(props, &EventPlotPropertiesWidget::exportCSVRequested,
+                                                 view, &EventPlotWidget::handleExportCSV);
 
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the event plot to navigate to a specific time position

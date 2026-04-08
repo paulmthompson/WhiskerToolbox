@@ -12,6 +12,7 @@
 #include "Core/HeatmapState.hpp"
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/Mappers/HeatmapMapper.hpp"
 #include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
@@ -63,6 +64,18 @@ public:
      * @return UTF-8 SVG document, or empty if there is no rectangle geometry to export.
      */
     [[nodiscard]] QString exportToSVG();
+
+    /**
+     * @brief Collect aggregate heatmap export data by re-running the pipeline.
+     *
+     * Re-executes the heatmap data pipeline with the current state settings and
+     * returns the sorted rows and unit keys ready for `exportHeatmapToCSV()`.
+     */
+    struct HeatmapExportBundle {
+        std::vector<std::string> unit_keys;
+        std::vector<CorePlotting::HeatmapRowData> rows;
+    };
+    [[nodiscard]] HeatmapExportBundle collectHeatmapExportData() const;
 
 signals:
     void plotDoubleClicked(int64_t time_frame_index);

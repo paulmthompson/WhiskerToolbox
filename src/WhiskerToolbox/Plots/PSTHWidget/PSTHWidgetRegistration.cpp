@@ -9,6 +9,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <iostream>
+#include <utility>
 
 namespace PSTHWidgetModule {
 
@@ -21,7 +22,7 @@ void registerTypes(EditorRegistry * registry,
     }
 
     // Capture dependencies for lambdas
-    auto dm = data_manager;
+    const auto& dm = std::move(data_manager);
     auto reg = registry;
 
     registry->registerType({.type_id = QStringLiteral("PSTHWidget"),
@@ -39,7 +40,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<PSTHState>(); },
 
                             // View factory - creates PSTHWidget (the view component)
-                            .create_view = [dm, reg](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_view = [dm, reg](const std::shared_ptr<EditorState>& state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<PSTHState>(state);
                                 if (!plot_state) {
                                     std::cerr << "PSTHWidgetModule: Failed to cast state to PSTHState" << std::endl;
@@ -53,7 +54,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Properties factory - creates PSTHPropertiesWidget
-                            .create_properties = [dm](std::shared_ptr<EditorState> state) -> QWidget * {
+                            .create_properties = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
                                 auto plot_state = std::dynamic_pointer_cast<PSTHState>(state);
                                 if (!plot_state) {
                                     std::cerr << "PSTHWidgetModule: Failed to cast state to PSTHState for properties" << std::endl;
@@ -85,11 +86,14 @@ void registerTypes(EditorRegistry * registry,
                                 QObject::connect(props, &PSTHPropertiesWidget::exportSVGRequested,
                                                  view, &PSTHWidget::handleExportSVG);
 
+                                QObject::connect(props, &PSTHPropertiesWidget::exportCSVRequested,
+                                                 view, &PSTHWidget::handleExportCSV);
+
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the PSTH plot to navigate to a specific time position
                                 if (reg) {
                                     QObject::connect(view, &PSTHWidget::timePositionSelected,
-                                                     [reg](TimePosition position) {
+                                                     [reg](const TimePosition& position) {
                                                          // Update EditorRegistry time (triggers timeChanged signal for other widgets)
                                                          reg->setCurrentTime(position);
                                                      });

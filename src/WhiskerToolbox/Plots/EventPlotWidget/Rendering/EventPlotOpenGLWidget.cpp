@@ -198,6 +198,67 @@ QString EventPlotOpenGLWidget::exportToSVG() {
     return QString::fromStdString(renderer.render());
 }
 
+EventPlotOpenGLWidget::RasterExportBundle EventPlotOpenGLWidget::collectRasterExportData() const {
+    RasterExportBundle bundle;
+
+    if (!_state || !_data_manager) {
+        return bundle;
+    }
+
+    auto event_names = _state->getPlotEventNames();
+    if (event_names.empty()) {
+        return bundle;
+    }
+
+    for (auto const & event_name: event_names) {
+        auto const opts = _state->getPlotEventOptions(event_name);
+        if (!opts || opts->event_key.empty()) {
+            continue;
+        }
+
+        std::shared_ptr<DigitalEventSeries> series;
+        std::shared_ptr<TimeFrame const> tf;
+
+        if (opts->interval_edge.has_value()) {
+            auto interval_series = _data_manager->getData<DigitalIntervalSeries>(opts->event_key);
+            if (!interval_series) {
+                continue;
+            }
+            series = WhiskerToolbox::Plots::extractEdgeEvents(
+                    interval_series, *opts->interval_edge);
+            if (!series) {
+                continue;
+            }
+            tf = series->getTimeFrame();
+        } else {
+            series = _data_manager->getData<DigitalEventSeries>(opts->event_key);
+            if (!series) {
+                continue;
+            }
+            tf = series->getTimeFrame();
+        }
+
+        if (!tf) {
+            continue;
+        }
+
+        auto gathered = gatherTrialData(series, opts->event_key);
+        if (gathered.empty()) {
+            continue;
+        }
+
+        bundle.owned.push_back({opts->event_key, std::move(gathered), tf});
+    }
+
+    // Build input references pointing into owned data
+    bundle.inputs.reserve(bundle.owned.size());
+    for (auto const & s: bundle.owned) {
+        bundle.inputs.push_back({s.event_key, &s.gathered, s.time_frame.get()});
+    }
+
+    return bundle;
+}
+
 // =============================================================================
 // OpenGL Lifecycle
 // =============================================================================

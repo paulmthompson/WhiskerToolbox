@@ -6,6 +6,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
+#include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/EventRateEstimation/RateNormalization.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
@@ -122,6 +123,122 @@ QString PSTHPlotOpenGLWidget::exportToSVG() {
     }
 
     return QString::fromStdString(renderer.render());
+}
+
+PSTHPlotOpenGLWidget::HistogramExportBundle PSTHPlotOpenGLWidget::collectHistogramExportData() const {
+    HistogramExportBundle bundle;
+
+    if (!_state || !_data_manager) {
+        return bundle;
+    }
+
+    auto event_names = _state->getPlotEventNames();
+    if (event_names.empty()) {
+        return bundle;
+    }
+
+    auto alignment_state = _state->alignmentState();
+    if (!alignment_state) {
+        return bundle;
+    }
+
+    double const window_size = _state->getWindowSize();
+    double const half_window = window_size / 2.0;
+
+    double bin_size = 10.0;
+    auto const & params = _state->estimationParams();
+    if (auto const * binning = std::get_if<WhiskerToolbox::Plots::BinningParams>(&params)) {
+        bin_size = binning->bin_size;
+    }
+
+    int const num_bins = static_cast<int>(std::ceil(window_size / bin_size));
+    if (num_bins <= 0) {
+        return bundle;
+    }
+
+    auto scaling_mode = _state->scaling();
+    constexpr double time_units_per_second = 1000.0;
+
+    for (auto const & event_name: event_names) {
+        auto const event_options = _state->getPlotEventOptions(event_name);
+        if (!event_options || event_options->event_key.empty()) {
+            continue;
+        }
+
+        auto gathered = WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>(
+                _data_manager,
+                event_options->event_key,
+                alignment_state->data());
+
+        if (gathered.empty()) {
+            continue;
+        }
+
+        auto source_series = _data_manager->getData<DigitalEventSeries>(event_options->event_key);
+        if (!source_series) {
+            continue;
+        }
+
+        auto time_frame = source_series->getTimeFrame();
+        if (!time_frame) {
+            continue;
+        }
+
+        std::vector<double> histogram(num_bins, 0.0);
+        size_t total_trials = 0;
+
+        for (size_t trial_idx = 0; trial_idx < gathered.size(); ++trial_idx) {
+            auto const & trial_view = gathered[trial_idx];
+            if (!trial_view) {
+                continue;
+            }
+
+            int64_t const alignment_time = gathered.alignmentTimeAt(trial_idx);
+            int const alignment_time_abs = static_cast<int>(alignment_time);
+
+            for (auto const & event_with_id: trial_view->view()) {
+                int const event_time_abs = time_frame->getTimeAtIndex(event_with_id.event_time);
+                auto const relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
+
+                if (relative_time < -half_window || relative_time >= half_window) {
+                    continue;
+                }
+
+                double const bin_position = (relative_time + half_window) / bin_size;
+                int bin_index = static_cast<int>(std::floor(bin_position));
+                bin_index = std::max(0, std::min(bin_index, num_bins - 1));
+                histogram[bin_index] += 1.0;
+            }
+
+            total_trials++;
+        }
+
+        // Apply scaling via RateEstimate
+        WhiskerToolbox::Plots::RateEstimate rate_estimate;
+        rate_estimate.values = histogram;
+        rate_estimate.num_trials = total_trials;
+        rate_estimate.metadata.sample_spacing = bin_size;
+        rate_estimate.times.reserve(num_bins);
+        for (int i = 0; i < num_bins; ++i) {
+            rate_estimate.times.push_back(-half_window + (i + 0.5) * bin_size);
+        }
+        WhiskerToolbox::Plots::applyScaling(rate_estimate, scaling_mode, time_units_per_second);
+
+        CorePlotting::HistogramData hist_data;
+        hist_data.bin_start = -half_window;
+        hist_data.bin_width = bin_size;
+        hist_data.counts = rate_estimate.values;
+
+        bundle.owned.push_back({event_options->event_key, std::move(hist_data)});
+    }
+
+    // Build input references pointing into owned data
+    bundle.inputs.reserve(bundle.owned.size());
+    for (auto const & s: bundle.owned) {
+        bundle.inputs.push_back({s.event_key, &s.histogram});
+    }
+
+    return bundle;
 }
 
 // =============================================================================

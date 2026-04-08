@@ -57,6 +57,14 @@ public slots:
      */
     void handleExportSVG();
 
+    /**
+     * @brief Open a file dialog and write aggregate heatmap data to a CSV file.
+     *
+     * Uses `AppFileDialog` with dialog id `"export_heatmap_csv"`. Re-runs the
+     * heatmap pipeline and calls `PlotDataExport::exportHeatmapToCSV()`.
+     */
+    void handleExportCSV();
+
 protected:
     void resizeEvent(QResizeEvent * event) override;
 

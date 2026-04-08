@@ -74,6 +74,8 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
             this, &EventPlotPropertiesWidget::_onSortingModeChanged);
     connect(ui->export_svg_button, &QPushButton::clicked,
             this, &EventPlotPropertiesWidget::exportSVGRequested);
+    connect(ui->export_csv_button, &QPushButton::clicked,
+            this, &EventPlotPropertiesWidget::exportCSVRequested);
 
     // === Glyph Style Options collapsible section ===
     // Inserted after the add event widget. The GlyphStyleControls are

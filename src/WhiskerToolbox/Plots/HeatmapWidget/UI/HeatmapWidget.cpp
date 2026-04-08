@@ -4,6 +4,9 @@
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "DataManager/DataManager.hpp"
+#include "PlotDataExport/HeatmapCSVExport.hpp"
+#include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
+#include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
@@ -334,4 +337,65 @@ void HeatmapWidget::handleExportSVG() {
             this,
             tr("Export Successful"),
             tr("Heatmap exported to:\n%1").arg(fileName));
+}
+
+void HeatmapWidget::handleExportCSV() {
+    QString const fileName = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("export_heatmap_csv"),
+            tr("Export Heatmap to CSV"),
+            tr("CSV Files (*.csv);;All Files (*)"));
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    auto bundle = _opengl_widget->collectHeatmapExportData();
+    if (bundle.rows.empty()) {
+        QMessageBox::warning(
+                this,
+                tr("Export Failed"),
+                tr("No data to export. Add units and configure alignment first."));
+        return;
+    }
+
+    PlotDataExport::HeatmapExportMetadata metadata;
+    if (_state) {
+        metadata.alignment_key = _state->getAlignmentEventKey().toStdString();
+        metadata.window_size = _state->getWindowSize();
+        metadata.scaling_mode = scalingLabel(_state->scaling());
+
+        auto const & params = _state->estimationParams();
+        std::visit([&metadata](auto const & p) {
+            using T = std::decay_t<decltype(p)>;
+            if constexpr (std::is_same_v<T, WhiskerToolbox::Plots::BinningParams>) {
+                metadata.estimation_method = "Binning";
+            } else if constexpr (std::is_same_v<T, WhiskerToolbox::Plots::GaussianKernelParams>) {
+                metadata.estimation_method = "GaussianKernel";
+            } else if constexpr (std::is_same_v<T, WhiskerToolbox::Plots::CausalExponentialParams>) {
+                metadata.estimation_method = "CausalExponential";
+            }
+        },
+                   params);
+    }
+
+    std::string const csv = PlotDataExport::exportHeatmapToCSV(
+            bundle.unit_keys, bundle.rows, metadata);
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(
+                this,
+                tr("Export Failed"),
+                tr("Could not open file for writing:\n%1").arg(fileName));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << QString::fromStdString(csv);
+    file.close();
+
+    QMessageBox::information(
+            this,
+            tr("Export Successful"),
+            tr("Heatmap CSV exported to:\n%1").arg(fileName));
 }

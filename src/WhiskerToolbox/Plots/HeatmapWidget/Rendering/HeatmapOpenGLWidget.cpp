@@ -117,6 +117,54 @@ QString HeatmapOpenGLWidget::exportToSVG() {
     return QString::fromStdString(renderer.render());
 }
 
+HeatmapOpenGLWidget::HeatmapExportBundle HeatmapOpenGLWidget::collectHeatmapExportData() const {
+    HeatmapExportBundle bundle;
+
+    if (!_state || !_data_manager) {
+        return bundle;
+    }
+
+    auto const & unit_keys = _state->unitKeys();
+    if (unit_keys.empty()) {
+        return bundle;
+    }
+
+    auto * alignment_state = _state->alignmentState();
+    if (!alignment_state) {
+        return bundle;
+    }
+
+    double const window_size = _state->getWindowSize();
+    if (window_size <= 0.0) {
+        return bundle;
+    }
+
+    WhiskerToolbox::Plots::HeatmapPipelineConfig config;
+    config.window_size = window_size;
+    config.scaling = _state->scaling();
+    config.estimation_params = _state->estimationParams();
+    config.time_units_per_second = 1000.0;
+
+    auto pipeline_result = WhiskerToolbox::Plots::runHeatmapPipeline(
+            _data_manager, unit_keys, alignment_state->data(), config);
+
+    if (!pipeline_result.success || pipeline_result.rows.empty()) {
+        return bundle;
+    }
+
+    bundle.unit_keys = unit_keys;
+    auto const sort_mode = _state->sortMode();
+    if (sort_mode != HeatmapSortMode::Manual) {
+        auto sort_indices = WhiskerToolbox::Plots::computeSortOrder(
+                pipeline_result, bundle.unit_keys, sort_mode, _state->sortAscending());
+        WhiskerToolbox::Plots::applySortOrder(
+                pipeline_result, bundle.unit_keys, sort_indices);
+    }
+
+    bundle.rows = std::move(pipeline_result.rows);
+    return bundle;
+}
+
 void HeatmapOpenGLWidget::resetView() {
     if (_state) {
         _state->setXZoom(1.0);

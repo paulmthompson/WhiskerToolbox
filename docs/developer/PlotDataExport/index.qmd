@@ -116,8 +116,8 @@ PropertiesWidget  ──signal──▶  MainWidget::handleExportCSV()
 | Widget | Export Function | Data Source |
 |--------|----------------|-------------|
 | EventPlotWidget | `exportRasterToCSV()` | Re-gathered `GatherResult<DigitalEventSeries>` per event series |
-| PSTHWidget | `exportHistogramToCSV()` | Cached `HistogramData` per event series from `PSTHPlotOpenGLWidget` |
-| HeatmapWidget | `exportHeatmapToCSV()` + `exportHeatmapPerTrialToCSV()` | Cached `HeatmapPipelineResult` from data pipeline |
+| PSTHWidget | `exportHistogramToCSV()` | Re-computed per-series `HistogramData` from `PSTHPlotOpenGLWidget::collectHistogramExportData()` |
+| HeatmapWidget | `exportHeatmapToCSV()` | Re-run pipeline via `HeatmapOpenGLWidget::collectHeatmapExportData()` |
 
 ## Testing Strategy
 

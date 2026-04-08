@@ -5,6 +5,7 @@
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "PlotDataExport/RasterCSVExport.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
@@ -348,6 +349,52 @@ void EventPlotWidget::handleExportSVG() {
             this,
             tr("Export Successful"),
             tr("Event plot exported to:\n%1").arg(fileName));
+}
+
+void EventPlotWidget::handleExportCSV() {
+    QString const fileName = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("export_event_plot_csv"),
+            tr("Export Event Plot to CSV"),
+            tr("CSV Files (*.csv);;All Files (*)"));
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    auto bundle = _opengl_widget->collectRasterExportData();
+    if (bundle.inputs.empty()) {
+        QMessageBox::warning(
+                this,
+                tr("Export Failed"),
+                tr("No data to export. Load data and configure the plot first."));
+        return;
+    }
+
+    PlotDataExport::RasterExportMetadata metadata;
+    if (_state) {
+        metadata.alignment_key = _state->getAlignmentEventKey().toStdString();
+        metadata.window_size = _state->getWindowSize();
+    }
+
+    std::string const csv = PlotDataExport::exportRasterToCSV(bundle.inputs, metadata);
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(
+                this,
+                tr("Export Failed"),
+                tr("Could not open file for writing:\n%1").arg(fileName));
+        return;
+    }
+
+    QTextStream out(&file);
+    out << QString::fromStdString(csv);
+    file.close();
+
+    QMessageBox::information(
+            this,
+            tr("Export Successful"),
+            tr("Event plot CSV exported to:\n%1").arg(fileName));
 }
 
 

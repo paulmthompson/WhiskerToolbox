@@ -397,6 +397,10 @@ void HeatmapPropertiesWidget::_setupExportSection() {
     export_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     export_layout->addWidget(export_button);
 
+    auto * export_csv_button = new QPushButton(tr("Export CSV..."));
+    export_csv_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    export_layout->addWidget(export_csv_button);
+
     _export_section->setContentLayout(*export_layout);
 
     int const spacer_index = ui->main_layout->indexOf(ui->vertical_spacer);
@@ -408,4 +412,7 @@ void HeatmapPropertiesWidget::_setupExportSection() {
 
     connect(export_button, &QPushButton::clicked,
             this, &HeatmapPropertiesWidget::exportSVGRequested);
+
+    connect(export_csv_button, &QPushButton::clicked,
+            this, &HeatmapPropertiesWidget::exportCSVRequested);
 }

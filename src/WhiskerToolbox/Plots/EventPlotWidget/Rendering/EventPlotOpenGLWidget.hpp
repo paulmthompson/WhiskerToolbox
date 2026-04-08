@@ -28,6 +28,7 @@
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
+#include "PlotDataExport/RasterCSVExport.hpp"
 #include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
@@ -118,6 +119,28 @@ public:
      *         has been built yet (e.g., before the first `paintGL()` call).
      */
     [[nodiscard]] QString exportToSVG();
+
+    /**
+     * @brief Collect raster export data for CSV export
+     *
+     * Re-gathers trial-aligned event data for all configured event series
+     * and packages them as `RasterSeriesInput` structs alongside their
+     * `GatherResult` and `TimeFrame` objects. The returned struct owns
+     * the data so it remains valid for the caller to serialize.
+     *
+     * @return Struct containing owned GatherResults and the corresponding
+     *         RasterSeriesInput vector ready for `exportRasterToCSV()`.
+     */
+    struct RasterExportBundle {
+        struct OwnedSeries {
+            std::string event_key;
+            GatherResult<DigitalEventSeries> gathered;
+            std::shared_ptr<TimeFrame const> time_frame;
+        };
+        std::vector<OwnedSeries> owned;
+        std::vector<PlotDataExport::RasterSeriesInput> inputs;
+    };
+    [[nodiscard]] RasterExportBundle collectRasterExportData() const;
 
 signals:
     /**

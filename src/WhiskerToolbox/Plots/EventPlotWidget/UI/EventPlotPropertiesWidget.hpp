@@ -79,6 +79,11 @@ signals:
      */
     void exportSVGRequested();
 
+    /**
+     * @brief Emitted when the user clicks the "Export CSV" button
+     */
+    void exportCSVRequested();
+
 private slots:
     /**
      * @brief Handle add event button click

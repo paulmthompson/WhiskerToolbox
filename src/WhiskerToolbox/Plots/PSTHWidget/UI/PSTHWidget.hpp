@@ -99,6 +99,15 @@ public slots:
      */
     void handleExportSVG();
 
+    /**
+     * @brief Open a file dialog and write PSTH histogram data to a CSV file.
+     *
+     * Uses `AppFileDialog` for session-aware path memory (dialog id
+     * `"export_psth_csv"`). Re-computes per-series histograms and calls
+     * `PlotDataExport::exportHistogramToCSV()`.
+     */
+    void handleExportCSV();
+
 protected:
     void resizeEvent(QResizeEvent * event) override;
 

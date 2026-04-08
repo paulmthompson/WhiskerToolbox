@@ -22,6 +22,7 @@
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/DataTypes/HistogramData.hpp"
 #include "CorePlotting/Mappers/HistogramMapper.hpp"
+#include "PlotDataExport/HistogramCSVExport.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -73,6 +74,23 @@ public:
      * @return SVG document as a `QString`, or empty if no histogram geometry is cached yet.
      */
     [[nodiscard]] QString exportToSVG();
+
+    /**
+     * @brief Collect per-series histogram data for CSV export
+     *
+     * Re-computes per-event-series histograms (with the current scaling)
+     * and returns them as owned HistogramData objects paired with input
+     * descriptors ready for `exportHistogramToCSV()`.
+     */
+    struct HistogramExportBundle {
+        struct OwnedSeries {
+            std::string event_key;
+            CorePlotting::HistogramData histogram;
+        };
+        std::vector<OwnedSeries> owned;
+        std::vector<PlotDataExport::HistogramSeriesInput> inputs;
+    };
+    [[nodiscard]] HistogramExportBundle collectHistogramExportData() const;
 
 signals:
     void plotDoubleClicked(int64_t time_frame_index);
