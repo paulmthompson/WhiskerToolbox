@@ -73,17 +73,18 @@ std::function<ElementVariant(ElementVariant)> TransformPipeline::buildTypeErased
         std::type_index params_type) const {
     auto & registry = ElementRegistry::instance();
 
-    // Capture a pointer to the step so we always access the current params
-    // (which may have been modified by preprocessing)
-    auto step_ptr = &step;
+    // Capture the params by value. For views and runtime execution, capturing
+    // by pointer is dangerous because the step (and pipeline) might go out of scope.
+    // The V2 pattern applies parameter bindings BEFORE calling this method,
+    // so we can safely capture the evaluated params.
     return [&registry,
             name = step.transform_name,
-            step_ptr,// Capture pointer to step to access mutable params
+            params = step.params,
             input_type,
             output_type,
             params_type](ElementVariant input) -> ElementVariant {
         return registry.executeWithDynamicParams(
-                name, input, step_ptr->params, input_type, output_type, params_type);
+                name, input, params, input_type, output_type, params_type);
     };
 }
 
