@@ -55,6 +55,7 @@ target_link_libraries(EventPlotWidget PRIVATE GatherResult)
 target_link_libraries(EventPlotWidget PRIVATE PlotDataExport)
 target_link_libraries(EventPlotWidget PRIVATE CoreUtilities)
 target_link_libraries(EventPlotWidget PRIVATE WhiskerToolbox::StateManagement)
+target_link_libraries(EventPlotWidget PRIVATE spdlog::spdlog_header_only)
 
 target_include_directories(EventPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

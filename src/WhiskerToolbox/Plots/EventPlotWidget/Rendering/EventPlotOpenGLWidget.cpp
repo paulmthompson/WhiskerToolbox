@@ -19,6 +19,8 @@
 #include <QShowEvent>
 #include <QWheelEvent>
 
+#include <spdlog/spdlog.h>
+
 #include <algorithm>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
@@ -53,6 +55,17 @@ struct SeriesTrialKey {
     } catch (...) {
         return {};
     }
+}
+
+/// Derive trial index from world-space Y coordinate.
+/// Trials are laid out in equal-height rows within [-1, +1].
+/// Row 0 is at the top (y ≈ +1), row (num_trials-1) at the bottom (y ≈ -1).
+[[nodiscard]] int trialIndexFromWorldY(float world_y, size_t num_trials) {
+    if (num_trials == 0) return -1;
+    float const row_height = 2.0f / static_cast<float>(num_trials);
+    // y = +1 → trial 0, y = -1 → trial (num_trials-1)
+    int const trial = static_cast<int>((1.0f - world_y) / row_height);
+    return std::clamp(trial, 0, static_cast<int>(num_trials) - 1);
 }
 
 }// anonymous namespace
@@ -306,7 +319,12 @@ void EventPlotOpenGLWidget::paintGL() {
 
     // Rebuild scene if needed
     if (_scene_dirty) {
+        auto const t0 = std::chrono::steady_clock::now();
         rebuildScene();
+        auto const t1 = std::chrono::steady_clock::now();
+        auto const ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+        spdlog::debug("[EventPlotGL] rebuildScene took {} ms, glyph_batches={}",
+                      ms, _scene.glyph_batches.size());
         _scene_dirty = false;
 
         // Sync current camera matrices into the cached scene so that
@@ -437,8 +455,14 @@ void EventPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
     bool const shift_pressed = event->modifiers() & Qt::ShiftModifier;
     bool const ctrl_pressed = event->modifiers() & Qt::ControlModifier;
 
+    spdlog::debug("[EventPlotGL] wheelEvent delta={:.2f} shift={} ctrl={}",
+                  delta, shift_pressed, ctrl_pressed);
     handleZoom(delta, shift_pressed, ctrl_pressed);
     event->accept();
+}
+
+void EventPlotOpenGLWidget::enterEvent(QEnterEvent * event) {
+    QOpenGLWidget::enterEvent(event);
 }
 
 void EventPlotOpenGLWidget::leaveEvent(QEvent * event) {
@@ -451,6 +475,7 @@ void EventPlotOpenGLWidget::leaveEvent(QEvent * event) {
 // =============================================================================
 
 void EventPlotOpenGLWidget::onStateChanged() {
+    spdlog::debug("[EventPlotGL] onStateChanged -> _scene_dirty=true");
     _scene_dirty = true;
     update();
 }
@@ -624,6 +649,10 @@ void EventPlotOpenGLWidget::rebuildScene() {
 
         style.color = CorePlotting::hexColorToVec4(gd.hex_color, gd.alpha);
 
+        // Accumulate ALL trials' elements into a single batch per series.
+        // This reduces draw calls from O(num_trials * num_series) to O(num_series).
+        std::vector<CorePlotting::MappedElement> all_elements;
+
         for (size_t trial = 0; trial < num_trials; ++trial) {
             auto const & trial_view = sd.gathered[trial];
             if (!trial_view) continue;
@@ -642,17 +671,15 @@ void EventPlotOpenGLWidget::rebuildScene() {
                     static_cast<int>(-_cached_view_state.x_min),
                     static_cast<int>(_cached_view_state.x_max));
 
-            // Unique key per series+trial to avoid collisions in scene builder
-            std::string const series_trial_key =
-                    sd.name.toStdString() + "_trial_" + std::to_string(trial);
-            std::vector<CorePlotting::MappedElement> elements;
-            elements.reserve(trial_view->size());// Upper bound estimate
             for (auto const & elem: mapped) {
-                elements.push_back(elem);
+                all_elements.push_back(elem);
             }
-
-            builder.addGlyphs(series_trial_key, std::move(elements), style);
         }
+
+        // One batch per series — series_key is just the event name.
+        // Trial index is derived from Y coordinate in hit testing.
+        std::string const series_key = sd.name.toStdString();
+        builder.addGlyphs(series_key, std::move(all_elements), style);
     }
 
     // Build and upload scene
@@ -729,10 +756,12 @@ std::optional<std::pair<int, std::string>> EventPlotOpenGLWidget::findEventNear(
             _scene);
 
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
-        // Extract trial index from series_key (format: "{event_name}_trial_{N}")
-        auto parsed = parseSeriesTrialKey(result.series_key);
-        if (parsed.isValid()) {
-            return std::make_pair(parsed.trial_index, parsed.event_name);
+        // series_key is now just the event name (batches are merged per series).
+        // Derive trial index from the hit Y coordinate using layout geometry.
+        int const trial_index = trialIndexFromWorldY(
+                result.world_y, _cached_alignment_times.size());
+        if (trial_index >= 0) {
+            return std::make_pair(trial_index, result.series_key);
         }
     }
 
@@ -762,22 +791,23 @@ void EventPlotOpenGLWidget::handleClickSelection(QPoint const & screen_pos) {
             _layout_response);
 
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
-        // Extract trial index and event name from series_key
-        // (format: "{event_name}_trial_{N}")
-        auto parsed = parseSeriesTrialKey(result.series_key);
-        if (parsed.isValid()) {
+        // series_key is now just the event name (batches are merged per series).
+        // Derive trial index from the hit Y coordinate.
+        int const trial_index = trialIndexFromWorldY(
+                result.world_y, _cached_alignment_times.size());
+        if (trial_index >= 0) {
             // Resolve the DataManager key from the event name
             QString series_key;
             if (_state) {
                 auto options = _state->getPlotEventOptions(
-                        QString::fromStdString(parsed.event_name));
+                        QString::fromStdString(result.series_key));
                 if (options) {
                     series_key = QString::fromStdString(options->event_key);
                 }
             }
 
             // Emit selection signal with trial index and relative time
-            emit eventSelected(parsed.trial_index, result.world_x, series_key);
+            emit eventSelected(trial_index, result.world_x, series_key);
         }
     }
 }
