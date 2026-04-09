@@ -62,7 +62,7 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
 std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
         DigitalIntervalSeries const * digital_interval_series,
         BooleanParams const & booleanParams,
-        ProgressCallback progressCallback);
+        const ProgressCallback& progressCallback);
 
 ///////////////////////////////////////////////////////////////////////////////
 
