@@ -193,8 +193,8 @@ void EventPlotPropertiesWidget::setPlotWidget(EventPlotWidget * plot_widget) {
 
         // Add the section to the main layout (after time axis range controls)
         int const insert_index = _range_controls_section
-                                   ? ui->main_layout->indexOf(_range_controls_section) + 1
-                                   : ui->main_layout->indexOf(_alignment_widget) + 1;
+                                         ? ui->main_layout->indexOf(_range_controls_section) + 1
+                                         : ui->main_layout->indexOf(_alignment_widget) + 1;
         ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
     }
 }
@@ -472,6 +472,12 @@ void EventPlotPropertiesWidget::_onSortingModeChanged(int index) {
             mode = TrialSortMode::FirstEventLatency;
             break;
         case 2:
+            mode = TrialSortMode::SecondEventLatency;
+            break;
+        case 3:
+            mode = TrialSortMode::AlignmentInterval;
+            break;
+        case 4:
             mode = TrialSortMode::EventCount;
             break;
     }

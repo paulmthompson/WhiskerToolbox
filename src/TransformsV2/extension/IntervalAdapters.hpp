@@ -28,6 +28,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
+#include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <memory>
@@ -45,9 +46,9 @@ namespace WhiskerToolbox::Transforms::V2 {
  * and the alignment time (for time normalization in projections).
  */
 struct AlignedInterval {
-    int64_t start;          ///< Interval start (inclusive)
-    int64_t end;            ///< Interval end (exclusive)
-    int64_t alignment_time; ///< Time to use for alignment in projections
+    int64_t start;         ///< Interval start (inclusive)
+    int64_t end;           ///< Interval end (exclusive)
+    int64_t alignment_time;///< Time to use for alignment in projections
 
     [[nodiscard]] constexpr int64_t duration() const noexcept {
         return end - start;
@@ -58,9 +59,9 @@ struct AlignedInterval {
  * @brief Alignment point options for intervals
  */
 enum class AlignmentPoint {
-    Start,  ///< Use interval start as alignment time
-    End,    ///< Use interval end as alignment time
-    Center  ///< Use interval center as alignment time
+    Start,///< Use interval start as alignment time
+    End,  ///< Use interval end as alignment time
+    Center///< Use interval center as alignment time
 };
 
 // =============================================================================
@@ -73,7 +74,7 @@ enum class AlignmentPoint {
  * Any type satisfying this concept can be used with gather().
  */
 template<typename T>
-concept IntervalSource = requires(T const& t) {
+concept IntervalSource = requires(T const & t) {
     { t.begin() } -> std::input_iterator;
     { t.end() } -> std::input_iterator;
     { t.size() } -> std::convertible_to<std::size_t>;
@@ -95,56 +96,51 @@ class EventExpanderAdapter {
 public:
     /**
      * @brief Iterator that lazily produces AlignedInterval from events
-     * 
-     * Note: Each dereference iterates through view() to find the element.
-     * For GatherResult construction (single forward pass), this is efficient.
+     *
+     * Uses O(1) indexed access into the underlying view() range (which is
+     * random-access: iota | transform). The TimeFrame pointer is cached
+     * once at construction to avoid repeated shared_ptr access.
      */
     class iterator {
     public:
         using iterator_category = std::input_iterator_tag;
         using value_type = AlignedInterval;
         using difference_type = std::ptrdiff_t;
-        using pointer = value_type const*;
+        using pointer = value_type const *;
         using reference = value_type;
 
         iterator() = default;
 
         iterator(
-            DigitalEventSeries const* events,
-            std::size_t index,
-            int64_t pre_window,
-            int64_t post_window)
-            : _events(events)
-            , _index(index)
-            , _pre_window(pre_window)
-            , _post_window(post_window) {}
+                DigitalEventSeries const * events,
+                std::size_t index,
+                int64_t pre_window,
+                int64_t post_window)
+            : _events(events),
+              _index(index),
+              _pre_window(pre_window),
+              _post_window(post_window),
+              _tf(events ? events->getTimeFrame().get() : nullptr) {}
 
         [[nodiscard]] value_type operator*() const {
-            // Iterate to find element at current index
-            std::size_t idx = 0;
-            for (auto const& event : _events->view()) {
-                if (idx == _index) {
-                    // Convert event index to absolute time if a TimeFrame exists,
-                    // otherwise treat the raw index as the time value.
-                    auto tf = _events->getTimeFrame();
-                    int64_t abs_time = tf
-                        ? tf->getTimeAtIndex(event.time())
-                        : event.time().getValue();
+            assert(_events && _index < _events->size());
+            auto event_view = _events->view();
+            auto const & event = event_view[_index];
 
-                    // Window offsets are always in absolute time units.
-                    return AlignedInterval{
-                        .start = abs_time - _pre_window,
-                        .end = abs_time + _post_window,
-                        .alignment_time = abs_time
-                    };
-                }
-                ++idx;
-            }
-            // Should never reach here if iterator is valid
-            return AlignedInterval{0, 0, 0};
+            // Convert event index to absolute time if a TimeFrame exists,
+            // otherwise treat the raw index as the time value.
+            int64_t abs_time = _tf
+                                       ? _tf->getTimeAtIndex(event.time())
+                                       : event.time().getValue();
+
+            // Window offsets are always in absolute time units.
+            return AlignedInterval{
+                    .start = abs_time - _pre_window,
+                    .end = abs_time + _post_window,
+                    .alignment_time = abs_time};
         }
 
-        iterator& operator++() {
+        iterator & operator++() {
             ++_index;
             return *this;
         }
@@ -155,19 +151,20 @@ public:
             return tmp;
         }
 
-        [[nodiscard]] bool operator==(iterator const& other) const {
+        [[nodiscard]] bool operator==(iterator const & other) const {
             return _index == other._index;
         }
 
-        [[nodiscard]] bool operator!=(iterator const& other) const {
+        [[nodiscard]] bool operator!=(iterator const & other) const {
             return !(*this == other);
         }
 
     private:
-        DigitalEventSeries const* _events{nullptr};
+        DigitalEventSeries const * _events{nullptr};
         std::size_t _index{0};
         int64_t _pre_window{0};
         int64_t _post_window{0};
+        TimeFrame const * _tf{nullptr};///< Cached raw pointer (non-owning)
     };
 
     /**
@@ -178,19 +175,19 @@ public:
      * @param post_window Time after each event to include
      */
     EventExpanderAdapter(
-        std::shared_ptr<DigitalEventSeries const> events,
-        int64_t pre_window,
-        int64_t post_window)
-        : _events(std::move(events))
-        , _pre_window(pre_window)
-        , _post_window(post_window) {}
+            std::shared_ptr<DigitalEventSeries const> events,
+            int64_t pre_window,
+            int64_t post_window)
+        : _events(std::move(events)),
+          _pre_window(pre_window),
+          _post_window(post_window) {}
 
     /**
      * @brief Construct with symmetric window
      */
     EventExpanderAdapter(
-        std::shared_ptr<DigitalEventSeries const> events,
-        int64_t window)
+            std::shared_ptr<DigitalEventSeries const> events,
+            int64_t window)
         : EventExpanderAdapter(std::move(events), window, window) {}
 
     [[nodiscard]] iterator begin() const {
@@ -208,7 +205,7 @@ public:
     /**
      * @brief Get the underlying event series
      */
-    [[nodiscard]] std::shared_ptr<DigitalEventSeries const> const& events() const {
+    [[nodiscard]] std::shared_ptr<DigitalEventSeries const> const & events() const {
         return _events;
     }
 
@@ -258,82 +255,76 @@ class IntervalWithAlignmentAdapter {
 public:
     /**
      * @brief Iterator that produces AlignedInterval with custom alignment
-     * 
-     * Note: Each dereference iterates through view() to find the element.
-     * For GatherResult construction (single forward pass), this is efficient.
+     *
+     * Uses O(1) indexed access into the underlying view() range (which is
+     * random-access: iota | transform). The TimeFrame pointer is cached
+     * once at construction to avoid repeated shared_ptr access.
      */
     class iterator {
     public:
         using iterator_category = std::input_iterator_tag;
         using value_type = AlignedInterval;
         using difference_type = std::ptrdiff_t;
-        using pointer = value_type const*;
+        using pointer = value_type const *;
         using reference = value_type;
 
         iterator() = default;
 
         iterator(
-            DigitalIntervalSeries const* intervals,
-            std::size_t index,
-            AlignmentPoint align,
-            int64_t pre_window,
-            int64_t post_window,
-            bool use_window)
-            : _intervals(intervals)
-            , _index(index)
-            , _align(align)
-            , _pre_window(pre_window)
-            , _post_window(post_window)
-            , _use_window(use_window) {}
+                DigitalIntervalSeries const * intervals,
+                std::size_t index,
+                AlignmentPoint align,
+                int64_t pre_window,
+                int64_t post_window,
+                bool use_window)
+            : _intervals(intervals),
+              _index(index),
+              _align(align),
+              _pre_window(pre_window),
+              _post_window(post_window),
+              _use_window(use_window),
+              _tf(intervals ? intervals->getTimeFrame().get() : nullptr) {}
 
         [[nodiscard]] value_type operator*() const {
-            // Iterate to find element at current index
-            std::size_t idx = 0;
-            for (auto const& interval_with_id : _intervals->view()) {
-                if (idx == _index) {
-                    auto const& interval = interval_with_id.interval;
+            assert(_intervals && _index < _intervals->size());
+            auto interval_view = _intervals->view();
+            auto const & interval_with_id = interval_view[_index];
+            auto const & interval = interval_with_id.interval;
 
-                    int64_t alignment_idx;
-                    switch (_align) {
-                        case AlignmentPoint::Start:
-                            alignment_idx = interval.start;
-                            break;
-                        case AlignmentPoint::End:
-                            alignment_idx = interval.end;
-                            break;
-                        case AlignmentPoint::Center:
-                            alignment_idx = (interval.start + interval.end) / 2;
-                            break;
-                    }
-
-                    if (_use_window) {
-                        // Window mode: convert alignment to absolute time,
-                        // then expand by pre/post window in absolute time units.
-                        auto tf = _intervals->getTimeFrame();
-                        int64_t abs_time = tf
-                            ? tf->getTimeAtIndex(TimeFrameIndex(alignment_idx))
-                            : alignment_idx;
-
-                        return AlignedInterval{
-                            .start = abs_time - _pre_window,
-                            .end = abs_time + _post_window,
-                            .alignment_time = abs_time
-                        };
-                    } else {
-                        // No window: use raw interval bounds (TF-index space)
-                        return AlignedInterval{
-                            .start = interval.start,
-                            .end = interval.end,
-                            .alignment_time = alignment_idx
-                        };
-                    }
-                }
-                ++idx;
+            int64_t alignment_idx;
+            switch (_align) {
+                case AlignmentPoint::Start:
+                    alignment_idx = interval.start;
+                    break;
+                case AlignmentPoint::End:
+                    alignment_idx = interval.end;
+                    break;
+                case AlignmentPoint::Center:
+                    alignment_idx = (interval.start + interval.end) / 2;
+                    break;
             }
-            return AlignedInterval{0, 0, 0};
+
+            if (_use_window) {
+                // Window mode: convert alignment to absolute time,
+                // then expand by pre/post window in absolute time units.
+                int64_t abs_time = _tf
+                                           ? _tf->getTimeAtIndex(TimeFrameIndex(alignment_idx))
+                                           : alignment_idx;
+
+                return AlignedInterval{
+                        .start = abs_time - _pre_window,
+                        .end = abs_time + _post_window,
+                        .alignment_time = abs_time};
+            } else {
+                // No window: use raw interval bounds (TF-index space)
+                return AlignedInterval{
+                        .start = interval.start,
+                        .end = interval.end,
+                        .alignment_time = alignment_idx};
+            }
         }
 
-        iterator& operator++() {
+        iterator & operator++() {
             ++_index;
             return *this;
         }
@@ -344,21 +335,22 @@ public:
             return tmp;
         }
 
-        [[nodiscard]] bool operator==(iterator const& other) const {
+        [[nodiscard]] bool operator==(iterator const & other) const {
             return _index == other._index;
         }
 
-        [[nodiscard]] bool operator!=(iterator const& other) const {
+        [[nodiscard]] bool operator!=(iterator const & other) const {
             return !(*this == other);
         }
 
     private:
-        DigitalIntervalSeries const* _intervals{nullptr};
+        DigitalIntervalSeries const * _intervals{nullptr};
         std::size_t _index{0};
         AlignmentPoint _align{AlignmentPoint::Start};
         int64_t _pre_window{0};
         int64_t _post_window{0};
         bool _use_window{false};
+        TimeFrame const * _tf{nullptr};///< Cached raw pointer (non-owning)
     };
 
     /**
@@ -368,10 +360,10 @@ public:
      * @param align Which point in each interval to use for alignment
      */
     IntervalWithAlignmentAdapter(
-        std::shared_ptr<DigitalIntervalSeries const> intervals,
-        AlignmentPoint align = AlignmentPoint::Start)
-        : _intervals(std::move(intervals))
-        , _align(align) {}
+            std::shared_ptr<DigitalIntervalSeries const> intervals,
+            AlignmentPoint align = AlignmentPoint::Start)
+        : _intervals(std::move(intervals)),
+          _align(align) {}
 
     /**
      * @brief Construct adapter with explicit window around alignment point
@@ -387,24 +379,24 @@ public:
      * @param post_window Absolute time units after alignment point
      */
     IntervalWithAlignmentAdapter(
-        std::shared_ptr<DigitalIntervalSeries const> intervals,
-        AlignmentPoint align,
-        int64_t pre_window,
-        int64_t post_window)
-        : _intervals(std::move(intervals))
-        , _align(align)
-        , _pre_window(pre_window)
-        , _post_window(post_window)
-        , _use_window(true) {}
+            std::shared_ptr<DigitalIntervalSeries const> intervals,
+            AlignmentPoint align,
+            int64_t pre_window,
+            int64_t post_window)
+        : _intervals(std::move(intervals)),
+          _align(align),
+          _pre_window(pre_window),
+          _post_window(post_window),
+          _use_window(true) {}
 
     [[nodiscard]] iterator begin() const {
         return iterator(_intervals.get(), 0, _align,
-                       _pre_window, _post_window, _use_window);
+                        _pre_window, _post_window, _use_window);
     }
 
     [[nodiscard]] iterator end() const {
         return iterator(_intervals.get(), _intervals->size(), _align,
-                       _pre_window, _post_window, _use_window);
+                        _pre_window, _post_window, _use_window);
     }
 
     [[nodiscard]] std::size_t size() const {
@@ -414,7 +406,7 @@ public:
     /**
      * @brief Get the underlying interval series
      */
-    [[nodiscard]] std::shared_ptr<DigitalIntervalSeries const> const& intervals() const {
+    [[nodiscard]] std::shared_ptr<DigitalIntervalSeries const> const & intervals() const {
         return _intervals;
     }
 
@@ -426,7 +418,7 @@ public:
      */
     [[nodiscard]] std::shared_ptr<TimeFrame> getTimeFrame() const {
         if (_use_window) {
-            return nullptr;  // Values already in absolute time
+            return nullptr;// Values already in absolute time
         }
         return _intervals ? _intervals->getTimeFrame() : nullptr;
     }
@@ -453,9 +445,9 @@ private:
  * @param post_window Time after each event
  */
 inline EventExpanderAdapter expandEvents(
-    std::shared_ptr<DigitalEventSeries const> events,
-    int64_t pre_window,
-    int64_t post_window) {
+        std::shared_ptr<DigitalEventSeries const> events,
+        int64_t pre_window,
+        int64_t post_window) {
     return EventExpanderAdapter(std::move(events), pre_window, post_window);
 }
 
@@ -463,8 +455,8 @@ inline EventExpanderAdapter expandEvents(
  * @brief Create an EventExpanderAdapter with symmetric window
  */
 inline EventExpanderAdapter expandEvents(
-    std::shared_ptr<DigitalEventSeries const> events,
-    int64_t window) {
+        std::shared_ptr<DigitalEventSeries const> events,
+        int64_t window) {
     return EventExpanderAdapter(std::move(events), window, window);
 }
 
@@ -475,8 +467,8 @@ inline EventExpanderAdapter expandEvents(
  * @param align Alignment point (default: Start)
  */
 inline IntervalWithAlignmentAdapter withAlignment(
-    std::shared_ptr<DigitalIntervalSeries const> intervals,
-    AlignmentPoint align = AlignmentPoint::Start) {
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
+        AlignmentPoint align = AlignmentPoint::Start) {
     return IntervalWithAlignmentAdapter(std::move(intervals), align);
 }
 
@@ -492,14 +484,14 @@ inline IntervalWithAlignmentAdapter withAlignment(
  * @param post_window Absolute time units after alignment point
  */
 inline IntervalWithAlignmentAdapter withAlignment(
-    std::shared_ptr<DigitalIntervalSeries const> intervals,
-    AlignmentPoint align,
-    int64_t pre_window,
-    int64_t post_window) {
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
+        AlignmentPoint align,
+        int64_t pre_window,
+        int64_t post_window) {
     return IntervalWithAlignmentAdapter(
-        std::move(intervals), align, pre_window, post_window);
+            std::move(intervals), align, pre_window, post_window);
 }
 
-} // namespace WhiskerToolbox::Transforms::V2
+}// namespace WhiskerToolbox::Transforms::V2
 
-#endif // WHISKERTOOLBOX_INTERVAL_ADAPTERS_HPP
+#endif// WHISKERTOOLBOX_INTERVAL_ADAPTERS_HPP

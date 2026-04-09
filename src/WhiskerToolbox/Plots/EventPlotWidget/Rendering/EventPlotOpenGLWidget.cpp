@@ -646,6 +646,7 @@ void EventPlotOpenGLWidget::rebuildScene() {
             std::string const series_trial_key =
                     sd.name.toStdString() + "_trial_" + std::to_string(trial);
             std::vector<CorePlotting::MappedElement> elements;
+            elements.reserve(trial_view->size());// Upper bound estimate
             for (auto const & elem: mapped) {
                 elements.push_back(elem);
             }
@@ -900,6 +901,70 @@ std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
                                  if (std::isinf(latencies[a]) && !std::isinf(latencies[b])) return false;
                                  if (!std::isinf(latencies[a]) && std::isinf(latencies[b])) return true;
                                  return latencies[a] < latencies[b];
+                             });
+            break;
+        }
+
+        case TrialSortMode::SecondEventLatency: {
+            // Sort by latency to second positive event (ascending)
+            // Useful when the first event is nearly identical across trials
+            // and structure in the second event timing is of interest.
+            // Trials with fewer than 2 positive events go to the end.
+            std::vector<double> latencies(num_trials);
+
+            for (size_t i = 0; i < num_trials; ++i) {
+                auto const & trial_view = gathered[i];
+                int64_t const alignment_time_abs = gathered.alignmentTimeAt(i);
+
+                double second_positive_latency = std::numeric_limits<double>::infinity();
+                int positive_count = 0;
+
+                if (trial_view) {
+                    auto trial_tf = trial_view->getTimeFrame();
+                    for (auto const & event: trial_view->view()) {
+                        int64_t const event_time_abs = trial_tf
+                                                               ? trial_tf->getTimeAtIndex(event.time())
+                                                               : event.time().getValue();
+                        auto const relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
+                        if (relative_time >= 0.0) {
+                            ++positive_count;
+                            if (positive_count == 2) {
+                                second_positive_latency = relative_time;
+                                break;
+                            }
+                        }
+                    }
+                }
+                latencies[i] = second_positive_latency;
+            }
+
+            std::stable_sort(sort_indices.begin(), sort_indices.end(),
+                             [&latencies](size_t a, size_t b) {
+                                 if (std::isinf(latencies[a]) && !std::isinf(latencies[b])) return false;
+                                 if (!std::isinf(latencies[a]) && std::isinf(latencies[b])) return true;
+                                 return latencies[a] < latencies[b];
+                             });
+            break;
+        }
+
+        case TrialSortMode::AlignmentInterval: {
+            // Sort by the temporal gap between consecutive alignment events.
+            // Trial 0 has no predecessor, so its interval is infinity (sorted last).
+            // Short gaps first, long gaps last.
+            std::vector<double> intervals(num_trials);
+            intervals[0] = std::numeric_limits<double>::infinity();
+
+            for (size_t i = 1; i < num_trials; ++i) {
+                int64_t const curr = gathered.alignmentTimeAt(i);
+                int64_t const prev = gathered.alignmentTimeAt(i - 1);
+                intervals[i] = static_cast<double>(curr - prev);
+            }
+
+            std::stable_sort(sort_indices.begin(), sort_indices.end(),
+                             [&intervals](size_t a, size_t b) {
+                                 if (std::isinf(intervals[a]) && !std::isinf(intervals[b])) return false;
+                                 if (!std::isinf(intervals[a]) && std::isinf(intervals[b])) return true;
+                                 return intervals[a] < intervals[b];
                              });
             break;
         }

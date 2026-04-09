@@ -94,11 +94,13 @@ public:
     [[nodiscard]] DigitalEventStorageCache tryGetCacheImpl() const;
 
 private:
-    void _rebuildLocalIndices();
+    void _ensureLocalIndices() const;
 
     std::shared_ptr<OwningDigitalEventStorage const> _source;
     std::vector<size_t> _indices;
-    std::unordered_map<EntityId, size_t> _local_entity_id_to_index;
+    mutable std::unordered_map<EntityId, size_t> _local_entity_id_to_index;
+    mutable bool _local_indices_dirty{true};///< Lazy hash map construction
+    bool _known_contiguous{false};          ///< Set directly by filterByTimeRange
 };
 
 #endif// VIEW_DIGITAL_EVENT_STORAGE_HPP

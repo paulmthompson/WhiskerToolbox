@@ -1,16 +1,17 @@
 #ifndef COREPLOTTING_MAPPERS_RASTERMAPPER_HPP
 #define COREPLOTTING_MAPPERS_RASTERMAPPER_HPP
 
+#include "Layout/LayoutTransform.hpp"
+#include "Layout/SeriesLayout.hpp"
 #include "MappedElement.hpp"
 #include "MappedLineView.hpp"
 #include "MapperConcepts.hpp"
-#include "Layout/SeriesLayout.hpp"
-#include "Layout/LayoutTransform.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <optional>
 #include <ranges>
 #include <vector>
 
@@ -52,19 +53,17 @@ namespace RasterMapper {
  * @return Range of MappedElement
  */
 [[nodiscard]] inline auto mapEventsRelative(
-    DigitalEventSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame,
-    int ref_abs_time
-) {
+        DigitalEventSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & time_frame,
+        int ref_abs_time) {
     float const y_center = layout.y_transform.offset;
-    
-    return series.view()
-        | std::views::transform([&time_frame, y_center, ref_abs_time](auto const & event_with_id) {
-            int abs_time = time_frame.getTimeAtIndex(event_with_id.event_time);
-            float relative_time = static_cast<float>(abs_time - ref_abs_time);
-            return MappedElement{relative_time, y_center, event_with_id.entity_id};
-        });
+
+    return series.view() | std::views::transform([&time_frame, y_center, ref_abs_time](auto const & event_with_id) {
+               int abs_time = time_frame.getTimeAtIndex(event_with_id.event_time);
+               float relative_time = static_cast<float>(abs_time - ref_abs_time);
+               return MappedElement{relative_time, y_center, event_with_id.entity_id};
+           });
 }
 
 /**
@@ -81,27 +80,26 @@ namespace RasterMapper {
  * @return Range of MappedElement for events in window
  */
 [[nodiscard]] inline auto mapEventsInWindow(
-    DigitalEventSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame,
-    int ref_abs_time,
-    int window_before,
-    int window_after
-) {
+        DigitalEventSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & time_frame,
+        int ref_abs_time,
+        int window_before,
+        int window_after) {
     float const y_center = layout.y_transform.offset;
     int const window_start = ref_abs_time - window_before;
     int const window_end = ref_abs_time + window_after;
-    
-    return series.view()
-        | std::views::filter([&time_frame, window_start, window_end](auto const & event_with_id) {
-            int abs_time = time_frame.getTimeAtIndex(event_with_id.event_time);
-            return abs_time >= window_start && abs_time <= window_end;
-        })
-        | std::views::transform([&time_frame, y_center, ref_abs_time](auto const & event_with_id) {
-            int abs_time = time_frame.getTimeAtIndex(event_with_id.event_time);
-            float relative_time = static_cast<float>(abs_time - ref_abs_time);
-            return MappedElement{relative_time, y_center, event_with_id.entity_id};
-        });
+
+    // Single transform that computes abs_time once, then filters and maps
+    return series.view() | std::views::transform([&time_frame, y_center, ref_abs_time, window_start, window_end](auto const & event_with_id) -> std::optional<MappedElement> {
+               int abs_time = time_frame.getTimeAtIndex(event_with_id.event_time);
+               if (abs_time < window_start || abs_time > window_end) {
+                   return std::nullopt;
+               }
+               float relative_time = static_cast<float>(abs_time - ref_abs_time);
+               return MappedElement{relative_time, y_center, event_with_id.entity_id};
+           }) |
+           std::views::filter([](auto const & opt) { return opt.has_value(); }) | std::views::transform([](auto const & opt) { return *opt; });
 }
 
 // ============================================================================
@@ -112,9 +110,9 @@ namespace RasterMapper {
  * @brief Configuration for multi-trial raster mapping
  */
 struct TrialConfig {
-    DigitalEventSeries const * series;  ///< Event series for this trial
-    int ref_abs_time;                    ///< Reference time in absolute time units
-    SeriesLayout layout;                 ///< Layout (Y position) for this trial
+    DigitalEventSeries const * series;///< Event series for this trial
+    int ref_abs_time;                 ///< Reference time in absolute time units
+    SeriesLayout layout;              ///< Layout (Y position) for this trial
 };
 
 /**
@@ -129,29 +127,28 @@ struct TrialConfig {
  * @return Vector of MappedElement (all trials combined)
  */
 [[nodiscard]] inline std::vector<MappedElement> mapTrials(
-    std::vector<TrialConfig> const & trials,
-    TimeFrame const & time_frame
-) {
+        std::vector<TrialConfig> const & trials,
+        TimeFrame const & time_frame) {
     std::vector<MappedElement> result;
-    
+
     // Estimate total capacity
     size_t total_events = 0;
-    for (auto const & trial : trials) {
+    for (auto const & trial: trials) {
         if (trial.series) {
             total_events += trial.series->size();
         }
     }
     result.reserve(total_events);
-    
+
     // Map each trial
-    for (auto const & trial : trials) {
+    for (auto const & trial: trials) {
         if (!trial.series) continue;
-        
-        for (auto const & elem : mapEventsRelative(*trial.series, trial.layout, time_frame, trial.ref_abs_time)) {
+
+        for (auto const & elem: mapEventsRelative(*trial.series, trial.layout, time_frame, trial.ref_abs_time)) {
             result.push_back(elem);
         }
     }
-    
+
     return result;
 }
 
@@ -168,23 +165,22 @@ struct TrialConfig {
  * @return Vector of MappedElement (filtered by window)
  */
 [[nodiscard]] inline std::vector<MappedElement> mapTrialsInWindow(
-    std::vector<TrialConfig> const & trials,
-    TimeFrame const & time_frame,
-    int window_before,
-    int window_after
-) {
+        std::vector<TrialConfig> const & trials,
+        TimeFrame const & time_frame,
+        int window_before,
+        int window_after) {
     std::vector<MappedElement> result;
-    
-    for (auto const & trial : trials) {
+
+    for (auto const & trial: trials) {
         if (!trial.series) continue;
-        
-        for (auto const & elem : mapEventsInWindow(
-                *trial.series, trial.layout, time_frame, 
-                trial.ref_abs_time, window_before, window_after)) {
+
+        for (auto const & elem: mapEventsInWindow(
+                     *trial.series, trial.layout, time_frame,
+                     trial.ref_abs_time, window_before, window_after)) {
             result.push_back(elem);
         }
     }
-    
+
     return result;
 }
 
@@ -204,16 +200,15 @@ struct TrialConfig {
  * @return Y center position for this row
  */
 [[nodiscard]] inline float computeRowYCenter(
-    int row_index,
-    int total_rows,
-    float y_min = -1.0f,
-    float y_max = 1.0f
-) {
+        int row_index,
+        int total_rows,
+        float y_min = -1.0f,
+        float y_max = 1.0f) {
     if (total_rows <= 0) return (y_min + y_max) / 2.0f;
-    
+
     float const total_height = y_max - y_min;
     float const row_height = total_height / static_cast<float>(total_rows);
-    
+
     // Row 0 at top (y_max), row N-1 at bottom (y_min)
     return y_max - (static_cast<float>(row_index) + 0.5f) * row_height;
 }
@@ -229,22 +224,20 @@ struct TrialConfig {
  * @return SeriesLayout configured for this row
  */
 [[nodiscard]] inline SeriesLayout makeRowLayout(
-    int row_index,
-    int total_rows,
-    std::string series_id,
-    float y_min = -1.0f,
-    float y_max = 1.0f
-) {
+        int row_index,
+        int total_rows,
+        std::string series_id,
+        float y_min = -1.0f,
+        float y_max = 1.0f) {
     float const total_height = y_max - y_min;
     float const row_height = total_height / static_cast<float>(total_rows);
     float const y_center = computeRowYCenter(row_index, total_rows, y_min, y_max);
     float const half_height = row_height / 2.0f;
-    
+
     return SeriesLayout{
-        std::move(series_id),
-        LayoutTransform{y_center, half_height},
-        row_index
-    };
+            std::move(series_id),
+            LayoutTransform{y_center, half_height},
+            row_index};
 }
 
 // ============================================================================
@@ -261,23 +254,22 @@ struct TrialConfig {
  * @return Vector of MappedElement
  */
 [[nodiscard]] inline std::vector<MappedElement> mapEventsRelativeToVector(
-    DigitalEventSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame,
-    int ref_abs_time
-) {
+        DigitalEventSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & time_frame,
+        int ref_abs_time) {
     std::vector<MappedElement> result;
     result.reserve(series.size());
-    
-    for (auto const & elem : mapEventsRelative(series, layout, time_frame, ref_abs_time)) {
+
+    for (auto const & elem: mapEventsRelative(series, layout, time_frame, ref_abs_time)) {
         result.push_back(elem);
     }
-    
+
     return result;
 }
 
-} // namespace RasterMapper
+}// namespace RasterMapper
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_MAPPERS_RASTERMAPPER_HPP
+#endif// COREPLOTTING_MAPPERS_RASTERMAPPER_HPP

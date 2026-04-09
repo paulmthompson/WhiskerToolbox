@@ -30,9 +30,11 @@
  * for future integration with DataTransform v2 for user-computed sort keys.
  */
 enum class TrialSortMode {
-    TrialIndex,         ///< No sorting - display in original trial order (default)
-    FirstEventLatency,  ///< Sort by latency to first positive event (ascending)
-    EventCount          ///< Sort by total number of events (descending)
+    TrialIndex,        ///< No sorting - display in original trial order (default)
+    FirstEventLatency, ///< Sort by latency to first positive event (ascending)
+    SecondEventLatency,///< Sort by latency to second positive event (ascending)
+    AlignmentInterval, ///< Sort by time gap between consecutive alignment events (ascending)
+    EventCount         ///< Sort by total number of events (descending)
     // Future: External - sort by external feature from DataManager
 };
 
@@ -40,12 +42,13 @@ enum class TrialSortMode {
  * @brief Axis labeling and grid options
  */
 struct EventPlotAxisOptions {
-    std::string x_label = "Time (ms)";  ///< X-axis label
-    std::string y_label = "Trial";       ///< Y-axis label
-    bool show_x_axis = true;             ///< Whether to show X axis
-    bool show_y_axis = true;             ///< Whether to show Y axis
-    bool show_grid = false;              ///< Whether to show grid lines
-};;
+    std::string x_label = "Time (ms)";///< X-axis label
+    std::string y_label = "Trial";    ///< Y-axis label
+    bool show_x_axis = true;          ///< Whether to show X axis
+    bool show_y_axis = true;          ///< Whether to show Y axis
+    bool show_grid = false;           ///< Whether to show grid lines
+};
+;
 
 /**
  * @brief Options for plotting an event series in the raster plot
@@ -58,8 +61,8 @@ struct EventPlotAxisOptions {
  * which edge (start or end) to extract as events for plotting.
  */
 struct EventPlotOptions {
-    std::string event_key;  ///< Key of the DigitalEventSeries or DigitalIntervalSeries to plot
-    std::optional<IntervalAlignmentType> interval_edge;  ///< Edge to extract when source is an interval series
+    std::string event_key;                             ///< Key of the DigitalEventSeries or DigitalIntervalSeries to plot
+    std::optional<IntervalAlignmentType> interval_edge;///< Edge to extract when source is an interval series
 };
 
 /**
@@ -68,15 +71,15 @@ struct EventPlotOptions {
 struct EventPlotStateData {
     std::string instance_id;
     std::string display_name = "Event Plot";
-    PlotAlignmentData alignment;                                   ///< Alignment settings (event key, interval type, offset, window size)
-    std::map<std::string, EventPlotOptions> plot_events;          ///< Map of event names to their plot options
-    std::map<std::string, CorePlotting::GlyphStyleData> event_glyph_styles;  ///< Per-event glyph styles (key → GlyphStyleData)
-    CorePlotting::ViewStateData view_state;                        ///< View state (zoom, pan, bounds). Y bounds fixed at -1..1 for trial viewport
-    RelativeTimeAxisStateData time_axis;                           ///< Time axis settings (min_range, max_range)
-    EventPlotAxisOptions axis_options;                             ///< Axis labels and grid options
-    std::string background_color = "#FFFFFF";                     ///< Background color as hex string (default: white)
-    bool pinned = false;                                           ///< Whether to ignore SelectionContext changes
-    TrialSortMode sorting_mode = TrialSortMode::TrialIndex;       ///< Trial sorting mode (default: trial index)
+    PlotAlignmentData alignment;                                           ///< Alignment settings (event key, interval type, offset, window size)
+    std::map<std::string, EventPlotOptions> plot_events;                   ///< Map of event names to their plot options
+    std::map<std::string, CorePlotting::GlyphStyleData> event_glyph_styles;///< Per-event glyph styles (key → GlyphStyleData)
+    CorePlotting::ViewStateData view_state;                                ///< View state (zoom, pan, bounds). Y bounds fixed at -1..1 for trial viewport
+    RelativeTimeAxisStateData time_axis;                                   ///< Time axis settings (min_range, max_range)
+    EventPlotAxisOptions axis_options;                                     ///< Axis labels and grid options
+    std::string background_color = "#FFFFFF";                              ///< Background color as hex string (default: white)
+    bool pinned = false;                                                   ///< Whether to ignore SelectionContext changes
+    TrialSortMode sorting_mode = TrialSortMode::TrialIndex;                ///< Trial sorting mode (default: trial index)
 };
 
-#endif // EVENT_PLOT_STATE_DATA_HPP
+#endif// EVENT_PLOT_STATE_DATA_HPP

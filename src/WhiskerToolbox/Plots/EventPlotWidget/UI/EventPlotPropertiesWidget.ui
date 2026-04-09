@@ -132,6 +132,16 @@
      </item>
      <item>
       <property name="text">
+       <string>Second Event Latency</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Alignment Interval</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>Event Count (Descending)</string>
       </property>
      </item>

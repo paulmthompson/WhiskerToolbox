@@ -15,13 +15,15 @@ ViewDigitalEventStorage::ViewDigitalEventStorage(std::shared_ptr<OwningDigitalEv
 
 void ViewDigitalEventStorage::setIndices(std::vector<size_t> indices) {
     _indices = std::move(indices);
-    _rebuildLocalIndices();
+    _local_indices_dirty = true;
+    _known_contiguous = false;
 }
 
 void ViewDigitalEventStorage::setAllIndices() {
     _indices.resize(_source->size());
     std::iota(_indices.begin(), _indices.end(), 0);
-    _rebuildLocalIndices();
+    _local_indices_dirty = true;
+    _known_contiguous = true;
 }
 
 void ViewDigitalEventStorage::filterByTimeRange(TimeFrameIndex start, TimeFrameIndex end) {
@@ -34,7 +36,8 @@ void ViewDigitalEventStorage::filterByTimeRange(TimeFrameIndex start, TimeFrameI
         _indices.push_back(i);
     }
 
-    _rebuildLocalIndices();
+    _local_indices_dirty = true;
+    _known_contiguous = true;// Sequential fill from binary search bounds is always contiguous
 }
 
 void ViewDigitalEventStorage::filterByEntityIds(std::unordered_set<EntityId> const & ids) {
@@ -46,7 +49,8 @@ void ViewDigitalEventStorage::filterByEntityIds(std::unordered_set<EntityId> con
         }
     }
 
-    _rebuildLocalIndices();
+    _local_indices_dirty = true;
+    _known_contiguous = false;
 }
 
 std::shared_ptr<OwningDigitalEventStorage const> ViewDigitalEventStorage::source() const {
@@ -71,6 +75,7 @@ std::optional<size_t> ViewDigitalEventStorage::findByTimeImpl(TimeFrameIndex tim
 }
 
 std::optional<size_t> ViewDigitalEventStorage::findByEntityIdImpl(EntityId id) const {
+    _ensureLocalIndices();
     auto it = _local_entity_id_to_index.find(id);
     return it != _local_entity_id_to_index.end() ? std::optional{it->second} : std::nullopt;
 }
@@ -93,6 +98,17 @@ DigitalEventStorageCache ViewDigitalEventStorage::tryGetCacheImpl() const {
         return DigitalEventStorageCache{nullptr, nullptr, 0, true};
     }
 
+    // Fast path: contiguity is already known from the operation that created the indices
+    if (_known_contiguous) {
+        size_t const start_idx = _indices[0];
+        return DigitalEventStorageCache{
+                _source->events().data() + start_idx,
+                _source->entityIds().data() + start_idx,
+                _indices.size(),
+                true};
+    }
+
+    // Slow path: verify contiguity for arbitrary index sets
     size_t const start_idx = _indices[0];
     bool is_contiguous = true;
 
@@ -114,10 +130,15 @@ DigitalEventStorageCache ViewDigitalEventStorage::tryGetCacheImpl() const {
     return DigitalEventStorageCache{};
 }
 
-void ViewDigitalEventStorage::_rebuildLocalIndices() {
+void ViewDigitalEventStorage::_ensureLocalIndices() const {
+    if (!_local_indices_dirty) {
+        return;
+    }
     _local_entity_id_to_index.clear();
+    _local_entity_id_to_index.reserve(_indices.size());
     for (size_t i = 0; i < _indices.size(); ++i) {
         EntityId const id = _source->getEntityId(_indices[i]);
         _local_entity_id_to_index[id] = i;
     }
+    _local_indices_dirty = false;
 }
