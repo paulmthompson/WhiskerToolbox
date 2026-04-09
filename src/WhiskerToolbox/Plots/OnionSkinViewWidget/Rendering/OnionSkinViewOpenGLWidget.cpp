@@ -454,6 +454,8 @@ void OnionSkinViewOpenGLWidget::rebuildScene() {
     builder.setBounds(BoundingBox{min_x, min_y, max_x, max_y});
 
     // --- Render each point key with its own glyph style, sorted back-to-front ---
+    // Merge all temporal distances into at most 2 batches per key (normal + highlighted current)
+    // to avoid per-distance VBO re-uploads. Back-to-front order is preserved within the batch.
     for (auto const & kp: keyed_points) {
         if (kp.points.empty()) {
             continue;
@@ -464,48 +466,55 @@ void OnionSkinViewOpenGLWidget::rebuildScene() {
         float const point_size = kp.glyph_style.size;
         auto const glyph_type = CorePlotting::toRenderableGlyphType(kp.glyph_style.glyph_type);
 
-        // Collect unique temporal distances and sort descending (farthest first)
-        std::vector<int> point_distances;
-        point_distances.reserve(kp.points.size());
-        for (auto const & pt: kp.points) {
-            point_distances.push_back(pt.absTemporalDistance());
-        }
-        std::sort(point_distances.begin(), point_distances.end(), std::greater<>());
-        point_distances.erase(
-                std::unique(point_distances.begin(), point_distances.end()),
-                point_distances.end());
+        // Sort points by descending temporal distance (farthest first = back-to-front)
+        std::vector<size_t> sorted_indices(kp.points.size());
+        std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
+        std::sort(sorted_indices.begin(), sorted_indices.end(),
+                  [&kp](size_t a, size_t b) {
+                      return kp.points[a].absTemporalDistance() >
+                             kp.points[b].absTemporalDistance();
+                  });
 
-        for (int const dist: point_distances) {
+        // Normal batch: all non-current points (or all points if not highlighting)
+        CorePlotting::RenderableGlyphBatch normal_batch;
+        normal_batch.glyph_type = glyph_type;
+        normal_batch.model_matrix = glm::mat4(1.0f);
+        normal_batch.size = point_size;
+
+        // Current-frame batch: only used when highlight_current is true
+        CorePlotting::RenderableGlyphBatch current_batch;
+        current_batch.glyph_type = glyph_type;
+        current_batch.model_matrix = glm::mat4(1.0f);
+        current_batch.size = point_size * 1.5f;
+
+        for (size_t const idx: sorted_indices) {
+            auto const & pt = kp.points[idx];
+            int const dist = pt.absTemporalDistance();
+            bool const is_current = (dist == 0);
+
             float const alpha = CorePlotting::computeTemporalAlpha(
                     dist, half_width, alpha_curve, min_alpha, max_alpha);
+            glm::vec4 const color = (is_current && highlight_current)
+                                            ? current_highlight_color
+                                            : glm::vec4{base_color.r, base_color.g, base_color.b, alpha};
 
-            CorePlotting::RenderableGlyphBatch batch;
-            batch.glyph_type = glyph_type;
-            batch.model_matrix = glm::mat4(1.0f);
+            auto & batch = (is_current && highlight_current) ? current_batch : normal_batch;
+            batch.positions.emplace_back(pt.x, pt.y);
+            batch.entity_ids.push_back(pt.entity_id);
+            batch.colors.push_back(color);
+        }
 
-            bool const is_current = (dist == 0);
-            batch.size = (is_current && highlight_current) ? point_size * 1.5f : point_size;
-
-            for (auto const & pt: kp.points) {
-                if (pt.absTemporalDistance() != dist) {
-                    continue;
-                }
-                batch.positions.emplace_back(pt.x, pt.y);
-                batch.entity_ids.push_back(pt.entity_id);
-
-                glm::vec4 const color = (is_current && highlight_current)
-                                          ? current_highlight_color
-                                          : glm::vec4{base_color.r, base_color.g, base_color.b, alpha};
-                batch.colors.push_back(color);
-            }
-
-            if (!batch.positions.empty()) {
-                builder.addGlyphBatch(std::move(batch));
-            }
+        // Add normal batch first (back-to-front), then current on top
+        if (!normal_batch.positions.empty()) {
+            builder.addGlyphBatch(std::move(normal_batch));
+        }
+        if (!current_batch.positions.empty()) {
+            builder.addGlyphBatch(std::move(current_batch));
         }
     }
 
     // --- Render each line key with its own style, sorted back-to-front ---
+    // Merge all lines into at most 2 batches per key (normal + highlighted current)
     for (auto const & kl: keyed_lines) {
         if (kl.lines.empty()) {
             continue;
@@ -524,6 +533,14 @@ void OnionSkinViewOpenGLWidget::rebuildScene() {
                              kl.lines[b].absTemporalDistance();
                   });
 
+        CorePlotting::RenderablePolyLineBatch normal_batch;
+        normal_batch.thickness = key_line_width;
+        normal_batch.model_matrix = glm::mat4(1.0f);
+
+        CorePlotting::RenderablePolyLineBatch current_batch;
+        current_batch.thickness = key_line_width * 1.5f;
+        current_batch.model_matrix = glm::mat4(1.0f);
+
         for (size_t const idx: line_indices) {
             auto const & line = kl.lines[idx];
             int const dist = line.absTemporalDistance();
@@ -532,22 +549,16 @@ void OnionSkinViewOpenGLWidget::rebuildScene() {
                     kl.line_style.alpha);
 
             bool const is_current = (dist == 0);
-
-            CorePlotting::RenderablePolyLineBatch batch;
-            batch.thickness = (is_current && highlight_current)
-                                      ? key_line_width * 1.5f
-                                      : key_line_width;
-            batch.model_matrix = glm::mat4(1.0f);
-            batch.entity_ids.push_back(line.entity_id);
-
             glm::vec4 const color = (is_current && highlight_current)
-                                      ? current_highlight_color
-                                      : glm::vec4{base_color.r, base_color.g,
-                                                  base_color.b, alpha};
-            batch.colors.push_back(color);
+                                            ? current_highlight_color
+                                            : glm::vec4{base_color.r, base_color.g,
+                                                        base_color.b, alpha};
+
+            auto & batch = (is_current && highlight_current) ? current_batch : normal_batch;
 
             int32_t vertex_count = 0;
-            batch.line_start_indices.push_back(0);
+            batch.line_start_indices.push_back(
+                    static_cast<int32_t>(batch.vertices.size() / 2));
 
             for (auto const & v: line.vertices()) {
                 batch.vertices.push_back(v.x);
@@ -555,14 +566,20 @@ void OnionSkinViewOpenGLWidget::rebuildScene() {
                 ++vertex_count;
             }
             batch.line_vertex_counts.push_back(vertex_count);
+            batch.entity_ids.push_back(line.entity_id);
+            batch.colors.push_back(color);
+        }
 
-            if (vertex_count > 0) {
-                builder.addPolyLineBatch(std::move(batch));
-            }
+        if (!normal_batch.vertices.empty()) {
+            builder.addPolyLineBatch(std::move(normal_batch));
+        }
+        if (!current_batch.vertices.empty()) {
+            builder.addPolyLineBatch(std::move(current_batch));
         }
     }
 
     // --- Render each mask contour key with its own style, sorted back-to-front ---
+    // Merge all contours into at most 2 batches per key (normal + highlighted current)
     for (auto const & kmc: keyed_mask_contours) {
         if (kmc.contours.empty()) {
             continue;
@@ -581,6 +598,14 @@ void OnionSkinViewOpenGLWidget::rebuildScene() {
                              kmc.contours[b].absTemporalDistance();
                   });
 
+        CorePlotting::RenderablePolyLineBatch normal_batch;
+        normal_batch.thickness = key_line_width;
+        normal_batch.model_matrix = glm::mat4(1.0f);
+
+        CorePlotting::RenderablePolyLineBatch current_batch;
+        current_batch.thickness = key_line_width * 1.5f;
+        current_batch.model_matrix = glm::mat4(1.0f);
+
         for (size_t const idx: contour_indices) {
             auto const & contour = kmc.contours[idx];
             int const dist = contour.absTemporalDistance();
@@ -589,22 +614,16 @@ void OnionSkinViewOpenGLWidget::rebuildScene() {
                     kmc.line_style.alpha);
 
             bool const is_current = (dist == 0);
-
-            CorePlotting::RenderablePolyLineBatch batch;
-            batch.thickness = (is_current && highlight_current)
-                                      ? key_line_width * 1.5f
-                                      : key_line_width;
-            batch.model_matrix = glm::mat4(1.0f);
-            batch.entity_ids.push_back(contour.entity_id);
-
             glm::vec4 const color = (is_current && highlight_current)
-                                      ? current_highlight_color
-                                      : glm::vec4{base_color.r, base_color.g,
-                                                  base_color.b, alpha};
-            batch.colors.push_back(color);
+                                            ? current_highlight_color
+                                            : glm::vec4{base_color.r, base_color.g,
+                                                        base_color.b, alpha};
+
+            auto & batch = (is_current && highlight_current) ? current_batch : normal_batch;
 
             int32_t vertex_count = 0;
-            batch.line_start_indices.push_back(0);
+            batch.line_start_indices.push_back(
+                    static_cast<int32_t>(batch.vertices.size() / 2));
 
             for (auto const & v: contour.vertices()) {
                 batch.vertices.push_back(v.x);
@@ -612,10 +631,15 @@ void OnionSkinViewOpenGLWidget::rebuildScene() {
                 ++vertex_count;
             }
             batch.line_vertex_counts.push_back(vertex_count);
+            batch.entity_ids.push_back(contour.entity_id);
+            batch.colors.push_back(color);
+        }
 
-            if (vertex_count > 0) {
-                builder.addPolyLineBatch(std::move(batch));
-            }
+        if (!normal_batch.vertices.empty()) {
+            builder.addPolyLineBatch(std::move(normal_batch));
+        }
+        if (!current_batch.vertices.empty()) {
+            builder.addPolyLineBatch(std::move(current_batch));
         }
     }
 
