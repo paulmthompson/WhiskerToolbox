@@ -1,3 +1,14 @@
+if (APPLE)
+    message(STATUS "Testing Currenly not supported on MacOS")
+    return()
+endif()
+
+if (WIN32)
+    message(STATUS "Testing Currenly not supported on Windows")
+    return()
+endif()
+
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
