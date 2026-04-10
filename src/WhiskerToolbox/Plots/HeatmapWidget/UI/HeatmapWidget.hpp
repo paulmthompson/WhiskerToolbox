@@ -6,7 +6,9 @@
 
 #include <QWidget>
 
+#include <map>
 #include <memory>
+#include <string>
 #include <utility>
 
 class DataManager;
@@ -90,6 +92,24 @@ private:
     VerticalAxisWidget * _vertical_axis_widget;
     VerticalAxisRangeControls * _vertical_range_controls;
     size_t _unit_count = 0;
+
+    /// DataManager-level observer ID for detecting key additions/removals
+    int _dm_observer_id = -1;
+
+    /// Per-key callback IDs for data change notifications (key → callback ID)
+    std::map<std::string, int> _data_callback_ids;
+
+    /// Register a data-change callback for a single key
+    void _registerDataCallback(std::string const & key);
+
+    /// Unregister a data-change callback for a single key
+    void _unregisterDataCallback(std::string const & key);
+
+    /// Unregister all data-change callbacks
+    void _unregisterAllDataCallbacks();
+
+    /// Check if any visualized keys have been removed from DataManager and clear them
+    void _pruneRemovedKeys();
 };
 
 #endif// HEATMAP_WIDGET_HPP

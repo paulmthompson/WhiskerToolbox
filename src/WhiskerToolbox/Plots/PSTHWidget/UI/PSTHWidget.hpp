@@ -14,7 +14,9 @@
 
 #include <QWidget>
 
+#include <map>
 #include <memory>
+#include <string>
 #include <utility>
 
 class DataManager;
@@ -135,6 +137,27 @@ private:
 
     VerticalAxisWidget * _vertical_axis_widget;
     VerticalAxisRangeControls * _vertical_range_controls;
+
+    /// DataManager-level observer ID for detecting key additions/removals
+    int _dm_observer_id = -1;
+
+    /// Per-key callback IDs for data change notifications (DM key → callback ID)
+    std::map<std::string, int> _data_callback_ids;
+
+    /// Register a data-change callback for a single DM key
+    void _registerDataCallback(std::string const & key);
+
+    /// Unregister a data-change callback for a single DM key
+    void _unregisterDataCallback(std::string const & key);
+
+    /// Unregister all data-change callbacks
+    void _unregisterAllDataCallbacks();
+
+    /// Sync data callbacks with current state's plot event keys
+    void _syncDataCallbacks();
+
+    /// Check if any visualized keys have been removed from DataManager and clear them
+    void _pruneRemovedKeys();
 };
 
 #endif// PSTH_WIDGET_HPP

@@ -21,6 +21,7 @@
 #include <QResizeEvent>
 #include <QTextStream>
 #include <QVBoxLayout>
+#include <set>
 #include <utility>
 
 #include "ui_PSTHWidget.h"
@@ -66,9 +67,9 @@ PSTHWidget::PSTHWidget(std::shared_ptr<DataManager> data_manager,
 
     // Replace the main layout
     QLayout * old_layout = layout();
-    
-        delete old_layout;
-    
+
+    delete old_layout;
+
     setLayout(vertical_layout);
 
     // Forward signals from OpenGL widget
@@ -79,10 +80,17 @@ PSTHWidget::PSTHWidget(std::shared_ptr<DataManager> data_manager,
 }
 
 PSTHWidget::~PSTHWidget() {
+    _unregisterAllDataCallbacks();
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
     delete ui;
 }
 
 void PSTHWidget::setState(std::shared_ptr<PSTHState> state) {
+    // Clean up old callbacks before switching state
+    _unregisterAllDataCallbacks();
+
     _state = std::move(state);
 
     if (_opengl_widget) {
@@ -97,6 +105,32 @@ void PSTHWidget::setState(std::shared_ptr<PSTHState> state) {
     wireTimeAxis();
     wireVerticalAxis();
     connectViewChangeSignals();
+
+    // Register data-change callbacks for existing plot event keys and alignment key
+    _syncDataCallbacks();
+
+    // Track when plot events are added/removed to manage callbacks
+    connect(_state.get(), &PSTHState::plotEventAdded,
+            this, [this](QString const & /* event_name */) {
+                _syncDataCallbacks();
+            });
+    connect(_state.get(), &PSTHState::plotEventRemoved,
+            this, [this](QString const & /* event_name */) {
+                _syncDataCallbacks();
+            });
+
+    // Track alignment key changes to swap callback
+    connect(_state.get(), &PSTHState::alignmentEventKeyChanged,
+            this, [this](QString const & /* key */) {
+                _syncDataCallbacks();
+            });
+
+    // Register DataManager-level observer to detect key removal
+    if (_data_manager && _dm_observer_id == -1) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _pruneRemovedKeys();
+        });
+    }
 
     syncTimeAxisRange();
     syncVerticalAxisRange();
@@ -386,5 +420,106 @@ void PSTHWidget::resizeEvent(QResizeEvent * event) {
     }
     if (_vertical_axis_widget) {
         _vertical_axis_widget->update();
+    }
+}
+
+void PSTHWidget::_registerDataCallback(std::string const & key) {
+    if (!_data_manager || key.empty()) {
+        return;
+    }
+    if (_data_callback_ids.find(key) != _data_callback_ids.end()) {
+        return;// Already registered
+    }
+    int const id = _data_manager->addCallbackToData(key, [this]() {
+        if (_state) {
+            emit _state->stateChanged();
+        }
+    });
+    if (id >= 0) {
+        _data_callback_ids[key] = id;
+    }
+}
+
+void PSTHWidget::_unregisterDataCallback(std::string const & key) {
+    auto it = _data_callback_ids.find(key);
+    if (it == _data_callback_ids.end()) {
+        return;
+    }
+    if (_data_manager) {
+        _data_manager->removeCallbackFromData(key, it->second);
+    }
+    _data_callback_ids.erase(it);
+}
+
+void PSTHWidget::_unregisterAllDataCallbacks() {
+    if (!_data_manager) {
+        return;
+    }
+    for (auto const & [key, id]: _data_callback_ids) {
+        _data_manager->removeCallbackFromData(key, id);
+    }
+    _data_callback_ids.clear();
+}
+
+void PSTHWidget::_syncDataCallbacks() {
+    if (!_state) {
+        return;
+    }
+
+    // Collect the set of DM keys currently in state (plot events + alignment)
+    std::set<std::string> current_keys;
+    for (auto const & name: _state->getPlotEventNames()) {
+        auto opts = _state->getPlotEventOptions(name);
+        if (opts) {
+            current_keys.insert(opts->event_key);
+        }
+    }
+    auto const alignment_key = _state->getAlignmentEventKey().toStdString();
+    if (!alignment_key.empty()) {
+        current_keys.insert(alignment_key);
+    }
+
+    // Remove callbacks for keys no longer in state
+    std::vector<std::string> to_remove;
+    for (auto const & [key, id]: _data_callback_ids) {
+        if (current_keys.find(key) == current_keys.end()) {
+            to_remove.push_back(key);
+        }
+    }
+    for (auto const & key: to_remove) {
+        _unregisterDataCallback(key);
+    }
+
+    // Add callbacks for new keys
+    for (auto const & key: current_keys) {
+        _registerDataCallback(key);
+    }
+}
+
+void PSTHWidget::_pruneRemovedKeys() {
+    if (!_state || !_data_manager) {
+        return;
+    }
+    auto const all_keys = _data_manager->getAllKeys();
+    std::set<std::string> const key_set(all_keys.begin(), all_keys.end());
+
+    // Find plot events whose DM keys no longer exist
+    std::vector<QString> to_remove;
+    for (auto const & name: _state->getPlotEventNames()) {
+        auto opts = _state->getPlotEventOptions(name);
+        if (opts && key_set.find(opts->event_key) == key_set.end()) {
+            _unregisterDataCallback(opts->event_key);
+            to_remove.push_back(name);
+        }
+    }
+    for (auto const & name: to_remove) {
+        _state->removePlotEvent(name);
+    }
+
+    // Prune alignment key if removed
+    auto const alignment_key = _state->getAlignmentEventKey().toStdString();
+    if (!alignment_key.empty() && key_set.find(alignment_key) == key_set.end()) {
+        _unregisterDataCallback(alignment_key);
+        _state->setAlignmentEventKey(QString());
     }
 }

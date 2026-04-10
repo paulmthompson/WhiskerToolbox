@@ -21,6 +21,7 @@
 #include <QResizeEvent>
 #include <QTextStream>
 #include <QVBoxLayout>
+#include <set>
 #include <utility>
 
 #include "ui_HeatmapWidget.h"
@@ -85,6 +86,10 @@ HeatmapWidget::HeatmapWidget(std::shared_ptr<DataManager> data_manager,
 }
 
 HeatmapWidget::~HeatmapWidget() {
+    _unregisterAllDataCallbacks();
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
     delete ui;
 }
 
@@ -95,6 +100,9 @@ void HeatmapWidget::setSelectionContext(SelectionContext * selection_context) {
 }
 
 void HeatmapWidget::setState(std::shared_ptr<HeatmapState> state) {
+    // Clean up old callbacks before switching state
+    _unregisterAllDataCallbacks();
+
     _state = std::move(state);
 
     if (_opengl_widget) {
@@ -109,6 +117,63 @@ void HeatmapWidget::setState(std::shared_ptr<HeatmapState> state) {
     wireTimeAxis();
     wireVerticalAxis();
     connectViewChangeSignals();
+
+    // Register data-change callbacks for existing unit keys and alignment key
+    for (auto const & key: _state->unitKeys()) {
+        _registerDataCallback(key);
+    }
+    auto const alignment_key = _state->getAlignmentEventKey().toStdString();
+    _registerDataCallback(alignment_key);
+
+    // Track when units are added/removed to manage callbacks
+    connect(_state.get(), &HeatmapState::unitsChanged,
+            this, [this]() {
+                // Sync callbacks with current unit key set
+                // First, find keys to remove (in callbacks but not in state)
+                auto const current_alignment = _state->getAlignmentEventKey().toStdString();
+                std::vector<std::string> to_remove;
+                for (auto const & [key, id]: _data_callback_ids) {
+                    if (!_state->hasUnit(key) && key != current_alignment) {
+                        to_remove.push_back(key);
+                    }
+                }
+                for (auto const & key: to_remove) {
+                    _unregisterDataCallback(key);
+                }
+                // Then, find keys to add (in state but not in callbacks)
+                for (auto const & key: _state->unitKeys()) {
+                    if (_data_callback_ids.find(key) == _data_callback_ids.end()) {
+                        _registerDataCallback(key);
+                    }
+                }
+            });
+
+    // Track alignment key changes: swap callback from old to new key
+    connect(_state.get(), &HeatmapState::alignmentEventKeyChanged,
+            this, [this](QString const & new_key) {
+                // Unregister all non-unit callbacks, then re-register alignment
+                // (simpler: just ensure the new key is registered; old one gets
+                //  cleaned up if it's not also a unit key)
+                auto const new_key_str = new_key.toStdString();
+                // Remove callbacks for keys not in units and not the new alignment
+                std::vector<std::string> to_remove;
+                for (auto const & [key, id]: _data_callback_ids) {
+                    if (!_state->hasUnit(key) && key != new_key_str) {
+                        to_remove.push_back(key);
+                    }
+                }
+                for (auto const & key: to_remove) {
+                    _unregisterDataCallback(key);
+                }
+                _registerDataCallback(new_key_str);
+            });
+
+    // Register DataManager-level observer to detect key removal
+    if (_data_manager && _dm_observer_id == -1) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _pruneRemovedKeys();
+        });
+    }
 
     // Initialize axis ranges from current view state
     syncTimeAxisRange();
@@ -398,4 +463,69 @@ void HeatmapWidget::handleExportCSV() {
             this,
             tr("Export Successful"),
             tr("Heatmap CSV exported to:\n%1").arg(fileName));
+}
+
+void HeatmapWidget::_registerDataCallback(std::string const & key) {
+    if (!_data_manager || key.empty()) {
+        return;
+    }
+    if (_data_callback_ids.find(key) != _data_callback_ids.end()) {
+        return;// Already registered
+    }
+    int const id = _data_manager->addCallbackToData(key, [this]() {
+        if (_state) {
+            emit _state->stateChanged();
+        }
+    });
+    if (id >= 0) {
+        _data_callback_ids[key] = id;
+    }
+}
+
+void HeatmapWidget::_unregisterDataCallback(std::string const & key) {
+    auto it = _data_callback_ids.find(key);
+    if (it == _data_callback_ids.end()) {
+        return;
+    }
+    if (_data_manager) {
+        _data_manager->removeCallbackFromData(key, it->second);
+    }
+    _data_callback_ids.erase(it);
+}
+
+void HeatmapWidget::_unregisterAllDataCallbacks() {
+    if (!_data_manager) {
+        return;
+    }
+    for (auto const & [key, id]: _data_callback_ids) {
+        _data_manager->removeCallbackFromData(key, id);
+    }
+    _data_callback_ids.clear();
+}
+
+void HeatmapWidget::_pruneRemovedKeys() {
+    if (!_state || !_data_manager) {
+        return;
+    }
+    auto const all_keys = _data_manager->getAllKeys();
+    std::set<std::string> const key_set(all_keys.begin(), all_keys.end());
+
+    // Prune removed unit keys
+    std::vector<std::string> to_remove;
+    for (auto const & key: _state->unitKeys()) {
+        if (key_set.find(key) == key_set.end()) {
+            to_remove.push_back(key);
+        }
+    }
+    for (auto const & key: to_remove) {
+        _unregisterDataCallback(key);
+        _state->removeUnit(key);
+    }
+
+    // Prune alignment key if removed
+    auto const alignment_key = _state->getAlignmentEventKey().toStdString();
+    if (!alignment_key.empty() && key_set.find(alignment_key) == key_set.end()) {
+        _unregisterDataCallback(alignment_key);
+        _state->setAlignmentEventKey(QString());
+    }
 }
