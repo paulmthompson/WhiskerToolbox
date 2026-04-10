@@ -34,6 +34,7 @@ struct PlotAlignmentData {
     IntervalAlignmentType interval_alignment_type = IntervalAlignmentType::Beginning;///< For intervals: use beginning or end
     double offset = 0.0;                                                             ///< Offset in time units to apply to alignment events
     double window_size = 1000.0;                                                     ///< Window size in time units to gather around alignment event
+    bool prevent_overlap = false;                                                    ///< When true, prune alignment events whose windows would overlap
 };
 
 #endif// PLOT_ALIGNMENT_DATA_HPP

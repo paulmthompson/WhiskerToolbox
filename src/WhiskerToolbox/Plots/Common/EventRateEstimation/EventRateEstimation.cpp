@@ -11,7 +11,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <numeric>
+#include <vector>
 
 namespace WhiskerToolbox::Plots {
 
@@ -25,11 +27,116 @@ using WhiskerToolbox::Transforms::V2::AlignmentPoint;
 using WhiskerToolbox::Transforms::V2::expandEvents;
 using WhiskerToolbox::Transforms::V2::withAlignment;
 
-[[nodiscard]] AlignmentPoint toAlignmentPointLocal(IntervalAlignmentType type) noexcept
-{
+[[nodiscard]] AlignmentPoint toAlignmentPointLocal(IntervalAlignmentType type) noexcept {
     return (type == IntervalAlignmentType::End)
-            ? AlignmentPoint::End
-            : AlignmentPoint::Start;
+                   ? AlignmentPoint::End
+                   : AlignmentPoint::Start;
+}
+
+/**
+ * @brief Prune alignment times whose expanded windows would overlap (local copy)
+ *
+ * This is a local copy of WhiskerToolbox::Plots::pruneOverlappingAlignmentTimes
+ * to avoid a transitive Qt dependency from PlotAlignmentGather.hpp.
+ */
+[[nodiscard]] std::vector<size_t> pruneOverlappingAlignmentTimesLocal(
+        std::vector<int64_t> const & alignment_times,
+        int64_t pre_window,
+        int64_t post_window) {
+    std::vector<size_t> kept_indices;
+    if (alignment_times.empty()) {
+        return kept_indices;
+    }
+    kept_indices.reserve(alignment_times.size());
+    kept_indices.push_back(0);
+    int64_t last_kept_end = alignment_times[0] + post_window;
+    for (size_t i = 1; i < alignment_times.size(); ++i) {
+        int64_t const current_start = alignment_times[i] - pre_window;
+        if (current_start > last_kept_end) {
+            kept_indices.push_back(i);
+            last_kept_end = alignment_times[i] + post_window;
+        }
+    }
+    return kept_indices;
+}
+
+/**
+ * @brief Filter a DigitalEventSeries to keep only non-overlapping events
+ */
+[[nodiscard]] std::shared_ptr<DigitalEventSeries> filterOverlappingEvents(
+        std::shared_ptr<DigitalEventSeries> const & events,
+        int64_t pre_window,
+        int64_t post_window) {
+    std::vector<int64_t> times;
+    times.reserve(events->size());
+    auto tf = events->getTimeFrame();
+    for (auto const & ev: events->view()) {
+        times.push_back(tf ? tf->getTimeAtIndex(ev.time()) : ev.time().getValue());
+    }
+    auto kept = pruneOverlappingAlignmentTimesLocal(times, pre_window, post_window);
+    if (kept.size() == events->size()) {
+        return events;
+    }
+    std::vector<TimeFrameIndex> kept_events;
+    kept_events.reserve(kept.size());
+    size_t idx = 0;
+    size_t kept_pos = 0;
+    for (auto const & ev: events->view()) {
+        if (kept_pos < kept.size() && idx == kept[kept_pos]) {
+            kept_events.push_back(ev.time());
+            ++kept_pos;
+        }
+        ++idx;
+    }
+    auto filtered = std::make_shared<DigitalEventSeries>(std::move(kept_events));
+    filtered->setTimeFrame(events->getTimeFrame());
+    return filtered;
+}
+
+/**
+ * @brief Filter a DigitalIntervalSeries to keep only non-overlapping intervals
+ */
+[[nodiscard]] std::shared_ptr<DigitalIntervalSeries> filterOverlappingIntervals(
+        std::shared_ptr<DigitalIntervalSeries> const & intervals,
+        AlignmentPoint align,
+        int64_t pre_window,
+        int64_t post_window) {
+    std::vector<int64_t> times;
+    times.reserve(intervals->size());
+    auto tf = intervals->getTimeFrame();
+    for (auto const & iv: intervals->view()) {
+        int64_t index{};
+        switch (align) {
+            case AlignmentPoint::Start:
+                index = iv.interval.start;
+                break;
+            case AlignmentPoint::End:
+                index = iv.interval.end;
+                break;
+            case AlignmentPoint::Center:
+                index = (iv.interval.start + iv.interval.end) / 2;
+                break;
+        }
+        times.push_back(tf ? tf->getTimeAtIndex(TimeFrameIndex(index)) : index);
+    }
+    auto kept = pruneOverlappingAlignmentTimesLocal(times, pre_window, post_window);
+    if (kept.size() == intervals->size()) {
+        return intervals;
+    }
+    std::vector<Interval> kept_intervals;
+    kept_intervals.reserve(kept.size());
+    size_t idx = 0;
+    size_t kept_pos = 0;
+    for (auto const & iv: intervals->view()) {
+        if (kept_pos < kept.size() && idx == kept[kept_pos]) {
+            kept_intervals.push_back(iv.interval);
+            ++kept_pos;
+        }
+        ++idx;
+    }
+    auto filtered = std::make_shared<DigitalIntervalSeries>(std::move(kept_intervals));
+    filtered->setTimeFrame(intervals->getTimeFrame());
+    return filtered;
 }
 
 /**
@@ -38,8 +145,7 @@ using WhiskerToolbox::Transforms::V2::withAlignment;
 [[nodiscard]] GatherResult<DigitalEventSeries> gatherWithEventSeries(
         std::shared_ptr<DigitalEventSeries> const & source,
         std::shared_ptr<DigitalEventSeries> const & alignment_events,
-        double half_window)
-{
+        double half_window) {
     if (!source || !alignment_events) {
         return GatherResult<DigitalEventSeries>{};
     }
@@ -57,8 +163,7 @@ using WhiskerToolbox::Transforms::V2::withAlignment;
         std::shared_ptr<DigitalEventSeries> const & source,
         std::shared_ptr<DigitalIntervalSeries> const & alignment_intervals,
         AlignmentPoint align,
-        double half_window)
-{
+        double half_window) {
     if (!source || !alignment_intervals) {
         return GatherResult<DigitalEventSeries>{};
     }
@@ -76,13 +181,13 @@ using WhiskerToolbox::Transforms::V2::withAlignment;
 [[nodiscard]] GatherResult<DigitalEventSeries> gatherFromAlignmentData(
         std::shared_ptr<DataManager> const & data_manager,
         std::shared_ptr<DigitalEventSeries> const & source,
-        PlotAlignmentData const & alignment_data)
-{
+        PlotAlignmentData const & alignment_data) {
     if (!data_manager || !source || alignment_data.alignment_event_key.empty()) {
         return GatherResult<DigitalEventSeries>{};
     }
 
     double const half_window = alignment_data.window_size / 2.0;
+    auto const hw = static_cast<int64_t>(half_window);
     DM_DataType const type =
             data_manager->getType(alignment_data.alignment_event_key);
 
@@ -92,6 +197,9 @@ using WhiskerToolbox::Transforms::V2::withAlignment;
                         alignment_data.alignment_event_key);
         if (!alignment_events) {
             return GatherResult<DigitalEventSeries>{};
+        }
+        if (alignment_data.prevent_overlap) {
+            alignment_events = filterOverlappingEvents(alignment_events, hw, hw);
         }
         return gatherWithEventSeries(source, alignment_events, half_window);
 
@@ -104,6 +212,10 @@ using WhiskerToolbox::Transforms::V2::withAlignment;
         }
         AlignmentPoint const align =
                 toAlignmentPointLocal(alignment_data.interval_alignment_type);
+        if (alignment_data.prevent_overlap) {
+            alignment_intervals = filterOverlappingIntervals(
+                    alignment_intervals, align, hw, hw);
+        }
         return gatherWithIntervalSeries(
                 source, alignment_intervals, align, half_window);
     }
@@ -111,7 +223,7 @@ using WhiskerToolbox::Transforms::V2::withAlignment;
     return GatherResult<DigitalEventSeries>{};
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // =============================================================================
 // Gathering
@@ -120,8 +232,7 @@ using WhiskerToolbox::Transforms::V2::withAlignment;
 std::optional<UnitGatherContext> createUnitGatherContext(
         std::shared_ptr<DataManager> const & data_manager,
         std::string const & event_key,
-        PlotAlignmentData const & alignment_data)
-{
+        PlotAlignmentData const & alignment_data) {
     if (!data_manager || event_key.empty()) {
         return std::nullopt;
     }
@@ -147,12 +258,11 @@ std::optional<UnitGatherContext> createUnitGatherContext(
 std::vector<UnitGatherContext> createUnitGatherContexts(
         std::shared_ptr<DataManager> const & data_manager,
         std::vector<std::string> const & event_keys,
-        PlotAlignmentData const & alignment_data)
-{
+        PlotAlignmentData const & alignment_data) {
     std::vector<UnitGatherContext> result;
     result.reserve(event_keys.size());
 
-    for (auto const & key : event_keys) {
+    for (auto const & key: event_keys) {
         auto ctx = createUnitGatherContext(data_manager, key, alignment_data);
         if (ctx.has_value()) {
             result.push_back(std::move(*ctx));
@@ -177,8 +287,7 @@ namespace {
  * @return Vector of bin centers
  */
 [[nodiscard]] std::vector<double> buildBinCenters(
-        int num_bins, double half_window, double bin_size)
-{
+        int num_bins, double half_window, double bin_size) {
     std::vector<double> times(static_cast<size_t>(num_bins));
     for (int i = 0; i < num_bins; ++i) {
         // Left edge of bin i: -half_window + i * bin_size
@@ -206,8 +315,7 @@ namespace {
         GatherResult<DigitalEventSeries> const & gathered,
         TimeFrame const * time_frame,
         double window_size,
-        BinningParams const & params)
-{
+        BinningParams const & params) {
     double const half_window = window_size / 2.0;
     double const bin_size = params.bin_size;
 
@@ -230,14 +338,14 @@ namespace {
         }
 
         // t=0 reference for this trial (absolute time)
-        double const alignment_time =
+        auto const alignment_time =
                 static_cast<double>(gathered.alignmentTimeAt(trial_idx));
 
-        for (auto const & event : trial_view->view()) {
+        for (auto const & event: trial_view->view()) {
             double const event_abs = time_frame
-                    ? static_cast<double>(
-                              time_frame->getTimeAtIndex(event.time()))
-                    : static_cast<double>(event.time().getValue());
+                                             ? static_cast<double>(
+                                                       time_frame->getTimeAtIndex(event.time()))
+                                             : static_cast<double>(event.time().getValue());
 
             double const relative_time = event_abs - alignment_time;
 
@@ -274,8 +382,7 @@ namespace {
         GatherResult<DigitalEventSeries> const & gathered,
         TimeFrame const * time_frame,
         double window_size,
-        BinningParams const & params)
-{
+        BinningParams const & params) {
     double const half_window = window_size / 2.0;
     double const bin_size = params.bin_size;
 
@@ -301,14 +408,14 @@ namespace {
 
         std::vector<double> trial_hist(n_bins, 0.0);
 
-        double const alignment_time =
+        auto const alignment_time =
                 static_cast<double>(gathered.alignmentTimeAt(trial_idx));
 
-        for (auto const & event : trial_view->view()) {
+        for (auto const & event: trial_view->view()) {
             double const event_abs = time_frame
-                    ? static_cast<double>(
-                              time_frame->getTimeAtIndex(event.time()))
-                    : static_cast<double>(event.time().getValue());
+                                             ? static_cast<double>(
+                                                       time_frame->getTimeAtIndex(event.time()))
+                                             : static_cast<double>(event.time().getValue());
 
             double const relative_time = event_abs - alignment_time;
 
@@ -337,7 +444,7 @@ namespace {
     return result;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // =============================================================================
 // Public dispatch functions
@@ -347,8 +454,7 @@ RateEstimate estimateRate(
         GatherResult<DigitalEventSeries> const & gathered,
         TimeFrame const * time_frame,
         double window_size,
-        EstimationParams const & params)
-{
+        EstimationParams const & params) {
     return std::visit(
             [&](auto const & p) -> RateEstimate {
                 using T = std::decay_t<decltype(p)>;
@@ -365,8 +471,7 @@ RateEstimateWithTrials estimateRateWithTrials(
         GatherResult<DigitalEventSeries> const & gathered,
         TimeFrame const * time_frame,
         double window_size,
-        EstimationParams const & params)
-{
+        EstimationParams const & params) {
     return std::visit(
             [&](auto const & p) -> RateEstimateWithTrials {
                 using T = std::decay_t<decltype(p)>;
@@ -383,12 +488,11 @@ RateEstimateWithTrials estimateRateWithTrials(
 std::vector<RateEstimate> estimateRates(
         std::vector<UnitGatherContext> const & units,
         double window_size,
-        EstimationParams const & params)
-{
+        EstimationParams const & params) {
     std::vector<RateEstimate> results;
     results.reserve(units.size());
 
-    for (auto const & unit : units) {
+    for (auto const & unit: units) {
         results.push_back(estimateRate(
                 unit.gathered, unit.time_frame.get(), window_size, params));
     }
@@ -396,5 +500,4 @@ std::vector<RateEstimate> estimateRates(
     return results;
 }
 
-} // namespace WhiskerToolbox::Plots
-
+}// namespace WhiskerToolbox::Plots

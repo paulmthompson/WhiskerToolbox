@@ -90,6 +90,20 @@ public:
      */
     void setWindowSize(double window_size);
 
+    // === Prevent Overlap ===
+
+    /**
+     * @brief Get whether overlap prevention is enabled
+     * @return true if alignment events with overlapping windows are pruned
+     */
+    [[nodiscard]] bool getPreventOverlap() const;
+
+    /**
+     * @brief Set whether to prevent overlapping alignment windows
+     * @param prevent_overlap When true, prune alignment events whose windows overlap
+     */
+    void setPreventOverlap(bool prevent_overlap);
+
     // === Data Access ===
 
     /**
@@ -128,6 +142,12 @@ signals:
      * @param window_size New window size value
      */
     void windowSizeChanged(double window_size);
+
+    /**
+     * @brief Emitted when prevent overlap setting changes
+     * @param prevent_overlap New prevent overlap value
+     */
+    void preventOverlapChanged(bool prevent_overlap);
 
 private:
     PlotAlignmentData _data;

@@ -853,9 +853,9 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData(
 
     auto const & alignment_data = alignment_state->data();
 
-    // Get alignment source (event or interval series for trial boundaries)
-    auto alignment_source = WhiskerToolbox::Plots::getAlignmentSource(
-            _data_manager, alignment_data.alignment_event_key);
+    // Get alignment source with optional overlap pruning
+    auto alignment_source = WhiskerToolbox::Plots::getFilteredAlignmentSource(
+            _data_manager, alignment_data);
     if (!alignment_source.isValid()) {
         return GatherResult<DigitalEventSeries>{};
     }

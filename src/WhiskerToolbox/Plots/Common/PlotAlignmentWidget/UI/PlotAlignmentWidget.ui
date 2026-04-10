@@ -83,6 +83,23 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="prevent_overlap_checkbox">
+     <property name="text">
+      <string>Prevent Overlap</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="pruned_count_label">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="visible">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QWidget" name="interval_alignment_widget" native="true">
      <property name="visible">
       <bool>false</bool>

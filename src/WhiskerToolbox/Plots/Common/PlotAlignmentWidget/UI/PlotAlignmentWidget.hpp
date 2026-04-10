@@ -112,6 +112,18 @@ private slots:
      */
     void _onStateWindowSizeChanged(double window_size);
 
+    /**
+     * @brief Handle prevent overlap checkbox toggle
+     * @param checked Whether the checkbox is checked
+     */
+    void _onPreventOverlapChanged(bool checked);
+
+    /**
+     * @brief Handle state prevent overlap change
+     * @param prevent_overlap New prevent overlap value
+     */
+    void _onStatePreventOverlapChanged(bool prevent_overlap);
+
 private:
     /**
      * @brief Populate the alignment event combo box with available event/interval series
@@ -122,6 +134,11 @@ private:
      * @brief Update the event/interval count labels based on current selection
      */
     void _updateEventCount();
+
+    /**
+     * @brief Update the pruned count label when prevent overlap is enabled
+     */
+    void _updatePrunedCount();
 
     Ui::PlotAlignmentWidget * ui;
     PlotAlignmentState * _state;

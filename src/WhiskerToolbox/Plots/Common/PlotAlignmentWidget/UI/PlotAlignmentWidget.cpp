@@ -1,5 +1,6 @@
 #include "PlotAlignmentWidget.hpp"
 
+#include "Common/PlotAlignmentGather.hpp"
 #include "Core/PlotAlignmentState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -8,6 +9,7 @@
 #include "ui_PlotAlignmentWidget.h"
 
 #include <algorithm>
+#include <utility>
 
 PlotAlignmentWidget::PlotAlignmentWidget(PlotAlignmentState * state,
                                          std::shared_ptr<DataManager> data_manager,
@@ -15,9 +17,8 @@ PlotAlignmentWidget::PlotAlignmentWidget(PlotAlignmentState * state,
     : QWidget(parent),
       ui(new Ui::PlotAlignmentWidget),
       _state(state),
-      _data_manager(data_manager),
-      _dm_observer_id(-1)
-{
+      _data_manager(std::move(std::move(data_manager))),
+      _dm_observer_id(-1) {
     ui->setupUi(this);
 
     // Set up interval alignment combo box
@@ -32,6 +33,8 @@ PlotAlignmentWidget::PlotAlignmentWidget(PlotAlignmentState * state,
             this, &PlotAlignmentWidget::_onOffsetChanged);
     connect(ui->window_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &PlotAlignmentWidget::_onWindowSizeChanged);
+    connect(ui->prevent_overlap_checkbox, &QCheckBox::toggled,
+            this, &PlotAlignmentWidget::_onPreventOverlapChanged);
 
     // Populate combo boxes
     _populateAlignmentEventComboBox();
@@ -54,14 +57,15 @@ PlotAlignmentWidget::PlotAlignmentWidget(PlotAlignmentState * state,
                 this, &PlotAlignmentWidget::_onStateOffsetChanged);
         connect(_state, &PlotAlignmentState::windowSizeChanged,
                 this, &PlotAlignmentWidget::_onStateWindowSizeChanged);
+        connect(_state, &PlotAlignmentState::preventOverlapChanged,
+                this, &PlotAlignmentWidget::_onStatePreventOverlapChanged);
 
         // Initialize UI from state
         updateUIFromState();
     }
 }
 
-PlotAlignmentWidget::~PlotAlignmentWidget()
-{
+PlotAlignmentWidget::~PlotAlignmentWidget() {
     // Remove DataManager observer callback
     if (_data_manager && _dm_observer_id != -1) {
         _data_manager->removeObserver(_dm_observer_id);
@@ -69,8 +73,7 @@ PlotAlignmentWidget::~PlotAlignmentWidget()
     delete ui;
 }
 
-void PlotAlignmentWidget::_populateAlignmentEventComboBox()
-{
+void PlotAlignmentWidget::_populateAlignmentEventComboBox() {
     ui->alignment_event_combo->clear();
     ui->alignment_event_combo->addItem("(None)", QString());
 
@@ -103,27 +106,26 @@ void PlotAlignmentWidget::_populateAlignmentEventComboBox()
     }
 }
 
-void PlotAlignmentWidget::_updateEventCount()
-{
+void PlotAlignmentWidget::_updateEventCount() {
     if (!_data_manager) {
         ui->total_count_label->setText("Total: 0");
         ui->interval_alignment_widget->setVisible(false);
         return;
     }
 
-    QString current_key = ui->alignment_event_combo->currentData().toString();
+    QString const current_key = ui->alignment_event_combo->currentData().toString();
     if (current_key.isEmpty()) {
         ui->total_count_label->setText("Total: 0");
         ui->interval_alignment_widget->setVisible(false);
         return;
     }
 
-    DM_DataType data_type = _data_manager->getType(current_key.toStdString());
+    DM_DataType const data_type = _data_manager->getType(current_key.toStdString());
 
     if (data_type == DM_DataType::DigitalEvent) {
         auto series = _data_manager->getData<DigitalEventSeries>(current_key.toStdString());
         if (series) {
-            size_t count = series->size();
+            size_t const count = series->size();
             ui->total_count_label->setText(QString("Total: %1 events").arg(count));
         } else {
             ui->total_count_label->setText("Total: 0 events");
@@ -132,7 +134,7 @@ void PlotAlignmentWidget::_updateEventCount()
     } else if (data_type == DM_DataType::DigitalInterval) {
         auto series = _data_manager->getData<DigitalIntervalSeries>(current_key.toStdString());
         if (series) {
-            size_t count = series->size();
+            size_t const count = series->size();
             ui->total_count_label->setText(QString("Total: %1 intervals").arg(count));
         } else {
             ui->total_count_label->setText("Total: 0 intervals");
@@ -142,46 +144,43 @@ void PlotAlignmentWidget::_updateEventCount()
         ui->total_count_label->setText("Total: 0");
         ui->interval_alignment_widget->setVisible(false);
     }
+
+    _updatePrunedCount();
 }
 
-void PlotAlignmentWidget::_onAlignmentEventChanged(int index)
-{
+void PlotAlignmentWidget::_onAlignmentEventChanged(int index) {
     Q_UNUSED(index)
-    QString key = ui->alignment_event_combo->currentData().toString();
+    QString const key = ui->alignment_event_combo->currentData().toString();
     if (_state) {
         _state->setAlignmentEventKey(key);
     }
     _updateEventCount();
 }
 
-void PlotAlignmentWidget::_onIntervalAlignmentChanged(int index)
-{
+void PlotAlignmentWidget::_onIntervalAlignmentChanged(int index) {
     if (!_state) {
         return;
     }
 
-    IntervalAlignmentType type = (index == 0) ? IntervalAlignmentType::Beginning : IntervalAlignmentType::End;
+    IntervalAlignmentType const type = (index == 0) ? IntervalAlignmentType::Beginning : IntervalAlignmentType::End;
     _state->setIntervalAlignmentType(type);
 }
 
-void PlotAlignmentWidget::_onOffsetChanged(double value)
-{
+void PlotAlignmentWidget::_onOffsetChanged(double value) {
     if (_state) {
         _state->setOffset(value);
     }
 }
 
-void PlotAlignmentWidget::_onWindowSizeChanged(double value)
-{
+void PlotAlignmentWidget::_onWindowSizeChanged(double value) {
     if (_state) {
         _state->setWindowSize(value);
     }
 }
 
-void PlotAlignmentWidget::_onStateAlignmentEventKeyChanged(QString const & key)
-{
+void PlotAlignmentWidget::_onStateAlignmentEventKeyChanged(QString const & key) {
     // Update combo box without triggering signal
-    int index = ui->alignment_event_combo->findData(key);
+    int const index = ui->alignment_event_combo->findData(key);
     if (index >= 0) {
         ui->alignment_event_combo->blockSignals(true);
         ui->alignment_event_combo->setCurrentIndex(index);
@@ -194,37 +193,80 @@ void PlotAlignmentWidget::_onStateAlignmentEventKeyChanged(QString const & key)
     _updateEventCount();
 }
 
-void PlotAlignmentWidget::_onStateIntervalAlignmentTypeChanged(IntervalAlignmentType type)
-{
-    int index = (type == IntervalAlignmentType::Beginning) ? 0 : 1;
+void PlotAlignmentWidget::_onStateIntervalAlignmentTypeChanged(IntervalAlignmentType type) {
+    int const index = (type == IntervalAlignmentType::Beginning) ? 0 : 1;
     ui->interval_alignment_combo->blockSignals(true);
     ui->interval_alignment_combo->setCurrentIndex(index);
     ui->interval_alignment_combo->blockSignals(false);
 }
 
-void PlotAlignmentWidget::_onStateOffsetChanged(double offset)
-{
+void PlotAlignmentWidget::_onStateOffsetChanged(double offset) {
     ui->offset_spinbox->blockSignals(true);
     ui->offset_spinbox->setValue(offset);
     ui->offset_spinbox->blockSignals(false);
 }
 
-void PlotAlignmentWidget::_onStateWindowSizeChanged(double window_size)
-{
+void PlotAlignmentWidget::_onStateWindowSizeChanged(double window_size) {
     ui->window_size_spinbox->blockSignals(true);
     ui->window_size_spinbox->setValue(window_size);
     ui->window_size_spinbox->blockSignals(false);
+    _updatePrunedCount();
 }
 
-void PlotAlignmentWidget::updateUIFromState()
-{
+void PlotAlignmentWidget::_onPreventOverlapChanged(bool checked) {
+    if (_state) {
+        _state->setPreventOverlap(checked);
+    }
+    _updatePrunedCount();
+}
+
+void PlotAlignmentWidget::_onStatePreventOverlapChanged(bool prevent_overlap) {
+    ui->prevent_overlap_checkbox->blockSignals(true);
+    ui->prevent_overlap_checkbox->setChecked(prevent_overlap);
+    ui->prevent_overlap_checkbox->blockSignals(false);
+    _updatePrunedCount();
+}
+
+void PlotAlignmentWidget::_updatePrunedCount() {
+    if (!_state || !_data_manager) {
+        ui->pruned_count_label->setVisible(false);
+        return;
+    }
+
+    bool const enabled = _state->getPreventOverlap();
+    if (!enabled || _state->getAlignmentEventKey().isEmpty()) {
+        ui->pruned_count_label->setVisible(false);
+        return;
+    }
+
+    PlotAlignmentData const & alignment_data = _state->data();
+    size_t const pruned_count = WhiskerToolbox::Plots::countNonOverlappingAlignmentEvents(
+            _data_manager, alignment_data);
+
+    // Determine total count from the source series
+    DM_DataType const type = _data_manager->getType(alignment_data.alignment_event_key);
+    size_t total_count = 0;
+    if (type == DM_DataType::DigitalEvent) {
+        auto series = _data_manager->getData<DigitalEventSeries>(alignment_data.alignment_event_key);
+        if (series) total_count = series->size();
+    } else if (type == DM_DataType::DigitalInterval) {
+        auto series = _data_manager->getData<DigitalIntervalSeries>(alignment_data.alignment_event_key);
+        if (series) total_count = series->size();
+    }
+
+    ui->pruned_count_label->setText(
+            QString("Used: %1 / %2").arg(pruned_count).arg(total_count));
+    ui->pruned_count_label->setVisible(true);
+}
+
+void PlotAlignmentWidget::updateUIFromState() {
     if (!_state) {
         return;
     }
 
     // Update alignment event combo box
-    QString key = _state->getAlignmentEventKey();
-    int index = ui->alignment_event_combo->findData(key);
+    QString const key = _state->getAlignmentEventKey();
+    int const index = ui->alignment_event_combo->findData(key);
     if (index >= 0) {
         ui->alignment_event_combo->setCurrentIndex(index);
     } else {
@@ -232,8 +274,8 @@ void PlotAlignmentWidget::updateUIFromState()
     }
 
     // Update interval alignment combo box
-    IntervalAlignmentType type = _state->getIntervalAlignmentType();
-    int alignment_index = (type == IntervalAlignmentType::Beginning) ? 0 : 1;
+    IntervalAlignmentType const type = _state->getIntervalAlignmentType();
+    int const alignment_index = (type == IntervalAlignmentType::Beginning) ? 0 : 1;
     ui->interval_alignment_combo->setCurrentIndex(alignment_index);
 
     // Update offset spinbox
@@ -242,6 +284,12 @@ void PlotAlignmentWidget::updateUIFromState()
     // Update window size spinbox
     ui->window_size_spinbox->setValue(_state->getWindowSize());
 
+    // Update prevent overlap checkbox
+    ui->prevent_overlap_checkbox->setChecked(_state->getPreventOverlap());
+
     // Update event count
     _updateEventCount();
+
+    // Update pruned count
+    _updatePrunedCount();
 }
