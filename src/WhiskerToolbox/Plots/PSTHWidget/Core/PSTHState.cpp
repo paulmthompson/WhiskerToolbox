@@ -69,7 +69,7 @@ PSTHState::PSTHState(QObject * parent)
         // Update window size to match range (centered at 0)
         // Use safe_range to prevent overflow → infinity when bounds are extreme
         double const range = CorePlotting::safe_range(_data.time_axis.min_range,
-                                                _data.time_axis.max_range);
+                                                      _data.time_axis.max_range);
         if (std::abs(range - _data.alignment.window_size) > 0.01) {
             _data.alignment.window_size = range;
             _alignment_state->data().window_size = range;
@@ -79,8 +79,9 @@ PSTHState::PSTHState(QObject * parent)
     };
     connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeChanged,
             this, syncTimeAxisData);
-    connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeUpdated,
-            this, syncTimeAxisData);
+    // Note: rangeUpdated (from setRangeSilent) is intentionally NOT connected here.
+    // setRangeSilent is called during view-only sync (zoom/pan) and must not
+    // overwrite window_size, which controls the histogram bin positions.
 
     // Forward vertical axis state signals to this object's signals
     // Note: We don't emit yMinChanged/yMaxChanged from PSTHState anymore
@@ -93,8 +94,8 @@ PSTHState::PSTHState(QObject * parent)
     };
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
             this, syncVerticalAxisData);
-    connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
-            this, syncVerticalAxisData);
+    // Note: rangeUpdated (from setRangeSilent) is intentionally NOT connected here.
+    // View-only sync should not trigger stateChanged / scene rebuilds.
 }
 
 QString PSTHState::getDisplayName() const {
