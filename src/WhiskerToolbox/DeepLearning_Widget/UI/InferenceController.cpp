@@ -339,6 +339,22 @@ void InferenceController::runBatch(int start, int end, int batch_size) {
         }
     }
 
+    // Also clone VideoData for static (memory) inputs so the worker
+    // thread does not race with the main thread's ffmpeg decoder.
+    for (auto const & si: _impl->_state->staticInputs()) {
+        if (si.data_key.empty()) continue;
+        if (media_overrides.contains(si.data_key)) continue;
+        auto media = _impl->_dm->getData<MediaData>(si.data_key);
+        if (!media) continue;
+        if (media->getMediaType() == MediaData::MediaType::Video) {
+            auto clone = std::make_shared<VideoData>();
+            clone->LoadMedia(media->getFilename());
+            media_overrides[si.data_key] = std::move(clone);
+        } else {
+            media_overrides[si.data_key] = media;
+        }
+    }
+
     auto reservation = std::make_shared<WriteReservation>();
 
     _impl->_cancel_flag->store(false, std::memory_order_relaxed);
@@ -425,6 +441,22 @@ void InferenceController::runBatchIntervals(
             media_overrides[binding.data_key] = std::move(clone);
         } else {
             media_overrides[binding.data_key] = media;
+        }
+    }
+
+    // Also clone VideoData for static (memory) inputs so the worker
+    // thread does not race with the main thread's ffmpeg decoder.
+    for (auto const & si: _impl->_state->staticInputs()) {
+        if (si.data_key.empty()) continue;
+        if (media_overrides.contains(si.data_key)) continue;
+        auto media = _impl->_dm->getData<MediaData>(si.data_key);
+        if (!media) continue;
+        if (media->getMediaType() == MediaData::MediaType::Video) {
+            auto clone = std::make_shared<VideoData>();
+            clone->LoadMedia(media->getFilename());
+            media_overrides[si.data_key] = std::move(clone);
+        } else {
+            media_overrides[si.data_key] = media;
         }
     }
 
