@@ -363,6 +363,8 @@ void EventPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         _is_panning = false;// Don't start panning yet - wait for drag detection
         _click_start_pos = event->pos();
         _last_mouse_pos = event->pos();
+        spdlog::debug("[EventPlotGL] mousePress screen=({}, {})",
+                      event->pos().x(), event->pos().y());
     }
     event->accept();
 }
@@ -402,7 +404,10 @@ void EventPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
         if (_is_panning) {
             _is_panning = false;
             setCursor(Qt::ArrowCursor);
+            spdlog::debug("[EventPlotGL] mouseRelease: was panning, ignoring click");
         } else {
+            spdlog::debug("[EventPlotGL] mouseRelease: click (not drag) at screen=({}, {})",
+                          event->pos().x(), event->pos().y());
             // This was a click (not a drag) - try to select an event
             handleClickSelection(event->pos());
         }
@@ -413,6 +418,16 @@ void EventPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         QPointF const world = screenToWorld(event->pos());
+        int const num_trials = static_cast<int>(_cached_alignment_times.size());
+        int const trial_from_y = trialIndexFromWorldY(
+                static_cast<float>(world.y()), _cached_alignment_times.size());
+
+        spdlog::debug("[EventPlotGL] doubleClick screen=({}, {}) world=({:.4f}, {:.4f}) "
+                      "widget={}x{} trials={} trialFromY={}",
+                      event->pos().x(), event->pos().y(),
+                      world.x(), world.y(),
+                      _widget_width, _widget_height,
+                      num_trials, trial_from_y);
 
         // Find event near click position
         auto hit = findEventNear(event->pos());
@@ -420,12 +435,18 @@ void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
             int const trial_index = hit->first;
             auto const relative_time = static_cast<float>(world.x());
 
+            spdlog::debug("[EventPlotGL] doubleClick hit: trial={} series='{}' relativeTime={:.4f}",
+                          trial_index, hit->second, relative_time);
+
             // Convert relative time to absolute time
             // The alignment time is the absolute time of t=0 for this trial
             if (trial_index >= 0 &&
                 static_cast<size_t>(trial_index) < _cached_alignment_times.size()) {
                 int64_t const alignment_time = _cached_alignment_times[trial_index];
                 int64_t const absolute_time = alignment_time + static_cast<int64_t>(relative_time);
+
+                spdlog::debug("[EventPlotGL] doubleClick time: alignmentTime={} absoluteTime={}",
+                              alignment_time, absolute_time);
 
                 // Resolve the data key from the hit's event name
                 // hit->second encodes the event name via the scene key
@@ -435,11 +456,24 @@ void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
                             QString::fromStdString(hit->second));
                     if (options) {
                         series_key = QString::fromStdString(options->event_key);
+                        spdlog::debug("[EventPlotGL] doubleClick resolved seriesKey='{}'",
+                                      series_key.toStdString());
+                    } else {
+                        spdlog::debug("[EventPlotGL] doubleClick: no plot options for '{}'",
+                                      hit->second);
                     }
                 }
 
+                spdlog::debug("[EventPlotGL] doubleClick emitting eventDoubleClicked "
+                              "absoluteTime={} seriesKey='{}'",
+                              absolute_time, series_key.toStdString());
                 emit eventDoubleClicked(absolute_time, series_key);
+            } else {
+                spdlog::debug("[EventPlotGL] doubleClick: trial_index {} out of range [0, {})",
+                              trial_index, _cached_alignment_times.size());
             }
+        } else {
+            spdlog::debug("[EventPlotGL] doubleClick: no hit found near click position");
         }
     }
     event->accept();
@@ -743,6 +777,19 @@ std::optional<std::pair<int, std::string>> EventPlotOpenGLWidget::findEventNear(
                                     (_widget_width * _cached_view_state.x_zoom);
     float const world_tolerance = tolerance_pixels * world_per_pixel_x;
 
+    spdlog::debug("[EventPlotGL] findEventNear: screen=({}, {}) world=({:.4f}, {:.4f}) "
+                  "tolerancePx={:.1f} worldTolerance={:.4f} worldPerPixelX={:.6f}",
+                  screen_pos.x(), screen_pos.y(),
+                  world.x(), world.y(),
+                  tolerance_pixels, world_tolerance, world_per_pixel_x);
+    spdlog::debug("[EventPlotGL] findEventNear: viewState x=[{:.2f}, {:.2f}] xZoom={:.4f} "
+                  "y=[{:.2f}, {:.2f}] yZoom={:.4f} hasSpatialIndex={}",
+                  _cached_view_state.x_min, _cached_view_state.x_max,
+                  _cached_view_state.x_zoom,
+                  _cached_view_state.y_min, _cached_view_state.y_max,
+                  _cached_view_state.y_zoom,
+                  _scene.spatial_index != nullptr);
+
     CorePlotting::HitTestConfig config;
     config.point_tolerance = world_tolerance;
     config.prioritize_discrete = true;
@@ -755,11 +802,24 @@ std::optional<std::pair<int, std::string>> EventPlotOpenGLWidget::findEventNear(
             static_cast<float>(world.y()),
             _scene);
 
+    spdlog::debug("[EventPlotGL] findEventNear: hitResult hasHit={} hitType={} "
+                  "seriesKey='{}' hitWorld=({:.4f}, {:.4f}) distance={:.4f}",
+                  result.hasHit(),
+                  static_cast<int>(result.hit_type),
+                  result.series_key,
+                  result.world_x, result.world_y,
+                  result.distance);
+
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
         // series_key is now just the event name (batches are merged per series).
         // Derive trial index from the hit Y coordinate using layout geometry.
         int const trial_index = trialIndexFromWorldY(
                 result.world_y, _cached_alignment_times.size());
+
+        spdlog::debug("[EventPlotGL] findEventNear: DigitalEvent hit -> trialIndex={} "
+                      "nearestEventWorldX={:.4f} nearestEventWorldY={:.4f}",
+                      trial_index, result.world_x, result.world_y);
+
         if (trial_index >= 0) {
             return std::make_pair(trial_index, result.series_key);
         }
@@ -777,6 +837,16 @@ void EventPlotOpenGLWidget::handleClickSelection(QPoint const & screen_pos) {
                                     (_widget_width * _cached_view_state.x_zoom);
     float const world_tolerance = 10.0f * world_per_pixel_x;// 10 pixel tolerance
 
+    int const num_trials = static_cast<int>(_cached_alignment_times.size());
+    int const trial_from_y = trialIndexFromWorldY(
+            static_cast<float>(world.y()), _cached_alignment_times.size());
+
+    spdlog::debug("[EventPlotGL] clickSelection: screen=({}, {}) world=({:.4f}, {:.4f}) "
+                  "worldTolerance={:.4f} trials={} trialFromY={}",
+                  screen_pos.x(), screen_pos.y(),
+                  world.x(), world.y(),
+                  world_tolerance, num_trials, trial_from_y);
+
     CorePlotting::HitTestConfig config;
     config.point_tolerance = world_tolerance;
     config.prioritize_discrete = true;
@@ -790,11 +860,24 @@ void EventPlotOpenGLWidget::handleClickSelection(QPoint const & screen_pos) {
             _scene,
             _layout_response);
 
+    spdlog::debug("[EventPlotGL] clickSelection: hitResult hasHit={} hitType={} "
+                  "seriesKey='{}' hitWorld=({:.4f}, {:.4f}) distance={:.4f}",
+                  result.hasHit(),
+                  static_cast<int>(result.hit_type),
+                  result.series_key,
+                  result.world_x, result.world_y,
+                  result.distance);
+
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
         // series_key is now just the event name (batches are merged per series).
         // Derive trial index from the hit Y coordinate.
         int const trial_index = trialIndexFromWorldY(
                 result.world_y, _cached_alignment_times.size());
+
+        spdlog::debug("[EventPlotGL] clickSelection: DigitalEvent hit -> trialIndex={} "
+                      "hitWorldX={:.4f} hitWorldY={:.4f}",
+                      trial_index, result.world_x, result.world_y);
+
         if (trial_index >= 0) {
             // Resolve the DataManager key from the event name
             QString series_key;
@@ -806,9 +889,15 @@ void EventPlotOpenGLWidget::handleClickSelection(QPoint const & screen_pos) {
                 }
             }
 
+            spdlog::debug("[EventPlotGL] clickSelection: emitting eventSelected "
+                          "trial={} relativeTime={:.4f} seriesKey='{}'",
+                          trial_index, result.world_x, series_key.toStdString());
+
             // Emit selection signal with trial index and relative time
             emit eventSelected(trial_index, result.world_x, series_key);
         }
+    } else {
+        spdlog::debug("[EventPlotGL] clickSelection: no DigitalEvent hit");
     }
 }
 
