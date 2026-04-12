@@ -42,7 +42,6 @@
 #include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
 #include "MLCore_Widget/MLCoreWidgetRegistration.hpp"
-#include "ML_Widget/MLWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 
 #include "Plots/3DPlot/3DPlotWidgetRegistration.hpp"
@@ -956,8 +955,6 @@ void MainWindow::_registerEditorTypes() {
     TerminalWidgetModule::registerTypes(_editor_registry.get());
 
     BatchProcessingWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
-
-    MLWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     MLCoreWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 

@@ -77,7 +77,7 @@ add_subdirectory(TableDesignerWidget)
 # Qt, DataManager, TensorData,
 # OpenBLAS, armadillo, LAPACK, nlohmann_json, MLPACK
 # Feature_Table_Widget, EditorState
-add_subdirectory(ML_Widget)
+#add_subdirectory(ML_Widget)
 
 # Qt, DataManager, EditorState, reflectcpp - MLCore ML workflow UI
 add_subdirectory(MLCore_Widget)
@@ -331,7 +331,7 @@ target_link_libraries(WhiskerToolbox PRIVATE PlottingOpenGL)  # Contains ShaderM
 target_link_libraries(WhiskerToolbox PRIVATE TimeScrollBar)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Tree_Widget)
-target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)
+#target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE MLCore_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataTransform_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE TransformsV2_Widget)
