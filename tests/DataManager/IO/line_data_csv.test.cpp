@@ -349,3 +349,85 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save/load thr
         verifyLineDataEquality(*loaded_line_data);
     }
 }
+
+// ============================================================================
+// Image Size via height/width fields
+// ============================================================================
+
+TEST_CASE_METHOD(LineDataCSVTestFixture,
+                 "DM - IO - LineData - CSV height/width fields set image size",
+                 "[LineData][CSV][IO][ImageSize]") {
+
+    REQUIRE(saveCSVLineData());
+
+    SECTION("New-style height/width fields") {
+        auto & registry = LoaderRegistry::getInstance();
+
+        nlohmann::json config;
+        config["filepath"] = csv_filepath.string();
+        config["delimiter"] = ",";
+        config["coordinate_delimiter"] = ",";
+        config["has_header"] = true;
+        config["height"] = 480;
+        config["width"] = 640;
+
+        auto load_result = registry.tryLoad("csv", DM_DataType::Line,
+                                            csv_filepath.string(), config);
+        REQUIRE(load_result.success);
+
+        auto loaded = std::get<std::shared_ptr<LineData>>(load_result.data);
+        CHECK(loaded->getImageSize().width == 640);
+        CHECK(loaded->getImageSize().height == 480);
+    }
+
+    SECTION("Legacy image_width/image_height still work") {
+        auto & registry = LoaderRegistry::getInstance();
+
+        nlohmann::json config;
+        config["filepath"] = csv_filepath.string();
+        config["image_width"] = 800;
+        config["image_height"] = 600;
+
+        auto load_result = registry.tryLoad("csv", DM_DataType::Line,
+                                            csv_filepath.string(), config);
+        REQUIRE(load_result.success);
+
+        auto loaded = std::get<std::shared_ptr<LineData>>(load_result.data);
+        CHECK(loaded->getImageSize().width == 800);
+        CHECK(loaded->getImageSize().height == 600);
+    }
+
+    SECTION("height/width take priority over legacy image_width/image_height") {
+        auto & registry = LoaderRegistry::getInstance();
+
+        nlohmann::json config;
+        config["filepath"] = csv_filepath.string();
+        config["height"] = 480;
+        config["width"] = 640;
+        config["image_width"] = 800;
+        config["image_height"] = 600;
+
+        auto load_result = registry.tryLoad("csv", DM_DataType::Line,
+                                            csv_filepath.string(), config);
+        REQUIRE(load_result.success);
+
+        auto loaded = std::get<std::shared_ptr<LineData>>(load_result.data);
+        CHECK(loaded->getImageSize().width == 640);
+        CHECK(loaded->getImageSize().height == 480);
+    }
+
+    SECTION("No image size fields leaves default") {
+        auto & registry = LoaderRegistry::getInstance();
+
+        nlohmann::json config;
+        config["filepath"] = csv_filepath.string();
+
+        auto load_result = registry.tryLoad("csv", DM_DataType::Line,
+                                            csv_filepath.string(), config);
+        REQUIRE(load_result.success);
+
+        auto loaded = std::get<std::shared_ptr<LineData>>(load_result.data);
+        CHECK(loaded->getImageSize().width == -1);
+        CHECK(loaded->getImageSize().height == -1);
+    }
+}

@@ -114,6 +114,8 @@ struct CSVMultiFileLineLoaderOptions {
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> y_column;
     std::optional<bool> has_header;
     std::optional<std::string> file_pattern;
+    std::optional<rfl::Validator<int, rfl::Minimum<1>>> height;
+    std::optional<rfl::Validator<int, rfl::Minimum<1>>> width;
 
     // Helper methods to get values with defaults
     std::string getDelimiter() const { return delimiter.value_or(","); }
@@ -144,6 +146,8 @@ struct CSVSingleFileLineLoaderOptions {
     std::optional<std::string> coordinate_delimiter;
     std::optional<bool> has_header;
     std::optional<std::string> header_identifier;
+    std::optional<rfl::Validator<int, rfl::Minimum<1>>> height;
+    std::optional<rfl::Validator<int, rfl::Minimum<1>>> width;
 
     // Helper methods to get values with defaults
     std::string getDelimiter() const { return delimiter.value_or(","); }
@@ -247,6 +251,12 @@ struct ParameterUIHints<CSVMultiFileLineLoaderOptions> {
         if (auto * f = schema.field("file_pattern")) {
             f->tooltip = "Glob pattern to select CSV files under parent_dir (default *.csv)";
         }
+        if (auto * f = schema.field("height")) {
+            f->tooltip = "Image height in pixels (used for coordinate normalization)";
+        }
+        if (auto * f = schema.field("width")) {
+            f->tooltip = "Image width in pixels (used for coordinate normalization)";
+        }
     }
 };
 
@@ -270,6 +280,12 @@ struct ParameterUIHints<CSVSingleFileLineLoaderOptions> {
         }
         if (auto * f = schema.field("header_identifier")) {
             f->tooltip = "Expected name of the frame column in the header row (default Frame)";
+        }
+        if (auto * f = schema.field("height")) {
+            f->tooltip = "Image height in pixels (used for coordinate normalization)";
+        }
+        if (auto * f = schema.field("width")) {
+            f->tooltip = "Image width in pixels (used for coordinate normalization)";
         }
     }
 };

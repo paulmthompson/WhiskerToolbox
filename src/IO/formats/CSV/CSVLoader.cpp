@@ -206,6 +206,12 @@ LoadResult CSVLoader::loadLineDataCSV(std::string const & filepath,
             if (config.contains("has_header")) {
                 opts.has_header = config["has_header"];
             }
+            if (config.contains("height")) {
+                opts.height = config["height"].get<int>();
+            }
+            if (config.contains("width")) {
+                opts.width = config["width"].get<int>();
+            }
 
             line_map = ::load(opts);
         } else {
@@ -225,6 +231,12 @@ LoadResult CSVLoader::loadLineDataCSV(std::string const & filepath,
             if (config.contains("header_identifier")) {
                 opts.header_identifier = config["header_identifier"];
             }
+            if (config.contains("height")) {
+                opts.height = config["height"].get<int>();
+            }
+            if (config.contains("width")) {
+                opts.width = config["width"].get<int>();
+            }
 
             line_map = ::load(opts);
         }
@@ -233,7 +245,12 @@ LoadResult CSVLoader::loadLineDataCSV(std::string const & filepath,
         auto line_data = std::make_shared<LineData>(line_map);
 
         // Apply image size if specified in config
-        if (config.contains("image_width") && config.contains("image_height")) {
+        // Check new-style height/width fields first, fall back to legacy image_width/image_height
+        if (config.contains("height") && config.contains("width")) {
+            int const width = config["width"];
+            int const height = config["height"];
+            line_data->setImageSize(ImageSize{width, height});
+        } else if (config.contains("image_width") && config.contains("image_height")) {
             int const width = config["image_width"];
             int const height = config["image_height"];
             line_data->setImageSize(ImageSize{width, height});
@@ -324,6 +341,15 @@ LoadResult CSVLoader::loadPointDataCSV(std::string const & filepath,
 
         auto point_data = std::make_shared<PointData>(point_map);
 
+        // Apply image size if specified in loader options
+        if (opts.height.has_value() && opts.width.has_value()) {
+            point_data->setImageSize(ImageSize{opts.width.value().value(), opts.height.value().value()});
+        } else if (config.contains("image_width") && config.contains("image_height")) {
+            int const width = config["image_width"];
+            int const height = config["image_height"];
+            point_data->setImageSize(ImageSize{width, height});
+        }
+
         std::cout << "CSVLoader: Loaded " << point_map.size()
                   << " point frames from " << filepath << std::endl;
 
@@ -366,6 +392,11 @@ LoadResult CSVLoader::loadPointDataDLC(std::string const & filepath,
                 return LoadResult("Bodypart '" + bodypart + "' not found in DLC file");
             }
             auto point_data = std::make_shared<PointData>(it->second);
+            if (opts.height.has_value() && opts.width.has_value()) {
+                point_data->setImageSize(ImageSize{opts.width.value().value(), opts.height.value().value()});
+            } else if (config.contains("image_width") && config.contains("image_height")) {
+                point_data->setImageSize(ImageSize{config["image_width"].get<int>(), config["image_height"].get<int>()});
+            }
             std::cout << "CSVLoader: Loaded DLC bodypart '" << bodypart
                       << "' with " << it->second.size() << " frames" << std::endl;
             return LoadResult(std::move(point_data));
@@ -374,6 +405,11 @@ LoadResult CSVLoader::loadPointDataDLC(std::string const & filepath,
         // Return first bodypart
         auto const & first = all_bodyparts.begin();
         auto point_data = std::make_shared<PointData>(first->second);
+        if (opts.height.has_value() && opts.width.has_value()) {
+            point_data->setImageSize(ImageSize{opts.width.value().value(), opts.height.value().value()});
+        } else if (config.contains("image_width") && config.contains("image_height")) {
+            point_data->setImageSize(ImageSize{config["image_width"].get<int>(), config["image_height"].get<int>()});
+        }
         std::cout << "CSVLoader: Loaded first DLC bodypart '" << first->first
                   << "' with " << first->second.size() << " frames" << std::endl;
         return LoadResult(std::move(point_data));
@@ -841,6 +877,12 @@ LoadResult CSVLoader::loadMaskDataCSV(std::string const & filepath,
         if (config.contains("header_identifier")) {
             opts.header_identifier = config["header_identifier"].get<std::string>();
         }
+        if (config.contains("height")) {
+            opts.height = config["height"].get<int>();
+        }
+        if (config.contains("width")) {
+            opts.width = config["width"].get<int>();
+        }
 
         auto mask_map = ::load(opts);
 
@@ -852,7 +894,12 @@ LoadResult CSVLoader::loadMaskDataCSV(std::string const & filepath,
         }
 
         // Apply image size if specified in config
-        if (config.contains("image_width") && config.contains("image_height")) {
+        // Check new-style height/width fields first, fall back to legacy image_width/image_height
+        if (config.contains("height") && config.contains("width")) {
+            int const width = config["width"];
+            int const height = config["height"];
+            mask_data->setImageSize(ImageSize{width, height});
+        } else if (config.contains("image_width") && config.contains("image_height")) {
             int const width = config["image_width"];
             int const height = config["image_height"];
             mask_data->setImageSize(ImageSize{width, height});

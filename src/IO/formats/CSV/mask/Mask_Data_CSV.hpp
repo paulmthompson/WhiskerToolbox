@@ -48,10 +48,12 @@ class MaskData;
 struct CSVMaskRLELoaderOptions {
     std::string filepath;///< Path to the CSV file (required)
 
-    std::optional<std::string> delimiter;        ///< Column delimiter (default: ",")
-    std::optional<std::string> rle_delimiter;    ///< Delimiter within RLE data (default: ",")
-    std::optional<bool> has_header;              ///< Whether file has a header row (default: true)
-    std::optional<std::string> header_identifier;///< String to identify header row (default: "Frame")
+    std::optional<std::string> delimiter;                      ///< Column delimiter (default: ",")
+    std::optional<std::string> rle_delimiter;                  ///< Delimiter within RLE data (default: ",")
+    std::optional<bool> has_header;                            ///< Whether file has a header row (default: true)
+    std::optional<std::string> header_identifier;              ///< String to identify header row (default: "Frame")
+    std::optional<rfl::Validator<int, rfl::Minimum<1>>> height;///< Image height in pixels
+    std::optional<rfl::Validator<int, rfl::Minimum<1>>> width; ///< Image width in pixels
 
     // Helper methods to get values with defaults
     [[nodiscard]] std::string getDelimiter() const { return delimiter.value_or(","); }
@@ -134,6 +136,12 @@ struct ParameterUIHints<CSVMaskRLELoaderOptions> {
         }
         if (auto * f = schema.field("header_identifier")) {
             f->tooltip = "Expected name of the frame column in the header row (default Frame)";
+        }
+        if (auto * f = schema.field("height")) {
+            f->tooltip = "Image height in pixels (used for coordinate normalization)";
+        }
+        if (auto * f = schema.field("width")) {
+            f->tooltip = "Image width in pixels (used for coordinate normalization)";
         }
     }
 };

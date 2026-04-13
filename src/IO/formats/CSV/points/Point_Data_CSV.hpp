@@ -46,6 +46,8 @@ struct CSVPointLoaderOptions {
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> y_column;
     std::optional<std::string> column_delim;
     std::optional<NaNHandling> nan_handling;
+    std::optional<rfl::Validator<int, rfl::Minimum<1>>> height;
+    std::optional<rfl::Validator<int, rfl::Minimum<1>>> width;
 
     // Helper methods to get values with defaults
     int getFrameColumn() const { return frame_column.has_value() ? frame_column.value().value() : 0; }
@@ -83,6 +85,12 @@ struct ParameterUIHints<CSVPointLoaderOptions> {
         }
         if (auto * f = schema.field("nan_handling")) {
             f->tooltip = "Whether to skip rows with NaN coordinates (Skip) or preserve them (Include)";
+        }
+        if (auto * f = schema.field("height")) {
+            f->tooltip = "Image height in pixels (used for coordinate normalization)";
+        }
+        if (auto * f = schema.field("width")) {
+            f->tooltip = "Image width in pixels (used for coordinate normalization)";
         }
     }
 };
@@ -181,6 +189,8 @@ struct DLCPointLoaderOptions {
 
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> frame_column;
     std::optional<rfl::Validator<float, rfl::Minimum<0.0f>>> likelihood_threshold;
+    std::optional<rfl::Validator<int, rfl::Minimum<1>>> height;
+    std::optional<rfl::Validator<int, rfl::Minimum<1>>> width;
 
     // Helper methods to get values with defaults
     int getFrameColumn() const { return frame_column.has_value() ? frame_column.value().value() : 0; }
@@ -206,6 +216,12 @@ struct ParameterUIHints<DLCPointLoaderOptions> {
         if (auto * f = schema.field("likelihood_threshold")) {
             f->tooltip =
                     "Minimum likelihood to keep a sample when likelihood columns exist; bodyparts without likelihood are still loaded";
+        }
+        if (auto * f = schema.field("height")) {
+            f->tooltip = "Image height in pixels (used for coordinate normalization)";
+        }
+        if (auto * f = schema.field("width")) {
+            f->tooltip = "Image width in pixels (used for coordinate normalization)";
         }
     }
 };

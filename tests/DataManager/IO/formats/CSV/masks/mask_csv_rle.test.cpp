@@ -230,3 +230,71 @@ TEST_CASE_METHOD(MaskCSVRLETestFixture,
     auto const & first_mask = *masks_at_0.begin();
     CHECK(first_mask.size() == 6);
 }
+
+// ============================================================================
+// Image Size via height/width fields
+// ============================================================================
+
+TEST_CASE_METHOD(MaskCSVRLETestFixture,
+                 "CSVLoader loads Mask with height/width image size",
+                 "[MaskCSV][CSVLoader][ImageSize]") {
+    CSVLoader loader;
+
+    // Save first
+    nlohmann::json save_config;
+    auto save_result = loader.save(csv_filepath.string(), DM_DataType::Mask, save_config,
+                                   original_mask_data.get());
+    REQUIRE(save_result.success);
+
+    SECTION("New-style height/width fields set image size") {
+        nlohmann::json load_config;
+        load_config["height"] = 480;
+        load_config["width"] = 640;
+
+        auto load_result = loader.load(csv_filepath.string(), DM_DataType::Mask, load_config);
+        REQUIRE(load_result.success);
+
+        auto loaded_mask = std::get<std::shared_ptr<MaskData>>(load_result.data);
+        CHECK(loaded_mask->getImageSize().width == 640);
+        CHECK(loaded_mask->getImageSize().height == 480);
+    }
+
+    SECTION("Legacy image_width/image_height still work") {
+        nlohmann::json load_config;
+        load_config["image_width"] = 800;
+        load_config["image_height"] = 600;
+
+        auto load_result = loader.load(csv_filepath.string(), DM_DataType::Mask, load_config);
+        REQUIRE(load_result.success);
+
+        auto loaded_mask = std::get<std::shared_ptr<MaskData>>(load_result.data);
+        CHECK(loaded_mask->getImageSize().width == 800);
+        CHECK(loaded_mask->getImageSize().height == 600);
+    }
+
+    SECTION("height/width take priority over legacy fields") {
+        nlohmann::json load_config;
+        load_config["height"] = 480;
+        load_config["width"] = 640;
+        load_config["image_width"] = 800;
+        load_config["image_height"] = 600;
+
+        auto load_result = loader.load(csv_filepath.string(), DM_DataType::Mask, load_config);
+        REQUIRE(load_result.success);
+
+        auto loaded_mask = std::get<std::shared_ptr<MaskData>>(load_result.data);
+        CHECK(loaded_mask->getImageSize().width == 640);
+        CHECK(loaded_mask->getImageSize().height == 480);
+    }
+
+    SECTION("No image size fields leaves default") {
+        nlohmann::json load_config;
+
+        auto load_result = loader.load(csv_filepath.string(), DM_DataType::Mask, load_config);
+        REQUIRE(load_result.success);
+
+        auto loaded_mask = std::get<std::shared_ptr<MaskData>>(load_result.data);
+        CHECK(loaded_mask->getImageSize().width == -1);
+        CHECK(loaded_mask->getImageSize().height == -1);
+    }
+}

@@ -751,3 +751,100 @@ TEST_CASE("PointData CSV Integration - Single Bodypart DLC",
         verifyPointsEqual(dlc_data.at("point"), *point_data);
     }
 }
+
+// ============================================================================
+// Image Size via height/width fields
+// ============================================================================
+
+TEST_CASE("PointData CSV Integration - height/width set image size",
+          "[points][csv][integration][ImageSize]") {
+    TempCSVPointTestDirectory temp_dir;
+
+    auto original = point_csv_scenarios::simple_points();
+    auto csv_path = temp_dir.getFilePath("points_imgsize.csv");
+    REQUIRE(point_csv_scenarios::writeCSVSimple(original, csv_path.string()));
+
+    SECTION("New-style height/width fields") {
+        json config = json::array({{{"data_type", "points"},
+                                    {"name", "test_imgsize"},
+                                    {"filepath", csv_path.string()},
+                                    {"format", "csv"},
+                                    {"frame_column", 0},
+                                    {"x_column", 1},
+                                    {"y_column", 2},
+                                    {"column_delim", ","},
+                                    {"height", 480},
+                                    {"width", 640}}});
+
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+
+        auto loaded = dm.getData<PointData>("test_imgsize");
+        REQUIRE(loaded != nullptr);
+        CHECK(loaded->getImageSize().width == 640);
+        CHECK(loaded->getImageSize().height == 480);
+    }
+
+    SECTION("Legacy image_width/image_height still work for points") {
+        json config = json::array({{{"data_type", "points"},
+                                    {"name", "test_legacy"},
+                                    {"filepath", csv_path.string()},
+                                    {"format", "csv"},
+                                    {"frame_column", 0},
+                                    {"x_column", 1},
+                                    {"y_column", 2},
+                                    {"column_delim", ","},
+                                    {"image_width", 800},
+                                    {"image_height", 600}}});
+
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+
+        auto loaded = dm.getData<PointData>("test_legacy");
+        REQUIRE(loaded != nullptr);
+        CHECK(loaded->getImageSize().width == 800);
+        CHECK(loaded->getImageSize().height == 600);
+    }
+
+    SECTION("height/width take priority over legacy fields") {
+        json config = json::array({{{"data_type", "points"},
+                                    {"name", "test_priority"},
+                                    {"filepath", csv_path.string()},
+                                    {"format", "csv"},
+                                    {"frame_column", 0},
+                                    {"x_column", 1},
+                                    {"y_column", 2},
+                                    {"column_delim", ","},
+                                    {"height", 480},
+                                    {"width", 640},
+                                    {"image_width", 800},
+                                    {"image_height", 600}}});
+
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+
+        auto loaded = dm.getData<PointData>("test_priority");
+        REQUIRE(loaded != nullptr);
+        CHECK(loaded->getImageSize().width == 640);
+        CHECK(loaded->getImageSize().height == 480);
+    }
+
+    SECTION("No image size fields leaves default") {
+        json config = json::array({{{"data_type", "points"},
+                                    {"name", "test_default"},
+                                    {"filepath", csv_path.string()},
+                                    {"format", "csv"},
+                                    {"frame_column", 0},
+                                    {"x_column", 1},
+                                    {"y_column", 2},
+                                    {"column_delim", ","}}});
+
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+
+        auto loaded = dm.getData<PointData>("test_default");
+        REQUIRE(loaded != nullptr);
+        CHECK(loaded->getImageSize().width == -1);
+        CHECK(loaded->getImageSize().height == -1);
+    }
+}
