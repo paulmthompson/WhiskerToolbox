@@ -1,7 +1,9 @@
 #include "CoreGeometry/angle.hpp"
 
+#include "CoreGeometry/line_geometry.hpp"
 #include "CoreGeometry/lines.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 
@@ -25,32 +27,37 @@ float normalize_angle(float raw_angle, float reference_x, float reference_y) {
 }
 
 
-// Calculate angle using direct point comparison
+// Calculate angle using direct point comparison with interpolated position
 float calculate_direct_angle(Line2D const & line, float position, float reference_x, float reference_y) {
     if (line.size() < 2) {
         return 0.0f;
     }
 
-    // Calculate the index of the position point, ensuring we never select the base point
-    // when computing the direction from the first point. This avoids a zero-length vector
-    // for 2-point lines at position 1.0.
-    auto idx = static_cast<size_t>(position * static_cast<float>((line.size() - 1)));
-    if (idx == 0) {
-        idx = 1; // always pick at least the second point
-    } else if (idx >= line.size()) {
-        idx = line.size() - 1; // clamp to last valid index
-    } else if (idx >= line.size() - 1) {
-        idx = line.size() - 1; // for end positions, use the last point
+    // Clamp position to valid range
+    position = std::clamp(position, 0.0f, 1.0f);
+
+    // Interpolate the target point along the line's cumulative arc length.
+    // This gives a smooth, evenly-parameterized result regardless of vertex spacing.
+    auto interpolated = point_at_fractional_position(line, position);
+    if (!interpolated.has_value()) {
+        return 0.0f;
     }
 
     Point2D<float> const base = line[0];
-    Point2D<float> const pos = line[idx];
+    Point2D<float> const pos = interpolated.value();
+
+    // Guard against zero-length vector (position very close to start)
+    float const dx = pos.x - base.x;
+    float const dy = pos.y - base.y;
+    if (dx == 0.0f && dy == 0.0f) {
+        return 0.0f;
+    }
 
     // Calculate angle in radians (atan2 returns value in range [-π, π])
-    float raw_angle = std::atan2(pos.y - base.y, pos.x - base.x);
+    float const raw_angle = std::atan2(dy, dx);
 
     // Convert to degrees
-    float angle_degrees = raw_angle * 180.0f / static_cast<float>(std::numbers::pi);
+    float const angle_degrees = raw_angle * 180.0f / static_cast<float>(std::numbers::pi);
 
     // Normalize with respect to the reference vector
     return normalize_angle(angle_degrees, reference_x, reference_y);
