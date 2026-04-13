@@ -15,16 +15,17 @@ IntervalViewer_Widget::IntervalViewer_Widget(std::shared_ptr<DataManager> data_m
     : QWidget(parent),
       ui(new Ui::IntervalViewer_Widget),
       _data_manager{std::move(data_manager)},
-      _opengl_widget{opengl_widget}
-{
+      _opengl_widget{opengl_widget} {
     ui->setupUi(this);
-    
+
     // Set the color display button to be flat and show just the color
     ui->color_display_button->setFlat(false);
-    ui->color_display_button->setEnabled(false); // Make it non-clickable, just for display
-    
+    ui->color_display_button->setEnabled(false);// Make it non-clickable, just for display
+
     connect(ui->color_button, &QPushButton::clicked,
             this, &IntervalViewer_Widget::_openColorDialog);
+    connect(ui->alpha_slider, &QSlider::valueChanged,
+            this, &IntervalViewer_Widget::_setIntervalAlpha);
 }
 
 IntervalViewer_Widget::~IntervalViewer_Widget() {
@@ -40,10 +41,10 @@ void IntervalViewer_Widget::showEvent(QShowEvent * event) {
 
 void IntervalViewer_Widget::hideEvent(QHideEvent * event) {
     std::cout << "IntervalViewer_Widget: Hide Event" << std::endl;
-    
+
     // Clear all selected entities when widget is hidden
     _opengl_widget->clearEntitySelection();
-    
+
     QWidget::hideEvent(event);
 }
 
@@ -52,21 +53,26 @@ void IntervalViewer_Widget::setActiveKey(std::string const & key) {
     if (!_active_key.empty()) {
         _opengl_widget->clearEntitySelection();
     }
-    
+
     _active_key = key;
     ui->name_label->setText(QString::fromStdString(key));
     _selection_enabled = !key.empty();
-    
+
     // Set the color to the current color from state if available
     if (!key.empty()) {
         auto const * opts = _opengl_widget->state()->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
         if (opts) {
             _updateColorDisplay(QString::fromStdString(opts->hex_color()));
+
+            // Set alpha from state
+            auto const alpha_int = static_cast<int>(opts->get_alpha() * 100.0f);
+            ui->alpha_slider->setValue(alpha_int);
+            ui->alpha_value_label->setText(QString::number(static_cast<double>(opts->get_alpha()), 'f', 2));
         } else {
-            _updateColorDisplay("#00FF00"); // Default green
+            _updateColorDisplay("#00FF00");// Default green
         }
     }
-    
+
     std::cout << "IntervalViewer_Widget: Active key set to " << key << std::endl;
 }
 
@@ -78,7 +84,7 @@ void IntervalViewer_Widget::_openColorDialog() {
     if (_active_key.empty()) {
         return;
     }
-    
+
     // Get current color
     QColor currentColor;
     auto const * opts = _opengl_widget->state()->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(_active_key));
@@ -87,12 +93,12 @@ void IntervalViewer_Widget::_openColorDialog() {
     } else {
         currentColor = QColor("#00FF00");
     }
-    
+
     // Open color dialog
-    QColor color = QColorDialog::getColor(currentColor, this, "Choose Color");
-    
+    QColor const color = QColorDialog::getColor(currentColor, this, "Choose Color");
+
     if (color.isValid()) {
-        QString hex_color = color.name();
+        QString const hex_color = color.name();
         _updateColorDisplay(hex_color);
         _setIntervalColor(hex_color);
     }
@@ -101,11 +107,10 @@ void IntervalViewer_Widget::_openColorDialog() {
 void IntervalViewer_Widget::_updateColorDisplay(QString const & hex_color) {
     // Update the color display button with the new color
     ui->color_display_button->setStyleSheet(
-        QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color)
-    );
+            QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color));
 }
 
-void IntervalViewer_Widget::_setIntervalColor(const QString& hex_color) {
+void IntervalViewer_Widget::_setIntervalColor(QString const & hex_color) {
     if (!_active_key.empty()) {
         auto * opts = _opengl_widget->state()->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(QString::fromStdString(_active_key));
         if (opts) {
@@ -120,6 +125,7 @@ void IntervalViewer_Widget::_setIntervalColor(const QString& hex_color) {
 void IntervalViewer_Widget::_setIntervalAlpha(int alpha) {
     if (!_active_key.empty()) {
         float const alpha_float = static_cast<float>(alpha) / 100.0f;
+        ui->alpha_value_label->setText(QString::number(static_cast<double>(alpha_float), 'f', 2));
         auto * opts = _opengl_widget->state()->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(QString::fromStdString(_active_key));
         if (opts) {
             opts->alpha() = alpha_float;
@@ -128,4 +134,4 @@ void IntervalViewer_Widget::_setIntervalAlpha(int alpha) {
             _opengl_widget->update();
         }
     }
-} 
+}

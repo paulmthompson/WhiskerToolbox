@@ -26,6 +26,8 @@ AnalogViewer_Widget::AnalogViewer_Widget(std::shared_ptr<DataManager> data_manag
 
     connect(ui->color_button, &QPushButton::clicked,
             this, &AnalogViewer_Widget::_openColorDialog);
+    connect(ui->alpha_slider, &QSlider::valueChanged,
+            this, &AnalogViewer_Widget::_setAnalogAlpha);
     connect(ui->scale_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AnalogViewer_Widget::_setAnalogScaleFactor);
     connect(ui->line_thickness_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
@@ -74,6 +76,11 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
         auto const * opts = _opengl_widget->state()->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
         if (opts) {
             _updateColorDisplay(QString::fromStdString(opts->hex_color()));
+
+            // Set alpha from state
+            auto const alpha_int = static_cast<int>(opts->get_alpha() * 100.0f);
+            ui->alpha_slider->setValue(alpha_int);
+            ui->alpha_value_label->setText(QString::number(static_cast<double>(opts->get_alpha()), 'f', 2));
 
             // Set scale factor from state
             ui->scale_spinbox->setValue(static_cast<double>(opts->user_scale_factor));
@@ -143,6 +150,7 @@ void AnalogViewer_Widget::_setAnalogColor(QString const & hex_color) {
 void AnalogViewer_Widget::_setAnalogAlpha(int alpha) {
     if (!_active_key.empty()) {
         float const alpha_float = static_cast<float>(alpha) / 100.0f;
+        ui->alpha_value_label->setText(QString::number(static_cast<double>(alpha_float), 'f', 2));
         auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(_active_key));
         if (opts) {
             opts->alpha() = alpha_float;

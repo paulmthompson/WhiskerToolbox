@@ -113,6 +113,49 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="alpha_layout">
+     <item>
+      <widget class="QLabel" name="alpha_label">
+       <property name="text">
+        <string>Alpha:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="alpha_slider">
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="value">
+        <number>100</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="alpha_value_label">
+       <property name="minimumSize">
+        <size>
+         <width>30</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>1.00</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="scale_layout">
      <item>
       <widget class="QLabel" name="scale_label">

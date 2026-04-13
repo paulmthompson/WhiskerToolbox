@@ -18,10 +18,12 @@ EventViewer_Widget::EventViewer_Widget(std::shared_ptr<DataManager> data_manager
 
     // Set the color display button to be flat and show just the color
     ui->color_display_button->setFlat(false);
-    ui->color_display_button->setEnabled(false); // Make it non-clickable, just for display
+    ui->color_display_button->setEnabled(false);// Make it non-clickable, just for display
 
     connect(ui->color_button, &QPushButton::clicked,
             this, &EventViewer_Widget::_openColorDialog);
+    connect(ui->alpha_slider, &QSlider::valueChanged,
+            this, &EventViewer_Widget::_setEventAlpha);
 
     // Connect display option controls
     connect(ui->mode_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -46,15 +48,20 @@ void EventViewer_Widget::setActiveKey(std::string const & key) {
         if (opts) {
             _updateColorDisplay(QString::fromStdString(opts->hex_color()));
 
+            // Set alpha from state
+            auto const alpha_int = static_cast<int>(opts->get_alpha() * 100.0f);
+            ui->alpha_slider->setValue(alpha_int);
+            ui->alpha_value_label->setText(QString::number(static_cast<double>(opts->get_alpha()), 'f', 2));
+
             // Set display mode controls
             ui->mode_combo->setCurrentIndex(static_cast<int>(opts->plotting_mode));
             ui->spacing_spinbox->setValue(static_cast<double>(opts->vertical_spacing));
             ui->height_spinbox->setValue(static_cast<double>(opts->event_height));
         } else {
-            _updateColorDisplay("#FF0000");// Default red
-            ui->mode_combo->setCurrentIndex(0);   // Default to Stacked
-            ui->spacing_spinbox->setValue(0.1);   // Default spacing
-            ui->height_spinbox->setValue(0.05);   // Default height
+            _updateColorDisplay("#FF0000");    // Default red
+            ui->mode_combo->setCurrentIndex(0);// Default to Stacked
+            ui->spacing_spinbox->setValue(0.1);// Default spacing
+            ui->height_spinbox->setValue(0.05);// Default height
         }
     }
 
@@ -65,7 +72,7 @@ void EventViewer_Widget::_openColorDialog() {
     if (_active_key.empty()) {
         return;
     }
-    
+
     // Get current color
     QColor currentColor;
     auto const * opts = _opengl_widget->state()->seriesOptions().get<DigitalEventSeriesOptionsData>(QString::fromStdString(_active_key));
@@ -74,12 +81,12 @@ void EventViewer_Widget::_openColorDialog() {
     } else {
         currentColor = QColor("#FF0000");
     }
-    
+
     // Open color dialog
-    QColor color = QColorDialog::getColor(currentColor, this, "Choose Color");
-    
+    QColor const color = QColorDialog::getColor(currentColor, this, "Choose Color");
+
     if (color.isValid()) {
-        QString hex_color = color.name();
+        QString const hex_color = color.name();
         _updateColorDisplay(hex_color);
         _setEventColor(hex_color);
     }
@@ -88,8 +95,7 @@ void EventViewer_Widget::_openColorDialog() {
 void EventViewer_Widget::_updateColorDisplay(QString const & hex_color) {
     // Update the color display button with the new color
     ui->color_display_button->setStyleSheet(
-        QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color)
-    );
+            QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color));
 }
 
 void EventViewer_Widget::_setEventColor(QString const & hex_color) {
@@ -107,6 +113,7 @@ void EventViewer_Widget::_setEventColor(QString const & hex_color) {
 void EventViewer_Widget::_setEventAlpha(int alpha) {
     if (!_active_key.empty()) {
         float const alpha_float = static_cast<float>(alpha) / 100.0f;
+        ui->alpha_value_label->setText(QString::number(static_cast<double>(alpha_float), 'f', 2));
         auto * opts = _opengl_widget->state()->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(QString::fromStdString(_active_key));
         if (opts) {
             opts->alpha() = alpha_float;
