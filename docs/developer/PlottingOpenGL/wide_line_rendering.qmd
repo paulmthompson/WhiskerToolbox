@@ -1,0 +1,34 @@
+---
+title: "Wide Line Rendering"
+---
+
+## Problem
+
+`glLineWidth()` is clamped to 1.0 on many OpenGL 3.3+ Core profile drivers, making the line thickness spinbox in the DataViewer have no visible effect for analog time series.
+
+## Solution
+
+Both `PolyLineRenderer` and `StreamingPolyLineRenderer` use a geometry shader (`wide_line.geom`) to expand each line segment into a screen-space quad (triangle strip). The geometry shader receives `GL_LINE_STRIP` primitives and emits 4-vertex triangle strips per segment.
+
+### Shader Pipeline
+
+- **`wide_line.vert`** — Transforms `a_position` (vec2) by `u_mvp_matrix` to clip space.
+- **`wide_line.geom`** — Converts each line segment to a quad. Width is specified in pixels via `u_line_width` and converted to NDC using `u_viewport_size`.
+- **`wide_line.frag`** — Outputs `u_color` (vec4 uniform).
+
+### Uniforms
+
+| Uniform | Type | Description |
+|---|---|---|
+| `u_mvp_matrix` | mat4 | Model-View-Projection matrix |
+| `u_color` | vec4 | Line color (RGBA) |
+| `u_line_width` | float | Line width in pixels |
+| `u_viewport_size` | vec2 | Viewport dimensions in pixels |
+
+### Viewport Size
+
+The renderers query `GL_VIEWPORT` via `glGetIntegerv` at render time to pass the current viewport dimensions to the geometry shader. This ensures correct pixel-to-NDC conversion regardless of widget resize.
+
+### Embedded Fallback
+
+Both renderers include embedded shader source strings (`PolyLineShaders::VERTEX_SHADER`, `GEOMETRY_SHADER`, `FRAGMENT_SHADER`) as fallback when shader files cannot be loaded from disk.

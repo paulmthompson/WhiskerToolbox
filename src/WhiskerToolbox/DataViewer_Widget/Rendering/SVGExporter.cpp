@@ -198,7 +198,7 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
     batch_params.start_time = TimeFrameIndex(start_time);
     batch_params.end_time = TimeFrameIndex(end_time);
     batch_params.color = color;
-    batch_params.thickness = static_cast<float>(options.get_line_thickness());
+    batch_params.thickness = options.get_line_thickness();
     batch_params.detect_gaps = (options.gap_handling == AnalogGapHandlingMode::DetectGaps);
     batch_params.gap_threshold = options.gap_threshold;
 

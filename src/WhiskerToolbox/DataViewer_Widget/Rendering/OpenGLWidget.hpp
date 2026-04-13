@@ -276,7 +276,7 @@ public:
      * 
      * @param master_time_frame Shared pointer to the master time frame
      */
-    void setMasterTimeFrame(std::shared_ptr<TimeFrame> master_time_frame);
+    void setMasterTimeFrame(const std::shared_ptr<TimeFrame>& master_time_frame);
 
     /**
      * @brief Load spike sorter configuration for a group of analog series

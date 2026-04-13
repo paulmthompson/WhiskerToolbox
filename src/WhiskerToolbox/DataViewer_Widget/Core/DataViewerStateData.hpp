@@ -95,12 +95,12 @@ struct AnalogSeriesOptionsData {
     // Convenience accessors for style fields
     [[nodiscard]] std::string const & hex_color() const { return style.get().hex_color; }
     [[nodiscard]] float get_alpha() const { return style.get().alpha; }
-    [[nodiscard]] int get_line_thickness() const { return style.get().line_thickness; }
+    [[nodiscard]] float get_line_thickness() const { return style.get().line_thickness; }
     [[nodiscard]] bool get_is_visible() const { return style.get().is_visible; }
 
     std::string & hex_color() { return style.get().hex_color; }
     float & alpha() { return style.get().alpha; }
-    int & line_thickness() { return style.get().line_thickness; }
+    float & line_thickness() { return style.get().line_thickness; }
     bool & is_visible() { return style.get().is_visible; }
 };
 
@@ -129,12 +129,12 @@ struct DigitalEventSeriesOptionsData {
     // Convenience accessors for style fields
     [[nodiscard]] std::string const & hex_color() const { return style.get().hex_color; }
     [[nodiscard]] float get_alpha() const { return style.get().alpha; }
-    [[nodiscard]] int get_line_thickness() const { return style.get().line_thickness; }
+    [[nodiscard]] float get_line_thickness() const { return style.get().line_thickness; }
     [[nodiscard]] bool get_is_visible() const { return style.get().is_visible; }
 
     std::string & hex_color() { return style.get().hex_color; }
     float & alpha() { return style.get().alpha; }
-    int & line_thickness() { return style.get().line_thickness; }
+    float & line_thickness() { return style.get().line_thickness; }
     bool & is_visible() { return style.get().is_visible; }
 };
 
@@ -152,12 +152,12 @@ struct DigitalIntervalSeriesOptionsData {
     // Convenience accessors for style fields
     [[nodiscard]] std::string const & hex_color() const { return style.get().hex_color; }
     [[nodiscard]] float get_alpha() const { return style.get().alpha; }
-    [[nodiscard]] int get_line_thickness() const { return style.get().line_thickness; }
+    [[nodiscard]] float get_line_thickness() const { return style.get().line_thickness; }
     [[nodiscard]] bool get_is_visible() const { return style.get().is_visible; }
 
     std::string & hex_color() { return style.get().hex_color; }
     float & alpha() { return style.get().alpha; }
-    int & line_thickness() { return style.get().line_thickness; }
+    float & line_thickness() { return style.get().line_thickness; }
     bool & is_visible() { return style.get().is_visible; }
 };
 

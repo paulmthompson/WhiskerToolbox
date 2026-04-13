@@ -147,6 +147,9 @@ void Feature_Tree_Widget::_itemSelected(QTreeWidgetItem * item, int column) {
     if (_features.find(key) != _features.end()) {
         if (_features[key].isGroup || _features[key].isDataTypeGroup) {
             selectedFeatures = _features[key].children;
+            if (_features[key].isGroup) {
+                emit groupSelected(key, selectedFeatures);
+            }
         } else {
             selectedFeatures = {key};
             emit featureSelected(key);// Emit single feature selection

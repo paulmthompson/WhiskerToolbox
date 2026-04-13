@@ -29,7 +29,7 @@ private slots:
     void _setAnalogColor(QString const & hex_color);
     void _setAnalogAlpha(int alpha);
     void _setAnalogScaleFactor(double scale_factor);
-    void _setLineThickness(int thickness);
+    void _setLineThickness(double thickness);
     void _setGapHandlingMode(int mode_index);
     void _setGapThreshold(int threshold);
 

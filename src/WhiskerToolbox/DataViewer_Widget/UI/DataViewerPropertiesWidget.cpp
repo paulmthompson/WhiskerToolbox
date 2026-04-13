@@ -6,6 +6,7 @@
 #include "Feature_Tree_Model.hpp"
 #include "Rendering/OpenGLWidget.hpp"
 #include "SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp"
+#include "SubWidgets/AnalogTimeSeries/GroupAnalogViewer_Widget.hpp"
 #include "SubWidgets/DigitalEvent/EventViewer_Widget.hpp"
 #include "SubWidgets/DigitalInterval/IntervalViewer_Widget.hpp"
 
@@ -24,9 +25,9 @@
 #include <iostream>
 
 DataViewerPropertiesWidget::DataViewerPropertiesWidget(std::shared_ptr<DataViewerState> state,
-                                                         std::shared_ptr<DataManager> data_manager,
-                                                         OpenGLWidget * opengl_widget,
-                                                         QWidget * parent)
+                                                       std::shared_ptr<DataManager> data_manager,
+                                                       OpenGLWidget * opengl_widget,
+                                                       QWidget * parent)
     : QWidget(parent),
       ui(new Ui::DataViewerPropertiesWidget),
       _state(std::move(state)),
@@ -39,7 +40,7 @@ DataViewerPropertiesWidget::DataViewerPropertiesWidget(std::shared_ptr<DataViewe
     _feature_tree_model->setDataManager(_data_manager);
 
     _setupFeatureTree();
-    
+
     if (_opengl_widget) {
         _setupStackedWidget();
     }
@@ -58,7 +59,7 @@ void DataViewerPropertiesWidget::setOpenGLWidget(OpenGLWidget * opengl_widget) {
         return;
     }
     _opengl_widget = opengl_widget;
-    
+
     if (_opengl_widget) {
         _setupStackedWidget();
     }
@@ -80,9 +81,9 @@ void DataViewerPropertiesWidget::_initializeFromState() {
     if (!_state) {
         return;
     }
-    
+
     _updating_from_state = true;
-    
+
     // Theme
     int theme_index = 0;
     switch (_state->theme()) {
@@ -97,18 +98,18 @@ void DataViewerPropertiesWidget::_initializeFromState() {
             break;
     }
     ui->theme_combo->setCurrentIndex(theme_index);
-    
+
     // Global zoom
     ui->global_zoom->setValue(static_cast<double>(_state->globalZoom()));
-    
+
     // X axis samples (time width from view state)
     auto const & view = _state->viewState();
     ui->x_axis_samples->setValue(static_cast<int>(view.getTimeWidth()));
-    
+
     // Grid settings
     ui->grid_lines_enabled->setChecked(_state->gridEnabled());
     ui->grid_spacing->setValue(_state->gridSpacing());
-    
+
     _updating_from_state = false;
 }
 
@@ -116,32 +117,32 @@ void DataViewerPropertiesWidget::_connectUIControls() {
     // Theme combo box
     connect(ui->theme_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &DataViewerPropertiesWidget::_onThemeChanged);
-    
+
     // Global zoom
     connect(ui->global_zoom, &QDoubleSpinBox::valueChanged,
             this, &DataViewerPropertiesWidget::_onGlobalZoomChanged);
-    
+
     // X axis samples
     connect(ui->x_axis_samples, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &DataViewerPropertiesWidget::_onXAxisSamplesChanged);
-    
+
     // Grid controls
     connect(ui->grid_lines_enabled, &QCheckBox::toggled,
             this, &DataViewerPropertiesWidget::_onGridLinesToggled);
     connect(ui->grid_spacing, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &DataViewerPropertiesWidget::_onGridSpacingChanged);
-    
+
     // Auto-arrange button
     connect(ui->auto_arrange_button, &QPushButton::clicked,
             this, &DataViewerPropertiesWidget::autoArrangeRequested);
-    
+
     // Export SVG button
     connect(ui->export_svg_button, &QPushButton::clicked, this, [this]() {
         bool const includeScalebar = ui->svg_scalebar_checkbox->isChecked();
         int const scalebarLength = ui->scalebar_length_spinbox->value();
         emit exportSVGRequested(includeScalebar, scalebarLength);
     });
-    
+
     // Scalebar checkbox enables/disables the length spinbox
     connect(ui->svg_scalebar_checkbox, &QCheckBox::toggled, this, [this](bool checked) {
         ui->scalebar_length_spinbox->setEnabled(checked);
@@ -158,7 +159,7 @@ void DataViewerPropertiesWidget::_connectStateSignals() {
     connect(_state.get(), &DataViewerState::themeChanged, this, [this]() {
         if (_updating_from_state) return;
         _updating_from_state = true;
-        
+
         int theme_index = 0;
         switch (_state->theme()) {
             case DataViewerTheme::Dark:
@@ -172,7 +173,7 @@ void DataViewerPropertiesWidget::_connectStateSignals() {
                 break;
         }
         ui->theme_combo->setCurrentIndex(theme_index);
-        
+
         _updating_from_state = false;
     });
 
@@ -180,10 +181,10 @@ void DataViewerPropertiesWidget::_connectStateSignals() {
     connect(_state.get(), &DataViewerState::gridChanged, this, [this]() {
         if (_updating_from_state) return;
         _updating_from_state = true;
-        
+
         ui->grid_lines_enabled->setChecked(_state->gridEnabled());
         ui->grid_spacing->setValue(_state->gridSpacing());
-        
+
         _updating_from_state = false;
     });
 
@@ -191,18 +192,18 @@ void DataViewerPropertiesWidget::_connectStateSignals() {
     connect(_state.get(), &DataViewerState::viewStateChanged, this, [this]() {
         if (_updating_from_state) return;
         _updating_from_state = true;
-        
+
         ui->global_zoom->setValue(static_cast<double>(_state->globalZoom()));
         auto const & view = _state->viewState();
         ui->x_axis_samples->setValue(static_cast<int>(view.getTimeWidth()));
-        
+
         _updating_from_state = false;
     });
 }
 
 void DataViewerPropertiesWidget::_onThemeChanged(int index) {
     if (_updating_from_state || !_state) return;
-    
+
     DataViewerTheme theme = DataViewerTheme::Dark;
     switch (index) {
         case 0:
@@ -219,31 +220,31 @@ void DataViewerPropertiesWidget::_onThemeChanged(int index) {
             theme = DataViewerTheme::Dark;
             break;
     }
-    
+
     _state->setTheme(theme);
 }
 
 void DataViewerPropertiesWidget::_onGlobalZoomChanged(double value) {
     if (_updating_from_state || !_state) return;
-    
+
     _state->setGlobalZoom(static_cast<float>(value));
 }
 
 void DataViewerPropertiesWidget::_onXAxisSamplesChanged(int value) {
     if (_updating_from_state || !_state) return;
-    
+
     _state->setTimeWidth(value);
 }
 
 void DataViewerPropertiesWidget::_onGridLinesToggled(bool enabled) {
     if (_updating_from_state || !_state) return;
-    
+
     _state->setGridEnabled(enabled);
 }
 
 void DataViewerPropertiesWidget::_onGridSpacingChanged(int value) {
     if (_updating_from_state || !_state) return;
-    
+
     _state->setGridSpacing(value);
 }
 
@@ -285,6 +286,24 @@ void DataViewerPropertiesWidget::_handleColorChanged(std::string const & feature
     emit featureColorChanged(feature_key, hex_color);
 }
 
+void DataViewerPropertiesWidget::_handleGroupSelected(std::string const & group_name, std::vector<std::string> const & children) {
+    if (!_data_manager || children.empty()) {
+        return;
+    }
+
+    int constexpr stacked_widget_group_analog_index = 3;
+
+    auto const type = _data_manager->getType(children.front());
+    if (type == DM_DataType::Analog) {
+        ui->stackedWidget->setCurrentIndex(stacked_widget_group_analog_index);
+        auto * group_widget = dynamic_cast<GroupAnalogViewer_Widget *>(
+                ui->stackedWidget->widget(stacked_widget_group_analog_index));
+        if (group_widget) {
+            group_widget->setActiveKeys(group_name, children);
+        }
+    }
+}
+
 void DataViewerPropertiesWidget::_setupFeatureTree() {
     // Configure Feature_Tree_Widget
     ui->feature_tree_widget->setTypeFilters({DM_DataType::Analog, DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
@@ -295,9 +314,12 @@ void DataViewerPropertiesWidget::_setupFeatureTree() {
         _handleFeatureSelected(QString::fromStdString(feature));
     });
 
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::groupSelected, this,
+            &DataViewerPropertiesWidget::_handleGroupSelected);
+
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeature, this, [this](std::string const & feature) {
         std::cout << "Properties: Adding single feature: " << feature << std::endl;
-        std::string color = _feature_tree_model->getFeatureColor(feature);
+        std::string const color = _feature_tree_model->getFeatureColor(feature);
         emit featureAddRequested(feature, color);
     });
 
@@ -335,7 +357,7 @@ void DataViewerPropertiesWidget::_setupFeatureTree() {
         // Get colors for each feature from the model
         std::vector<std::string> colors;
         colors.reserve(features.size());
-        for (auto const & key : features) {
+        for (auto const & key: features) {
             colors.push_back(_feature_tree_model->getFeatureColor(key));
         }
         emit featuresAddRequested(features, colors);
@@ -347,7 +369,7 @@ void DataViewerPropertiesWidget::_setupFeatureTree() {
     });
 
     // Connect color change signals from the model
-    connect(_feature_tree_model.get(), &Feature_Tree_Model::featureColorChanged, 
+    connect(_feature_tree_model.get(), &Feature_Tree_Model::featureColorChanged,
             this, &DataViewerPropertiesWidget::_handleColorChanged);
 
     // Connect color change signals from the tree widget to the model
@@ -380,10 +402,12 @@ void DataViewerPropertiesWidget::_setupStackedWidget() {
     auto * analog_widget = new AnalogViewer_Widget(_data_manager, _opengl_widget);
     auto * interval_widget = new IntervalViewer_Widget(_data_manager, _opengl_widget);
     auto * event_widget = new EventViewer_Widget(_data_manager, _opengl_widget);
+    auto * group_analog_widget = new GroupAnalogViewer_Widget(_data_manager, _opengl_widget);
 
-    ui->stackedWidget->addWidget(analog_widget);   // Index 0
-    ui->stackedWidget->addWidget(interval_widget); // Index 1
-    ui->stackedWidget->addWidget(event_widget);    // Index 2
+    ui->stackedWidget->addWidget(analog_widget);      // Index 0
+    ui->stackedWidget->addWidget(interval_widget);    // Index 1
+    ui->stackedWidget->addWidget(event_widget);       // Index 2
+    ui->stackedWidget->addWidget(group_analog_widget);// Index 3
 
     // Connect color change signals from sub-widgets
     connect(analog_widget, &AnalogViewer_Widget::colorChanged,
@@ -391,5 +415,7 @@ void DataViewerPropertiesWidget::_setupStackedWidget() {
     connect(interval_widget, &IntervalViewer_Widget::colorChanged,
             this, &DataViewerPropertiesWidget::_handleColorChanged);
     connect(event_widget, &EventViewer_Widget::colorChanged,
+            this, &DataViewerPropertiesWidget::_handleColorChanged);
+    connect(group_analog_widget, &GroupAnalogViewer_Widget::colorChanged,
             this, &DataViewerPropertiesWidget::_handleColorChanged);
 }

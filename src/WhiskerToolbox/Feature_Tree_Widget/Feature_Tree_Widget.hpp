@@ -53,6 +53,7 @@ public:
 signals:
     void featuresSelected(std::vector<std::string> const & features);
     void featureSelected(std::string const & feature);
+    void groupSelected(std::string const & group_name, std::vector<std::string> const & children);
     void addFeatures(std::vector<std::string> const & features);
     void removeFeatures(std::vector<std::string> const & features);
     void addFeature(std::string const & feature);

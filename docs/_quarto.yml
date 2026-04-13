@@ -60,6 +60,9 @@ website:
               href: developer/coreplotting/index.qmd
               contents:
                 - developer/coreplotting/feature_color.qmd
+            - section: "PlottingOpenGL"
+              contents:
+                - developer/PlottingOpenGL/wide_line_rendering.qmd
             - section: "PlottingSVG"
               href: developer/PlottingSVG/index.qmd
               contents:

@@ -128,10 +128,10 @@ private:
 
     std::string m_shader_base_path;
     bool m_use_shader_manager{false};
-    
+
     // Only used when not using ShaderManager
     GLShaderProgram m_embedded_shader;
-    
+
     GLVertexArray m_vao;
     GLBuffer m_vbo{GLBuffer::Type::Vertex};
 
@@ -143,19 +143,19 @@ private:
         glm::vec4 global_color{1.0f, 1.0f, 1.0f, 1.0f};
         glm::mat4 model_matrix{1.0f};
         float thickness{1.0f};
-        int vertex_offset{0};  // Offset in VBO for this batch
+        int vertex_offset{0};// Offset in VBO for this batch
         int total_vertices{0};
         bool has_per_line_colors{false};
     };
     std::vector<BatchData> m_batches;
-    std::vector<float> m_all_vertices;  // Combined vertex data for all batches
+    std::vector<float> m_all_vertices;// Combined vertex data for all batches
     int m_total_vertices{0};
-    
+
     // Default line thickness (used by setLineThickness API for backwards compatibility)
     float m_thickness{1.0f};
 
     bool m_initialized{false};
-    
+
     // Shader program name for ShaderManager
     static constexpr char const * SHADER_PROGRAM_NAME = "polyline_renderer";
 };
@@ -177,6 +177,42 @@ uniform mat4 u_mvp_matrix;
 
 void main() {
     gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
+}
+)";
+
+constexpr char const * GEOMETRY_SHADER = R"(
+#version 410 core
+
+layout(lines) in;
+layout(triangle_strip, max_vertices = 4) out;
+
+uniform float u_line_width;
+uniform vec2 u_viewport_size;
+
+void main() {
+    vec2 p0 = gl_in[0].gl_Position.xy;
+    vec2 p1 = gl_in[1].gl_Position.xy;
+
+    vec2 sp0 = p0 * u_viewport_size * 0.5;
+    vec2 sp1 = p1 * u_viewport_size * 0.5;
+
+    vec2 dir = sp1 - sp0;
+    float len = length(dir);
+    if (len < 0.001) return;
+    dir /= len;
+    vec2 perp = vec2(-dir.y, dir.x);
+
+    vec2 offset_ndc = perp * u_line_width / u_viewport_size;
+
+    gl_Position = vec4(p0 + offset_ndc, 0.0, 1.0);
+    EmitVertex();
+    gl_Position = vec4(p0 - offset_ndc, 0.0, 1.0);
+    EmitVertex();
+    gl_Position = vec4(p1 + offset_ndc, 0.0, 1.0);
+    EmitVertex();
+    gl_Position = vec4(p1 - offset_ndc, 0.0, 1.0);
+    EmitVertex();
+    EndPrimitive();
 }
 )";
 

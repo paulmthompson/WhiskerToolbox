@@ -51,6 +51,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.cpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.ui
+        UI/SubWidgets/AnalogTimeSeries/GroupAnalogViewer_Widget.cpp
+        UI/SubWidgets/AnalogTimeSeries/GroupAnalogViewer_Widget.hpp
         UI/SubWidgets/DigitalEvent/EventViewer_Widget.cpp
         UI/SubWidgets/DigitalEvent/EventViewer_Widget.hpp
         UI/SubWidgets/DigitalEvent/EventViewer_Widget.ui

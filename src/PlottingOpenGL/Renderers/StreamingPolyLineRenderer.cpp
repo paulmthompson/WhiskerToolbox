@@ -1,7 +1,7 @@
 #include "StreamingPolyLineRenderer.hpp"
 
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
-#include "PolyLineRenderer.hpp"  // For embedded shader source
+#include "PolyLineRenderer.hpp"// For embedded shader source
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -90,6 +90,12 @@ void StreamingPolyLineRenderer::render(glm::mat4 const & view_matrix,
         return;
     }
 
+    // Query current viewport size for geometry shader line width calculation
+    GLint viewport[4];
+    gl->glGetIntegerv(GL_VIEWPORT, viewport);
+    auto const viewport_width = static_cast<float>(viewport[2]);
+    auto const viewport_height = static_cast<float>(viewport[3]);
+
     // Get shader program
     ShaderProgram * shader_program = nullptr;
     if (m_use_shader_manager) {
@@ -125,6 +131,8 @@ void StreamingPolyLineRenderer::render(glm::mat4 const & view_matrix,
                                     m_cached_batch.global_color.g,
                                     m_cached_batch.global_color.b,
                                     m_cached_batch.global_color.a);
+            native->setUniformValue("u_line_width", m_cached_batch.thickness);
+            native->setUniformValue("u_viewport_size", viewport_width, viewport_height);
         }
     } else {
         m_embedded_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
@@ -133,10 +141,9 @@ void StreamingPolyLineRenderer::render(glm::mat4 const & view_matrix,
                                           m_cached_batch.global_color.g,
                                           m_cached_batch.global_color.b,
                                           m_cached_batch.global_color.a);
+        m_embedded_shader.setUniformValue("u_line_width", m_cached_batch.thickness);
+        m_embedded_shader.setUniformValue("u_viewport_size", viewport_width, viewport_height);
     }
-
-    // Set line width
-    gl->glLineWidth(m_cached_batch.thickness);
 
     // Draw each polyline segment
     for (size_t i = 0; i < m_cached_batch.line_start_indices.size(); ++i) {
@@ -158,7 +165,7 @@ void StreamingPolyLineRenderer::render(glm::mat4 const & view_matrix,
         m_timing_stats.last_total_time = m_timing_stats.last_upload_time + m_timing_stats.last_render_time;
 
         // Update moving average
-        double const alpha = 0.1;  // Smoothing factor
+        double const alpha = 0.1;// Smoothing factor
         m_timing_stats.avg_render_time_us = alpha * static_cast<double>(m_timing_stats.last_render_time.count()) +
                                             (1.0 - alpha) * m_timing_stats.avg_render_time_us;
     }
@@ -189,14 +196,14 @@ void StreamingPolyLineRenderer::updateData(CorePlotting::RenderablePolyLineBatch
         // Incremental update
         updateGPUBufferIncremental();
         m_incremental_updates++;
-        
+
         if (m_timing_enabled) {
             m_timing_stats.was_full_reupload = false;
         }
     } else {
         // Full re-upload required
         uploadGPUBufferFull(batch);
-        
+
         if (m_timing_enabled) {
             m_timing_stats.was_full_reupload = true;
         }
@@ -248,7 +255,7 @@ bool StreamingPolyLineRenderer::computeDirtyRegions(CorePlotting::RenderablePoly
 
     // Check if we have cached data to compare against
     if (!m_cached_batch.valid) {
-        return false;  // First upload - need full upload
+        return false;// First upload - need full upload
     }
 
     // Check if topology changed (requires full re-upload)
@@ -267,7 +274,7 @@ bool StreamingPolyLineRenderer::computeDirtyRegions(CorePlotting::RenderablePoly
     // Check buffer capacity
     size_t const required_bytes = batch.vertices.size() * sizeof(float);
     if (required_bytes > m_gpu_buffer_capacity) {
-        return false;  // Need to reallocate
+        return false;// Need to reallocate
     }
 
     // Find dirty regions by comparing vertices
@@ -289,18 +296,16 @@ bool StreamingPolyLineRenderer::computeDirtyRegions(CorePlotting::RenderablePoly
             in_dirty_region = true;
         } else if (!is_different && in_dirty_region) {
             // End of dirty region
-            m_dirty_regions.push_back({
-                    dirty_start * sizeof(float),
-                    i * sizeof(float)});
+            m_dirty_regions.push_back({dirty_start * sizeof(float),
+                                       i * sizeof(float)});
             in_dirty_region = false;
         }
     }
 
     // Close any open dirty region
     if (in_dirty_region) {
-        m_dirty_regions.push_back({
-                dirty_start * sizeof(float),
-                vertex_count * sizeof(float)});
+        m_dirty_regions.push_back({dirty_start * sizeof(float),
+                                   vertex_count * sizeof(float)});
     }
 
     // If too many dirty regions, it's more efficient to do full upload
@@ -312,7 +317,7 @@ bool StreamingPolyLineRenderer::computeDirtyRegions(CorePlotting::RenderablePoly
 
     // Calculate total dirty bytes
     size_t dirty_bytes = 0;
-    for (auto const & region : m_dirty_regions) {
+    for (auto const & region: m_dirty_regions) {
         dirty_bytes += region.end_byte - region.start_byte;
     }
 
@@ -322,7 +327,7 @@ bool StreamingPolyLineRenderer::computeDirtyRegions(CorePlotting::RenderablePoly
         return false;
     }
 
-    return true;  // Incremental update is worthwhile
+    return true;// Incremental update is worthwhile
 }
 
 void StreamingPolyLineRenderer::updateGPUBufferIncremental() {
@@ -338,7 +343,7 @@ void StreamingPolyLineRenderer::updateGPUBufferIncremental() {
     size_t total_uploaded = 0;
 
     // Upload each dirty region using glBufferSubData
-    for (auto const & region : m_dirty_regions) {
+    for (auto const & region: m_dirty_regions) {
         size_t const offset = region.start_byte;
         size_t const size = region.end_byte - region.start_byte;
         size_t const float_offset = offset / sizeof(float);
@@ -372,7 +377,7 @@ void StreamingPolyLineRenderer::uploadGPUBufferFull(CorePlotting::RenderablePoly
     }
 
     size_t const required_bytes = batch.vertices.size() * sizeof(float);
-    size_t const desired_capacity = static_cast<size_t>(
+    auto const desired_capacity = static_cast<size_t>(
             static_cast<float>(required_bytes) * m_capacity_multiplier);
 
     (void) m_vao.bind();
@@ -408,20 +413,22 @@ void StreamingPolyLineRenderer::uploadGPUBufferFull(CorePlotting::RenderablePoly
 }
 
 bool StreamingPolyLineRenderer::loadShadersFromManager() {
-    std::string const vertex_path = m_shader_base_path + "line.vert";
-    std::string const fragment_path = m_shader_base_path + "line.frag";
+    std::string const vertex_path = m_shader_base_path + "wide_line.vert";
+    std::string const fragment_path = m_shader_base_path + "wide_line.frag";
+    std::string const geometry_path = m_shader_base_path + "wide_line.geom";
 
     return ShaderManager::instance().loadProgram(
             SHADER_PROGRAM_NAME,
             vertex_path,
             fragment_path,
-            "",
+            geometry_path,
             ShaderSourceType::FileSystem);
 }
 
 bool StreamingPolyLineRenderer::compileEmbeddedShaders() {
-    // Reuse the same embedded shaders as PolyLineRenderer
+    // Reuse the same embedded shaders as PolyLineRenderer (includes geometry shader)
     return m_embedded_shader.createFromSource(PolyLineShaders::VERTEX_SHADER,
+                                              PolyLineShaders::GEOMETRY_SHADER,
                                               PolyLineShaders::FRAGMENT_SHADER);
 }
 

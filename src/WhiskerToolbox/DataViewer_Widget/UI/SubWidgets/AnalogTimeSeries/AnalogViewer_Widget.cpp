@@ -30,7 +30,7 @@ AnalogViewer_Widget::AnalogViewer_Widget(std::shared_ptr<DataManager> data_manag
             this, &AnalogViewer_Widget::_setAnalogAlpha);
     connect(ui->scale_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AnalogViewer_Widget::_setAnalogScaleFactor);
-    connect(ui->line_thickness_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+    connect(ui->line_thickness_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AnalogViewer_Widget::_setLineThickness);
 
     // Connect gap handling controls
@@ -86,17 +86,17 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
             ui->scale_spinbox->setValue(static_cast<double>(opts->user_scale_factor));
 
             // Set line thickness
-            ui->line_thickness_spinbox->setValue(opts->get_line_thickness());
+            ui->line_thickness_spinbox->setValue(static_cast<double>(opts->get_line_thickness()));
 
             // Set gap handling controls
             ui->gap_mode_combo->setCurrentIndex(static_cast<int>(opts->gap_handling));
             ui->gap_threshold_spinbox->setValue(static_cast<int>(opts->gap_threshold));
         } else {
-            _updateColorDisplay("#0000FF");         // Default blue
-            ui->scale_spinbox->setValue(1.0);       // Default scale
-            ui->line_thickness_spinbox->setValue(1);// Default line thickness
-            ui->gap_mode_combo->setCurrentIndex(0); // Default to AlwaysConnect
-            ui->gap_threshold_spinbox->setValue(5); // Default threshold (5 frames)
+            _updateColorDisplay("#0000FF");           // Default blue
+            ui->scale_spinbox->setValue(1.0);         // Default scale
+            ui->line_thickness_spinbox->setValue(1.0);// Default line thickness
+            ui->gap_mode_combo->setCurrentIndex(0);   // Default to AlwaysConnect
+            ui->gap_threshold_spinbox->setValue(5);   // Default threshold (5 frames)
         }
     }
 
@@ -172,11 +172,11 @@ void AnalogViewer_Widget::_setAnalogScaleFactor(double scale_factor) {
     }
 }
 
-void AnalogViewer_Widget::_setLineThickness(int thickness) {
+void AnalogViewer_Widget::_setLineThickness(double thickness) {
     if (!_active_key.empty()) {
         auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(_active_key));
         if (opts) {
-            opts->line_thickness() = thickness;
+            opts->line_thickness() = static_cast<float>(thickness);
             // Trigger immediate repaint
             _opengl_widget->update();
         }

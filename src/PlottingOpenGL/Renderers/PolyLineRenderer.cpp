@@ -84,6 +84,12 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
         return;
     }
 
+    // Query current viewport size for geometry shader line width calculation
+    GLint viewport[4];
+    gl->glGetIntegerv(GL_VIEWPORT, viewport);
+    auto const viewport_width = static_cast<float>(viewport[2]);
+    auto const viewport_height = static_cast<float>(viewport[3]);
+
     // Get shader program (either from ShaderManager or embedded)
     ShaderProgram * shader_program = nullptr;
     if (m_use_shader_manager) {
@@ -107,8 +113,18 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
         return;
     }
 
+    // Set viewport size uniform (shared across all batches)
+    if (m_use_shader_manager) {
+        auto * native = shader_program->getNativeProgram();
+        if (native) {
+            native->setUniformValue("u_viewport_size", viewport_width, viewport_height);
+        }
+    } else {
+        m_embedded_shader.setUniformValue("u_viewport_size", viewport_width, viewport_height);
+    }
+
     // Render each batch with its own model matrix
-    for (auto const & batch : m_batches) {
+    for (auto const & batch: m_batches) {
         if (batch.total_vertices == 0) continue;
 
         // Compute MVP = Projection * View * Model (per-batch model matrix)
@@ -116,12 +132,14 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
 
         if (m_use_shader_manager) {
             shader_program->setUniform("u_mvp_matrix", mvp);
+            auto * native = shader_program->getNativeProgram();
+            if (native) {
+                native->setUniformValue("u_line_width", batch.thickness);
+            }
         } else {
             m_embedded_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
+            m_embedded_shader.setUniformValue("u_line_width", batch.thickness);
         }
-
-        // Set line width (may be clamped by driver)
-        gl->glLineWidth(batch.thickness);
 
         // Draw each polyline segment in this batch
         if (batch.has_per_line_colors && batch.line_colors.size() == batch.line_start_indices.size()) {
@@ -145,7 +163,7 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
             if (m_use_shader_manager) {
                 auto * native = shader_program->getNativeProgram();
                 if (native) {
-                    native->setUniformValue("u_color", 
+                    native->setUniformValue("u_color",
                                             batch.global_color.r,
                                             batch.global_color.g,
                                             batch.global_color.b,
@@ -204,7 +222,7 @@ void PolyLineRenderer::uploadData(CorePlotting::RenderablePolyLineBatch const & 
     batch_data.global_color = batch.global_color;
     batch_data.model_matrix = batch.model_matrix;
     batch_data.thickness = batch.thickness;
-    
+
     // Track vertex offset for this batch (in vertex count, not floats)
     batch_data.vertex_offset = m_total_vertices;
     batch_data.total_vertices = static_cast<int>(batch.vertices.size()) / 2;
@@ -230,20 +248,21 @@ void PolyLineRenderer::setLineThickness(float thickness) {
 }
 
 bool PolyLineRenderer::loadShadersFromManager() {
-    std::string const vertex_path = m_shader_base_path + "line.vert";
-    std::string const fragment_path = m_shader_base_path + "line.frag";
-    
+    std::string const vertex_path = m_shader_base_path + "wide_line.vert";
+    std::string const fragment_path = m_shader_base_path + "wide_line.frag";
+    std::string const geometry_path = m_shader_base_path + "wide_line.geom";
+
     return ShaderManager::instance().loadProgram(
-        SHADER_PROGRAM_NAME,
-        vertex_path,
-        fragment_path,
-        "",  // No geometry shader
-        ShaderSourceType::FileSystem
-    );
+            SHADER_PROGRAM_NAME,
+            vertex_path,
+            fragment_path,
+            geometry_path,
+            ShaderSourceType::FileSystem);
 }
 
 bool PolyLineRenderer::compileEmbeddedShaders() {
     return m_embedded_shader.createFromSource(PolyLineShaders::VERTEX_SHADER,
+                                              PolyLineShaders::GEOMETRY_SHADER,
                                               PolyLineShaders::FRAGMENT_SHADER);
 }
 
