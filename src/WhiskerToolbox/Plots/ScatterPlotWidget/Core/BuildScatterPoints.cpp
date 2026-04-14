@@ -9,6 +9,7 @@
 #include "TimeFrame/TimeIndexStorage.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <unordered_map>
 
@@ -316,6 +317,29 @@ ScatterPointData buildFromIntervalInterval(
     return result;
 }
 
+/**
+ * @brief Remove entries where either x or y is NaN
+ *
+ * Compacts the parallel arrays in place, preserving order of valid points.
+ */
+void removeNaNPoints(ScatterPointData & data) {
+    std::size_t write = 0;
+    for (std::size_t read = 0; read < data.size(); ++read) {
+        if (std::isnan(data.x_values[read]) || std::isnan(data.y_values[read])) {
+            continue;
+        }
+        if (write != read) {
+            data.x_values[write] = data.x_values[read];
+            data.y_values[write] = data.y_values[read];
+            data.time_indices[write] = data.time_indices[read];
+        }
+        ++write;
+    }
+    data.x_values.erase(data.x_values.begin() + static_cast<std::ptrdiff_t>(write), data.x_values.end());
+    data.y_values.erase(data.y_values.begin() + static_cast<std::ptrdiff_t>(write), data.y_values.end());
+    data.time_indices.erase(data.time_indices.begin() + static_cast<std::ptrdiff_t>(write), data.time_indices.end());
+}
+
 }// namespace
 
 ScatterPointData buildScatterPoints(
@@ -385,6 +409,9 @@ ScatterPointData buildScatterPoints(
             result = buildFromIntervalInterval(*x_tensor, x_source, *y_tensor, y_source);
         }
     }
+
+    // Filter out points with NaN coordinates (e.g. from TensorData with missing values)
+    removeNaNPoints(result);
 
     // Populate source context for entity resolution
     if (!result.empty()) {

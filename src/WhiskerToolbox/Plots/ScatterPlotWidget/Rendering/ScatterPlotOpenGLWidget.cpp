@@ -537,10 +537,22 @@ void ScatterPlotOpenGLWidget::rebuildScene() {
     }
 
     // Compute bounds for auto-fit (with 5% padding)
-    float x_min = *std::min_element(_scatter_data.x_values.begin(), _scatter_data.x_values.end());
-    float x_max = *std::max_element(_scatter_data.x_values.begin(), _scatter_data.x_values.end());
-    float y_min = *std::min_element(_scatter_data.y_values.begin(), _scatter_data.y_values.end());
-    float y_max = *std::max_element(_scatter_data.y_values.begin(), _scatter_data.y_values.end());
+    // Use comparator that treats NaN as greater-than to ensure correct min/max
+    auto const nan_less = [](float a, float b) {
+        if (std::isnan(a)) return false;
+        if (std::isnan(b)) return true;
+        return a < b;
+    };
+    float x_min = *std::min_element(_scatter_data.x_values.begin(), _scatter_data.x_values.end(), nan_less);
+    float x_max = *std::max_element(_scatter_data.x_values.begin(), _scatter_data.x_values.end(), nan_less);
+    float y_min = *std::min_element(_scatter_data.y_values.begin(), _scatter_data.y_values.end(), nan_less);
+    float y_max = *std::max_element(_scatter_data.y_values.begin(), _scatter_data.y_values.end(), nan_less);
+
+    // If all values were NaN (shouldn't happen after filtering), bail out
+    if (std::isnan(x_min) || std::isnan(x_max) || std::isnan(y_min) || std::isnan(y_max)) {
+        _scene_renderer->clearScene();
+        return;
+    }
 
     float const x_range = x_max - x_min;
     float const y_range = y_max - y_min;
