@@ -36,7 +36,7 @@ auto tensorRobustPCA(
         return nullptr;
     }
 
-    std::size_t const n_components = params.getNComponents();
+    std::size_t const n_components = params.n_components;
     if (n_components == 0 || n_components > num_cols) {
         ctx.logMessage("TensorRobustPCA: n_components (" + std::to_string(n_components) +
                        ") must be in [1, " + std::to_string(num_cols) + "]");
@@ -59,9 +59,9 @@ auto tensorRobustPCA(
     MLCore::RobustPCAOperation rpca;
     MLCore::RobustPCAParameters mlparams;
     mlparams.n_components = n_components;
-    mlparams.lambda = params.getLambda();
-    mlparams.tol = params.getTol();
-    mlparams.max_iter = params.getMaxIter();
+    mlparams.lambda = params.lambda;
+    mlparams.tol = params.tol;
+    mlparams.max_iter = params.max_iter;
 
     arma::mat result;
     if (!rpca.fitTransform(features, &mlparams, result)) {

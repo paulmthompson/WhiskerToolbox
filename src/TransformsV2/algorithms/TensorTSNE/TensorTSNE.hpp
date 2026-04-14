@@ -11,7 +11,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <optional>
 
 class TensorData;
 namespace WhiskerToolbox::Transforms::V2 {
@@ -25,15 +24,11 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  */
 struct TensorTSNEParams {
     /// Number of output dimensions (usually 2 or 3)
-    std::optional<std::size_t> n_components;
+    std::size_t n_components = 2;
     /// Perplexity (effective number of neighbors, typical range 5–50)
-    std::optional<double> perplexity;
+    double perplexity = 30.0;
     /// Barnes-Hut approximation angle (0 = exact, >0 = faster)
-    std::optional<double> theta;
-
-    [[nodiscard]] std::size_t getNComponents() const { return n_components.value_or(2); }
-    [[nodiscard]] double getPerplexity() const { return perplexity.value_or(30.0); }
-    [[nodiscard]] double getTheta() const { return theta.value_or(0.5); }
+    double theta = 0.5;
 };
 
 /**

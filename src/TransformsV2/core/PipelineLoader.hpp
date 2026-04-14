@@ -1,8 +1,9 @@
 #ifndef WHISKERTOOLBOX_V2_PIPELINE_LOADER_HPP
 #define WHISKERTOOLBOX_V2_PIPELINE_LOADER_HPP
 
-#include "core/TransformPipeline.hpp"
-#include "detail/ReductionStep.hpp"
+#include "core/TransformPipeline.hpp"       // TransformPipeline
+#include "detail/PipelineStep.hpp"          // PipelineStep
+#include "detail/ReductionStep.hpp"         // ReductionStep
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>

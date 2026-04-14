@@ -37,7 +37,7 @@ auto tensorPCA(
         return nullptr;
     }
 
-    std::size_t const n_components = params.getNComponents();
+    std::size_t const n_components = params.n_components;
     if (n_components == 0 || n_components > num_cols) {
         ctx.logMessage("TensorPCA: n_components (" + std::to_string(n_components) +
                        ") must be in [1, " + std::to_string(num_cols) + "]");

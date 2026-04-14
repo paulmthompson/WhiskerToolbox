@@ -36,7 +36,7 @@ auto tensorTSNE(
         return nullptr;
     }
 
-    std::size_t const n_components = params.getNComponents();
+    std::size_t const n_components = params.n_components;
     if (n_components == 0 || n_components > num_cols) {
         ctx.logMessage("TensorTSNE: n_components (" + std::to_string(n_components) +
                        ") must be in [1, " + std::to_string(num_cols) + "]");
@@ -59,8 +59,8 @@ auto tensorTSNE(
     MLCore::TSNEOperation tsne;
     MLCore::TSNEParameters mlparams;
     mlparams.n_components = n_components;
-    mlparams.perplexity = params.getPerplexity();
-    mlparams.theta = params.getTheta();
+    mlparams.perplexity = params.perplexity;
+    mlparams.theta = params.theta;
 
     arma::mat result;
     if (!tsne.fitTransform(features, &mlparams, result)) {

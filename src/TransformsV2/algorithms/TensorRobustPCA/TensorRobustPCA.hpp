@@ -11,7 +11,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <optional>
 
 class TensorData;
 namespace WhiskerToolbox::Transforms::V2 {
@@ -25,18 +24,13 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  */
 struct TensorRobustPCAParams {
     /// Number of output dimensions
-    std::optional<std::size_t> n_components;
+    std::size_t n_components = 2;
     /// Regularization parameter (0 = auto-compute from data)
-    std::optional<double> lambda;
+    double lambda = 0.0;
     /// Convergence tolerance
-    std::optional<double> tol;
+    double tol = 1e-5;
     /// Maximum ALM iterations
-    std::optional<std::size_t> max_iter;
-
-    [[nodiscard]] std::size_t getNComponents() const { return n_components.value_or(2); }
-    [[nodiscard]] double getLambda() const { return lambda.value_or(0.0); }
-    [[nodiscard]] double getTol() const { return tol.value_or(1e-5); }
-    [[nodiscard]] std::size_t getMaxIter() const { return max_iter.value_or(100); }
+    std::size_t max_iter = 100;
 };
 
 /**
