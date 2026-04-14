@@ -16,14 +16,15 @@
 #include "algorithms/LineSubsegment/LineSubsegment.hpp"
 #include "algorithms/MaskArea/MaskArea.hpp"
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
+#include "algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
 #include "algorithms/TensorPCA/TensorPCA.hpp"
 #include "algorithms/TensorRobustPCA/TensorRobustPCA.hpp"
 #include "algorithms/TensorTSNE/TensorTSNE.hpp"
-#include "algorithms/SincInterpolation/SincInterpolation.hpp"
+#include "algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
-#include "core/PipelineLoader.hpp"  // registerPipelineStepFactoryFor
+#include "core/PipelineLoader.hpp"// registerPipelineStepFactoryFor
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
@@ -72,6 +73,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<SincInterpolationParams>();
     registerPipelineStepFactoryFor<TensorPCAParams>();
     registerPipelineStepFactoryFor<TensorRobustPCAParams>();
+    registerPipelineStepFactoryFor<TensorTemporalNeighborParams>();
     return true;
 }();
 
@@ -689,6 +691,20 @@ auto const register_tensor_robust_pca = RegisterContainerTransform<TensorData, T
                 .output_type_name = "TensorData",
                 .params_type_name = "TensorRobustPCAParams",
                 .is_expensive = true,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register TensorTemporalNeighbors (Container Transform: TensorData → TensorData)
+auto const register_tensor_temporal_neighbors = RegisterContainerTransform<TensorData, TensorData, TensorTemporalNeighborParams>(
+        "TensorTemporalNeighbors",
+        tensorTemporalNeighbors,
+        ContainerTransformMetadata{
+                .description = "Augment time-indexed tensor with lag/lead feature columns",
+                .category = "Feature Engineering",
+                .input_type_name = "TensorData",
+                .output_type_name = "TensorData",
+                .params_type_name = "TensorTemporalNeighborParams",
+                .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 

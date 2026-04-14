@@ -3,12 +3,12 @@
 
 #include "TypeTraits/DataTypeTraits.hpp"
 
-#include <memory>           // std::shared_ptr
-#include <string>           // std::string
-#include <type_traits>      
-#include <typeindex>        // std::type_index
+#include <memory>// std::shared_ptr
+#include <string>// std::string
+#include <type_traits>
+#include <typeindex>// std::type_index
 //#include <unordered_map>    // std::unordered_map
-#include <vector>           // std::vector
+#include <vector>// std::vector
 
 class MaskData;
 class LineData;
@@ -17,6 +17,7 @@ class AnalogTimeSeries;
 class RaggedAnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
+class TensorData;
 class TimeFrame;
 
 class Mask2D;
@@ -286,6 +287,8 @@ template<>
 struct is_container<DigitalEventSeries> : std::true_type {};
 template<>
 struct is_container<DigitalIntervalSeries> : std::true_type {};
+template<>
+struct is_container<TensorData> : std::true_type {};
 
 template<typename T>
 inline constexpr bool is_container_v = is_container<T>::value;

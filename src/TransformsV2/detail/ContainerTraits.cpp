@@ -10,6 +10,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "Tensors/TensorData.hpp"
 
 #include <stdexcept>
 #include <unordered_set>
@@ -58,7 +59,8 @@ std::string TypeIndexMapper::containerToString(std::type_index container_type) {
             {typeid(AnalogTimeSeries), "AnalogTimeSeries"},
             {typeid(RaggedAnalogTimeSeries), "RaggedAnalogTimeSeries"},
             {typeid(DigitalEventSeries), "DigitalEventSeries"},
-            {typeid(DigitalIntervalSeries), "DigitalIntervalSeries"}};
+            {typeid(DigitalIntervalSeries), "DigitalIntervalSeries"},
+            {typeid(TensorData), "TensorData"}};
 
     auto it = map.find(container_type);
     if (it != map.end()) {
@@ -77,13 +79,15 @@ std::type_index TypeIndexMapper::stringToContainer(std::string const & name) {
             {"RaggedAnalogTimeSeries", typeid(RaggedAnalogTimeSeries)},
             {"DigitalEventSeries", typeid(DigitalEventSeries)},
             {"DigitalIntervalSeries", typeid(DigitalIntervalSeries)},
+            {"TensorData", typeid(TensorData)},
             // Short-format aliases (from convert_data_type_to_string)
             {"mask", typeid(MaskData)},
             {"line", typeid(LineData)},
             {"points", typeid(PointData)},
             {"analog", typeid(AnalogTimeSeries)},
             {"digital_event", typeid(DigitalEventSeries)},
-            {"digital_interval", typeid(DigitalIntervalSeries)}};
+            {"digital_interval", typeid(DigitalIntervalSeries)},
+            {"tensor", typeid(TensorData)}};
 
     auto it = map.find(name);
     if (it != map.end()) {

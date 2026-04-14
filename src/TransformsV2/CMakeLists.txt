@@ -76,6 +76,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/TensorPCA/TensorPCA.cpp
         algorithms/TensorRobustPCA/TensorRobustPCA.hpp
         algorithms/TensorRobustPCA/TensorRobustPCA.cpp
+        algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.hpp
+        algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.cpp
         algorithms/TensorTSNE/TensorTSNE.hpp
         algorithms/TensorTSNE/TensorTSNE.cpp
         algorithms/RangeReductions/EventRangeReductions.hpp

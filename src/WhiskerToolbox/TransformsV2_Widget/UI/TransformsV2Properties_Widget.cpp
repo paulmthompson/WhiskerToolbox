@@ -14,6 +14,7 @@
 #include "TransformsV2/detail/ContainerTraits.hpp"
 
 #include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
 
 #include <QApplication>
 #include <QClipboard>
@@ -461,6 +462,8 @@ std::string TransformsV2Properties_Widget::resolveDataTypeFromManager(std::strin
             return "DigitalEventSeries";
         case DM_DataType::DigitalInterval:
             return "DigitalIntervalSeries";
+        case DM_DataType::Tensor:
+            return "TensorData";
         default:
             return {};
     }
@@ -798,14 +801,25 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
         return;
     }
 
+    spdlog::debug("[TransformsV2Widget] onExecuteClicked: input_key='{}', output_key='{}'",
+                  _input_data_key, output_key);
+    spdlog::debug("[TransformsV2Widget] Pipeline JSON ({} chars): {}",
+                  json_str.size(), json_str);
+
     // Build the TransformPipeline from the PipelineDescriptor JSON
     auto pipeline_result = loadPipelineFromJson(json_str);
     if (!pipeline_result) {
+        auto err_msg = std::string(pipeline_result.error()->what());
+        spdlog::error("[TransformsV2Widget] loadPipelineFromJson FAILED: {}", err_msg);
         _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
-        _error_label->setText(tr("Error: Failed to build pipeline from JSON."));
+        _error_label->setText(
+                tr("Error: Failed to build pipeline from JSON: %1")
+                        .arg(QString::fromStdString(err_msg)));
         _error_label->setVisible(true);
         return;
     }
+    spdlog::debug("[TransformsV2Widget] Pipeline built successfully ({} steps)",
+                  pipeline_result.value().size());
 
     // Get the input data variant
     auto input_variant = dm->getDataVariant(_input_data_key);
@@ -843,7 +857,10 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
             QApplication::processEvents();
         }
 
+        spdlog::debug("[TransformsV2Widget] Calling executePipeline with input variant index={}",
+                      input_variant.value().index());
         auto result = executePipeline(input_variant.value(), pipeline_result.value());
+        spdlog::debug("[TransformsV2Widget] executePipeline returned variant index={}", result.index());
 
         auto end_time = std::chrono::steady_clock::now();
         auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -854,7 +871,7 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
         std::string const otk = _output_time_key_combo
                                         ? _output_time_key_combo->currentData().toString().toStdString()
                                         : std::string{};
-        TimeKey time_key = otk.empty() ? dm->getTimeKey(_input_data_key) : TimeKey(otk);
+        TimeKey const time_key = otk.empty() ? dm->getTimeKey(_input_data_key) : TimeKey(otk);
         dm->setData(output_key, result, time_key);
 
         _state->setOutputDataKey(output_key);
@@ -869,6 +886,7 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
         _error_label->setVisible(true);
 
     } catch (std::exception const & e) {
+        spdlog::error("[TransformsV2Widget] Execution exception: {}", e.what());
         _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
         _error_label->setText(
                 tr("Execution error: %1").arg(QString::fromUtf8(e.what())));

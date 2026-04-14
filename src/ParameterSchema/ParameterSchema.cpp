@@ -180,7 +180,8 @@ std::string determineBaseType(std::string_view type_str) {
     if (contains(type_str, "float")) {
         return "float";
     }
-    if (contains(type_str, "int")) {
+    if (contains(type_str, "int") || contains(type_str, "size_t") ||
+        contains(type_str, "long") || contains(type_str, "short")) {
         return "int";
     }
     if (contains(type_str, "string")) {
@@ -268,4 +269,3 @@ VariantAlternative & VariantAlternative::operator=(VariantAlternative const & ot
 
 VariantAlternative::VariantAlternative(VariantAlternative && other) noexcept = default;
 VariantAlternative & VariantAlternative::operator=(VariantAlternative && other) noexcept = default;
-

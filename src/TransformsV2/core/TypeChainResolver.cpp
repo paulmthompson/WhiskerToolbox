@@ -33,7 +33,7 @@ std::type_index resolveContainerFromElement(std::type_index element_type,
     return TypeIndexMapper::elementToContainer(element_type);
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ---------------------------------------------------------------------------
 // resolveTypeChain
@@ -54,22 +54,16 @@ TypeChainResult resolveTypeChain(
     try {
         current_element = TypeIndexMapper::containerToElement(current_container);
     } catch (...) {
-        // Unknown container — can't derive element type.
-        result.output_element_type = typeid(void);
-        result.output_container_type = input_container_type;
-        result.all_valid = step_names.empty();
-        for (auto const & name : step_names) {
-            (void) name;
-            result.steps.push_back({"Unknown", "Unknown", false});
-        }
-        return result;
+        // Container-only type (e.g. TensorData, DigitalEventSeries) — no element
+        // type, but container transforms can still operate on it.
+        current_element = typeid(void);
     }
 
     // --- Derive initial ragged state -----------------------------------------
     is_ragged = TypeIndexMapper::isContainerRagged(current_container);
 
     // --- Walk the chain ------------------------------------------------------
-    for (auto const & name : step_names) {
+    for (auto const & name: step_names) {
         StepTypeInfo info;
         info.input_type_name = TypeIndexMapper::containerToString(current_container);
 
@@ -85,7 +79,8 @@ TypeChainResult resolveTypeChain(
                 current_container = output_container;
                 try {
                     current_element = TypeIndexMapper::containerToElement(current_container);
-                } catch (...) { /* keep previous element type */ }
+                } catch (...) { /* keep previous element type */
+                }
                 is_ragged = TypeIndexMapper::isContainerRagged(current_container);
             }
 
@@ -114,7 +109,8 @@ TypeChainResult resolveTypeChain(
                 // Resolve container from element + ragged state
                 try {
                     current_container = resolveContainerFromElement(current_element, is_ragged);
-                } catch (...) { /* keep previous container */ }
+                } catch (...) { /* keep previous container */
+                }
             }
 
             // Output name: when valid, use the resolved container.
@@ -142,4 +138,4 @@ TypeChainResult resolveTypeChain(
     return result;
 }
 
-} // namespace WhiskerToolbox::Transforms::V2
+}// namespace WhiskerToolbox::Transforms::V2

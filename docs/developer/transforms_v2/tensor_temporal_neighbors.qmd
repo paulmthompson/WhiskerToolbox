@@ -1,0 +1,80 @@
+---
+title: "TensorTemporalNeighbors"
+---
+
+## Overview
+
+`TensorTemporalNeighbors` is a TransformsV2 container transform (TensorData → TensorData) that
+augments a time-indexed tensor with feature columns from neighboring time indices. This enables
+lag/lead feature engineering for downstream models such as Hidden Markov Models, without manual
+alignment code.
+
+## Location
+
+- Header: `src/TransformsV2/algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.hpp`
+- Implementation: `src/TransformsV2/algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.cpp`
+- Tests: `src/TransformsV2/algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.test.cpp`
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `offsets` | `std::vector<int>` | (required) | Integer offsets relative to each row in sorted time order (e.g. `{-1, +1}` for previous/next row) |
+| `boundary_policy` | `BoundaryPolicy` | `NaN` | How to handle rows where an offset falls outside the tensor: `NaN`, `Drop`, `Clamp`, or `Zero` |
+| `column_indices` | `std::optional<std::vector<std::size_t>>` | all | Subset of source column indices to shift |
+| `include_original` | `bool` | `true` | Whether to include the original (unshifted) columns in the output |
+
+## Time-Alignment Rule
+
+Neighbors are determined by **sorted row position** in `TimeIndexStorage`, not by raw frame number ±1.
+For example, if rows exist at frames `[10, 20, 50]`, offset `+1` from frame 10 yields the row at
+frame 20 (the next stored row), not frame 11 (which has no data).
+
+Both `DenseTimeIndexStorage` and `SparseTimeIndexStorage` guarantee sorted indices.
+
+## Boundary Policies
+
+| Policy | Behavior |
+|--------|----------|
+| `NaN` | Fill missing neighbor features with `NaN`. All rows preserved. |
+| `Drop` | Remove rows where any offset is out-of-range. Output has fewer rows. |
+| `Clamp` | Clamp to first/last row when an offset goes out-of-range. |
+| `Zero` | Fill missing neighbor features with `0.0f`. |
+
+## Output Layout
+
+Columns are ordered as: `[original cols] [offset_1 cols] [offset_2 cols] ...`
+
+Shifted columns are named `"{original_col}_lag{offset}"`, e.g. `feat1_lag-1`, `feat1_lag+1`.
+
+If `include_original` is `false`, original columns are omitted.
+
+## Constraints
+
+- Input must be 2D
+- Input must have `RowType::TimeFrameIndex` (Interval and Ordinal rows are rejected)
+- Returns `nullptr` on validation failure
+
+## Pipeline JSON Example
+
+```json
+{
+  "transformations": [
+    {
+      "transform_name": "TensorTemporalNeighbors",
+      "input_key": "features",
+      "output_key": "augmented_features",
+      "params": {
+        "offsets": [-1, 1],
+        "boundary_policy": "NaN",
+        "include_original": true
+      }
+    }
+  ]
+}
+```
+
+## Registration
+
+Registered as `"TensorTemporalNeighbors"` in `RegisteredTransforms.cpp` under category
+**Feature Engineering**.

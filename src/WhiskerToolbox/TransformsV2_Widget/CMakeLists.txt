@@ -37,6 +37,7 @@ target_link_libraries(TransformsV2_Widget PUBLIC TransformsV2)
 target_link_libraries(TransformsV2_Widget PRIVATE AutoParamWidget)
 target_link_libraries(TransformsV2_Widget PRIVATE Collapsible_Widget)
 target_link_libraries(TransformsV2_Widget PRIVATE DataManager)
+target_link_libraries(TransformsV2_Widget PRIVATE spdlog::spdlog_header_only)
 
 set_target_compiler_warnings(TransformsV2_Widget)
 
