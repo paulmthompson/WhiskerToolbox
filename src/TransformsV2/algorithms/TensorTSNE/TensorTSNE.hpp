@@ -9,6 +9,8 @@
 #ifndef WHISKERTOOLBOX_V2_TENSOR_TSNE_HPP
 #define WHISKERTOOLBOX_V2_TENSOR_TSNE_HPP
 
+#include "TransformsV2/utils/NaNFilter.hpp"
+
 #include <cstddef>
 #include <memory>
 
@@ -29,6 +31,10 @@ struct TensorTSNEParams {
     double perplexity = 30.0;
     /// Barnes-Hut approximation angle (0 = exact, >0 = faster)
     double theta = 0.5;
+
+    /// How to handle rows containing NaN/Inf values
+    WhiskerToolbox::Transforms::V2::NaNPolicy nan_policy =
+            WhiskerToolbox::Transforms::V2::NaNPolicy::Propagate;
 };
 
 /**

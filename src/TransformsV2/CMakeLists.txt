@@ -80,6 +80,10 @@ set(TRANSFORM_V2_SOURCES
         algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.cpp
         algorithms/TensorTSNE/TensorTSNE.hpp
         algorithms/TensorTSNE/TensorTSNE.cpp
+        utils/NaNFilter.hpp
+        utils/NaNFilter.cpp
+        utils/DimReductionOutputBuilder.hpp
+        utils/DimReductionOutputBuilder.cpp
         algorithms/RangeReductions/EventRangeReductions.hpp
         algorithms/RangeReductions/IntervalRangeReductions.hpp
         algorithms/RangeReductions/ValueRangeReductions.hpp

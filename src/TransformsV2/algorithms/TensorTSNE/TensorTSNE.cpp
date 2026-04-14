@@ -8,6 +8,8 @@
 #include "MLCore/models/MLModelParameters.hpp"
 #include "MLCore/models/unsupervised/TSNEOperation.hpp"
 #include "Tensors/TensorData.hpp"
+#include "TransformsV2/utils/DimReductionOutputBuilder.hpp"
+#include "TransformsV2/utils/NaNFilter.hpp"
 #include "core/ComputeContext.hpp"
 
 #include <string>
@@ -45,10 +47,42 @@ auto tensorTSNE(
 
     ctx.reportProgress(0);
 
-    // Convert TensorData (row-major: rows=observations, cols=features)
-    // to mlpack convention (features × observations)
+    // Convert TensorData to observations × features double matrix
     arma::fmat const & fmat = input.asArmadilloMatrix();
-    arma::mat const features = arma::conv_to<arma::mat>::from(fmat.t());
+
+    // NaN handling: check and filter based on policy
+    auto const nan_policy = params.nan_policy;
+    bool const has_nan = hasNonFiniteRows(fmat);
+
+    if (has_nan && nan_policy == NaNPolicy::Fail) {
+        ctx.logMessage("TensorTSNE: Input contains NaN/Inf and nan_policy is Fail");
+        return nullptr;
+    }
+
+    arma::mat obs_matrix = arma::conv_to<arma::mat>::from(fmat);
+
+    NaNFilterResult filter_result;
+    if (has_nan) {
+        filter_result = filterNonFiniteRows(obs_matrix);
+        ctx.logMessage("TensorTSNE: Filtered " + std::to_string(filter_result.rows_dropped) +
+                       " NaN/Inf rows (" + std::to_string(filter_result.valid_row_indices.size()) +
+                       " remaining)");
+
+        if (filter_result.valid_row_indices.size() < 4) {
+            ctx.logMessage("TensorTSNE: Too few finite rows after filtering");
+            return nullptr;
+        }
+    } else {
+        filter_result.clean_matrix = std::move(obs_matrix);
+        filter_result.valid_row_indices.resize(num_rows);
+        for (std::size_t i = 0; i < num_rows; ++i) {
+            filter_result.valid_row_indices[i] = i;
+        }
+        filter_result.rows_dropped = 0;
+    }
+
+    // Transpose to mlpack convention (features × observations)
+    arma::mat const features = filter_result.clean_matrix.t();
 
     if (ctx.shouldCancel()) {
         return nullptr;
@@ -73,9 +107,6 @@ auto tensorTSNE(
     }
     ctx.reportProgress(90);
 
-    // Convert back: result is (n_components × observations) → (observations × n_components)
-    arma::fmat output_fmat = arma::conv_to<arma::fmat>::from(result.t());
-
     // Generate column names: tSNE1, tSNE2, ...
     std::vector<std::string> col_names;
     col_names.reserve(n_components);
@@ -83,53 +114,10 @@ auto tensorTSNE(
         col_names.push_back("tSNE" + std::to_string(i + 1));
     }
 
-    // Armadillo stores column-major, but TensorData factories expect row-major flat data.
-    // Extract elements in row-major order.
-    std::vector<float> flat_data(output_fmat.n_elem);
-    for (arma::uword r = 0; r < output_fmat.n_rows; ++r) {
-        for (arma::uword c = 0; c < output_fmat.n_cols; ++c) {
-            flat_data[r * n_components + c] = output_fmat(r, c);
-        }
-    }
-
-    // Build output preserving RowDescriptor from input
-    auto const & row_desc = input.rows();
-    std::shared_ptr<TensorData> output;
-
-    switch (row_desc.type()) {
-        case RowType::TimeFrameIndex:
-            output = std::make_shared<TensorData>(
-                    TensorData::createTimeSeries2D(
-                            flat_data,
-                            num_rows,
-                            n_components,
-                            row_desc.timeStoragePtr(),
-                            row_desc.timeFrame(),
-                            col_names));
-            break;
-
-        case RowType::Interval:
-            output = std::make_shared<TensorData>(
-                    TensorData::createFromIntervals(
-                            flat_data,
-                            num_rows,
-                            n_components,
-                            std::vector<TimeFrameInterval>(
-                                    row_desc.intervals().begin(),
-                                    row_desc.intervals().end()),
-                            row_desc.timeFrame(),
-                            col_names));
-            break;
-
-        case RowType::Ordinal:
-            output = std::make_shared<TensorData>(
-                    TensorData::createOrdinal2D(
-                            flat_data,
-                            num_rows,
-                            n_components,
-                            col_names));
-            break;
-    }
+    // Delegate output construction to shared builder
+    auto output = buildDimReductionOutput(
+            result, input, filter_result.valid_row_indices,
+            nan_policy, n_components, col_names);
 
     ctx.reportProgress(100);
     return output;

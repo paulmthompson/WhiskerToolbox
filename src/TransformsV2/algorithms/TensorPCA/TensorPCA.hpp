@@ -9,6 +9,8 @@
 #ifndef WHISKERTOOLBOX_V2_TENSOR_PCA_HPP
 #define WHISKERTOOLBOX_V2_TENSOR_PCA_HPP
 
+#include "TransformsV2/utils/NaNFilter.hpp"
+
 #include <cstddef>
 #include <memory>
 
@@ -25,6 +27,10 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 struct TensorPCAParams {
     /// Number of principal components to retain
     std::size_t n_components = 2;
+
+    /// How to handle rows containing NaN/Inf values
+    WhiskerToolbox::Transforms::V2::NaNPolicy nan_policy =
+            WhiskerToolbox::Transforms::V2::NaNPolicy::Propagate;
 };
 
 /**

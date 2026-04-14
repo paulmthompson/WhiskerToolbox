@@ -21,7 +21,9 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <cmath>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -234,4 +236,84 @@ TEST_CASE("TensorRobustPCA respects cancellation", "[TransformsV2][TensorRobustP
 
     auto result = tensorRobustPCA(input, params, ctx);
     REQUIRE(result == nullptr);
+}
+
+// ============================================================================
+// NaN policy tests
+// ============================================================================
+
+namespace {
+
+/// Create a 30x4 ordinal tensor with NaN in rows 0 and 29
+TensorData makeNaNOrdinalTensor_RPCA() {
+    constexpr std::size_t rows = 30;
+    constexpr std::size_t cols = 4;
+    std::vector<float> data(rows * cols, 0.0f);
+    float const nan_val = std::numeric_limits<float>::quiet_NaN();
+
+    for (std::size_t r = 0; r < rows; ++r) {
+        float const offset = (r < 15) ? 0.0f : 10.0f;
+        for (std::size_t c = 0; c < cols; ++c) {
+            data[r * cols + c] = offset + 0.1f * static_cast<float>(r * cols + c);
+        }
+    }
+    data[0 * cols + 2] = nan_val;
+    data[(rows - 1) * cols + 1] = nan_val;
+
+    return TensorData::createOrdinal2D(data, rows, cols,
+                                       {"f0", "f1", "f2", "f3"});
+}
+
+}// namespace
+
+TEST_CASE("TensorRobustPCA NaN policy Fail returns nullptr", "[TransformsV2][TensorRobustPCA][nan]") {
+    auto input = makeNaNOrdinalTensor_RPCA();
+    ComputeContext const ctx;
+
+    TensorRobustPCAParams params;
+    params.n_components = 2;
+    params.nan_policy = NaNPolicy::Fail;
+
+    auto result = tensorRobustPCA(input, params, ctx);
+    REQUIRE(result == nullptr);
+}
+
+TEST_CASE("TensorRobustPCA NaN policy Propagate preserves row count", "[TransformsV2][TensorRobustPCA][nan]") {
+    auto input = makeNaNOrdinalTensor_RPCA();
+    ComputeContext const ctx;
+
+    TensorRobustPCAParams params;
+    params.n_components = 2;
+    params.nan_policy = NaNPolicy::Propagate;
+
+    auto result = tensorRobustPCA(input, params, ctx);
+    REQUIRE(result != nullptr);
+    CHECK(result->numRows() == 30);
+
+    // Rows 0 and 29 should be NaN
+    auto flat = result->materializeFlat();
+    std::size_t const out_cols = result->numColumns();
+    CHECK(std::isnan(flat[0]));
+    CHECK(std::isnan(flat[29 * out_cols]));
+
+    // Row 1 should be finite
+    CHECK(std::isfinite(flat[1 * out_cols]));
+}
+
+TEST_CASE("TensorRobustPCA NaN policy Drop reduces row count", "[TransformsV2][TensorRobustPCA][nan]") {
+    auto input = makeNaNOrdinalTensor_RPCA();
+    ComputeContext const ctx;
+
+    TensorRobustPCAParams params;
+    params.n_components = 2;
+    params.nan_policy = NaNPolicy::Drop;
+
+    auto result = tensorRobustPCA(input, params, ctx);
+    REQUIRE(result != nullptr);
+    CHECK(result->numRows() == 28);// 30 - 2 NaN rows
+
+    auto flat = result->materializeFlat();
+    for (std::size_t i = 0; i < flat.size(); ++i) {
+        CHECK(std::isfinite(flat[i]));
+    }
 }

@@ -2,13 +2,13 @@
 #define WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
 
 #include "ComputeContext.hpp"
-#include "ParameterSchema/ParameterSchema.hpp"  // ParameterSchema, extractParameterSchema
-#include "detail/ContainerExecutor.hpp"     // for IContainerExecutor
+#include "ParameterSchema/ParameterSchema.hpp"// ParameterSchema, extractParameterSchema
+#include "detail/ContainerExecutor.hpp"       // for IContainerExecutor
 #include "detail/ContainerTraits.hpp"
-#include "detail/ParamExecutor.hpp"         // IParamExecutor, TypedParamExecutor, ITimeGroupedParamExecutor, TypedTimeGroupedParamExecutor
-#include "extension/ContainerRegistry.hpp"  // ContainerTransformMetadata
-#include "extension/ElementTransform.hpp"   // TypedTimeGroupedTransform, TypedTransform, is_tuple_v
-#include "extension/TransformTypes.hpp"    // ElementVariant, TransformLineageType, BatchVariant
+#include "detail/ParamExecutor.hpp"       // IParamExecutor, TypedParamExecutor, ITimeGroupedParamExecutor, TypedTimeGroupedParamExecutor
+#include "extension/ContainerRegistry.hpp"// ContainerTransformMetadata
+#include "extension/ElementTransform.hpp" // TypedTimeGroupedTransform, TypedTransform, is_tuple_v
+#include "extension/TransformTypes.hpp"   // ElementVariant, TransformLineageType, BatchVariant
 
 #include "DataManagerTypes.hpp"
 
@@ -1331,6 +1331,11 @@ DataTypeVariant TypedContainerExecutor<InContainer, OutContainer, Params>::execu
 
     // Execute pure transform using typed method
     auto result = executeTyped(name, **input_ptr, ctx);
+
+    // Guard against transforms that signal failure by returning nullptr
+    if (!result) {
+        throw std::runtime_error("Container transform '" + name + "' returned null (computation failed)");
+    }
 
     // Wrap result back in variant (pipeline's job)
     return DataTypeVariant{result};

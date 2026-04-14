@@ -9,6 +9,8 @@
 #ifndef WHISKERTOOLBOX_V2_TENSOR_ROBUST_PCA_HPP
 #define WHISKERTOOLBOX_V2_TENSOR_ROBUST_PCA_HPP
 
+#include "TransformsV2/utils/NaNFilter.hpp"
+
 #include <cstddef>
 #include <memory>
 
@@ -31,6 +33,10 @@ struct TensorRobustPCAParams {
     double tol = 1e-5;
     /// Maximum ALM iterations
     std::size_t max_iter = 100;
+
+    /// How to handle rows containing NaN/Inf values
+    WhiskerToolbox::Transforms::V2::NaNPolicy nan_policy =
+            WhiskerToolbox::Transforms::V2::NaNPolicy::Propagate;
 };
 
 /**
