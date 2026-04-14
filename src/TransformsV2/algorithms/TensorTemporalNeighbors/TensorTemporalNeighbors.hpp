@@ -12,10 +12,7 @@
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
-#include <cstddef>
 #include <memory>
-#include <optional>
-#include <string>
 #include <vector>
 
 class TensorData;
@@ -37,19 +34,35 @@ enum class BoundaryPolicy {
 
 /**
  * @brief Parameters for temporal neighbor feature augmentation (reflect-cpp compatible)
+ *
+ * Offsets are generated from separate lag and lead ranges:
+ *   - Lags:  {-lag_step, -2*lag_step, ..., -lag_range}  (negative offsets, past)
+ *   - Leads: {+lead_step, +2*lead_step, ..., +lead_range}  (positive offsets, future)
+ *
+ * Example: lag_range=3, lag_step=1, lead_range=2, lead_step=1
+ *   → offsets: {-3, -2, -1, +1, +2}
  */
 struct TensorTemporalNeighborParams {
-    /// Integer offsets relative to each row (e.g. {-2, -1, +1})
-    std::vector<int> offsets;
+    /// Maximum lag (past) offset magnitude; 0 disables lags
+    int lag_range = 0;
+
+    /// Step size for lag offsets (must be >= 1 when lag_range > 0)
+    int lag_step = 1;
+
+    /// Maximum lead (future) offset magnitude; 0 disables leads
+    int lead_range = 0;
+
+    /// Step size for lead offsets (must be >= 1 when lead_range > 0)
+    int lead_step = 1;
 
     /// Boundary policy for rows where a neighbor offset is out-of-range
     BoundaryPolicy boundary_policy = BoundaryPolicy::NaN;
 
-    /// Subset of source column indices to shift; empty/nullopt means all columns
-    std::optional<std::vector<std::size_t>> column_indices;
-
     /// Whether to include the original (unshifted) columns in the output
     bool include_original = true;
+
+    /// Build the sorted offset list from lag/lead range and step parameters
+    [[nodiscard]] std::vector<int> buildOffsets() const;
 };
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
@@ -60,15 +73,24 @@ struct TensorTemporalNeighborParams {
 template<>
 struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorTemporalNeighborParams> {
     static void annotate(ParameterSchema & schema) {
-        if (auto * f = schema.field("offsets")) {
-            f->tooltip = "Integer offsets relative to each row in sorted time order "
-                         "(e.g. -1 = previous row, +1 = next row)";
+        if (auto * f = schema.field("lag_range")) {
+            f->tooltip = "Maximum lag offset magnitude (past). 0 disables lags.";
+            f->min_value = 0;
+        }
+        if (auto * f = schema.field("lag_step")) {
+            f->tooltip = "Step size between lag offsets";
+            f->min_value = 1;
+        }
+        if (auto * f = schema.field("lead_range")) {
+            f->tooltip = "Maximum lead offset magnitude (future). 0 disables leads.";
+            f->min_value = 0;
+        }
+        if (auto * f = schema.field("lead_step")) {
+            f->tooltip = "Step size between lead offsets";
+            f->min_value = 1;
         }
         if (auto * f = schema.field("boundary_policy")) {
             f->tooltip = "How to handle rows where an offset falls outside the tensor";
-        }
-        if (auto * f = schema.field("column_indices")) {
-            f->tooltip = "Subset of source column indices to shift (empty = all columns)";
         }
         if (auto * f = schema.field("include_original")) {
             f->tooltip = "Include the original (unshifted) columns in the output";
@@ -83,9 +105,10 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  *
  * Container signature: TensorData → TensorData
  *
- * The input must be 2D with RowType::TimeFrameIndex. For each specified offset,
- * the features (or a column subset) from the neighbor row at position
- * (current_row + offset) in sorted time order are appended as new columns.
+ * The input must be 2D with RowType::TimeFrameIndex. Offsets are generated
+ * from the lag_range/lag_step and lead_range/lead_step parameters. For each
+ * offset, the features from the neighbor row at position (current_row + offset)
+ * in sorted time order are appended as new columns.
  *
  * Output column layout: [original cols (if include_original)] [offset_1 cols] [offset_2 cols] ...
  * Shifted columns are named "{original_col}_lag{offset}" (e.g. "feat1_lag-1").

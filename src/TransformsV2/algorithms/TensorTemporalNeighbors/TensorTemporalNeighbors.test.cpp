@@ -2,8 +2,8 @@
  * @file TensorTemporalNeighbors.test.cpp
  * @brief Catch2 tests for the TensorTemporalNeighbors container transform
  *
- * Tests boundary policies (NaN, Drop, Clamp, Zero), column subsetting,
- * sparse time indices, identity on empty offsets, rejection of
+ * Tests boundary policies (NaN, Drop, Clamp, Zero), buildOffsets(),
+ * sparse time indices, identity on zero ranges, rejection of
  * non-TimeFrameIndex row types, JSON parameter round-trip,
  * registry integration, and DataManager pipeline integration.
  */
@@ -53,7 +53,7 @@ std::shared_ptr<TimeIndexStorage> makeDenseTimeStorage(std::size_t count) {
 }
 
 /// 5 rows x 2 cols, dense time storage [0..4], row-major
-/// Row i: [10*(i+1), 10*(i+1)+1]  →  [10,11], [20,21], [30,31], [40,41], [50,51]
+/// Row i: [10*(i+1), 10*(i+1)+1]  ->  [10,11], [20,21], [30,31], [40,41], [50,51]
 TensorData makeSimpleTensor() {
     std::vector<float> data = {
             10.0f, 11.0f,
@@ -86,19 +86,84 @@ ComputeContext makeCtx() {
 }// namespace
 
 // ============================================================================
+// buildOffsets tests
+// ============================================================================
+
+TEST_CASE("TensorTemporalNeighborParams buildOffsets", "[TensorTemporalNeighbors]") {
+    SECTION("lag_range=3 lag_step=1 lead_range=2 lead_step=1") {
+        TensorTemporalNeighborParams params;
+        params.lag_range = 3;
+        params.lag_step = 1;
+        params.lead_range = 2;
+        params.lead_step = 1;
+
+        auto offsets = params.buildOffsets();
+        REQUIRE(offsets.size() == 5);
+        CHECK(offsets[0] == -3);
+        CHECK(offsets[1] == -2);
+        CHECK(offsets[2] == -1);
+        CHECK(offsets[3] == 1);
+        CHECK(offsets[4] == 2);
+    }
+
+    SECTION("lag only with step=2") {
+        TensorTemporalNeighborParams params;
+        params.lag_range = 6;
+        params.lag_step = 2;
+
+        auto offsets = params.buildOffsets();
+        REQUIRE(offsets.size() == 3);
+        CHECK(offsets[0] == -6);
+        CHECK(offsets[1] == -4);
+        CHECK(offsets[2] == -2);
+    }
+
+    SECTION("lead only with step=3") {
+        TensorTemporalNeighborParams params;
+        params.lead_range = 9;
+        params.lead_step = 3;
+
+        auto offsets = params.buildOffsets();
+        REQUIRE(offsets.size() == 3);
+        CHECK(offsets[0] == 3);
+        CHECK(offsets[1] == 6);
+        CHECK(offsets[2] == 9);
+    }
+
+    SECTION("zero ranges produce empty offsets") {
+        TensorTemporalNeighborParams params;
+        auto offsets = params.buildOffsets();
+        CHECK(offsets.empty());
+    }
+
+    SECTION("lag_range=1 lag_step=1 produces single offset") {
+        TensorTemporalNeighborParams params;
+        params.lag_range = 1;
+        params.lag_step = 1;
+
+        auto offsets = params.buildOffsets();
+        REQUIRE(offsets.size() == 1);
+        CHECK(offsets[0] == -1);
+    }
+}
+
+// ============================================================================
 // Basic lag/lead with NaN boundary
 // ============================================================================
 
 TEST_CASE("TensorTemporalNeighbors basic NaN boundary", "[TensorTemporalNeighbors]") {
     auto tensor = makeSimpleTensor();
     TensorTemporalNeighborParams params;
-    params.offsets = {-1, +1};
+    params.lag_range = 1;
+    params.lag_step = 1;
+    params.lead_range = 1;
+    params.lead_step = 1;
     params.boundary_policy = BoundaryPolicy::NaN;
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
     REQUIRE(result != nullptr);
 
-    // 5 rows, original 2 cols + 2 offsets × 2 cols = 6 cols
+    // 5 rows, original 2 cols + 2 offsets x 2 cols = 6 cols
     CHECK(result->numRows() == 5);
     CHECK(result->numColumns() == 6);
     CHECK(result->rowType() == RowType::TimeFrameIndex);
@@ -147,7 +212,10 @@ TEST_CASE("TensorTemporalNeighbors basic NaN boundary", "[TensorTemporalNeighbor
 TEST_CASE("TensorTemporalNeighbors Drop boundary", "[TensorTemporalNeighbors]") {
     auto tensor = makeSimpleTensor();
     TensorTemporalNeighborParams params;
-    params.offsets = {-1, +1};
+    params.lag_range = 1;
+    params.lag_step = 1;
+    params.lead_range = 1;
+    params.lead_step = 1;
     params.boundary_policy = BoundaryPolicy::Drop;
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
@@ -182,7 +250,10 @@ TEST_CASE("TensorTemporalNeighbors Drop boundary", "[TensorTemporalNeighbors]") 
 TEST_CASE("TensorTemporalNeighbors Clamp boundary", "[TensorTemporalNeighbors]") {
     auto tensor = makeSimpleTensor();
     TensorTemporalNeighborParams params;
-    params.offsets = {-1, +1};
+    params.lag_range = 1;
+    params.lag_step = 1;
+    params.lead_range = 1;
+    params.lead_step = 1;
     params.boundary_policy = BoundaryPolicy::Clamp;
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
@@ -192,13 +263,13 @@ TEST_CASE("TensorTemporalNeighbors Clamp boundary", "[TensorTemporalNeighbors]")
 
     auto flat = result->materializeFlat();
 
-    // Row 0: lag-1 clamped to row 0 itself → [10,11]
+    // Row 0: lag-1 clamped to row 0 itself -> [10,11]
     CHECK(flat[0 * 6 + 2] == 10.0f);
     CHECK(flat[0 * 6 + 3] == 11.0f);
     CHECK(flat[0 * 6 + 4] == 20.0f);
     CHECK(flat[0 * 6 + 5] == 21.0f);
 
-    // Row 4: lag+1 clamped to row 4 itself → [50,51]
+    // Row 4: lag+1 clamped to row 4 itself -> [50,51]
     CHECK(flat[4 * 6 + 2] == 40.0f);
     CHECK(flat[4 * 6 + 3] == 41.0f);
     CHECK(flat[4 * 6 + 4] == 50.0f);
@@ -212,13 +283,14 @@ TEST_CASE("TensorTemporalNeighbors Clamp boundary", "[TensorTemporalNeighbors]")
 TEST_CASE("TensorTemporalNeighbors Zero boundary", "[TensorTemporalNeighbors]") {
     auto tensor = makeSimpleTensor();
     TensorTemporalNeighborParams params;
-    params.offsets = {-1};
+    params.lag_range = 1;
+    params.lag_step = 1;
     params.boundary_policy = BoundaryPolicy::Zero;
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
     REQUIRE(result != nullptr);
     CHECK(result->numRows() == 5);
-    // 2 original + 2 lag-1 = 4
+    // 2 original + 1 offset x 2 cols = 4
     CHECK(result->numColumns() == 4);
 
     auto flat = result->materializeFlat();
@@ -233,19 +305,22 @@ TEST_CASE("TensorTemporalNeighbors Zero boundary", "[TensorTemporalNeighbors]") 
 }
 
 // ============================================================================
-// Multiple offsets
+// Multiple offsets via ranges
 // ============================================================================
 
 TEST_CASE("TensorTemporalNeighbors multiple offsets", "[TensorTemporalNeighbors]") {
     auto tensor = makeSimpleTensor();
     TensorTemporalNeighborParams params;
-    params.offsets = {-2, -1, +1, +2};
+    params.lag_range = 2;
+    params.lag_step = 1;
+    params.lead_range = 2;
+    params.lead_step = 1;
     params.boundary_policy = BoundaryPolicy::NaN;
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
     REQUIRE(result != nullptr);
 
-    // 2 original + 4 offsets × 2 cols = 10
+    // 2 original + 4 offsets x 2 cols = 10
     CHECK(result->numRows() == 5);
     CHECK(result->numColumns() == 10);
 
@@ -264,35 +339,34 @@ TEST_CASE("TensorTemporalNeighbors multiple offsets", "[TensorTemporalNeighbors]
 }
 
 // ============================================================================
-// Column subset
+// Step size > 1
 // ============================================================================
 
-TEST_CASE("TensorTemporalNeighbors column subset", "[TensorTemporalNeighbors]") {
-    auto tensor = makeSimpleTensor();
+TEST_CASE("TensorTemporalNeighbors step size > 1", "[TensorTemporalNeighbors]") {
+    auto tensor = makeSimpleTensor();// 5 rows
     TensorTemporalNeighborParams params;
-    params.offsets = {-1, +1};
+    params.lag_range = 4;
+    params.lag_step = 2;
     params.boundary_policy = BoundaryPolicy::NaN;
-    params.column_indices = std::vector<std::size_t>{0};// only shift column "a"
+
+    // Offsets: {-4, -2}
+    auto offsets = params.buildOffsets();
+    REQUIRE(offsets.size() == 2);
+    CHECK(offsets[0] == -4);
+    CHECK(offsets[1] == -2);
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
     REQUIRE(result != nullptr);
-
-    // 2 original + 2 offsets × 1 col = 4
-    CHECK(result->numColumns() == 4);
-
-    auto const & names = result->columnNames();
-    CHECK(names[0] == "a");
-    CHECK(names[1] == "b");
-    CHECK(names[2] == "a_lag-1");
-    CHECK(names[3] == "a_lag+1");
+    // 2 original + 2 offsets x 2 cols = 6
+    CHECK(result->numColumns() == 6);
 
     auto flat = result->materializeFlat();
 
-    // Row 2: original=[30,31], a_lag-1=20, a_lag+1=40
-    CHECK(flat[2 * 4 + 0] == 30.0f);
-    CHECK(flat[2 * 4 + 1] == 31.0f);
-    CHECK(flat[2 * 4 + 2] == 20.0f);
-    CHECK(flat[2 * 4 + 3] == 40.0f);
+    // Row 4: lag-4=row0=[10,11], lag-2=row2=[30,31]
+    CHECK(flat[4 * 6 + 2] == 10.0f);
+    CHECK(flat[4 * 6 + 3] == 11.0f);
+    CHECK(flat[4 * 6 + 4] == 30.0f);
+    CHECK(flat[4 * 6 + 5] == 31.0f);
 }
 
 // ============================================================================
@@ -306,7 +380,10 @@ TEST_CASE("TensorTemporalNeighbors single row NaN", "[TensorTemporalNeighbors]")
     auto tensor = TensorData::createTimeSeries2D(data, 1, 2, ts, tf, {"a", "b"});
 
     TensorTemporalNeighborParams params;
-    params.offsets = {-1, +1};
+    params.lag_range = 1;
+    params.lag_step = 1;
+    params.lead_range = 1;
+    params.lead_step = 1;
     params.boundary_policy = BoundaryPolicy::NaN;
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
@@ -330,7 +407,8 @@ TEST_CASE("TensorTemporalNeighbors single row Drop returns nullptr", "[TensorTem
     auto tensor = TensorData::createTimeSeries2D(data, 1, 2, ts, tf, {"a", "b"});
 
     TensorTemporalNeighborParams params;
-    params.offsets = {-1};
+    params.lag_range = 1;
+    params.lag_step = 1;
     params.boundary_policy = BoundaryPolicy::Drop;
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
@@ -338,13 +416,14 @@ TEST_CASE("TensorTemporalNeighbors single row Drop returns nullptr", "[TensorTem
 }
 
 // ============================================================================
-// Sparse time indices (index-adjacent, not frame ±1)
+// Sparse time indices (index-adjacent, not frame +/-1)
 // ============================================================================
 
 TEST_CASE("TensorTemporalNeighbors sparse time indices", "[TensorTemporalNeighbors]") {
     auto tensor = makeSparseTimeTensor();// Rows at frames [10, 20, 50]
     TensorTemporalNeighborParams params;
-    params.offsets = {+1};
+    params.lead_range = 1;
+    params.lead_step = 1;
     params.boundary_policy = BoundaryPolicy::NaN;
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
@@ -367,13 +446,13 @@ TEST_CASE("TensorTemporalNeighbors sparse time indices", "[TensorTemporalNeighbo
 }
 
 // ============================================================================
-// Empty offsets → identity
+// Zero ranges -> identity
 // ============================================================================
 
-TEST_CASE("TensorTemporalNeighbors empty offsets returns identity", "[TensorTemporalNeighbors]") {
+TEST_CASE("TensorTemporalNeighbors zero ranges returns identity", "[TensorTemporalNeighbors]") {
     auto tensor = makeSimpleTensor();
     TensorTemporalNeighborParams params;
-    params.offsets = {};
+    // lag_range=0, lead_range=0 -> no offsets
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
     REQUIRE(result != nullptr);
@@ -397,7 +476,8 @@ TEST_CASE("TensorTemporalNeighbors rejects Ordinal rows", "[TensorTemporalNeighb
             {1.0f, 2.0f, 3.0f, 4.0f}, 2, 2, {"a", "b"});
 
     TensorTemporalNeighborParams params;
-    params.offsets = {-1};
+    params.lag_range = 1;
+    params.lag_step = 1;
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
     CHECK(result == nullptr);
@@ -410,14 +490,17 @@ TEST_CASE("TensorTemporalNeighbors rejects Ordinal rows", "[TensorTemporalNeighb
 TEST_CASE("TensorTemporalNeighbors exclude original columns", "[TensorTemporalNeighbors]") {
     auto tensor = makeSimpleTensor();
     TensorTemporalNeighborParams params;
-    params.offsets = {-1, +1};
+    params.lag_range = 1;
+    params.lag_step = 1;
+    params.lead_range = 1;
+    params.lead_step = 1;
     params.boundary_policy = BoundaryPolicy::Clamp;
     params.include_original = false;
 
     auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
     REQUIRE(result != nullptr);
     CHECK(result->numRows() == 5);
-    // Only offset columns: 2 offsets × 2 cols = 4
+    // Only offset columns: 2 offsets x 2 cols = 4
     CHECK(result->numColumns() == 4);
 
     auto const & names = result->columnNames();
@@ -432,20 +515,6 @@ TEST_CASE("TensorTemporalNeighbors exclude original columns", "[TensorTemporalNe
     CHECK(flat[2 * 4 + 1] == 21.0f);
     CHECK(flat[2 * 4 + 2] == 40.0f);
     CHECK(flat[2 * 4 + 3] == 41.0f);
-}
-
-// ============================================================================
-// Invalid column index
-// ============================================================================
-
-TEST_CASE("TensorTemporalNeighbors rejects out-of-range column index", "[TensorTemporalNeighbors]") {
-    auto tensor = makeSimpleTensor();// 2 columns
-    TensorTemporalNeighborParams params;
-    params.offsets = {-1};
-    params.column_indices = std::vector<std::size_t>{5};// out of range
-
-    auto result = tensorTemporalNeighbors(tensor, params, makeCtx());
-    CHECK(result == nullptr);
 }
 
 // ============================================================================
@@ -482,7 +551,10 @@ TEST_CASE("TensorTemporalNeighborParams JSON loading", "[TensorTemporalNeighbors
 
     SECTION("Load valid JSON with all fields") {
         std::string json = R"({
-            "offsets": [-2, -1, 1],
+            "lag_range": 3,
+            "lag_step": 1,
+            "lead_range": 2,
+            "lead_step": 1,
             "boundary_policy": "Drop",
             "include_original": false
         })";
@@ -490,10 +562,10 @@ TEST_CASE("TensorTemporalNeighborParams JSON loading", "[TensorTemporalNeighbors
         auto result = loadParametersFromJson<TensorTemporalNeighborParams>(json);
         REQUIRE(result);
         auto const & p = result.value();
-        REQUIRE(p.offsets.size() == 3);
-        CHECK(p.offsets[0] == -2);
-        CHECK(p.offsets[1] == -1);
-        CHECK(p.offsets[2] == 1);
+        CHECK(p.lag_range == 3);
+        CHECK(p.lag_step == 1);
+        CHECK(p.lead_range == 2);
+        CHECK(p.lead_step == 1);
         CHECK(p.boundary_policy == BoundaryPolicy::Drop);
         CHECK(p.include_original == false);
     }
@@ -502,14 +574,20 @@ TEST_CASE("TensorTemporalNeighborParams JSON loading", "[TensorTemporalNeighbors
         auto result = loadParametersFromJson<TensorTemporalNeighborParams>("{}");
         REQUIRE(result);
         auto const & p = result.value();
-        CHECK(p.offsets.empty());
+        CHECK(p.lag_range == 0);
+        CHECK(p.lag_step == 1);
+        CHECK(p.lead_range == 0);
+        CHECK(p.lead_step == 1);
         CHECK(p.boundary_policy == BoundaryPolicy::NaN);
         CHECK(p.include_original == true);
     }
 
     SECTION("JSON round-trip preserves values") {
         TensorTemporalNeighborParams original;
-        original.offsets = {-3, +3};
+        original.lag_range = 5;
+        original.lag_step = 2;
+        original.lead_range = 3;
+        original.lead_step = 1;
         original.boundary_policy = BoundaryPolicy::Clamp;
         original.include_original = false;
 
@@ -518,7 +596,10 @@ TEST_CASE("TensorTemporalNeighborParams JSON loading", "[TensorTemporalNeighbors
         auto result = loadParametersFromJson<TensorTemporalNeighborParams>(json);
         REQUIRE(result);
         auto const & recovered = result.value();
-        CHECK(recovered.offsets == original.offsets);
+        CHECK(recovered.lag_range == original.lag_range);
+        CHECK(recovered.lag_step == original.lag_step);
+        CHECK(recovered.lead_range == original.lead_range);
+        CHECK(recovered.lead_step == original.lead_step);
         CHECK(recovered.boundary_policy == BoundaryPolicy::Clamp);
         CHECK(recovered.include_original == false);
     }
@@ -536,7 +617,7 @@ TEST_CASE("TensorTemporalNeighbors DataManager pipeline integration",
     auto time_frame = std::make_shared<TimeFrame>(std::vector<int>{0, 1, 2, 3, 4});
     dm.setTime(TimeKey("default"), time_frame);
 
-    // 5 rows × 2 cols, dense time storage
+    // 5 rows x 2 cols, dense time storage
     std::vector<float> data = {10.0f, 11.0f, 20.0f, 21.0f, 30.0f, 31.0f, 40.0f, 41.0f, 50.0f, 51.0f};
     auto ts = TimeIndexStorageFactory::createDenseFromZero(5);
     auto tensor = std::make_shared<TensorData>(
@@ -563,7 +644,10 @@ TEST_CASE("TensorTemporalNeighbors DataManager pipeline integration",
                         "input_key": "input_tensor",
                         "output_key": "augmented_tensor",
                         "parameters": {
-                            "offsets": [-1, 1],
+                            "lag_range": 1,
+                            "lag_step": 1,
+                            "lead_range": 1,
+                            "lead_step": 1,
                             "boundary_policy": "NaN",
                             "include_original": true
                         }
@@ -585,7 +669,7 @@ TEST_CASE("TensorTemporalNeighbors DataManager pipeline integration",
         auto result = dm.getData<TensorData>("augmented_tensor");
         REQUIRE(result != nullptr);
         CHECK(result->numRows() == 5);
-        // 2 original + 2 offsets × 2 cols = 6
+        // 2 original + 2 offsets x 2 cols = 6
         CHECK(result->numColumns() == 6);
 
         auto flat = result->materializeFlat();
@@ -612,7 +696,10 @@ TEST_CASE("TensorTemporalNeighbors DataManager pipeline integration",
                         "input_key": "input_tensor",
                         "output_key": "augmented_tensor_drop",
                         "parameters": {
-                            "offsets": [-1, 1],
+                            "lag_range": 1,
+                            "lag_step": 1,
+                            "lead_range": 1,
+                            "lead_step": 1,
                             "boundary_policy": "Drop",
                             "include_original": true
                         }
@@ -633,7 +720,7 @@ TEST_CASE("TensorTemporalNeighbors DataManager pipeline integration",
 
         auto result = dm.getData<TensorData>("augmented_tensor_drop");
         REQUIRE(result != nullptr);
-        // Rows 0 and 4 dropped → 3 surviving rows
+        // Rows 0 and 4 dropped -> 3 surviving rows
         CHECK(result->numRows() == 3);
         CHECK(result->numColumns() == 6);
     }

@@ -19,30 +19,40 @@
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 
-namespace {
+// ============================================================================
+// buildOffsets
+// ============================================================================
 
-/// Determine which source columns to shift
-std::vector<std::size_t> resolveColumnIndices(
-        TensorTemporalNeighborParams const & params,
-        std::size_t num_cols) {
-    if (params.column_indices.has_value() && !params.column_indices->empty()) {
-        return *params.column_indices;
+std::vector<int> TensorTemporalNeighborParams::buildOffsets() const {
+    std::vector<int> result;
+
+    // Lags (negative, descending magnitude → ascending value: -range, ..., -step)
+    if (lag_range > 0 && lag_step >= 1) {
+        for (int v = lag_range; v >= lag_step; v -= lag_step) {
+            result.push_back(-v);
+        }
     }
-    std::vector<std::size_t> all(num_cols);
-    for (std::size_t i = 0; i < num_cols; ++i) {
-        all[i] = i;
+
+    // Leads (positive, ascending)
+    if (lead_range > 0 && lead_step >= 1) {
+        for (int v = lead_step; v <= lead_range; v += lead_step) {
+            result.push_back(v);
+        }
     }
-    return all;
+
+    return result;
 }
 
-/// Build column names for one offset group
+namespace {
+
+/// Build column names for one offset group (all columns)
 std::vector<std::string> buildOffsetColumnNames(
         std::vector<std::string> const & src_names,
-        std::vector<std::size_t> const & col_indices,
+        std::size_t num_cols,
         int offset) {
     std::vector<std::string> names;
-    names.reserve(col_indices.size());
-    for (auto ci: col_indices) {
+    names.reserve(num_cols);
+    for (std::size_t ci = 0; ci < num_cols; ++ci) {
         std::string const & base =
                 ci < src_names.size() ? src_names[ci] : ("col" + std::to_string(ci));
         names.push_back(base + "_lag" + (offset >= 0 ? "+" : "") + std::to_string(offset));
@@ -90,8 +100,11 @@ auto tensorTemporalNeighbors(
         return nullptr;
     }
 
+    // Build offsets from lag/lead range parameters
+    auto const offsets = params.buildOffsets();
+
     // If no offsets, return a copy of the input (identity transform)
-    if (params.offsets.empty()) {
+    if (offsets.empty()) {
         auto const & row_desc = input.rows();
         auto data = input.materializeFlat();
         return std::make_shared<TensorData>(
@@ -102,17 +115,6 @@ auto tensorTemporalNeighbors(
                         input.columnNames()));
     }
 
-    // Validate column_indices
-    auto const shift_cols = resolveColumnIndices(params, num_cols);
-    for (auto ci: shift_cols) {
-        if (ci >= num_cols) {
-            ctx.logMessage("TensorTemporalNeighbors: column_indices contains " +
-                           std::to_string(ci) + " but tensor has only " +
-                           std::to_string(num_cols) + " columns");
-            return nullptr;
-        }
-    }
-
     ctx.reportProgress(0);
 
     // --- Determine surviving rows (Drop mode) ---
@@ -120,7 +122,7 @@ auto tensorTemporalNeighbors(
     if (params.boundary_policy == BoundaryPolicy::Drop) {
         for (std::size_t r = 0; r < num_rows; ++r) {
             bool all_valid = true;
-            for (int const offset: params.offsets) {
+            for (int const offset: offsets) {
                 auto const neighbor = static_cast<std::ptrdiff_t>(r) + offset;
                 if (neighbor < 0 || neighbor >= static_cast<std::ptrdiff_t>(num_rows)) {
                     all_valid = false;
@@ -141,11 +143,10 @@ auto tensorTemporalNeighbors(
     ctx.reportProgress(10);
 
     // --- Compute output dimensions ---
-    std::size_t const num_shifted_cols_per_offset = shift_cols.size();
-    std::size_t const num_offsets = params.offsets.size();
+    std::size_t const num_offsets = offsets.size();
     std::size_t const original_cols_in_output = params.include_original ? num_cols : 0;
     std::size_t const total_out_cols =
-            original_cols_in_output + num_shifted_cols_per_offset * num_offsets;
+            original_cols_in_output + num_cols * num_offsets;
     std::size_t const out_rows =
             (params.boundary_policy == BoundaryPolicy::Drop) ? surviving_rows.size() : num_rows;
 
@@ -161,8 +162,8 @@ auto tensorTemporalNeighbors(
         }
     }
 
-    for (int const offset: params.offsets) {
-        auto names = buildOffsetColumnNames(input.columnNames(), shift_cols, offset);
+    for (int const offset: offsets) {
+        auto names = buildOffsetColumnNames(input.columnNames(), num_cols, offset);
         out_col_names.insert(out_col_names.end(), names.begin(), names.end());
     }
 
@@ -185,8 +186,8 @@ auto tensorTemporalNeighbors(
             }
         }
 
-        // Shifted columns for each offset
-        for (int const offset: params.offsets) {
+        // Shifted columns for each offset (all columns)
+        for (int const offset: offsets) {
             auto const neighbor = static_cast<std::ptrdiff_t>(src_r) + offset;
             bool const in_bounds =
                     (neighbor >= 0) && (neighbor < static_cast<std::ptrdiff_t>(num_rows));
@@ -198,7 +199,7 @@ auto tensorTemporalNeighbors(
                 source_row = (neighbor < 0) ? 0 : (num_rows - 1);
             }
 
-            for (auto ci: shift_cols) {
+            for (std::size_t ci = 0; ci < num_cols; ++ci) {
                 if (in_bounds || params.boundary_policy == BoundaryPolicy::Clamp) {
                     out_data[out_r * total_out_cols + out_col] =
                             src_flat[source_row * num_cols + ci];
