@@ -87,12 +87,12 @@ private:
     void _removeFromMask(CanvasCoordinates const & canvas_coords);
 
 private slots:
-    void _setMaskAlpha(int alpha);
+    void _setMaskAlpha(float alpha);
     void _setMaskColor(QString const & hex_color);
     void _toggleShowBoundingBox(bool checked);
     void _toggleShowOutline(bool checked);
     void _toggleUseAsTransparency(bool checked);
-    void _toggleSelectionMode(QString text);
+    void _toggleSelectionMode(const QString& text);
     void _clickedInVideo(CanvasCoordinates const & canvas_coords);
     void _rightClickedInVideo(CanvasCoordinates const & canvas_coords);
     void _mouseMoveInVideo(CanvasCoordinates const & canvas_coords);

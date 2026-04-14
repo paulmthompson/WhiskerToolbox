@@ -19,7 +19,6 @@ add_subdirectory(EditorState) # reflectcpp, Qt
 add_subdirectory(KeymapSystem) # Qt, EditorState
 add_subdirectory(Collapsible_Widget) # Qt
 add_subdirectory(Terminal_Widget) # Qt, EditorState, reflectcpp
-add_subdirectory(ColorPicker_Widget) # Qt, DataManager
 
 add_subdirectory(GroupManagementWidget) # Qt, DataManager, EditorState
 add_subdirectory(GroupContextMenu) # Qt, Entity, GroupManagementWidget
@@ -62,11 +61,11 @@ add_subdirectory(DataInspector_Widget)
 
 # Qt, DataManager, glm, Boost,
 # DataViewer, Feature_Tree_Widget, PlottingOpenGL,
-# ColorPicker_Widget, TimeScrollbar, CorePlotting
+# TimeScrollbar, CorePlotting
 add_subdirectory(DataViewer_Widget)
 
 # Qt, DataManager, Feature_Table_Widget, EditorState,
-# Geometry, Collapsible_Widget, ColorPicker_Widget,
+# Geometry, Collapsible_Widget, ColorAlphaControls,
 # GroupManagementWidget, GroupContextMenu, opencv,
 # TimeScrollBar
 add_subdirectory(Media_Widget)
@@ -106,6 +105,7 @@ add_subdirectory(Plots/Common/VerticalAxisWidget)
 add_subdirectory(Plots/Common/HorizontalAxisWidget)
 add_subdirectory(Plots/Common/GlyphStyleWidget)
 add_subdirectory(Plots/Common/LineStyleControls)
+add_subdirectory(Plots/Common/ColorAlphaControls)
 
 # Qt - Shared tooltip manager for plot widgets
 add_subdirectory(Plots/Common/TooltipManager)
@@ -265,7 +265,7 @@ target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
 target_link_libraries(WhiskerToolbox PRIVATE EditorState)
 target_link_libraries(WhiskerToolbox PRIVATE KeymapSystem)
 target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
-target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE ColorAlphaControls)
 target_link_libraries(WhiskerToolbox PRIVATE DataExport_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataImport_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataViewer_Widget)

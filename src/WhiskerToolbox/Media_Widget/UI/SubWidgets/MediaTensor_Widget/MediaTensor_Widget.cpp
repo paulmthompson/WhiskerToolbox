@@ -4,6 +4,7 @@
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
 
+#include "ColorAlphaControls.hpp"
 #include "DataManager/DataManager.hpp"
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -16,13 +17,13 @@ MediaTensor_Widget::MediaTensor_Widget(std::shared_ptr<DataManager> data_manager
     : QWidget(parent),
       ui(new Ui::MediaTensor_Widget),
       _data_manager{std::move(data_manager)},
-      _scene{std::move(scene)},
+      _scene{scene},
       _state{state} {
     ui->setupUi(this);
 
     connect(ui->horizontalSlider, &QSlider::valueChanged, this, &MediaTensor_Widget::_setTensorChannel);
-    connect(ui->color_picker, &ColorPicker_Widget::colorChanged, this, &MediaTensor_Widget::_setTensorColor);
-    connect(ui->color_picker, &ColorPicker_Widget::alphaChanged, this, &MediaTensor_Widget::_setTensorAlpha);
+    connect(ui->color_picker, &ColorAlphaControls::colorChanged, this, &MediaTensor_Widget::_setTensorColor);
+    connect(ui->color_picker, &ColorAlphaControls::alphaChanged, this, &MediaTensor_Widget::_setTensorAlpha);
 }
 
 MediaTensor_Widget::~MediaTensor_Widget() {
@@ -41,13 +42,13 @@ void MediaTensor_Widget::setActiveKey(std::string const & key) {
             ui->horizontalSlider->setMaximum(static_cast<int>(num_cols) - 1);
 
             ui->horizontalSlider->setValue(0);
-            
+
             // Set the color picker to the current tensor color if available
             if (_state) {
                 auto const * config = _state->displayOptions().get<TensorDisplayOptions>(QString::fromStdString(key));
                 if (config) {
                     ui->color_picker->setColor(QString::fromStdString(config->hex_color()));
-                    ui->color_picker->setAlpha(static_cast<int>(config->alpha() * 100));
+                    ui->color_picker->setAlpha(config->alpha());
                 }
             }
         }
@@ -66,7 +67,7 @@ void MediaTensor_Widget::_setTensorChannel(int channel) {
     }
 }
 
-void MediaTensor_Widget::_setTensorColor(const QString& hex_color) {
+void MediaTensor_Widget::_setTensorColor(QString const & hex_color) {
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
         auto * tensor_opts = _state->displayOptions().getMutable<TensorDisplayOptions>(key);
@@ -78,14 +79,13 @@ void MediaTensor_Widget::_setTensorColor(const QString& hex_color) {
     }
 }
 
-void MediaTensor_Widget::_setTensorAlpha(int alpha) {
-    float const alpha_float = static_cast<float>(alpha) / 100;
+void MediaTensor_Widget::_setTensorAlpha(float alpha) {
 
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
         auto * tensor_opts = _state->displayOptions().getMutable<TensorDisplayOptions>(key);
         if (tensor_opts) {
-            tensor_opts->alpha() = alpha_float;
+            tensor_opts->alpha() = alpha;
             _state->displayOptions().notifyChanged<TensorDisplayOptions>(key);
         }
         _scene->UpdateCanvas();

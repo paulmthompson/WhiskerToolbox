@@ -8,10 +8,11 @@
 #include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
 
 #include "Collapsible_Widget/Section.hpp"
+#include "ColorAlphaControls.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
-#include "Masks/Mask_Data.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
+#include "Masks/Mask_Data.hpp"
 
 #include <QLabel>
 #include <QVBoxLayout>
@@ -39,9 +40,9 @@ MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Me
 
     connect(ui->selection_mode_combo, &QComboBox::currentTextChanged, this, &MediaMask_Widget::_toggleSelectionMode);
 
-    connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
+    connect(ui->color_picker, &ColorAlphaControls::alphaChanged,
             this, &MediaMask_Widget::_setMaskAlpha);
-    connect(ui->color_picker, &ColorPicker_Widget::colorChanged,
+    connect(ui->color_picker, &ColorAlphaControls::colorChanged,
             this, &MediaMask_Widget::_setMaskColor);
 
     // Connect bounding box control
@@ -131,7 +132,7 @@ void MediaMask_Widget::setActiveKey(std::string const & key) {
 
         if (config) {
             ui->color_picker->setColor(QString::fromStdString(config->hex_color()));
-            ui->color_picker->setAlpha(static_cast<int>(config->alpha() * 100));
+            ui->color_picker->setAlpha(config->alpha());
 
             // Set bounding box checkbox
             ui->show_bounding_box_checkbox->blockSignals(true);
@@ -151,14 +152,13 @@ void MediaMask_Widget::setActiveKey(std::string const & key) {
     }
 }
 
-void MediaMask_Widget::_setMaskAlpha(int alpha) {
-    float const alpha_float = static_cast<float>(alpha) / 100;
+void MediaMask_Widget::_setMaskAlpha(float alpha) {
 
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
         auto * mask_opts = _state->displayOptions().getMutable<MaskDisplayOptions>(key);
         if (mask_opts) {
-            mask_opts->alpha() = alpha_float;
+            mask_opts->alpha() = alpha;
             _state->displayOptions().notifyChanged<MaskDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
@@ -177,11 +177,11 @@ void MediaMask_Widget::_setMaskColor(QString const & hex_color) {
     }
 }
 
-void MediaMask_Widget::_toggleSelectionMode(QString text) {
+void MediaMask_Widget::_toggleSelectionMode(const QString& text) {
     _selection_mode = _selection_modes[text];
 
     // Switch to the appropriate page in the stacked widget
-    int pageIndex = static_cast<int>(_selection_mode);
+    int const pageIndex = static_cast<int>(_selection_mode);
     ui->mode_stacked_widget->setCurrentIndex(pageIndex);
 
     // Update hover circle visibility based on the mode
@@ -354,7 +354,7 @@ void MediaMask_Widget::_applyMaskDilation(MaskDilationOptions const & options) {
     for (auto const & single_mask: original_masks) {
         if (!single_mask.empty()) {
             auto dilated_mask = ImageProcessing::dilate_mask(single_mask.points(), image_size, options);
-            dilated_masks.push_back(Mask2D(std::move(dilated_mask)));
+            dilated_masks.emplace_back(std::move(dilated_mask));
         }
     }
 
@@ -402,7 +402,7 @@ void MediaMask_Widget::_applyDilationPermanently() {
     _original_mask_data.clear();
 
     // Reset the dilation widget
-    MaskDilationOptions default_options;
+    MaskDilationOptions const default_options;
     _dilation_widget->setOptions(default_options);
 
     std::cout << "Mask dilation applied permanently" << std::endl;
@@ -469,21 +469,21 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
 
     // Transform canvas coordinates directly to mask coordinates
     // This maintains separation of concerns - no need to access media data
-    float x_mask_raw = (canvas_coords.x / static_cast<float>(canvas_width)) * static_cast<float>(mask_image_size.width);
-    float y_mask_raw = (canvas_coords.y / static_cast<float>(canvas_height)) * static_cast<float>(mask_image_size.height);
+    float const x_mask_raw = (canvas_coords.x / static_cast<float>(canvas_width)) * static_cast<float>(mask_image_size.width);
+    float const y_mask_raw = (canvas_coords.y / static_cast<float>(canvas_height)) * static_cast<float>(mask_image_size.height);
 
     // Get brush size and scale it separately for each dimension to preserve circle shape
-    int brush_radius_canvas = _brushSelectionWidget->getBrushSize();
-    float scale_x = static_cast<float>(mask_image_size.width) / static_cast<float>(canvas_width);
-    float scale_y = static_cast<float>(mask_image_size.height) / static_cast<float>(canvas_height);
+    int const brush_radius_canvas = _brushSelectionWidget->getBrushSize();
+    float const scale_x = static_cast<float>(mask_image_size.width) / static_cast<float>(canvas_width);
+    float const scale_y = static_cast<float>(mask_image_size.height) / static_cast<float>(canvas_height);
 
     // Calculate scaled brush radius for each dimension
-    float brush_radius_x = static_cast<float>(brush_radius_canvas) * scale_x;
-    float brush_radius_y = static_cast<float>(brush_radius_canvas) * scale_y;
+    float const brush_radius_x = static_cast<float>(brush_radius_canvas) * scale_x;
+    float const brush_radius_y = static_cast<float>(brush_radius_canvas) * scale_y;
 
     // Use the transformed coordinates directly - hover circle is now centered on cursor
-    float x_mask = x_mask_raw;
-    float y_mask = y_mask_raw;
+    float const x_mask = x_mask_raw;
+    float const y_mask = y_mask_raw;
 
     // Generate ellipse pixels using the new general-purpose function
     auto brush_pixels = generate_ellipse_pixels(x_mask, y_mask, brush_radius_x, brush_radius_y);
@@ -510,7 +510,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     // Add new pixels that don't already exist in the primary mask
     int added_count = 0;
     for (auto const & pixel: brush_pixels) {
-        std::pair<int, int> pixel_key = {static_cast<int>(pixel.x),
+        std::pair<int, int> const pixel_key = {static_cast<int>(pixel.x),
                                          static_cast<int>(pixel.y)};
         if (existing_pixel_set.find(pixel_key) == existing_pixel_set.end()) {
             primary_mask.push_back(pixel);
@@ -566,21 +566,21 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
 
     // Transform canvas coordinates directly to mask coordinates
     // This maintains separation of concerns - no need to access media data
-    float x_mask_raw = (canvas_coords.x / static_cast<float>(canvas_width)) * static_cast<float>(mask_image_size.width);
-    float y_mask_raw = (canvas_coords.y / static_cast<float>(canvas_height)) * static_cast<float>(mask_image_size.height);
+    float const x_mask_raw = (canvas_coords.x / static_cast<float>(canvas_width)) * static_cast<float>(mask_image_size.width);
+    float const y_mask_raw = (canvas_coords.y / static_cast<float>(canvas_height)) * static_cast<float>(mask_image_size.height);
 
     // Get brush size and scale it separately for each dimension to preserve circle shape
-    int brush_radius_canvas = _brushSelectionWidget->getBrushSize();
-    float scale_x = static_cast<float>(mask_image_size.width) / static_cast<float>(canvas_width);
-    float scale_y = static_cast<float>(mask_image_size.height) / static_cast<float>(canvas_height);
+    int const brush_radius_canvas = _brushSelectionWidget->getBrushSize();
+    float const scale_x = static_cast<float>(mask_image_size.width) / static_cast<float>(canvas_width);
+    float const scale_y = static_cast<float>(mask_image_size.height) / static_cast<float>(canvas_height);
 
     // Calculate scaled brush radius for each dimension
-    float brush_radius_x = static_cast<float>(brush_radius_canvas) * scale_x;
-    float brush_radius_y = static_cast<float>(brush_radius_canvas) * scale_y;
+    float const brush_radius_x = static_cast<float>(brush_radius_canvas) * scale_x;
+    float const brush_radius_y = static_cast<float>(brush_radius_canvas) * scale_y;
 
     // Use the transformed coordinates directly - hover circle is now centered on cursor
-    float x_mask = x_mask_raw;
-    float y_mask = y_mask_raw;
+    float const x_mask = x_mask_raw;
+    float const y_mask = y_mask_raw;
 
     // Get current time and existing masks
     auto time_position = _state->current_position;
@@ -604,11 +604,11 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     // Filter out pixels within brush radius from the primary mask
     for (auto const & point: primary_mask) {
         // Calculate elliptical distance from brush center
-        float dx = point.x - x_mask;
-        float dy = point.y - y_mask;
-        float normalized_dx = dx / brush_radius_x;
-        float normalized_dy = dy / brush_radius_y;
-        float ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
+        float const dx = point.x - x_mask;
+        float const dy = point.y - y_mask;
+        float const normalized_dx = dx / brush_radius_x;
+        float const normalized_dy = dy / brush_radius_y;
+        float const ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
 
         // Keep pixels outside brush ellipse
         if (ellipse_distance > 1.0f) {
@@ -655,7 +655,7 @@ void MediaMask_Widget::_mouseMoveInVideo(CanvasCoordinates const & canvas_coords
 
 void MediaMask_Widget::_mouseReleased() {
     // Stop dragging when mouse is released
-    bool was_dragging = _is_dragging;
+    bool const was_dragging = _is_dragging;
     _is_dragging = false;
 
     // Update canvas once when brush drag operation is completed
@@ -677,11 +677,8 @@ void MediaMask_Widget::_onAllowEmptyMaskChanged(bool allow) {
 void MediaMask_Widget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
 
-    // Ensure the color picker and stacked widget components resize properly
-    int availableWidth = width() - 20;// Account for margins
-
-    // Update color picker width to use available space
-    ui->color_picker->setFixedWidth(qMin(availableWidth, 400));// Cap at reasonable maximum
+    // Ensure the stacked widget components resize properly
+    int const availableWidth = width() - 20;// Account for margins
 
     // Update stacked widget width
     ui->mode_stacked_widget->setFixedWidth(availableWidth);

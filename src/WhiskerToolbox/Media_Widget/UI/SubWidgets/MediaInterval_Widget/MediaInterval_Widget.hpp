@@ -29,7 +29,7 @@ private:
     std::string _active_key;
 
 private slots:
-    void _setIntervalAlpha(int alpha);
+    void _setIntervalAlpha(float alpha);
     void _setIntervalColor(QString const & hex_color);
     void _setPlottingStyle(int style_index);
 };

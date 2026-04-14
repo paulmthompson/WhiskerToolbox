@@ -96,19 +96,14 @@
     </layout>
    </item>
    <item>
-    <widget class="ColorPicker_Widget" name="color_picker" native="true">
+    <widget class="ColorAlphaControls" name="color_picker" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="minimumSize">
-      <size>
-       <width>200</width>
-       <height>130</height>
-      </size>
-     </property>
+
     </widget>
    </item>
    <item>
@@ -211,9 +206,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ColorPicker_Widget</class>
+   <class>ColorAlphaControls</class>
    <extends>QWidget</extends>
-   <header>ColorPicker_Widget/ColorPicker_Widget.hpp</header>
+   <header>ColorAlphaControls.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

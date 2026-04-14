@@ -32,8 +32,8 @@ private:
 
 private slots:
     void _setTensorChannel(int channel);
-    void _setTensorColor(const QString& hex_color);
-    void _setTensorAlpha(int alpha);
+    void _setTensorColor(QString const & hex_color);
+    void _setTensorAlpha(float alpha);
 };
 
 

@@ -112,7 +112,7 @@ target_link_libraries(Media_Widget PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(Media_Widget PUBLIC WhiskerToolbox::CoreMath)
 
 target_link_libraries(Media_Widget PRIVATE Feature_Table_Widget)
-target_link_libraries(Media_Widget PRIVATE ColorPicker_Widget)
+target_link_libraries(Media_Widget PRIVATE ColorAlphaControls)
 target_link_libraries(Media_Widget PRIVATE Collapsible_Widget)
 target_link_libraries(Media_Widget PRIVATE AutoParamWidget)
 target_link_libraries(Media_Widget PRIVATE GlyphStyleWidget)
