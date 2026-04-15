@@ -1,0 +1,142 @@
+---
+title: "LARS Projection Operation"
+description: "Supervised dimensionality reduction via LARS (LASSO / Ridge / Elastic Net)"
+---
+
+## Overview
+
+`LARSProjectionOperation` is a supervised dimensionality reduction technique that uses
+mlpack's LARS (Least Angle Regression Stagewise) algorithm in a one-vs-all configuration
+to learn a linear projection from $D$-dimensional feature space into $C$-dimensional class
+space (one dimension per class).
+
+The regularization mode controls which penalty terms are active:
+
+- **LASSO** ($\lambda_1 > 0, \lambda_2 = 0$): L1 penalty produces sparse coefficients,
+  effectively performing feature selection
+- **Ridge** ($\lambda_1 = 0, \lambda_2 > 0$): L2 penalty produces dense, shrunken coefficients
+- **Elastic Net** ($\lambda_1 > 0, \lambda_2 > 0$): Combined L1+L2 for grouped sparsity
+
+The objective minimized for each class $c$ is:
+
+$$\min_{\beta_c} \frac{1}{2} \| X \beta_c - y_c \|_2^2 + \lambda_1 \| \beta_c \|_1 + \frac{1}{2} \lambda_2 \| \beta_c \|_2^2$$
+
+where $y_c$ is a binary indicator (1 if observation belongs to class $c$, 0 otherwise).
+
+**Task type:** `SupervisedDimensionalityReduction`
+
+**Source files:**
+
+- Header: `src/MLCore/models/supervised/LARSProjectionOperation.hpp`
+- Implementation: `src/MLCore/models/supervised/LARSProjectionOperation.cpp`
+- Abstract base: `src/MLCore/models/MLSupervisedDimReductionOperation.hpp`
+- Tests: `tests/MLCore/LARSProjectionOperation.test.cpp`
+
+## Parameters
+
+`LARSProjectionParameters` in `MLModelParameters.hpp`:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `regularization_type` | `RegularizationType` | `LASSO` | Regularization preset (LASSO, Ridge, or ElasticNet). |
+| `lambda1` | `double` | 0.1 | L1 regularization penalty (sparsity). Used by LASSO and ElasticNet modes. |
+| `lambda2` | `double` | 0.0 | L2 regularization penalty (shrinkage). Used by Ridge and ElasticNet modes. |
+| `tolerance` | `double` | 1e-16 | Convergence tolerance on feature correlations. |
+| `use_cholesky` | `bool` | `true` | Use Cholesky decomposition during training (faster in most cases). |
+
+The `RegularizationType` enum resolves effective lambda values:
+
+- `LASSO`: uses `lambda1`, forces `lambda2 = 0`
+- `Ridge`: forces `lambda1 = 0`, uses `lambda2`
+- `ElasticNet`: uses both `lambda1` and `lambda2`
+
+**Feature scaling** (z-score normalization) is the caller's responsibility via `FeatureConverter`.
+The operation sets `normalizeData=false` to avoid double-normalization.
+
+## Architecture
+
+### Class Hierarchy
+
+```
+MLModelOperation (interface)
+  └── MLSupervisedDimReductionOperation (abstract base)
+        └── LARSProjectionOperation (concrete)
+```
+
+### Pimpl Pattern
+
+```
+LARSProjectionOperation.hpp  →  MLSupervisedDimReductionOperation (public API)
+LARSProjectionOperation.cpp  →  mlpack::LARS (hidden, used only during training)
+```
+
+The `Impl` struct holds:
+
+- `arma::mat weight_matrix` — $(C \times D)$ assembled from per-class regression coefficients
+- `arma::vec bias` — $(C)$ intercept per class
+- `std::vector<std::size_t> active_features` — union of non-zero coefficient indices
+- `num_classes`, `num_features`, `col_names` — metadata
+- `trained` — readiness flag
+
+Unlike `LogitProjectionOperation`, the mlpack `LARS` objects are **not retained** after training.
+Only the extracted weight matrix and bias are kept for projection and serialization.
+
+### One-vs-All Training
+
+For $C$ classes, the operation trains $C$ independent `mlpack::LARS` models:
+
+1. For each class $c \in [0, C)$:
+   - Construct binary responses: $y_c(i) = 1$ if label$(i) = c$, else $0$
+   - Train `mlpack::LARS` with the resolved lambda1/lambda2
+   - Extract `lars.Beta()` → row $c$ of `weight_matrix`
+   - Extract `lars.Intercept()` → `bias(c)`
+   - Collect `lars.ActiveSet()` into the union of active features
+
+2. Projection: $\text{result} = W \cdot X + b$ (broadcast)
+
+### Projection
+
+Both `fitTransform()` and `transform()` compute:
+
+$$\text{result}_{c,i} = \sum_{d=0}^{D-1} W_{c,d} \cdot X_{d,i} + b_c$$
+
+Output shape: $(C \times N)$, matching `LogitProjectionOperation`.
+
+## Feature Selection
+
+The `activeFeatureIndices()` method returns the sorted union of non-zero coefficient indices
+across all per-class models. In LASSO mode with a sufficiently large `lambda1`, many features
+will have zero coefficients. This provides a principled feature selection mechanism.
+
+## Serialization
+
+Save/load uses cereal binary archives, storing:
+
+- `num_classes`, `num_features`, `col_names`, `active_features`
+- `weight_matrix` (flattened `C × D`)
+- `bias` (`C` values)
+
+This is identical to the pattern used by `LogitProjectionOperation` — no mlpack objects are
+serialized.
+
+## Widget Integration
+
+In the DimReductionPanel (supervised mode), selecting "LARS Projection" shows:
+
+- **Regularization** combo box (LASSO / Ridge / Elastic Net)
+- **Lambda1 (L1)** spin box (default 0.1)
+- **Lambda2 (L2)** spin box (default 0.0)
+
+Class name fields (Positive/Negative) are shown since LARS is a discriminative method
+(`requiresAllClassesForFitting() = true`).
+
+## Comparison with Other Supervised Projections
+
+| Aspect | Logit Projection | LARS Projection | Supervised PCA |
+|---|---|---|---|
+| Method | Softmax regression logits | One-vs-all LARS regression | PCA on labeled subset |
+| Output dims | $C$ (num classes) | $C$ (num classes) | User-controlled |
+| Sparsity | Dense weights | Sparse (LASSO/ElasticNet) | Dense eigenvectors |
+| Feature selection | No | Yes (`activeFeatureIndices`) | No |
+| `requiresAllClassesForFitting` | `true` | `true` | `false` |
+| Underlying model | `mlpack::SoftmaxRegression` | `mlpack::LARS` | Eigendecomposition |

@@ -2,6 +2,7 @@
 find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
 find_package(Armadillo REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 # Find MLPack (header-only library)
 find_path(MLPACK_INCLUDE_DIRS "mlpack.hpp")
@@ -30,6 +31,8 @@ set(MLCore_SOURCES
     models/MLDimReductionOperation.hpp
     models/MLSupervisedDimReductionOperation.hpp
 
+    models/supervised/LARSProjectionOperation.cpp
+    models/supervised/LARSProjectionOperation.hpp
     models/supervised/LogisticRegressionOperation.cpp
     models/supervised/LogisticRegressionOperation.hpp
     models/supervised/LogitProjectionOperation.cpp
@@ -107,6 +110,7 @@ target_link_libraries(MLCore PRIVATE
     DataManager
     TensorData
     tapkee::tapkee
+    spdlog::spdlog_header_only
     #Feature_Table_Widget
 )
 

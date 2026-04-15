@@ -22,6 +22,8 @@
 #include "models/MLSupervisedDimReductionOperation.hpp"
 #include "models/MLTaskType.hpp"
 
+#include <spdlog/spdlog.h>
+
 #include <armadillo>
 
 #include <cstddef>
@@ -282,6 +284,11 @@ SupervisedDimReductionPipelineResult runSupervisedDimReductionPipeline(
                            "(all contain NaN/Inf values)");
     }
 
+    spdlog::debug("[SupervisedDimReduction] Converted features: {} features x {} observations, "
+                  "rows_dropped={}, zscore_applied={}",
+                  converted.matrix.n_rows, converted.matrix.n_cols,
+                  converted.rows_dropped, !converted.zscore_means.empty());
+
     // valid_row_times corresponds 1:1 with columns of converted.matrix.
     auto valid_row_times = filterRowTimes(all_row_times, converted.valid_row_indices);
 
@@ -366,6 +373,26 @@ SupervisedDimReductionPipelineResult runSupervisedDimReductionPipeline(
                                    std::to_string(labels.num_classes));
     }
 
+    // Log label distribution for debugging
+    {
+        std::vector<std::size_t> class_counts(labels.num_classes, 0);
+        for (arma::uword i = 0; i < labels.labels.n_elem; ++i) {
+            if (labels.labels(i) < labels.num_classes) {
+                class_counts[labels.labels(i)]++;
+            }
+        }
+        spdlog::debug("[SupervisedDimReduction] Label distribution: {} classes, "
+                      "{} total observations, {} unlabeled",
+                      labels.num_classes, labels.labels.n_elem, labels.unlabeled_count);
+        for (std::size_t c = 0; c < labels.num_classes; ++c) {
+            double const pct = 100.0 * static_cast<double>(class_counts[c]) /
+                               static_cast<double>(labels.labels.n_elem);
+            spdlog::debug("[SupervisedDimReduction]   class {} ('{}'): {} observations ({:.1f}%)",
+                          c, c < labels.class_names.size() ? labels.class_names[c] : "?",
+                          class_counts[c], pct);
+        }
+    }
+
     // Extract the subset of rows that have valid labels for training.
     // Group-based modes mark unlabeled rows with sentinel = num_classes.
     auto labeled_cols = collectLabeledCols(labels.labels, labels.num_classes);
@@ -433,6 +460,25 @@ SupervisedDimReductionPipelineResult runSupervisedDimReductionPipeline(
                    "Fitting '" + config.model_name + "' on " +
                            std::to_string(train_features.n_cols) + " observations × " +
                            std::to_string(train_features.n_rows) + " features");
+
+    // Log training matrix statistics for debugging z-score / normalization effects
+    {
+        auto const n_feat = train_features.n_rows;
+        auto const n_obs = train_features.n_cols;
+        spdlog::debug("[SupervisedDimReduction] Training matrix: {} features x {} observations",
+                      n_feat, n_obs);
+        auto const n_log = std::min(static_cast<arma::uword>(3), n_feat);
+        for (arma::uword f = 0; f < n_log; ++f) {
+            spdlog::debug("[SupervisedDimReduction]   train_feat[{}]: "
+                          "min={:.4f}, max={:.4f}, mean={:.4f}, std={:.4f}, L2norm={:.4f}",
+                          f,
+                          arma::min(train_features.row(f)),
+                          arma::max(train_features.row(f)),
+                          arma::mean(train_features.row(f)),
+                          arma::stddev(train_features.row(f), 0),
+                          arma::norm(train_features.row(f), 2));
+        }
+    }
 
     arma::mat train_logits;
     if (!sup_op->fitTransform(train_features, train_labels, config.model_params,

@@ -45,9 +45,10 @@ DimReductionPanel::DimReductionPanel(
     _setupConnections();
     _registerDataManagerObserver();
 
-    // Default: show PCA params, hide t-SNE and Robust PCA params
+    // Default: show PCA params, hide t-SNE and Robust PCA and LARS params
     ui->tsneParamsWidget->setVisible(false);
     ui->robustPcaParamsWidget->setVisible(false);
+    ui->larsParamsWidget->setVisible(false);
 
     // Default: unsupervised mode — labels hidden
     ui->labelsGroupBox->setVisible(false);
@@ -175,6 +176,21 @@ std::unique_ptr<MLCore::MLModelParametersBase> DimReductionPanel::currentParamet
         params->n_components = static_cast<std::size_t>(ui->rpcaComponentsSpinBox->value());
         params->lambda = ui->rpcaLambdaSpinBox->value();
         params->max_iter = static_cast<std::size_t>(ui->rpcaMaxIterSpinBox->value());
+        return params;
+    }
+
+    if (name == "LARS Projection") {
+        auto params = std::make_unique<MLCore::LARSProjectionParameters>();
+        int const reg_idx = ui->larsRegTypeCombo->currentIndex();
+        if (reg_idx == 0) {
+            params->regularization_type = MLCore::RegularizationType::LASSO;
+        } else if (reg_idx == 1) {
+            params->regularization_type = MLCore::RegularizationType::Ridge;
+        } else {
+            params->regularization_type = MLCore::RegularizationType::ElasticNet;
+        }
+        params->lambda1 = ui->larsLambda1SpinBox->value();
+        params->lambda2 = ui->larsLambda2SpinBox->value();
         return params;
     }
 
@@ -462,9 +478,14 @@ void DimReductionPanel::_onAlgorithmChanged(int index) {
         // Supervised PCA reuses the PCA params widget (n_components + scale)
         bool const is_spca = (name == "Supervised PCA");
         bool const is_srpca = (name == "Supervised Robust PCA");
+        bool const is_lars = (name == "LARS Projection");
         ui->pcaParamsWidget->setVisible(is_spca);
         ui->tsneParamsWidget->setVisible(false);
         ui->robustPcaParamsWidget->setVisible(is_srpca);
+        ui->larsParamsWidget->setVisible(is_lars);
+        if (is_lars) {
+            _updateLarsRegularizationUI(ui->larsRegTypeCombo->currentIndex());
+        }
 
         // Hide class name fields for non-discriminative algorithms (e.g. sPCA)
         // where output dimensions are user-controlled, not class-count-based.
@@ -480,9 +501,18 @@ void DimReductionPanel::_onAlgorithmChanged(int index) {
         ui->pcaParamsWidget->setVisible(is_pca);
         ui->tsneParamsWidget->setVisible(is_tsne);
         ui->robustPcaParamsWidget->setVisible(is_rpca);
+        ui->larsParamsWidget->setVisible(false);
     }
 
     _updateOutputKeyFromInput();
+}
+
+void DimReductionPanel::_updateLarsRegularizationUI(int regTypeIndex) {
+    // 0 = LASSO (L1 only), 1 = Ridge (L2 only), 2 = Elastic Net (both)
+    bool const enable_l1 = (regTypeIndex != 1);
+    bool const enable_l2 = (regTypeIndex != 0);
+    ui->larsLambda1SpinBox->setEnabled(enable_l1);
+    ui->larsLambda2SpinBox->setEnabled(enable_l2);
 }
 
 void DimReductionPanel::_onModeToggled(bool supervised) {
@@ -630,6 +660,10 @@ void DimReductionPanel::_setupConnections() {
     connect(ui->supervisedRadio, &QRadioButton::toggled,
             this, &DimReductionPanel::_onModeToggled);
 
+    // LARS regularization type → enable/disable lambda spin boxes
+    connect(ui->larsRegTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &DimReductionPanel::_updateLarsRegularizationUI);
+
     // Label source combo
     connect(ui->labelSourceCombo, &QComboBox::currentIndexChanged,
             this, &DimReductionPanel::_onLabelSourceChanged);
@@ -728,13 +762,19 @@ void DimReductionPanel::_populateAlgorithms() {
         // Show/hide param widgets based on the first supervised algorithm
         ui->tsneParamsWidget->setVisible(false);
         ui->robustPcaParamsWidget->setVisible(false);
+        ui->larsParamsWidget->setVisible(false);
         if (ui->algorithmComboBox->count() > 0) {
             auto const first_name =
                     ui->algorithmComboBox->currentData().toString().toStdString();
             bool const is_spca = (first_name == "Supervised PCA");
             bool const is_srpca = (first_name == "Supervised Robust PCA");
+            bool const is_lars = (first_name == "LARS Projection");
             ui->pcaParamsWidget->setVisible(is_spca);
             ui->robustPcaParamsWidget->setVisible(is_srpca);
+            ui->larsParamsWidget->setVisible(is_lars);
+            if (is_lars) {
+                _updateLarsRegularizationUI(ui->larsRegTypeCombo->currentIndex());
+            }
 
             // Hide class name fields for non-discriminative algorithms
             ui->positiveClassLabel->setVisible(!is_spca && !is_srpca);
@@ -761,6 +801,7 @@ void DimReductionPanel::_populateAlgorithms() {
             ui->pcaParamsWidget->setVisible(first_name == "PCA");
             ui->tsneParamsWidget->setVisible(first_name == "t-SNE");
             ui->robustPcaParamsWidget->setVisible(first_name == "Robust PCA");
+            ui->larsParamsWidget->setVisible(false);
         }
     }
 
@@ -988,6 +1029,8 @@ void DimReductionPanel::_updateOutputKeyFromInput() {
         suffix = "spca";
     } else if (isSupervisedMode() && algo == "Supervised Robust PCA") {
         suffix = "srpca";
+    } else if (isSupervisedMode() && algo == "LARS Projection") {
+        suffix = "lars";
     } else if (isSupervisedMode()) {
         suffix = "logit";
     } else if (algo == "PCA") {
@@ -1014,6 +1057,7 @@ void DimReductionPanel::_updateSupervisedVisibility(bool supervised) {
     if (supervised) {
         ui->tsneParamsWidget->setVisible(false);
         ui->robustPcaParamsWidget->setVisible(false);
+        ui->larsParamsWidget->setVisible(false);
     }
 }
 

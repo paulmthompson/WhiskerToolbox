@@ -25,6 +25,7 @@ add_executable(test_MLCore
     HiddenMarkovModel.test.cpp
     KMeansOperation.test.cpp
     LabelAssembler.test.cpp
+    LARSProjectionOperation.test.cpp
     PCA_HMM_Equivalence.test.cpp
     PCAOperation.test.cpp
     RobustPCAOperation.test.cpp

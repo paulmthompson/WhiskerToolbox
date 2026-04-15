@@ -168,6 +168,7 @@ private:
     void _refreshDataKeyCombo();
     void _refreshDataGroupCombo();
     void _refreshEventCombo();
+    void _updateLarsRegularizationUI(int regTypeIndex);
     void _rebuildGroupClassList();
     void _rebuildDataGroupClassList();
     void _syncGroupIdsToState();

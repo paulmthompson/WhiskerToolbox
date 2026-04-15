@@ -403,6 +403,115 @@
         </layout>
        </widget>
       </item>
+      <!-- LARS Projection parameters -->
+      <item>
+       <widget class="QWidget" name="larsParamsWidget">
+        <layout class="QGridLayout" name="larsGridLayout">
+         <property name="horizontalSpacing">
+          <number>10</number>
+         </property>
+         <property name="verticalSpacing">
+          <number>6</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QLabel" name="larsRegTypeLabel">
+           <property name="text">
+            <string>Regularization:</string>
+           </property>
+           <property name="toolTip">
+            <string>Regularization mode: LASSO (L1), Ridge (L2), or Elastic Net (L1+L2)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="larsRegTypeCombo">
+           <property name="toolTip">
+            <string>LASSO = sparse coefficients, Ridge = dense shrunken coefficients, Elastic Net = grouped sparsity</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>LASSO</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Ridge</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Elastic Net</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="larsLambda1Label">
+           <property name="text">
+            <string>Lambda1 (L1):</string>
+           </property>
+           <property name="toolTip">
+            <string>L1 regularization penalty — controls sparsity</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDoubleSpinBox" name="larsLambda1SpinBox">
+           <property name="toolTip">
+            <string>L1 penalty. Larger values produce sparser models with fewer non-zero features.</string>
+           </property>
+           <property name="minimum">
+            <double>0.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>10000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="value">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="larsLambda2Label">
+           <property name="text">
+            <string>Lambda2 (L2):</string>
+           </property>
+           <property name="toolTip">
+            <string>L2 regularization penalty — controls coefficient shrinkage</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QDoubleSpinBox" name="larsLambda2SpinBox">
+           <property name="toolTip">
+            <string>L2 penalty. Shrinks coefficients toward zero without enforcing exact zeros.</string>
+           </property>
+           <property name="minimum">
+            <double>0.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>10000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="value">
+            <double>0.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

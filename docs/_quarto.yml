@@ -114,6 +114,7 @@ website:
                 - developer/MLCore/models.qmd
                 - developer/MLCore/softmax_regression.qmd
                 - developer/MLCore/logit_projection.qmd
+                - developer/MLCore/lars_projection.qmd
                 - developer/MLCore/supervised_pca.qmd
                 - developer/MLCore/supervised_robust_pca.qmd
                 - developer/MLCore/dim_reduction.qmd

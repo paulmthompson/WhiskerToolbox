@@ -199,6 +199,43 @@ struct LogitProjectionParameters : public MLModelParametersBase {
 };
 
 /**
+ * @brief Regularization mode for LARS Projection
+ *
+ * Controls which penalty terms are active in the LARS objective:
+ *   min_β  0.5 ||Xβ − y||₂² + λ₁||β||₁ + 0.5 λ₂||β||₂²
+ *
+ * - LASSO:      λ₁ > 0, λ₂ = 0   (L1 only → sparse coefficients)
+ * - Ridge:      λ₁ = 0, λ₂ > 0   (L2 only → dense, shrunken coefficients)
+ * - ElasticNet: λ₁ > 0, λ₂ > 0   (L1 + L2 → grouped sparsity)
+ */
+enum class RegularizationType {
+    LASSO,
+    Ridge,
+    ElasticNet
+};
+
+/**
+ * @brief Parameters for LARS Projection (supervised dimensionality reduction)
+ *
+ * LARSProjectionOperation uses mlpack's LARS (Least Angle Regression Stagewise)
+ * algorithm to perform one-vs-all linear regression with L1/L2 regularization.
+ * The regression coefficients form a (C × D) weight matrix that projects data
+ * into a C-dimensional space where C is the number of classes.
+ *
+ * The `regularization_type` field selects presets for lambda1/lambda2:
+ * - LASSO: Uses lambda1, ignores lambda2
+ * - Ridge: Ignores lambda1, uses lambda2
+ * - ElasticNet: Uses both lambda1 and lambda2
+ */
+struct LARSProjectionParameters : public MLModelParametersBase {
+    RegularizationType regularization_type = RegularizationType::LASSO;///< Regularization preset
+    double lambda1 = 0.1;                                              ///< L1 regularization penalty (sparsity)
+    double lambda2 = 0.0;                                              ///< L2 regularization penalty (shrinkage)
+    double tolerance = 1e-16;                                          ///< Convergence tolerance on feature correlations
+    bool use_cholesky = true;                                          ///< Use Cholesky decomposition (faster in most cases)
+};
+
+/**
  * @brief Parameters for Supervised PCA dimensionality reduction
  *
  * Supervised PCA fits PCA on the labeled subset of observations only,

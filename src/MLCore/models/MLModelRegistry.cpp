@@ -6,6 +6,7 @@
 #include "MLModelRegistry.hpp"
 
 #include "supervised/HiddenMarkovModelOperation.hpp"
+#include "supervised/LARSProjectionOperation.hpp"
 #include "supervised/LogisticRegressionOperation.hpp"
 #include "supervised/LogitProjectionOperation.hpp"
 #include "supervised/NaiveBayesOperation.hpp"
@@ -34,6 +35,7 @@ MLModelRegistry::MLModelRegistry() {
     registerModel<RandomForestOperation>();
     registerModel<NaiveBayesOperation>();
     registerModel<LogisticRegressionOperation>();
+    registerModel<LARSProjectionOperation>();
     registerModel<LogitProjectionOperation>();
     registerModel<SupervisedPCAOperation>();
     registerModel<SupervisedRobustPCAOperation>();
