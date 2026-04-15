@@ -1,6 +1,6 @@
 ---
 title: "Dimensionality Reduction"
-description: "MLCore dimensionality reduction operations (PCA, t-SNE, Robust PCA)"
+description: "MLCore dimensionality reduction operations (PCA, t-SNE, Robust PCA, ICA)"
 ---
 
 ## Overview
@@ -16,7 +16,8 @@ models/
     ├── PCAOperation.hpp/.cpp        # Principal Component Analysis (manual eigendecomp)
     ├── RobustPCAOperation.hpp/.cpp  # Robust PCA via ROSL (Armadillo)
     ├── rosl.hpp                     # Third-party ROSL algorithm (GPL3)
-    └── TSNEOperation.hpp/.cpp       # t-SNE (tapkee)
+    ├── TSNEOperation.hpp/.cpp       # t-SNE (tapkee)
+    └── ICAOperation.hpp/.cpp        # ICA via RADICAL (mlpack)
 ```
 
 ### MLDimReductionOperation
@@ -213,6 +214,67 @@ The `TensorPCA` container transform (`src/TransformsV2/algorithms/TensorPCA/`) p
 |-------|------|---------|-------------|
 | `n_components` | `optional<size_t>` | 2 | Number of PCs |
 
+## ICAOperation
+
+Implements Independent Component Analysis (ICA) via mlpack's [RADICAL](https://www.mlpack.org/doc/user/methods/radical.html) (Robust, Accurate, Direct ICA aLgorithm). Unlike PCA, which finds uncorrelated components ordered by variance, ICA finds components that are statistically independent.
+
+### Backend
+
+Uses `mlpack::Radical`, which is included in the mlpack headers already used by the project.
+
+### Implementation
+
+1. Call `mlpack::Radical::Apply(features, independent, unmixing)` to decompose the input
+2. Store the learned unmixing matrix `W` for projecting new data: `Y = W * X`
+
+### Parameters
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `noise_std_dev` | `double` | 0.175 | Standard deviation of Gaussian noise added to data |
+| `replicates` | `size_t` | 30 | Number of Gaussian-perturbed replicates per point |
+| `angles` | `size_t` | 150 | Number of angles in brute-force search during 2D RADICAL |
+| `sweeps` | `size_t` | 0 | Number of sweeps (0 = dimensions - 1) |
+| `m` | `size_t` | 0 | Vasicek's m-spacing estimator parameter (0 = sqrt(dimensions)) |
+
+### Capabilities
+
+- **Out-of-sample projection:** `transform()` is supported — new data is projected via the learned unmixing matrix.
+- **Explained variance:** `explainedVarianceRatio()` returns empty (not meaningful for ICA).
+- **No dimensionality reduction:** Output has the same number of dimensions as the input. Each output dimension is an independent component.
+
+### Edge Cases
+
+- Empty data → returns `false`
+- Fewer than 2 observations → returns `false`
+
+### Save/Load
+
+Uses cereal binary serialization storing the unmixing matrix and feature count.
+
+### Performance Notes
+
+RADICAL scales quadratically in the number of input dimensions. For high-dimensional data, consider reducing dimensionality with PCA first.
+
+## TransformsV2 Integration: TensorICA
+
+The `TensorICA` container transform (`src/TransformsV2/algorithms/TensorICA/`) provides a thin wrapper registered in `RegisteredTransforms.cpp`:
+
+- **Input:** `TensorData` (2D, ≥2 rows, ≥2 cols)
+- **Output:** `TensorData` with same number of columns as input, named "IC1", "IC2", ...
+- **RowDescriptor preservation:** Output inherits the input's `RowType` (TimeFrameIndex, Interval, or Ordinal)
+- **Non-deterministic:** `is_deterministic = false` in the registration metadata (RADICAL adds random noise)
+
+### TensorICAParams (reflect-cpp)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `noise_std_dev` | `double` | 0.175 | Gaussian noise std dev |
+| `replicates` | `size_t` | 30 | Number of replicates per point |
+| `angles` | `size_t` | 150 | Number of angles for 2D search |
+| `sweeps` | `size_t` | 0 | Number of sweeps (0 = auto) |
+| `nan_policy` | `NaNPolicy` | Propagate | How to handle NaN/Inf rows |
+
 ## Tests
 
 - `tests/MLCore/PCAOperation.test.cpp` — Metadata, fitTransform correctness, explained variance, transform re-projection, edge cases, save/load round-trip, registry integration
@@ -221,3 +283,4 @@ The `TensorPCA` container transform (`src/TransformsV2/algorithms/TensorPCA/`) p
 - `src/TransformsV2/algorithms/TensorPCA/TensorPCA.test.cpp` — Container registration, ordinal/TimeFrameIndex/Interval row preservation, default params, validation, progress, cancellation
 - `src/TransformsV2/algorithms/TensorTSNE/TensorTSNE.test.cpp` — Container registration, ordinal/TimeFrameIndex row preservation, validation, progress, cancellation
 - `src/TransformsV2/algorithms/TensorRobustPCA/TensorRobustPCA.test.cpp` — Container registration, ordinal/TimeFrameIndex row preservation, validation (too few rows, excessive components), progress, cancellation
+- `src/TransformsV2/algorithms/TensorICA/TensorICA.test.cpp` — Container registration, ordinal/TimeFrameIndex/Interval row preservation, validation (too few rows, too few cols), progress, cancellation

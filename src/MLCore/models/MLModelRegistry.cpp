@@ -15,6 +15,7 @@
 #include "supervised/SupervisedRobustPCAOperation.hpp"
 #include "unsupervised/DBSCANOperation.hpp"
 #include "unsupervised/GaussianMixtureOperation.hpp"
+#include "unsupervised/ICAOperation.hpp"
 #include "unsupervised/KMeansOperation.hpp"
 #include "unsupervised/PCAOperation.hpp"
 #include "unsupervised/RobustPCAOperation.hpp"
@@ -43,6 +44,7 @@ MLModelRegistry::MLModelRegistry() {
     registerModel<GaussianMixtureOperation>();
     registerModel<PCAOperation>();
     registerModel<RobustPCAOperation>();
+    registerModel<ICAOperation>();
     registerModel<TSNEOperation>();
 }
 

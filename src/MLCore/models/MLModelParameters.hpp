@@ -162,6 +162,25 @@ struct RobustPCAParameters : public MLModelParametersBase {
     std::size_t max_iter = 100;  ///< Maximum ALM iterations
 };
 
+/**
+ * @brief Parameters for ICA (RADICAL algorithm) dimensionality reduction
+ *
+ * Wraps mlpack::Radical hyperparameters. RADICAL performs Independent
+ * Component Analysis — it finds a linear transformation (unmixing matrix)
+ * that maximizes statistical independence of the output components.
+ *
+ * @note ICA does not reduce dimensionality: the output has the same
+ *       number of dimensions as the input. The components are ordered
+ *       by the algorithm's internal sweep order, not by variance.
+ * @note RADICAL scales quadratically in the number of dimensions.
+ */
+struct ICAParameters : public MLModelParametersBase {
+    double noise_std_dev = 0.175;///< Standard deviation of Gaussian noise added to data
+    std::size_t replicates = 30; ///< Number of Gaussian-perturbed replicates per point
+    std::size_t angles = 150;    ///< Number of angles in brute-force search during 2D RADICAL
+    std::size_t sweeps = 0;      ///< Number of sweeps (0 = number of dimensions minus one)
+    std::size_t m = 0;           ///< Vasicek's m-spacing estimator parameter (0 = sqrt(dimensions))
+};
 
 // ============================================================================
 // Supervised dimensionality reduction parameters

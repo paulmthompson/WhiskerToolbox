@@ -74,6 +74,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/SincInterpolation/SincInterpolation.cpp
         algorithms/TensorPCA/TensorPCA.hpp
         algorithms/TensorPCA/TensorPCA.cpp
+        algorithms/TensorICA/TensorICA.hpp
+        algorithms/TensorICA/TensorICA.cpp
         algorithms/TensorRobustPCA/TensorRobustPCA.hpp
         algorithms/TensorRobustPCA/TensorRobustPCA.cpp
         algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.hpp

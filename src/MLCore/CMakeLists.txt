@@ -51,6 +51,8 @@ set(MLCore_SOURCES
     models/unsupervised/DBSCANOperation.hpp
     models/unsupervised/GaussianMixtureOperation.cpp
     models/unsupervised/GaussianMixtureOperation.hpp
+    models/unsupervised/ICAOperation.cpp
+    models/unsupervised/ICAOperation.hpp
     models/unsupervised/KMeansOperation.cpp
     models/unsupervised/KMeansOperation.hpp
     models/unsupervised/PCAOperation.cpp

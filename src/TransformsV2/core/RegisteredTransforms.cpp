@@ -18,6 +18,7 @@
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
 #include "algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
+#include "algorithms/TensorICA/TensorICA.hpp"
 #include "algorithms/TensorPCA/TensorPCA.hpp"
 #include "algorithms/TensorRobustPCA/TensorRobustPCA.hpp"
 #include "algorithms/TensorTSNE/TensorTSNE.hpp"
@@ -72,6 +73,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     registerPipelineStepFactoryFor<SincInterpolationParams>();
     registerPipelineStepFactoryFor<TensorPCAParams>();
+    registerPipelineStepFactoryFor<TensorICAParams>();
     registerPipelineStepFactoryFor<TensorRobustPCAParams>();
     registerPipelineStepFactoryFor<TensorTemporalNeighborParams>();
     return true;
@@ -664,6 +666,20 @@ auto const register_tensor_pca = RegisterContainerTransform<TensorData, TensorDa
                 .params_type_name = "TensorPCAParams",
                 .is_expensive = true,
                 .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register TensorICA (Container Transform: TensorData → TensorData)
+auto const register_tensor_ica = RegisterContainerTransform<TensorData, TensorData, TensorICAParams>(
+        "TensorICA",
+        tensorICA,
+        ContainerTransformMetadata{
+                .description = "Apply ICA (RADICAL algorithm) to a TensorData",
+                .category = "Dimensionality Reduction",
+                .input_type_name = "TensorData",
+                .output_type_name = "TensorData",
+                .params_type_name = "TensorICAParams",
+                .is_expensive = true,
+                .is_deterministic = false,
                 .supports_cancellation = true});
 
 // Register TensorTSNE (Container Transform: TensorData → TensorData)
