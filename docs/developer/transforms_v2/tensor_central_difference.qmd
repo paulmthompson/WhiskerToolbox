@@ -1,0 +1,88 @@
+---
+title: "TensorCentralDifference"
+---
+
+## Overview
+
+`TensorCentralDifference` is a TransformsV2 container transform (TensorData → TensorData) that
+appends central-difference (delta) columns to a time-indexed tensor. For each original column, a
+new column is computed as:
+
+$$\Delta_c[t] = \frac{\text{value}_c[t+1] - \text{value}_c[t-1]}{2}$$
+
+This is useful for computing first-derivative approximations of features for downstream
+machine-learning pipelines.
+
+## Location
+
+- Header: `src/TransformsV2/algorithms/TensorCentralDifference/TensorCentralDifference.hpp`
+- Implementation: `src/TransformsV2/algorithms/TensorCentralDifference/TensorCentralDifference.cpp`
+- Tests: `src/TransformsV2/algorithms/TensorCentralDifference/TensorCentralDifference.test.cpp`
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `boundary_policy` | `DeltaBoundaryPolicy` | `NaN` | How to handle the first/last row where t-1 or t+1 is missing: `NaN`, `Drop`, `Clamp`, or `Zero` |
+| `include_original` | `bool` | `true` | Whether to include the original (unshifted) columns in the output |
+
+## Time-Alignment Rule
+
+Neighbors are determined by **sorted row position** in `TimeIndexStorage`, not by raw frame number ±1.
+For example, if rows exist at frames `[10, 20, 50]`, the central difference at frame 20 uses
+frame 10 (previous row) and frame 50 (next row).
+
+## Boundary Policies
+
+| Policy | Behavior |
+|--------|----------|
+| `NaN` | Fill boundary delta values with `NaN`. All rows preserved. |
+| `Drop` | Remove the first and last rows. Output has `N-2` rows. |
+| `Clamp` | Clamp to current row when t-1 or t+1 is missing (forward/backward half-difference). |
+| `Zero` | Fill boundary delta values with `0.0f`. |
+
+## Output Layout
+
+Columns are ordered as: `[original cols (if include_original)] [delta_col0] [delta_col1] ...`
+
+Delta columns are named `"{original_col}_delta"`, e.g. `feat1_delta`.
+
+For an input with N columns, the output has `2*N` columns (with `include_original=true`)
+or `N` columns (with `include_original=false`).
+
+## Constraints
+
+- Input must be 2D
+- Input must have `RowType::TimeFrameIndex` (Ordinal rows are rejected)
+- Returns `nullptr` on validation failure
+
+## Pipeline JSON Example
+
+```json
+{
+  "transformations": {
+    "metadata": { "name": "Central Difference Pipeline", "version": "2.0" },
+    "steps": [
+      {
+        "step_id": "1",
+        "transform_name": "TensorCentralDifference",
+        "input_key": "features",
+        "output_key": "features_with_delta",
+        "parameters": {
+          "boundary_policy": "NaN",
+          "include_original": true
+        }
+      }
+    ]
+  }
+}
+```
+
+## Registration
+
+Registered as `"TensorCentralDifference"` in `RegisteredTransforms.cpp` under category
+**Feature Engineering**.
+
+## Related Transforms
+
+- **TensorTemporalNeighbors**: Augments with raw lag/lead feature columns (arbitrary offsets)

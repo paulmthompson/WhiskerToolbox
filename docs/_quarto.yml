@@ -99,6 +99,7 @@ website:
                 - developer/transforms_v2/architecture.qmd
                 - developer/transforms_v2/adding_transforms.qmd
                 - developer/transforms_v2/sinc_interpolation.qmd
+                - developer/transforms_v2/tensor_central_difference.qmd
                 - developer/transforms_v2/tensor_temporal_neighbors.qmd
             - section: "ParameterSchema"
               href: developer/ParameterSchema/index.qmd

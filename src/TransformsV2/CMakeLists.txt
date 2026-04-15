@@ -78,6 +78,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/TensorICA/TensorICA.cpp
         algorithms/TensorRobustPCA/TensorRobustPCA.hpp
         algorithms/TensorRobustPCA/TensorRobustPCA.cpp
+        algorithms/TensorCentralDifference/TensorCentralDifference.hpp
+        algorithms/TensorCentralDifference/TensorCentralDifference.cpp
         algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.hpp
         algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.cpp
         algorithms/TensorTSNE/TensorTSNE.hpp

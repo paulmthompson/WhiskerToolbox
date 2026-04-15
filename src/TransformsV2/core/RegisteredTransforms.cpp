@@ -22,6 +22,7 @@
 #include "algorithms/TensorPCA/TensorPCA.hpp"
 #include "algorithms/TensorRobustPCA/TensorRobustPCA.hpp"
 #include "algorithms/TensorTSNE/TensorTSNE.hpp"
+#include "algorithms/TensorCentralDifference/TensorCentralDifference.hpp"
 #include "algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
@@ -76,6 +77,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<TensorICAParams>();
     registerPipelineStepFactoryFor<TensorRobustPCAParams>();
     registerPipelineStepFactoryFor<TensorTemporalNeighborParams>();
+    registerPipelineStepFactoryFor<TensorCentralDifferenceParams>();
     return true;
 }();
 
@@ -707,6 +709,20 @@ auto const register_tensor_robust_pca = RegisterContainerTransform<TensorData, T
                 .output_type_name = "TensorData",
                 .params_type_name = "TensorRobustPCAParams",
                 .is_expensive = true,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register TensorCentralDifference (Container Transform: TensorData → TensorData)
+auto const register_tensor_central_difference = RegisterContainerTransform<TensorData, TensorData, TensorCentralDifferenceParams>(
+        "TensorCentralDifference",
+        tensorCentralDifference,
+        ContainerTransformMetadata{
+                .description = "Append central-difference (delta) columns to a time-indexed tensor",
+                .category = "Feature Engineering",
+                .input_type_name = "TensorData",
+                .output_type_name = "TensorData",
+                .params_type_name = "TensorCentralDifferenceParams",
+                .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 

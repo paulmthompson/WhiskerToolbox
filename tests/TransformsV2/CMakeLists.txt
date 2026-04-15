@@ -54,6 +54,7 @@ add_executable(test_TransformsV2
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorPCA/TensorPCA.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorICA/TensorICA.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorCentralDifference/TensorCentralDifference.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorTSNE/TensorTSNE.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorRobustPCA/TensorRobustPCA.test.cpp
