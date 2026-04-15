@@ -614,6 +614,16 @@ void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey
         }
     }
 
+    // If the key already exists with a different data object, remove the old
+    // entry first and notify observers.  This lets consumers (inspectors, plots,
+    // etc.) see the key disappear before the new object appears, so they can
+    // detach per-object callbacks and reset any raw pointers they hold.
+    if (_data.contains(key)) {
+        _time_frames.erase(key);
+        _data.erase(key);
+        _notifyObservers();
+    }
+
     _data[key] = data;
     setTimeKey(key, time_key);
 

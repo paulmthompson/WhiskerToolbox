@@ -25,7 +25,7 @@ TEST_CASE("DataManager::setTime successfully registers TimeFrame objects", "[Dat
 
         REQUIRE(result == true);
         REQUIRE(dm.getTime(TimeKey("test_time")) == timeframe);
-        REQUIRE(dm.getTimeFrameKeys().size() == 2); // "time" exists by default + our new one
+        REQUIRE(dm.getTimeFrameKeys().size() == 2);// "time" exists by default + our new one
     }
 
     SECTION("Register multiple TimeFrames with different keys") {
@@ -39,7 +39,7 @@ TEST_CASE("DataManager::setTime successfully registers TimeFrame objects", "[Dat
         REQUIRE(result2 == true);
         REQUIRE(dm.getTime(TimeKey("time1")) == timeframe1);
         REQUIRE(dm.getTime(TimeKey("time2")) == timeframe2);
-        REQUIRE(dm.getTimeFrameKeys().size() == 3); // "time" exists by default + our 2 new ones
+        REQUIRE(dm.getTimeFrameKeys().size() == 3);// "time" exists by default + our 2 new ones
     }
 }
 
@@ -52,7 +52,7 @@ TEST_CASE("DataManager::setTime handles error conditions", "[DataManager][TimeFr
 
         REQUIRE(result == false);
         REQUIRE(dm.getTime(TimeKey("null_time")) == nullptr);
-        REQUIRE(dm.getTimeFrameKeys().size() == 1); // Only "time" exists by default
+        REQUIRE(dm.getTimeFrameKeys().size() == 1);// Only "time" exists by default
     }
 
     SECTION("Reject duplicate key") {
@@ -64,8 +64,8 @@ TEST_CASE("DataManager::setTime handles error conditions", "[DataManager][TimeFr
 
         REQUIRE(result1 == true);
         REQUIRE(result2 == false);
-        REQUIRE(dm.getTime(TimeKey("duplicate")) == timeframe1); // First one should remain
-        REQUIRE(dm.getTimeFrameKeys().size() == 2); // Only "time" and "duplicate" exist
+        REQUIRE(dm.getTime(TimeKey("duplicate")) == timeframe1);// First one should remain
+        REQUIRE(dm.getTimeFrameKeys().size() == 2);             // Only "time" and "duplicate" exist
     }
 }
 
@@ -194,7 +194,7 @@ TEST_CASE("DataManager::getTimeFrameKeys returns all TimeFrame keys", "[DataMana
         REQUIRE(keys.size() == 3);
 
         // Check that all expected keys are present (order not guaranteed)
-        auto has_key = [&keys](const TimeKey& key) {
+        auto has_key = [&keys](TimeKey const & key) {
             return std::find(keys.begin(), keys.end(), key) != keys.end();
         };
 
@@ -222,7 +222,7 @@ TEST_CASE("DataManager::getTimeFrameKeys returns all TimeFrame keys", "[DataMana
         // Verify keys haven't changed
         {
             auto keys = dm.getTimeFrameKeys();
-            REQUIRE(keys.size() == 2); // Still just 2 keys
+            REQUIRE(keys.size() == 2);// Still just 2 keys
             REQUIRE(std::find(keys.begin(), keys.end(), TimeKey("custom_time")) != keys.end());
         }
     }
@@ -240,7 +240,7 @@ TEST_CASE("DataManager::addCallbackToData registers callbacks with data objects"
 
         int id = dm.addCallbackToData("test_points", callback);
 
-        REQUIRE(id >= 0); // Valid ID is returned
+        REQUIRE(id >= 0);// Valid ID is returned
 
         // Trigger the callback by modifying the data
         auto points = dm.getData<PointData>("test_points");
@@ -261,7 +261,7 @@ TEST_CASE("DataManager::addCallbackToData registers callbacks with data objects"
 
         REQUIRE(id1 >= 0);
         REQUIRE(id2 >= 0);
-        REQUIRE(id1 != id2); // IDs should be unique
+        REQUIRE(id1 != id2);// IDs should be unique
 
         // Trigger the callbacks
         auto points = dm.getData<PointData>("test_points");
@@ -281,8 +281,8 @@ TEST_CASE("DataManager::addCallbackToData handles error conditions", "[DataManag
 
         int id = dm.addCallbackToData("nonexistent_data", callback);
 
-        REQUIRE(id == -1); // Invalid ID indicates failure
-        REQUIRE(callback_executed == false); // Callback should not have executed
+        REQUIRE(id == -1);                  // Invalid ID indicates failure
+        REQUIRE(callback_executed == false);// Callback should not have executed
     }
 }
 
@@ -311,7 +311,7 @@ TEST_CASE("DataManager::removeCallbackFromData removes registered callbacks", "[
 
         // Verify callback no longer works
         points->notifyObservers();
-        REQUIRE(callback_count == 1); // Count should remain unchanged
+        REQUIRE(callback_count == 1);// Count should remain unchanged
     }
 
     SECTION("Removing one callback doesn't affect others") {
@@ -332,8 +332,8 @@ TEST_CASE("DataManager::removeCallbackFromData removes registered callbacks", "[
         auto points = dm.getData<PointData>("test_points");
         points->notifyObservers();
 
-        REQUIRE(callback1_count == 0); // First callback removed
-        REQUIRE(callback2_count == 1); // Second callback still active
+        REQUIRE(callback1_count == 0);// First callback removed
+        REQUIRE(callback2_count == 1);// Second callback still active
     }
 }
 
@@ -414,10 +414,10 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
         // Adding with custom TimeFrame - setTime now also notifies observers
         auto custom_time = std::make_shared<TimeFrame>();
         dm.setTime(TimeKey("custom_time"), custom_time);
-        REQUIRE(notification_count == 2);  // setTime triggers notification
+        REQUIRE(notification_count == 2);// setTime triggers notification
 
         dm.setData<PointData>("points2", std::make_shared<PointData>(), TimeKey("custom_time"));
-        REQUIRE(notification_count == 3);  // setData triggers notification
+        REQUIRE(notification_count == 3);// setData triggers notification
 
         // Using variant form
         DataTypeVariant variant = std::make_shared<PointData>();
@@ -465,10 +465,10 @@ TEST_CASE("DataManager::getAllKeys returns all data keys", "[DataManager]") {
         auto keys = dm.getAllKeys();
 
         // Check the size and contents
-        REQUIRE(keys.size() == 4); // 3 new keys + "media"
+        REQUIRE(keys.size() == 4);// 3 new keys + "media"
 
         // Check that all expected keys are present (order not guaranteed)
-        auto has_key = [&keys](const std::string& key) {
+        auto has_key = [&keys](std::string const & key) {
             return std::find(keys.begin(), keys.end(), key) != keys.end();
         };
 
@@ -485,7 +485,7 @@ TEST_CASE("DataManager::getAllKeys returns all data keys", "[DataManager]") {
         // First check that the key exists
         {
             auto keys = dm.getAllKeys();
-            REQUIRE(keys.size() == 2); // "media" + "temporary"
+            REQUIRE(keys.size() == 2);// "media" + "temporary"
             REQUIRE(std::find(keys.begin(), keys.end(), "temporary") != keys.end());
         }
 
@@ -583,7 +583,7 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         REQUIRE(dm.getType("media") == DM_DataType::Video);
     }
 
-    #ifdef ENABLE_OPENCV
+#ifdef ENABLE_OPENCV
     SECTION("ImageData type detection") {
         // Create ImageData object without loading from folder
         auto image_data = std::make_shared<ImageData>();
@@ -591,28 +591,27 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
 
         // getType should correctly identify it as Images
         REQUIRE(dm.getType("test_images") == DM_DataType::Images);
-        
+
         // Also test that it doesn't misidentify as Video
         REQUIRE(dm.getType("test_images") != DM_DataType::Video);
         REQUIRE(dm.getType("test_images") != DM_DataType::Unknown);
     }
-    #endif
+#endif
 
     SECTION("All supported data types") {
         // Test all data types that getType should recognize
-        
+
         // Points
         dm.setData<PointData>("test_points", TimeKey("time"));
         REQUIRE(dm.getType("test_points") == DM_DataType::Points);
-        
+
         // Lines
         dm.setData<LineData>("test_lines", TimeKey("time"));
         REQUIRE(dm.getType("test_lines") == DM_DataType::Line);
-        
+
         // Masks
         dm.setData<MaskData>("test_mask", TimeKey("time"));
         REQUIRE(dm.getType("test_mask") == DM_DataType::Mask);
-        
     }
 
     SECTION("Non-existent key returns Unknown") {
@@ -620,5 +619,107 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         REQUIRE(dm.getType("nonexistent_key") == DM_DataType::Unknown);
         REQUIRE(dm.getType("") == DM_DataType::Unknown);
         REQUIRE(dm.getType("another_missing_key") == DM_DataType::Unknown);
+    }
+}
+
+TEST_CASE("setData overwrite notifies deletion before addition", "[DataManager][overwrite]") {
+    DataManager dm;
+
+    SECTION("Template setData<T>(key, shared_ptr) overwrites with two notifications") {
+        auto pts1 = std::make_shared<PointData>();
+        dm.setData<PointData>("t", pts1, TimeKey("time"));
+
+        int notify_count = 0;
+        bool saw_key_absent = false;
+        auto obs_id = dm.addObserver([&]() {
+            notify_count++;
+            if (!dm.getDataVariant("t").has_value()) {
+                saw_key_absent = true;
+            }
+        });
+
+        // Overwrite with a different shared_ptr
+        auto pts2 = std::make_shared<PointData>();
+        dm.setData<PointData>("t", pts2, TimeKey("time"));
+
+        // Should have been notified twice: once for removal, once for addition
+        REQUIRE(notify_count == 2);
+        // During the first notification the key was absent
+        REQUIRE(saw_key_absent);
+        // After setData completes, the key holds the new object
+        REQUIRE(dm.getDataVariant("t").has_value());
+
+        dm.removeObserver(obs_id);
+    }
+
+    SECTION("Variant setData overwrites with two notifications") {
+        auto pts1 = std::make_shared<PointData>();
+        dm.setData("t", DataTypeVariant{pts1}, TimeKey("time"));
+
+        int notify_count = 0;
+        bool saw_key_absent = false;
+        auto obs_id = dm.addObserver([&]() {
+            notify_count++;
+            if (!dm.getDataVariant("t").has_value()) {
+                saw_key_absent = true;
+            }
+        });
+
+        auto pts2 = std::make_shared<PointData>();
+        dm.setData("t", DataTypeVariant{pts2}, TimeKey("time"));
+
+        REQUIRE(notify_count == 2);
+        REQUIRE(saw_key_absent);
+
+        dm.removeObserver(obs_id);
+    }
+
+    SECTION("Template setData<T>(key, time_key) overwrites with two notifications") {
+        dm.setData<PointData>("t", TimeKey("time"));
+
+        int notify_count = 0;
+        bool saw_key_absent = false;
+        auto obs_id = dm.addObserver([&]() {
+            notify_count++;
+            if (!dm.getDataVariant("t").has_value()) {
+                saw_key_absent = true;
+            }
+        });
+
+        dm.setData<PointData>("t", TimeKey("time"));
+
+        REQUIRE(notify_count == 2);
+        REQUIRE(saw_key_absent);
+
+        dm.removeObserver(obs_id);
+    }
+
+    SECTION("First setData on new key notifies only once") {
+        int notify_count = 0;
+        auto obs_id = dm.addObserver([&]() { notify_count++; });
+
+        auto pts = std::make_shared<PointData>();
+        dm.setData<PointData>("fresh", pts, TimeKey("time"));
+
+        REQUIRE(notify_count == 1);
+
+        dm.removeObserver(obs_id);
+    }
+
+    SECTION("Per-object callback on old data is orphaned after overwrite") {
+        auto pts1 = std::make_shared<PointData>();
+        dm.setData<PointData>("t", pts1, TimeKey("time"));
+
+        // Register a per-object callback on pts1 through DataManager
+        int per_obj_count = 0;
+        dm.addCallbackToData("t", [&]() { per_obj_count++; });
+
+        // Overwrite — the old shared_ptr (and its ObserverData) is destroyed
+        auto pts2 = std::make_shared<PointData>();
+        dm.setData<PointData>("t", pts2, TimeKey("time"));
+
+        // Notify through the new object — old callback should NOT fire
+        dm.getData<PointData>("t")->notifyObservers();
+        REQUIRE(per_obj_count == 0);
     }
 }

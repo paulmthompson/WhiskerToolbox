@@ -1,0 +1,65 @@
+---
+title: "Inspector Lifecycle vs DataManager Deletion"
+---
+
+## Overview
+
+When `DataManager::deleteData(key)` removes a data object, any **DataInspector** currently
+inspecting that key must safely clear its state—no dangling `getData` calls, no stale
+table-model pointers, and no leaked observer callbacks.
+
+## Architecture
+
+`DataInspectorPropertiesWidget` registers a **DataManager-level observer** at construction.
+Every time the DataManager's data set changes (add, remove, modify), this observer fires and
+checks whether the currently inspected key still exists:
+
+```
+DataManager::deleteData(key)
+  └── _notifyObservers()
+        └── DataInspectorPropertiesWidget::_onDataManagerChanged()
+              ├── getDataVariant(_current_key) → nullopt  (key gone)
+              └── state->setInspectedDataKey("")
+                    ├── → _onInspectedKeyChanged("") → _clearInspector()
+                    │       └── inspector->removeCallbacks()  (safe even for dead keys)
+                    └── → DataInspectorViewWidget::_onInspectedKeyChanged("")
+                            └── _clearView()
+                                  └── view->removeCallbacks()
+```
+
+Because both `DataInspectorPropertiesWidget` and `DataInspectorViewWidget` are connected
+to the same `DataInspectorState`, clearing the state key in one place cascades to both.
+
+## Observer Callback Safety
+
+When a data object is erased from the DataManager map, its `shared_ptr` drops to zero
+(assuming no external holders) and the object—including its `ObserverData` callback map—is
+destroyed. After that:
+
+- **`removeCallbackFromData(key, id)`** fails gracefully because the key is no longer in
+  `_data`. Returns `false`; the widget simply resets `callback_id = -1`.
+- **Table-model raw pointers** (e.g., `_table_model->setMasks(mask_data.get())`) become
+  dangling, but `_clearView()` destroys the table model in the same synchronous callstack
+  before any paint or model-refresh can access them.
+
+## Key Classes and Roles
+
+| Class | Role |
+|---|---|
+| `DataInspectorPropertiesWidget` | Owns the DM observer; detects deletion; clears state |
+| `DataInspectorViewWidget` | Responds to state change; destroys view + table model |
+| `DataInspectorState` | Shared state; `inspectedDataKeyChanged` signal drives both widgets |
+| `BaseInspector` | Provides `removeCallbackFromData()` that delegates to DataManager |
+| `BaseDataView` | Subclasses implement `removeCallbacks()` via `remove_callback()` utility |
+
+## Adding a New Inspector / DataView
+
+When creating a new `BaseInspector` or `BaseDataView` subclass:
+
+1. **Always** implement `removeCallbacks()` to unregister any per-data callbacks.
+2. **Always** call `removeCallbacks()` in your destructor.
+3. If you register a DataManager-level observer (`addObserver`), unregister it in the destructor.
+4. Use `BaseInspector::removeCallbackFromData(key, id)` or the `remove_callback()` free
+   function from `DataManager_Widget_utils.hpp`—both handle missing keys gracefully.
+5. **Do not** store raw pointers to data objects beyond the scope of a single method call,
+   unless you clear them in `removeCallbacks()`.

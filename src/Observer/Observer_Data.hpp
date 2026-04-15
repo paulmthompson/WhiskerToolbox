@@ -32,8 +32,8 @@
  * @see ObserverData for the observer registration and notification mechanism
  */
 enum class NotifyObservers {
-    Yes,  ///< Notify observers after the operation
-    No    ///< Do not notify observers after the operation
+    Yes,///< Notify observers after the operation
+    No  ///< Do not notify observers after the operation
 };
 
 /**
@@ -49,7 +49,9 @@ enum class NotifyObservers {
  *          synchronization if thread safety is required.
  *
  * @warning Modifying observers (adding or removing) from within an observer
- *          callback during notifyObservers() results in undefined behavior.
+ *          callback during notifyObservers() is safe. The current notification
+ *          round iterates a snapshot; additions or removals take effect on the
+ *          next call to notifyObservers().
  *
  * Example usage:
  * @code
@@ -118,7 +120,7 @@ public:
 
 private:
     std::unordered_map<CallbackID, ObserverCallback> _observers;
-    CallbackID _next_id = 1;  ///< Monotonically increasing ID counter
+    CallbackID _next_id = 1;///< Monotonically increasing ID counter
 };
 
 
@@ -131,11 +133,11 @@ private:
  *
  * It is not copyable, but it is movable.
  */
-template <typename T>
+template<typename T>
 class ModificationHandle {
 public:
     // Constructor: Takes the data to modify and the function to call on destruction
-    ModificationHandle(T& data_ref, std::function<void()> on_destroy_callback)
+    ModificationHandle(T & data_ref, std::function<void()> on_destroy_callback)
         : _data_ref(data_ref),
           _on_destroy_cb(std::move(on_destroy_callback)) {}
 
@@ -148,27 +150,27 @@ public:
 
     // --- Accessors ---
     // Provide pointer-like access
-    T* operator->() { return &_data_ref.get(); }
-    T const* operator->() const { return &_data_ref.get(); }
+    T * operator->() { return &_data_ref.get(); }
+    T const * operator->() const { return &_data_ref.get(); }
 
     // Provide reference-like access
-    T& operator*() { return _data_ref.get(); }
-    T const& operator*() const { return _data_ref.get(); }
+    T & operator*() { return _data_ref.get(); }
+    T const & operator*() const { return _data_ref.get(); }
 
     // Explicit getter
-    T& get() { return _data_ref.get(); }
-    T const& get() const { return _data_ref.get(); }
+    T & get() { return _data_ref.get(); }
+    T const & get() const { return _data_ref.get(); }
 
     // --- Move Semantics ---
     // Enable moving: transfer ownership of the notification
-    ModificationHandle(ModificationHandle&& other) noexcept
+    ModificationHandle(ModificationHandle && other) noexcept
         : _data_ref(other._data_ref),
           _on_destroy_cb(std::move(other._on_destroy_cb)) {
         // Null out the other's callback so it doesn't fire
         other._on_destroy_cb = nullptr;
     }
 
-    ModificationHandle& operator=(ModificationHandle&& other) noexcept {
+    ModificationHandle & operator=(ModificationHandle && other) noexcept {
         if (this != &other) {
             // If this handle is about to be overwritten, fire its own callback first
             // if it's still valid (or just let it be destroyed, depends on design)
@@ -176,7 +178,7 @@ public:
                 _on_destroy_cb();
             }
 
-            _data_ref = other._data_ref; // Note: std::reference_wrapper assignment re-seats the reference
+            _data_ref = other._data_ref;// Note: std::reference_wrapper assignment re-seats the reference
             _on_destroy_cb = std::move(other._on_destroy_cb);
             other._on_destroy_cb = nullptr;
         }
@@ -184,12 +186,12 @@ public:
     }
 
     // --- Disable Copying ---
-    ModificationHandle(const ModificationHandle&) = delete;
-    ModificationHandle& operator=(const ModificationHandle&) = delete;
+    ModificationHandle(ModificationHandle const &) = delete;
+    ModificationHandle & operator=(ModificationHandle const &) = delete;
 
 private:
     std::reference_wrapper<T> _data_ref;
     std::function<void()> _on_destroy_cb;
 };
 
-#endif // OBSERVER_DATA_HPP
+#endif// OBSERVER_DATA_HPP

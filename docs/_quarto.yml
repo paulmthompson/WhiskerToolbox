@@ -144,6 +144,7 @@ website:
           contents:
             - developer/ui/data_inspectors/tensor_inspector.qmd
             - developer/ui/data_inspectors/digital_event_series_inspector.qmd
+            - developer/ui/data_inspectors/inspector_deletion_lifecycle.qmd
         - section: "Data Management"
           contents:
             - developer/DataManager/data_manager.qmd

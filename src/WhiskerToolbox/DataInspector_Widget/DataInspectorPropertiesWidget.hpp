@@ -151,6 +151,7 @@ private slots:
     void _onInspectedKeyChanged(QString const & key);
     void _onInspectedTimeFrameKeyChanged(QString const & key);
     void _onStateChanged();
+    void _onDataManagerChanged();
 
 private:
     void _setupUi();
@@ -175,6 +176,7 @@ private:
     std::string _current_key;
     DM_DataType _current_type{DM_DataType::Unknown};
     DataInspectorViewWidget * _view_widget{nullptr};
+    int _dm_observer_id{-1};///< Callback ID for DataManager-level observer (deletion detection)
 
     void _connectInspectorToView();
 };

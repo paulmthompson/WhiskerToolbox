@@ -270,6 +270,15 @@ public:
     template<typename T>
     void setData(std::string const & key, TimeKey const & time_key) {
         commands::warnIfOutsideCommand("setData");
+
+        // If the key already exists, remove old entry and notify so consumers
+        // can detach per-object callbacks before the object is replaced.
+        if (_data.contains(key)) {
+            _time_frames.erase(key);
+            _data.erase(key);
+            _notifyObservers();
+        }
+
         _data[key] = std::make_shared<T>();
         setTimeKey(key, time_key);
 
@@ -305,6 +314,14 @@ public:
             if (found) {
                 return;// Data already exists, do not set again
             }
+        }
+
+        // If the key already exists with a different data object, remove old
+        // entry and notify so consumers can detach per-object callbacks.
+        if (_data.contains(key)) {
+            _time_frames.erase(key);
+            _data.erase(key);
+            _notifyObservers();
         }
 
         _data[key] = data;
@@ -474,7 +491,7 @@ private:
 using JsonLoadProgressCallback = std::function<bool(int current, int total, std::string const & message)>;
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
-std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath, const JsonLoadProgressCallback& progress_callback);
+std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath, JsonLoadProgressCallback const & progress_callback);
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path);
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path, JsonLoadProgressCallback const & progress_callback);
 

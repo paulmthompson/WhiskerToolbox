@@ -40,9 +40,22 @@ DataInspectorPropertiesWidget::DataInspectorPropertiesWidget(
     ui->setupUi(this);
     _setupUi();
     _connectSignals();
+
+    // Register a DataManager-level observer to detect data deletion.
+    // When deleteData() removes the currently inspected key, this observer
+    // clears the inspector state so no dangling references remain.
+    if (_data_manager) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _onDataManagerChanged();
+        });
+    }
 }
 
-DataInspectorPropertiesWidget::~DataInspectorPropertiesWidget() = default;
+DataInspectorPropertiesWidget::~DataInspectorPropertiesWidget() {
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
+}
 
 void DataInspectorPropertiesWidget::setState(std::shared_ptr<DataInspectorState> state) {
     // Disconnect from old state
@@ -186,6 +199,29 @@ void DataInspectorPropertiesWidget::_onTimeFrameFocusChanged(
 
 void DataInspectorPropertiesWidget::_onStateChanged() {
     _updateHeaderDisplay();
+}
+
+void DataInspectorPropertiesWidget::_onDataManagerChanged() {
+    // Check whether the currently inspected data key was deleted from DataManager.
+    // If so, clear the inspector state so both Properties and View widgets reset.
+    if (_current_key.empty() || !_data_manager) {
+        return;
+    }
+
+    // For TimeFrame keys, skip — deleteData only affects data keys
+    if (_current_type == DM_DataType::Time) {
+        return;
+    }
+
+    auto const data_variant = _data_manager->getDataVariant(_current_key);
+    if (!data_variant.has_value()) {
+        // Key no longer exists — clear the state (cascades to View widget too)
+        if (_state) {
+            _state->setInspectedDataKey(QString());
+        } else {
+            _updateInspectorForKey(QString());
+        }
+    }
 }
 
 void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) {

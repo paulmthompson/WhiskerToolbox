@@ -8,8 +8,10 @@ ObserverData::CallbackID ObserverData::addObserver(ObserverCallback callback) {
 }
 
 void ObserverData::notifyObservers() {
-    for (auto & [id, observer]: _observers) {
-        observer();// Call the observer callback
+    // Copy the callback map so observers can safely add/remove during iteration.
+    auto const snapshot = _observers;
+    for (auto const & [id, observer]: snapshot) {
+        observer();
     }
 }
 
