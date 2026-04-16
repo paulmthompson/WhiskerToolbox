@@ -1,5 +1,6 @@
 #include "TensorInspector.hpp"
 
+#include "TensorColumnViewCreator.hpp"
 #include "TensorDesigner.hpp"
 
 #include "Collapsible_Widget/Section.hpp"
@@ -17,9 +18,11 @@
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "EditorState/SelectionContext.hpp"
 
+#include <QComboBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QVBoxLayout>
 
 #include <rfl/json.hpp>
@@ -54,6 +57,7 @@ void TensorInspector::setActiveKey(std::string const & key) {
     }
 
     _updateFilename();
+    _updateSectionVisibility();
 }
 
 void TensorInspector::removeCallbacks() {
@@ -84,10 +88,37 @@ void TensorInspector::setOperationContext(EditorLib::OperationContext * context)
 
 void TensorInspector::_onDataChanged() {
     updateView();
+    _updateSectionVisibility();
 }
 
 void TensorInspector::_onTensorCreated(QString const & key) {
     emit tensorCreated(key);
+}
+
+void TensorInspector::_onCreateColumnViews() {
+    if (_active_key.empty()) {
+        QMessageBox::warning(this, QStringLiteral("Warning"),
+                             QStringLiteral("No tensor selected"));
+        return;
+    }
+
+    auto prefix = _view_prefix_edit->text().toStdString();
+    if (prefix.empty()) {
+        prefix = _active_key;
+    }
+
+    auto const count = createTensorColumnViews(
+            *dataManager(), _active_key, prefix, {});
+
+    if (count > 0) {
+        QMessageBox::information(this, QStringLiteral("Column Views"),
+                                 QStringLiteral("Created %1 AnalogTimeSeries column view(s)")
+                                         .arg(count));
+    } else {
+        QMessageBox::warning(this, QStringLiteral("Column Views"),
+                             QStringLiteral("Failed to create column views. "
+                                            "Check that the tensor is 2D."));
+    }
 }
 
 // =============================================================================
@@ -174,6 +205,61 @@ void TensorInspector::_setupDesignerUi() {
                 }
             });
 
+    // === Populate from Analog Section (collapsible, shown when tensor is empty) ===
+    _populate_section = new Section(this, QStringLiteral("Create from AnalogTimeSeries"));
+    auto * populate_content = new QWidget(this);
+    auto * populate_layout = new QVBoxLayout(populate_content);
+    populate_layout->setContentsMargins(0, 0, 0, 0);
+
+    auto * group_layout = new QHBoxLayout();
+    group_layout->addWidget(new QLabel(QStringLiteral("Channel group:"), this));
+    _analog_group_combo = new QComboBox(this);
+    _analog_group_combo->setToolTip(
+            QStringLiteral("Groups of AnalogTimeSeries sharing a common prefix"));
+    group_layout->addWidget(_analog_group_combo, 1);
+
+    _refresh_groups_btn = new QPushButton(QStringLiteral("Refresh"), this);
+    _refresh_groups_btn->setToolTip(QStringLiteral("Re-scan DataManager for analog channel groups"));
+    group_layout->addWidget(_refresh_groups_btn);
+    populate_layout->addLayout(group_layout);
+
+    _populate_btn = new QPushButton(QStringLiteral("Populate Tensor"), this);
+    _populate_btn->setToolTip(
+            QStringLiteral("Pack the selected analog channels into this tensor"));
+    populate_layout->addWidget(_populate_btn);
+
+    _populate_section->setContentLayout(*populate_layout);
+    layout->addWidget(_populate_section);
+
+    connect(_refresh_groups_btn, &QPushButton::clicked,
+            this, &TensorInspector::_onRefreshAnalogGroups);
+    connect(_populate_btn, &QPushButton::clicked,
+            this, &TensorInspector::_onPopulateFromAnalog);
+
+    // === Column Views Section (collapsible) ===
+    _column_views_section = new Section(this, QStringLiteral("Column Views"));
+    auto * views_content = new QWidget(this);
+    auto * views_layout = new QVBoxLayout(views_content);
+    views_layout->setContentsMargins(0, 0, 0, 0);
+
+    auto * prefix_layout = new QHBoxLayout();
+    prefix_layout->addWidget(new QLabel(QStringLiteral("Key prefix:"), this));
+    _view_prefix_edit = new QLineEdit(this);
+    _view_prefix_edit->setPlaceholderText(QStringLiteral("e.g. tensor_views"));
+    prefix_layout->addWidget(_view_prefix_edit);
+    views_layout->addLayout(prefix_layout);
+
+    _create_views_btn = new QPushButton(QStringLiteral("Create Column Views"), this);
+    _create_views_btn->setToolTip(
+            QStringLiteral("Create zero-copy AnalogTimeSeries views for each column"));
+    views_layout->addWidget(_create_views_btn);
+
+    _column_views_section->setContentLayout(*views_layout);
+    layout->addWidget(_column_views_section);
+
+    connect(_create_views_btn, &QPushButton::clicked,
+            this, &TensorInspector::_onCreateColumnViews);
+
     layout->addStretch();
 }
 
@@ -199,5 +285,78 @@ std::string TensorInspector::_generateFilename() const {
 void TensorInspector::_updateFilename() {
     if (_filename_edit) {
         _filename_edit->setText(QString::fromStdString(_generateFilename()));
+    }
+    if (_view_prefix_edit && !_active_key.empty()) {
+        _view_prefix_edit->setText(QString::fromStdString(_active_key));
+    }
+}
+
+void TensorInspector::_onPopulateFromAnalog() {
+    if (_active_key.empty()) {
+        QMessageBox::warning(this, QStringLiteral("Warning"),
+                             QStringLiteral("No tensor selected"));
+        return;
+    }
+
+    auto const idx = _analog_group_combo->currentIndex();
+    if (idx < 0 || static_cast<std::size_t>(idx) >= _cached_groups.size()) {
+        QMessageBox::warning(this, QStringLiteral("Warning"),
+                             QStringLiteral("No channel group selected. Click Refresh first."));
+        return;
+    }
+
+    auto const & group = _cached_groups[static_cast<std::size_t>(idx)];
+
+    auto const success = populateTensorFromAnalogKeys(
+            *dataManager(), _active_key, group.keys);
+
+    if (success) {
+        QMessageBox::information(this, QStringLiteral("Success"),
+                                 QStringLiteral("Tensor populated with %1 channels from \"%2\"")
+                                         .arg(group.keys.size())
+                                         .arg(QString::fromStdString(group.prefix)));
+        _updateSectionVisibility();
+    } else {
+        QMessageBox::warning(this, QStringLiteral("Error"),
+                             QStringLiteral("Failed to populate tensor. Ensure all channels "
+                                            "share the same TimeFrame and sample count."));
+    }
+}
+
+void TensorInspector::_onRefreshAnalogGroups() {
+    _cached_groups = discoverAnalogKeyGroups(*dataManager());
+
+    _analog_group_combo->clear();
+    for (auto const & group: _cached_groups) {
+        auto const label = QString::fromStdString(group.prefix) +
+                           QStringLiteral(" (%1 channels)").arg(group.keys.size());
+        _analog_group_combo->addItem(label);
+    }
+
+    _populate_btn->setEnabled(!_cached_groups.empty());
+}
+
+void TensorInspector::_updateSectionVisibility() {
+    if (_active_key.empty()) {
+        return;
+    }
+
+    auto tensor = dataManager()->getData<TensorData>(_active_key);
+    bool const is_empty = !tensor || tensor->isEmpty();
+
+    // Show populate section only when tensor is empty
+    if (_populate_section) {
+        _populate_section->setVisible(is_empty);
+        if (is_empty) {
+            _onRefreshAnalogGroups();
+        }
+    }
+
+    // Show column views and export only when tensor has data
+    if (_column_views_section) {
+        _column_views_section->setVisible(!is_empty);
+    }
+    if (_export_section) {
+        _export_section->setVisible(!is_empty);
     }
 }

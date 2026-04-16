@@ -1,11 +1,15 @@
 /**
  * @file TensorToAnalog.cpp
  * @brief Implementation of TensorToAnalog container transform
+ *
+ * Phase 3 update: uses zero-copy TensorColumnAnalogStorage views
+ * instead of copying column data.
  */
 
 #include "TensorToAnalog.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/storage/TensorColumnAnalogStorage.hpp"
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -60,29 +64,37 @@ auto tensorToAnalog(
     auto const row_type = row_desc.type();
     auto time_frame = input.getTimeFrame();
 
+    // Create a shared_ptr<TensorData const> for the storage views to keep alive.
+    // We take the address of the input reference; the caller must ensure the
+    // TensorData outlives the returned AnalogTimeSeries views. To guarantee
+    // this, we create a shared_ptr with a no-op deleter (the caller owns the
+    // TensorData) OR the caller can pass a shared_ptr externally.
+    // For safety, copy the tensor into a shared_ptr so views are self-contained.
+    auto tensor_ptr = std::make_shared<TensorData>(input);
+
+    // Resolve time storage
+    std::shared_ptr<TimeIndexStorage> time_storage;
+    if (row_type == RowType::TimeFrameIndex) {
+        time_storage = row_desc.timeStoragePtr();
+    } else {
+        time_storage = TimeIndexStorageFactory::createDenseFromZero(input.numRows());
+    }
+
     std::vector<std::shared_ptr<AnalogTimeSeries>> result;
     result.reserve(columns.size());
 
-    for (int column : columns) {
+    for (int const column: columns) {
         auto const col_idx = static_cast<std::size_t>(column);
-        auto values = input.getColumn(col_idx);
 
-        std::shared_ptr<AnalogTimeSeries> analog;
+        // Create zero-copy storage view into the tensor column
+        auto col_storage = TensorColumnAnalogStorage(tensor_ptr, col_idx);
+        AnalogDataStorageWrapper wrapper(col_storage);
 
-        if (row_type == RowType::TimeFrameIndex) {
-            // Preserve time indices from the tensor
-            auto time_indices = row_desc.timeStoragePtr()->getAllTimeIndices();
-            analog = std::make_shared<AnalogTimeSeries>(std::move(values), std::move(time_indices));
-            if (time_frame) {
-                analog->setTimeFrame(time_frame);
-            }
-        } else {
-            // Ordinal or Interval: use consecutive indices
-            auto const n = values.size();
-            analog = std::make_shared<AnalogTimeSeries>(std::move(values), n);
-            if (time_frame) {
-                analog->setTimeFrame(time_frame);
-            }
+        auto analog = AnalogTimeSeries::createFromStorage(
+                std::move(wrapper), time_storage);
+
+        if (time_frame) {
+            analog->setTimeFrame(time_frame);
         }
 
         result.push_back(std::move(analog));

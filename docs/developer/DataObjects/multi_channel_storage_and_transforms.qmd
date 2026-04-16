@@ -334,8 +334,8 @@ An empty list means "extract all columns".
 3. Set the source `TimeFrame` on each output series.
 
 ::: {.callout-note}
-This initial version creates owning copies. Phase 3 replaces this with
-zero-copy `TensorColumnAnalogStorage` views.
+**Updated in Phase 3:** This transform now creates zero-copy
+`TensorColumnAnalogStorage` views instead of owning copies.
 :::
 
 ### Step 1.3 — Registration & Tests ✓
@@ -495,12 +495,19 @@ all channels in a single batched call, parallelizing across channels.
 
 ## Phase 3: Zero-Copy TensorData Column Views {#sec-phase3}
 
+::: {.callout-note}
+**Completed.** All four steps are implemented, tested, and integrated.
+`TensorToAnalog` now produces zero-copy `AnalogTimeSeries` views backed by
+`TensorColumnAnalogStorage`. 17 Catch2 test cases verify element access,
+span access, memory sharing, and round-trip correctness.
+:::
+
 *Depends on Phase 1. Enables zero-copy channel access.*
 
 This phase eliminates the data copy in `TensorToAnalog` by creating an
 `AnalogTimeSeries` storage backend that directly references a `TensorData` column.
 
-### Step 3.1 — TensorColumnAnalogStorage Backend
+### Step 3.1 — TensorColumnAnalogStorage Backend ✓
 
 **New file:**
 `src/DataObjects/AnalogTimeSeries/storage/TensorColumnAnalogStorage.hpp`
@@ -532,31 +539,44 @@ span-based access.
 This is a significant improvement over the current mmap storage, where
 `getSpanRangeImpl()` always returns an empty span.
 
-### Step 3.2 — Factory Method
+### Step 3.2 — Factory Method ✓
 
-Add to `AnalogTimeSeries`:
+Added a general-purpose `createFromStorage` factory to `AnalogTimeSeries` that
+accepts a pre-constructed `AnalogDataStorageWrapper` and `TimeIndexStorage`.
+This avoids adding a TensorData dependency to the AnalogTimeSeries library:
 
 ```cpp
-static std::shared_ptr<AnalogTimeSeries> createFromTensorColumn(
-    std::shared_ptr<TensorData const> tensor,
-    std::size_t column_index,
+static std::shared_ptr<AnalogTimeSeries> createFromStorage(
+    AnalogDataStorageWrapper storage,
     std::shared_ptr<TimeIndexStorage> time_storage);
 ```
 
-### Step 3.3 — Update TensorToAnalog
+The caller (e.g. `TensorToAnalog.cpp`) constructs the
+`TensorColumnAnalogStorage`, wraps it in an `AnalogDataStorageWrapper`, and
+passes it to this factory. This keeps the dependency on TensorData in the
+transform layer, not in the data object layer.
 
-Modify the Phase 1 `TensorToAnalog` transform to use `createFromTensorColumn`
-instead of copying column data. Result: applying CAR → `TensorToAnalog` produces
-views that share the filtered `TensorData` memory.
+### Step 3.3 — Update TensorToAnalog ✓
 
-### Step 3.4 — Tests
+`TensorToAnalog` now copies the input `TensorData` into a `shared_ptr` (so views
+are self-contained), resolves time storage once, and creates a
+`TensorColumnAnalogStorage` for each selected column. Result: applying
+CAR → `TensorToAnalog` produces views that share the filtered `TensorData`
+memory with zero per-element copies.
 
-- **Zero-copy verification:** Confirm that the `AnalogTimeSeries` view and the
-  source `TensorData` share the same memory (pointer comparison).
-- **Span access:** Verify `getDataInTimeFrameIndexRange` returns a non-empty span
-  (unlike current mmap behavior).
-- **DataViewer compatibility:** Ensure the new backend works with the existing
-  `DataViewer_Widget` rendering pipeline.
+### Step 3.4 — Tests ✓
+
+17 Catch2 test cases in `TensorColumnAnalogStorage.test.cpp`:
+
+- **Zero-copy verification:** Pointer comparison confirms `AnalogTimeSeries`
+  view shares memory with the source `TensorData` column.
+- **Span access:** `getDataInTimeFrameIndexRange` returns non-empty spans;
+  full and range-based span access verified.
+- **Element access:** All elements match `column * 1000 + row` test pattern.
+- **Edge cases:** Single column, single row, span boundary conditions.
+- **Round-trip:** `AnalogToTensor` → `TensorToAnalog` produces zero-copy views
+  matching the original data.
+- **TimeFrame preservation:** Output series carry the correct `TimeFrame`.
 
 ## DataViewer Integration {#sec-dataviewer-integration}
 

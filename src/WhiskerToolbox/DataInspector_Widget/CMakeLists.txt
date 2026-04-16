@@ -90,6 +90,8 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
         TensorData/TensorDataView.cpp
         TensorData/TensorDesigner.hpp
         TensorData/TensorDesigner.cpp
+        TensorData/TensorColumnViewCreator.hpp
+        TensorData/TensorColumnViewCreator.cpp
         TensorData/ColumnConfigDialog.hpp
         TensorData/ColumnConfigDialog.cpp
 

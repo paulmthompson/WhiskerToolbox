@@ -25,10 +25,14 @@
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
 
 class CSVTensorSaver_Widget;
+class QComboBox;
 class QLineEdit;
+class QPushButton;
 class Section;
 class SelectionContext;
 class TensorDesigner;
+
+struct AnalogKeyGroup;
 
 namespace EditorLib {
 class OperationContext;
@@ -112,9 +116,25 @@ private slots:
      */
     void _onTensorCreated(QString const & key);
 
+    /**
+     * @brief Create AnalogTimeSeries column views and insert into DataManager
+     */
+    void _onCreateColumnViews();
+
+    /**
+     * @brief Populate the empty tensor from selected AnalogTimeSeries group
+     */
+    void _onPopulateFromAnalog();
+
+    /**
+     * @brief Refresh the analog key group combo box
+     */
+    void _onRefreshAnalogGroups();
+
 private:
     void _setupDesignerUi();
     void _assignCallbacks();
+    void _updateSectionVisibility();
 
     /**
      * @brief Generate filename for export based on active key
@@ -131,6 +151,17 @@ private:
     Section * _export_section{nullptr};
     QLineEdit * _filename_edit{nullptr};
     CSVTensorSaver_Widget * _csv_saver_widget{nullptr};
+
+    Section * _column_views_section{nullptr};
+    QLineEdit * _view_prefix_edit{nullptr};
+    QPushButton * _create_views_btn{nullptr};
+
+    Section * _populate_section{nullptr};
+    QComboBox * _analog_group_combo{nullptr};
+    QPushButton * _populate_btn{nullptr};
+    QPushButton * _refresh_groups_btn{nullptr};
+
+    std::vector<AnalogKeyGroup> _cached_groups;
 };
 
 #endif// TENSOR_INSPECTOR_HPP

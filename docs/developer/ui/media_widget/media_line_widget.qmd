@@ -1,0 +1,80 @@
+---
+title: "MediaLine Widget"
+format: html
+---
+
+## Overview
+
+`MediaLine_Widget` is the sub-widget within `Media_Widget` responsible for
+configuring and interacting with line/polyline data. It provides:
+
+1. **Style controls**: Color, alpha, and thickness for line rendering
+2. **Line-specific display options**: Show points, position marker, line segments
+3. **Line interaction**: Select, add points, erase points, draw across all frames
+
+## Style Controls (LineStyleControls)
+
+Line visual properties (color, alpha, thickness) are managed through an embedded
+`LineStyleControls` widget backed by a `LineStyleState` instance. This replaces
+the previous bespoke `ColorPicker_Widget` and line thickness slider/spinbox with
+the reusable line style infrastructure from `Plots/Common/LineStyleControls/`.
+
+### Data Flow
+
+```
+LineStyleControls (UI)
+       ↕ signals
+LineStyleState (QObject wrapper)
+       ↕ sync methods
+LineDisplayOptions (serializable struct)
+       ↕ stored in
+MediaWidgetState::DisplayOptionsRegistry
+       ↕ read by
+Media_Window::_plotLineData() (rendering)
+```
+
+- `_syncLineStyleFromOptions()`: Loads `LineDisplayOptions` into `LineStyleState` when
+  the active key changes (uses `setStyleSilent()` to avoid triggering a render loop)
+- `_applyLineStyleToOptions()`: Writes `LineStyleState` changes back to
+  `LineDisplayOptions` and triggers a canvas update
+
+### Type Mapping
+
+`LineDisplayOptions::line_thickness` is stored as `int`, while
+`LineStyleData::thickness` is `float`. The sync methods handle this conversion
+via `static_cast`.
+
+## Line-Specific Controls
+
+These domain-specific controls remain as bespoke UI elements (not abstracted):
+
+| Control | Option | Description |
+|---------|--------|-------------|
+| Show points checkbox | `show_points` | Display open circles at each vertex |
+| Position marker checkbox + slider | `show_position_marker`, `position_percentage` | Marker at percentage along line |
+| Segment checkbox + sliders | `show_segment`, `segment_start_percentage`, `segment_end_percentage` | Display only a portion of the line |
+
+## Mouse Interaction Modes
+
+Mouse modes are selected via a combo box with a stacked widget for mode-specific parameters:
+
+| Mode | Widget | Behavior |
+|------|--------|----------|
+| (None) | `LineNoneSelectionWidget` | No interaction |
+| Select Line | `LineSelectSelectionWidget` | Click to select, Ctrl+click to add points, Alt+click to erase |
+| Draw Across All Frames | `LineDrawAllFramesSelectionWidget` | Stateful workflow: start → draw → complete → apply to all frames |
+
+## Display Options
+
+`LineDisplayOptions` stores per-key styling in `DisplayOptionsRegistry`.
+The struct contains:
+
+- `line_thickness` (int): Line width in pixels
+- `show_points` (bool): Show circles at vertices
+- `edge_snapping` (bool): Enable edge snapping for new points
+- `show_position_marker` (bool): Show marker at percentage distance
+- `position_percentage` (int): Marker position (0-100%)
+- `show_segment` (bool): Show only a segment of the line
+- `segment_start_percentage` / `segment_end_percentage` (int): Segment bounds
+- `selected_line_index` (int): Index of selected line (-1 = none)
+- Common fields via `rfl::Flatten<CommonDisplayFields>`: `hex_color`, `alpha`, `is_visible`

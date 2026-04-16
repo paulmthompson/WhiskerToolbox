@@ -1,0 +1,70 @@
+---
+title: "MediaPoint Widget"
+format: html
+---
+
+## Overview
+
+`MediaPoint_Widget` is the sub-widget within `Media_Widget` responsible for
+configuring and interacting with point data. It provides:
+
+1. **Style controls**: Shape, size, color, and alpha for point markers
+2. **Point interaction**: Select, move, and add points via mouse clicks with modifier keys
+
+## Style Controls (GlyphStyleControls)
+
+Point visual properties are managed through an embedded `GlyphStyleControls` widget
+backed by a `GlyphStyleState` instance. This replaces the previous bespoke
+`ColorPicker_Widget`, size slider/spinbox, and marker shape combo box with the
+reusable glyph style infrastructure from `Plots/Common/GlyphStyleWidget/`.
+
+### Supported Glyph Types
+
+The marker shapes come from `CorePlotting::GlyphType`:
+
+| GlyphType | Rendering |
+|-----------|-----------|
+| Circle    | Filled ellipse |
+| Square    | Filled rectangle |
+| Tick      | Vertical line |
+| Cross     | '+' shaped marker |
+| Diamond   | Rotated square |
+| Triangle  | Filled triangle |
+
+### Data Flow
+
+```
+GlyphStyleControls (UI)
+       ↕ signals
+GlyphStyleState (QObject wrapper)
+       ↕ sync methods
+PointDisplayOptions (serializable struct)
+       ↕ stored in
+MediaWidgetState::DisplayOptionsRegistry
+       ↕ read by
+Media_Window::_plotPointData() (rendering)
+```
+
+- `_syncGlyphStateFromOptions()`: Loads `PointDisplayOptions` into `GlyphStyleState` when
+  the active key changes (uses `setStyleSilent()` to avoid triggering a render loop)
+- `_applyGlyphStateToOptions()`: Writes `GlyphStyleState` changes back to
+  `PointDisplayOptions` and triggers a canvas update
+
+## Point Interaction
+
+Mouse interaction uses modifier keys:
+
+| Action | Modifier | Behavior |
+|--------|----------|----------|
+| Select point | Click | Finds nearest point within threshold, highlights in yellow |
+| Move point | Ctrl+Click | Moves selected point to click position |
+| Add point | Alt+Click | Adds new point at click position at current time |
+
+## Display Options
+
+`PointDisplayOptions` stores per-key styling in `MediaWidgetStateData::point_options`.
+The struct contains:
+
+- `point_size` (int): Marker size in pixels
+- `marker_shape` (`CorePlotting::GlyphType`): Marker shape enum
+- Common fields via `rfl::Flatten<CommonDisplayFields>`: `hex_color`, `alpha`, `is_visible`

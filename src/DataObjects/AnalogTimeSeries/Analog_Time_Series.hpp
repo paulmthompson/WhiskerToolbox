@@ -7,8 +7,8 @@
 #include "TimeFrame/TimeIndexStorage.hpp"
 #include "TypeTraits/DataTypeTraits.hpp"
 #include "storage/AnalogDataStorage.hpp"
-#include "storage/MmapAnalogConfig.hpp"
 #include "storage/LazyAnalogDataStorage.hpp"
+#include "storage/MmapAnalogConfig.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -223,9 +223,7 @@ public:
 
         if (num_samples != time_storage->size()) {
             throw std::runtime_error(
-                    "View size (" + std::to_string(num_samples)
-                    + ") does not match time storage size ("
-                    + std::to_string(time_storage->size()) + ")");
+                    "View size (" + std::to_string(num_samples) + ") does not match time storage size (" + std::to_string(time_storage->size()) + ")");
         }
 
         auto lazy_storage = LazyViewStorage<ViewType>(std::move(view), num_samples);
@@ -279,9 +277,27 @@ public:
      * @endcode
      */
     [[nodiscard]] static std::shared_ptr<AnalogTimeSeries> createView(
-            std::shared_ptr<AnalogTimeSeries const> source,
+            std::shared_ptr<AnalogTimeSeries const> const & source,
             TimeFrameIndex start_time,
             TimeFrameIndex end_time);
+
+    /**
+     * @brief Create an AnalogTimeSeries from a custom storage backend
+     *
+     * General-purpose factory that accepts a type-erased storage wrapper and
+     * shared time index storage. Used by zero-copy backends (e.g., TensorColumnAnalogStorage)
+     * that construct the wrapper externally and pass it in.
+     *
+     * @param storage Type-erased analog data storage wrapper
+     * @param time_storage Shared time index storage
+     * @return std::shared_ptr<AnalogTimeSeries> with the given storage backend
+     *
+     * @pre time_storage != nullptr
+     * @pre storage.size() == time_storage->size()
+     */
+    [[nodiscard]] static std::shared_ptr<AnalogTimeSeries> createFromStorage(
+            AnalogDataStorageWrapper storage,
+            std::shared_ptr<TimeIndexStorage> time_storage);
 
     // ========== Getting Data ==========
 
@@ -654,7 +670,7 @@ private:
 
     void setData(std::vector<float> analog_vector);
     void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
-    void setData(std::map<int, float> analog_map);
+    void setData(std::map<int, float> const & analog_map);
 
     /**
      * @brief Cache optimization pointers after construction

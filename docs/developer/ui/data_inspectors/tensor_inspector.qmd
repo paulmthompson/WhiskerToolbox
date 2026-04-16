@@ -19,3 +19,73 @@ The `TensorDesigner` uses `TransformPipeline` to define how computed columns are
 
 -   **Lazy Columns**: Columns can be defined by a pipeline but not computed until requested.
 -   **Serialization**: The pipeline definition is stored in the column metadata.
+
+## Column Views
+
+The **Column Views** section allows creating zero-copy `AnalogTimeSeries` views
+for each column of a 2D `TensorData`. This is useful for visualizing individual
+channels in `DataViewer_Widget` and applying per-channel transforms.
+
+### How it works
+
+1. User selects a `TensorData` in the data tree.
+2. In the **Column Views** collapsible section, set a key prefix (defaults to tensor key).
+3. Click **Create Column Views**.
+4. For each column, an `AnalogTimeSeries` backed by `TensorColumnAnalogStorage`
+   is inserted into DataManager under `{prefix}/{column_name}`.
+
+### Implementation
+
+| File | Description |
+|------|-------------|
+| `src/WhiskerToolbox/DataInspector_Widget/TensorData/TensorColumnViewCreator.hpp` | Utility header |
+| `src/WhiskerToolbox/DataInspector_Widget/TensorData/TensorColumnViewCreator.cpp` | Implementation |
+| `tests/TransformsV2/test_tensor_column_views.test.cpp` | Integration tests |
+
+The utility calls `tensorToAnalog()` internally, which creates `TensorColumnAnalogStorage`
+views — zero-copy spans into the Armadillo matrix columns. The views share ownership
+of the source `TensorData` via `shared_ptr`, so they remain valid as long as any
+view exists.
+
+::: {.callout-note}
+Column names from the `TensorData` are used as suffixes in the generated keys.
+If no column names are set, the fallback is `ch0`, `ch1`, etc.
+:::
+
+## Populate from AnalogTimeSeries
+
+When a `TensorData` object is **empty** (e.g., freshly created via the New Data widget),
+the inspector shows a **Create from AnalogTimeSeries** section instead of Column Views / Export.
+
+### Workflow
+
+1. Create an empty `TensorData` in the DataManager (via New Data → Tensor).
+2. Select it in the data tree. The inspector shows "Create from AnalogTimeSeries".
+3. Click **Refresh** to scan the DataManager for groups of analog channels that share
+   a common prefix (e.g., `voltage_1`, `voltage_2`, `voltage_3` → group "voltage").
+4. Select a group from the combo box.
+5. Click **Populate Tensor** to pack the channels into the tensor.
+
+After population, the section hides and the standard Column Views / Export sections appear.
+
+### Key Group Discovery
+
+`discoverAnalogKeyGroups()` extracts the prefix before the last `_` character in each
+`AnalogTimeSeries` key, groups keys by prefix, and returns only groups with ≥2 keys.
+Keys without an underscore (or with `_` only at position 0) are excluded.
+
+### Implementation
+
+| File | Description |
+|------|-------------|
+| `TensorColumnViewCreator.hpp` | `AnalogKeyGroup`, `discoverAnalogKeyGroups()`, `populateTensorFromAnalogKeys()` |
+| `TensorColumnViewCreator.cpp` | Implementation using `analogToTensor()` algorithm |
+| `TensorInspector.cpp` | UI section with combo box, refresh/populate buttons, visibility toggling |
+| `test_tensor_column_views.test.cpp` | Tests for group discovery and tensor population |
+
+### Section Visibility
+
+`_updateSectionVisibility()` checks `TensorData::isEmpty()` and toggles:
+
+- **Empty tensor**: Show "Create from AnalogTimeSeries", hide Column Views and Export.
+- **Non-empty tensor**: Hide "Create from AnalogTimeSeries", show Column Views and Export.

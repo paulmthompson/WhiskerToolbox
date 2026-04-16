@@ -3,6 +3,7 @@
 #include "storage/MemoryMappedAnalogDataStorage.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>// std::nan, std::sqrt
 #include <iostream>
 #include <numeric>// std::iota
@@ -50,34 +51,33 @@ AnalogTimeSeries::AnalogTimeSeries(AnalogDataStorageWrapper storage, std::vector
 // ========== Factory Methods ==========
 
 std::shared_ptr<AnalogTimeSeries> AnalogTimeSeries::createMemoryMapped(
-    MmapStorageConfig config,
-    std::vector<TimeFrameIndex> time_vector) {
-    
+        MmapStorageConfig config,
+        std::vector<TimeFrameIndex> time_vector) {
+
     // Create memory-mapped storage
     auto mmap_storage = MemoryMappedAnalogDataStorage(std::move(config));
-    
+
     // Validate that time vector matches data size
-    size_t num_samples = mmap_storage.size();
+    size_t const num_samples = mmap_storage.size();
     if (time_vector.size() != num_samples) {
         throw std::runtime_error(
-            "Time vector size (" + std::to_string(time_vector.size()) + 
-            ") does not match data size (" + std::to_string(num_samples) + ")");
+                "Time vector size (" + std::to_string(time_vector.size()) +
+                ") does not match data size (" + std::to_string(num_samples) + ")");
     }
-    
+
     // Wrap in type-erased storage
     AnalogDataStorageWrapper storage_wrapper(std::move(mmap_storage));
-    
+
     // Use make_shared with private constructor access via friendship or helper
     // Since we can't use make_shared with private constructors directly, use new
     return std::shared_ptr<AnalogTimeSeries>(
-        new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_vector)));
+            new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_vector)));
 }
 
 std::shared_ptr<AnalogTimeSeries> AnalogTimeSeries::createView(
-    std::shared_ptr<AnalogTimeSeries const> source,
-    TimeFrameIndex start_time,
-    TimeFrameIndex end_time)
-{
+        std::shared_ptr<AnalogTimeSeries const> const & source,
+        TimeFrameIndex start_time,
+        TimeFrameIndex end_time) {
     // Get shared vector storage from source (zero-copy via aliasing constructor)
     auto shared_storage = source->_data_storage.getSharedVectorStorage();
     if (!shared_storage) {
@@ -85,58 +85,58 @@ std::shared_ptr<AnalogTimeSeries> AnalogTimeSeries::createView(
         auto materialized = source->materialize();
         return createView(materialized, start_time, end_time);
     }
-    
+
     // Find the data array indices for the time range
     auto start_index_opt = source->_findDataArrayIndexGreaterOrEqual(start_time);
     auto end_index_opt = source->_findDataArrayIndexLessOrEqual(end_time);
-    
+
     // Handle empty range
     if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
         // Return empty view
         auto view_storage = ViewAnalogDataStorage{shared_storage, 0, 0};
-        AnalogDataStorageWrapper storage_wrapper(std::move(view_storage));
-        
+        AnalogDataStorageWrapper storage_wrapper(view_storage);
+
         auto result = std::shared_ptr<AnalogTimeSeries>(
-            new AnalogTimeSeries(
-                std::move(storage_wrapper), 
-                TimeIndexStorageFactory::createDenseFromZero(0)));
+                new AnalogTimeSeries(
+                        std::move(storage_wrapper),
+                        TimeIndexStorageFactory::createDenseFromZero(0)));
         result->_time_frame = source->_time_frame;
         return result;
     }
-    
-    size_t start_idx = start_index_opt.value().getValue();
-    size_t end_idx = end_index_opt.value().getValue();
-    
+
+    size_t const start_idx = start_index_opt.value().getValue();
+    size_t const end_idx = end_index_opt.value().getValue();
+
     // Validate indices
     if (start_idx > end_idx) {
         // Return empty view
         auto view_storage = ViewAnalogDataStorage{shared_storage, 0, 0};
-        AnalogDataStorageWrapper storage_wrapper(std::move(view_storage));
-        
+        AnalogDataStorageWrapper storage_wrapper(view_storage);
+
         auto result = std::shared_ptr<AnalogTimeSeries>(
-            new AnalogTimeSeries(
-                std::move(storage_wrapper),
-                TimeIndexStorageFactory::createDenseFromZero(0)));
+                new AnalogTimeSeries(
+                        std::move(storage_wrapper),
+                        TimeIndexStorageFactory::createDenseFromZero(0)));
         result->_time_frame = source->_time_frame;
         return result;
     }
-    
+
     // Create view storage referencing the shared source (no copy!)
     // end_idx + 1 because ViewAnalogDataStorage uses exclusive end
     auto view_storage = ViewAnalogDataStorage{shared_storage, start_idx, end_idx + 1};
-    AnalogDataStorageWrapper storage_wrapper(std::move(view_storage));
-    
+    AnalogDataStorageWrapper storage_wrapper(view_storage);
+
     // Create time storage for the view range
     // Optimization: If source has dense time storage, create a new dense storage
     // with the appropriate start index (O(1)) instead of materializing a vector (O(n))
     std::shared_ptr<TimeIndexStorage> view_time_storage;
-    
-    auto const* dense_source = dynamic_cast<DenseTimeIndexStorage const*>(source->_time_storage.get());
+
+    auto const * dense_source = dynamic_cast<DenseTimeIndexStorage const *>(source->_time_storage.get());
     if (dense_source != nullptr) {
         // Source is dense - create new dense storage with offset applied
         // The view's time indices are: source_start + start_idx, source_start + start_idx + 1, ...
-        TimeFrameIndex view_start = dense_source->getTimeFrameIndexAt(start_idx);
-        size_t view_count = end_idx - start_idx + 1;
+        TimeFrameIndex const view_start = dense_source->getTimeFrameIndexAt(start_idx);
+        size_t const view_count = end_idx - start_idx + 1;
         view_time_storage = TimeIndexStorageFactory::createDense(view_start, view_count);
     } else {
         // Source is sparse - must materialize the time indices for the view range
@@ -147,16 +147,27 @@ std::shared_ptr<AnalogTimeSeries> AnalogTimeSeries::createView(
         }
         view_time_storage = TimeIndexStorageFactory::createFromTimeIndices(std::move(view_time_indices));
     }
-    
+
     auto result = std::shared_ptr<AnalogTimeSeries>(
-        new AnalogTimeSeries(std::move(storage_wrapper), std::move(view_time_storage)));
+            new AnalogTimeSeries(std::move(storage_wrapper), std::move(view_time_storage)));
     result->_time_frame = source->_time_frame;
-    
+
     return result;
 }
 
+std::shared_ptr<AnalogTimeSeries> AnalogTimeSeries::createFromStorage(
+        AnalogDataStorageWrapper storage,
+        std::shared_ptr<TimeIndexStorage> time_storage) {
+    assert(time_storage != nullptr && "createFromStorage: time_storage must not be null");
+    assert(storage.size() == time_storage->size() &&
+           "createFromStorage: storage and time_storage size mismatch");
+
+    return std::shared_ptr<AnalogTimeSeries>(
+            new AnalogTimeSeries(std::move(storage), std::move(time_storage)));
+}
+
 void AnalogTimeSeries::setData(std::vector<float> analog_vector) {
-    size_t size = analog_vector.size();
+    size_t const size = analog_vector.size();
     _data_storage = AnalogDataStorageWrapper(VectorAnalogDataStorage(std::move(analog_vector)));
     _time_storage = TimeIndexStorageFactory::createDenseFromZero(size);
     _cacheOptimizationPointers();
@@ -173,17 +184,17 @@ void AnalogTimeSeries::setData(std::vector<float> analog_vector, std::vector<Tim
     _cacheOptimizationPointers();
 }
 
-void AnalogTimeSeries::setData(std::map<int, float> analog_map) {
+void AnalogTimeSeries::setData(std::map<int, float> const & analog_map) {
     std::vector<float> data_vec;
     std::vector<TimeFrameIndex> time_vec;
     data_vec.reserve(analog_map.size());
     time_vec.reserve(analog_map.size());
-    
+
     for (auto & [key, value]: analog_map) {
-        time_vec.push_back(TimeFrameIndex(key));
+        time_vec.emplace_back(key);
         data_vec.push_back(value);
     }
-    
+
     _data_storage = AnalogDataStorageWrapper(VectorAnalogDataStorage(std::move(data_vec)));
     _time_storage = std::make_shared<SparseTimeIndexStorage>(std::move(time_vec));
     _cacheOptimizationPointers();
@@ -199,16 +210,16 @@ std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
     // Check if both boundaries were found
     if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
         // Return empty span if either boundary is not found
-        return std::span<float const>();
+        return {};
     }
 
-    size_t start_idx = start_index_opt.value().getValue();
-    size_t end_idx = end_index_opt.value().getValue();
+    size_t const start_idx = start_index_opt.value().getValue();
+    size_t const end_idx = end_index_opt.value().getValue();
 
     // Validate that start <= end (should always be true if our logic is correct)
     if (start_idx > end_idx) {
         // Return empty span for invalid range
-        return std::span<float const>();
+        return {};
     }
 
     // Use storage's getSpanRange for efficient access
@@ -312,8 +323,8 @@ AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFram
         return {std::span<float const>(), this, DataArrayIndex(0), DataArrayIndex(0)};
     }
 
-    size_t start_idx = start_index_opt.value().getValue();
-    size_t end_idx = end_index_opt.value().getValue();
+    size_t const start_idx = start_index_opt.value().getValue();
+    size_t const end_idx = end_index_opt.value().getValue();
 
     // Validate that start <= end
     if (start_idx > end_idx) {
@@ -329,7 +340,7 @@ AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFram
         TimeFrameIndex start_time,
         TimeFrameIndex end_time,
         TimeFrame const * source_timeFrame) const {
-    
+
     if (source_timeFrame == _time_frame.get()) {
         return getTimeValueSpanInTimeFrameIndexRange(start_time, end_time);
     }

@@ -1,0 +1,124 @@
+---
+title: "TensorColumnAnalogStorage"
+---
+
+## Overview
+
+`TensorColumnAnalogStorage` is a zero-copy CRTP storage backend for
+`AnalogTimeSeries` that directly references a column of a `TensorData` object.
+It is part of Phase 3 of the
+[multi-channel storage roadmap](../multi_channel_storage_and_transforms.qmd#sec-phase3).
+
+**File:** `src/DataObjects/AnalogTimeSeries/storage/TensorColumnAnalogStorage.hpp`
+
+## Purpose
+
+When multi-channel data is stored as a `TensorData` (an Armadillo `arma::fmat`
+with shape `[time × channels]`), individual channels need to be exposed as
+`AnalogTimeSeries` objects for compatibility with `DataViewer_Widget`, transforms,
+and export. `TensorColumnAnalogStorage` enables this without copying data.
+
+## Memory Model
+
+Armadillo uses column-major layout: each column of an `arma::fmat` is contiguous
+in memory. `TensorColumnAnalogStorage` caches the raw column pointer
+(`arma::fmat::colptr(c)`) to provide $O(1)$ element access and contiguous span
+access.
+
+```
+arma::fmat(rows=1000, cols=32)  ← column-major
+
+   col 0       col 1       col 2      ...
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ t0      │ │ t0      │ │ t0      │
+│ t1      │ │ t1      │ │ t1      │
+│ ...     │ │ ...     │ │ ...     │
+│ t999    │ │ t999    │ │ t999    │
+└─────────┘ └─────────┘ └─────────┘
+     ↑            ↑
+  _col_ptr     _col_ptr
+  (col=0)      (col=1)
+```
+
+Each `TensorColumnAnalogStorage` holds a `std::shared_ptr<TensorData const>`,
+ensuring the underlying matrix stays alive as long as any view exists.
+
+## CRTP Interface
+
+| Method | Behavior |
+|--------|----------|
+| `getValueAtImpl(i)` | `_col_ptr[i]` (Armadillo) or `TensorData::at({i, col})` (fallback) |
+| `sizeImpl()` | `_tensor->numRows()` |
+| `getSpanImpl()` | `{_col_ptr, numRows()}` if contiguous; empty otherwise |
+| `getSpanRangeImpl(s, e)` | `{_col_ptr + s, e - s}` if contiguous; empty otherwise |
+| `isContiguousImpl()` | `true` if Armadillo-backed |
+| `getStorageTypeImpl()` | `AnalogStorageType::Custom` |
+| `tryGetCacheImpl()` | Returns `{_col_ptr, numRows(), true}` if Armadillo |
+
+: CRTP method implementations {.striped}
+
+## Construction
+
+```cpp
+auto tensor_ptr = std::make_shared<TensorData>(some_tensor);
+auto storage = TensorColumnAnalogStorage(tensor_ptr, /*column_index=*/0);
+```
+
+**Preconditions:**
+
+- `tensor != nullptr`
+- `tensor->ndim() == 2`
+- `column_index < tensor->numColumns()`
+
+## Factory Method
+
+`TensorColumnAnalogStorage` is typically used through the general-purpose
+`AnalogTimeSeries::createFromStorage` factory:
+
+```cpp
+auto storage = TensorColumnAnalogStorage(tensor_ptr, col);
+auto wrapper = AnalogDataStorageWrapper(std::move(storage));
+auto analog = AnalogTimeSeries::createFromStorage(std::move(wrapper), time_storage);
+```
+
+This factory was designed to avoid adding a TensorData dependency to the
+AnalogTimeSeries library. The caller constructs the concrete storage and
+wraps it in the type-erased `AnalogDataStorageWrapper` before passing it in.
+
+## Integration: TensorToAnalog Transform
+
+The `TensorToAnalog` transform (Phase 1, updated in Phase 3) uses this backend:
+
+1. Copies the input `TensorData` into a `shared_ptr` (self-contained ownership).
+2. Resolves time storage once (shared across all column views).
+3. For each selected column, constructs a `TensorColumnAnalogStorage` and wraps
+   it in an `AnalogTimeSeries` via `createFromStorage`.
+
+The resulting `AnalogTimeSeries` objects share the same `TensorData` memory.
+
+## Non-Armadillo Fallback
+
+If the `TensorData` uses a storage backend other than `ArmadilloTensorStorage`
+(e.g. `LibTorchTensorStorage`), the column pointer cache (`_col_ptr`) is `nullptr`.
+In this case:
+
+- `isContiguous()` returns `false`
+- `getSpan()` / `getSpanRange()` return empty spans
+- `getValueAt(i)` falls back to `TensorData::at({i, col})` (per-element virtual dispatch)
+
+This ensures correctness for all backends while preserving zero-copy performance
+for the common Armadillo case.
+
+## Tests
+
+17 Catch2 test cases in
+`src/TransformsV2/algorithms/TensorToAnalog/TensorColumnAnalogStorage.test.cpp`
+cover:
+
+- Basic element access and size
+- Zero-copy memory sharing (pointer comparison with `arma::fmat::colptr`)
+- Contiguous span access (full and range)
+- Edge cases (single column, single row, span boundaries)
+- `createFromStorage` factory integration
+- `TensorToAnalog` round-trip with zero-copy verification
+- TimeFrame preservation
