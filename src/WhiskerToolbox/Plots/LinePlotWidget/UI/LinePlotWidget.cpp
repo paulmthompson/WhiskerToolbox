@@ -4,30 +4,32 @@
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "DataManager/DataManager.hpp"
-#include "Rendering/LinePlotOpenGLWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
+#include "Rendering/LinePlotOpenGLWidget.hpp"
 
 #include <QHBoxLayout>
 #include <QResizeEvent>
 #include <QVBoxLayout>
+
+#include <set>
+#include <utility>
 
 #include "ui_LinePlotWidget.h"
 
 LinePlotWidget::LinePlotWidget(std::shared_ptr<DataManager> data_manager,
                                QWidget * parent)
     : QWidget(parent),
-      _data_manager(data_manager),
+      _data_manager(std::move(std::move(data_manager))),
       ui(new Ui::LinePlotWidget),
       _opengl_widget(nullptr),
       _axis_widget(nullptr),
       _range_controls(nullptr),
       _vertical_axis_widget(nullptr),
-      _vertical_range_controls(nullptr)
-{
+      _vertical_range_controls(nullptr) {
     ui->setupUi(this);
 
     auto * horizontal_layout = new QHBoxLayout();
@@ -49,9 +51,9 @@ LinePlotWidget::LinePlotWidget(std::shared_ptr<DataManager> data_manager,
     _vertical_range_controls = nullptr;
 
     QLayout * old_layout = layout();
-    if (old_layout) {
+    
         delete old_layout;
-    }
+    
     setLayout(vertical_layout);
 
     connect(_opengl_widget, &LinePlotOpenGLWidget::plotDoubleClicked,
@@ -69,14 +71,15 @@ LinePlotWidget::LinePlotWidget(std::shared_ptr<DataManager> data_manager,
             });
 }
 
-LinePlotWidget::~LinePlotWidget()
-{
+LinePlotWidget::~LinePlotWidget() {
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
     delete ui;
 }
 
-void LinePlotWidget::setState(std::shared_ptr<LinePlotState> state)
-{
-    _state = state;
+void LinePlotWidget::setState(std::shared_ptr<LinePlotState> state) {
+    _state = std::move(state);
 
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
@@ -93,17 +96,22 @@ void LinePlotWidget::setState(std::shared_ptr<LinePlotState> state)
 
     syncTimeAxisRange();
     syncVerticalAxisRange();
+
+    // Register DataManager-level observer to detect key removal
+    if (_data_manager && _dm_observer_id == -1) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _pruneRemovedKeys();
+        });
+    }
 }
 
-void LinePlotWidget::setGroupManager(GroupManager * group_manager)
-{
+void LinePlotWidget::setGroupManager(GroupManager * group_manager) {
     if (_opengl_widget) {
         _opengl_widget->setGroupManager(group_manager);
     }
 }
 
-void LinePlotWidget::createTimeAxisIfNeeded()
-{
+void LinePlotWidget::createTimeAxisIfNeeded() {
     if (_axis_widget) {
         return;
     }
@@ -123,8 +131,7 @@ void LinePlotWidget::createTimeAxisIfNeeded()
     }
 }
 
-void LinePlotWidget::wireTimeAxis()
-{
+void LinePlotWidget::wireTimeAxis() {
     if (!_axis_widget) {
         return;
     }
@@ -145,8 +152,7 @@ void LinePlotWidget::wireTimeAxis()
     });
 }
 
-void LinePlotWidget::wireVerticalAxis()
-{
+void LinePlotWidget::wireVerticalAxis() {
     if (!_vertical_axis_widget && _state) {
         auto * vertical_axis_state = _state->verticalAxisState();
         if (vertical_axis_state) {
@@ -190,14 +196,13 @@ void LinePlotWidget::wireVerticalAxis()
                         _state->setYZoom(full_range / range);
                         _state->setPan(_state->viewState().x_pan,
                                        ((min_range + max_range) / 2.0) -
-                                       ((vas_local->getYMin() + vas_local->getYMax()) / 2.0));
+                                               ((vas_local->getYMin() + vas_local->getYMax()) / 2.0));
                     }
                 });
     }
 }
 
-void LinePlotWidget::connectViewChangeSignals()
-{
+void LinePlotWidget::connectViewChangeSignals() {
     auto onViewChanged = [this]() {
         if (_axis_widget) {
             _axis_widget->update();
@@ -216,8 +221,7 @@ void LinePlotWidget::connectViewChangeSignals()
             this, onViewChanged);
 }
 
-void LinePlotWidget::syncTimeAxisRange()
-{
+void LinePlotWidget::syncTimeAxisRange() {
     auto * time_axis_state = _state ? _state->relativeTimeAxisState() : nullptr;
     if (!time_axis_state) {
         return;
@@ -226,8 +230,7 @@ void LinePlotWidget::syncTimeAxisRange()
     time_axis_state->setRangeSilent(min, max);
 }
 
-void LinePlotWidget::syncVerticalAxisRange()
-{
+void LinePlotWidget::syncVerticalAxisRange() {
     if (!_state) {
         return;
     }
@@ -240,8 +243,7 @@ void LinePlotWidget::syncVerticalAxisRange()
     vas->setRangeSilent(min, max);
 }
 
-std::pair<double, double> LinePlotWidget::computeVisibleTimeRange() const
-{
+std::pair<double, double> LinePlotWidget::computeVisibleTimeRange() const {
     if (!_state) {
         return {0.0, 0.0};
     }
@@ -251,8 +253,7 @@ std::pair<double, double> LinePlotWidget::computeVisibleTimeRange() const
     return {center - half + vs.x_pan, center + half + vs.x_pan};
 }
 
-std::pair<double, double> LinePlotWidget::computeVisibleVerticalRange() const
-{
+std::pair<double, double> LinePlotWidget::computeVisibleVerticalRange() const {
     if (!_state) {
         return {0.0, 100.0};
     }
@@ -265,23 +266,45 @@ std::pair<double, double> LinePlotWidget::computeVisibleVerticalRange() const
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }
 
-LinePlotState * LinePlotWidget::state()
-{
+void LinePlotWidget::_pruneRemovedKeys() {
+    if (!_state || !_data_manager) {
+        return;
+    }
+    auto const all_keys = _data_manager->getAllKeys();
+    std::set<std::string> const key_set(all_keys.begin(), all_keys.end());
+
+    // Prune plot series whose DM keys no longer exist
+    std::vector<QString> to_remove;
+    for (auto const & name: _state->getPlotSeriesNames()) {
+        auto opts = _state->getPlotSeriesOptions(name);
+        if (opts && key_set.find(opts->series_key) == key_set.end()) {
+            to_remove.push_back(name);
+        }
+    }
+    for (auto const & name: to_remove) {
+        _state->removePlotSeries(name);
+    }
+
+    // Prune alignment key if removed
+    auto const alignment_key = _state->getAlignmentEventKey().toStdString();
+    if (!alignment_key.empty() && key_set.find(alignment_key) == key_set.end()) {
+        _state->setAlignmentEventKey(QString());
+    }
+}
+
+LinePlotState * LinePlotWidget::state() {
     return _state.get();
 }
 
-RelativeTimeAxisRangeControls * LinePlotWidget::getRangeControls() const
-{
+RelativeTimeAxisRangeControls * LinePlotWidget::getRangeControls() const {
     return _range_controls;
 }
 
-VerticalAxisRangeControls * LinePlotWidget::getVerticalRangeControls() const
-{
+VerticalAxisRangeControls * LinePlotWidget::getVerticalRangeControls() const {
     return _vertical_range_controls;
 }
 
-void LinePlotWidget::resizeEvent(QResizeEvent * event)
-{
+void LinePlotWidget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
     if (_axis_widget) {
         _axis_widget->update();

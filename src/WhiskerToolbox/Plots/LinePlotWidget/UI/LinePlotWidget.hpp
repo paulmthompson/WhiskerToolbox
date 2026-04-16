@@ -108,6 +108,9 @@ private:
     [[nodiscard]] std::pair<double, double> computeVisibleTimeRange() const;
     [[nodiscard]] std::pair<double, double> computeVisibleVerticalRange() const;
 
+    /// Check if any visualized keys have been removed from DataManager and clear them
+    void _pruneRemovedKeys();
+
     std::shared_ptr<DataManager> _data_manager;
     Ui::LinePlotWidget * ui;
 
@@ -119,6 +122,9 @@ private:
 
     VerticalAxisWidget * _vertical_axis_widget;
     VerticalAxisRangeControls * _vertical_range_controls;
+
+    /// DataManager-level observer ID for detecting key additions/removals
+    int _dm_observer_id{-1};
 };
 
 #endif// LINE_PLOT_WIDGET_HPP

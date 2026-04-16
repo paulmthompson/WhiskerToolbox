@@ -1,5 +1,6 @@
 #include "ScatterPlotWidget.hpp"
 
+#include "Core/ScatterColorConfig.hpp"
 #include "Core/ScatterPlotState.hpp"
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "DataManager/DataManager.hpp"
@@ -20,6 +21,8 @@
 #include <QTextStream>
 #include <QVBoxLayout>
 #include <utility>
+
+#include <set>
 
 #include "ui_ScatterPlotWidget.h"
 
@@ -60,6 +63,9 @@ ScatterPlotWidget::ScatterPlotWidget(std::shared_ptr<DataManager> data_manager,
 }
 
 ScatterPlotWidget::~ScatterPlotWidget() {
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
     delete ui;
 }
 
@@ -79,6 +85,13 @@ void ScatterPlotWidget::setState(std::shared_ptr<ScatterPlotState> state) {
     connectViewChangeSignals();
     syncHorizontalAxisRange();
     syncVerticalAxisRange();
+
+    // Register DataManager-level observer to detect key removal
+    if (_data_manager && _dm_observer_id == -1) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _pruneRemovedKeys();
+        });
+    }
 }
 
 void ScatterPlotWidget::createVerticalAxisIfNeeded() {
@@ -242,6 +255,35 @@ std::pair<double, double> ScatterPlotWidget::computeVisibleYRange() const {
     double const y_center = (vs.y_min + vs.y_max) / 2.0;
     double const half = y_range / 2.0 / vs.y_zoom;
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
+}
+
+void ScatterPlotWidget::_pruneRemovedKeys() {
+    if (!_state || !_data_manager) {
+        return;
+    }
+    auto const all_keys = _data_manager->getAllKeys();
+    std::set<std::string> const key_set(all_keys.begin(), all_keys.end());
+
+    // Clear X source if its key was removed
+    auto const & x_src = _state->xSource();
+    if (x_src && key_set.find(x_src->data_key) == key_set.end()) {
+        _state->setXSource(std::nullopt);
+    }
+
+    // Clear Y source if its key was removed
+    auto const & y_src = _state->ySource();
+    if (y_src && key_set.find(y_src->data_key) == key_set.end()) {
+        _state->setYSource(std::nullopt);
+    }
+
+    // Clear color-by-feature source if its key was removed
+    auto const & cc = _state->colorConfig();
+    if (cc.color_source && key_set.find(cc.color_source->data_key) == key_set.end()) {
+        auto config = cc;
+        config.color_source = std::nullopt;
+        config.color_mode = "fixed";
+        _state->setColorConfig(std::move(config));
+    }
 }
 
 ScatterPlotState * ScatterPlotWidget::state() {

@@ -15,19 +15,21 @@
 #include <QResizeEvent>
 #include <QVBoxLayout>
 
+#include <set>
+#include <utility>
+
 #include "ui_ACFWidget.h"
 
 ACFWidget::ACFWidget(std::shared_ptr<DataManager> data_manager,
                      QWidget * parent)
     : QWidget(parent),
-      _data_manager(data_manager),
+      _data_manager(std::move(std::move(data_manager))),
       ui(new Ui::ACFWidget),
       _opengl_widget(nullptr),
       _horizontal_axis_widget(nullptr),
       _horizontal_range_controls(nullptr),
       _vertical_axis_widget(nullptr),
-      _vertical_range_controls(nullptr)
-{
+      _vertical_range_controls(nullptr) {
     ui->setupUi(this);
 
     auto * horizontal_layout = new QHBoxLayout();
@@ -43,20 +45,21 @@ ACFWidget::ACFWidget(std::shared_ptr<DataManager> data_manager,
     vertical_layout->addLayout(horizontal_layout, 1);
 
     QLayout * old_layout = layout();
-    if (old_layout) {
+    
         delete old_layout;
-    }
+    
     setLayout(vertical_layout);
 }
 
-ACFWidget::~ACFWidget()
-{
+ACFWidget::~ACFWidget() {
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
     delete ui;
 }
 
-void ACFWidget::setState(std::shared_ptr<ACFState> state)
-{
-    _state = state;
+void ACFWidget::setState(std::shared_ptr<ACFState> state) {
+    _state = std::move(state);
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
     }
@@ -71,10 +74,16 @@ void ACFWidget::setState(std::shared_ptr<ACFState> state)
     connectViewChangeSignals();
     syncHorizontalAxisRange();
     syncVerticalAxisRange();
+
+    // Register DataManager-level observer to detect key removal
+    if (_data_manager && _dm_observer_id == -1) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _pruneRemovedKeys();
+        });
+    }
 }
 
-void ACFWidget::createVerticalAxisIfNeeded()
-{
+void ACFWidget::createVerticalAxisIfNeeded() {
     if (_vertical_axis_widget) {
         return;
     }
@@ -97,8 +106,7 @@ void ACFWidget::createVerticalAxisIfNeeded()
     }
 }
 
-void ACFWidget::createHorizontalAxisIfNeeded()
-{
+void ACFWidget::createHorizontalAxisIfNeeded() {
     if (_horizontal_axis_widget) {
         return;
     }
@@ -114,8 +122,7 @@ void ACFWidget::createHorizontalAxisIfNeeded()
     }
 }
 
-void ACFWidget::wireHorizontalAxis()
-{
+void ACFWidget::wireHorizontalAxis() {
     if (!_horizontal_axis_widget) {
         return;
     }
@@ -129,8 +136,7 @@ void ACFWidget::wireHorizontalAxis()
     });
 }
 
-void ACFWidget::wireVerticalAxis()
-{
+void ACFWidget::wireVerticalAxis() {
     if (!_vertical_axis_widget || !_state) {
         return;
     }
@@ -157,7 +163,7 @@ void ACFWidget::wireVerticalAxis()
                         _state->setYZoom(full_range / range);
                         _state->setPan(_state->viewState().x_pan,
                                        ((min_range + max_range) / 2.0) -
-                                           ((vas_local->getYMin() + vas_local->getYMax()) / 2.0));
+                                               ((vas_local->getYMin() + vas_local->getYMax()) / 2.0));
                     }
                 });
     }
@@ -175,15 +181,14 @@ void ACFWidget::wireVerticalAxis()
                         double const full_range = has_local->getXMax() - has_local->getXMin();
                         _state->setXZoom(full_range / range);
                         _state->setPan(((min_range + max_range) / 2.0) -
-                                           ((has_local->getXMin() + has_local->getXMax()) / 2.0),
+                                               ((has_local->getXMin() + has_local->getXMax()) / 2.0),
                                        _state->viewState().y_pan);
                     }
                 });
     }
 }
 
-void ACFWidget::connectViewChangeSignals()
-{
+void ACFWidget::connectViewChangeSignals() {
     auto onViewChanged = [this]() {
         if (_horizontal_axis_widget) {
             _horizontal_axis_widget->update();
@@ -198,8 +203,7 @@ void ACFWidget::connectViewChangeSignals()
     connect(_opengl_widget, &ACFOpenGLWidget::viewBoundsChanged, this, onViewChanged);
 }
 
-void ACFWidget::syncHorizontalAxisRange()
-{
+void ACFWidget::syncHorizontalAxisRange() {
     auto * has = _state ? _state->horizontalAxisState() : nullptr;
     if (!has) {
         return;
@@ -208,8 +212,7 @@ void ACFWidget::syncHorizontalAxisRange()
     has->setRangeSilent(min, max);
 }
 
-void ACFWidget::syncVerticalAxisRange()
-{
+void ACFWidget::syncVerticalAxisRange() {
     auto * vas = _state ? _state->verticalAxisState() : nullptr;
     if (!vas) {
         return;
@@ -218,8 +221,7 @@ void ACFWidget::syncVerticalAxisRange()
     vas->setRangeSilent(min, max);
 }
 
-std::pair<double, double> ACFWidget::computeVisibleXRange() const
-{
+std::pair<double, double> ACFWidget::computeVisibleXRange() const {
     if (!_state) {
         return {0.0, 100.0};
     }
@@ -230,8 +232,7 @@ std::pair<double, double> ACFWidget::computeVisibleXRange() const
     return {x_center - half + vs.x_pan, x_center + half + vs.x_pan};
 }
 
-std::pair<double, double> ACFWidget::computeVisibleYRange() const
-{
+std::pair<double, double> ACFWidget::computeVisibleYRange() const {
     if (!_state) {
         return {0.0, 100.0};
     }
@@ -243,23 +244,33 @@ std::pair<double, double> ACFWidget::computeVisibleYRange() const
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }
 
-ACFState * ACFWidget::state()
-{
+void ACFWidget::_pruneRemovedKeys() {
+    if (!_state || !_data_manager) {
+        return;
+    }
+    auto const all_keys = _data_manager->getAllKeys();
+    std::set<std::string> const key_set(all_keys.begin(), all_keys.end());
+
+    // Clear event key if removed
+    auto const event_key = _state->getEventKey().toStdString();
+    if (!event_key.empty() && key_set.find(event_key) == key_set.end()) {
+        _state->setEventKey(QString());
+    }
+}
+
+ACFState * ACFWidget::state() {
     return _state.get();
 }
 
-HorizontalAxisRangeControls * ACFWidget::getHorizontalRangeControls() const
-{
+HorizontalAxisRangeControls * ACFWidget::getHorizontalRangeControls() const {
     return _horizontal_range_controls;
 }
 
-VerticalAxisRangeControls * ACFWidget::getVerticalRangeControls() const
-{
+VerticalAxisRangeControls * ACFWidget::getVerticalRangeControls() const {
     return _vertical_range_controls;
 }
 
-void ACFWidget::resizeEvent(QResizeEvent * event)
-{
+void ACFWidget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
     if (_horizontal_axis_widget) {
         _horizontal_axis_widget->update();

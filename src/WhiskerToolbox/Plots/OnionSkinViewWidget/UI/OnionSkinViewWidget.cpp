@@ -15,20 +15,22 @@
 #include <QResizeEvent>
 #include <QVBoxLayout>
 
+#include <set>
+#include <utility>
+
 #include "ui_OnionSkinViewWidget.h"
 
 OnionSkinViewWidget::OnionSkinViewWidget(
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
     : QWidget(parent),
-      _data_manager(data_manager),
+      _data_manager(std::move(std::move(data_manager))),
       ui(new Ui::OnionSkinViewWidget),
       _opengl_widget(nullptr),
       _horizontal_axis_widget(nullptr),
       _horizontal_range_controls(nullptr),
       _vertical_axis_widget(nullptr),
-      _vertical_range_controls(nullptr)
-{
+      _vertical_range_controls(nullptr) {
     ui->setupUi(this);
 
     auto * horizontal_layout = new QHBoxLayout();
@@ -44,20 +46,21 @@ OnionSkinViewWidget::OnionSkinViewWidget(
     vertical_layout->addLayout(horizontal_layout, 1);
 
     QLayout * old_layout = layout();
-    if (old_layout) {
+    
         delete old_layout;
-    }
+    
     setLayout(vertical_layout);
 }
 
-OnionSkinViewWidget::~OnionSkinViewWidget()
-{
+OnionSkinViewWidget::~OnionSkinViewWidget() {
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
     delete ui;
 }
 
-void OnionSkinViewWidget::setState(std::shared_ptr<OnionSkinViewState> state)
-{
-    _state = state;
+void OnionSkinViewWidget::setState(std::shared_ptr<OnionSkinViewState> state) {
+    _state = std::move(state);
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
         _opengl_widget->setDataManager(_data_manager);
@@ -73,10 +76,16 @@ void OnionSkinViewWidget::setState(std::shared_ptr<OnionSkinViewState> state)
     connectViewChangeSignals();
     syncHorizontalAxisRange();
     syncVerticalAxisRange();
+
+    // Register DataManager-level observer to detect key removal
+    if (_data_manager && _dm_observer_id == -1) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _pruneRemovedKeys();
+        });
+    }
 }
 
-void OnionSkinViewWidget::createVerticalAxisIfNeeded()
-{
+void OnionSkinViewWidget::createVerticalAxisIfNeeded() {
     if (_vertical_axis_widget) {
         return;
     }
@@ -99,8 +108,7 @@ void OnionSkinViewWidget::createVerticalAxisIfNeeded()
     }
 }
 
-void OnionSkinViewWidget::createHorizontalAxisIfNeeded()
-{
+void OnionSkinViewWidget::createHorizontalAxisIfNeeded() {
     if (_horizontal_axis_widget) {
         return;
     }
@@ -116,8 +124,7 @@ void OnionSkinViewWidget::createHorizontalAxisIfNeeded()
     }
 }
 
-void OnionSkinViewWidget::wireHorizontalAxis()
-{
+void OnionSkinViewWidget::wireHorizontalAxis() {
     if (!_horizontal_axis_widget) {
         return;
     }
@@ -143,15 +150,14 @@ void OnionSkinViewWidget::wireHorizontalAxis()
                         double const full_range = vs.x_max - vs.x_min;
                         _state->setXZoom(full_range / range);
                         _state->setPan(((min_range + max_range) / 2.0) -
-                                           ((vs.x_min + vs.x_max) / 2.0),
+                                               ((vs.x_min + vs.x_max) / 2.0),
                                        vs.y_pan);
                     }
                 });
     }
 }
 
-void OnionSkinViewWidget::wireVerticalAxis()
-{
+void OnionSkinViewWidget::wireVerticalAxis() {
     if (!_vertical_axis_widget || !_state) {
         return;
     }
@@ -180,14 +186,13 @@ void OnionSkinViewWidget::wireVerticalAxis()
                         _state->setYZoom(full_range / range);
                         _state->setPan(vs.x_pan,
                                        ((min_range + max_range) / 2.0) -
-                                           ((vs.y_min + vs.y_max) / 2.0));
+                                               ((vs.y_min + vs.y_max) / 2.0));
                     }
                 });
     }
 }
 
-void OnionSkinViewWidget::connectViewChangeSignals()
-{
+void OnionSkinViewWidget::connectViewChangeSignals() {
     auto onViewChanged = [this]() {
         if (_horizontal_axis_widget) {
             _horizontal_axis_widget->update();
@@ -203,8 +208,7 @@ void OnionSkinViewWidget::connectViewChangeSignals()
             onViewChanged);
 }
 
-void OnionSkinViewWidget::syncHorizontalAxisRange()
-{
+void OnionSkinViewWidget::syncHorizontalAxisRange() {
     auto * has = _state ? _state->horizontalAxisState() : nullptr;
     if (!has) {
         return;
@@ -213,8 +217,7 @@ void OnionSkinViewWidget::syncHorizontalAxisRange()
     has->setRangeSilent(min, max);
 }
 
-void OnionSkinViewWidget::syncVerticalAxisRange()
-{
+void OnionSkinViewWidget::syncVerticalAxisRange() {
     auto * vas = _state ? _state->verticalAxisState() : nullptr;
     if (!vas) {
         return;
@@ -223,8 +226,7 @@ void OnionSkinViewWidget::syncVerticalAxisRange()
     vas->setRangeSilent(min, max);
 }
 
-std::pair<double, double> OnionSkinViewWidget::computeVisibleXRange() const
-{
+std::pair<double, double> OnionSkinViewWidget::computeVisibleXRange() const {
     if (!_state) {
         return {0.0, 100.0};
     }
@@ -235,8 +237,7 @@ std::pair<double, double> OnionSkinViewWidget::computeVisibleXRange() const
     return {x_center - half + vs.x_pan, x_center + half + vs.x_pan};
 }
 
-std::pair<double, double> OnionSkinViewWidget::computeVisibleYRange() const
-{
+std::pair<double, double> OnionSkinViewWidget::computeVisibleYRange() const {
     if (!_state) {
         return {0.0, 100.0};
     }
@@ -248,30 +249,54 @@ std::pair<double, double> OnionSkinViewWidget::computeVisibleYRange() const
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }
 
-void OnionSkinViewWidget::_onTimeChanged(TimePosition position)
-{
+void OnionSkinViewWidget::_onTimeChanged(const TimePosition& position) {
     if (_opengl_widget) {
         _opengl_widget->setCurrentTime(position.index.getValue());
     }
 }
 
-OnionSkinViewState * OnionSkinViewWidget::state()
-{
+void OnionSkinViewWidget::_pruneRemovedKeys() {
+    if (!_state || !_data_manager) {
+        return;
+    }
+    auto const all_keys = _data_manager->getAllKeys();
+    std::set<std::string> const key_set(all_keys.begin(), all_keys.end());
+
+    // Prune point data keys
+    for (auto const & key: _state->getPointDataKeys()) {
+        if (key_set.find(key.toStdString()) == key_set.end()) {
+            _state->removePointDataKey(key);
+        }
+    }
+
+    // Prune line data keys
+    for (auto const & key: _state->getLineDataKeys()) {
+        if (key_set.find(key.toStdString()) == key_set.end()) {
+            _state->removeLineDataKey(key);
+        }
+    }
+
+    // Prune mask data keys
+    for (auto const & key: _state->getMaskDataKeys()) {
+        if (key_set.find(key.toStdString()) == key_set.end()) {
+            _state->removeMaskDataKey(key);
+        }
+    }
+}
+
+OnionSkinViewState * OnionSkinViewWidget::state() {
     return _state.get();
 }
 
-HorizontalAxisRangeControls * OnionSkinViewWidget::getHorizontalRangeControls() const
-{
+HorizontalAxisRangeControls * OnionSkinViewWidget::getHorizontalRangeControls() const {
     return _horizontal_range_controls;
 }
 
-VerticalAxisRangeControls * OnionSkinViewWidget::getVerticalRangeControls() const
-{
+VerticalAxisRangeControls * OnionSkinViewWidget::getVerticalRangeControls() const {
     return _vertical_range_controls;
 }
 
-void OnionSkinViewWidget::resizeEvent(QResizeEvent * event)
-{
+void OnionSkinViewWidget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
     if (_horizontal_axis_widget) {
         _horizontal_axis_widget->update();

@@ -15,20 +15,22 @@
 #include <QResizeEvent>
 #include <QVBoxLayout>
 
+#include <set>
+#include <utility>
+
 #include "ui_TemporalProjectionViewWidget.h"
 
 TemporalProjectionViewWidget::TemporalProjectionViewWidget(
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
     : QWidget(parent),
-      _data_manager(data_manager),
+      _data_manager(std::move(std::move(data_manager))),
       ui(new Ui::TemporalProjectionViewWidget),
       _opengl_widget(nullptr),
       _horizontal_axis_widget(nullptr),
       _horizontal_range_controls(nullptr),
       _vertical_axis_widget(nullptr),
-      _vertical_range_controls(nullptr)
-{
+      _vertical_range_controls(nullptr) {
     ui->setupUi(this);
 
     auto * horizontal_layout = new QHBoxLayout();
@@ -45,20 +47,21 @@ TemporalProjectionViewWidget::TemporalProjectionViewWidget(
     vertical_layout->addLayout(horizontal_layout, 1);
 
     QLayout * old_layout = layout();
-    if (old_layout) {
+    
         delete old_layout;
-    }
+    
     setLayout(vertical_layout);
 }
 
-TemporalProjectionViewWidget::~TemporalProjectionViewWidget()
-{
+TemporalProjectionViewWidget::~TemporalProjectionViewWidget() {
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
     delete ui;
 }
 
-void TemporalProjectionViewWidget::setState(std::shared_ptr<TemporalProjectionViewState> state)
-{
-    _state = state;
+void TemporalProjectionViewWidget::setState(std::shared_ptr<TemporalProjectionViewState> state) {
+    _state = std::move(state);
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
     }
@@ -73,10 +76,16 @@ void TemporalProjectionViewWidget::setState(std::shared_ptr<TemporalProjectionVi
     connectViewChangeSignals();
     syncHorizontalAxisRange();
     syncVerticalAxisRange();
+
+    // Register DataManager-level observer to detect key removal
+    if (_data_manager && _dm_observer_id == -1) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _pruneRemovedKeys();
+        });
+    }
 }
 
-void TemporalProjectionViewWidget::createVerticalAxisIfNeeded()
-{
+void TemporalProjectionViewWidget::createVerticalAxisIfNeeded() {
     if (_vertical_axis_widget) {
         return;
     }
@@ -99,8 +108,7 @@ void TemporalProjectionViewWidget::createVerticalAxisIfNeeded()
     }
 }
 
-void TemporalProjectionViewWidget::createHorizontalAxisIfNeeded()
-{
+void TemporalProjectionViewWidget::createHorizontalAxisIfNeeded() {
     if (_horizontal_axis_widget) {
         return;
     }
@@ -116,8 +124,7 @@ void TemporalProjectionViewWidget::createHorizontalAxisIfNeeded()
     }
 }
 
-void TemporalProjectionViewWidget::wireHorizontalAxis()
-{
+void TemporalProjectionViewWidget::wireHorizontalAxis() {
     if (!_horizontal_axis_widget) {
         return;
     }
@@ -143,15 +150,14 @@ void TemporalProjectionViewWidget::wireHorizontalAxis()
                         double const full_range = vs.x_max - vs.x_min;
                         _state->setXZoom(full_range / range);
                         _state->setPan(((min_range + max_range) / 2.0) -
-                                           ((vs.x_min + vs.x_max) / 2.0),
+                                               ((vs.x_min + vs.x_max) / 2.0),
                                        vs.y_pan);
                     }
                 });
     }
 }
 
-void TemporalProjectionViewWidget::wireVerticalAxis()
-{
+void TemporalProjectionViewWidget::wireVerticalAxis() {
     if (!_vertical_axis_widget || !_state) {
         return;
     }
@@ -178,14 +184,13 @@ void TemporalProjectionViewWidget::wireVerticalAxis()
                         _state->setYZoom(full_range / range);
                         _state->setPan(vs.x_pan,
                                        ((min_range + max_range) / 2.0) -
-                                           ((vs.y_min + vs.y_max) / 2.0));
+                                               ((vs.y_min + vs.y_max) / 2.0));
                     }
                 });
     }
 }
 
-void TemporalProjectionViewWidget::connectViewChangeSignals()
-{
+void TemporalProjectionViewWidget::connectViewChangeSignals() {
     auto onViewChanged = [this]() {
         if (_horizontal_axis_widget) {
             _horizontal_axis_widget->update();
@@ -201,8 +206,7 @@ void TemporalProjectionViewWidget::connectViewChangeSignals()
             onViewChanged);
 }
 
-void TemporalProjectionViewWidget::syncHorizontalAxisRange()
-{
+void TemporalProjectionViewWidget::syncHorizontalAxisRange() {
     auto * has = _state ? _state->horizontalAxisState() : nullptr;
     if (!has) {
         return;
@@ -211,8 +215,7 @@ void TemporalProjectionViewWidget::syncHorizontalAxisRange()
     has->setRangeSilent(min, max);
 }
 
-void TemporalProjectionViewWidget::syncVerticalAxisRange()
-{
+void TemporalProjectionViewWidget::syncVerticalAxisRange() {
     auto * vas = _state ? _state->verticalAxisState() : nullptr;
     if (!vas) {
         return;
@@ -221,8 +224,7 @@ void TemporalProjectionViewWidget::syncVerticalAxisRange()
     vas->setRangeSilent(min, max);
 }
 
-std::pair<double, double> TemporalProjectionViewWidget::computeVisibleXRange() const
-{
+std::pair<double, double> TemporalProjectionViewWidget::computeVisibleXRange() const {
     if (!_state) {
         return {0.0, 100.0};
     }
@@ -233,8 +235,7 @@ std::pair<double, double> TemporalProjectionViewWidget::computeVisibleXRange() c
     return {x_center - half + vs.x_pan, x_center + half + vs.x_pan};
 }
 
-std::pair<double, double> TemporalProjectionViewWidget::computeVisibleYRange() const
-{
+std::pair<double, double> TemporalProjectionViewWidget::computeVisibleYRange() const {
     if (!_state) {
         return {0.0, 100.0};
     }
@@ -246,35 +247,51 @@ std::pair<double, double> TemporalProjectionViewWidget::computeVisibleYRange() c
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }
 
-void TemporalProjectionViewWidget::_onTimeChanged(TimePosition /*position*/)
-{
+void TemporalProjectionViewWidget::_onTimeChanged(const TimePosition& /*position*/) {
     // Empty for now; can update view when time changes from EditorRegistry.
 }
 
-void TemporalProjectionViewWidget::clearSelection()
-{
+void TemporalProjectionViewWidget::_pruneRemovedKeys() {
+    if (!_state || !_data_manager) {
+        return;
+    }
+    auto const all_keys = _data_manager->getAllKeys();
+    std::set<std::string> const key_set(all_keys.begin(), all_keys.end());
+
+    // Prune point data keys
+    for (auto const & key: _state->getPointDataKeys()) {
+        if (key_set.find(key.toStdString()) == key_set.end()) {
+            _state->removePointDataKey(key);
+        }
+    }
+
+    // Prune line data keys
+    for (auto const & key: _state->getLineDataKeys()) {
+        if (key_set.find(key.toStdString()) == key_set.end()) {
+            _state->removeLineDataKey(key);
+        }
+    }
+}
+
+void TemporalProjectionViewWidget::clearSelection() {
     if (_opengl_widget) {
         _opengl_widget->clearSelection();
     }
 }
 
-TemporalProjectionViewState * TemporalProjectionViewWidget::state()
-{
+TemporalProjectionViewState * TemporalProjectionViewWidget::state() {
     return _state.get();
 }
 
-HorizontalAxisRangeControls * TemporalProjectionViewWidget::getHorizontalRangeControls() const
-{
+HorizontalAxisRangeControls * TemporalProjectionViewWidget::getHorizontalRangeControls() const {
     return _horizontal_range_controls;
 }
 
-VerticalAxisRangeControls * TemporalProjectionViewWidget::getVerticalRangeControls() const
-{
+VerticalAxisRangeControls * TemporalProjectionViewWidget::getVerticalRangeControls() const {
     return _vertical_range_controls;
 }
 
-void TemporalProjectionViewWidget::resizeEvent(QResizeEvent * event)
-{
+void TemporalProjectionViewWidget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
     if (_horizontal_axis_widget) {
         _horizontal_axis_widget->update();
@@ -284,8 +301,7 @@ void TemporalProjectionViewWidget::resizeEvent(QResizeEvent * event)
     }
 }
 
-void TemporalProjectionViewWidget::setGroupManager(GroupManager * group_manager)
-{
+void TemporalProjectionViewWidget::setGroupManager(GroupManager * group_manager) {
     if (_opengl_widget) {
         _opengl_widget->setGroupManager(group_manager);
     }

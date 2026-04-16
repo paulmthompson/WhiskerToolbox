@@ -70,7 +70,7 @@ public:
      *
      * @param position The new TimePosition
      */
-    void _onTimeChanged(TimePosition position);
+    void _onTimeChanged(const TimePosition& position);
 
 signals:
     /**
@@ -80,11 +80,17 @@ signals:
     void timePositionSelected(TimePosition position);
 
 private:
+    /// Check if any visualized keys have been removed from DataManager and clear them
+    void _pruneRemovedKeys();
+
     std::shared_ptr<DataManager> _data_manager;
     Ui::SpectrogramWidget * ui;
 
     /// Serializable state shared with properties widget
     std::shared_ptr<SpectrogramState> _state;
+
+    /// DataManager-level observer ID for detecting key additions/removals
+    int _dm_observer_id{-1};
 };
 
 #endif// SPECTROGRAM_WIDGET_HPP

@@ -70,7 +70,7 @@ public:
      * 
      * @param position The new TimePosition
      */
-    void _onTimeChanged(TimePosition position);
+    void _onTimeChanged(const TimePosition& position);
 
 signals:
     /**
@@ -83,6 +83,9 @@ protected:
     void resizeEvent(QResizeEvent * event) override;
 
 private:
+    /// Check if any visualized keys have been removed from DataManager and clear them
+    void _pruneRemovedKeys();
+
     std::shared_ptr<DataManager> _data_manager;
     Ui::ThreeDPlotWidget * ui;
 
@@ -91,6 +94,9 @@ private:
 
     /// OpenGL widget for 3D rendering
     ThreeDPlotOpenGLWidget * _opengl_widget{nullptr};
+
+    /// DataManager-level observer ID for detecting key additions/removals
+    int _dm_observer_id{-1};
 };
 
 #endif// THREE_D_PLOT_WIDGET_HPP

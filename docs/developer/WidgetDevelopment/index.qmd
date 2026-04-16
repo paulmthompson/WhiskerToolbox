@@ -359,6 +359,77 @@ _data_manager->setData<TensorData>("output_key", std::move(new_data));
 
 For mutation operations that should be serializable and undoable, use the Command Architecture instead of calling `setData()` directly. See [§3 Commands](#command-architecture) below.
 
+### Handling Key Deletion (Required Pattern) {#key-deletion-pruning}
+
+When `DataManager::deleteData(key)` runs, the key is removed and all global observers fire. **Every plot widget** that references DataManager keys must subscribe to this event and prune stale references. Failing to do this causes dangling keys, `getData()` calls on missing objects, or stale GPU batches.
+
+::: {.callout-important}
+## Mandatory for New Plot Widgets
+
+All new plot widgets **must** implement the observer + prune pattern described below.
+:::
+
+**Step 1: Add a member to store the observer ID**
+
+```cpp
+int _dm_observer_id{-1};
+```
+
+**Step 2: Register in `setState()`**
+
+```cpp
+if (_data_manager && _dm_observer_id == -1) {
+    _dm_observer_id = _data_manager->addObserver([this]() {
+        _pruneRemovedKeys();
+    });
+}
+```
+
+**Step 3: Implement `_pruneRemovedKeys()`**
+
+Get the current key set from DataManager and remove any state references that no longer exist:
+
+```cpp
+void MyWidget::_pruneRemovedKeys() {
+    if (!_state || !_data_manager) { return; }
+    auto const all_keys = _data_manager->getAllKeys();
+    std::set<std::string> const key_set(all_keys.begin(), all_keys.end());
+
+    // For each key your state references, check existence and clear if missing:
+    auto const key = _state->getDataKey().toStdString();
+    if (!key.empty() && key_set.find(key) == key_set.end()) {
+        _state->setDataKey(QString());
+    }
+}
+```
+
+For widgets with multiple keys (e.g. plot series), iterate and collect removals before mutating:
+
+```cpp
+std::vector<QString> to_remove;
+for (auto const & name : _state->getSeriesNames()) {
+    auto opts = _state->getSeriesOptions(name);
+    if (opts && key_set.find(opts->data_key) == key_set.end()) {
+        to_remove.push_back(name);
+    }
+}
+for (auto const & name : to_remove) {
+    _state->removeSeries(name);
+}
+```
+
+**Step 4: Unregister in destructor**
+
+```cpp
+MyWidget::~MyWidget() {
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
+}
+```
+
+**Reference implementations:** `PSTHWidget`, `EventPlotWidget`, `HeatmapWidget` (full per-key callback management + pruning). Simpler single-key pattern: `SpectrogramWidget`, `ACFWidget`.
+
 ## 3. Command Architecture — Serializable Data Mutations {#command-architecture}
 
 The Command Architecture represents DataManager operations as `ICommand` objects. Commands are JSON-serializable, composable into sequences, and optionally undoable.

@@ -77,7 +77,7 @@ public:
      *
      * @param position The new TimePosition
      */
-    void _onTimeChanged(TimePosition position);
+    void _onTimeChanged(const TimePosition& position);
 
 signals:
     void timePositionSelected(TimePosition position);
@@ -97,6 +97,9 @@ private:
     [[nodiscard]] std::pair<double, double> computeVisibleXRange() const;
     [[nodiscard]] std::pair<double, double> computeVisibleYRange() const;
 
+    /// Check if any visualized keys have been removed from DataManager and clear them
+    void _pruneRemovedKeys();
+
     std::shared_ptr<DataManager> _data_manager;
     Ui::TemporalProjectionViewWidget * ui;
     std::shared_ptr<TemporalProjectionViewState> _state;
@@ -106,6 +109,9 @@ private:
     HorizontalAxisRangeControls * _horizontal_range_controls;
     VerticalAxisWidget * _vertical_axis_widget;
     VerticalAxisRangeControls * _vertical_range_controls;
+
+    /// DataManager-level observer ID for detecting key additions/removals
+    int _dm_observer_id{-1};
 };
 
-#endif  // TEMPORAL_PROJECTION_VIEW_WIDGET_HPP
+#endif// TEMPORAL_PROJECTION_VIEW_WIDGET_HPP
