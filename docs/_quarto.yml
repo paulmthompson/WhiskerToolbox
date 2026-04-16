@@ -166,6 +166,7 @@ website:
             - section: "TensorData"
               contents:
                 - developer/DataObjects/Tensors/row_mutation.qmd
+            - developer/DataObjects/multi_channel_storage_and_transforms.qmd
             - section: "Command Architecture"
               href: developer/DataManager/Commands/index.qmd
               contents:
