@@ -244,14 +244,19 @@ to handle block-cached or strided storage.
 
 ## Phase 1: AnalogToTensor & TensorToAnalog Transforms {#sec-phase1}
 
+::: {.callout-note}
+**Completed.** Both transforms are implemented, registered, and tested.
+See [developer docs](../transforms_v2/analog_to_tensor.qmd) for full API reference.
+:::
+
 *No dependencies. Directly addresses Issue #240.*
 
 This phase creates the bridge between independent `AnalogTimeSeries` channels and
 a unified `TensorData` representation suitable for cross-channel operations.
 
-### Step 1.1 — AnalogToTensor Container Transform
+### Step 1.1 — AnalogToTensor Container Transform ✓
 
-**New files:**
+**Files:**
 
 - `src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.hpp`
 - `src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.cpp`
@@ -290,22 +295,19 @@ and `AutoParamWidget` renders them as multi-select lists (for
 The list has a max height of 200px with scrolling for large channel counts.
 :::
 
-**Algorithm:**
+**Algorithm (implemented):**
 
-1. Retrieve each `AnalogTimeSeries` from DataManager by key (from `channel_keys`).
-2. Validate all channels share an identical `TimeFrame` and sample count.
-3. Allocate an `arma::fmat(num_samples, num_channels)` via `ArmadilloTensorStorage`.
-4. Copy each channel's data into the corresponding column. Use `viewValues()` for
-   mmap-safe iteration (avoids the empty-span problem).
-5. Return `TensorData::createTimeSeries2D(...)` with column names derived from
-   the analog keys.
+1. Validate all channels are non-null, share the same `TimeFrame` (pointer
+   identity), and have identical sample counts.
+2. Build flat row-major data by iterating each channel via `viewValues()`
+   (mmap-safe; avoids the empty-span problem).
+3. Return `TensorData::createTimeSeries2D(...)` preserving the shared `TimeFrame`
+   and `TimeIndexStorage`. Column names come from `channel_keys` when sizes match,
+   otherwise auto-generated as `"ch0"`, `"ch1"`, etc.
 
-**Pattern reference:** `AnalogIntervalReduction` (binary transform producing
-TensorData from analog + digital inputs).
+### Step 1.2 — TensorToAnalog Container Transform ✓
 
-### Step 1.2 — TensorToAnalog Container Transform
-
-**New files:**
+**Files:**
 
 - `src/TransformsV2/algorithms/TensorToAnalog/TensorToAnalog.hpp`
 - `src/TransformsV2/algorithms/TensorToAnalog/TensorToAnalog.cpp`
@@ -323,26 +325,34 @@ struct TensorToAnalogParams {
 `QLineEdit` (e.g. `"0, 1, 2"`) via the `std::vector<int>` widget support.
 An empty list means "extract all columns".
 
-**Algorithm:**
+**Algorithm (implemented):**
 
 1. For each selected column, extract data via `TensorData::getColumn(i)`.
-2. Create an owning `AnalogTimeSeries` from the extracted vector and the source
-   tensor's `TimeIndexStorage`.
-3. Register each in DataManager with key `{prefix}_{column_name}`.
+2. When the tensor has `RowType::TimeFrameIndex`, recover time indices via
+   `RowDescriptor::timeStoragePtr()->getAllTimeIndices()` and construct the
+   `AnalogTimeSeries` with those indices to preserve temporal alignment.
+3. Set the source `TimeFrame` on each output series.
 
 ::: {.callout-note}
-This initial version creates independent copies. Phase 3 replaces this with
-zero-copy column views.
+This initial version creates owning copies. Phase 3 replaces this with
+zero-copy `TensorColumnAnalogStorage` views.
 :::
 
-### Step 1.3 — Registration & Tests
+### Step 1.3 — Registration & Tests ✓
 
-- Register both transforms via static RAII in `RegisteredTransforms.cpp`.
-- Catch2 tests in `tests/TransformsV2/`:
-  - Round-trip: create N `AnalogTimeSeries` → `AnalogToTensor` → `TensorToAnalog`
-    → verify values match.
-  - Edge cases: single channel, mismatched time frames (should fail gracefully),
-    mmap-backed analog input.
+- Both transforms registered via `registerPipelineStepFactoryFor` in
+  `RegisteredTransforms.cpp`.
+- 12 Catch2 test cases (484 assertions) in
+  `src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.test.cpp`:
+  - Round-trip: N `AnalogTimeSeries` → `AnalogToTensor` → `TensorToAnalog`
+    → values match exactly.
+  - Single channel, default column name generation.
+  - Mismatched TimeFrames → `nullptr` (graceful failure).
+  - Mismatched sample counts → `nullptr` (graceful failure).
+  - Empty channels vector → `nullptr`.
+  - `TimeFrame` and `RowType::TimeFrameIndex` preserved in output.
+  - `TensorToAnalog` column selection, out-of-range index rejection.
+  - Ordinal tensor extraction.
 
 ## Phase 2: Cross-Channel Transforms (CAR, Whitening) {#sec-phase2}
 

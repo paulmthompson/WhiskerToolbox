@@ -59,6 +59,7 @@ add_executable(test_TransformsV2
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorTSNE/TensorTSNE.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorRobustPCA/TensorRobustPCA.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/SincInterpolation/SincInterpolation.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.test.cpp
 )
 
 target_include_directories(test_TransformsV2 PRIVATE

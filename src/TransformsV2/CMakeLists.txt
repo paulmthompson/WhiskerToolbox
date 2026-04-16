@@ -84,6 +84,10 @@ set(TRANSFORM_V2_SOURCES
         algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.cpp
         algorithms/TensorTSNE/TensorTSNE.hpp
         algorithms/TensorTSNE/TensorTSNE.cpp
+        algorithms/AnalogToTensor/AnalogToTensor.hpp
+        algorithms/AnalogToTensor/AnalogToTensor.cpp
+        algorithms/TensorToAnalog/TensorToAnalog.hpp
+        algorithms/TensorToAnalog/TensorToAnalog.cpp
         utils/NaNFilter.hpp
         utils/NaNFilter.cpp
         utils/DimReductionOutputBuilder.hpp

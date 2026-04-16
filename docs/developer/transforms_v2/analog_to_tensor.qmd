@@ -1,0 +1,108 @@
+---
+title: "AnalogToTensor & TensorToAnalog"
+---
+
+## Overview
+
+Phase 1 of the [multi-channel storage roadmap](../DataObjects/multi_channel_storage_and_transforms.qmd).
+These transforms bridge independent `AnalogTimeSeries` channels and a unified `TensorData`
+representation suitable for cross-channel operations.
+
+### AnalogToTensor
+
+N-ary container transform: packs N `AnalogTimeSeries` into one 2D `TensorData`
+(rows = time samples, columns = channels).
+
+### TensorToAnalog
+
+Extracts selected columns from a 2D `TensorData` as independent owning
+`AnalogTimeSeries` objects.
+
+## Location
+
+| File | Description |
+|------|-------------|
+| `src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.hpp` | AnalogToTensor header |
+| `src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.cpp` | AnalogToTensor implementation |
+| `src/TransformsV2/algorithms/TensorToAnalog/TensorToAnalog.hpp` | TensorToAnalog header |
+| `src/TransformsV2/algorithms/TensorToAnalog/TensorToAnalog.cpp` | TensorToAnalog implementation |
+| `src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.test.cpp` | Tests for both transforms |
+
+## AnalogToTensor Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `channel_prefix` | `std::string` | `""` | Prefix to match AnalogTimeSeries keys in DataManager |
+| `channel_keys` | `std::vector<std::string>` | `{}` | Selected DataManager keys (used as column names) |
+
+## TensorToAnalog Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `output_key_prefix` | `std::string` | `""` | Prefix for generated AnalogTimeSeries keys |
+| `columns` | `std::vector<int>` | `{}` | Column indices to extract (empty = all columns) |
+
+## Function Signatures
+
+Unlike standard 1-input container transforms, these have non-standard signatures
+because AnalogToTensor takes N inputs and TensorToAnalog produces N outputs:
+
+```cpp
+// N AnalogTimeSeries → 1 TensorData
+auto analogToTensor(
+    std::vector<std::shared_ptr<AnalogTimeSeries const>> const & channels,
+    AnalogToTensorParams const & params,
+    ComputeContext const & ctx) -> std::shared_ptr<TensorData>;
+
+// 1 TensorData → N AnalogTimeSeries
+auto tensorToAnalog(
+    TensorData const & input,
+    TensorToAnalogParams const & params,
+    ComputeContext const & ctx) -> std::vector<std::shared_ptr<AnalogTimeSeries>>;
+```
+
+## Algorithm
+
+### AnalogToTensor
+
+1. Validate all channels share the same `TimeFrame` (pointer identity) and sample count.
+2. Build flat row-major data by iterating each channel via `viewValues()` (mmap-safe).
+3. Return `TensorData::createTimeSeries2D(...)` preserving the shared `TimeFrame`
+   and `TimeIndexStorage`.
+
+### TensorToAnalog
+
+1. Determine columns to extract (all if `columns` is empty).
+2. For each column, call `TensorData::getColumn(i)` to get an owning copy.
+3. If the tensor has `RowType::TimeFrameIndex`, preserve time indices via
+   `RowDescriptor::timeStoragePtr()->getAllTimeIndices()`.
+4. Set the `TimeFrame` from the source tensor on each output.
+
+## Constraints
+
+### AnalogToTensor
+
+- Channels vector must not be empty
+- All channels must have identical sample counts
+- All channels must share the same `TimeFrame` (pointer identity)
+- Returns `nullptr` on validation failure
+
+### TensorToAnalog
+
+- Input must be 2D
+- Column indices must be in `[0, numColumns())`
+- Returns empty vector on validation failure
+
+## Round-Trip
+
+```
+N × AnalogTimeSeries  →  analogToTensor()  →  TensorData  →  tensorToAnalog()  →  N × AnalogTimeSeries
+```
+
+Values are preserved exactly. Time indices and TimeFrame are preserved for
+`TimeFrameIndex`-typed tensors.
+
+::: {.callout-note}
+Phase 1 creates owning copies in TensorToAnalog. Phase 3 will replace this
+with zero-copy `TensorColumnAnalogStorage` views into the Armadillo matrix.
+:::

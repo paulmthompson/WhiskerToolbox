@@ -1,5 +1,6 @@
 #include "core/RegisteredTransforms.hpp"
 
+#include "algorithms/AnalogToTensor/AnalogToTensor.hpp"
 #include "algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
 #include "algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
@@ -24,6 +25,7 @@
 #include "algorithms/TensorTSNE/TensorTSNE.hpp"
 #include "algorithms/TensorCentralDifference/TensorCentralDifference.hpp"
 #include "algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.hpp"
+#include "algorithms/TensorToAnalog/TensorToAnalog.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
 #include "core/PipelineLoader.hpp"// registerPipelineStepFactoryFor
@@ -78,6 +80,8 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<TensorRobustPCAParams>();
     registerPipelineStepFactoryFor<TensorTemporalNeighborParams>();
     registerPipelineStepFactoryFor<TensorCentralDifferenceParams>();
+    registerPipelineStepFactoryFor<AnalogToTensorParams>();
+    registerPipelineStepFactoryFor<TensorToAnalogParams>();
     return true;
 }();
 
