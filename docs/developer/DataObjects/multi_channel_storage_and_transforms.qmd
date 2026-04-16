@@ -358,7 +358,12 @@ zero-copy `TensorColumnAnalogStorage` views.
 
 *Depends on Phase 1 (requires multi-channel TensorData).*
 
-### Step 2.1 — Common Average Reference (CAR) Transform
+### Step 2.1 — Common Average Reference (CAR) Transform ✓
+
+::: {.callout-note}
+**Completed.** TensorCAR is implemented, registered, and tested.
+See [developer docs](../transforms_v2/tensor_car.qmd) for full API reference.
+:::
 
 **New files:**
 
@@ -377,7 +382,7 @@ struct TensorCARParams {
 };
 ```
 
-**Algorithm (unified LibTorch path):**
+**Algorithm (CPU via Armadillo):**
 
 1. `auto t = tensor.toLibTorch()` — convert from Armadillo storage.
 2. If `use_gpu`: `t = DeviceManager::instance().toDevice(t)` — move to GPU.

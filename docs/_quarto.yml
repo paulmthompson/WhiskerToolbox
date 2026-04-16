@@ -102,6 +102,7 @@ website:
                 - developer/transforms_v2/tensor_central_difference.qmd
                 - developer/transforms_v2/tensor_temporal_neighbors.qmd
                 - developer/transforms_v2/analog_to_tensor.qmd
+                - developer/transforms_v2/tensor_car.qmd
             - section: "ParameterSchema"
               href: developer/ParameterSchema/index.qmd
               contents:

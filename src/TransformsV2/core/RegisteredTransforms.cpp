@@ -1,6 +1,7 @@
 #include "core/RegisteredTransforms.hpp"
 
 #include "algorithms/AnalogToTensor/AnalogToTensor.hpp"
+#include "algorithms/TensorCAR/TensorCAR.hpp"
 #include "algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
 #include "algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
@@ -81,6 +82,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<TensorTemporalNeighborParams>();
     registerPipelineStepFactoryFor<TensorCentralDifferenceParams>();
     registerPipelineStepFactoryFor<AnalogToTensorParams>();
+    registerPipelineStepFactoryFor<TensorCARParams>();
     registerPipelineStepFactoryFor<TensorToAnalogParams>();
     return true;
 }();
@@ -713,6 +715,20 @@ auto const register_tensor_robust_pca = RegisterContainerTransform<TensorData, T
                 .output_type_name = "TensorData",
                 .params_type_name = "TensorRobustPCAParams",
                 .is_expensive = true,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register TensorCAR (Container Transform: TensorData → TensorData)
+auto const register_tensor_car = RegisterContainerTransform<TensorData, TensorData, TensorCARParams>(
+        "TensorCAR",
+        tensorCAR,
+        ContainerTransformMetadata{
+                .description = "Apply Common Average Reference to a multi-channel TensorData",
+                .category = "Signal Processing",
+                .input_type_name = "TensorData",
+                .output_type_name = "TensorData",
+                .params_type_name = "TensorCARParams",
+                .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 

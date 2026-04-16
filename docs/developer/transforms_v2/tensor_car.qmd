@@ -1,0 +1,98 @@
+---
+title: "TensorCAR"
+---
+
+## Overview
+
+Phase 2.1 of the [multi-channel storage roadmap](../DataObjects/multi_channel_storage_and_transforms.qmd).
+Applies **Common Average Reference (CAR)** to a multi-channel `TensorData`.
+For each time point, the transform subtracts a cross-channel reference signal
+(mean or median) from every channel:
+
+$$\text{result}[t, c] = \text{input}[t, c] - r(t)$$
+
+where $r(t)$ is the mean or median across all non-excluded channels at time $t$.
+This removes common-mode noise shared across channels — a standard preprocessing
+step in extracellular electrophysiology.
+
+## Location
+
+| File | Description |
+|------|-------------|
+| `src/TransformsV2/algorithms/TensorCAR/TensorCAR.hpp` | Header: `TensorCARParams`, `CARMethod`, `tensorCAR()` |
+| `src/TransformsV2/algorithms/TensorCAR/TensorCAR.cpp` | Implementation |
+| `src/TransformsV2/algorithms/TensorCAR/TensorCAR.test.cpp` | Catch2 tests |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `method` | `CARMethod` | `Median` | `Mean` or `Median` reference computation |
+| `exclude_channels` | `std::vector<int>` | `{}` | 0-based channel indices excluded from reference computation (still receive the reference subtraction) |
+| `use_gpu` | `bool` | `false` | Reserved for future LibTorch GPU path; currently unused |
+
+## Compute Backend
+
+The current implementation uses **Armadillo** for computation:
+
+1. Retrieve the underlying `arma::fmat` via `input.asArmadilloMatrix()`.
+   Shape: `(num_samples, num_channels)` — column-major.
+2. If `exclude_channels` is non-empty, restrict reference computation to
+   the complement sub-matrix via `mat.cols(include_uvec)`.
+3. Compute reference column vector (one value per time point):
+   - Mean: `arma::mean(ref_source, 1)` → `(num_samples, 1)`
+   - Median: `arma::median(ref_source, 1)` → `(num_samples, 1)`
+4. Subtract: `result_mat.each_col() -= ref_col`
+   — subtracts `ref[t]` from every channel at every time point.
+5. Reconstruct a `TensorData` preserving the input's `RowDescriptor`
+   (TimeFrameIndex, Interval, or Ordinal) and column names.
+
+### Future GPU Path
+
+The `use_gpu` flag is reserved for a future LibTorch implementation following
+the roadmap algorithm:
+
+```cpp
+auto t = tensor.toLibTorch();
+if (use_gpu) { t = DeviceManager::instance().toDevice(t); }
+auto ref = torch::median(t, /*dim=*/1).values;
+t = t - ref.unsqueeze(1);
+// return TensorData wrapping LibTorchTensorStorage
+```
+
+## Row Descriptor Preservation
+
+The output has exactly the same shape and `RowDescriptor` as the input:
+
+| Input `RowType` | Factory used |
+|-----------------|-------------|
+| `TimeFrameIndex` | `TensorData::createTimeSeries2D(...)` |
+| `Interval` | `TensorData::createFromIntervals(...)` |
+| `Ordinal` | `TensorData::createFromArmadillo(...)` |
+
+## Registration
+
+- **Registry name:** `"TensorCAR"`
+- **Category:** Signal Processing
+- **Transform type:** Container (`TensorData` → `TensorData`)
+- Registered in `src/TransformsV2/core/RegisteredTransforms.cpp`
+
+## Tests
+
+The test file verifies:
+
+| Test | What is checked |
+|------|----------------|
+| Registration | `ElementRegistry::isContainerTransform("TensorCAR")` |
+| Mean CAR | Row-wise mean ≈ 0 after transform |
+| Median CAR | Row-wise median ≈ 0 after transform |
+| Default params | Median is default |
+| Excluded channels | Reference computed from non-excluded channels only; excluded channels still receive the reference |
+| Shape/name preservation | Same rows, same columns, same column names |
+| RowDescriptor: TimeFrameIndex | Preserved with same `TimeFrame` pointer |
+| RowDescriptor: Ordinal | Preserved |
+| RowDescriptor: Interval | Preserved |
+| Via ElementRegistry | Full execution path |
+| 1D input | Returns `nullptr` |
+| All channels excluded | Returns `nullptr` |
+| Single channel | Output is all zeros |
