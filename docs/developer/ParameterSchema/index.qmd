@@ -43,6 +43,8 @@ Describes a single field in a parameter struct at runtime:
 | `is_bound` | `bool` | True if typically populated from a value store |
 | `dynamic_combo` | `bool` | If true, create QComboBox even with empty `allowed_values` |
 | `include_none_sentinel` | `bool` | If true, prepend "(None)" sentinel to combo (maps to `""` in JSON) |
+| `is_vector` | `bool` | True for `std::vector<T>` fields |
+| `vector_element_type` | `std::string` | Element type for vector fields (e.g. `"string"`, `"int"`, `"float"`) |
 | `is_variant` | `bool` | True for `rfl::TaggedUnion` fields |
 | `variant_discriminator` | `std::string` | Tag field name (e.g. `"model"`) |
 | `variant_alternatives` | `std::vector<VariantAlternative>` | One entry per union alternative |
@@ -89,6 +91,52 @@ ParameterSchema schema = extractParameterSchema<MyParams>();
 
 This is typically called once per type — either at static registration time (TransformsV2)
 or lazily by the command factory (Command Architecture).
+
+### `std::vector<T>` Auto-Detection
+
+`std::vector<T>` fields (where `T` is `std::string`, `int`, `float`, or `double`) are
+automatically detected at compile time using `detail::is_std_vector_v<T>`. When detected:
+
+- `is_vector` is set to `true`
+- `vector_element_type` is set to the element type name (e.g. `"string"`, `"int"`, `"float"`)
+- `type_name` is set to `"vector<element_type>"` (e.g. `"vector<string>"`)
+- Default values serialize as JSON arrays (e.g. `["ch1","ch2"]` or `[0,1,2]`)
+
+```cpp
+struct MultiChannelParams {
+    std::vector<std::string> channels;  // → multi-select list or free-form CSV
+    std::vector<int> columns = {0, 1, 2};  // → CSV line edit with defaults
+    std::vector<float> thresholds;  // → CSV line edit
+};
+```
+
+`AutoParamWidget` renders vector fields in two modes:
+
+1. **Multi-select list** — When `vector_element_type == "string"` and `dynamic_combo == true`,
+   a `QListWidget` with checkable items is created. Items are populated at runtime via
+   `updateAllowedValues()`. All items are checked by default on first population. The list
+   has a maximum height of 200px and scrolls for larger lists.
+
+2. **CSV line edit** — For numeric vectors (`int`, `float`, `double`) or free-form string
+   vectors (without `dynamic_combo`), a `QLineEdit` is shown. Values are entered as
+   comma-separated text (e.g. `"0, 1, 2"`). Default values from the struct are
+   pre-populated.
+
+Both modes serialize to/from JSON arrays via `toJson()` and `fromJson()`.
+
+#### `ParameterUIHints` for Vectors
+
+Use `dynamic_combo = true` on a `std::vector<std::string>` field to enable the multi-select
+list mode. The allowed values are populated at runtime by `updateAllowedValues()`:
+
+```cpp
+template<>
+struct ParameterUIHints<MultiChannelParams> {
+    static void annotate(ParameterSchema & schema) {
+        schema.field("channels")->dynamic_combo = true;
+    }
+};
+```
 
 ### Enum Class Auto-Detection
 
@@ -211,8 +259,9 @@ Describes one alternative in a variant field:
 | Function | Description |
 |----------|-------------|
 | `snakeCaseToDisplay(s)` | `"scale_factor"` → `"Scale Factor"` |
-| `parseUnderlyingType(s)` | Strips `optional<>` / `Validator<>` to return `"float"`, `"int"`, etc. |
+| `parseUnderlyingType(s)` | Strips `optional<>` / `Validator<>` to return `"float"`, `"int"`, `"vector<int>"`, etc. |
 | `isOptionalType(s)` | True if the type string contains `"optional"` |
+| `isVectorType(s)` | True if the type string contains `"vector"` |
 | `hasValidator(s)` | True if the type string contains `"Validator"` |
 | `extractConstraints(s)` | Returns `ConstraintInfo` with `min_value`, `max_value`, exclusivity flags |
 

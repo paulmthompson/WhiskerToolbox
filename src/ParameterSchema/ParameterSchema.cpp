@@ -199,6 +199,12 @@ std::string determineBaseType(std::string_view type_str) {
 // ============================================================================
 
 std::string parseUnderlyingType(std::string const & type_str) {
+    // Detect std::vector<T> before stripping to the element type.
+    // This must run before determineBaseType() which would lose the container.
+    if (contains(type_str, "vector")) {
+        auto const element = determineBaseType(type_str);
+        return "vector<" + element + ">";
+    }
     return determineBaseType(type_str);
 }
 
@@ -208,6 +214,14 @@ std::string parseUnderlyingType(std::string const & type_str) {
 
 bool isOptionalType(std::string const & type_str) {
     return contains(type_str, "optional");
+}
+
+// ============================================================================
+// isVectorType
+// ============================================================================
+
+bool isVectorType(std::string const & type_str) {
+    return contains(type_str, "vector");
 }
 
 // ============================================================================

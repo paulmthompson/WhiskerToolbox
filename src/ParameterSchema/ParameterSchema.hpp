@@ -81,6 +81,10 @@ struct ParameterFieldDescriptor {
     bool is_optional = false;///< True for std::optional<T> fields
     bool is_bound = false;   ///< True if typically populated from PipelineValueStore
 
+    // Vector support (for std::vector<T> fields)
+    bool is_vector = false;         ///< True for std::vector<T> fields
+    std::string vector_element_type;///< Inner type: "float", "int", "std::string" (only valid when is_vector)
+
     // Dynamic combo support (for fields populated at runtime, e.g. DataManager keys)
     bool dynamic_combo = false;        ///< If true, create QComboBox even with empty allowed_values
     bool include_none_sentinel = false;///< If true, prepend "(None)" sentinel to combo
@@ -164,6 +168,9 @@ std::string parseUnderlyingType(std::string const & type_str);
 /// Check if a type string represents an optional field
 bool isOptionalType(std::string const & type_str);
 
+/// Check if a type string represents a std::vector field
+bool isVectorType(std::string const & type_str);
+
 /// Check if a type string contains an rfl::Validator
 bool hasValidator(std::string const & type_str);
 
@@ -197,6 +204,28 @@ struct unwrap_optional<std::optional<T>> {
 
 template<typename T>
 using unwrap_optional_t = typename unwrap_optional<T>::type;
+
+/// Detect std::vector<T> at compile time
+template<typename T>
+struct is_std_vector : std::false_type {};
+
+template<typename T, typename A>
+struct is_std_vector<std::vector<T, A>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_std_vector_v = is_std_vector<T>::value;
+
+/// Extract the element type from std::vector<T>
+template<typename T>
+struct vector_element {};
+
+template<typename T, typename A>
+struct vector_element<std::vector<T, A>> {
+    using type = T;
+};
+
+template<typename T>
+using vector_element_t = typename vector_element<T>::type;
 
 /// Detect rfl::TaggedUnion<_discriminator, Ts...> via SFINAE
 template<typename T, typename = void>
@@ -371,6 +400,32 @@ ParameterSchema extractParameterSchema() {
                 detail::processTaggedUnion(
                         static_cast<InnerType const *>(nullptr),
                         schema.fields[field_idx]);
+            }
+        } else if constexpr (detail::is_std_vector_v<InnerType>) {
+            if (field_idx < schema.fields.size()) {
+                auto & fd = schema.fields[field_idx];
+                fd.is_vector = true;
+                // vector_element_type is the element's base type name.
+                // parseUnderlyingType already returned "vector<...>" for type_name.
+                // Extract just the element part.
+                using ElemType = detail::vector_element_t<InnerType>;
+                if constexpr (std::is_same_v<ElemType, float>) {
+                    fd.vector_element_type = "float";
+                } else if constexpr (std::is_same_v<ElemType, double>) {
+                    fd.vector_element_type = "double";
+                } else if constexpr (std::is_same_v<ElemType, int>) {
+                    fd.vector_element_type = "int";
+                } else if constexpr (std::is_same_v<ElemType, bool>) {
+                    fd.vector_element_type = "bool";
+                } else if constexpr (std::is_same_v<ElemType, std::string>) {
+                    fd.vector_element_type = "std::string";
+                } else if constexpr (std::is_integral_v<ElemType>) {
+                    fd.vector_element_type = "int";
+                } else if constexpr (std::is_floating_point_v<ElemType>) {
+                    fd.vector_element_type = "float";
+                } else {
+                    fd.vector_element_type = "unknown";
+                }
             }
         } else if constexpr (std::is_enum_v<InnerType>) {
             if (field_idx < schema.fields.size()) {

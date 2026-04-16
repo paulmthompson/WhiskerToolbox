@@ -39,6 +39,7 @@ class QDoubleSpinBox;
 class QFormLayout;
 class QGroupBox;
 class QLineEdit;
+class QListWidget;
 class QSpinBox;
 class QStackedWidget;
 class QVBoxLayout;
@@ -152,6 +153,12 @@ private:
         // For dynamic combo fields
         bool include_none_sentinel = false;///< Whether to prepend "(None)" to combo items
 
+        // For vector fields (std::vector<T>)
+        bool is_vector_field = false;             ///< True when this row represents a std::vector<T> field
+        std::string vector_element_type;          ///< Element type: "float", "int", "std::string"
+        QListWidget * multi_select_list = nullptr;///< Multi-select checkable list (for vector<string> + dynamic_combo)
+        QLineEdit * csv_input = nullptr;          ///< Comma-separated input (for vector<int>, vector<float>, or free-form vector<string>)
+
         // For variant (TaggedUnion) fields
         bool is_variant = false;
         std::string variant_discriminator;
@@ -163,6 +170,8 @@ private:
 
     void buildFieldRow(ParameterFieldDescriptor const & desc,
                        QFormLayout * layout);
+    void buildVectorFieldRow(ParameterFieldDescriptor const & desc,
+                             QFormLayout * layout);
     void buildVariantRow(ParameterFieldDescriptor const & desc,
                          QFormLayout * layout);
     static std::string variantSubRowsToJson(FieldRow const & row);

@@ -262,13 +262,37 @@ a unified `TensorData` representation suitable for cross-channel operations.
 
 ```cpp
 struct AnalogToTensorParams {
-    std::vector<std::string> channel_keys; // DataManager keys for analog channels
+    std::string channel_prefix;                // prefix to match AnalogTimeSeries keys
+    std::vector<std::string> channel_keys;     // selected DataManager keys (populated from prefix)
 };
 ```
 
+The first-pass UI uses a **hybrid prefix + multi-select** approach:
+
+- `channel_prefix` is a `dynamic_combo` field populated with unique prefixes
+  discovered from `AnalogTimeSeries` keys in DataManager (e.g. `"voltage"`,
+  `"emg"`).
+- When a prefix is selected, `channel_keys` (a `dynamic_combo`
+  `std::vector<std::string>` field) is populated with all matching keys and
+  rendered as a multi-select `QListWidget` with all items checked by default.
+  The user can uncheck individual channels to exclude them.
+
+This is enabled by the `std::vector<T>` support in `ParameterSchema` and
+`AutoParamWidget` (see
+[ParameterSchema developer docs](../ParameterSchema/index.qmd#stdvectort-auto-detection)).
+
+::: {.callout-note}
+**Infrastructure dependency resolved:** `ParameterSchema` now detects
+`std::vector<T>` fields at compile time (`is_vector`, `vector_element_type`),
+and `AutoParamWidget` renders them as multi-select lists (for
+`vector<string>` + `dynamic_combo`) or CSV line edits (for `vector<int>`,
+`vector<float>`). All items are checked by default on first population.
+The list has a max height of 200px with scrolling for large channel counts.
+:::
+
 **Algorithm:**
 
-1. Retrieve each `AnalogTimeSeries` from DataManager by key.
+1. Retrieve each `AnalogTimeSeries` from DataManager by key (from `channel_keys`).
 2. Validate all channels share an identical `TimeFrame` and sample count.
 3. Allocate an `arma::fmat(num_samples, num_channels)` via `ArmadilloTensorStorage`.
 4. Copy each channel's data into the corresponding column. Use `viewValues()` for
@@ -294,6 +318,10 @@ struct TensorToAnalogParams {
     std::vector<int> columns;      // which columns to extract (empty = all)
 };
 ```
+
+`output_key_prefix` uses a standard `QLineEdit`. `columns` uses a CSV
+`QLineEdit` (e.g. `"0, 1, 2"`) via the `std::vector<int>` widget support.
+An empty list means "extract all columns".
 
 **Algorithm:**
 

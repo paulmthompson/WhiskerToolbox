@@ -9,6 +9,8 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListWidget>
+#include <QListWidgetItem>
 #include <QSizePolicy>
 #include <QSpinBox>
 #include <QStackedWidget>
@@ -78,6 +80,12 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
     // Variant (TaggedUnion) fields get a specialized layout
     if (desc.is_variant) {
         buildVariantRow(desc, layout);
+        return;
+    }
+
+    // Vector fields get a specialized layout (multi-select list or CSV input)
+    if (desc.is_vector) {
+        buildVectorFieldRow(desc, layout);
         return;
     }
 
@@ -270,6 +278,120 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
     // Set tooltip if available
     if (!desc.tooltip.empty() && value_widget) {
         value_widget->setToolTip(QString::fromStdString(desc.tooltip));
+    }
+
+    _field_rows.push_back(std::move(row));
+}
+
+// ============================================================================
+// buildVectorFieldRow — Create multi-select list or CSV input for vector fields
+// ============================================================================
+
+namespace {
+
+/// Maximum visible height for the multi-select QListWidget (pixels)
+constexpr int kMaxListWidgetHeight = 200;
+
+}// anonymous namespace
+
+void AutoParamWidget::buildVectorFieldRow(ParameterFieldDescriptor const & desc,
+                                          QFormLayout * layout) {
+    FieldRow row;
+    row.field_name = desc.name;
+    row.type_name = desc.type_name;
+    row.is_optional = false;// per user preference: no optional vector support
+    row.is_vector_field = true;
+    row.vector_element_type = desc.vector_element_type;
+
+    QWidget * value_widget = nullptr;
+
+    bool const use_multi_select = (desc.vector_element_type == "std::string") && desc.dynamic_combo;
+
+    if (use_multi_select) {
+        // Multi-select QListWidget with checkable items
+        auto * list = new QListWidget(this);
+        list->setSelectionMode(QAbstractItemView::NoSelection);
+        list->setMaximumHeight(kMaxListWidgetHeight);
+
+        // Populate with static allowed_values if any (items start checked by default)
+        for (auto const & val: desc.allowed_values) {
+            auto * item = new QListWidgetItem(QString::fromStdString(val), list);
+            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+            item->setCheckState(Qt::Checked);
+        }
+
+        // Apply defaults from JSON array: uncheck items not in the default list
+        if (desc.default_value_json.has_value()) {
+            auto def_result = rfl::json::read<rfl::Generic>(desc.default_value_json.value());
+            if (def_result) {
+                auto const * arr = std::get_if<rfl::Generic::Array>(&def_result.value().get());
+                if (arr) {
+                    std::vector<std::string> defaults;
+                    for (auto const & elem: *arr) {
+                        if (auto const * s = std::get_if<std::string>(&elem.get())) {
+                            defaults.push_back(*s);
+                        }
+                    }
+                    for (int i = 0; i < list->count(); ++i) {
+                        auto * item = list->item(i);
+                        auto text = item->text().toStdString();
+                        bool const in_defaults = std::find(defaults.begin(), defaults.end(), text) != defaults.end();
+                        item->setCheckState(in_defaults ? Qt::Checked : Qt::Unchecked);
+                    }
+                }
+            }
+        }
+
+        connect(list, &QListWidget::itemChanged, this, &AutoParamWidget::onFieldChanged);
+
+        row.multi_select_list = list;
+        value_widget = list;
+
+    } else {
+        // CSV line edit for vector<int>, vector<float>, or free-form vector<string>
+        auto * edit = new QLineEdit(this);
+
+        if (desc.vector_element_type == "int") {
+            edit->setPlaceholderText(tr("e.g., 1, 2, 3, 10"));
+        } else if (desc.vector_element_type == "float" || desc.vector_element_type == "double") {
+            edit->setPlaceholderText(tr("e.g., 0.5, 1.0, 2.5"));
+        } else {
+            edit->setPlaceholderText(tr("e.g., key1, key2, key3"));
+        }
+
+        // Apply default from JSON array
+        if (desc.default_value_json.has_value()) {
+            auto def_result = rfl::json::read<rfl::Generic>(desc.default_value_json.value());
+            if (def_result) {
+                auto const * arr = std::get_if<rfl::Generic::Array>(&def_result.value().get());
+                if (arr) {
+                    QStringList parts;
+                    for (auto const & elem: *arr) {
+                        if (auto const * s = std::get_if<std::string>(&elem.get())) {
+                            parts.append(QString::fromStdString(*s));
+                        } else if (auto const * d = std::get_if<double>(&elem.get())) {
+                            parts.append(QString::number(*d));
+                        } else if (auto const * i = std::get_if<int>(&elem.get())) {
+                            parts.append(QString::number(*i));
+                        }
+                    }
+                    edit->setText(parts.join(QStringLiteral(", ")));
+                }
+            }
+        }
+
+        connect(edit, &QLineEdit::editingFinished, this, &AutoParamWidget::onFieldChanged);
+
+        row.csv_input = edit;
+        value_widget = edit;
+    }
+
+    if (value_widget) {
+        QString const label = QString::fromStdString(desc.display_name);
+        layout->addRow(label, value_widget);
+        if (!desc.tooltip.empty()) {
+            value_widget->setToolTip(QString::fromStdString(desc.tooltip));
+        }
     }
 
     _field_rows.push_back(std::move(row));
@@ -620,6 +742,50 @@ std::string AutoParamWidget::toJson() const {
 
         if (row.is_variant && row.variant_combo) {
             oss << variantSubRowsToJson(row);
+        } else if (row.is_vector_field && row.multi_select_list) {
+            // Multi-select list → JSON array of checked item strings
+            oss << "[";
+            bool first_item = true;
+            for (int i = 0; i < row.multi_select_list->count(); ++i) {
+                auto const * item = row.multi_select_list->item(i);
+                if (item->checkState() == Qt::Checked) {
+                    if (!first_item) oss << ",";
+                    first_item = false;
+                    oss << "\"" << item->text().toStdString() << "\"";
+                }
+            }
+            oss << "]";
+        } else if (row.is_vector_field && row.csv_input) {
+            // CSV line edit → JSON array
+            auto text = row.csv_input->text().trimmed().toStdString();
+            if (text.empty()) {
+                oss << "[]";
+            } else {
+                oss << "[";
+                std::istringstream stream(text);
+                std::string token;
+                bool first_item = true;
+                while (std::getline(stream, token, ',')) {
+                    // Trim whitespace from token
+                    auto start = token.find_first_not_of(" \t");
+                    auto end = token.find_last_not_of(" \t");
+                    if (start == std::string::npos) continue;
+                    token = token.substr(start, end - start + 1);
+                    if (token.empty()) continue;
+
+                    if (!first_item) oss << ",";
+                    first_item = false;
+
+                    if (row.vector_element_type == "int") {
+                        oss << token;// numeric, no quotes
+                    } else if (row.vector_element_type == "float" || row.vector_element_type == "double") {
+                        oss << token;// numeric, no quotes
+                    } else {
+                        oss << "\"" << token << "\"";// string, with quotes
+                    }
+                }
+                oss << "]";
+            }
         } else if (row.double_spin) {
             oss << row.double_spin->value();
         } else if (row.int_spin) {
@@ -685,6 +851,40 @@ bool AutoParamWidget::fromJson(std::string const & json) {
             // Variant fields: the value is a nested JSON object
             auto variant_json = rfl::json::write(field_result.value());
             variantSubRowsFromJson(row, variant_json);
+        } else if (row.is_vector_field && row.multi_select_list) {
+            // Vector multi-select list: value should be a JSON array of strings
+            auto const * arr = std::get_if<rfl::Generic::Array>(&value);
+            if (arr) {
+                std::vector<std::string> checked_values;
+                for (auto const & elem: *arr) {
+                    if (auto const * s = std::get_if<std::string>(&elem.get())) {
+                        checked_values.push_back(*s);
+                    }
+                }
+                // Update check states — items in the array are checked, others unchecked
+                for (int i = 0; i < row.multi_select_list->count(); ++i) {
+                    auto * item = row.multi_select_list->item(i);
+                    auto text = item->text().toStdString();
+                    bool const should_check = std::find(checked_values.begin(), checked_values.end(), text) != checked_values.end();
+                    item->setCheckState(should_check ? Qt::Checked : Qt::Unchecked);
+                }
+            }
+        } else if (row.is_vector_field && row.csv_input) {
+            // Vector CSV input: value should be a JSON array
+            auto const * arr = std::get_if<rfl::Generic::Array>(&value);
+            if (arr) {
+                QStringList parts;
+                for (auto const & elem: *arr) {
+                    if (auto const * s = std::get_if<std::string>(&elem.get())) {
+                        parts.append(QString::fromStdString(*s));
+                    } else if (auto const * d = std::get_if<double>(&elem.get())) {
+                        parts.append(QString::number(*d));
+                    } else if (auto const * i_val = std::get_if<int>(&elem.get())) {
+                        parts.append(QString::number(*i_val));
+                    }
+                }
+                row.csv_input->setText(parts.join(QStringLiteral(", ")));
+            }
         } else if (row.double_spin) {
             if (auto const * num = std::get_if<double>(&value)) {
                 row.double_spin->setValue(*num);
@@ -821,8 +1021,43 @@ void AutoParamWidget::updateAllowedValues(std::string const & field_name,
         }
     };
 
+    auto const updateMultiSelectList = [&](QListWidget * list) {
+        // Collect currently checked items to preserve selection
+        std::vector<std::string> previously_checked;
+        for (int i = 0; i < list->count(); ++i) {
+            auto const * item = list->item(i);
+            if (item->checkState() == Qt::Checked) {
+                previously_checked.push_back(item->text().toStdString());
+            }
+        }
+
+        bool const was_blocked = list->signalsBlocked();
+        list->blockSignals(true);
+        list->clear();
+
+        bool const is_initial = previously_checked.empty();
+
+        for (auto const & val: values) {
+            auto * item = new QListWidgetItem(QString::fromStdString(val), list);
+            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+            if (is_initial) {
+                // First population: all items checked by default
+                item->setCheckState(Qt::Checked);
+            } else {
+                // Subsequent updates: preserve checked state
+                bool const was_checked = std::find(previously_checked.begin(), previously_checked.end(), val) != previously_checked.end();
+                item->setCheckState(was_checked ? Qt::Checked : Qt::Unchecked);
+            }
+        }
+
+        list->blockSignals(was_blocked);
+        selection_changed = true;// always re-emit since list contents changed
+    };
+
     for (auto & row: _field_rows) {
-        if (row.field_name == field_name && row.combo_box) {
+        if (row.field_name == field_name && row.multi_select_list) {
+            updateMultiSelectList(row.multi_select_list);
+        } else if (row.field_name == field_name && row.combo_box) {
             updateCombo(row.combo_box, row.include_none_sentinel);
         }
 
