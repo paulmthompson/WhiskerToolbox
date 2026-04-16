@@ -586,9 +586,60 @@ TensorData TensorData::toLibTorch() const {
         throw std::logic_error("TensorData::toLibTorch: empty tensor");
     }
 
-    // Materialize to row-major flat data, then wrap in torch::Tensor
-    auto flat = materializeFlat();
     auto const s = _dimensions.shape();
+
+    // Fast path: Armadillo → strided view → clone (single contiguous memcpy).
+    // Avoids the element-by-element virtual dispatch in materializeFlat().
+    if (auto const * arma = _storage.tryGetAs<ArmadilloTensorStorage>()) {
+        torch::Tensor t;
+
+        if (arma->ndim() == 1) {
+            // 1D: layout is identical for column-major and row-major
+            auto const & vec = arma->vector();
+            t = torch::from_blob(
+                        const_cast<float *>(vec.memptr()),
+                        {static_cast<int64_t>(vec.n_elem)},
+                        torch::kFloat32)
+                        .clone();
+        } else if (arma->ndim() == 2) {
+            // 2D: create a strided view with column-major strides, then
+            // call contiguous() to produce a row-major tensor that owns
+            // its own memory.  (clone() preserves strides, so we need
+            // contiguous() explicitly.)
+            auto const & mat = arma->matrix();
+            t = torch::from_blob(
+                        const_cast<float *>(mat.memptr()),
+                        {static_cast<int64_t>(mat.n_rows),
+                         static_cast<int64_t>(mat.n_cols)},
+                        {1, static_cast<int64_t>(mat.n_rows)},
+                        torch::kFloat32)
+                        .contiguous();
+        } else {
+            // 3D (fcube): fall through to generic path below
+            goto generic_path;// NOLINT(cppcoreguidelines-avoid-goto)
+        }
+
+        // Preserve dimensions, rows, timeframe
+        std::vector<AxisDescriptor> axes;
+        axes.reserve(s.size());
+        for (std::size_t i = 0; i < s.size(); ++i) {
+            axes.push_back(_dimensions.axis(i));
+        }
+        DimensionDescriptor dims{axes};
+        if (_dimensions.hasColumnNames()) {
+            dims.setColumnNames(
+                    std::vector<std::string>(_dimensions.columnNames().begin(),
+                                             _dimensions.columnNames().end()));
+        }
+
+        return TensorData{std::move(dims), _rows,
+                          TensorStorageWrapper{LibTorchTensorStorage{std::move(t)}},
+                          _time_frame};
+    }
+
+generic_path:
+    // Generic path: materialize to row-major flat data, then wrap in torch::Tensor
+    auto flat = materializeFlat();
 
     auto torch_storage = LibTorchTensorStorage::fromFlatData(flat, s);
 

@@ -73,7 +73,7 @@ std::shared_ptr<TimeFrame> makeTimeFrame(std::size_t size) {
 // =============================================================================
 
 TEST_CASE("TensorData default construction is empty", "[TensorData]") {
-    TensorData tensor;
+    TensorData const tensor;
 
     CHECK(tensor.isEmpty());
     CHECK(tensor.ndim() == 0);
@@ -91,7 +91,7 @@ TEST_CASE("TensorData default construction is empty", "[TensorData]") {
 
 TEST_CASE("TensorData createTimeSeries2D basic", "[TensorData]") {
     // 3 rows × 4 columns
-    std::vector<float> data = {
+    std::vector<float> const data = {
             1.0f, 2.0f, 3.0f, 4.0f,
             5.0f, 6.0f, 7.0f, 8.0f,
             9.0f, 10.0f, 11.0f, 12.0f};
@@ -114,7 +114,7 @@ TEST_CASE("TensorData createTimeSeries2D basic", "[TensorData]") {
 }
 
 TEST_CASE("TensorData createTimeSeries2D column access by index", "[TensorData]") {
-    std::vector<float> data = {
+    std::vector<float> const data = {
             1.0f, 2.0f,
             3.0f, 4.0f,
             5.0f, 6.0f};
@@ -137,7 +137,7 @@ TEST_CASE("TensorData createTimeSeries2D column access by index", "[TensorData]"
 }
 
 TEST_CASE("TensorData createTimeSeries2D column access by name", "[TensorData]") {
-    std::vector<float> data = {
+    std::vector<float> const data = {
             10.0f, 20.0f,
             30.0f, 40.0f};
     auto ts = makeDenseTimeStorage(2);
@@ -158,7 +158,7 @@ TEST_CASE("TensorData createTimeSeries2D column access by name", "[TensorData]")
 }
 
 TEST_CASE("TensorData createTimeSeries2D element access", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+    std::vector<float> const data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
     auto ts = makeDenseTimeStorage(2);
     auto tf = makeTimeFrame(100);
 
@@ -176,7 +176,7 @@ TEST_CASE("TensorData createTimeSeries2D element access", "[TensorData]") {
 }
 
 TEST_CASE("TensorData createTimeSeries2D row access", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+    std::vector<float> const data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
     auto ts = makeDenseTimeStorage(2);
     auto tf = makeTimeFrame(100);
 
@@ -196,7 +196,7 @@ TEST_CASE("TensorData createTimeSeries2D row access", "[TensorData]") {
 }
 
 TEST_CASE("TensorData createTimeSeries2D error: null time_storage", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f};
+    std::vector<float> const data = {1.0f, 2.0f};
     auto tf = makeTimeFrame(100);
     CHECK_THROWS_AS(
             TensorData::createTimeSeries2D(data, 1, 2, nullptr, tf),
@@ -204,7 +204,7 @@ TEST_CASE("TensorData createTimeSeries2D error: null time_storage", "[TensorData
 }
 
 TEST_CASE("TensorData createTimeSeries2D accepts null time_frame", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f};
+    std::vector<float> const data = {1.0f, 2.0f};
     auto ts = makeDenseTimeStorage(1);
     auto tensor = TensorData::createTimeSeries2D(data, 1, 2, ts, nullptr);
     CHECK(tensor.rowType() == RowType::TimeFrameIndex);
@@ -212,7 +212,7 @@ TEST_CASE("TensorData createTimeSeries2D accepts null time_frame", "[TensorData]
 }
 
 TEST_CASE("TensorData createTimeSeries2D error: time_storage size mismatch", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f, 3.0f, 4.0f};
+    std::vector<float> const data = {1.0f, 2.0f, 3.0f, 4.0f};
     auto ts = makeDenseTimeStorage(3);// 3 != 2
     auto tf = makeTimeFrame(100);
     CHECK_THROWS_AS(
@@ -225,9 +225,9 @@ TEST_CASE("TensorData createTimeSeries2D error: time_storage size mismatch", "[T
 // =============================================================================
 
 TEST_CASE("TensorData createFromIntervals basic", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f, 3.0f, 4.0f};
+    std::vector<float> const data = {1.0f, 2.0f, 3.0f, 4.0f};
     auto tf = makeTimeFrame(100);
-    std::vector<TimeFrameInterval> intervals = {
+    std::vector<TimeFrameInterval> const intervals = {
             {TimeFrameIndex{0}, TimeFrameIndex{10}},
             {TimeFrameIndex{20}, TimeFrameIndex{30}}};
 
@@ -242,9 +242,9 @@ TEST_CASE("TensorData createFromIntervals basic", "[TensorData]") {
 }
 
 TEST_CASE("TensorData createFromIntervals error: intervals size mismatch", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f, 3.0f, 4.0f};
+    std::vector<float> const data = {1.0f, 2.0f, 3.0f, 4.0f};
     auto tf = makeTimeFrame(100);
-    std::vector<TimeFrameInterval> intervals = {
+    std::vector<TimeFrameInterval> const intervals = {
             {TimeFrameIndex{0}, TimeFrameIndex{10}}};// 1 interval but num_rows=2
     CHECK_THROWS_AS(
             TensorData::createFromIntervals(data, 2, 2, intervals, tf),
@@ -256,7 +256,7 @@ TEST_CASE("TensorData createFromIntervals error: intervals size mismatch", "[Ten
 // =============================================================================
 
 TEST_CASE("TensorData createND 2D", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+    std::vector<float> const data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
     auto tensor = TensorData::createND(data, {{"rows", 2}, {"cols", 3}});
 
     CHECK(tensor.ndim() == 2);
@@ -314,7 +314,7 @@ TEST_CASE("TensorData createND error: empty axes", "[TensorData]") {
 // =============================================================================
 
 TEST_CASE("TensorData createFromArmadillo matrix", "[TensorData]") {
-    arma::fmat m = {{1.0f, 2.0f, 3.0f},
+    arma::fmat const m = {{1.0f, 2.0f, 3.0f},
                     {4.0f, 5.0f, 6.0f}};
 
     auto tensor = TensorData::createFromArmadillo(m, {"x", "y", "z"});
@@ -364,7 +364,7 @@ TEST_CASE("TensorData createFromArmadillo cube with custom axes", "[TensorData]"
 // =============================================================================
 
 TEST_CASE("TensorData createOrdinal2D", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f, 3.0f, 4.0f};
+    std::vector<float> const data = {1.0f, 2.0f, 3.0f, 4.0f};
     auto tensor = TensorData::createOrdinal2D(data, 2, 2, {"col_a", "col_b"});
 
     CHECK(tensor.ndim() == 2);
@@ -379,7 +379,7 @@ TEST_CASE("TensorData createOrdinal2D", "[TensorData]") {
 // =============================================================================
 
 TEST_CASE("TensorData materializeFlat on 2D returns row-major data", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+    std::vector<float> const data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
     auto tensor = TensorData::createOrdinal2D(data, 2, 3);
 
     auto flat = tensor.materializeFlat();
@@ -394,7 +394,7 @@ TEST_CASE("TensorData materializeFlat on 2D returns row-major data", "[TensorDat
 }
 
 TEST_CASE("TensorData materializeFlat on empty tensor returns empty", "[TensorData]") {
-    TensorData tensor;
+    TensorData const tensor;
     CHECK(tensor.materializeFlat().empty());
 }
 
@@ -403,7 +403,7 @@ TEST_CASE("TensorData materializeFlat on empty tensor returns empty", "[TensorDa
 // =============================================================================
 
 TEST_CASE("TensorData toArmadillo on already-armadillo is identity", "[TensorData]") {
-    arma::fmat m = {{1.0f, 2.0f}, {3.0f, 4.0f}};
+    arma::fmat const m = {{1.0f, 2.0f}, {3.0f, 4.0f}};
     auto tensor = TensorData::createFromArmadillo(m);
     auto converted = tensor.toArmadillo();
 
@@ -412,7 +412,7 @@ TEST_CASE("TensorData toArmadillo on already-armadillo is identity", "[TensorDat
 }
 
 TEST_CASE("TensorData toArmadillo on 4D throws", "[TensorData]") {
-    std::vector<float> data(24, 1.0f);
+    std::vector<float> const data(24, 1.0f);
     auto tensor = TensorData::createND(
             data, {{"a", 2}, {"b", 3}, {"c", 2}, {"d", 2}});
 
@@ -420,12 +420,12 @@ TEST_CASE("TensorData toArmadillo on 4D throws", "[TensorData]") {
 }
 
 TEST_CASE("TensorData asArmadilloMatrix on empty throws", "[TensorData]") {
-    TensorData tensor;
+    TensorData const tensor;
     CHECK_THROWS_AS(tensor.asArmadilloMatrix(), std::logic_error);
 }
 
 TEST_CASE("TensorData asArmadilloCube on 2D Armadillo throws", "[TensorData]") {
-    arma::fmat m = {{1.0f, 2.0f}};
+    arma::fmat const m = {{1.0f, 2.0f}};
     auto tensor = TensorData::createFromArmadillo(m);
     CHECK_THROWS(tensor.asArmadilloCube());// ArmadilloTensorStorage::cube() throws
 }
@@ -435,7 +435,7 @@ TEST_CASE("TensorData asArmadilloCube on 2D Armadillo throws", "[TensorData]") {
 // =============================================================================
 
 TEST_CASE("TensorData materialize creates independent copy", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f, 3.0f, 4.0f};
+    std::vector<float> const data = {1.0f, 2.0f, 3.0f, 4.0f};
     auto tensor = TensorData::createOrdinal2D(data, 2, 2);
     auto materialized = tensor.materialize();
 
@@ -600,7 +600,7 @@ TEST_CASE("TensorData storage() provides backend access", "[TensorData]") {
 }
 
 TEST_CASE("TensorData storage type for 4D is Dense", "[TensorData]") {
-    std::vector<float> data(24, 1.0f);
+    std::vector<float> const data(24, 1.0f);
     auto tensor = TensorData::createND(
             data, {{"a", 2}, {"b", 3}, {"c", 2}, {"d", 2}});
 
@@ -615,7 +615,7 @@ TEST_CASE("TensorData storage type for 4D is Dense", "[TensorData]") {
 // =============================================================================
 
 TEST_CASE("TensorData 1D tensor via createND", "[TensorData]") {
-    std::vector<float> data = {1.0f, 2.0f, 3.0f};
+    std::vector<float> const data = {1.0f, 2.0f, 3.0f};
     auto tensor = TensorData::createND(data, {{"values", 3}});
 
     CHECK(tensor.ndim() == 1);
@@ -625,7 +625,7 @@ TEST_CASE("TensorData 1D tensor via createND", "[TensorData]") {
 }
 
 TEST_CASE("TensorData getColumn on empty throws", "[TensorData]") {
-    TensorData tensor;
+    TensorData const tensor;
     CHECK_THROWS_AS(tensor.getColumn(0), std::runtime_error);
 }
 
@@ -641,13 +641,13 @@ TEST_CASE("TensorData getColumn by nonexistent name throws", "[TensorData]") {
 }
 
 TEST_CASE("TensorData at on empty throws", "[TensorData]") {
-    TensorData tensor;
+    TensorData const tensor;
     std::vector<std::size_t> idx = {0};
     CHECK_THROWS_AS(tensor.at(idx), std::runtime_error);
 }
 
 TEST_CASE("TensorData row on empty throws", "[TensorData]") {
-    TensorData tensor;
+    TensorData const tensor;
     CHECK_THROWS_AS(tensor.row(0), std::runtime_error);
 }
 
@@ -657,7 +657,7 @@ TEST_CASE("TensorData row out of range throws", "[TensorData]") {
 }
 
 TEST_CASE("TensorData flatData on empty throws", "[TensorData]") {
-    TensorData tensor;
+    TensorData const tensor;
     CHECK_THROWS_AS(tensor.flatData(), std::runtime_error);
 }
 
@@ -679,7 +679,7 @@ TEST_CASE("TensorData rows() returns correct descriptor for time-indexed", "[Ten
 
 TEST_CASE("TensorData rows() returns correct descriptor for intervals", "[TensorData]") {
     auto tf = makeTimeFrame(100);
-    std::vector<TimeFrameInterval> intervals = {
+    std::vector<TimeFrameInterval> const intervals = {
             {TimeFrameIndex{0}, TimeFrameIndex{10}},
             {TimeFrameIndex{20}, TimeFrameIndex{30}}};
 
@@ -764,6 +764,76 @@ TEST_CASE("TensorData toLibTorch preserves metadata", "[TensorData][LibTorch]") 
     CHECK(torch_tensor.numColumns() == 3);
 }
 
+TEST_CASE("TensorData toLibTorch strided path produces contiguous tensor",
+          "[TensorData][LibTorch]") {
+    // Build a non-trivial Armadillo-backed tensor to exercise the strided path
+    arma::fmat mat(100, 8);
+    for (arma::uword c = 0; c < mat.n_cols; ++c) {
+        for (arma::uword r = 0; r < mat.n_rows; ++r) {
+            mat(r, c) = static_cast<float>(r * mat.n_cols + c);
+        }
+    }
+    auto tensor = TensorData::createFromArmadillo(std::move(mat));
+    REQUIRE(tensor.storage().getStorageType() == TensorStorageType::Armadillo);
+
+    auto torch_tensor = tensor.toLibTorch();
+    REQUIRE(torch_tensor.storage().getStorageType() == TensorStorageType::LibTorch);
+
+    // The underlying torch::Tensor must be contiguous (row-major)
+    auto const * torch_storage =
+            torch_tensor.storage().tryGetAs<LibTorchTensorStorage>();
+    REQUIRE(torch_storage != nullptr);
+    CHECK(torch_storage->tensor().is_contiguous());
+
+    // Verify every element matches the original
+    for (std::size_t r = 0; r < 100; ++r) {
+        for (std::size_t c = 0; c < 8; ++c) {
+            auto const expected = static_cast<float>(r * 8 + c);
+            auto const actual = torch_tensor.at(std::vector<std::size_t>{r, c});
+            CHECK_THAT(actual, WithinAbs(expected, 1e-5f));
+        }
+    }
+}
+
+TEST_CASE("TensorData toLibTorch strided path handles single-column matrix",
+          "[TensorData][LibTorch]") {
+    // createFromArmadillo(fvec) implicitly converts to an Nx1 matrix.
+    arma::fvec vec = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+    auto tensor = TensorData::createFromArmadillo(std::move(vec));
+    REQUIRE(tensor.storage().getStorageType() == TensorStorageType::Armadillo);
+
+    auto torch_tensor = tensor.toLibTorch();
+    REQUIRE(torch_tensor.storage().getStorageType() == TensorStorageType::LibTorch);
+
+    auto const * torch_storage =
+            torch_tensor.storage().tryGetAs<LibTorchTensorStorage>();
+    REQUIRE(torch_storage != nullptr);
+    CHECK(torch_storage->tensor().is_contiguous());
+
+    CHECK_THAT(torch_tensor.at(std::vector<std::size_t>{0, 0}), WithinAbs(10.0f, 1e-5f));
+    CHECK_THAT(torch_tensor.at(std::vector<std::size_t>{2, 0}), WithinAbs(30.0f, 1e-5f));
+    CHECK_THAT(torch_tensor.at(std::vector<std::size_t>{4, 0}), WithinAbs(50.0f, 1e-5f));
+}
+
+TEST_CASE("TensorData toLibTorch round-trip preserves values",
+          "[TensorData][LibTorch]") {
+    // Armadillo → LibTorch → Armadillo → verify values
+    auto const original = TensorData::createOrdinal2D(
+            {1.0f, 2.0f, 3.0f,
+             4.0f, 5.0f, 6.0f,
+             7.0f, 8.0f, 9.0f},
+            3, 3);
+
+    auto torch_result = original.toLibTorch();
+    auto back = torch_result.toArmadillo();
+
+    for (std::size_t r = 0; r < 3; ++r) {
+        for (std::size_t c = 0; c < 3; ++c) {
+            CHECK_THAT(back.at(std::vector<std::size_t>{r, c}),
+                       WithinAbs(original.at(std::vector<std::size_t>{r, c}), 1e-5f));
+        }
+    }
+}
 
 
 #endif// TENSOR_BACKEND_LIBTORCH
@@ -816,7 +886,7 @@ TEST_CASE("TensorData appendRow notifies observers", "[TensorData]") {
 
 TEST_CASE("TensorData appendRow with interval rows", "[TensorData]") {
     auto tf = makeTimeFrame(1000);
-    std::vector<TimeFrameInterval> intervals = {
+    std::vector<TimeFrameInterval> const intervals = {
             {TimeFrameIndex{0}, TimeFrameIndex{10}},
             {TimeFrameIndex{10}, TimeFrameIndex{20}}};
     auto tensor = TensorData::createFromIntervals(
@@ -826,7 +896,7 @@ TEST_CASE("TensorData appendRow with interval rows", "[TensorData]") {
     REQUIRE(tensor.numRows() == 2);
 
     std::vector<float> new_row = {5.0f, 6.0f};
-    TimeFrameInterval new_interval{TimeFrameIndex{20}, TimeFrameIndex{30}};
+    TimeFrameInterval const new_interval{TimeFrameIndex{20}, TimeFrameIndex{30}};
     tensor.appendRow(new_row, new_interval);
 
     CHECK(tensor.numRows() == 3);
@@ -919,14 +989,14 @@ TEST_CASE("TensorData insertRow at end equals append", "[TensorData]") {
 
 TEST_CASE("TensorData insertRow with interval", "[TensorData]") {
     auto tf = makeTimeFrame(1000);
-    std::vector<TimeFrameInterval> intervals = {
+    std::vector<TimeFrameInterval> const intervals = {
             {TimeFrameIndex{0}, TimeFrameIndex{10}},
             {TimeFrameIndex{20}, TimeFrameIndex{30}}};
     auto tensor = TensorData::createFromIntervals(
             {1.0f, 2.0f, 3.0f, 4.0f}, 2, 2, intervals, tf);
 
     std::vector<float> new_row = {10.0f, 20.0f};
-    TimeFrameInterval new_interval{TimeFrameIndex{10}, TimeFrameIndex{20}};
+    TimeFrameInterval const new_interval{TimeFrameIndex{10}, TimeFrameIndex{20}};
     tensor.insertRow(1, new_row, new_interval);
 
     CHECK(tensor.numRows() == 3);
@@ -1023,7 +1093,7 @@ TEST_CASE("TensorData upsertRows into empty tensor creates time-indexed rows", "
     TensorData tensor;
     auto tf = makeTimeFrame(100);
 
-    std::vector<std::pair<int, std::vector<float>>> rows = {
+    std::vector<std::pair<int, std::vector<float>>> const rows = {
             {5, {1.0f, 2.0f}},
             {10, {3.0f, 4.0f}},
             {15, {5.0f, 6.0f}}};
@@ -1056,7 +1126,7 @@ TEST_CASE("TensorData upsertRows appends to existing time-indexed tensor", "[Ten
             3, 2, time_storage, tf);
 
     // Append frames 4 and 5
-    std::vector<std::pair<int, std::vector<float>>> new_rows = {
+    std::vector<std::pair<int, std::vector<float>>> const new_rows = {
             {4, {70.0f, 80.0f}},
             {5, {90.0f, 100.0f}}};
 
@@ -1083,7 +1153,7 @@ TEST_CASE("TensorData upsertRows overwrites overlapping frames", "[TensorData]")
             3, 2, time_storage, tf);
 
     // Overwrite frame 2 and add frame 4
-    std::vector<std::pair<int, std::vector<float>>> new_rows = {
+    std::vector<std::pair<int, std::vector<float>>> const new_rows = {
             {2, {99.0f, 88.0f}},
             {4, {77.0f, 66.0f}}};
 
@@ -1149,7 +1219,7 @@ TEST_CASE("TensorData upsertRows from ordinal tensor preserves data", "[TensorDa
             {1.0f, 2.0f, 3.0f, 4.0f}, 2, 2);
 
     // Original rows 0 and 1 become frames 0 and 1; add frame 5
-    std::vector<std::pair<int, std::vector<float>>> new_rows = {
+    std::vector<std::pair<int, std::vector<float>>> const new_rows = {
             {5, {50.0f, 60.0f}}};
 
     tensor.upsertRows(new_rows, tf);
@@ -1171,7 +1241,7 @@ TEST_CASE("TensorData upsertRows notifies observers", "[TensorData]") {
     int count = 0;
     tensor.addObserver([&count]() { ++count; });
 
-    std::vector<std::pair<int, std::vector<float>>> rows = {
+    std::vector<std::pair<int, std::vector<float>>> const rows = {
             {0, {1.0f, 2.0f}}};
     tensor.upsertRows(rows, tf);
 
@@ -1181,13 +1251,13 @@ TEST_CASE("TensorData upsertRows notifies observers", "[TensorData]") {
 TEST_CASE("TensorData upsertRows rejects empty frame_rows", "[TensorData]") {
     TensorData tensor;
     auto tf = makeTimeFrame(100);
-    std::vector<std::pair<int, std::vector<float>>> empty;
+    std::vector<std::pair<int, std::vector<float>>> const empty;
     CHECK_THROWS_AS(tensor.upsertRows(empty, tf), std::invalid_argument);
 }
 
 TEST_CASE("TensorData upsertRows rejects null time_frame", "[TensorData]") {
     TensorData tensor;
-    std::vector<std::pair<int, std::vector<float>>> rows = {
+    std::vector<std::pair<int, std::vector<float>>> const rows = {
             {0, {1.0f}}};
     CHECK_THROWS_AS(tensor.upsertRows(rows, nullptr), std::invalid_argument);
 }
@@ -1195,7 +1265,7 @@ TEST_CASE("TensorData upsertRows rejects null time_frame", "[TensorData]") {
 TEST_CASE("TensorData upsertRows rejects inconsistent row sizes", "[TensorData]") {
     TensorData tensor;
     auto tf = makeTimeFrame(100);
-    std::vector<std::pair<int, std::vector<float>>> rows = {
+    std::vector<std::pair<int, std::vector<float>>> const rows = {
             {0, {1.0f, 2.0f}},
             {1, {3.0f}}};// wrong size
     CHECK_THROWS_AS(tensor.upsertRows(rows, tf), std::invalid_argument);
@@ -1206,7 +1276,7 @@ TEST_CASE("TensorData upsertRows rejects column count mismatch with existing", "
     auto tensor = TensorData::createOrdinal2D(
             {1.0f, 2.0f, 3.0f, 4.0f}, 2, 2);
 
-    std::vector<std::pair<int, std::vector<float>>> rows = {
+    std::vector<std::pair<int, std::vector<float>>> const rows = {
             {5, {1.0f, 2.0f, 3.0f}}};// 3 cols vs existing 2
     CHECK_THROWS_AS(tensor.upsertRows(rows, tf), std::invalid_argument);
 }
@@ -1216,7 +1286,7 @@ TEST_CASE("TensorData upsertRows preserves column names", "[TensorData]") {
     auto tensor = TensorData::createOrdinal2D(
             {1.0f, 2.0f}, 1, 2, {"alpha", "beta"});
 
-    std::vector<std::pair<int, std::vector<float>>> rows = {
+    std::vector<std::pair<int, std::vector<float>>> const rows = {
             {5, {10.0f, 20.0f}}};
     tensor.upsertRows(rows, tf);
 

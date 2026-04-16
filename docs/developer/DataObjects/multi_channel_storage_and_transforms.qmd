@@ -154,12 +154,12 @@ LibTorch BLAS operations (`torch::mm`, `torch::median`, `torch::linalg::eigh`)
 are all stride-aware. The whitening transform can operate directly on
 Armadillo's memory without touching it.
 
-::: {.callout-important}
-**Prerequisite fix:** Before Phase 2 transforms ship, `TensorData::toLibTorch()`
-must be updated to use `torch::from_blob` with column-major strides when the
-source is `ArmadilloTensorStorage`, instead of going through `materializeFlat()`.
-This changes `toLibTorch()` from $O(n)$ virtual calls + 2 copies to zero-copy.
-See @sec-tolibtorch-fix.
+::: {.callout-note}
+**Completed (Phase 0):** `TensorData::toLibTorch()` now uses `torch::from_blob`
+with column-major strides when the source is `ArmadilloTensorStorage`, followed
+by `.contiguous()` to produce a row-major tensor that owns its own memory. This
+eliminates the $O(n)$ virtual calls from `materializeFlat()` and reduces the
+conversion to a single contiguous memcpy.
 :::
 
 With the stride fix, the full round-trip for applying a transform looks like:
@@ -241,77 +241,6 @@ to handle block-cached or strided storage.
         │  CAR / Whiten │──── LibTorch (CPU or GPU via DeviceManager)
         └───────────────┘
 ```
-
-## Phase 0: Fix `toLibTorch()` Strided Conversion {#sec-tolibtorch-fix}
-
-*No dependencies. Prerequisite for efficient Phase 2 transforms.*
-
-The current `TensorData::toLibTorch()` converts Armadillo storage via
-`materializeFlat()` — element-by-element iteration with virtual dispatch,
-producing a row-major `std::vector<float>` that is then cloned into a
-`torch::Tensor`. This is $O(n)$ virtual calls plus two full data copies.
-
-### The fix
-
-When the source is `ArmadilloTensorStorage`, use `torch::from_blob` with
-explicit column-major strides:
-
-```cpp
-TensorData TensorData::toLibTorch() const {
-    // Already LibTorch-backed? Return shallow copy.
-    if (_storage.getStorageType() == TensorStorageType::LibTorch) {
-        return *this;
-    }
-
-    // Fast path: Armadillo → zero-copy strided view
-    if (auto const * arma = _storage.tryGetAs<ArmadilloTensorStorage>()) {
-        auto const & mat = arma->matrix();
-        auto t = torch::from_blob(
-            const_cast<float*>(mat.memptr()),
-            {static_cast<int64_t>(mat.n_rows),
-             static_cast<int64_t>(mat.n_cols)},
-            {1, static_cast<int64_t>(mat.n_rows)},  // column-major strides
-            torch::kFloat32
-        );
-        // Clone to own the memory (Armadillo may reallocate).
-        // LibTorch's clone() respects strides — output is contiguous row-major.
-        auto torch_storage = LibTorchTensorStorage(t.clone());
-        // ... preserve dimensions, timeframe (same as current code)
-    }
-
-    // Fallback: element-by-element (non-Armadillo, non-LibTorch backends)
-    auto flat = materializeFlat();
-    // ... existing code
-}
-```
-
-The `t.clone()` call is still necessary because the resulting `LibTorchTensorStorage`
-must own its memory (the source Armadillo matrix could be destroyed or reallocated).
-But `clone()` on a strided tensor is a single contiguous memcpy — not per-element
-virtual dispatch. For 32ch × 1M samples:
-
-| Metric | Before (materializeFlat) | After (from_blob + clone) |
-|--------|------------------------|---------------------------|
-| Virtual calls | 32M | 0 |
-| Data copies | 2 (flat vector + clone) | 1 (clone) |
-| Cache behavior | Column-major read → row-major write (hostile) | Single contiguous pass |
-| Wall time (est.) | ~200ms | ~15ms |
-
-: Performance impact of the strided conversion fix {.striped}
-
-### Scope
-
-**Files to modify:**
-
-- `src/DataObjects/Tensors/TensorData.cpp` — add Armadillo fast path in
-  `toLibTorch()`
-
-**Tests:**
-
-- Verify `toLibTorch()` from Armadillo source produces identical values
-  (compare against element-by-element path within float tolerance).
-- Verify the resulting LibTorch tensor is contiguous (`tensor.is_contiguous()`).
-- Benchmark: time `toLibTorch()` before and after on a 1000×32 matrix.
 
 ## Phase 1: AnalogToTensor & TensorToAnalog Transforms {#sec-phase1}
 
@@ -1159,15 +1088,15 @@ logic wraps the transform rather than modifying it.
 
 ## Verification Summary
 
-| Phase | Test Command | Acceptance Criteria |
-|-------|-------------|-------------------|
-| 0 | `ctest -R "TensorData.*toLibTorch"` | Values match element-by-element path; result is contiguous |
-| 1 | `ctest -R "AnalogToTensor\|TensorToAnalog"` | Round-trip fidelity, error on mismatched timeframes |
-| 2 | `ctest -R "TensorCAR\|TensorWhitening\|TensorIIRFilter"` | Row-wise mean ≈ 0 (CAR); cov ≈ I (whitening); IIR matches single-channel |
-| 3 | `ctest -R "TensorColumnAnalog"` | Zero-copy pointer match; non-empty span from `getDataInTimeFrameIndexRange` |
-| 3 | `ctest -R "BinaryTensorBacked"` | TensorData created; views share memory; values match legacy path |
-| 4 | `ctest -R "SharedMmapBlockCache"` | Correct values; block load count = ⌈range/block_size⌉ |
-| 5 | Benchmark suite | GPU matches CPU within tolerance; speedup measured |
+| Phase | Test Command | Acceptance Criteria | Status |
+|-------|-------------|-------------------|--------|
+| ~~0~~ | `ctest -R "test_data_manager_all"` | Values match element-by-element path; result is contiguous | **Done** |
+| 1 | `ctest -R "AnalogToTensor\|TensorToAnalog"` | Round-trip fidelity, error on mismatched timeframes | |
+| 2 | `ctest -R "TensorCAR\|TensorWhitening\|TensorIIRFilter"` | Row-wise mean ≈ 0 (CAR); cov ≈ I (whitening); IIR matches single-channel | |
+| 3 | `ctest -R "TensorColumnAnalog"` | Zero-copy pointer match; non-empty span from `getDataInTimeFrameIndexRange` | |
+| 3 | `ctest -R "BinaryTensorBacked"` | TensorData created; views share memory; values match legacy path | |
+| 4 | `ctest -R "SharedMmapBlockCache"` | Correct values; block load count = ⌈range/block_size⌉ | |
+| 5 | Benchmark suite | GPU matches CPU within tolerance; speedup measured | |
 
 : Per-phase verification {.striped}
 
@@ -1182,7 +1111,7 @@ memory usage stays bounded (Phase 3 zero-copy, Phase 4 block cache bounded).
 
 | File | Phase | Change |
 |------|-------|--------|
-| `src/DataObjects/Tensors/TensorData.cpp` | 0 | Armadillo fast path in `toLibTorch()` |
+| ~~`src/DataObjects/Tensors/TensorData.cpp`~~ | ~~0~~ | ~~Armadillo fast path in `toLibTorch()`~~ **Done** |
 | `src/TransformsV2/core/RegisteredTransforms.cpp` | 1, 2 | Register new transforms |
 | `src/DataObjects/AnalogTimeSeries/Analog_Time_Series.hpp` | 3, 4 | Add factory methods |
 | `src/DataObjects/AnalogTimeSeries/storage/AnalogDataStorage.hpp` | 3, 4 | Type-erasure for new backends |
