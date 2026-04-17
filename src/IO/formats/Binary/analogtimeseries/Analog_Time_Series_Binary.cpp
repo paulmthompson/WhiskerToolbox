@@ -4,9 +4,13 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/storage/AnalogDataStorage.hpp"
+#include "AnalogTimeSeries/storage/BlockCachedMmapAnalogStorage.hpp"
 #include "AnalogTimeSeries/storage/MemoryMappedAnalogDataStorage.hpp"
+#include "AnalogTimeSeries/storage/SharedMmapBlockCache.hpp"
 #include "AnalogTimeSeries/storage/TensorColumnAnalogStorage.hpp"
 #include "Tensors/TensorData.hpp"
+#include "Tensors/storage/MmapTensorStorage.hpp"
+#include "Tensors/storage/TensorStorageWrapper.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
 
 #include <armadillo>
@@ -187,11 +191,10 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions co
 
 BinaryAnalogLoadResult loadTensorBacked(BinaryAnalogLoaderOptions const & opts) {
 
-    // Tensor-backed only applies to in-memory multi-channel loading
+    // Tensor-backed applies to multi-channel loading (both in-memory and mmap)
     bool const should_use_tensor =
             opts.getUseTensorBacked() &&
-            opts.getNumChannels() > 1 &&
-            !opts.getUseMemoryMapped();
+            opts.getNumChannels() > 1;
 
     if (!should_use_tensor) {
         // Fall back to legacy per-channel loading
@@ -199,6 +202,66 @@ BinaryAnalogLoadResult loadTensorBacked(BinaryAnalogLoaderOptions const & opts) 
         return BinaryAnalogLoadResult{.tensor = nullptr, .channels = std::move(channels)};
     }
 
+    if (opts.getUseMemoryMapped()) {
+        // Block-cached mmap path: single shared mmap + decoded float block cache
+        std::filesystem::path file_path = opts.filepath;
+        if (!file_path.is_absolute()) {
+            file_path = std::filesystem::path(opts.getParentDir()) / file_path;
+        }
+
+        auto const num_channels = static_cast<std::size_t>(opts.getNumChannels());
+
+        SharedMmapBlockCacheConfig cache_config;
+        cache_config.file_path = file_path;
+        cache_config.header_size = static_cast<std::size_t>(opts.getHeaderSize());
+        cache_config.num_channels = num_channels;
+        cache_config.data_type = stringToMmapDataType(opts.getBinaryDataType());
+        cache_config.scale_factor = opts.getScaleFactor();
+        cache_config.offset_value = opts.getOffsetValue();
+
+        auto cache = std::make_shared<SharedMmapBlockCache>(std::move(cache_config));
+        auto const num_samples = cache->numSamplesPerChannel();
+
+        // Create time storage (dense 0..N-1)
+        auto time_storage = TimeIndexStorageFactory::createDenseFromZero(num_samples);
+
+        // Build column names: "0", "1", ...
+        std::vector<std::string> col_names;
+        col_names.reserve(num_channels);
+        for (std::size_t ch = 0; ch < num_channels; ++ch) {
+            col_names.push_back(std::to_string(ch));
+        }
+
+        // Create TensorData with MmapTensorStorage
+        auto mmap_storage = MmapTensorStorage(cache);
+        auto tensor = std::make_shared<TensorData>(
+                TensorData::createTimeSeries2DFromStorage(
+                        TensorStorageWrapper{std::move(mmap_storage)},
+                        time_storage,
+                        nullptr,
+                        std::move(col_names)));
+
+        // Create per-channel analog views via BlockCachedMmapAnalogStorage
+        std::vector<std::shared_ptr<AnalogTimeSeries>> channels;
+        channels.reserve(num_channels);
+
+        auto const_cache = std::const_pointer_cast<SharedMmapBlockCache const>(cache);
+        for (std::size_t ch = 0; ch < num_channels; ++ch) {
+            auto block_storage = BlockCachedMmapAnalogStorage(const_cache, ch);
+            AnalogDataStorageWrapper wrapper(block_storage);
+
+            auto analog = AnalogTimeSeries::createFromStorage(
+                    std::move(wrapper), time_storage);
+            channels.push_back(std::move(analog));
+        }
+
+        std::cout << "Block-cached mmap tensor loading: " << num_channels
+                  << " channels, " << num_samples << " samples" << std::endl;
+
+        return BinaryAnalogLoadResult{.tensor = std::move(tensor), .channels = std::move(channels)};
+    }
+
+    // In-memory tensor path
     auto binary_loader_opts = Loader::BinaryAnalogOptions{
             .file_path = opts.filepath,
             .header_size_bytes = static_cast<size_t>(opts.getHeaderSize()),

@@ -209,6 +209,47 @@ TensorData TensorData::createTimeSeries2D(
 }
 
 // =============================================================================
+// Factory: createTimeSeries2DFromStorage
+// =============================================================================
+
+TensorData TensorData::createTimeSeries2DFromStorage(
+        TensorStorageWrapper storage,
+        std::shared_ptr<TimeIndexStorage> time_storage,
+        std::shared_ptr<TimeFrame> time_frame,
+        std::vector<std::string> column_names) {
+    if (!time_storage) {
+        throw std::invalid_argument(
+                "TensorData::createTimeSeries2DFromStorage: time_storage must not be null");
+    }
+    auto const shape = storage.shape();
+    if (shape.size() != 2) {
+        throw std::invalid_argument(
+                "TensorData::createTimeSeries2DFromStorage: storage must be 2D (got " +
+                std::to_string(shape.size()) + "D)");
+    }
+    auto const n_rows = shape[0];
+    auto const n_cols = shape[1];
+    if (time_storage->size() != n_rows) {
+        throw std::invalid_argument(
+                "TensorData::createTimeSeries2DFromStorage: time_storage size (" +
+                std::to_string(time_storage->size()) +
+                ") must match storage rows (" + std::to_string(n_rows) + ")");
+    }
+
+    DimensionDescriptor dims{{{"time", n_rows},
+                              {"channel", n_cols}}};
+    if (!column_names.empty()) {
+        dims.setColumnNames(std::move(column_names));
+    }
+
+    RowDescriptor rows = RowDescriptor::fromTimeIndices(
+            std::move(time_storage), time_frame);
+
+    return TensorData{std::move(dims), std::move(rows),
+                      std::move(storage), std::move(time_frame)};
+}
+
+// =============================================================================
 // Factory: createFromIntervals
 // =============================================================================
 

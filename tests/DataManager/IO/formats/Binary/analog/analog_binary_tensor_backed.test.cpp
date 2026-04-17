@@ -316,30 +316,34 @@ TEST_CASE("Tensor-backed binary loading - single channel fallback",
 }
 
 //=============================================================================
-// Test: Fallback - memory-mapped with tensor_backed true
+// Test: memory-mapped + tensor_backed → block-cached mmap path (Phase 2)
 //=============================================================================
 
-TEST_CASE("Tensor-backed binary loading - memory-mapped fallback",
-          "[analog][binary][tensor_backed]") {
+TEST_CASE("Tensor-backed binary loading - mmap uses block-cached path",
+          "[analog][binary][tensor_backed][block_cached_mmap]") {
 
     TempTensorBackedTestDirectory temp_dir;
 
     auto signals = analog_scenarios::two_channel_ramps();
-    auto binary_path = temp_dir.getFilePath("mmap_fallback.bin");
+    auto binary_path = temp_dir.getFilePath("mmap_tensor.bin");
     REQUIRE(analog_scenarios::writeBinaryInt16MultiChannel(signals, binary_path.string()));
 
     BinaryAnalogLoaderOptions opts;
     opts.filepath = binary_path.string();
     opts.num_channels = 2;
     opts.use_memory_mapped = true;
-    opts.use_tensor_backed = true;// Should be ignored when mmap is on
+    opts.use_tensor_backed = true;
     opts.binary_data_type = "int16";
 
     auto result = loadTensorBacked(opts);
 
-    // Mmap → no tensor, just legacy channels
-    REQUIRE(result.tensor == nullptr);
+    // Phase 2: mmap + tensor_backed → block-cached mmap with tensor
+    REQUIRE(result.tensor != nullptr);
+    REQUIRE(result.tensor->ndim() == 2);
+    REQUIRE(result.tensor->numColumns() == 2);
     REQUIRE(result.channels.size() == 2);
+    REQUIRE(result.channels[0]->getNumSamples() == signals[0]->getNumSamples());
+    REQUIRE(result.channels[1]->getNumSamples() == signals[1]->getNumSamples());
 }
 
 //=============================================================================
@@ -433,4 +437,175 @@ TEST_CASE("BinaryAnalogLoaderOptions - use_tensor_backed JSON round-trip",
     REQUIRE(parsed);
     REQUIRE(parsed.value().getUseTensorBacked() == true);
     REQUIRE(parsed.value().getNumChannels() == 4);
+}
+
+//=============================================================================
+// Phase 2 Tests: Block-Cached Mmap
+//=============================================================================
+
+TEST_CASE("Block-cached mmap - values match legacy mmap path",
+          "[analog][binary][tensor_backed][block_cached_mmap]") {
+
+    TempTensorBackedTestDirectory temp_dir;
+
+    auto signals = analog_scenarios::four_channel_constants();
+    auto binary_path = temp_dir.getFilePath("block_cached_compare.bin");
+    REQUIRE(analog_scenarios::writeBinaryInt16MultiChannel(signals, binary_path.string()));
+
+    BinaryAnalogLoaderOptions opts;
+    opts.filepath = binary_path.string();
+    opts.num_channels = 4;
+    opts.binary_data_type = "int16";
+
+    // Legacy mmap path (per-channel independent mmaps)
+    opts.use_memory_mapped = true;
+    opts.use_tensor_backed = false;
+    auto legacy = loadTensorBacked(opts);
+    REQUIRE(legacy.tensor == nullptr);
+    REQUIRE(legacy.channels.size() == 4);
+
+    // Block-cached mmap path
+    opts.use_tensor_backed = true;
+    auto block_cached = loadTensorBacked(opts);
+    REQUIRE(block_cached.tensor != nullptr);
+    REQUIRE(block_cached.channels.size() == 4);
+
+    // Compare all channel values
+    for (size_t ch = 0; ch < 4; ++ch) {
+        auto legacy_samples = legacy.channels[ch]->getAllSamples();
+        auto block_samples = block_cached.channels[ch]->getAllSamples();
+
+        REQUIRE(std::ranges::distance(legacy_samples) == std::ranges::distance(block_samples));
+
+        auto legacy_it = legacy_samples.begin();
+        auto block_it = block_samples.begin();
+        for (; legacy_it != legacy_samples.end(); ++legacy_it, ++block_it) {
+            REQUIRE((*legacy_it).value() == (*block_it).value());
+        }
+    }
+}
+
+TEST_CASE("Block-cached mmap - TensorData shape and column access",
+          "[analog][binary][tensor_backed][block_cached_mmap]") {
+
+    TempTensorBackedTestDirectory temp_dir;
+
+    auto signals = analog_scenarios::two_channel_ramps();
+    auto binary_path = temp_dir.getFilePath("block_cached_tensor.bin");
+    REQUIRE(analog_scenarios::writeBinaryInt16MultiChannel(signals, binary_path.string()));
+
+    BinaryAnalogLoaderOptions opts;
+    opts.filepath = binary_path.string();
+    opts.num_channels = 2;
+    opts.use_memory_mapped = true;
+    opts.use_tensor_backed = true;
+    opts.binary_data_type = "int16";
+
+    auto result = loadTensorBacked(opts);
+    REQUIRE(result.tensor != nullptr);
+
+    auto const num_samples = signals[0]->getNumSamples();
+
+    SECTION("Shape is correct") {
+        REQUIRE(result.tensor->numRows() == num_samples);
+        REQUIRE(result.tensor->numColumns() == 2);
+    }
+
+    SECTION("getColumn returns correct values") {
+        auto col0 = result.tensor->storage().getColumn(0);
+        auto col1 = result.tensor->storage().getColumn(1);
+
+        REQUIRE(col0.size() == num_samples);
+        REQUIRE(col1.size() == num_samples);
+
+        auto orig0_samples = signals[0]->getAllSamples();
+        auto orig1_samples = signals[1]->getAllSamples();
+
+        size_t i = 0;
+        for (auto const & sample: orig0_samples) {
+            float expected = static_cast<float>(static_cast<int16_t>(sample.value()));
+            REQUIRE(col0[i] == expected);
+            ++i;
+        }
+
+        i = 0;
+        for (auto const & sample: orig1_samples) {
+            float expected = static_cast<float>(static_cast<int16_t>(sample.value()));
+            REQUIRE(col1[i] == expected);
+            ++i;
+        }
+    }
+
+    SECTION("Column names are set") {
+        REQUIRE(result.tensor->hasNamedColumns());
+        auto const & names = result.tensor->columnNames();
+        REQUIRE(names.size() == 2);
+        REQUIRE(names[0] == "0");
+        REQUIRE(names[1] == "1");
+    }
+}
+
+TEST_CASE("Block-cached mmap - non-contiguous storage properties",
+          "[analog][binary][tensor_backed][block_cached_mmap]") {
+
+    TempTensorBackedTestDirectory temp_dir;
+
+    auto signals = analog_scenarios::two_channel_ramps();
+    auto binary_path = temp_dir.getFilePath("block_cached_props.bin");
+    REQUIRE(analog_scenarios::writeBinaryInt16MultiChannel(signals, binary_path.string()));
+
+    BinaryAnalogLoaderOptions opts;
+    opts.filepath = binary_path.string();
+    opts.num_channels = 2;
+    opts.use_memory_mapped = true;
+    opts.use_tensor_backed = true;
+    opts.binary_data_type = "int16";
+
+    auto result = loadTensorBacked(opts);
+    REQUIRE(result.tensor != nullptr);
+
+    // MmapTensorStorage is not contiguous
+    REQUIRE_FALSE(result.tensor->storage().isContiguous());
+
+    // flatData() should throw for non-contiguous storage
+    REQUIRE_THROWS_AS(result.tensor->storage().flatData(), std::runtime_error);
+
+    // Per-channel views have empty full spans (non-contiguous)
+    REQUIRE(result.channels[0]->getAnalogTimeSeries().empty());
+    REQUIRE(result.channels[1]->getAnalogTimeSeries().empty());
+
+    // But element-by-element access works
+    auto ch0_view = result.channels[0]->viewValues();
+    REQUIRE(!ch0_view.empty());
+}
+
+TEST_CASE("Block-cached mmap - float32 data type",
+          "[analog][binary][tensor_backed][block_cached_mmap]") {
+
+    TempTensorBackedTestDirectory temp_dir;
+
+    auto signals = analog_scenarios::two_channel_ramps();
+    auto binary_path = temp_dir.getFilePath("block_cached_f32.bin");
+    REQUIRE(writeBinaryFloat32MultiChannel(signals, binary_path.string()));
+
+    BinaryAnalogLoaderOptions opts;
+    opts.filepath = binary_path.string();
+    opts.num_channels = 2;
+    opts.use_memory_mapped = true;
+    opts.use_tensor_backed = true;
+    opts.binary_data_type = "float32";
+
+    auto result = loadTensorBacked(opts);
+    REQUIRE(result.tensor != nullptr);
+    REQUIRE(result.channels.size() == 2);
+
+    // Float32 should preserve exact values (no int16 truncation)
+    auto ch0_samples = result.channels[0]->getAllSamples();
+    auto orig0_samples = signals[0]->getAllSamples();
+
+    auto ch0_it = ch0_samples.begin();
+    auto orig0_it = orig0_samples.begin();
+    for (; ch0_it != ch0_samples.end(); ++ch0_it, ++orig0_it) {
+        REQUIRE((*ch0_it).value() == (*orig0_it).value());
+    }
 }

@@ -32,6 +32,15 @@ for the original feature request.
   updated to register both the `TensorData` and per-channel views. Also fixed
   the hardcoded `int16_t` bug in the in-memory multi-channel path — now
   dispatches on `binary_data_type`. 9 test cases (764 assertions).
+- **Shared block-cached mmap storage (Phase 2):** Added `SharedMmapBlockCache`
+  — a single mmap of an interleaved binary file with a FIFO circular buffer of
+  decoded float32 blocks. When one channel loads a time window, all channels
+  are decoded. `BlockCachedMmapAnalogStorage` provides per-channel
+  `AnalogTimeSeries` views; `MmapTensorStorage` provides `TensorData` access.
+  New `TensorData::createTimeSeries2DFromStorage()` factory method for custom
+  storage backends. `TensorStorageType::MemoryMapped` added. `loadTensorBacked()`
+  updated: `use_tensor_backed + use_memory_mapped + num_channels > 1` takes the
+  block-cached mmap path. 5 new test cases (540 assertions).
 
 ## Roadmap
 
@@ -92,8 +101,10 @@ enabled only when `num_channels > 1`.
 
 ### 2. Shared Block-Cached Mmap Storage {#sec-block-cache}
 
-**Priority: Medium** — Required for efficient viewing of large multi-channel
-recordings that don't fit in memory.
+::: {.callout-note}
+**Status: Complete.** `SharedMmapBlockCache`, `BlockCachedMmapAnalogStorage`,
+and `MmapTensorStorage` are implemented and integrated into `loadTensorBacked()`.
+:::
 
 The current per-channel mmap storage (`MemoryMappedAnalogDataStorage`) reads
 the same file pages independently per channel. For 384 channels, each OS page
@@ -213,10 +224,9 @@ the transform.
 ```
 Tensor-Backed Binary Loading (§1)
   ├── In-memory path: DONE ✓
-  └── Mmap path: requires Shared Block Cache (§2)
+  └── Mmap path: DONE ✓ (uses Shared Block Cache §2)
 
-Shared Block-Cached Mmap (§2)
-  └── Independent of §1 and §3
+Shared Block-Cached Mmap (§2): DONE ✓
 
 Cross-Channel Transforms (§3)
   ├── ZCA Whitening (#245): ready now (uses toLibTorch() ✓)

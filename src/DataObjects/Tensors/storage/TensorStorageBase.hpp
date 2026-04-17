@@ -29,11 +29,12 @@
  * type-erasure wrapper's tryGetAs<T>() method.
  */
 enum class TensorStorageType {
-    Armadillo, ///< arma::fvec / arma::fmat / arma::fcube (≤3D, always available)
-    Dense,     ///< Flat std::vector<float> + shape (>3D fallback)
-    LibTorch,  ///< torch::Tensor (optional, behind #ifdef)
-    View,      ///< Zero-copy slice of another storage
-    Lazy       ///< Lazily computed columns (transforms v2 pipelines)
+    Armadillo,  ///< arma::fvec / arma::fmat / arma::fcube (≤3D, always available)
+    Dense,      ///< Flat std::vector<float> + shape (>3D fallback)
+    LibTorch,   ///< torch::Tensor (optional, behind #ifdef)
+    View,       ///< Zero-copy slice of another storage
+    Lazy,       ///< Lazily computed columns (transforms v2 pipelines)
+    MemoryMapped///< Block-cached memory-mapped interleaved binary (Phase 2)
 };
 
 /**
@@ -58,11 +59,11 @@ enum class TensorStorageType {
  * @endcode
  */
 struct TensorStorageCache {
-    float const * data_ptr = nullptr;       ///< Raw pointer to contiguous float data
-    std::size_t total_elements = 0;         ///< Total number of elements
-    std::vector<std::size_t> shape;         ///< Shape of the tensor
-    std::vector<std::size_t> strides;       ///< Row-major strides (elements, not bytes)
-    bool is_valid = false;                  ///< True if contiguous and data_ptr is usable
+    float const * data_ptr = nullptr;///< Raw pointer to contiguous float data
+    std::size_t total_elements = 0;  ///< Total number of elements
+    std::vector<std::size_t> shape;  ///< Shape of the tensor
+    std::vector<std::size_t> strides;///< Row-major strides (elements, not bytes)
+    bool is_valid = false;           ///< True if contiguous and data_ptr is usable
 
     /**
      * @brief Check if cache is usable for fast-path access
@@ -144,7 +145,7 @@ public:
      * @throws std::out_of_range if axis >= ndim or index >= shape[axis]
      */
     [[nodiscard]] std::vector<float> sliceAlongAxis(
-        std::size_t axis, std::size_t index) const {
+            std::size_t axis, std::size_t index) const {
         return self().sliceAlongAxisImpl(axis, index);
     }
 
@@ -224,4 +225,4 @@ private:
     }
 };
 
-#endif // TENSOR_STORAGE_BASE_HPP
+#endif// TENSOR_STORAGE_BASE_HPP

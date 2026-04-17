@@ -170,6 +170,28 @@ public:
             std::vector<std::string> column_names = {});
 
     /**
+     * @brief Create a 2D time-series tensor from a custom storage backend.
+     *
+     * Enables non-Armadillo backends (e.g., MmapTensorStorage) to be used
+     * as TensorData with time-indexed rows.
+     *
+     * @param storage Type-erased storage wrapper (must report 2D shape).
+     * @param time_storage Dense time index storage (size must match storage rows).
+     * @param time_frame Shared TimeFrame for time reference (may be nullptr;
+     *        DataManager assigns the correct TimeFrame when registered).
+     * @param column_names Optional column labels.
+     *
+     * @pre time_storage != nullptr (enforcement: exception)
+     * @pre time_storage->size() == storage.shape()[0] (enforcement: exception)
+     * @pre storage.shape().size() == 2 (enforcement: exception)
+     */
+    [[nodiscard]] static TensorData createTimeSeries2DFromStorage(
+            TensorStorageWrapper storage,
+            std::shared_ptr<TimeIndexStorage> time_storage,
+            std::shared_ptr<TimeFrame> time_frame,
+            std::vector<std::string> column_names = {});
+
+    /**
      * @brief Create a 2D tensor with interval-based rows
      *
      * Each row corresponds to an interval (e.g., trial). Uses ArmadilloTensorStorage.

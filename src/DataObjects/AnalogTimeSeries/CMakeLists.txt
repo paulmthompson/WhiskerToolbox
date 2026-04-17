@@ -7,6 +7,8 @@ set(analog_subdirectory_sources
     storage/AnalogDataStorage.cpp
     storage/MemoryMappedAnalogDataStorage.hpp
     storage/MemoryMappedAnalogDataStorage.cpp
+    storage/SharedMmapBlockCache.hpp
+    storage/SharedMmapBlockCache.cpp
 
     RaggedAnalogTimeSeries.hpp
     RaggedAnalogTimeSeries.cpp
