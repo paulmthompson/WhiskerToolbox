@@ -2,52 +2,34 @@
 title: "Multi-Channel Storage & Cross-Channel Transforms"
 ---
 
-## Motivation
+## Overview
 
-Multi-channel acquisition data (e.g. 32–384 channels from an analog-to-digital
-converter) is a core data type in neural recording workflows. Today these channels
-are represented as independent `AnalogTimeSeries` objects with no awareness of each
-other. This creates two categories of problems:
+This document describes the implemented infrastructure for representing
+multi-channel acquisition data (e.g. 32–384 channels from an analog-to-digital
+converter) using `TensorData` as the canonical owner, with zero-copy
+`AnalogTimeSeries` column views for compatibility with existing single-channel
+widgets and transforms.
 
-1. **No cross-channel operations.** Common Average Referencing (CAR), spatial
-   whitening, and other cross-channel transforms require simultaneous access to all
-   channels at a given time point. Independent `AnalogTimeSeries` objects have no
-   mechanism for this.
-
-2. **Redundant I/O for memory-mapped data.** When channels are stored in an
-   interleaved binary file (32 int16 values for $t_1$, 32 int16 values for $t_2$, …),
-   each channel's `MemoryMappedAnalogDataStorage` reads the same file pages via
-   stride/offset but discards the neighboring channel data it had to read anyway.
-   For 384 channels, each OS page is effectively read 384 times.
-
-Additionally, the current mmap storage has no block caching:
-`getSpanRangeImpl()` always returns an empty span, forcing all access through
-element-by-element virtual dispatch with per-element stride calculation, `memcpy`,
-type conversion, and scaling.
-
-This document describes a phased refactoring plan to address both problems.
 See [GitHub Issue #240](https://github.com/paulmthompson/WhiskerToolbox/issues/240)
-for the original feature request.
+for the original feature request. For planned future work (spatial whitening,
+tensor IIR filtering, block-cached mmap, tensor-backed binary loading), see
+[Multi-Channel Roadmap](multi_channel_roadmap.qmd).
 
 ## Design Principles
 
 - **TensorData is the canonical owner** for multi-channel data.
   `AnalogTimeSeries` objects become lightweight column views.
-- **Block cache is file-level**, shared across all channels reading the same file.
 - **LibTorch is the compute backend** for cross-channel transforms. Armadillo
   remains the default *storage* backend for `TensorData` and provides zero-copy
   column access for `AnalogTimeSeries` views.
 - **GPU acceleration is opt-in** via device selection; the same LibTorch code
   runs on CPU or GPU.
-- **Phases are independently shippable.** Each phase produces working, tested code.
 
-## Compute Backend Decision: Armadillo vs LibTorch {#sec-compute-backend}
+## Compute Backend: Armadillo (Storage) + LibTorch (Compute) {#sec-compute-backend}
 
-Cross-channel transforms (CAR, whitening, and future operations) use **LibTorch
-as the single compute backend**, even on CPU-only systems. LibTorch is a required
-dependency regardless of GPU availability.
-
-### Rationale
+Cross-channel transforms use **LibTorch as the single compute backend**, even
+on CPU-only systems. This avoids maintaining separate Armadillo and LibTorch
+code paths for the same operations.
 
 | Concern | Armadillo | LibTorch |
 |---------|-----------|----------|
@@ -55,15 +37,12 @@ dependency regardless of GPU availability.
 | Memory layout | Column-major | Row-major default (natural for row-wise cross-channel ops like CAR) |
 | Median/mean | `arma::median(mat, 1)` | `torch::median(t, 1)` |
 | Eigendecomposition | `arma::eig_sym` | `torch::linalg::eigh` |
-| BLAS | System OpenBLAS/LAPACK | MKL (Intel) or highly-tuned OpenBLAS |
 | Bulk type conversion | Manual loop | `tensor.to(torch::kFloat32)` — fused, SIMD-friendly |
 
 : Armadillo vs LibTorch comparison for cross-channel compute {.striped}
 
-Maintaining two implementations (Armadillo for CPU, LibTorch for GPU) doubles the
-code surface, doubles the test surface, and creates a source of subtle divergence.
-With LibTorch, the `use_gpu` parameter reduces to device selection rather than an
-entirely different algorithm:
+The `use_gpu` parameter reduces to device selection rather than an entirely
+different algorithm:
 
 ```cpp
 auto t = tensor.toLibTorch();
@@ -74,15 +53,13 @@ auto ref = torch::median(t, /*dim=*/1).values;
 t = t - ref.unsqueeze(1);
 ```
 
-### Where Armadillo remains
-
-Armadillo continues to serve as the default **storage** backend for `TensorData`
+Armadillo serves as the default **storage** backend for `TensorData`
 (`ArmadilloTensorStorage`). Its column-major layout is ideal for
-`TensorColumnAnalogStorage` (Phase 3) because each column is contiguous —
-perfect for `AnalogTimeSeries` span access. The `toLibTorch()` conversion
-bridges storage to compute when transforms are applied.
+`TensorColumnAnalogStorage` because each column is contiguous — perfect for
+`AnalogTimeSeries` span access. The `toLibTorch()` conversion bridges storage
+to compute when transforms are applied.
 
-## Storage Layout & Conversion Costs {#sec-storage-layout}
+## Storage Layout {#sec-storage-layout}
 
 A 32-channel, 1M-sample recording stored in-memory as a `TensorData` lives in
 an Armadillo `arma::fmat(1000000, 32)` — column-major. Each column is one
@@ -128,16 +105,12 @@ And each `TensorColumnAnalogStorage` view is a first-class
 `AnalogTimeSeries` that plugs into DataViewer, transforms, and export
 without special-casing.
 
-### Conversion costs: Armadillo ↔ LibTorch
+### Armadillo ↔ LibTorch Conversion
 
-When a cross-channel transform runs, data must move from Armadillo (storage)
-to LibTorch (compute) and back. The current `toLibTorch()` implementation
-is expensive: it calls `materializeFlat()` which iterates element-by-element
-with virtual dispatch per element, converting column-major → row-major.
-For 32 channels × 1M samples this is 32M virtual calls plus two full copies.
-
-This is fixable. `torch::from_blob` accepts custom strides, enabling a
-**zero-copy view** of Armadillo's column-major memory:
+When a cross-channel transform runs, data moves from Armadillo (storage)
+to LibTorch (compute) and back. `TensorData::toLibTorch()` uses
+`torch::from_blob` with column-major strides for a zero-copy view of
+Armadillo's memory, followed by `.contiguous()` to produce a row-major tensor:
 
 ```cpp
 auto const & mat = arma_storage->matrix();
@@ -150,19 +123,10 @@ auto t = torch::from_blob(
 // t is a zero-copy strided view — no data movement
 ```
 
-LibTorch BLAS operations (`torch::mm`, `torch::median`, `torch::linalg::eigh`)
-are all stride-aware. The whitening transform can operate directly on
-Armadillo's memory without touching it.
+This eliminates the $O(n)$ virtual calls from the old `materializeFlat()` path
+and reduces the conversion to a single contiguous memcpy.
 
-::: {.callout-note}
-**Completed (Phase 0):** `TensorData::toLibTorch()` now uses `torch::from_blob`
-with column-major strides when the source is `ArmadilloTensorStorage`, followed
-by `.contiguous()` to produce a row-major tensor that owns its own memory. This
-eliminates the $O(n)$ virtual calls from `materializeFlat()` and reduces the
-conversion to a single contiguous memcpy.
-:::
-
-With the stride fix, the full round-trip for applying a transform looks like:
+The full round-trip cost for applying a transform is:
 
 | Step | Operation | Copies |
 |------|-----------|--------|
@@ -197,64 +161,14 @@ transforms — including "apply the same filter to all channels" — go on
 
 : Transform responsibility by data origin {.striped}
 
-The block cache's job (Phase 4) is **efficient I/O and reasonable viewing
-performance**, not hot-loop compute. Scrolling through a channel in a
-`DataViewer` widget fetches a screen's worth of samples — not a tight
-filter loop over millions of elements. Heavy compute (filtering, CAR,
-whitening) happens after materializing into a proper `TensorData` where
-columns are contiguous and LibTorch can operate on the full matrix.
+Heavy compute (filtering, CAR, whitening) happens after materializing into a
+proper `TensorData` where columns are contiguous and LibTorch can operate on
+the full matrix. This avoids a problematic design where single-channel transforms
+need to be aware of their storage backend's memory layout.
 
-This avoids a problematic design where single-channel transforms need to
-be aware of their storage backend's memory layout. The `AnalogTimeSeries`
-filter transform remains fast for its natural use case and does not need
-to handle block-cached or strided storage.
+## AnalogToTensor & TensorToAnalog Transforms {#sec-analog-tensor-transforms}
 
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Interleaved Binary File                       │
-│  [ch0 ch1 … ch31] [ch0 ch1 … ch31] [ch0 ch1 … ch31] …        │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │ mmap
-              ┌────────────▼─────────────┐
-              │   SharedMmapBlockCache   │  (Phase 4)
-              │   Circular buffer of     │
-              │   decoded float blocks   │
-              └────────────┬─────────────┘
-                     ┌─────┴──────┐
-                     ▼            ▼
-        ┌────────────────┐  ┌─────────────────┐
-        │  MmapTensor    │  │ BlockCachedMmap │
-        │  Storage       │  │ AnalogStorage   │
-        │  (TensorData)  │  │ (per-channel)   │
-        └───────┬────────┘  └─────────────────┘
-                │
-                ▼
-        ┌───────────────┐     AnalogTimeSeries::
-        │  TensorData   │────▶ createFromTensorColumn()
-        │  [time × ch]  │     (Phase 3: zero-copy views)
-        └───────┬───────┘
-                │  Transforms (Phase 2)
-                ▼
-        ┌───────────────┐
-        │  CAR / Whiten │──── LibTorch (CPU or GPU via DeviceManager)
-        └───────────────┘
-```
-
-## Phase 1: AnalogToTensor & TensorToAnalog Transforms {#sec-phase1}
-
-::: {.callout-note}
-**Completed.** Both transforms are implemented, registered, and tested.
-See [developer docs](../transforms_v2/analog_to_tensor.qmd) for full API reference.
-:::
-
-*No dependencies. Directly addresses Issue #240.*
-
-This phase creates the bridge between independent `AnalogTimeSeries` channels and
-a unified `TensorData` representation suitable for cross-channel operations.
-
-### Step 1.1 — AnalogToTensor Container Transform ✓
+### AnalogToTensor Container Transform
 
 **Files:**
 
@@ -305,7 +219,7 @@ The list has a max height of 200px with scrolling for large channel counts.
    and `TimeIndexStorage`. Column names come from `channel_keys` when sizes match,
    otherwise auto-generated as `"ch0"`, `"ch1"`, etc.
 
-### Step 1.2 — TensorToAnalog Container Transform ✓
+### TensorToAnalog Container Transform
 
 **Files:**
 
@@ -333,12 +247,10 @@ An empty list means "extract all columns".
    `AnalogTimeSeries` with those indices to preserve temporal alignment.
 3. Set the source `TimeFrame` on each output series.
 
-::: {.callout-note}
-**Updated in Phase 3:** This transform now creates zero-copy
-`TensorColumnAnalogStorage` views instead of owning copies.
-:::
+This transform creates zero-copy `TensorColumnAnalogStorage` views instead
+of owning copies (see [TensorColumnAnalogStorage](#sec-tensor-column-storage) below).
 
-### Step 1.3 — Registration & Tests ✓
+### Registration & Tests
 
 - Both transforms registered via `registerPipelineStepFactoryFor` in
   `RegisteredTransforms.cpp`.
@@ -354,18 +266,11 @@ An empty list means "extract all columns".
   - `TensorToAnalog` column selection, out-of-range index rejection.
   - Ordinal tensor extraction.
 
-## Phase 2: Cross-Channel Transforms (CAR, Whitening) {#sec-phase2}
+## Common Average Reference (CAR) Transform {#sec-car}
 
-*Depends on Phase 1 (requires multi-channel TensorData).*
-
-### Step 2.1 — Common Average Reference (CAR) Transform ✓
-
-::: {.callout-note}
-**Completed.** TensorCAR is implemented, registered, and tested.
 See [developer docs](../transforms_v2/tensor_car.qmd) for full API reference.
-:::
 
-**New files:**
+**Files:**
 
 - `src/TransformsV2/algorithms/TensorCAR/TensorCAR.hpp`
 - `src/TransformsV2/algorithms/TensorCAR/TensorCAR.cpp`
@@ -397,117 +302,13 @@ placement in step 2. See @sec-compute-backend for rationale.
 
 **Pattern reference:** `TensorPCA` (container transform, `TensorData` → `TensorData`).
 
-### Step 2.2 — Spatial Whitening Transform
+## Zero-Copy TensorData Column Views {#sec-tensor-column-storage}
 
-**New files:**
-
-- `src/TransformsV2/algorithms/TensorWhitening/TensorWhitening.hpp`
-- `src/TransformsV2/algorithms/TensorWhitening/TensorWhitening.cpp`
-
-**Parameters struct:**
-
-```cpp
-struct TensorWhiteningParams {
-    WhiteningMethod method = WhiteningMethod::ZCA; // ZCA, PCA, or Cholesky
-    float regularization = 1e-5f;
-    bool use_gpu = false;
-};
-```
-
-**Algorithm (unified LibTorch path):**
-
-1. `auto t = tensor.toLibTorch()` — convert from Armadillo storage.
-2. If `use_gpu`: `t = DeviceManager::instance().toDevice(t)`.
-3. Compute covariance: $C = \frac{1}{n-1} X^T X$ via `torch::mm(t.t(), t) / (n - 1)`.
-4. Eigendecomposition: `auto [eigval, eigvec] = torch::linalg::eigh(cov)`.
-5. Whitening matrix (ZCA):
-   $$W = V \cdot \mathrm{diag}\!\left(\frac{1}{\sqrt{\lambda_i + \epsilon}}\right) \cdot V^T$$
-   ```cpp
-   auto D_inv = torch::diag(1.0f / torch::sqrt(eigval + reg));
-   auto W = torch::mm(torch::mm(eigvec, D_inv), eigvec.t());
-   ```
-6. Apply: `auto result = torch::mm(t, W)`.
-7. Return `TensorData` wrapping the result `LibTorchTensorStorage`.
-
-### Step 2.3 — Per-Channel IIR Filter on TensorData
-
-**New files:**
-
-- `src/TransformsV2/algorithms/TensorIIRFilter/TensorIIRFilter.hpp`
-- `src/TransformsV2/algorithms/TensorIIRFilter/TensorIIRFilter.cpp`
-
-**Transform type:** Container (`TensorData` → `TensorData`).
-
-**Parameters struct:**
-
-```cpp
-struct TensorIIRFilterParams {
-    FilterSpecification filter_spec; // reuses existing FilterSpecification
-};
-```
-
-This applies the same IIR filter independently to every column (channel) of the
-tensor. It is the multi-channel counterpart to the existing single-channel
-`AnalogFilterOperation`.
-
-**Algorithm (column-at-a-time on Armadillo storage):**
-
-1. Ensure the tensor has Armadillo storage: `tensor.toArmadillo()`.
-2. Create the filter from the specification: `auto filter = filter_spec.createFilter()`.
-3. For each column $c$ in $[0, N_{\text{channels}})$:
-   a. Get contiguous column pointer: `float* col = mat.colptr(c)`.
-   b. Apply the IIR filter in-place on the contiguous span.
-   c. Reset filter state for the next channel.
-4. Return `TensorData` wrapping the filtered matrix.
-
-Because Armadillo uses column-major layout, each column is a contiguous block of
-`num_rows` floats. The inner filter loop is identical to the existing
-single-channel `AnalogTimeSeries` filter — same tight span, same cache
-utilization, same speed. No virtual dispatch, no block boundary concerns.
-
-::: {.callout-tip}
-**Why not filter through the `AnalogTimeSeries` interface?**
-
-If multi-channel data is stored in a block cache (Phase 4), individual
-`AnalogTimeSeries` channels see interleaved or block-strided data. Running an
-IIR filter through per-element virtual dispatch on that layout would be orders
-of magnitude slower than operating on contiguous columns. The TensorData path
-ensures the data is materialized into contiguous columns *before* the filter
-runs. See @sec-transform-responsibility.
-:::
-
-**Future extension:** For FIR filters (or IIR filters expressed as cascaded
-second-order sections), LibTorch's `torch::nn::functional::conv1d` can process
-all channels in a single batched call, parallelizing across channels.
-
-### Step 2.4 — Tests
-
-- **CAR:** Verify that after CAR, the row-wise mean (or median) is approximately
-  zero: $\lVert \bar{x}_{\text{row}} \rVert < \epsilon$.
-- **Whitening:** Verify the covariance of the result approximates the identity
-  matrix: $\lVert \mathrm{cov}(X_{\text{white}}) - I \rVert_F < \epsilon$.
-- **IIR Filter:** Verify output matches single-channel `filter_analog()` applied
-  independently to each column. Test with Butterworth lowpass on known sinusoidal
-  input.
-- **CPU vs GPU:** Verify results match within floating-point tolerance (if CUDA
-  is available at test time). Since both paths execute the same LibTorch code,
-  divergence should be limited to GPU floating-point non-determinism.
-
-## Phase 3: Zero-Copy TensorData Column Views {#sec-phase3}
-
-::: {.callout-note}
-**Completed.** All four steps are implemented, tested, and integrated.
-`TensorToAnalog` now produces zero-copy `AnalogTimeSeries` views backed by
-`TensorColumnAnalogStorage`. 17 Catch2 test cases verify element access,
-span access, memory sharing, and round-trip correctness.
-:::
-
-*Depends on Phase 1. Enables zero-copy channel access.*
-
-This phase eliminates the data copy in `TensorToAnalog` by creating an
+`TensorToAnalog` produces zero-copy `AnalogTimeSeries` views backed by
+`TensorColumnAnalogStorage`. This eliminates the data copy by creating an
 `AnalogTimeSeries` storage backend that directly references a `TensorData` column.
 
-### Step 3.1 — TensorColumnAnalogStorage Backend ✓
+### TensorColumnAnalogStorage Backend
 
 **New file:**
 `src/DataObjects/AnalogTimeSeries/storage/TensorColumnAnalogStorage.hpp`
@@ -536,10 +337,7 @@ span-based access.
 
 : CRTP method implementations for TensorColumnAnalogStorage {.striped}
 
-This is a significant improvement over the current mmap storage, where
-`getSpanRangeImpl()` always returns an empty span.
-
-### Step 3.2 — Factory Method ✓
+### Factory Method
 
 Added a general-purpose `createFromStorage` factory to `AnalogTimeSeries` that
 accepts a pre-constructed `AnalogDataStorageWrapper` and `TimeIndexStorage`.
@@ -556,7 +354,7 @@ The caller (e.g. `TensorToAnalog.cpp`) constructs the
 passes it to this factory. This keeps the dependency on TensorData in the
 transform layer, not in the data object layer.
 
-### Step 3.3 — Update TensorToAnalog ✓
+### TensorToAnalog Integration
 
 `TensorToAnalog` now copies the input `TensorData` into a `shared_ptr` (so views
 are self-contained), resolves time storage once, and creates a
@@ -564,7 +362,7 @@ are self-contained), resolves time storage once, and creates a
 CAR → `TensorToAnalog` produces views that share the filtered `TensorData`
 memory with zero per-element copies.
 
-### Step 3.4 — Tests ✓
+### Tests
 
 17 Catch2 test cases in `TensorColumnAnalogStorage.test.cpp`:
 
@@ -582,642 +380,25 @@ memory with zero per-element copies.
 
 `DataViewer_Widget` is the primary consumer of multi-channel `AnalogTimeSeries`
 data. It groups channels by naming convention (e.g. `voltage_1`, `voltage_2`, …
-under a `voltage` group) and plots them as stacked 1D temporal traces. Today
-this works well for in-memory data but is slow for memory-mapped channels because
-each channel independently reads the same file pages.
-
-A critical design goal of this plan is that **DataViewer_Widget does not need to
-change.** The storage abstraction handles multi-channel efficiency transparently.
-
-### In-memory path (Phase 3)
-
-When data fits in memory, the loading path creates one `TensorData` (Armadillo)
-and $N$ `TensorColumnAnalogStorage`-backed `AnalogTimeSeries` objects. Each one
-has a contiguous column span. When DataViewer calls
-`getDataInTimeFrameIndexRange()`, it receives a real `std::span<float const>`
-pointing into the Armadillo matrix column. This is exactly as fast as the
-current `VectorAnalogDataStorage` path. DataViewer sees no difference.
-
-### Block-cached mmap path (Phase 4)
-
-When data is too large for memory, the loading path creates one
-`SharedMmapBlockCache` and $N$ `BlockCachedMmapAnalogStorage`-backed
-`AnalogTimeSeries` objects. All $N$ channels share the same cache via
-`std::shared_ptr`. When DataViewer renders the visible time window for a group:
-
-```
-DataViewer renders voltage_0 at t=[5000, 6000):
-  → BlockCachedMmap asks cache for samples 5000–6000
-  → Cache miss → loadBlock() decodes ALL N channels for that block
-  → Returns data for channel 0
-
-DataViewer renders voltage_1 at t=[5000, 6000):
-  → BlockCachedMmap asks cache for samples 5000–6000
-  → Cache HIT → returns channel 1 data instantly
-
-... (channels 2 through N−1 all hit cache)
-
-User scrolls to t=[6500, 7500):
-  → voltage_0 triggers one new block load
-  → voltage_1 through voltage_{N−1} all hit cache again
-```
-
-The shared block cache is the mechanism that makes this fast. The first channel
-pays the decode cost; the remaining $N - 1$ are free lookups. DataViewer does
-not orchestrate this — it happens automatically because all `AnalogTimeSeries`
-objects reference the same `SharedMmapBlockCache`.
-
-For a typical DataViewer render (1000–2000 visible samples per channel), even
-element-by-element access into a decoded float32 cache block is fast —
-microseconds per channel. The expensive part today is per-element stride
-calculation + `memcpy` + int16-to-float conversion from raw mmap, repeated
-independently per channel with no shared state. The block cache eliminates
-that entirely: type conversion happens once at block load, and subsequent
-access is plain float array indexing.
-
-### Where group awareness matters: loading time
-
-The one place where multi-channel awareness is needed at the group level is
-**data import**, not viewing. When the user loads a multi-channel binary file,
-the loading code decides:
-
-| Condition | Strategy | Resulting AnalogTimeSeries backend |
-|-----------|----------|------------------------------------|
-| File fits in memory | Materialize into `TensorData` (Armadillo) | `TensorColumnAnalogStorage` (contiguous spans) |
-| File too large | Create `SharedMmapBlockCache` | `BlockCachedMmapAnalogStorage` (cached lookups) |
-
-: Loading strategy selection at import time {.striped}
-
-This decision is made once at import time by the `DataImport_Widget` or loading
-command. After that, DataViewer just sees `AnalogTimeSeries` objects registered
-under the usual naming convention and plots them with its existing code.
-
-## Tensor-Backed Binary Loading {#sec-tensor-loading}
-
-Phases 1–3 define `TensorColumnAnalogStorage` and
-`BlockCachedMmapAnalogStorage`, but those backends are useless if the loading
-path never creates them. Today the binary loader
-([Analog_Time_Series_Binary.cpp](../../../src/IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.cpp))
-returns `vector<shared_ptr<AnalogTimeSeries>>` — each channel is an independent
-object with either `VectorAnalogDataStorage` (in-memory) or
-`MemoryMappedAnalogDataStorage` (mmap, per-channel stride). No `TensorData` is
-created and no channels share state.
-
-This section adds a tensor-aware loading strategy to `src/IO/formats/Binary/`
-so that multi-channel data is loaded with the correct backend from the start,
-rather than requiring a post-hoc `AnalogToTensor` transform.
-
-### Current loader architecture
-
-The existing binary analog loading flow is:
-
-```
-BinaryAnalogImport_Widget  (UI: collects parameters)
-        │
-        ▼  signal: loadBinaryAnalogRequested(BinaryAnalogLoaderOptions)
-AnalogImport_Widget::_handleBinaryLoadRequested()
-        │
-        ▼  calls free function ::load(opts)
-Analog_Time_Series_Binary.cpp
-        │
-        ├─ use_memory_mapped=true:
-        │    for each channel:
-        │      MmapStorageConfig { offset=channel, stride=N_ch }
-        │      → MemoryMappedAnalogDataStorage (independent per channel)
-        │
-        └─ use_memory_mapped=false:
-             readBinaryFileMultiChannel<int16_t>()
-             → de-interleave into N vectors
-             → N independent VectorAnalogDataStorage objects
-```
-
-Both paths produce independent `AnalogTimeSeries` objects. The in-memory path
-is additionally **hardcoded to int16_t** and ignores the `binary_data_type`
-parameter (a bug the mmap path does not have).
-
-### New loading mode: `use_tensor_backed`
-
-Add a new boolean option to `BinaryAnalogLoaderOptions`:
-
-```cpp
-struct BinaryAnalogLoaderOptions {
-    // ... existing fields ...
-    std::optional<bool> use_tensor_backed;  // default false (backward-compatible)
-};
-```
-
-When `use_tensor_backed=true` *and* `num_channels > 1`, the loader creates
-tensor-backed storage instead of independent per-channel objects.
-
-#### In-memory tensor-backed path
-
-When `use_tensor_backed=true` and `use_memory_mapped=false`:
-
-```
-::load(opts)  [Analog_Time_Series_Binary.cpp]
-        │
-        ▼
-1. Read entire interleaved file via readBinaryFileMultiChannel<T>()
-   (fix: dispatch on binary_data_type instead of hardcoding int16_t)
-        │
-        ▼
-2. Allocate arma::fmat(num_samples, num_channels)
-   Copy de-interleaved channels into columns with scale/offset
-        │
-        ▼
-3. Create TensorData::createTimeSeries2D(mat, col_names, time_storage)
-        │
-        ▼
-4. For each column c in [0, num_channels):
-     AnalogTimeSeries::createFromTensorColumn(tensor, c, time_storage)
-        │
-        ▼
-5. Return { tensor_data, vector<AnalogTimeSeries> }
-```
-
-The `TensorData` owns the memory. Each `AnalogTimeSeries` is a zero-copy
-`TensorColumnAnalogStorage` view into a column. DataViewer sees contiguous
-spans — identical to the current `VectorAnalogDataStorage` path.
-
-#### Memory-mapped tensor-backed path
-
-When `use_tensor_backed=true` and `use_memory_mapped=true`:
-
-```
-::load(opts)  [Analog_Time_Series_Binary.cpp]
-        │
-        ▼
-1. Create SharedMmapBlockCache from file with multi-channel config:
-     { file_path, header_size, num_channels, data_type,
-       scale_factor, offset_value, block_size_samples }
-        │
-        ▼
-2. For each channel c in [0, num_channels):
-     AnalogTimeSeries::createBlockCachedMmap(cache, c, time_vector)
-        │
-        ▼
-3. Return vector<AnalogTimeSeries>
-   (all sharing the same SharedMmapBlockCache via shared_ptr)
-```
-
-All $N$ channels share the same `SharedMmapBlockCache`. When DataViewer
-renders one channel's time window, all $N$ channels' data for that window
-is decoded into the cache. Subsequent channels hit the cache. See
-@sec-dataviewer-integration for the access pattern walkthrough.
-
-### Return type change
-
-The current `::load()` returns `vector<shared_ptr<AnalogTimeSeries>>`. The
-tensor-backed in-memory path also produces a `TensorData` that must be
-registered in DataManager (it is the memory owner; the `AnalogTimeSeries`
-views point into it). Two approaches:
-
-**Option A — Expanded return type:**
-
-```cpp
-struct BinaryAnalogLoadResult {
-    std::vector<std::shared_ptr<AnalogTimeSeries>> channels;
-    std::shared_ptr<TensorData> tensor;  // non-null when tensor-backed
-};
-```
-
-The caller (`AnalogImport_Widget::_handleBinaryLoadRequested`) registers the
-`TensorData` in DataManager under `"{key}_tensor"` and each channel under
-`"{key}_ch{i}"`. This mirrors the existing multi-channel naming pattern.
-
-**Option B — Return through `BatchLoadResult`:**
-
-Have `BinaryFormatLoader::loadAnalogBatch()` return both the `TensorData` and
-the per-channel `AnalogTimeSeries` in the `BatchLoadResult::results` vector
-(which already holds a `LoadedDataVariant` that includes
-`shared_ptr<TensorData>`). This keeps the `IFormatLoader` interface unchanged.
-
-Option A is preferred because it makes the tensor ownership explicit at the
-call site and avoids overloading `BatchLoadResult` with mixed types.
-
-### Changes to `AnalogImport_Widget`
-
-`_handleBinaryLoadRequested()` gains a branch for the tensor-backed case:
-
-```cpp
-void AnalogImport_Widget::_handleBinaryLoadRequested(BinaryAnalogLoaderOptions options) {
-    auto const analog_key = ui->data_name_text->text().toStdString();
-    // ... existing validation ...
-
-    auto result = load(options);
-
-    if (result.tensor) {
-        // Tensor-backed path: register the TensorData first (it owns the memory)
-        _data_manager->setData<TensorData>(
-            analog_key + "_tensor", result.tensor, TimeKey("time"));
-
-        // Register per-channel views
-        for (size_t i = 0; i < result.channels.size(); ++i) {
-            std::string channel_key = analog_key + "_ch" + std::to_string(i);
-            _data_manager->setData<AnalogTimeSeries>(
-                channel_key, result.channels[i], TimeKey("time"));
-        }
-    } else {
-        // Existing independent-channel path (unchanged)
-        // ...
-    }
-}
-```
-
-### Changes to `BinaryFormatLoader`
-
-`loadAnalogBatch()` must handle the new return type and include the
-`TensorData` in the `BatchLoadResult` when present:
-
-```cpp
-BatchLoadResult BinaryFormatLoader::loadAnalogBatch(...) {
-    auto result = ::load(opts);
-    std::vector<LoadResult> load_results;
-
-    // If a TensorData was created, include it first
-    if (result.tensor) {
-        LoadResult tensor_lr(std::move(result.tensor));
-        tensor_lr.name = "tensor";
-        load_results.push_back(std::move(tensor_lr));
-    }
-
-    // Per-channel AnalogTimeSeries
-    for (size_t i = 0; i < result.channels.size(); ++i) {
-        LoadResult lr(std::move(result.channels[i]));
-        lr.name = std::to_string(i);
-        load_results.push_back(std::move(lr));
-    }
-
-    return BatchLoadResult::fromVector(std::move(load_results));
-}
-```
-
-This means JSON-based loading (where `DataManagerIO` calls
-`BinaryFormatLoader::loadBatch()` without a widget) also benefits from
-tensor-backed storage.
-
-### Bug fix: in-memory data type dispatch
-
-The current in-memory path is hardcoded to `int16_t`:
-
-```cpp
-auto data = Loader::readBinaryFileMultiChannel<int16_t>(binary_loader_opts);
-```
-
-This should dispatch on `binary_data_type` to match the mmap path. The
-tensor-backed path fixes this by construction (type conversion happens during
-the copy into `arma::fmat`), but the legacy independent-channel path should
-also be fixed:
-
-```cpp
-if (opts.getBinaryDataType() == "float32") {
-    data = Loader::readBinaryFileMultiChannel<float>(binary_loader_opts);
-} else if (opts.getBinaryDataType() == "int16") {
-    data = Loader::readBinaryFileMultiChannel<int16_t>(binary_loader_opts);
-}
-// ... etc
-```
-
-### UI changes
-
-`BinaryAnalogImport_Widget` needs a checkbox for "Tensor-backed (shared
-storage)" that maps to `use_tensor_backed`. The checkbox is enabled only
-when `num_channels > 1`. When checked, the "Memory mapped" checkbox
-switches between the in-memory tensor path and the block-cached mmap path.
-
-### JSON loading support
-
-For headless / pipeline loading via JSON config files, the
-`BinaryAnalogLoaderOptions` struct already uses reflect-cpp, so adding
-`use_tensor_backed` makes it available in JSON configs immediately:
-
-```json
-{
-    "data_type": "Analog",
-    "format": "binary",
-    "name": "voltage",
-    "filepath": "recording.bin",
-    "num_channels": 32,
-    "binary_data_type": "int16",
-    "scale_factor": 0.195,
-    "use_tensor_backed": true,
-    "use_memory_mapped": false
-}
-```
-
-This creates a `TensorData` named `"voltage_tensor"` and 32
-`AnalogTimeSeries` named `"voltage_ch0"` through `"voltage_ch31"`, each
-backed by `TensorColumnAnalogStorage`.
-
-### Dependency ordering
-
-This section depends on:
-
-- **Phase 3** (`TensorColumnAnalogStorage`) for the in-memory tensor-backed path
-- **Phase 4** (`SharedMmapBlockCache`, `BlockCachedMmapAnalogStorage`) for the
-  mmap tensor-backed path
-
-The in-memory tensor-backed path can ship as soon as Phase 3 is complete.
-The mmap tensor-backed path ships with Phase 4. The `use_tensor_backed`
-option and return type change can land with Phase 3; the mmap branch is
-gated on `SharedMmapBlockCache` availability.
-
-### Tests
-
-- **In-memory tensor-backed:** Load a multi-channel binary file with
-  `use_tensor_backed=true`. Verify `TensorData` column count matches
-  `num_channels`. Verify each `AnalogTimeSeries` view shares memory with
-  the `TensorData` (pointer comparison on `getSpanRangeImpl`). Verify values
-  match the legacy independent-channel path.
-- **Mmap tensor-backed:** Load with `use_tensor_backed=true` and
-  `use_memory_mapped=true`. Verify all channels share the same
-  `SharedMmapBlockCache` instance. Verify values match element-by-element
-  against the legacy per-channel mmap path.
-- **Data type dispatch fix:** Load float32 binary files with the legacy
-  in-memory path. Verify values are correct (currently broken for non-int16).
-- **JSON round-trip:** Parse a `BinaryAnalogLoaderOptions` JSON with
-  `use_tensor_backed=true`, verify it round-trips through reflect-cpp.
-
-## Phase 4: Shared Block-Cached Mmap Storage {#sec-phase4}
-
-*Independent of Phases 1–3. Addresses the I/O efficiency problem.*
-
-This phase introduces a file-level block cache that ensures when one channel reads
-a time range, all other channels' data in that range is decoded and cached
-simultaneously.
-
-::: {.callout-important}
-**The block cache is for I/O and viewing, not hot-loop compute.**
-
-The cache provides efficient access for scrolling, plotting, and loading data
-into `TensorData`. It does *not* need to provide contiguous per-channel spans
-for filter loops. Heavy per-channel compute (IIR filtering, spectral analysis)
-happens after materializing data into `TensorData` where Armadillo column-major
-layout guarantees contiguous columns. See @sec-transform-responsibility.
-:::
-
-### Step 4.1 — SharedMmapBlockCache
-
-**New files:**
-
-- `src/DataObjects/AnalogTimeSeries/storage/SharedMmapBlockCache.hpp`
-- `src/DataObjects/AnalogTimeSeries/storage/SharedMmapBlockCache.cpp`
-
-**Design:** A shared resource that memory-maps an interleaved binary file and
-maintains a circular buffer of decoded float blocks.
-
-**Members:**
-
-- `void* _mapped_data` — OS-level mmap of the entire file.
-- Circular buffer of $N$ decoded blocks ($N$ configurable, default 16).
-- Each block: contiguous `std::vector<float>` of size
-  `block_size_samples × num_channels` (row-major: time varies fastest within a
-  channel's stride).
-- Block time range tracking: `[start_sample, end_sample)` per block.
-- Shared `MmapStorageConfig` (file path, header, num_channels, data_type, scale).
-
-**Key methods:**
-
-| Method | Purpose |
-|--------|---------|
-| `getBlock(time_sample)` | Returns view of block containing that sample; loads from mmap if not cached |
-| `loadBlock(start_sample)` | Bulk-decodes `block_size × num_channels` elements from mmap into float block |
-| `getChannelValue(time, ch)` | O(1) lookup within cached block |
-| `getChannelSpan(start, end, ch)` | Zero-copy span if block-aligned |
-
-: SharedMmapBlockCache public API {.striped}
-
-#### Bulk Type Conversion in `loadBlock` {#sec-bulk-decode}
-
-ADC data is typically stored as int16. The current per-element mmap storage
-performs `memcpy` + `static_cast<float>` + scale + offset for every single
-sample. In the block cache, type conversion happens **once per block load**
-for all channels simultaneously.
-
-LibTorch provides an efficient bulk conversion path:
-
-```cpp
-// Interpret raw mmap bytes as int16 tensor (zero-copy via from_blob)
-auto raw = torch::from_blob(
-    mmap_ptr + byte_offset,
-    {block_samples, num_channels},
-    torch::kInt16);
-
-// Fused convert + scale + offset (single vectorized pass)
-auto decoded = raw.to(torch::kFloat32) * scale_factor + offset_value;
-```
-
-This is a single fused kernel that benefits from SIMD on CPU (and is trivially
-GPU-portable if on-device decode is ever desired). After decode, the block
-contains native float32 data ready for computation or span access.
-
-Alternatively, a plain C++ loop with explicit SIMD intrinsics or
-`std::transform` can be used if avoiding the LibTorch dependency at the
-storage layer is preferred. The key design point is: **type conversion and
-scaling happen exactly once, at block load time.** All downstream access
-operates on float32.
-
-**Eviction policy:** FIFO circular buffer, optimized for sequential temporal
-access. Random-access workloads may benefit from LRU, but FIFO is simpler and
-sufficient for the dominant scrolling/playback pattern.
-
-**Thread safety:** Reader-writer lock on the block table. Multiple readers are
-allowed; a single writer for block loads. This supports the common pattern of
-multiple DataViewer widgets reading different channels simultaneously.
-
-### Step 4.2 — BlockCachedMmapAnalogStorage
-
-**New file:**
-`src/DataObjects/AnalogTimeSeries/storage/BlockCachedMmapAnalogStorage.hpp`
-
-A new `AnalogTimeSeries` storage backend that delegates to `SharedMmapBlockCache`.
-
-**Members:**
-
-- `std::shared_ptr<SharedMmapBlockCache> _cache`
-- `std::size_t _channel_index`
-
-**CRTP implementation:**
-
-| Method | Implementation |
-|--------|---------------|
-| `getValueAtImpl(i)` | `_cache->getChannelValue(i, _channel_index)` — O(1) in cached block |
-| `getSpanRangeImpl(s, e)` | Span from cache block if range fits in one block; temp buffer for cross-block |
-| `tryGetCacheImpl()` | Cache pointer for the current block if known |
-| `isContiguousImpl()` | `false` (data is interleaved in cache blocks) |
-
-: BlockCachedMmapAnalogStorage CRTP methods {.striped}
-
-**Benefit:** When 32 channels read sample range $[1000, 2000)$, the first
-channel triggers a block load decoding all 32 channels. The remaining 31 channels
-hit the cache. This reduces I/O by a factor of $\sim N_{\text{channels}}$.
-
-### Step 4.3 — MmapTensorStorage for TensorData
-
-**New file:** `src/DataObjects/Tensors/storage/MmapTensorStorage.hpp`
-
-A `TensorData` storage backend backed by `SharedMmapBlockCache`. This enables
-loading interleaved binary files directly as `TensorData` with shape
-`[time, channels]`.
-
-Combined with Phase 3's `TensorColumnAnalogStorage`, this provides the full
-pipeline: binary file → block-cached TensorData → zero-copy AnalogTimeSeries
-views per channel.
-
-### Step 4.4 — Configuration Changes
-
-Extend `MmapStorageConfig` with multi-channel awareness:
-
-```cpp
-struct MmapStorageConfig {
-    // ... existing fields ...
-    std::size_t num_channels = 1;         // total channels in file
-    std::size_t block_size_samples = 4096;// samples per cache block
-    std::size_t num_cache_blocks = 16;    // blocks in circular buffer
-};
-```
-
-### Step 4.5 — Factory Methods
-
-- `AnalogTimeSeries::createBlockCachedMmap(shared_ptr<SharedMmapBlockCache>,
-  channel_index, time_vector)`
-- `TensorData::createFromMmap(MmapStorageConfig, time_vector)` — creates
-  multi-channel tensor directly from interleaved binary.
-- Group creation helper: create $N$ `AnalogTimeSeries` from one
-  `SharedMmapBlockCache`.
-
-### Step 4.6 — Tests & Benchmarks
-
-- **Correctness:** Verify values match element-by-element against current
-  `MemoryMappedAnalogDataStorage`.
-- **Block efficiency:** Verify block loads =
-  $\lceil \text{range} / \text{block\_size} \rceil$, not
-  $\text{range} \times N_{\text{channels}}$.
-- **Cross-block reads:** Verify correct stitching when a requested range spans
-  two blocks.
-- **Benchmark:** Compare block-cached vs current element-by-element for
-  384-channel data at various block sizes.
-
-### Cache Sizing Guidance
-
-The cache memory footprint is:
-
-$$M = N_{\text{blocks}} \times B_{\text{samples}} \times N_{\text{channels}} \times 4 \;\text{bytes}$$
-
-| Channels | Block Size | Num Blocks | Memory |
-|----------|-----------|------------|--------|
-| 32 | 4096 | 16 | 8 MB |
-| 64 | 4096 | 16 | 16 MB |
-| 384 | 4096 | 16 | 96 MB |
-| 384 | 4096 | 8 | 48 MB |
-| 384 | 2048 | 8 | 24 MB |
-
-: Cache memory footprint for common configurations {.striped}
-
-For Neuropixels-scale recordings (384 channels), 8 blocks of 4096 samples
-(~48 MB) provides a reasonable trade-off between memory and cache hit rate
-for typical scrolling speeds.
-
-## Phase 5: GPU-Accelerated Processing {#sec-phase5}
-
-*Depends on Phase 2. Phase 4 is optional but improves large-dataset throughput.*
-
-Because Phase 2 already uses LibTorch as the compute backend, GPU acceleration
-is a matter of device placement rather than a new code path. This phase focuses
-on **large-dataset batching** and **benchmarking**.
-
-### Step 5.1 — Temporal Block Processing for Large Datasets
-
-When a dataset exceeds GPU memory (or is too large to materialize fully on CPU),
-process it in temporal blocks:
-
-1. Iterate over time in chunks of $B$ samples (matching Phase 4 cache block size
-   or configurable independently).
-2. For each chunk: extract `TensorData` slice → `toLibTorch()` →
-   `DeviceManager::instance().toDevice()` → compute → download result.
-3. Concatenate results.
-
-This reuses the existing Phase 2 transform code unmodified — the batching
-logic wraps the transform rather than modifying it.
-
-### Step 5.2 — Benchmarks
-
-- GPU vs CPU CAR on 384 channels × 30,000 samples.
-- GPU vs CPU whitening.
-- Block upload/download overhead measurement.
-- Determine the crossover point where GPU becomes faster than CPU
-  (expected: GPU wins for large channel counts and/or long time windows;
-  CPU wins for small problems where transfer overhead dominates).
-
-## Verification Summary
-
-| Phase | Test Command | Acceptance Criteria | Status |
-|-------|-------------|-------------------|--------|
-| ~~0~~ | `ctest -R "test_data_manager_all"` | Values match element-by-element path; result is contiguous | **Done** |
-| 1 | `ctest -R "AnalogToTensor\|TensorToAnalog"` | Round-trip fidelity, error on mismatched timeframes | |
-| 2 | `ctest -R "TensorCAR\|TensorWhitening\|TensorIIRFilter"` | Row-wise mean ≈ 0 (CAR); cov ≈ I (whitening); IIR matches single-channel | |
-| 3 | `ctest -R "TensorColumnAnalog"` | Zero-copy pointer match; non-empty span from `getDataInTimeFrameIndexRange` | |
-| 3 | `ctest -R "BinaryTensorBacked"` | TensorData created; views share memory; values match legacy path | |
-| 4 | `ctest -R "SharedMmapBlockCache"` | Correct values; block load count = ⌈range/block_size⌉ | |
-| 5 | Benchmark suite | GPU matches CPU within tolerance; speedup measured | |
-
-: Per-phase verification {.striped}
-
-**Integration test (manual):** Load 32-channel binary with `use_tensor_backed=true`
-→ verify `TensorData` + 32 `AnalogTimeSeries` views appear in DataManager → apply
-CAR transform on the `TensorData` → `TensorToAnalog` → view in DataViewer. Verify
-memory usage stays bounded (Phase 3 zero-copy, Phase 4 block cache bounded).
-
-## File Inventory
-
-### Existing files to modify
-
-| File | Phase | Change |
-|------|-------|--------|
-| ~~`src/DataObjects/Tensors/TensorData.cpp`~~ | ~~0~~ | ~~Armadillo fast path in `toLibTorch()`~~ **Done** |
-| `src/TransformsV2/core/RegisteredTransforms.cpp` | 1, 2 | Register new transforms |
-| `src/DataObjects/AnalogTimeSeries/Analog_Time_Series.hpp` | 3, 4 | Add factory methods |
-| `src/DataObjects/AnalogTimeSeries/storage/AnalogDataStorage.hpp` | 3, 4 | Type-erasure for new backends |
-| `src/DataObjects/AnalogTimeSeries/storage/MmapAnalogConfig.hpp` | 4 | Add multi-channel fields |
-| `src/DataObjects/Tensors/TensorData.hpp` | 4 | Add `createFromMmap` factory |
-| `src/DataObjects/Tensors/storage/TensorStorageWrapper.hpp` | 4 | Register new backend |
-| `src/IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp` | 3 | Add `use_tensor_backed` option, `BinaryAnalogLoadResult` return type |
-| `src/IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.cpp` | 3, 4 | Tensor-backed loading paths, data type dispatch fix |
-| `src/IO/formats/Binary/BinaryFormatLoader.cpp` | 3 | Handle `BinaryAnalogLoadResult` in `loadAnalogBatch()` |
-| `src/WhiskerToolbox/DataImport_Widget/AnalogTimeSeries/AnalogImport_Widget.cpp` | 3 | Register `TensorData` + per-channel views in DataManager |
-| `src/WhiskerToolbox/DataImport_Widget/AnalogTimeSeries/Binary/BinaryAnalogImport_Widget.cpp` | 3 | Add "Tensor-backed" checkbox |
-
-: Existing files requiring modification {.striped}
-
-### New files to create
-
-| File | Phase |
-|------|-------|
-| `src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.hpp` | 1 |
-| `src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.cpp` | 1 |
-| `src/TransformsV2/algorithms/TensorToAnalog/TensorToAnalog.hpp` | 1 |
-| `src/TransformsV2/algorithms/TensorToAnalog/TensorToAnalog.cpp` | 1 |
-| `src/TransformsV2/algorithms/TensorCAR/TensorCAR.hpp` | 2 |
-| `src/TransformsV2/algorithms/TensorCAR/TensorCAR.cpp` | 2 |
-| `src/TransformsV2/algorithms/TensorWhitening/TensorWhitening.hpp` | 2 |
-| `src/TransformsV2/algorithms/TensorWhitening/TensorWhitening.cpp` | 2 |
-| `src/TransformsV2/algorithms/TensorIIRFilter/TensorIIRFilter.hpp` | 2 |
-| `src/TransformsV2/algorithms/TensorIIRFilter/TensorIIRFilter.cpp` | 2 |
-| `src/DataObjects/AnalogTimeSeries/storage/TensorColumnAnalogStorage.hpp` | 3 |
-| `src/DataObjects/AnalogTimeSeries/storage/SharedMmapBlockCache.hpp` | 4 |
-| `src/DataObjects/AnalogTimeSeries/storage/SharedMmapBlockCache.cpp` | 4 |
-| `src/DataObjects/AnalogTimeSeries/storage/BlockCachedMmapAnalogStorage.hpp` | 4 |
-| `src/DataObjects/Tensors/storage/MmapTensorStorage.hpp` | 4 |
-
-: New files to create {.striped}
-
-## Excluded Scope
-
-The following are explicitly out of scope for this plan:
-
-- **UI widgets** for multi-channel configuration or channel group management.
-- **Spectral transforms** (FFT, spectrogram) — future work using the same
-  TensorData infrastructure built here.
-- **`madvise` / `PrefetchVirtualMemory` hints** for mmap prefetching — a
-  low-hanging optimization that can be added to `SharedMmapBlockCache` later.
-- **Distributed / multi-GPU compute.**
+under a `voltage` group) and plots them as stacked 1D temporal traces.
+
+A critical design goal is that **DataViewer_Widget does not need to change.**
+The storage abstraction handles multi-channel efficiency transparently.
+
+### In-memory path
+
+The loading path creates one `TensorData` (Armadillo) and $N$
+`TensorColumnAnalogStorage`-backed `AnalogTimeSeries` objects. Each one has a
+contiguous column span. When DataViewer calls `getDataInTimeFrameIndexRange()`,
+it receives a real `std::span<float const>` pointing into the Armadillo matrix
+column. This is exactly as fast as the `VectorAnalogDataStorage` path.
+DataViewer sees no difference.
+
+## See Also
+
+- [AnalogToTensor / TensorToAnalog developer docs](../transforms_v2/analog_to_tensor.qmd)
+- [TensorCAR developer docs](../transforms_v2/tensor_car.qmd)
+- [TensorColumnAnalogStorage developer docs](AnalogTimeSeries/tensor_column_analog_storage.qmd)
+- [Multi-Channel Roadmap](multi_channel_roadmap.qmd) — planned future work
+  (tensor-backed binary loading, shared block-cached mmap, spatial whitening,
+  per-channel IIR filter, GPU acceleration)

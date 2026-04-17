@@ -1,0 +1,225 @@
+---
+title: "Multi-Channel Storage Roadmap"
+---
+
+## Overview
+
+This roadmap tracks planned improvements to the multi-channel `TensorData`
+infrastructure. For documentation of what is already implemented (AnalogToTensor,
+TensorToAnalog, TensorCAR, TensorColumnAnalogStorage), see
+[Multi-Channel Storage & Cross-Channel Transforms](multi_channel_storage_and_transforms.qmd).
+
+See [GitHub Issue #240](https://github.com/paulmthompson/WhiskerToolbox/issues/240)
+for the original feature request.
+
+## Completed
+
+- **toLibTorch() zero-copy stride fix:** `TensorData::toLibTorch()` uses
+  `torch::from_blob` with column-major strides, eliminating $O(n)$ virtual calls.
+- **AnalogToTensor / TensorToAnalog transforms:** Bridge between independent
+  `AnalogTimeSeries` channels and unified `TensorData`. Registered, tested (12 cases).
+- **Common Average Reference (CAR) transform:** `TensorData` → `TensorData`,
+  supports mean/median, channel exclusion, CPU/GPU via LibTorch. Registered, tested.
+- **TensorColumnAnalogStorage:** Zero-copy `AnalogTimeSeries` views backed by
+  `TensorData` columns. `TensorToAnalog` uses this automatically. 17 test cases.
+- **ParameterSchema `std::vector<T>` support:** Multi-select lists and CSV line
+  edits for vector parameters in `AutoParamWidget`.
+
+## Roadmap
+
+### 1. Tensor-Backed Binary Loading {#sec-tensor-loading}
+
+**Priority: High** — This is the critical path for making tensor-backed storage
+the default for multi-channel binary imports.
+
+Today the binary loader
+(`src/IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.cpp`)
+returns independent `AnalogTimeSeries` objects — each channel with either
+`VectorAnalogDataStorage` (in-memory) or `MemoryMappedAnalogDataStorage`
+(mmap, per-channel stride). No `TensorData` is created and no channels share state.
+
+#### Goals
+
+1. Add `use_tensor_backed` option to `BinaryAnalogLoaderOptions`.
+2. When enabled with `num_channels > 1`:
+   - **In-memory path:** Read interleaved binary → `arma::fmat` → `TensorData`
+     → N `TensorColumnAnalogStorage` views.
+   - **Mmap path:** Deferred to shared block cache (see below).
+3. Return `BinaryAnalogLoadResult` containing both the `TensorData` (memory
+   owner) and per-channel `AnalogTimeSeries` views.
+4. Update `AnalogImport_Widget` and `BinaryFormatLoader` to register both the
+   `TensorData` and per-channel views in DataManager.
+5. Expose `use_tensor_backed` in JSON loading configs (reflect-cpp automatic).
+6. Fix the existing hardcoded `int16_t` bug in the in-memory multi-channel path
+   (should dispatch on `binary_data_type`).
+
+#### UI Changes
+
+`BinaryAnalogImport_Widget` needs a "Tensor-backed (shared storage)" checkbox,
+enabled only when `num_channels > 1`.
+
+#### Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp` | Add `use_tensor_backed` option, `BinaryAnalogLoadResult` return type |
+| `src/IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.cpp` | Tensor-backed in-memory path, data type dispatch fix |
+| `src/IO/formats/Binary/BinaryFormatLoader.cpp` | Handle `BinaryAnalogLoadResult` in `loadAnalogBatch()` |
+| `src/WhiskerToolbox/DataImport_Widget/AnalogTimeSeries/AnalogImport_Widget.cpp` | Register `TensorData` + per-channel views |
+| `src/WhiskerToolbox/DataImport_Widget/AnalogTimeSeries/Binary/BinaryAnalogImport_Widget.cpp` | Add checkbox |
+
+: Files affected by tensor-backed binary loading {.striped}
+
+#### Tests
+
+- Load multi-channel binary with `use_tensor_backed=true`. Verify `TensorData`
+  column count matches `num_channels`. Verify each view shares memory
+  (pointer comparison). Verify values match legacy independent-channel path.
+- Data type dispatch fix: Load float32 binary files with legacy in-memory path.
+- JSON round-trip for `BinaryAnalogLoaderOptions` with `use_tensor_backed=true`.
+
+---
+
+### 2. Shared Block-Cached Mmap Storage {#sec-block-cache}
+
+**Priority: Medium** — Required for efficient viewing of large multi-channel
+recordings that don't fit in memory.
+
+The current per-channel mmap storage (`MemoryMappedAnalogDataStorage`) reads
+the same file pages independently per channel. For 384 channels, each OS page
+is read ~384 times. Additionally, `getSpanRangeImpl()` always returns an empty
+span, forcing element-by-element virtual dispatch with per-element stride
+calculation, `memcpy`, type conversion, and scaling.
+
+#### Design: SharedMmapBlockCache
+
+A shared resource that memory-maps an interleaved binary file and maintains a
+circular buffer of decoded float blocks.
+
+**New files:**
+
+- `src/DataObjects/AnalogTimeSeries/storage/SharedMmapBlockCache.hpp`
+- `src/DataObjects/AnalogTimeSeries/storage/SharedMmapBlockCache.cpp`
+- `src/DataObjects/AnalogTimeSeries/storage/BlockCachedMmapAnalogStorage.hpp`
+- `src/DataObjects/Tensors/storage/MmapTensorStorage.hpp`
+
+**Key properties:**
+
+- Circular buffer of $N$ decoded blocks (default 16).
+- Each block: `block_size_samples × num_channels` float32 values.
+- FIFO eviction (optimized for sequential temporal access).
+- Reader-writer lock for thread safety.
+- Bulk type conversion at block load time (single vectorized pass via LibTorch
+  `from_blob` + `.to(kFloat32)` or plain C++ with SIMD).
+
+**Access pattern:** When DataViewer renders a time window for one channel,
+all $N$ channels' data for that window is decoded into the cache. Subsequent
+channels hit the cache. The first channel pays the decode cost; the remaining
+$N - 1$ are free lookups.
+
+**Cache sizing:**
+
+$$M = N_{\text{blocks}} \times B_{\text{samples}} \times N_{\text{channels}} \times 4 \;\text{bytes}$$
+
+| Channels | Block Size | Num Blocks | Memory |
+|----------|-----------|------------|--------|
+| 32 | 4096 | 16 | 8 MB |
+| 384 | 4096 | 8 | 48 MB |
+
+: Cache memory footprint for common configurations {.striped}
+
+#### BlockCachedMmapAnalogStorage
+
+Per-channel `AnalogTimeSeries` storage backend that delegates to the shared cache:
+
+| Method | Implementation |
+|--------|---------------|
+| `getValueAtImpl(i)` | O(1) lookup in cached block |
+| `getSpanRangeImpl(s, e)` | Span from cache block if within one block; temp buffer for cross-block |
+| `isContiguousImpl()` | `false` (interleaved in cache blocks) |
+
+: BlockCachedMmapAnalogStorage CRTP methods {.striped}
+
+#### MmapTensorStorage
+
+`TensorData` storage backend backed by `SharedMmapBlockCache`. Enables loading
+interleaved binary files directly as `TensorData` with shape `[time, channels]`.
+
+#### Tests & Benchmarks
+
+- Values match element-by-element against `MemoryMappedAnalogDataStorage`.
+- Block loads = ⌈range/block_size⌉, not range × num_channels.
+- Cross-block read stitching.
+- Benchmark: block-cached vs element-by-element for 384-channel data.
+
+---
+
+### 3. Cross-Channel Transforms {#sec-cross-channel-transforms}
+
+Additional transforms that operate on multi-channel `TensorData`:
+
+- **Spatial Whitening (ZCA):** [GitHub Issue #245](https://github.com/paulmthompson/WhiskerToolbox/issues/245)
+  — Decorrelates channels and normalizes variances using eigendecomposition.
+  Supports ZCA, PCA, and Cholesky methods.
+
+- **Per-Channel IIR Filter:** [GitHub Issue #246](https://github.com/paulmthompson/WhiskerToolbox/issues/246)
+  — Applies the same IIR filter to every column of a tensor. Operates on
+  contiguous Armadillo columns for optimal cache utilization.
+
+Both follow the `TensorCAR` transform pattern (container transform,
+`TensorData` → `TensorData`, LibTorch compute backend).
+
+---
+
+### 4. GPU-Accelerated Processing {#sec-gpu}
+
+**Priority: Low** — Since all cross-channel transforms already use LibTorch
+as the compute backend, GPU acceleration is a matter of device placement
+rather than a new code path.
+
+#### Temporal Block Processing for Large Datasets
+
+When a dataset exceeds GPU memory, process it in temporal blocks:
+
+1. Iterate over time in chunks of $B$ samples.
+2. For each chunk: extract `TensorData` slice → `toLibTorch()` →
+   `DeviceManager::instance().toDevice()` → compute → download result.
+3. Concatenate results.
+
+This reuses existing transform code unmodified — the batching logic wraps
+the transform.
+
+#### Benchmarks Needed
+
+- GPU vs CPU CAR on 384 channels × 30,000 samples.
+- GPU vs CPU whitening.
+- Block upload/download overhead measurement.
+- Determine the crossover point where GPU becomes faster than CPU.
+
+---
+
+## Dependency Graph
+
+```
+Tensor-Backed Binary Loading (§1)
+  ├── In-memory path: ready now (uses TensorColumnAnalogStorage ✓)
+  └── Mmap path: requires Shared Block Cache (§2)
+
+Shared Block-Cached Mmap (§2)
+  └── Independent of §1 and §3
+
+Cross-Channel Transforms (§3)
+  ├── ZCA Whitening (#245): ready now (uses toLibTorch() ✓)
+  └── IIR Filter (#246): ready now (uses Armadillo columns ✓)
+
+GPU Acceleration (§4)
+  └── Requires §3 transforms to exist
+```
+
+## Excluded Scope
+
+- **UI widgets** for multi-channel configuration or channel group management.
+- **Spectral transforms** (FFT, spectrogram) — future work using the same
+  TensorData infrastructure.
+- **`madvise` / `PrefetchVirtualMemory` hints** for mmap prefetching.
+- **Distributed / multi-GPU compute.**

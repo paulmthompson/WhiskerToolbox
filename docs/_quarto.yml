@@ -169,6 +169,7 @@ website:
               contents:
                 - developer/DataObjects/Tensors/row_mutation.qmd
             - developer/DataObjects/multi_channel_storage_and_transforms.qmd
+            - developer/DataObjects/multi_channel_roadmap.qmd
             - developer/DataObjects/AnalogTimeSeries/tensor_column_analog_storage.qmd
             - section: "Command Architecture"
               href: developer/DataManager/Commands/index.qmd
