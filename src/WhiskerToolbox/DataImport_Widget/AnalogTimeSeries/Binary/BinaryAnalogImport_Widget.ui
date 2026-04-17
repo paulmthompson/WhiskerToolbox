@@ -272,6 +272,19 @@
        </property>
       </widget>
      </item>
+     <item row="10" column="0" colspan="3">
+      <widget class="QCheckBox" name="tensor_backed_checkbox">
+       <property name="text">
+        <string>Tensor-backed (shared storage)</string>
+       </property>
+       <property name="toolTip">
+        <string>Store multi-channel data in a shared TensorData matrix with zero-copy per-channel views. Only effective for in-memory loading with num_channels &gt; 1.</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

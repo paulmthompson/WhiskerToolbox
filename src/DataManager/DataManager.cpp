@@ -262,7 +262,17 @@ bool tryBatchLoadFromRegistry(
         // Handle based on data type
         switch (data_type) {
             case DM_DataType::Analog: {
-                if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(result.data)) {
+                if (std::holds_alternative<std::shared_ptr<TensorData>>(result.data)) {
+                    // Tensor-backed batch: register the TensorData under base name
+                    auto tensor_data = std::get<std::shared_ptr<TensorData>>(result.data);
+                    dm->setData<TensorData>(name, tensor_data, TimeKey("time"));
+
+                    if (item.contains("clock")) {
+                        std::string const clock_str = item["clock"];
+                        auto const clock = TimeKey(clock_str);
+                        dm->setTimeKey(name, clock);
+                    }
+                } else if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(result.data)) {
                     auto analog_data = std::get<std::shared_ptr<AnalogTimeSeries>>(result.data);
                     dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
 

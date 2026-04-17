@@ -16,6 +16,7 @@
 #include <vector>
 
 class AnalogTimeSeries;
+class TensorData;
 
 // Custom validator for binary_data_type (the storage format in the binary file)
 struct ValidBinaryDataType {
@@ -67,6 +68,8 @@ struct BinaryAnalogLoaderOptions {
     std::optional<float> offset_value;
     std::optional<size_t> num_samples;
 
+    std::optional<bool> use_tensor_backed;
+
     // Helper methods to get values with defaults
     std::string getParentDir() const { return parent_dir.value_or("."); }
     int getHeaderSize() const { return header_size.has_value() ? header_size.value().value() : 0; }
@@ -78,6 +81,7 @@ struct BinaryAnalogLoaderOptions {
     float getScaleFactor() const { return scale_factor.value_or(1.0f); }
     float getOffsetValue() const { return offset_value.value_or(0.0f); }
     size_t getNumSamples() const { return num_samples.value_or(0); }
+    bool getUseTensorBacked() const { return use_tensor_backed.value_or(false); }
 };
 
 // Compile-time validation that BinaryAnalogLoaderOptions conforms to loader requirements
@@ -85,6 +89,27 @@ static_assert(WhiskerToolbox::ValidLoaderOptions<BinaryAnalogLoaderOptions>,
               "BinaryAnalogLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions const & opts);
+
+/**
+ * @brief Result of tensor-backed binary loading
+ *
+ * When use_tensor_backed is true and num_channels > 1, the loader produces
+ * a TensorData that owns the multi-channel data and per-channel
+ * AnalogTimeSeries views backed by TensorColumnAnalogStorage (zero-copy).
+ */
+struct BinaryAnalogLoadResult {
+    std::shared_ptr<TensorData> tensor;                     ///< Memory owner (null when not tensor-backed)
+    std::vector<std::shared_ptr<AnalogTimeSeries>> channels;///< Per-channel series (views when tensor != null)
+};
+
+/**
+ * @brief Load binary analog data with optional tensor-backed storage
+ *
+ * When opts.use_tensor_backed is true and num_channels > 1, returns a
+ * BinaryAnalogLoadResult where tensor owns the data and channels are
+ * zero-copy TensorColumnAnalogStorage views.
+ */
+DATAMANAGERIO_EXPORT BinaryAnalogLoadResult loadTensorBacked(BinaryAnalogLoaderOptions const & opts);
 
 template<>
 struct ParameterUIHints<BinaryAnalogLoaderOptions> {
@@ -126,6 +151,10 @@ struct ParameterUIHints<BinaryAnalogLoaderOptions> {
         }
         if (auto * f = schema.field("num_samples")) {
             f->tooltip = "Maximum samples per channel to expose; 0 means load all available (memory-mapped path)";
+        }
+        if (auto * f = schema.field("use_tensor_backed")) {
+            f->tooltip =
+                    "Store multi-channel data in a shared TensorData matrix with zero-copy per-channel views (in-memory path, num_channels > 1)";
         }
     }
 };

@@ -24,13 +24,23 @@ for the original feature request.
   `TensorData` columns. `TensorToAnalog` uses this automatically. 17 test cases.
 - **ParameterSchema `std::vector<T>` support:** Multi-select lists and CSV line
   edits for vector parameters in `AutoParamWidget`.
+- **Tensor-backed binary loading (Phase 1 — in-memory path):** Added
+  `use_tensor_backed` option to `BinaryAnalogLoaderOptions`. When enabled with
+  `num_channels > 1` and in-memory loading, reads interleaved binary →
+  `arma::fmat` → `TensorData` → N `TensorColumnAnalogStorage` zero-copy views.
+  `BinaryFormatLoader`, `AnalogImport_Widget`, and `BinaryAnalogImport_Widget`
+  updated to register both the `TensorData` and per-channel views. Also fixed
+  the hardcoded `int16_t` bug in the in-memory multi-channel path — now
+  dispatches on `binary_data_type`. 9 test cases (764 assertions).
 
 ## Roadmap
 
 ### 1. Tensor-Backed Binary Loading {#sec-tensor-loading}
 
-**Priority: High** — This is the critical path for making tensor-backed storage
-the default for multi-channel binary imports.
+::: {.callout-note}
+**Status: Complete (in-memory path).** The mmap path is deferred to Phase 2
+(Shared Block Cache).
+:::
 
 Today the binary loader
 (`src/IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.cpp`)
@@ -202,7 +212,7 @@ the transform.
 
 ```
 Tensor-Backed Binary Loading (§1)
-  ├── In-memory path: ready now (uses TensorColumnAnalogStorage ✓)
+  ├── In-memory path: DONE ✓
   └── Mmap path: requires Shared Block Cache (§2)
 
 Shared Block-Cached Mmap (§2)

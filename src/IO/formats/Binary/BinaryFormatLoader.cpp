@@ -117,25 +117,33 @@ BatchLoadResult BinaryFormatLoader::loadAnalogBatch(std::string const & filepath
         // Successfully parsed with reflect-cpp, use validated options
         auto opts = opts_result.value();
 
-        // Load all channels using existing multi-channel loading
-        auto analog_series_vec = ::load(opts);
+        // Use tensor-backed loading (falls back to legacy when not applicable)
+        auto load_result = ::loadTensorBacked(opts);
 
-        if (analog_series_vec.empty()) {
+        if (load_result.channels.empty()) {
             return BatchLoadResult::error("No data loaded from binary file: " + filepath);
         }
 
         // Convert to BatchLoadResult with channel names
         std::vector<LoadResult> results;
-        results.reserve(analog_series_vec.size());
+        results.reserve(load_result.channels.size());
 
-        for (size_t i = 0; i < analog_series_vec.size(); ++i) {
-            LoadResult lr(std::move(analog_series_vec[i]));
+        // If tensor-backed, include the TensorData as the first result
+        if (load_result.tensor) {
+            LoadResult tensor_lr(std::move(load_result.tensor));
+            tensor_lr.name = "__tensor__";
+            results.push_back(std::move(tensor_lr));
+        }
+
+        for (size_t i = 0; i < load_result.channels.size(); ++i) {
+            LoadResult lr(std::move(load_result.channels[i]));
             lr.name = std::to_string(i);// Channel index as name
             results.push_back(std::move(lr));
         }
 
         std::cout << "BinaryFormatLoader: Loaded " << results.size()
-                  << " analog channel(s) from " << filepath << std::endl;
+                  << " object(s) from " << filepath
+                  << (load_result.tensor ? " (tensor-backed)" : "") << std::endl;
 
         return BatchLoadResult::fromVector(std::move(results));
 

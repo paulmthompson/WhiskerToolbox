@@ -55,8 +55,8 @@ private:
 
 private slots:
     void _onLoaderTypeChanged(int index);
-    void _handleCSVLoadRequested(CSVAnalogLoaderOptions options);
-    void _handleBinaryLoadRequested(BinaryAnalogLoaderOptions options);
+    void _handleCSVLoadRequested(const CSVAnalogLoaderOptions& options);
+    void _handleBinaryLoadRequested(const BinaryAnalogLoaderOptions& options);
 };
 
 #endif // ANALOG_IMPORT_WIDGET_HPP

@@ -2,16 +2,17 @@
 
 #include "ui_AnalogImport_Widget.h"
 
-#include "DataManager/DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
-#include "IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
 #include "DataImportTypeRegistry.hpp"
+#include "DataManager/DataManager.hpp"
+#include "IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
+#include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
+#include "Tensors/TensorData.hpp"
 
-#include <QFileDialog>
 #include <QComboBox>
-#include <QStackedWidget>
+#include <QFileDialog>
 #include <QMessageBox>
+#include <QStackedWidget>
 
 #include <iostream>
 
@@ -26,7 +27,7 @@ AnalogImport_Widget::AnalogImport_Widget(std::shared_ptr<DataManager> data_manag
 
     connect(ui->csv_analog_import_widget, &CSVAnalogImport_Widget::loadAnalogCSVRequested,
             this, &AnalogImport_Widget::_handleCSVLoadRequested);
-    
+
 #ifdef ENABLE_CAPNPROTO
     connect(ui->binary_analog_import_widget, &BinaryAnalogImport_Widget::loadBinaryAnalogRequested,
             this, &AnalogImport_Widget::_handleBinaryLoadRequested);
@@ -49,13 +50,13 @@ void AnalogImport_Widget::_onLoaderTypeChanged(int index) {
         ui->stacked_loader_options->setCurrentWidget(ui->binary_analog_import_widget);
 #else
         QMessageBox::warning(this, tr("Feature Not Available"),
-            tr("Binary analog loading requires CapnProto support. Please rebuild with ENABLE_CAPNPROTO=ON."));
+                             tr("Binary analog loading requires CapnProto support. Please rebuild with ENABLE_CAPNPROTO=ON."));
         ui->loader_type_combo->setCurrentIndex(0);
 #endif
     }
 }
 
-void AnalogImport_Widget::_handleCSVLoadRequested(CSVAnalogLoaderOptions options) {
+void AnalogImport_Widget::_handleCSVLoadRequested(const CSVAnalogLoaderOptions& options) {
     auto const analog_key = ui->data_name_text->text().toStdString();
     if (analog_key.empty()) {
         QMessageBox::warning(this, tr("Import Error"), tr("Data name cannot be empty."));
@@ -64,26 +65,26 @@ void AnalogImport_Widget::_handleCSVLoadRequested(CSVAnalogLoaderOptions options
 
     try {
         auto analog_series = load(options);
-        std::cout << "Loaded analog time series with " << analog_series->getNumSamples() 
+        std::cout << "Loaded analog time series with " << analog_series->getNumSamples()
                   << " samples from " << options.filepath << std::endl;
 
         _data_manager->setData<AnalogTimeSeries>(analog_key, analog_series, TimeKey("time"));
 
         QMessageBox::information(this, tr("Import Successful"),
-            tr("Loaded %1 samples into '%2'")
-                .arg(analog_series->getNumSamples())
-                .arg(QString::fromStdString(analog_key)));
+                                 tr("Loaded %1 samples into '%2'")
+                                         .arg(analog_series->getNumSamples())
+                                         .arg(QString::fromStdString(analog_key)));
 
         emit importCompleted(QString::fromStdString(analog_key), "AnalogTimeSeries");
 
     } catch (std::exception const & e) {
         std::cerr << "Error loading CSV file " << options.filepath << ": " << e.what() << std::endl;
         QMessageBox::critical(this, tr("Import Error"),
-            tr("Error loading CSV file: %1").arg(QString::fromStdString(e.what())));
+                              tr("Error loading CSV file: %1").arg(QString::fromStdString(e.what())));
     }
 }
 
-void AnalogImport_Widget::_handleBinaryLoadRequested(BinaryAnalogLoaderOptions options) {
+void AnalogImport_Widget::_handleBinaryLoadRequested(const BinaryAnalogLoaderOptions& options) {
     auto const analog_key = ui->data_name_text->text().toStdString();
     if (analog_key.empty()) {
         QMessageBox::warning(this, tr("Import Error"), tr("Data name cannot be empty."));
@@ -91,46 +92,54 @@ void AnalogImport_Widget::_handleBinaryLoadRequested(BinaryAnalogLoaderOptions o
     }
 
     try {
-        auto analog_series_vec = load(options);
-        
-        if (analog_series_vec.empty()) {
+        auto result = loadTensorBacked(options);
+
+        if (result.channels.empty()) {
             QMessageBox::warning(this, tr("Import Error"), tr("No data loaded from binary file."));
             return;
         }
-        
-        // If multiple channels, use indexed names
-        if (analog_series_vec.size() == 1) {
-            auto const & analog_series = analog_series_vec[0];
-            std::cout << "Loaded analog time series with " << analog_series->getNumSamples() 
+
+        // Register TensorData if tensor-backed
+        if (result.tensor) {
+            _data_manager->setData<TensorData>(analog_key, result.tensor, TimeKey("time"));
+            std::cout << "Registered TensorData '" << analog_key << "' with "
+                      << result.tensor->numColumns() << " columns" << std::endl;
+        }
+
+        // If single channel (no tensor), use base name
+        if (result.channels.size() == 1 && !result.tensor) {
+            auto const & analog_series = result.channels[0];
+            std::cout << "Loaded analog time series with " << analog_series->getNumSamples()
                       << " samples from " << options.filepath << std::endl;
 
             _data_manager->setData<AnalogTimeSeries>(analog_key, analog_series, TimeKey("time"));
 
             QMessageBox::information(this, tr("Import Successful"),
-                tr("Loaded %1 samples into '%2'")
-                    .arg(analog_series->getNumSamples())
-                    .arg(QString::fromStdString(analog_key)));
+                                     tr("Loaded %1 samples into '%2'")
+                                             .arg(analog_series->getNumSamples())
+                                             .arg(QString::fromStdString(analog_key)));
 
             emit importCompleted(QString::fromStdString(analog_key), "AnalogTimeSeries");
         } else {
             // Multiple channels loaded
             size_t total_samples = 0;
-            for (size_t i = 0; i < analog_series_vec.size(); ++i) {
-                auto const & analog_series = analog_series_vec[i];
-                std::string channel_key = analog_key + "_ch" + std::to_string(i);
-                
+            for (size_t i = 0; i < result.channels.size(); ++i) {
+                auto const & analog_series = result.channels[i];
+                std::string const channel_key = analog_key + "_ch" + std::to_string(i);
+
                 _data_manager->setData<AnalogTimeSeries>(channel_key, analog_series, TimeKey("time"));
                 total_samples += analog_series->getNumSamples();
-                
-                std::cout << "Loaded channel " << i << " with " << analog_series->getNumSamples() 
+
+                std::cout << "Loaded channel " << i << " with " << analog_series->getNumSamples()
                           << " samples as '" << channel_key << "'" << std::endl;
             }
 
             QMessageBox::information(this, tr("Import Successful"),
-                tr("Loaded %1 channels with %2 total samples from '%3'")
-                    .arg(analog_series_vec.size())
-                    .arg(total_samples)
-                    .arg(QString::fromStdString(analog_key)));
+                                     tr("Loaded %1 channels with %2 total samples from '%3'%4")
+                                             .arg(result.channels.size())
+                                             .arg(total_samples)
+                                             .arg(QString::fromStdString(analog_key))
+                                             .arg(result.tensor ? tr(" (tensor-backed)") : QString()));
 
             // Emit for the first channel (or a representative)
             emit importCompleted(QString::fromStdString(analog_key + "_ch0"), "AnalogTimeSeries");
@@ -139,7 +148,7 @@ void AnalogImport_Widget::_handleBinaryLoadRequested(BinaryAnalogLoaderOptions o
     } catch (std::exception const & e) {
         std::cerr << "Error loading binary file " << options.filepath << ": " << e.what() << std::endl;
         QMessageBox::critical(this, tr("Import Error"),
-            tr("Error loading binary file: %1").arg(QString::fromStdString(e.what())));
+                              tr("Error loading binary file: %1").arg(QString::fromStdString(e.what())));
     }
 }
 
@@ -148,13 +157,12 @@ namespace {
 struct AnalogImportRegistrar {
     AnalogImportRegistrar() {
         DataImportTypeRegistry::instance().registerType(
-            "AnalogTimeSeries",
-            ImportWidgetFactory{
-                .display_name = "Analog Time Series",
-                .create_widget = [](std::shared_ptr<DataManager> dm, QWidget * parent) {
-                    return new AnalogImport_Widget(std::move(dm), parent);
-                }
-            });
+                "AnalogTimeSeries",
+                ImportWidgetFactory{
+                        .display_name = "Analog Time Series",
+                        .create_widget = [](std::shared_ptr<DataManager> dm, QWidget * parent) {
+                            return new AnalogImport_Widget(std::move(dm), parent);
+                        }});
     }
 } analog_import_registrar;
-}
+}// namespace
