@@ -74,10 +74,16 @@ auto analogToTensor(
                    static_cast<arma::uword>(num_channels));
 
     for (std::size_t c = 0; c < num_channels; ++c) {
-        auto const & values = channels[c]->viewValues();
+        auto const& values = channels[c]->viewValues();
         assert(values.size() == num_samples);
+
         auto col = mat.col(static_cast<arma::uword>(c));
-        std::copy(values.begin(), values.end(), col.begin());
+
+        // Manually loop to avoid std::copy's iterator assignment requirements
+        std::size_t i = 0;
+        for (auto&& val : values) {
+            col(i++) = static_cast<float>(val);
+        }
     }
 
     ctx.reportProgress(70);
