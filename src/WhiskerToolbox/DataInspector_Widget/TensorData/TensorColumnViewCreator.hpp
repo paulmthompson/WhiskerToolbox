@@ -83,7 +83,7 @@ struct AnalogKeyGroup {
  */
 [[nodiscard]] auto populateTensorFromAnalogKeys(
         DataManager & dm,
-        std::string const & tensor_key,
+        const std::string& tensor_key,
         std::vector<std::string> const & analog_keys) -> bool;
 
 #endif// TENSOR_COLUMN_VIEW_CREATOR_HPP

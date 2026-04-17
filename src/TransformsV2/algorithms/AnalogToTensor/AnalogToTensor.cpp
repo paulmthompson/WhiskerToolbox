@@ -11,6 +11,7 @@
 #include "TimeFrame/TimeIndexStorage.hpp"
 #include "TransformsV2/core/ComputeContext.hpp"
 
+#include <armadillo>
 #include <cassert>
 #include <cstddef>
 #include <string>
@@ -67,16 +68,16 @@ auto analogToTensor(
         return nullptr;
     }
 
-    // Build flat row-major data: [t0_ch0, t0_ch1, ..., t1_ch0, t1_ch1, ...]
-    std::vector<float> flat_data(num_samples * num_channels);
+    // Build arma::fmat directly — each channel maps to one column.
+    // Armadillo is column-major, so writing column-by-column is contiguous and cache-friendly.
+    arma::fmat mat(static_cast<arma::uword>(num_samples),
+                   static_cast<arma::uword>(num_channels));
 
     for (std::size_t c = 0; c < num_channels; ++c) {
-        std::size_t row = 0;
-        for (float const value: channels[c]->viewValues()) {
-            flat_data[row * num_channels + c] = value;
-            ++row;
-        }
-        assert(row == num_samples);
+        auto const & values = channels[c]->viewValues();
+        assert(values.size() == num_samples);
+        auto col = mat.col(static_cast<arma::uword>(c));
+        std::copy(values.begin(), values.end(), col.begin());
     }
 
     ctx.reportProgress(70);
@@ -97,8 +98,7 @@ auto analogToTensor(
     }
 
     auto tensor = TensorData::createTimeSeries2D(
-            flat_data, num_samples, num_channels,
-            time_storage, time_frame, col_names);
+            std::move(mat), time_storage, time_frame, col_names);
 
     ctx.reportProgress(100);
 

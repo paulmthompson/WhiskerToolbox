@@ -147,6 +147,29 @@ public:
             std::vector<std::string> column_names = {});
 
     /**
+     * @brief Create a 2D time-series tensor from a pre-built Armadillo matrix
+     *
+     * Zero-copy variant: the matrix is moved directly into ArmadilloTensorStorage,
+     * avoiding row-major → column-major conversion overhead.
+     * Axes named "time" and "channel".
+     *
+     * @param matrix Armadillo float matrix (moved into storage)
+     * @param time_storage TimeIndexStorage mapping row indices to TimeFrameIndex
+     * @param time_frame Shared TimeFrame for absolute time reference (may be nullptr)
+     * @param column_names Optional column labels
+     *
+     * @pre time_storage != nullptr (enforcement: exception)
+     * @pre time_storage->size() == matrix.n_rows (enforcement: exception)
+     * @pre matrix.n_rows > 0 && matrix.n_cols > 0 (enforcement: exception)
+     * @pre column_names.empty() || column_names.size() == matrix.n_cols (enforcement: exception)
+     */
+    [[nodiscard]] static TensorData createTimeSeries2D(
+            arma::fmat matrix,
+            std::shared_ptr<TimeIndexStorage> time_storage,
+            std::shared_ptr<TimeFrame> time_frame,
+            std::vector<std::string> column_names = {});
+
+    /**
      * @brief Create a 2D tensor with interval-based rows
      *
      * Each row corresponds to an interval (e.g., trial). Uses ArmadilloTensorStorage.
@@ -420,8 +443,8 @@ public:
      * Otherwise, materializes flat data and wraps in torch::Tensor.
      */
     [[nodiscard]] TensorData toLibTorch() const;
-    
-#endif // TENSOR_BACKEND_LIBTORCH
+
+#endif// TENSOR_BACKEND_LIBTORCH
 
 
     // ========== Mutation ==========

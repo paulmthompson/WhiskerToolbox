@@ -113,11 +113,30 @@ auto discoverAnalogKeyGroups(DataManager & dm) -> std::vector<AnalogKeyGroup> {
 
 auto populateTensorFromAnalogKeys(
         DataManager & dm,
-        std::string const & tensor_key,
+        const std::string& tensor_key,
         std::vector<std::string> const & analog_keys) -> bool {
 
     if (analog_keys.empty()) {
         std::cerr << "populateTensorFromAnalogKeys: no analog keys provided\n";
+        return false;
+    }
+
+    // Verify the tensor exists
+    auto existing_tensor = dm.getData<TensorData>(tensor_key);
+    if (!existing_tensor) {
+        std::cerr << "populateTensorFromAnalogKeys: no TensorData at '"
+                  << tensor_key << "'\n";
+        return false;
+    }
+
+    // If the tensor already has a non-default TimeFrame, check that it matches
+    // the analog channels' TimeFrame
+    auto const tensor_time_key = dm.getTimeKey(tensor_key);
+    auto const analog_time_key = dm.getTimeKey(analog_keys.front());
+    if (!tensor_time_key.empty() && tensor_time_key != analog_time_key) {
+        std::cerr << "populateTensorFromAnalogKeys: TimeFrame mismatch — tensor '"
+                  << tensor_key << "' uses TimeKey '" << tensor_time_key
+                  << "' but analog channels use '" << analog_time_key << "'\n";
         return false;
     }
 
@@ -147,8 +166,7 @@ auto populateTensorFromAnalogKeys(
         return false;
     }
 
-    auto const time_key = dm.getTimeKey(analog_keys.front());
-    dm.setData<TensorData>(tensor_key, new_tensor, time_key);
+    dm.setData<TensorData>(tensor_key, new_tensor, analog_time_key);
 
     return true;
 }

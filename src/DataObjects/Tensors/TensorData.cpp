@@ -172,6 +172,43 @@ TensorData TensorData::createTimeSeries2D(
 }
 
 // =============================================================================
+// Factory: createTimeSeries2D (arma::fmat overload)
+// =============================================================================
+
+TensorData TensorData::createTimeSeries2D(
+        arma::fmat matrix,
+        std::shared_ptr<TimeIndexStorage> time_storage,
+        std::shared_ptr<TimeFrame> time_frame,
+        std::vector<std::string> column_names) {
+    if (!time_storage) {
+        throw std::invalid_argument(
+                "TensorData::createTimeSeries2D: time_storage must not be null");
+    }
+    auto const n_rows = static_cast<std::size_t>(matrix.n_rows);
+    auto const n_cols = static_cast<std::size_t>(matrix.n_cols);
+    if (time_storage->size() != n_rows) {
+        throw std::invalid_argument(
+                "TensorData::createTimeSeries2D: time_storage size (" +
+                std::to_string(time_storage->size()) +
+                ") must match matrix rows (" + std::to_string(n_rows) + ")");
+    }
+
+    DimensionDescriptor dims{{{"time", n_rows},
+                              {"channel", n_cols}}};
+    if (!column_names.empty()) {
+        dims.setColumnNames(std::move(column_names));
+    }
+
+    RowDescriptor rows = RowDescriptor::fromTimeIndices(
+            std::move(time_storage), time_frame);
+
+    auto storage = TensorStorageWrapper{ArmadilloTensorStorage{std::move(matrix)}};
+
+    return TensorData{std::move(dims), std::move(rows),
+                      std::move(storage), std::move(time_frame)};
+}
+
+// =============================================================================
 // Factory: createFromIntervals
 // =============================================================================
 

@@ -22,6 +22,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QPointer>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -305,10 +306,18 @@ void TensorInspector::_onPopulateFromAnalog() {
         return;
     }
 
-    auto const & group = _cached_groups[static_cast<std::size_t>(idx)];
+    // Copy all member data to locals before calling into DataManager.
+    // setData() triggers observer notifications that can destroy this widget.
+    auto const tensor_key = _active_key;
+    auto const group = _cached_groups[static_cast<std::size_t>(idx)];
+    auto dm = dataManager();
+    QPointer<TensorInspector> const guard(this);
 
-    auto const success = populateTensorFromAnalogKeys(
-            *dataManager(), _active_key, group.keys);
+    auto const success = populateTensorFromAnalogKeys(*dm, tensor_key, group.keys);
+
+    if (!guard) {
+        return;// 'this' was destroyed during observer notification
+    }
 
     if (success) {
         QMessageBox::information(this, QStringLiteral("Success"),

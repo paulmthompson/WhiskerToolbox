@@ -83,6 +83,31 @@ Keys without an underscore (or with `_` only at position 0) are excluded.
 | `TensorInspector.cpp` | UI section with combo box, refresh/populate buttons, visibility toggling |
 | `test_tensor_column_views.test.cpp` | Tests for group discovery and tensor population |
 
+### Lifetime Safety
+
+`_onPopulateFromAnalog()` calls `DataManager::setData()`, which triggers observer
+notifications that can destroy the `TensorInspector` widget (the properties widget
+recreates inspectors when the inspected key changes). To prevent use-after-free:
+
+- All member data (`_active_key`, group keys) is copied to locals before the call.
+- `populateTensorFromAnalogKeys()` takes `tensor_key` **by value** (not by reference).
+- A `QPointer<TensorInspector>` guard detects destruction; if triggered, the slot returns
+  without accessing `this`.
+
+### TimeFrame Validation
+
+`populateTensorFromAnalogKeys()` checks that the target tensor's existing `TimeKey`
+(if non-empty) matches the source analog channels' `TimeKey`. This prevents
+accidentally overwriting a tensor that lives in a different temporal coordinate system.
+
+### Performance
+
+`analogToTensor()` builds an `arma::fmat` directly column-by-column. Each analog
+channel maps to one Armadillo column (contiguous memory), so the copy is
+cache-friendly with zero intermediate allocation. The matrix is moved into
+`TensorData::createTimeSeries2D(arma::fmat, ...)` — no row-major-to-column-major
+conversion is needed.
+
 ### Section Visibility
 
 `_updateSectionVisibility()` checks `TensorData::isEmpty()` and toggles:
