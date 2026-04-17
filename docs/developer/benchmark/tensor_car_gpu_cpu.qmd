@@ -1,0 +1,153 @@
+---
+title: "TensorCAR: GPU vs CPU Benchmark Analysis"
+format: html
+date: 2026-04-17
+---
+
+This document records the results of an ad-hoc benchmark comparing three backends
+for the Common Average Reference (CAR) transform on multi-channel neural recordings.
+The goal was to determine whether adding a GPU (LibTorch CUDA) path to the existing
+Armadillo-based `TensorCAR` transform is worthwhile, and to identify the crossover
+points and optimal block sizes.
+
+## Hardware
+
+| Component | Specification |
+|-----------|---------------|
+| CPU       | 6 cores / 12 threads @ 2904 MHz |
+| L3 Cache  | 12 MiB |
+| GPU       | NVIDIA (CUDA-capable, tested via LibTorch) |
+
+## Backends Tested
+
+- **Armadillo CPU** — Current production path. Column-major storage, single-threaded.
+- **LibTorch CPU** — Row-major tensor, multi-threaded via OpenMP/TBB thread pool.
+- **LibTorch CUDA** — Row-major tensor on GPU.
+
+## Key Results: Mean-CAR (384 channels)
+
+Mean-CAR computes the row-wise mean across all channels and subtracts it from each channel.
+This is memory-bandwidth-bound on all backends.
+
+| Rows | Armadillo | Torch CPU | Torch CUDA | GPU speedup vs best CPU |
+|------|-----------|-----------|------------|-------------------------|
+| 1k   | 122 µs    | 47.7 µs   | 73.2 µs    | GPU slower              |
+| 10k  | 3,606 µs  | 2,119 µs  | 209 µs     | **10×**                 |
+| 30k  | 11,419 µs | 7,516 µs  | 502 µs     | **15×**                 |
+| 100k | —         | 24,708 µs | 1,809 µs   | **14×**                 |
+| 300k | —         | 69,441 µs | 4,433 µs   | **16×**                 |
+| 900k | —         | 218,515 µs| 12,928 µs  | **17×**                 |
+
+GPU throughput reaches ~100 Gi/s at 300k+ rows, plateauing near PCIe/memory bandwidth limits.
+
+## Key Results: Median-CAR (384 channels)
+
+Median-CAR is significantly more expensive because it requires sorting each row.
+
+| Rows | Armadillo | Torch CPU | Torch CUDA | GPU speedup vs best CPU |
+|------|-----------|-----------|------------|-------------------------|
+| 1k   | 3,892 µs  | 1,095 µs  | 130 µs     | **8.4×**                |
+| 10k  | 45,903 µs | 11,382 µs | 822 µs     | **14×**                 |
+| 30k  | 126,519 µs| 32,322 µs | 2,345 µs   | **14×**                 |
+| 900k | —         | 1,020,080 µs | 67,411 µs | **15×**               |
+
+Median-CAR shows a GPU win even at 1k rows because the per-row sort is compute-heavy
+enough to overcome kernel launch overhead.
+
+## Transfer Overhead
+
+Data must be copied between CPU and GPU memory. At 900k × 384 channels (1.4 GB):
+
+- **CPU → GPU:** ~192 ms
+- **GPU → CPU:** ~275 ms
+
+Transfer saturates PCIe at ~7 Gi/s. For a single CAR operation, transfer dominates at
+large block sizes (e.g., 900k rows: 467 ms transfer vs 13 ms compute for mean-CAR).
+This means GPU acceleration is most effective when:
+
+1. Data is already on the GPU (chained transforms), or
+2. The compute cost exceeds transfer cost (always true for median-CAR, true for mean-CAR at 10k+ rows).
+
+## Recommended GPU Block Size
+
+Based on throughput curves, **100,000 rows** is the recommended default `gpu_block_hint`:
+
+- At 30 kHz sampling, this is ~3.3 seconds of data
+- Memory footprint: ~153 MB at 384 channels
+- Achieves 80–95% of peak GPU throughput for both mean and median
+- Large enough to amortize kernel launch overhead, small enough for reasonable memory use
+
+## Threading and Time-Domain Parallelism
+
+CAR is embarrassingly parallel across time (rows). Each row's reduction across channels
+is independent. Controlled experiments with `OMP_NUM_THREADS` confirmed:
+
+| Backend | 1 thread | 6 threads | Speedup | Notes |
+|---------|----------|-----------|---------|-------|
+| Armadillo Mean  | 11.8 ms | 11.3 ms | **1.0×** | Not threaded |
+| Torch CPU Mean  | 10.5 ms | 7.3 ms  | **1.4×** | Bandwidth-limited |
+| Armadillo Median| 129 ms  | 126 ms  | **1.0×** | Not threaded |
+| Torch CPU Median| 147 ms  | 35 ms   | **4.2×** | Near-linear scaling |
+
+*All measurements at 30k × 384.*
+
+Key findings:
+
+- **Armadillo** does not parallelize `arma::mean(mat, 1)` or `arma::median(mat, 1)` across rows.
+  `OMP_NUM_THREADS` has no effect.
+- **LibTorch CPU** uses its internal thread pool (ATen `parallel_for`). The effect is dramatic
+  for median (4.2× from 6 cores) because the per-row sort is expensive and independent.
+  Mean shows modest gains because it is memory-bandwidth-bound.
+- **LibTorch CUDA** parallelizes most aggressively — every row gets its own warp(s).
+  More rows = more thread blocks = better SM utilization, which is why throughput climbs
+  with row count.
+- LibTorch auto-detects available cores. No environment variables need to be set at runtime.
+  Use `torch::set_num_threads(N)` for programmatic control if needed.
+
+## In-Place vs Out-of-Place
+
+Benchmarks comparing in-place (`sub_()`) vs out-of-place (`input - ref`) at 30k × 384:
+
+| Variant | Armadillo | Torch CPU | Torch CUDA |
+|---------|-----------|-----------|------------|
+| Out-of-place | 11,419 µs | 7,516 µs | 502 µs |
+| In-place (+clone) | 11,303 µs | 10,889 µs | 801 µs |
+
+The in-place variants are **not faster** when the original must be preserved (both paths
+do one full copy). LibTorch out-of-place is actually faster because `input - ref` fuses
+allocation and write into a single streamed pass, while `clone() + sub_()` requires a
+read-modify-write on the same buffer.
+
+**The real savings are in the production code path**, which currently performs 2–3 unnecessary
+full-matrix copies:
+
+1. `result_mat = input_mat` — copy entire matrix (153 MB)
+2. `matToFlat(result_mat)` — column-major to row-major conversion (153 MB)
+3. `TensorData::createTimeSeries2D(flat)` — copy into new storage (153 MB)
+
+A LibTorch-native path where TensorData operates directly on `torch::Tensor` would
+eliminate all of these copies. Combined with in-place transform support in the pipeline
+(where the original doesn't need to be preserved), this would reduce memory traffic from
+~460 MB to near zero for a 384ch × 100k block.
+
+## Architecture Implications
+
+Adding GPU support to `TensorCAR` does not require coupling TransformsV2 to the
+DeepLearning module. The recommended approach:
+
+- Add conditional `find_package(Torch QUIET)` directly to the TransformsV2 CMakeLists.txt
+- Use `torch::cuda::is_available()` inline — no `DeviceManager` sharing needed
+- Both TransformsV2 and DeepLearning submit to the same CUDA context, which handles
+  concurrent kernels correctly
+
+For in-place transform support, the TransformsV2 pipeline would need:
+
+1. A parallel registration path accepting `(Container&, Params, Context) → void`
+2. A `supports_in_place` metadata flag on `ContainerTransformMetadata`
+3. Pipeline executor logic: when `output_key == input_key` and the transform supports
+   in-place, pass a mutable reference and skip reallocation
+
+## Benchmark Code
+
+The ad-hoc benchmark is in `benchmark/adhoc/tensor_car_gpu_cpu.cpp`. It is throwaway
+code for design comparison and is not part of the regression benchmark suite.

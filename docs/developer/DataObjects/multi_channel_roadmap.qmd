@@ -194,28 +194,142 @@ Both follow the `TensorCAR` transform pattern (container transform,
 
 ### 4. GPU-Accelerated Processing {#sec-gpu}
 
-**Priority: Low** — Since all cross-channel transforms already use LibTorch
-as the compute backend, GPU acceleration is a matter of device placement
-rather than a new code path.
+::: {.callout-note}
+**Status: Benchmarked.** Ad-hoc benchmarks confirmed large GPU speedups for
+CAR transforms. See
+[TensorCAR GPU vs CPU Benchmark Analysis](../benchmark/tensor_car_gpu_cpu.qmd)
+for full results. Implementation is next.
+:::
+
+#### Benchmark Summary
+
+Ad-hoc benchmarks compared Armadillo CPU, LibTorch CPU, and LibTorch CUDA for
+mean-CAR and median-CAR across channel counts (32–384) and block sizes
+(1k–900k rows). Key findings at 384 channels:
+
+| Transform | Armadillo (30k rows) | Torch CPU | Torch CUDA | GPU speedup |
+|-----------|---------------------|-----------|------------|-------------|
+| Mean-CAR  | 11.4 ms             | 7.5 ms    | 0.5 ms     | **15×**     |
+| Median-CAR| 126.5 ms            | 32.3 ms   | 2.3 ms     | **14×**     |
+
+- **GPU crossover:** Mean-CAR wins above ~5k rows. Median-CAR wins even at 1k
+  rows because the per-row sort is compute-heavy.
+- **Threading:** Armadillo is single-threaded for these reductions. LibTorch CPU
+  parallelizes across rows using its thread pool (4.2× speedup for median on 6 cores).
+  LibTorch CUDA parallelizes most aggressively with one warp per row.
+- **Transfer overhead:** CPU↔GPU copies saturate PCIe at ~7 Gi/s. At 900k × 384
+  (1.4 GB), transfer takes ~467 ms vs 13 ms compute. GPU wins when data is
+  already on-device or the compute exceeds the transfer cost.
+- **Recommended `gpu_block_hint`:** 100,000 rows (~3.3 s at 30 kHz, 153 MB at
+  384 channels). Achieves 80–95% peak GPU throughput.
+
+#### Production Code Copy Overhead
+
+The current Armadillo-based `TensorCAR` performs 2–3 unnecessary full-matrix
+copies per invocation:
+
+1. `arma::fmat result_mat = input_mat` — full copy ($N \times C \times 4$ bytes)
+2. `matToFlat(result_mat)` — column-major to row-major conversion (another full copy)
+3. `TensorData::createTimeSeries2D(flat)` — copy into new storage (third full copy)
+
+For 384 channels × 100k rows (153 MB per copy), this wastes ~460 MB of memory
+bandwidth. The subtraction itself (`each_col() -= ref`) is in-place on the
+first copy — the overhead is entirely in format conversion and storage creation.
+
+#### Implementation Plan
+
+The GPU path decomposes into three sub-phases that can be landed independently.
+
+##### Phase 4a: Eliminate Armadillo Copy Overhead (CPU-only improvement)
+
+Reduce the Armadillo path from 3 copies to 1 by operating on row-major data
+directly. No GPU or LibTorch dependency needed.
+
+**Changes:**
+
+| File | Change |
+|------|--------|
+| `TensorCAR.cpp` | Replace `matToFlat()` round-trip. Compute `ref_col`, then write the subtracted result directly into a flat `std::vector<float>` in row-major order in a single pass, avoiding the intermediate `arma::fmat` copy. |
+| `TensorCAR.cpp` | Use `std::move(flat)` into `TensorData::createTimeSeries2D()` to eliminate the final copy. |
+
+**Expected savings:** ~306 MB eliminated (2 of 3 copies) at 384ch × 100k.
+
+##### Phase 4b: LibTorch Compute Path for TensorCAR
+
+Add an optional LibTorch backend to `TensorCAR` that uses `toLibTorch()` for
+the computation, keeping the data in `torch::Tensor` row-major format throughout.
+
+**Architecture:** Add conditional `find_package(Torch QUIET)` to the
+TransformsV2 `CMakeLists.txt`. No dependency on the `DeepLearning` module or
+`DeviceManager` — use `torch::cuda::is_available()` inline for device selection.
+Both modules submit to the same CUDA context.
+
+**Changes:**
+
+| File | Change |
+|------|--------|
+| `src/TransformsV2/CMakeLists.txt` | Conditional `find_package(Torch QUIET)`. Add `TENSOR_TRANSFORMS_LIBTORCH_AVAILABLE` compile definition. |
+| `TensorCARParams` | Add `use_gpu` behavior: `false` = Armadillo, `true` = LibTorch (CUDA if available, CPU fallback). |
+| `TensorCAR.cpp` | New `#ifdef` path: `input.toLibTorch()` → `.to(device)` → `mean/median(dim=1)` → `input - ref` → download → `TensorData`. |
+
+**Compute path (LibTorch, no transfer overhead measured):**
+
+```
+input.toLibTorch()          // zero-copy stride view (existing)
+  → .to(torch::kCUDA)       // upload once
+  → .mean(1, true)           // compute ref on GPU
+  → input - ref              // fused subtract + allocate on GPU
+  → .to(torch::kCPU)         // download once
+  → TensorData from flat     // single copy into storage
+```
+
+Total: 1 upload + 1 download + 1 storage copy (vs 3 copies in current path).
+
+##### Phase 4c: In-Place Transform Support
+
+Eliminate the final storage copy by allowing transforms to mutate their input.
+This benefits both CPU and GPU paths.
+
+**TransformsV2 plumbing changes:**
+
+| File | Change |
+|------|--------|
+| `ContainerTransformMetadata` | Add `bool supports_in_place = false` flag. |
+| `ElementRegistry.hpp` | Add `registerContainerTransformInPlace()` accepting `(Container&, Params, Ctx) → void` signature. |
+| `DataManagerIntegration.cpp` | In `executeStep()`: when `output_key == input_key` and `supports_in_place`, resolve the existing `shared_ptr`, call the in-place variant, then notify observers without replacing the pointer. |
+
+**TensorCAR in-place variant:**
+
+```cpp
+void tensorCARInPlace(TensorData& data, TensorCARParams const& params,
+                      ComputeContext const& ctx);
+```
+
+This mutates the `TensorData`'s internal storage directly (via `setData()`
+or a mutable Armadillo/LibTorch accessor), avoiding all output allocation.
+
+**Savings:** Eliminates the remaining storage copy from Phase 4b, bringing
+total copy overhead to: 1 upload + 1 download (GPU) or 0 copies (CPU in-place).
 
 #### Temporal Block Processing for Large Datasets
 
 When a dataset exceeds GPU memory, process it in temporal blocks:
 
-1. Iterate over time in chunks of $B$ samples.
-2. For each chunk: extract `TensorData` slice → `toLibTorch()` →
-   `DeviceManager::instance().toDevice()` → compute → download result.
-3. Concatenate results.
+1. Iterate over time in chunks of $B$ samples (default $B = 100{,}000$).
+2. For each chunk: `toLibTorch()` → `.to(kCUDA)` → compute → `.to(kCPU)` →
+   write back.
+3. Concatenate results (or write in-place per block).
 
-This reuses existing transform code unmodified — the batching logic wraps
-the transform.
+This wraps any transform — no per-transform batching code needed.
 
-#### Benchmarks Needed
+#### Benchmarks Completed
 
-- GPU vs CPU CAR on 384 channels × 30,000 samples.
-- GPU vs CPU whitening.
-- Block upload/download overhead measurement.
-- Determine the crossover point where GPU becomes faster than CPU.
+- ✅ GPU vs CPU CAR on 384 channels × 1k–900k samples.
+- ✅ Block upload/download overhead measurement (PCIe ~7 Gi/s).
+- ✅ GPU crossover point determination (mean: ~5k rows, median: always).
+- ✅ Threading analysis (Armadillo single-threaded, LibTorch multi-threaded).
+- ✅ In-place vs out-of-place allocation overhead (negligible when original preserved).
+- ⬚ GPU vs CPU whitening (requires §3 ZCA implementation).
 
 ---
 
@@ -233,7 +347,9 @@ Cross-Channel Transforms (§3)
   └── IIR Filter (#246): ready now (uses Armadillo columns ✓)
 
 GPU Acceleration (§4)
-  └── Requires §3 transforms to exist
+  ├── §4a: Eliminate Armadillo copy overhead (no dependencies)
+  ├── §4b: LibTorch compute path (depends on §4a for clean baseline)
+  └── §4c: In-place transform support (independent of §4a/§4b, benefits both)
 ```
 
 ## Excluded Scope
