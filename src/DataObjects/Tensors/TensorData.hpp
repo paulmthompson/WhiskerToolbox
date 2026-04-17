@@ -489,6 +489,22 @@ public:
      */
     [[nodiscard]] TensorData toLibTorch() const;
 
+    /**
+     * @brief Convert to LibTorch-backed tensor without making contiguous.
+     *
+     * For Armadillo 2D storage, returns a non-contiguous tensor with
+     * column-major strides that shares the Armadillo buffer (the returned
+     * TensorData keeps the source alive via its storage).  Callers that
+     * will immediately upload to GPU should prefer this over toLibTorch()
+     * because `.to(device).contiguous()` performs the transpose on GPU
+     * memory bandwidth instead of CPU.
+     *
+     * Falls back to toLibTorch() for 1D, 3D, or non-Armadillo storage.
+     *
+     * @pre storage is valid
+     */
+    [[nodiscard]] TensorData toLibTorchStrided() const;
+
 #endif// TENSOR_BACKEND_LIBTORCH
 
 

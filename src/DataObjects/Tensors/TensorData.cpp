@@ -776,6 +776,60 @@ generic_path:
                       _time_frame};
 }
 
+TensorData TensorData::toLibTorchStrided() const {
+    // Already LibTorch-backed? Return shallow copy (same as toLibTorch).
+    if (_storage.isValid() &&
+        _storage.getStorageType() == TensorStorageType::LibTorch) {
+        return *this;
+    }
+
+    if (!_storage.isValid()) {
+        throw std::logic_error("TensorData::toLibTorchStrided: empty tensor");
+    }
+
+    // Only the Armadillo 2D case benefits from a strided (non-contiguous)
+    // tensor.  The caller can then do .to(device).contiguous() to perform
+    // the column-major → row-major transpose on GPU bandwidth.
+    if (auto const * arma = _storage.getAsChecked<ArmadilloTensorStorage>(
+                TensorStorageType::Armadillo);
+        arma && arma->ndim() == 2) {
+
+        auto const & mat = arma->matrix();
+
+        // Non-owning view with column-major strides.  The returned
+        // TensorData keeps _storage alive (shared_ptr in wrapper),
+        // so the Armadillo buffer remains valid.
+        auto t = torch::from_blob(
+                const_cast<float *>(mat.memptr()),
+                {static_cast<int64_t>(mat.n_rows),
+                 static_cast<int64_t>(mat.n_cols)},
+                {1, static_cast<int64_t>(mat.n_rows)},
+                torch::kFloat32);
+
+        // Build output TensorData that shares the Armadillo memory
+        auto s = _dimensions.shape();
+        std::vector<AxisDescriptor> axes;
+        axes.reserve(s.size());
+        for (std::size_t i = 0; i < s.size(); ++i) {
+            axes.push_back(_dimensions.axis(i));
+        }
+        DimensionDescriptor dims{axes};
+        if (_dimensions.hasColumnNames()) {
+            dims.setColumnNames(
+                    std::vector<std::string>(_dimensions.columnNames().begin(),
+                                             _dimensions.columnNames().end()));
+        }
+
+        return TensorData{std::move(dims), _rows,
+                          TensorStorageWrapper{LibTorchTensorStorage{std::move(t)}},
+                          _time_frame};
+    }
+
+    // Fallback: 1D, 3D, or non-Armadillo storage → use toLibTorch() which
+    // produces a contiguous tensor.
+    return toLibTorch();
+}
+
 #endif// TENSOR_BACKEND_LIBTORCH
 
 // =============================================================================

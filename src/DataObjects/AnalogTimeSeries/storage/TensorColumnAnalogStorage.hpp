@@ -139,10 +139,13 @@ private:
     float const * _col_ptr = nullptr;
 
     /**
-     * @brief Cache the raw column pointer if the tensor has Armadillo storage.
+     * @brief Cache the raw column pointer for fast contiguous access.
      *
-     * Armadillo uses column-major layout, so colptr(c) gives a contiguous
-     * block of numRows() floats for column c.
+     * Armadillo (column-major): colptr(c) gives a contiguous block directly.
+     * For non-Armadillo backends, _col_ptr stays nullptr and element access
+     * falls through to TensorData::at(). Callers that need fast column
+     * access from non-Armadillo tensors should convert to Armadillo
+     * (via TensorData::toArmadillo()) before constructing column views.
      */
     void _cacheColumnPointer() {
         auto const * arma_storage = _tensor->storage().getAsChecked<ArmadilloTensorStorage>(

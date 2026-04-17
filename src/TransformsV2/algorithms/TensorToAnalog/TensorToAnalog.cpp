@@ -65,12 +65,11 @@ auto tensorToAnalog(
     auto time_frame = input.getTimeFrame();
 
     // Create a shared_ptr<TensorData const> for the storage views to keep alive.
-    // We take the address of the input reference; the caller must ensure the
-    // TensorData outlives the returned AnalogTimeSeries views. To guarantee
-    // this, we create a shared_ptr with a no-op deleter (the caller owns the
-    // TensorData) OR the caller can pass a shared_ptr externally.
-    // For safety, copy the tensor into a shared_ptr so views are self-contained.
-    auto tensor_ptr = std::make_shared<TensorData>(input);
+    // Convert to Armadillo (column-major) if needed so TensorColumnAnalogStorage
+    // gets contiguous column access via colptr(). For Armadillo-backed input
+    // this is a cheap copy of the shared_ptr; for LibTorch/Dense backends
+    // this is a single matrix-wide conversion shared by all column views.
+    auto tensor_ptr = std::make_shared<TensorData>(input.toArmadillo());
 
     // Resolve time storage
     std::shared_ptr<TimeIndexStorage> time_storage;

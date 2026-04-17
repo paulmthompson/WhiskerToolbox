@@ -77,7 +77,7 @@ auto createTensorColumnViews(
         }
 
         auto key = prefix;
-        key += "/";
+        key += "_";
         key += suffix;
         dm.setData<AnalogTimeSeries>(key, views[i], time_key);
         ++count;

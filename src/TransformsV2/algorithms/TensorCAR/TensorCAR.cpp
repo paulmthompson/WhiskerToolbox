@@ -26,8 +26,6 @@
 #pragma push_macro("CHECK")
 #include <torch/torch.h>
 #pragma pop_macro("CHECK")
-
-#include <c10/cuda/CUDACachingAllocator.h>
 #endif
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
@@ -117,34 +115,50 @@ auto tensorCARLibTorch(
 
     auto const num_cols = input.numColumns();
 
-    // Get the torch::Tensor — zero-copy if already LibTorch-backed,
-    // otherwise toLibTorch() does a single strided copy.
+    // Obtain a torch::Tensor from the input.
+    // If already LibTorch-backed, use it directly (zero-copy handle).
+    // For CUDA: use toLibTorchStrided() to get a non-contiguous column-major
+    // view, then upload + make contiguous on GPU (transpose at ~900 GB/s GPU
+    // bandwidth instead of ~30 GB/s CPU bandwidth).
+    // For CPU: use toLibTorch() which returns a contiguous row-major tensor.
     auto const * lt_storage =
             input.storage().getAsChecked<LibTorchTensorStorage>(
                     TensorStorageType::LibTorch);
 
     // Keep converted TensorData alive if we need to create one
     std::optional<TensorData> converted;
-    if (!lt_storage) {
+    torch::Tensor t;
+
+    auto device = torch::kCPU;
+    bool const cuda_available = use_cuda && torch::cuda::is_available();
+    if (use_cuda && !cuda_available) {
+        ctx.logMessage("TensorCAR: CUDA not available; using LibTorch CPU");
+    }
+
+    if (lt_storage) {
+        // Already LibTorch-backed — zero-copy handle
+        t = lt_storage->tensor();
+        if (cuda_available) {
+            device = torch::kCUDA;
+            t = t.to(device);
+        }
+    } else if (cuda_available) {
+        // Armadillo/Dense → strided column-major view → upload to GPU →
+        // make contiguous on GPU (transpose runs on GPU memory bandwidth).
+        device = torch::kCUDA;
+        converted.emplace(input.toLibTorchStrided());
+        lt_storage = converted->storage().getAsChecked<LibTorchTensorStorage>(
+                TensorStorageType::LibTorch);
+        assert(lt_storage && "toLibTorchStrided() must produce LibTorchTensorStorage");
+        t = lt_storage->tensor().to(device).contiguous();
+        ctx.logMessage("TensorCAR: Using CUDA device");
+    } else {
+        // CPU path: contiguous row-major tensor
         converted.emplace(input.toLibTorch());
         lt_storage = converted->storage().getAsChecked<LibTorchTensorStorage>(
                 TensorStorageType::LibTorch);
         assert(lt_storage && "toLibTorch() must produce LibTorchTensorStorage");
-    }
-
-    // t is read-only — subtraction creates a new tensor, no clone needed
-    torch::Tensor t = lt_storage->tensor();
-
-    ctx.reportProgress(10);
-
-    // Select device
-    auto device = torch::kCPU;
-    if (use_cuda && torch::cuda::is_available()) {
-        device = torch::kCUDA;
-        t = t.to(device);
-        ctx.logMessage("TensorCAR: Using CUDA device");
-    } else if (use_cuda) {
-        ctx.logMessage("TensorCAR: CUDA not available; using LibTorch CPU");
+        t = lt_storage->tensor();
     }
 
     ctx.reportProgress(20);
@@ -202,17 +216,14 @@ auto tensorCARLibTorch(
     if (result.device().type() == torch::kCUDA) {
         result = result.to(torch::kCPU);
 
-        // Release intermediate CUDA tensors before flushing the cache
+        // Release intermediate CUDA tensor handles so the caching allocator
+        // can reuse the GPU memory on subsequent transforms.
         t.reset();
         ref.reset();
-
-        // LibTorch's CUDA caching allocator holds freed GPU memory for reuse.
-        // Flush it so the memory is returned to the OS immediately.
-        c10::cuda::CUDACachingAllocator::emptyCache();
+        // NOTE: Do NOT call emptyCache() here. The caching allocator reuses
+        // freed blocks instantly; flushing forces expensive cudaMalloc on
+        // the next run (5-15s for multi-GB allocations).
     }
-
-    // Ensure contiguous row-major layout
-    result = result.contiguous();
 
     // Preserve column names
     auto const & src_col_names = input.columnNames();
