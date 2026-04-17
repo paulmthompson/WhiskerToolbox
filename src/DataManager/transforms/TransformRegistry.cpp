@@ -6,8 +6,8 @@
 #include "transforms/AnalogTimeSeries/Analog_Interval_Peak/analog_interval_peak.hpp"
 #include "transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp"
-#include "transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "transforms/DigitalIntervalSeries/Digital_Interval_Boolean/digital_interval_boolean.hpp"
+#include "transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "transforms/Lines/Line_Alignment/line_alignment.hpp"
 #include "transforms/Lines/Line_Angle/line_angle.hpp"
 #include "transforms/Lines/Line_Base_Flip/line_base_flip.hpp"
@@ -15,16 +15,16 @@
 #include "transforms/Lines/Line_Curvature/line_curvature.hpp"
 #include "transforms/Lines/Line_Group_To_Intervals/line_group_to_intervals.hpp"
 #include "transforms/Lines/Line_Index_Grouping/line_index_grouping.hpp"
+#include "transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
 #include "transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
+#include "transforms/Lines/Line_Outlier_Detection/line_outlier_detection.hpp"
 #include "transforms/Lines/Line_Point_Extraction/line_point_extraction.hpp"
 #include "transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
-#include "transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
-#include "transforms/Lines/Line_Outlier_Detection/line_outlier_detection.hpp"
 #include "transforms/Lines/Line_Resample/line_resample.hpp"
 #include "transforms/Lines/Line_Subsegment/line_subsegment.hpp"
-#include "transforms/Points/Point_Particle_Filter/point_particle_filter.hpp"
 #include "transforms/Masks/Mask_Area/mask_area.hpp"
 #include "transforms/Masks/Mask_Centroid/mask_centroid.hpp"
+#include "transforms/Masks/Mask_Cleaning/mask_cleaning.hpp"
 #include "transforms/Masks/Mask_Connected_Component/mask_connected_component.hpp"
 #include "transforms/Masks/Mask_Hole_Filling/mask_hole_filling.hpp"
 #include "transforms/Masks/Mask_Median_Filter/mask_median_filter.hpp"
@@ -32,6 +32,7 @@
 #include "transforms/Masks/Mask_Skeletonize/mask_skeletonize.hpp"
 #include "transforms/Masks/Mask_To_Line/mask_to_line.hpp"
 #include "transforms/Media/whisker_tracing.hpp"
+#include "transforms/Points/Point_Particle_Filter/point_particle_filter.hpp"
 
 #include <iostream>// For init messages
 #include <map>
@@ -49,6 +50,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<MaskAreaOperation>());
     _registerOperation(std::make_unique<MaskCentroidOperation>());
     _registerOperation(std::make_unique<MaskConnectedComponentOperation>());
+    _registerOperation(std::make_unique<MaskCleaningOperation>());
     _registerOperation(std::make_unique<MaskHoleFillingOperation>());
     _registerOperation(std::make_unique<MaskMedianFilterOperation>());
     _registerOperation(std::make_unique<MaskPrincipalAxisOperation>());

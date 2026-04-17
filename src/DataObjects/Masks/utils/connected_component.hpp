@@ -55,5 +55,25 @@ std::vector<uint8_t> remove_small_clusters(std::vector<uint8_t> const & image, I
  */
 Image remove_small_clusters(Image const & input_image, int threshold);
 
+/**
+ * @brief Keeps only the K largest or K smallest foreground connected components (8-connectivity).
+ *
+ * @param image Binary foreground mask (row-major)
+ * @param image_size Image dimensions
+ * @param keep_count How many components to retain per frame (values below 1 are treated as 1)
+ * @param keep_largest If true, keep the largest components by pixel count; otherwise the smallest
+ *
+ * @pre image.size() must equal image_size.width * image_size.height
+ */
+std::vector<uint8_t> keep_ranked_clusters(
+        std::vector<uint8_t> const & image,
+        ImageSize image_size,
+        int keep_count,
+        bool keep_largest);
+
+/**
+ * @brief Image overload for keep_ranked_clusters
+ */
+Image keep_ranked_clusters(Image const & input_image, int keep_count, bool keep_largest);
 
 #endif//WHISKERTOOLBOX_CONNECTED_COMPONENT_HPP

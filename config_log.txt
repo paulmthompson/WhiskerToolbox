@@ -1,0 +1,20 @@
+-- CapnProto support: ENABLED
+-- HDF5 support: ENABLED
+-- FFmpeg support: ENABLED
+-- Python vcpkg ENABLED
+-- OpenCV support: ENABLED
+-- UI support: ENABLED
+-- Tensor backend: LibTorch (deep learning enabled)
+-- OR-Tools support: DISABLED
+-- Fuzz testing: DISABLED
+-- VCPKG_MANIFEST_FEATURES: capnproto;hdf5;ffmpeg;bundlepython;ui
+CMake Error at /opt/homebrew/share/cmake/Modules/CMakeDetermineSystem.cmake:159 (message):
+  Could not find toolchain file:
+
+   "/scripts/buildsystems/vcpkg.cmake"
+Call Stack (most recent call first):
+  CMakeLists.txt:106 (project)
+
+
+CMake Error: CMake was unable to find a build program corresponding to "Ninja".  CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build tool.
+-- Configuring incomplete, errors occurred!
