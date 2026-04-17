@@ -652,7 +652,54 @@ TensorData TensorData::toArmadillo() const {
         return *this;
     }
 
-    // Materialize and convert
+#ifdef TENSOR_BACKEND_LIBTORCH
+    // Fast path: LibTorch 2D → Armadillo without intermediate std::vector.
+    // LibTorch is row-major, Armadillo is column-major.  We read directly
+    // from the torch::Tensor data pointer into the arma::fmat, performing
+    // the transpose in a single pass and avoiding the 128 MB intermediate
+    // flat vector that materialize() → materializeFlat() would create.
+    if (_storage.isValid() &&
+        _storage.getStorageType() == TensorStorageType::LibTorch &&
+        _dimensions.ndim() == 2) {
+
+        auto const * lt = _storage.getAsChecked<LibTorchTensorStorage>(
+                TensorStorageType::LibTorch);
+        if (lt && lt->isCpu()) {
+            auto t = lt->tensor().contiguous();
+            auto const * src = t.data_ptr<float>();
+            auto const num_rows = static_cast<std::size_t>(t.size(0));
+            auto const num_cols = static_cast<std::size_t>(t.size(1));
+
+            arma::fmat mat(num_rows, num_cols);
+            for (std::size_t r = 0; r < num_rows; ++r) {
+                for (std::size_t c = 0; c < num_cols; ++c) {
+                    mat(r, c) = src[r * num_cols + c];
+                }
+            }
+
+            auto storage = TensorStorageWrapper{
+                    ArmadilloTensorStorage{std::move(mat)}};
+
+            // Preserve dimensions and metadata
+            auto s = _dimensions.shape();
+            std::vector<AxisDescriptor> axes;
+            axes.reserve(s.size());
+            for (std::size_t i = 0; i < s.size(); ++i) {
+                axes.push_back(_dimensions.axis(i));
+            }
+            DimensionDescriptor dims{axes};
+            if (_dimensions.hasColumnNames()) {
+                dims.setColumnNames(
+                        std::vector<std::string>(_dimensions.columnNames().begin(),
+                                                 _dimensions.columnNames().end()));
+            }
+
+            return TensorData{std::move(dims), _rows, std::move(storage), _time_frame};
+        }
+    }
+#endif
+
+    // Generic path: materialize via flat vector (for Dense, Lazy, Mmap, etc.)
     return materialize();
 }
 
