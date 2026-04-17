@@ -24,6 +24,17 @@ for the original feature request.
   `TensorData` columns. `TensorToAnalog` uses this automatically. 17 test cases.
 - **ParameterSchema `std::vector<T>` support:** Multi-select lists and CSV line
   edits for vector parameters in `AutoParamWidget`.
+- **Phase 4a — Eliminate Armadillo copy overhead (CPU):** Removed `matToFlat()`
+  helper from `TensorCAR.cpp`. All three output paths (TimeFrameIndex, Interval,
+  Ordinal) now use `std::move(result_mat)` into `arma::fmat` factory overloads,
+  reducing copies from 3 to 1. Added `createFromIntervals(arma::fmat)` overload
+  to `TensorData`.
+- **Phase 4b — LibTorch compute path for TensorCAR:** Added conditional LibTorch
+  backend to `TensorCAR` behind `TENSOR_BACKEND_LIBTORCH`. When `use_gpu = true`,
+  uses `toLibTorch()` → device transfer → `mean`/`median` → subtract → download.
+  TimeFrameIndex output path is zero-copy via `LibTorchTensorStorage`. TransformsV2
+  CMakeLists.txt links Torch privately with `find_package(OpenCV)` workaround for
+  the protobuf target conflict.
 - **Tensor-backed binary loading (Phase 1 — in-memory path):** Added
   `use_tensor_backed` option to `BinaryAnalogLoaderOptions`. When enabled with
   `num_channels > 1` and in-memory loading, reads interleaved binary →
@@ -195,10 +206,10 @@ Both follow the `TensorCAR` transform pattern (container transform,
 ### 4. GPU-Accelerated Processing {#sec-gpu}
 
 ::: {.callout-note}
-**Status: Benchmarked.** Ad-hoc benchmarks confirmed large GPU speedups for
-CAR transforms. See
+**Status: Phase 4a and 4b complete.** Ad-hoc benchmarks confirmed large GPU
+speedups for CAR transforms. See
 [TensorCAR GPU vs CPU Benchmark Analysis](../benchmark/tensor_car_gpu_cpu.qmd)
-for full results. Implementation is next.
+for full results. Phase 4c (in-place transform support) remains.
 :::
 
 #### Benchmark Summary
@@ -240,50 +251,25 @@ first copy — the overhead is entirely in format conversion and storage creatio
 
 The GPU path decomposes into three sub-phases that can be landed independently.
 
-##### Phase 4a: Eliminate Armadillo Copy Overhead (CPU-only improvement)
+##### Phase 4a: Eliminate Armadillo Copy Overhead (CPU-only improvement) ✅
 
-Reduce the Armadillo path from 3 copies to 1 by operating on row-major data
-directly. No GPU or LibTorch dependency needed.
+::: {.callout-tip}
+**Complete.** Removed `matToFlat()` helper. All output paths use
+`std::move(result_mat)` into `arma::fmat` factory overloads. Added
+`TensorData::createFromIntervals(arma::fmat)`. Copies reduced from 3 to 1.
+:::
 
-**Changes:**
+##### Phase 4b: LibTorch Compute Path for TensorCAR ✅
 
-| File | Change |
-|------|--------|
-| `TensorCAR.cpp` | Replace `matToFlat()` round-trip. Compute `ref_col`, then write the subtracted result directly into a flat `std::vector<float>` in row-major order in a single pass, avoiding the intermediate `arma::fmat` copy. |
-| `TensorCAR.cpp` | Use `std::move(flat)` into `TensorData::createTimeSeries2D()` to eliminate the final copy. |
-
-**Expected savings:** ~306 MB eliminated (2 of 3 copies) at 384ch × 100k.
-
-##### Phase 4b: LibTorch Compute Path for TensorCAR
-
-Add an optional LibTorch backend to `TensorCAR` that uses `toLibTorch()` for
-the computation, keeping the data in `torch::Tensor` row-major format throughout.
-
-**Architecture:** Add conditional `find_package(Torch QUIET)` to the
-TransformsV2 `CMakeLists.txt`. No dependency on the `DeepLearning` module or
-`DeviceManager` — use `torch::cuda::is_available()` inline for device selection.
-Both modules submit to the same CUDA context.
-
-**Changes:**
-
-| File | Change |
-|------|--------|
-| `src/TransformsV2/CMakeLists.txt` | Conditional `find_package(Torch QUIET)`. Add `TENSOR_TRANSFORMS_LIBTORCH_AVAILABLE` compile definition. |
-| `TensorCARParams` | Add `use_gpu` behavior: `false` = Armadillo, `true` = LibTorch (CUDA if available, CPU fallback). |
-| `TensorCAR.cpp` | New `#ifdef` path: `input.toLibTorch()` → `.to(device)` → `mean/median(dim=1)` → `input - ref` → download → `TensorData`. |
-
-**Compute path (LibTorch, no transfer overhead measured):**
-
-```
-input.toLibTorch()          // zero-copy stride view (existing)
-  → .to(torch::kCUDA)       // upload once
-  → .mean(1, true)           // compute ref on GPU
-  → input - ref              // fused subtract + allocate on GPU
-  → .to(torch::kCPU)         // download once
-  → TensorData from flat     // single copy into storage
-```
-
-Total: 1 upload + 1 download + 1 storage copy (vs 3 copies in current path).
+::: {.callout-tip}
+**Complete.** Added `tensorCARLibTorch()` behind `#ifdef TENSOR_BACKEND_LIBTORCH`.
+Dispatched when `use_gpu = true`. Uses `toLibTorch()` → `.to(device)` →
+`mean`/`median` with `index_select` for excluded channels → subtract →
+`.to(kCPU)` → `buildResultFromTorch()`. TimeFrameIndex output wraps the result
+tensor in `LibTorchTensorStorage` (zero-copy). Interval and Ordinal paths
+materialize to flat/arma. TransformsV2 links Torch privately; `find_package(OpenCV)`
+before `find_package(Torch)` works around the protobuf target conflict.
+:::
 
 ##### Phase 4c: In-Place Transform Support
 

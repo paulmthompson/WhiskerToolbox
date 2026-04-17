@@ -660,7 +660,8 @@ arma::fmat const & TensorData::asArmadilloMatrix() const {
     if (!_storage.isValid()) {
         throw std::logic_error("TensorData::asArmadilloMatrix: empty tensor");
     }
-    auto const * arma_storage = _storage.tryGetAs<ArmadilloTensorStorage>();
+    auto const * arma_storage = _storage.getAsChecked<ArmadilloTensorStorage>(
+            TensorStorageType::Armadillo);
     if (!arma_storage) {
         throw std::logic_error(
                 "TensorData::asArmadilloMatrix: storage is not Armadillo-backed "
@@ -673,7 +674,8 @@ arma::fcube const & TensorData::asArmadilloCube() const {
     if (!_storage.isValid()) {
         throw std::logic_error("TensorData::asArmadilloCube: empty tensor");
     }
-    auto const * arma_storage = _storage.tryGetAs<ArmadilloTensorStorage>();
+    auto const * arma_storage = _storage.getAsChecked<ArmadilloTensorStorage>(
+            TensorStorageType::Armadillo);
     if (!arma_storage) {
         throw std::logic_error(
                 "TensorData::asArmadilloCube: storage is not Armadillo-backed "
@@ -702,7 +704,8 @@ TensorData TensorData::toLibTorch() const {
 
     // Fast path: Armadillo → strided view → clone (single contiguous memcpy).
     // Avoids the element-by-element virtual dispatch in materializeFlat().
-    if (auto const * arma = _storage.tryGetAs<ArmadilloTensorStorage>()) {
+    if (auto const * arma = _storage.getAsChecked<ArmadilloTensorStorage>(
+                TensorStorageType::Armadillo)) {
         torch::Tensor t;
 
         if (arma->ndim() == 1) {

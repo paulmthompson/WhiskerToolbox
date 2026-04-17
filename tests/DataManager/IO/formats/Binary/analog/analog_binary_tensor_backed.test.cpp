@@ -19,6 +19,8 @@
 #include "DataManager.hpp"
 #include "IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
 #include "Tensors/TensorData.hpp"
+#include "Tensors/storage/ArmadilloTensorStorage.hpp"
+#include "Tensors/storage/TensorStorageWrapper.hpp"
 
 #include <nlohmann/json.hpp>
 #include <rfl/json.hpp>
@@ -102,7 +104,7 @@ bool writeBinaryFloat32MultiChannel(
 TEST_CASE("Tensor-backed binary loading - basic multi-channel",
           "[analog][binary][tensor_backed]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::two_channel_ramps();
     auto binary_path = temp_dir.getFilePath("two_channel.bin");
@@ -154,7 +156,7 @@ TEST_CASE("Tensor-backed binary loading - basic multi-channel",
 TEST_CASE("Tensor-backed binary loading - zero-copy verification",
           "[analog][binary][tensor_backed]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::four_channel_constants();
     auto binary_path = temp_dir.getFilePath("four_channel.bin");
@@ -192,7 +194,7 @@ TEST_CASE("Tensor-backed binary loading - zero-copy verification",
 TEST_CASE("Tensor-backed binary loading - values match legacy path",
           "[analog][binary][tensor_backed]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::four_channel_constants();
     auto binary_path = temp_dir.getFilePath("four_channel_compare.bin");
@@ -233,7 +235,7 @@ TEST_CASE("Tensor-backed binary loading - values match legacy path",
 TEST_CASE("Tensor-backed binary loading - float32 data type dispatch",
           "[analog][binary][tensor_backed]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::two_channel_ramps();
     auto binary_path = temp_dir.getFilePath("float32_multichannel.bin");
@@ -265,7 +267,7 @@ TEST_CASE("Tensor-backed binary loading - float32 data type dispatch",
 TEST_CASE("Binary data type dispatch fix - float32 multi-channel in-memory",
           "[analog][binary][data_type_fix]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::two_channel_ramps();
     auto binary_path = temp_dir.getFilePath("float32_legacy.bin");
@@ -296,7 +298,7 @@ TEST_CASE("Binary data type dispatch fix - float32 multi-channel in-memory",
 TEST_CASE("Tensor-backed binary loading - single channel fallback",
           "[analog][binary][tensor_backed]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto original = analog_scenarios::simple_ramp_100();
     auto binary_path = temp_dir.getFilePath("single_channel.bin");
@@ -322,7 +324,7 @@ TEST_CASE("Tensor-backed binary loading - single channel fallback",
 TEST_CASE("Tensor-backed binary loading - mmap uses block-cached path",
           "[analog][binary][tensor_backed][block_cached_mmap]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::two_channel_ramps();
     auto binary_path = temp_dir.getFilePath("mmap_tensor.bin");
@@ -353,13 +355,13 @@ TEST_CASE("Tensor-backed binary loading - mmap uses block-cached path",
 TEST_CASE("Tensor-backed binary loading - JSON config integration",
           "[analog][binary][tensor_backed][datamanager]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::four_channel_constants();
     auto binary_path = temp_dir.getFilePath("json_tensor_backed.bin");
     REQUIRE(analog_scenarios::writeBinaryInt16MultiChannel(signals, binary_path.string()));
 
-    json config = json::array({{{"data_type", "analog"},
+    json const config = json::array({{{"data_type", "analog"},
                                 {"name", "tensor_test"},
                                 {"filepath", binary_path.string()},
                                 {"format", "binary"},
@@ -378,12 +380,12 @@ TEST_CASE("Tensor-backed binary loading - JSON config integration",
 
     // Per-channel AnalogTimeSeries should be registered as tensor_test_0, ..., tensor_test_3
     for (int ch = 0; ch < 4; ++ch) {
-        std::string key = "tensor_test_" + std::to_string(ch);
+        std::string const key = "tensor_test_" + std::to_string(ch);
         auto loaded = dm.getData<AnalogTimeSeries>(key);
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == 50);
 
-        float expected_value = 10.0f * (ch + 1);// 10, 20, 30, 40
+        float const expected_value = 10.0f * (ch + 1);// 10, 20, 30, 40
         auto samples = loaded->getAllSamples();
         for (auto const & sample: samples) {
             REQUIRE(sample.value() == expected_value);
@@ -398,7 +400,7 @@ TEST_CASE("Tensor-backed binary loading - JSON config integration",
 TEST_CASE("Tensor-backed binary loading - column names",
           "[analog][binary][tensor_backed]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::two_channel_ramps();
     auto binary_path = temp_dir.getFilePath("col_names.bin");
@@ -446,7 +448,7 @@ TEST_CASE("BinaryAnalogLoaderOptions - use_tensor_backed JSON round-trip",
 TEST_CASE("Block-cached mmap - values match legacy mmap path",
           "[analog][binary][tensor_backed][block_cached_mmap]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::four_channel_constants();
     auto binary_path = temp_dir.getFilePath("block_cached_compare.bin");
@@ -488,7 +490,7 @@ TEST_CASE("Block-cached mmap - values match legacy mmap path",
 TEST_CASE("Block-cached mmap - TensorData shape and column access",
           "[analog][binary][tensor_backed][block_cached_mmap]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::two_channel_ramps();
     auto binary_path = temp_dir.getFilePath("block_cached_tensor.bin");
@@ -523,14 +525,14 @@ TEST_CASE("Block-cached mmap - TensorData shape and column access",
 
         size_t i = 0;
         for (auto const & sample: orig0_samples) {
-            float expected = static_cast<float>(static_cast<int16_t>(sample.value()));
+            auto const expected = static_cast<float>(static_cast<int16_t>(sample.value()));
             REQUIRE(col0[i] == expected);
             ++i;
         }
 
         i = 0;
         for (auto const & sample: orig1_samples) {
-            float expected = static_cast<float>(static_cast<int16_t>(sample.value()));
+            auto const expected = static_cast<float>(static_cast<int16_t>(sample.value()));
             REQUIRE(col1[i] == expected);
             ++i;
         }
@@ -548,7 +550,7 @@ TEST_CASE("Block-cached mmap - TensorData shape and column access",
 TEST_CASE("Block-cached mmap - non-contiguous storage properties",
           "[analog][binary][tensor_backed][block_cached_mmap]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::two_channel_ramps();
     auto binary_path = temp_dir.getFilePath("block_cached_props.bin");
@@ -582,7 +584,7 @@ TEST_CASE("Block-cached mmap - non-contiguous storage properties",
 TEST_CASE("Block-cached mmap - float32 data type",
           "[analog][binary][tensor_backed][block_cached_mmap]") {
 
-    TempTensorBackedTestDirectory temp_dir;
+    TempTensorBackedTestDirectory const temp_dir;
 
     auto signals = analog_scenarios::two_channel_ramps();
     auto binary_path = temp_dir.getFilePath("block_cached_f32.bin");
@@ -607,5 +609,53 @@ TEST_CASE("Block-cached mmap - float32 data type",
     auto orig0_it = orig0_samples.begin();
     for (; ch0_it != ch0_samples.end(); ++ch0_it, ++orig0_it) {
         REQUIRE((*ch0_it).value() == (*orig0_it).value());
+    }
+}
+
+//=============================================================================
+// Test: asArmadilloMatrix works after tensor-backed loading
+//=============================================================================
+
+TEST_CASE("Tensor-backed binary loading - asArmadilloMatrix succeeds",
+          "[analog][binary][tensor_backed]") {
+
+    TempTensorBackedTestDirectory const temp_dir;
+
+    auto signals = analog_scenarios::four_channel_constants();
+    auto binary_path = temp_dir.getFilePath("arma_matrix_test.bin");
+    REQUIRE(analog_scenarios::writeBinaryInt16MultiChannel(signals, binary_path.string()));
+
+    BinaryAnalogLoaderOptions opts;
+    opts.filepath = binary_path.string();
+    opts.num_channels = 4;
+    opts.use_tensor_backed = true;
+
+    auto result = loadTensorBacked(opts);
+    REQUIRE(result.tensor != nullptr);
+
+    // Storage should report Armadillo type
+    REQUIRE(result.tensor->storage().getStorageType() == TensorStorageType::Armadillo);
+
+    // tryGetAs<ArmadilloTensorStorage> uses dynamic_cast which fails across
+    // shared-library boundaries. Use getAsChecked which uses enum verification.
+    auto const * arma_storage =
+            result.tensor->storage().getAsChecked<ArmadilloTensorStorage>(
+                    TensorStorageType::Armadillo);
+    REQUIRE(arma_storage != nullptr);
+
+    // asArmadilloMatrix must not throw
+    REQUIRE_NOTHROW(result.tensor->asArmadilloMatrix());
+
+    // Verify the matrix has the correct shape and values
+    arma::fmat const & mat = result.tensor->asArmadilloMatrix();
+    REQUIRE(mat.n_rows == 50);
+    REQUIRE(mat.n_cols == 4);
+
+    // four_channel_constants: channels are constant 10, 20, 30, 40
+    for (arma::uword c = 0; c < 4; ++c) {
+        float const expected = 10.0f * static_cast<float>(c + 1);
+        for (arma::uword r = 0; r < mat.n_rows; ++r) {
+            REQUIRE(mat(r, c) == expected);
+        }
     }
 }

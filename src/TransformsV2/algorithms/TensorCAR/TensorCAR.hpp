@@ -41,8 +41,10 @@ struct TensorCARParams {
     /// Excluded channels still have the reference subtracted from them.
     std::vector<int> exclude_channels;
 
-    /// Reserved for future GPU acceleration via LibTorch device placement.
-    /// Currently unused; computation always runs on CPU via Armadillo.
+    /// When true, request CUDA GPU acceleration (requires TENSOR_BACKEND_LIBTORCH).
+    /// When false, use the native backend: LibTorch CPU if data is LibTorch-backed,
+    /// Armadillo CPU otherwise. The compute path auto-detects the storage backend
+    /// to avoid unnecessary conversions.
     bool use_gpu = false;
 };
 
@@ -91,7 +93,8 @@ struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorCARParam
                          "Excluded channels still have the reference subtracted.";
         }
         if (auto * f = schema.field("use_gpu")) {
-            f->tooltip = "Reserved for future GPU acceleration (currently unused).";
+            f->tooltip = "Request CUDA GPU acceleration. When unchecked, the compute "
+                         "path auto-detects the storage backend (LibTorch CPU or Armadillo CPU).";
         }
     }
 };

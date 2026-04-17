@@ -1,5 +1,9 @@
 find_package(reflectcpp CONFIG REQUIRED)
 
+#if (ENABLE_UI AND ENABLE_ORTOOLS)
+    find_package(OpenCV CONFIG)
+#endif()
+
 
 set(TRANSFORM_V2_SOURCES
     detail/ContainerTraits.hpp
@@ -141,6 +145,15 @@ target_link_libraries(TransformsV2 PRIVATE DataManager) # DataTypeVariant
 target_link_libraries(TransformsV2 PRIVATE MLCore) # TensorPCA → PCAOperation
 
 target_link_libraries(TransformsV2 PUBLIC DataTypeTraits)
+
+# Optional LibTorch support for GPU-accelerated tensor transforms (e.g., TensorCAR).
+# TENSOR_BACKEND_LIBTORCH is PRIVATE to avoid torch header pollution to consumers.
+if(TENSOR_BACKEND_LIBTORCH)
+    find_package(Torch REQUIRED)
+    target_link_libraries(TransformsV2 PRIVATE ${TORCH_LIBRARIES})
+    target_include_directories(TransformsV2 PRIVATE ${TORCH_INCLUDE_DIRS})
+    target_compile_definitions(TransformsV2 PRIVATE TENSOR_BACKEND_LIBTORCH)
+endif()
 
 set_target_compiler_warnings(TransformsV2)
 

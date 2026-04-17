@@ -10,6 +10,17 @@
 #include <utility>
 #include <vector>
 
+// StorageConcept / StorageModel carry virtual functions whose typeinfo must be
+// visible across shared-library boundaries for dynamic_cast (tryGetAs) to work.
+// DataManagerIO is built as a SHARED library with hidden visibility, which hides
+// vague-linkage typeinfo for inline/template classes.  Forcing default visibility
+// on these types ensures a single typeinfo is used program-wide.
+#if defined(_WIN32) || defined(_WIN64)
+#define TENSOR_STORAGE_RTTI_VISIBLE
+#else
+#define TENSOR_STORAGE_RTTI_VISIBLE __attribute__((visibility("default")))
+#endif
+
 /**
  * @brief Sean Parent type-erasure wrapper for tensor storage backends
  *
@@ -182,6 +193,30 @@ public:
     template<typename T>
     [[nodiscard]] T * tryGetMutableAs();
 
+    /**
+     * @brief Type-safe cast using enum verification instead of dynamic_cast
+     *
+     * When TensorData (a static library) is absorbed into DataManagerIO
+     * (a shared library with hidden visibility), `dynamic_cast` fails across
+     * library boundaries because each module gets its own typeinfo for
+     * `StorageModel<T>`. This method works around that by checking the
+     * `TensorStorageType` enum (which is value-based and works correctly
+     * across boundaries), then using `static_cast`.
+     *
+     * @pre `expected_type` must be the correct TensorStorageType for T.
+     *      Passing the wrong enum is undefined behavior.
+     *
+     * @tparam T The concrete storage type to cast to
+     * @param expected_type The TensorStorageType enum value corresponding to T
+     * @return Pointer to the concrete storage, or nullptr if type doesn't match
+     */
+    template<typename T>
+    [[nodiscard]] T const * getAsChecked(TensorStorageType expected_type) const;
+
+    /// @brief Mutable version of getAsChecked
+    template<typename T>
+    [[nodiscard]] T * getMutableAsChecked(TensorStorageType expected_type) const;
+
     // ========== Shared Ownership Access ==========
 
     /**
@@ -203,13 +238,13 @@ private:
      *
      * Every method in TensorStorageBase has a corresponding pure virtual here.
      */
-    struct StorageConcept {
+    struct TENSOR_STORAGE_RTTI_VISIBLE StorageConcept {
         virtual ~StorageConcept() = default;
 
         [[nodiscard]] virtual float getValueAt(std::span<std::size_t const> indices) const = 0;
         [[nodiscard]] virtual std::span<float const> flatData() const = 0;
         [[nodiscard]] virtual std::vector<float> sliceAlongAxis(
-            std::size_t axis, std::size_t index) const = 0;
+                std::size_t axis, std::size_t index) const = 0;
         [[nodiscard]] virtual std::vector<float> getColumn(std::size_t col) const = 0;
         [[nodiscard]] virtual std::vector<std::size_t> shape() const = 0;
         [[nodiscard]] virtual std::size_t totalElements() const = 0;
@@ -226,8 +261,9 @@ private:
      * @tparam T A concrete type inheriting TensorStorageBase<T>
      */
     template<typename T>
-    struct StorageModel final : StorageConcept {
-        explicit StorageModel(T storage) : _storage(std::move(storage)) {}
+    struct TENSOR_STORAGE_RTTI_VISIBLE StorageModel final : StorageConcept {
+        explicit StorageModel(T storage)
+            : _storage(std::move(storage)) {}
 
         [[nodiscard]] float getValueAt(std::span<std::size_t const> indices) const override {
             return _storage.getValueAt(indices);
@@ -236,7 +272,7 @@ private:
             return _storage.flatData();
         }
         [[nodiscard]] std::vector<float> sliceAlongAxis(
-            std::size_t axis, std::size_t index) const override {
+                std::size_t axis, std::size_t index) const override {
             return _storage.sliceAlongAxis(axis, index);
         }
         [[nodiscard]] std::vector<float> getColumn(std::size_t col) const override {
@@ -258,7 +294,7 @@ private:
             return _storage.tryGetCache();
         }
 
-        T _storage; // The actual concrete storage
+        T _storage;// The actual concrete storage
     };
 
     std::shared_ptr<StorageConcept> _impl;
@@ -273,13 +309,11 @@ private:
 
 template<typename StorageImpl>
 TensorStorageWrapper::TensorStorageWrapper(StorageImpl impl)
-    : _impl(std::make_shared<StorageModel<StorageImpl>>(std::move(impl)))
-{
+    : _impl(std::make_shared<StorageModel<StorageImpl>>(std::move(impl))) {
 }
 
 template<typename T>
-T const * TensorStorageWrapper::tryGetAs() const
-{
+T const * TensorStorageWrapper::tryGetAs() const {
     if (!_impl) {
         return nullptr;
     }
@@ -291,8 +325,7 @@ T const * TensorStorageWrapper::tryGetAs() const
 }
 
 template<typename T>
-T * TensorStorageWrapper::tryGetMutableAs()
-{
+T * TensorStorageWrapper::tryGetMutableAs() {
     if (!_impl) {
         return nullptr;
     }
@@ -303,4 +336,31 @@ T * TensorStorageWrapper::tryGetMutableAs()
     return &model->_storage;
 }
 
-#endif // TENSOR_STORAGE_WRAPPER_HPP
+template<typename T>
+T const * TensorStorageWrapper::getAsChecked(TensorStorageType expected_type) const {
+    if (!_impl) {
+        return nullptr;
+    }
+    if (_impl->getStorageType() != expected_type) {
+        return nullptr;
+    }
+    // Enum matched — the underlying StorageConcept is StorageModel<T>.
+    // static_cast is safe because the enum uniquely identifies the concrete type.
+    auto const * model = static_cast<StorageModel<T> const *>(_impl.get());
+    return &model->_storage;
+}
+
+template<typename T>
+T * TensorStorageWrapper::getMutableAsChecked(TensorStorageType expected_type) const {
+    if (!_impl) {
+        return nullptr;
+    }
+    if (_impl->getStorageType() != expected_type) {
+        return nullptr;
+    }
+    auto * model = const_cast<StorageModel<T> *>(
+            static_cast<StorageModel<T> const *>(_impl.get()));
+    return &model->_storage;
+}
+
+#endif// TENSOR_STORAGE_WRAPPER_HPP

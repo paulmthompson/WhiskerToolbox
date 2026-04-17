@@ -145,7 +145,8 @@ private:
      * block of numRows() floats for column c.
      */
     void _cacheColumnPointer() {
-        auto const * arma_storage = _tensor->storage().tryGetAs<ArmadilloTensorStorage>();
+        auto const * arma_storage = _tensor->storage().getAsChecked<ArmadilloTensorStorage>(
+                TensorStorageType::Armadillo);
         if (arma_storage && arma_storage->ndim() == 2) {
             _col_ptr = arma_storage->matrix().colptr(_column_index);
         }

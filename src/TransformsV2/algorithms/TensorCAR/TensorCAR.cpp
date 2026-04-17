@@ -7,6 +7,7 @@
 
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
+#include "Tensors/storage/TensorStorageBase.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "TransformsV2/core/ComputeContext.hpp"
 
@@ -18,7 +19,213 @@
 #include <string>
 #include <vector>
 
+#ifdef TENSOR_BACKEND_LIBTORCH
+#include "Tensors/storage/LibTorchTensorStorage.hpp"
+#include "Tensors/storage/TensorStorageWrapper.hpp"
+
+#pragma push_macro("CHECK")
+#include <torch/torch.h>
+#pragma pop_macro("CHECK")
+
+#include <c10/cuda/CUDACachingAllocator.h>
+#endif
+
 namespace WhiskerToolbox::Transforms::V2::Examples {
+
+#ifdef TENSOR_BACKEND_LIBTORCH
+
+namespace {
+
+/**
+ * @brief Build a TensorData result from a CPU torch::Tensor preserving the
+ *        RowDescriptor and column names from the original input.
+ *
+ * @pre result_tensor is contiguous, float32, on CPU, shape [num_rows, num_cols]
+ */
+auto buildResultFromTorch(
+        torch::Tensor result_tensor,
+        TensorData const & input,
+        std::vector<std::string> const & col_names) -> std::shared_ptr<TensorData> {
+
+    auto const & row_desc = input.rows();
+    auto const num_rows = input.numRows();
+    auto const num_cols = input.numColumns();
+
+    switch (row_desc.type()) {
+        case RowType::TimeFrameIndex: {
+            // Zero-copy: wrap the torch::Tensor in LibTorchTensorStorage
+            auto storage = TensorStorageWrapper{
+                    LibTorchTensorStorage{std::move(result_tensor)}};
+            return std::make_shared<TensorData>(
+                    TensorData::createTimeSeries2DFromStorage(
+                            std::move(storage),
+                            row_desc.timeStoragePtr(),
+                            row_desc.timeFrame(),
+                            std::vector<std::string>(col_names)));
+        }
+        case RowType::Interval: {
+            // Materialize to flat vector (single memcpy from contiguous tensor)
+            auto const * ptr = result_tensor.data_ptr<float>();
+            std::vector<float> const flat(ptr, ptr + num_rows * num_cols);
+            auto const intervals_span = row_desc.intervals();
+            std::vector<TimeFrameInterval> intervals(
+                    intervals_span.begin(), intervals_span.end());
+            return std::make_shared<TensorData>(
+                    TensorData::createFromIntervals(
+                            flat,
+                            num_rows,
+                            num_cols,
+                            std::move(intervals),
+                            row_desc.timeFrame(),
+                            std::vector<std::string>(col_names)));
+        }
+        case RowType::Ordinal:
+        default: {
+            // Materialize to flat vector, build arma::fmat, use createFromArmadillo
+            auto const * ptr = result_tensor.data_ptr<float>();
+            arma::fmat result_arma(num_rows, num_cols);
+            for (std::size_t r = 0; r < num_rows; ++r) {
+                for (std::size_t c = 0; c < num_cols; ++c) {
+                    result_arma(r, c) = ptr[r * num_cols + c];
+                }
+            }
+            return std::make_shared<TensorData>(
+                    TensorData::createFromArmadillo(
+                            std::move(result_arma),
+                            std::vector<std::string>(col_names)));
+        }
+    }
+}
+
+/**
+ * @brief LibTorch compute path for Common Average Reference.
+ *
+ * If the input is already LibTorch-backed, uses its tensor directly (no
+ * conversion). Otherwise converts via toLibTorch(). Optionally moves to
+ * CUDA when use_gpu is true.
+ *
+ * @param input      2D TensorData
+ * @param params     CAR parameters
+ * @param ctx        Compute context
+ * @param use_cuda   Whether to attempt CUDA device transfer
+ */
+auto tensorCARLibTorch(
+        TensorData const & input,
+        TensorCARParams const & params,
+        ComputeContext const & ctx,
+        bool use_cuda) -> std::shared_ptr<TensorData> {
+
+    auto const num_cols = input.numColumns();
+
+    // Get the torch::Tensor — zero-copy if already LibTorch-backed,
+    // otherwise toLibTorch() does a single strided copy.
+    auto const * lt_storage =
+            input.storage().getAsChecked<LibTorchTensorStorage>(
+                    TensorStorageType::LibTorch);
+
+    // Keep converted TensorData alive if we need to create one
+    std::optional<TensorData> converted;
+    if (!lt_storage) {
+        converted.emplace(input.toLibTorch());
+        lt_storage = converted->storage().getAsChecked<LibTorchTensorStorage>(
+                TensorStorageType::LibTorch);
+        assert(lt_storage && "toLibTorch() must produce LibTorchTensorStorage");
+    }
+
+    // t is read-only — subtraction creates a new tensor, no clone needed
+    torch::Tensor t = lt_storage->tensor();
+
+    ctx.reportProgress(10);
+
+    // Select device
+    auto device = torch::kCPU;
+    if (use_cuda && torch::cuda::is_available()) {
+        device = torch::kCUDA;
+        t = t.to(device);
+        ctx.logMessage("TensorCAR: Using CUDA device");
+    } else if (use_cuda) {
+        ctx.logMessage("TensorCAR: CUDA not available; using LibTorch CPU");
+    }
+
+    ctx.reportProgress(20);
+
+    // Build column mask for excluded channels
+    std::set<int> const excluded_set(
+            params.exclude_channels.begin(),
+            params.exclude_channels.end());
+
+    bool const all_included = excluded_set.empty() ||
+                              excluded_set.size() >= num_cols;
+
+    // Compute reference signal: shape [num_rows, 1]
+    torch::Tensor ref;
+    if (all_included) {
+        if (params.method == CARMethod::Mean) {
+            ref = t.mean(/*dim=*/1, /*keepdim=*/true);
+        } else {
+            ref = std::get<0>(t.median(/*dim=*/1, /*keepdim=*/true));
+        }
+    } else {
+        // Build index tensor for included columns
+        std::vector<int64_t> included_indices;
+        included_indices.reserve(num_cols);
+        for (std::size_t c = 0; c < num_cols; ++c) {
+            if (excluded_set.find(static_cast<int>(c)) == excluded_set.end()) {
+                included_indices.push_back(static_cast<int64_t>(c));
+            }
+        }
+        auto idx = torch::tensor(included_indices, torch::kLong).to(device);
+        auto ref_source = t.index_select(/*dim=*/1, idx);
+        if (params.method == CARMethod::Mean) {
+            ref = ref_source.mean(/*dim=*/1, /*keepdim=*/true);
+        } else {
+            ref = std::get<0>(ref_source.median(/*dim=*/1, /*keepdim=*/true));
+        }
+    }
+
+    ctx.reportProgress(50);
+
+    if (ctx.shouldCancel()) {
+        return nullptr;
+    }
+
+    // Subtract reference from all channels
+    torch::Tensor result = t - ref;
+
+    ctx.reportProgress(80);
+
+    if (ctx.shouldCancel()) {
+        return nullptr;
+    }
+
+    // Download to CPU if on CUDA
+    if (result.device().type() == torch::kCUDA) {
+        result = result.to(torch::kCPU);
+
+        // Release intermediate CUDA tensors before flushing the cache
+        t.reset();
+        ref.reset();
+
+        // LibTorch's CUDA caching allocator holds freed GPU memory for reuse.
+        // Flush it so the memory is returned to the OS immediately.
+        c10::cuda::CUDACachingAllocator::emptyCache();
+    }
+
+    // Ensure contiguous row-major layout
+    result = result.contiguous();
+
+    // Preserve column names
+    auto const & src_col_names = input.columnNames();
+    std::vector<std::string> const col_names(src_col_names.begin(), src_col_names.end());
+
+    ctx.reportProgress(100);
+
+    return buildResultFromTorch(std::move(result), input, col_names);
+}
+
+}// namespace
+
+#endif// TENSOR_BACKEND_LIBTORCH
 
 auto tensorCAR(
         TensorData const & input,
@@ -45,10 +252,32 @@ auto tensorCAR(
         return nullptr;
     }
 
+    // --- Backend dispatch ---
+    // Detect storage type and route to the matching compute path to avoid
+    // unnecessary conversions. use_gpu only controls CUDA vs CPU within
+    // the LibTorch path.
+    auto const storage_type = input.storage().getStorageType();
+
+#ifdef TENSOR_BACKEND_LIBTORCH
+    // If data is already LibTorch-backed, always use the LibTorch path
+    // (avoids expensive LibTorch → Armadillo materialization)
+    if (storage_type == TensorStorageType::LibTorch) {
+        bool const use_cuda = params.use_gpu;
+        return tensorCARLibTorch(input, params, ctx, use_cuda);
+    }
+    // If user explicitly requests GPU, convert to LibTorch
     if (params.use_gpu) {
-        ctx.logMessage("TensorCAR: use_gpu=true is not yet implemented; "
+        return tensorCARLibTorch(input, params, ctx, /*use_cuda=*/true);
+    }
+#else
+    if (params.use_gpu) {
+        ctx.logMessage("TensorCAR: use_gpu=true but LibTorch not available; "
                        "falling back to CPU (Armadillo).");
     }
+#endif
+    // For non-Armadillo, non-LibTorch backends (Dense, Lazy, Mmap, etc.),
+    // materialize to Armadillo and use the Armadillo CPU path.
+    (void) storage_type;
 
     ctx.reportProgress(0);
 
@@ -73,7 +302,9 @@ auto tensorCAR(
     }
 
     // --- Retrieve Armadillo matrix ---
-    arma::fmat const & input_mat = input.asArmadilloMatrix();
+    // If already Armadillo-backed, this is zero-copy. Otherwise materializes.
+    auto const arma_data = input.toArmadillo();
+    arma::fmat const & input_mat = arma_data.asArmadilloMatrix();
     // input_mat shape: (num_rows, num_cols) — column-major
 
     ctx.reportProgress(10);
