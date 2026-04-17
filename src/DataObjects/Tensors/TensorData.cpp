@@ -283,6 +283,40 @@ TensorData TensorData::createFromIntervals(
 }
 
 // =============================================================================
+// Factory: createFromIntervals (arma::fmat overload)
+// =============================================================================
+
+TensorData TensorData::createFromIntervals(
+        arma::fmat matrix,
+        std::vector<TimeFrameInterval> intervals,
+        std::shared_ptr<TimeFrame> time_frame,
+        std::vector<std::string> column_names) {
+    auto const num_rows = static_cast<std::size_t>(matrix.n_rows);
+    auto const num_cols = static_cast<std::size_t>(matrix.n_cols);
+
+    if (intervals.size() != num_rows) {
+        throw std::invalid_argument(
+                "TensorData::createFromIntervals: intervals size (" +
+                std::to_string(intervals.size()) +
+                ") must match matrix rows (" + std::to_string(num_rows) + ")");
+    }
+
+    DimensionDescriptor dims{{{"row", num_rows},
+                              {"channel", num_cols}}};
+    if (!column_names.empty()) {
+        dims.setColumnNames(std::move(column_names));
+    }
+
+    RowDescriptor rows = RowDescriptor::fromIntervals(
+            std::move(intervals), time_frame);
+
+    auto storage = TensorStorageWrapper{ArmadilloTensorStorage{std::move(matrix)}};
+
+    return TensorData{std::move(dims), std::move(rows),
+                      std::move(storage), std::move(time_frame)};
+}
+
+// =============================================================================
 // Factory: createND
 // =============================================================================
 

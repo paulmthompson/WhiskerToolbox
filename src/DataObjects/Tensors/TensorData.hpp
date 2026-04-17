@@ -220,6 +220,29 @@ public:
             std::vector<std::string> column_names = {});
 
     /**
+     * @brief Create a 2D tensor with interval-based rows from an Armadillo matrix
+     *
+     * Zero-copy variant: the matrix is moved directly into ArmadilloTensorStorage,
+     * avoiding row-major to column-major conversion overhead.
+     *
+     * @param matrix Armadillo float matrix (moved into storage)
+     * @param intervals One TimeFrameInterval per row
+     * @param time_frame Shared TimeFrame for time reference (may be nullptr)
+     * @param column_names Optional column labels
+     *
+     * @pre intervals.size() == matrix.n_rows (enforcement: exception)
+     * @pre matrix.n_rows > 0 && matrix.n_cols > 0 (enforcement: exception)
+     * @pre column_names.empty() || column_names.size() == matrix.n_cols (enforcement: exception)
+     *
+     * @throws std::invalid_argument on size mismatches
+     */
+    [[nodiscard]] static TensorData createFromIntervals(
+            arma::fmat matrix,
+            std::vector<TimeFrameInterval> intervals,
+            std::shared_ptr<TimeFrame> time_frame,
+            std::vector<std::string> column_names = {});
+
+    /**
      * @brief Create an N-dimensional tensor from flat data and axis descriptors
      *
      * Uses ArmadilloTensorStorage for ≤3D, DenseTensorStorage for >3D.

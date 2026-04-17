@@ -12,7 +12,6 @@
 
 #include <armadillo>
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <set>
@@ -20,28 +19,6 @@
 #include <vector>
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
-
-namespace {
-
-/**
- * @brief Convert an arma::fmat (column-major) to a row-major flat vector.
- *
- * @param mat  Column-major matrix with shape (num_rows, num_cols)
- * @return Row-major flat vector of size num_rows * num_cols
- */
-std::vector<float> matToFlat(arma::fmat const & mat) {
-    auto const num_rows = static_cast<std::size_t>(mat.n_rows);
-    auto const num_cols = static_cast<std::size_t>(mat.n_cols);
-    std::vector<float> flat(num_rows * num_cols);
-    for (std::size_t r = 0; r < num_rows; ++r) {
-        for (std::size_t c = 0; c < num_cols; ++c) {
-            flat[r * num_cols + c] = mat(r, c);
-        }
-    }
-    return flat;
-}
-
-}// namespace
 
 auto tensorCAR(
         TensorData const & input,
@@ -154,27 +131,21 @@ auto tensorCAR(
 
     switch (row_desc.type()) {
         case RowType::TimeFrameIndex: {
-            auto flat = matToFlat(result_mat);
             return std::make_shared<TensorData>(
                     TensorData::createTimeSeries2D(
-                            flat,
-                            num_rows,
-                            num_cols,
+                            std::move(result_mat),
                             row_desc.timeStoragePtr(),
                             row_desc.timeFrame(),
                             col_names));
         }
         case RowType::Interval: {
-            auto flat = matToFlat(result_mat);
             auto const intervals_span = row_desc.intervals();
             std::vector<TimeFrameInterval> intervals(
                     intervals_span.begin(),
                     intervals_span.end());
             return std::make_shared<TensorData>(
                     TensorData::createFromIntervals(
-                            flat,
-                            num_rows,
-                            num_cols,
+                            std::move(result_mat),
                             std::move(intervals),
                             row_desc.timeFrame(),
                             col_names));
