@@ -16,13 +16,13 @@ std::shared_ptr<DigitalEventSeries> analogEventThreshold(
     
     // Validate parameters
     if (!params.isValidDirection()) {
-        std::cerr << "Invalid direction parameter: " << params.getDirection() << std::endl;
+        std::cerr << "Invalid direction parameter: " << params.direction << std::endl;
         return std::make_shared<DigitalEventSeries>();
     }
     
-    float const threshold = params.getThresholdValue();
-    float const lockout_time = params.getLockoutTime();
-    std::string const direction = params.getDirection();
+    float const threshold = params.threshold_value;
+    float const lockout_time = params.lockout_time.value();
+    std::string const direction = params.direction;
     
     auto const& values = input.getAnalogTimeSeries();
     auto const& time_storage = input.getTimeStorage();

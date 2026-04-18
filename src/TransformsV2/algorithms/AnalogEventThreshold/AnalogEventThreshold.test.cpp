@@ -256,9 +256,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThresholdParams - JSON Loading",
         REQUIRE(result);
         auto params = result.value();
         
-        REQUIRE(params.getThresholdValue() == 2.5f);
-        REQUIRE(params.getDirection() == "negative");
-        REQUIRE(params.getLockoutTime() == 100.0f);
+        REQUIRE(params.threshold_value == 2.5f);
+        REQUIRE(params.direction == "negative");
+        REQUIRE(params.lockout_time.value() == 100.0f);
     }
     
     SECTION("Load empty JSON (uses defaults)") {
@@ -269,9 +269,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThresholdParams - JSON Loading",
         REQUIRE(result);
         auto params = result.value();
         
-        REQUIRE(params.getThresholdValue() == 1.0f);
-        REQUIRE(params.getDirection() == "positive");
-        REQUIRE(params.getLockoutTime() == 0.0f);
+        REQUIRE(params.threshold_value == 1.0f);
+        REQUIRE(params.direction == "positive");
+        REQUIRE(params.lockout_time.value() == 0.0f);
     }
     
     SECTION("Load with only some fields") {
@@ -285,9 +285,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThresholdParams - JSON Loading",
         REQUIRE(result);
         auto params = result.value();
         
-        REQUIRE(params.getThresholdValue() == 3.0f);
-        REQUIRE(params.getDirection() == "absolute");
-        REQUIRE(params.getLockoutTime() == 0.0f);  // Default
+        REQUIRE(params.threshold_value == 3.0f);
+        REQUIRE(params.direction == "absolute");
+        REQUIRE(params.lockout_time.value() == 0.0f);  // Default
     }
     
     SECTION("Reject negative lockout time") {
@@ -316,9 +316,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThresholdParams - JSON Loading",
         auto recovered = result.value();
         
         // Verify values match
-        REQUIRE(recovered.getThresholdValue() == 1.5f);
-        REQUIRE(recovered.getDirection() == "positive");
-        REQUIRE(recovered.getLockoutTime() == 50.0f);
+        REQUIRE(recovered.threshold_value == 1.5f);
+        REQUIRE(recovered.direction == "positive");
+        REQUIRE(recovered.lockout_time.value() == 50.0f);
     }
 }
 

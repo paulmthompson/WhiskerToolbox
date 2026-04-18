@@ -31,32 +31,18 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  */
 struct AnalogEventThresholdParams {
     // Threshold value for event detection
-    std::optional<float> threshold_value;
+    float threshold_value = 1.0f;
 
     // Direction of threshold crossing: "positive", "negative", or "absolute"
-    std::optional<std::string> direction;
+    std::string direction = "positive";
 
     // Lockout time (in same units as time series) to prevent multiple detections
     // Must be non-negative
-    std::optional<rfl::Validator<float, rfl::Minimum<0.0f>>> lockout_time;
-
-    // Helper methods to get values with defaults
-    float getThresholdValue() const {
-        return threshold_value.value_or(1.0f);
-    }
-
-    std::string getDirection() const {
-        return direction.value_or("positive");
-    }
-
-    float getLockoutTime() const {
-        return lockout_time.has_value() ? lockout_time.value().value() : 0.0f;
-    }
+    rfl::Validator<float, rfl::Minimum<0.0f>> lockout_time = 0.0f;
 
     // Validate direction string
     bool isValidDirection() const {
-        auto dir = getDirection();
-        return dir == "positive" || dir == "negative" || dir == "absolute";
+        return direction == "positive" || direction == "negative" || direction == "absolute";
     }
 };
 
