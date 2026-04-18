@@ -231,6 +231,8 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
 }
 
 void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
+    _last_mouse_pos = event->pos();
+
     // Check if interaction manager is handling this
     if (_interaction_manager->isActive()) {
         float const canvas_x = static_cast<float>(event->pos().x());
@@ -253,6 +255,11 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
     _input_handler->handleMouseMove(event);
     QOpenGLWidget::mouseMoveEvent(event);
+
+    // Request repaint so the crosshair overlay tracks the cursor
+    if (_state && _state->developerMode() && _overlay_toggles.crosshair) {
+        update();
+    }
 }
 
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
@@ -269,8 +276,13 @@ void OpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 }
 
 void OpenGLWidget::leaveEvent(QEvent * event) {
+    _last_mouse_pos = QPoint();
     _input_handler->handleLeave();
     QOpenGLWidget::leaveEvent(event);
+
+    if (_state && _state->developerMode() && _overlay_toggles.crosshair) {
+        update();
+    }
 }
 
 void OpenGLWidget::setState(std::shared_ptr<DataViewerState> state) {
@@ -435,6 +447,11 @@ void OpenGLWidget::paintGL() {
 
     //unified controller preview overlay
     drawInteractionPreview();
+
+    // Developer overlay (QPainter on top of GL)
+    if (_state && _state->developerMode()) {
+        drawDeveloperOverlays();
+    }
 }
 
 void OpenGLWidget::resizeGL(int w, int h) {
@@ -1450,4 +1467,194 @@ DataViewerDiagnostics OpenGLWidget::getDiagnostics() const {
     diag.rendering.total_vertex_count = total_verts;
 
     return diag;
+}
+
+// ============================================================================
+// Developer Overlay Controls
+// ============================================================================
+
+void OpenGLWidget::setOverlayLaneBoundaries(bool enabled) {
+    _overlay_toggles.lane_boundaries = enabled;
+    if (_state && _state->developerMode()) {
+        update();
+    }
+}
+
+void OpenGLWidget::setOverlayOriginMarkers(bool enabled) {
+    _overlay_toggles.origin_markers = enabled;
+    if (_state && _state->developerMode()) {
+        update();
+    }
+}
+
+void OpenGLWidget::setOverlayCrosshair(bool enabled) {
+    _overlay_toggles.crosshair = enabled;
+    if (_state && _state->developerMode()) {
+        update();
+    }
+}
+
+// ============================================================================
+// Developer Overlay Drawing
+// ============================================================================
+
+namespace {
+
+/// Convert NDC Y [-1, +1] to canvas pixel Y (top-down)
+float ndcToPixelY(float ndc_y, int canvas_height) {
+    return static_cast<float>(canvas_height) * (1.0f - ndc_y) / 2.0f;
+}
+
+/// Convert NDC X [-1, +1] to canvas pixel X (left-to-right)
+float ndcToPixelX(float ndc_x, int canvas_width) {
+    return static_cast<float>(canvas_width) * (ndc_x + 1.0f) / 2.0f;
+}
+
+/// Color for overlay elements by series type
+QColor overlayColorForType(std::string const & type) {
+    if (type == "Analog") return {74, 144, 217, 160};         // blue
+    if (type == "DigitalEvent") return {92, 184, 92, 160};    // green
+    if (type == "DigitalInterval") return {240, 173, 78, 160};// orange
+    return {200, 200, 200, 160};                              // fallback grey
+}
+
+}// namespace
+
+void OpenGLWidget::drawDeveloperOverlays() {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, false);
+
+    if (_overlay_toggles.lane_boundaries) {
+        drawLaneBoundaries(painter);
+    }
+    if (_overlay_toggles.origin_markers) {
+        drawOriginMarkers(painter);
+    }
+    if (_overlay_toggles.crosshair) {
+        drawCursorCrosshair(painter);
+    }
+
+    painter.end();
+}
+
+void OpenGLWidget::drawLaneBoundaries(QPainter & painter) {
+    auto const & layouts = _cache_state.layout_response.layouts;
+    int const h = height();
+    int const w = width();
+
+    QFont const font(QStringLiteral("monospace"), 8);
+    painter.setFont(font);
+
+    QPen pen;
+    pen.setStyle(Qt::DashLine);
+    pen.setWidth(1);
+
+    for (auto const & layout: layouts) {
+        float const center_ndc = layout.y_transform.offset;
+        float const half_height = std::abs(layout.y_transform.gain);
+
+        float const top_ndc = center_ndc + half_height;
+        float const bot_ndc = center_ndc - half_height;
+
+        float const top_px = ndcToPixelY(top_ndc, h);
+        float const bot_px = ndcToPixelY(bot_ndc, h);
+
+        QColor const color = overlayColorForType(
+                _data_store->analogSeries().count(layout.series_id)  ? "Analog"
+                : _data_store->eventSeries().count(layout.series_id) ? "DigitalEvent"
+                : _data_store->intervalSeries().count(layout.series_id)
+                        ? "DigitalInterval"
+                        : "");
+
+        pen.setColor(color);
+        painter.setPen(pen);
+
+        // Top boundary
+        painter.drawLine(0, static_cast<int>(top_px), w, static_cast<int>(top_px));
+        // Bottom boundary
+        painter.drawLine(0, static_cast<int>(bot_px), w, static_cast<int>(bot_px));
+
+        // Label at left margin
+        painter.setPen(QColor(color.red(), color.green(), color.blue(), 220));
+        QString const label = QStringLiteral("Lane %1: %2")
+                                      .arg(layout.series_index)
+                                      .arg(QString::fromStdString(layout.series_id));
+        painter.drawText(4, static_cast<int>(top_px) + 12, label);
+    }
+}
+
+void OpenGLWidget::drawOriginMarkers(QPainter & painter) {
+    auto const & layouts = _cache_state.layout_response.layouts;
+    int const h = height();
+
+    QPen pen;
+    pen.setWidth(2);
+
+    for (auto const & layout: layouts) {
+        float const center_ndc = layout.y_transform.offset;
+        float const center_px = ndcToPixelY(center_ndc, h);
+
+        QColor const color = overlayColorForType(
+                _data_store->analogSeries().count(layout.series_id)  ? "Analog"
+                : _data_store->eventSeries().count(layout.series_id) ? "DigitalEvent"
+                : _data_store->intervalSeries().count(layout.series_id)
+                        ? "DigitalInterval"
+                        : "");
+
+        pen.setColor(color);
+        painter.setPen(pen);
+
+        // Short horizontal tick at left edge marking the series origin
+        painter.drawLine(0, static_cast<int>(center_px), 20, static_cast<int>(center_px));
+    }
+}
+
+void OpenGLWidget::drawCursorCrosshair(QPainter & painter) {
+    if (_last_mouse_pos.isNull()) {
+        return;
+    }
+
+    int const w = width();
+    int const h = height();
+    int const mx = _last_mouse_pos.x();
+    int const my = _last_mouse_pos.y();
+
+    // Crosshair lines
+    QPen pen(QColor(255, 255, 255, 80));
+    pen.setWidth(1);
+    painter.setPen(pen);
+    painter.drawLine(mx, 0, mx, h);
+    painter.drawLine(0, my, w, my);
+
+    // Compact readout near cursor
+    float const time = canvasXToTime(static_cast<float>(mx));
+    float const ndc_y = -1.0f + 2.0f * (static_cast<float>(h) - static_cast<float>(my)) / static_cast<float>(h);
+
+    auto const series_hit = findSeriesAtPosition(
+            static_cast<float>(mx), static_cast<float>(my));
+    QString series_label = QStringLiteral("none");
+    if (series_hit) {
+        series_label = QStringLiteral("%1: %2")
+                               .arg(QString::fromStdString(series_hit->first),
+                                    QString::fromStdString(series_hit->second));
+    }
+
+    QString const text = QStringLiteral("T=%1  Y=%2  (%3)")
+                                 .arg(static_cast<double>(time), 0, 'f', 1)
+                                 .arg(static_cast<double>(ndc_y), 0, 'f', 3)
+                                 .arg(series_label);
+
+    // Draw readout with a semi-transparent background for legibility
+    QFont const font(QStringLiteral("monospace"), 8);
+    painter.setFont(font);
+    QFontMetrics const fm(font);
+    QRect const text_rect = fm.boundingRect(text);
+
+    int const text_x = mx + 12;
+    int const text_y = my - 12;
+    QRect const bg_rect(text_x - 2, text_y - text_rect.height(), text_rect.width() + 4, text_rect.height() + 4);
+    painter.fillRect(bg_rect, QColor(0, 0, 0, 140));
+
+    painter.setPen(QColor(255, 255, 255, 220));
+    painter.drawText(text_x, text_y, text);
 }

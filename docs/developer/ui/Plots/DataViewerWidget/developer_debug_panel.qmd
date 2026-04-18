@@ -505,143 +505,39 @@ gated by a "Developer Mode" checkbox. When the checkbox is toggled, the state's
 
 ---
 
-### Phase C: On-Canvas Overlays
+### Phase C: On-Canvas Overlays {.completed}
 
-Can proceed in parallel with Phase B.
+**Status: COMPLETE** — Implemented in `Rendering/OpenGLWidget.hpp/.cpp`.
 
-#### C.1 — Add QPainter overlay pass in `paintGL()`
+QPainter-based diagnostic overlays are drawn on top of the GL canvas when developer
+mode is enabled. Three independently togglable overlay types are provided:
 
-**File**: `Rendering/OpenGLWidget.cpp`
+#### Files Modified
 
-Insert the overlay call as the **last operation** in `paintGL()`, after
-`drawInteractionPreview()`. The QPainter session must come after all GL calls:
+- `Rendering/OpenGLWidget.hpp` — Added `OverlayToggles` struct, `_overlay_toggles` and
+  `_last_mouse_pos` members, public setters (`setOverlayLaneBoundaries`,
+  `setOverlayOriginMarkers`, `setOverlayCrosshair`), and private drawing methods
+  (`drawDeveloperOverlays`, `drawLaneBoundaries`, `drawOriginMarkers`, `drawCursorCrosshair`)
+- `Rendering/OpenGLWidget.cpp` — Added overlay pass in `paintGL()`, mouse position tracking
+  in `mouseMoveEvent()`/`leaveEvent()`, NDC-to-pixel conversion helpers, and full implementations
+  of all three overlay types
+- `UI/DataViewerDebugPanel.cpp` — Wired overlay toggle checkboxes to OpenGLWidget setters
 
-```cpp
-void OpenGLWidget::paintGL() {
-    // ... existing GL rendering ...
-    drawAxis();
-    drawGridLines();
-    drawInteractionPreview();
+#### Overlays Implemented
 
-    // Developer overlay (QPainter on top of GL)
-    if (_state && _state->developerMode()) {
-        QPainter painter(this);
-        painter.setRenderHint(QPainter::Antialiasing);
-        drawDeveloperOverlays(painter);
-        painter.end();
-    }
-}
-```
+| Overlay | Description |
+|---------|-------------|
+| **Lane Boundaries** | Dashed horizontal lines at top/bottom of each lane, color-coded by type (blue=Analog, green=Event, orange=Interval), with lane index and series key labels |
+| **Origin Markers** | Short horizontal tick marks at each series' center_y (transform origin), color-coded by type |
+| **Cursor Crosshair** | Full-width/height crosshair lines following the mouse, with a compact readout showing time, NDC-Y, and series-under-cursor |
 
-Add `#include <QPainter>` to `OpenGLWidget.cpp`. Declare `drawDeveloperOverlays()` as
-a private method in the header.
+#### Design Notes
 
-Store overlay toggle state as a simple struct in `OpenGLWidget` (NOT serialized —
-session-only):
-
-```cpp
-// In OpenGLWidget.hpp — private section:
-struct OverlayToggles {
-    bool lane_boundaries = true;
-    bool origin_markers = true;
-    bool crosshair = true;
-};
-OverlayToggles _overlay_toggles;
-```
-
-Provide public setters so the debug panel checkboxes can control them:
-
-```cpp
-void setOverlayLaneBoundaries(bool enabled);
-void setOverlayOriginMarkers(bool enabled);
-void setOverlayCrosshair(bool enabled);
-```
-
-#### C.2 — NDC to pixel coordinate conversion
-
-All overlay drawing uses QPainter pixel coordinates. The conversion from NDC `[-1, +1]`
-to canvas pixels is:
-
-```cpp
-// NDC Y is bottom-up (-1 = bottom, +1 = top), QPainter Y is top-down (0 = top)
-float ndcToPixelY(float ndc_y, int canvas_height) {
-    return static_cast<float>(canvas_height) * (1.0f - ndc_y) / 2.0f;
-}
-float ndcToPixelX(float ndc_x, int canvas_width) {
-    return static_cast<float>(canvas_width) * (ndc_x + 1.0f) / 2.0f;
-}
-```
-
-These are consistent with the existing inverse in `findSeriesAtPosition()`:
-`ndc_y = -1.0f + 2.0f * (height() - canvas_y) / height()`.
-
-#### C.3 — Lane boundary overlay implementation
-
-Iterate `_cache_state.layout_response.layouts`. For each layout entry:
-
-```cpp
-void OpenGLWidget::drawLaneBoundaries(QPainter & painter) {
-    auto const & layouts = _cache_state.layout_response.layouts;
-    int const h = height();
-    int const w = width();
-
-    QPen pen;
-    pen.setStyle(Qt::DashLine);
-    pen.setWidth(1);
-
-    QFont font("monospace", 8);
-    painter.setFont(font);
-
-    for (size_t i = 0; i < layouts.size(); ++i) {
-        auto const & layout = layouts[i];
-        // Determine color by series type (check _data_store maps)
-        pen.setColor(QColor(74, 144, 217, 128));  // blue for analog
-        painter.setPen(pen);
-
-        float const top_ndc = layout.y_transform.offset + layout.y_transform.gain;
-        float const bot_ndc = layout.y_transform.offset - layout.y_transform.gain;
-        int const top_px = static_cast<int>(ndcToPixelY(top_ndc, h));
-        int const bot_px = static_cast<int>(ndcToPixelY(bot_ndc, h));
-
-        painter.drawLine(0, top_px, w, top_px);
-        painter.drawLine(0, bot_px, w, bot_px);
-
-        // Label at left margin
-        painter.drawText(4, top_px + 12,
-            QString("Lane %1: %2").arg(i).arg(
-                QString::fromStdString(layout.series_id)));
-    }
-}
-```
-
-#### C.4 — Cursor crosshair
-
-Track the last mouse position via `mouseMoveEvent()` (already dispatched to
-`_input_handler`). Store `_last_mouse_pos` as a `QPoint` member. Draw in overlay:
-
-```cpp
-void OpenGLWidget::drawCursorCrosshair(QPainter & painter) {
-    if (_last_mouse_pos.isNull()) return;
-
-    QPen pen(QColor(255, 255, 255, 80));
-    pen.setWidth(1);
-    painter.setPen(pen);
-    painter.drawLine(_last_mouse_pos.x(), 0, _last_mouse_pos.x(), height());
-    painter.drawLine(0, _last_mouse_pos.y(), width(), _last_mouse_pos.y());
-
-    // Compact readout near cursor
-    float const time = canvasXToTime(static_cast<float>(_last_mouse_pos.x()));
-    float const ndc_y = -1.0f + 2.0f * (static_cast<float>(height()) -
-        static_cast<float>(_last_mouse_pos.y())) / static_cast<float>(height());
-    painter.setPen(QColor(255, 255, 255, 200));
-    painter.drawText(_last_mouse_pos.x() + 8, _last_mouse_pos.y() - 8,
-        QString("T=%1  Y=%2").arg(time, 0, 'f', 1).arg(ndc_y, 0, 'f', 4));
-}
-```
-
-**Acceptance criteria**: Lane boundary lines accurately reflect `LayoutResponse` positions.
-Labels match the lane table in the debug panel. Crosshair coordinates match the coordinate
-inspector.
+- Overlay toggles are session-only (`OverlayToggles` struct in `OpenGLWidget`, NOT serialized)
+- Mouse position is tracked via `_last_mouse_pos` (`QPoint`), cleared on `leaveEvent()`
+- NDC-to-pixel conversion uses the standard formula consistent with `findSeriesAtPosition()`
+- Crosshair readout includes a semi-transparent background rectangle for legibility
+- Zero overhead when developer mode is OFF — no QPainter session, no diagnostics collected
 
 ---
 

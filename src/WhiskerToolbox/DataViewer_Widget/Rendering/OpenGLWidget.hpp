@@ -75,6 +75,7 @@
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+#include <QPoint>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -302,6 +303,17 @@ public:
         return std::make_pair(width(), height());
     }
 
+    // ========================================================================
+    // Developer Overlay Controls
+    // ========================================================================
+
+    /// Enable/disable lane boundary overlay lines
+    void setOverlayLaneBoundaries(bool enabled);
+    /// Enable/disable series origin marker overlay
+    void setOverlayOriginMarkers(bool enabled);
+    /// Enable/disable cursor crosshair overlay
+    void setOverlayCrosshair(bool enabled);
+
     /**
      * @brief Collect a snapshot of layout and rendering diagnostics
      *
@@ -386,6 +398,18 @@ private:
      * line selection, and other interactive glyph operations.
      */
     void drawInteractionPreview();
+
+    /**
+     * @brief Draw developer-mode diagnostic overlays via QPainter
+     *
+     * Called at the end of paintGL() when developer_mode is enabled.
+     * Draws lane boundaries, origin markers, and cursor crosshair
+     * on top of the GL canvas.
+     */
+    void drawDeveloperOverlays();
+    void drawLaneBoundaries(QPainter & painter);
+    void drawOriginMarkers(QPainter & painter);
+    void drawCursorCrosshair(QPainter & painter);
 
     /**
      * @brief Handle completed interaction and update DataManager
@@ -496,6 +520,17 @@ private:
 
     // The hit tester provides unified hit testing via SceneHitTester
     CorePlotting::SceneHitTester _hit_tester;
+
+    /// Session-only overlay visibility toggles (not serialized)
+    struct OverlayToggles {
+        bool lane_boundaries = true;
+        bool origin_markers = true;
+        bool crosshair = true;
+    };
+    OverlayToggles _overlay_toggles;
+
+    /// Last known mouse position for crosshair overlay
+    QPoint _last_mouse_pos;
 
     /**
      * @brief Build a LayoutRequest from current series state

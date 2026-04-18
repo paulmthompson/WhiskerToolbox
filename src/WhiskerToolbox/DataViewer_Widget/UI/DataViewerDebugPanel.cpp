@@ -241,6 +241,14 @@ void DataViewerDebugPanel::_connectSignals() {
 
         connect(_opengl_widget, &OpenGLWidget::mouseHover,
                 this, &DataViewerDebugPanel::updateCoordinateInspector);
+
+        // Wire overlay toggle checkboxes to OpenGLWidget setters
+        connect(_lane_boundaries_cb, &QCheckBox::toggled,
+                _opengl_widget, &OpenGLWidget::setOverlayLaneBoundaries);
+        connect(_origin_markers_cb, &QCheckBox::toggled,
+                _opengl_widget, &OpenGLWidget::setOverlayOriginMarkers);
+        connect(_crosshair_cb, &QCheckBox::toggled,
+                _opengl_widget, &OpenGLWidget::setOverlayCrosshair);
     }
 
     if (_state) {
