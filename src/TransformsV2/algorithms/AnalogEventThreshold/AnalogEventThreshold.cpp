@@ -14,15 +14,9 @@ std::shared_ptr<DigitalEventSeries> analogEventThreshold(
     AnalogEventThresholdParams const& params,
     ComputeContext const& ctx) {
     
-    // Validate parameters
-    if (!params.isValidDirection()) {
-        std::cerr << "Invalid direction parameter: " << params.direction << std::endl;
-        return std::make_shared<DigitalEventSeries>();
-    }
-    
     float const threshold = params.threshold_value;
     float const lockout_time = params.lockout_time.value();
-    std::string const direction = params.direction;
+    auto const direction = params.direction;
     
     auto const& values = input.getAnalogTimeSeries();
     auto const& time_storage = input.getTimeStorage();
@@ -49,15 +43,15 @@ std::shared_ptr<DigitalEventSeries> analogEventThreshold(
         bool event_detected = false;
         
         // Check threshold crossing based on direction
-        if (direction == "positive") {
+        if (direction == AnalogEventThresholdParams::Direction::positive) {
             if (values[i] > threshold) {
                 event_detected = true;
             }
-        } else if (direction == "negative") {
+        } else if (direction == AnalogEventThresholdParams::Direction::negative) {
             if (values[i] < threshold) {
                 event_detected = true;
             }
-        } else if (direction == "absolute") {
+        } else if (direction == AnalogEventThresholdParams::Direction::absolute) {
             if (std::abs(values[i]) > std::abs(threshold)) {
                 event_detected = true;
             }
