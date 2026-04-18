@@ -210,6 +210,7 @@ enum class DataViewerZoomScalingMode {
 struct DataViewerUIPreferences {
     DataViewerZoomScalingMode zoom_scaling_mode = DataViewerZoomScalingMode::Adaptive;
     bool properties_panel_collapsed = false;
+    bool developer_mode = false;///< Toggle developer diagnostics panel and on-canvas overlays
     // Note: splitter sizes not serialized (Qt-specific, layout-dependent)
 };
 

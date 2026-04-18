@@ -10,6 +10,7 @@ set(DATAVIEWER_WIDGET_SOURCES
         Core/DataViewerStateData.hpp
         Core/DataViewerState.cpp
         Core/DataViewerState.hpp
+        Core/DataViewerDiagnostics.hpp
         Core/SeriesOptionsRegistry.cpp
         Core/SeriesOptionsRegistry.hpp
         Core/SpikeSorterConfigLoader.cpp

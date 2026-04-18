@@ -402,6 +402,20 @@ public:
      */
     [[nodiscard]] DataViewerUIPreferences const & uiPreferences() const { return _data.ui; }
 
+    // ==================== Developer Mode ====================
+
+    /**
+     * @brief Toggle the developer diagnostics panel and on-canvas overlays
+     * @param enabled true to enable developer mode
+     */
+    void setDeveloperMode(bool enabled);
+
+    /**
+     * @brief Check if developer mode is active
+     * @return true if developer diagnostics are enabled
+     */
+    [[nodiscard]] bool developerMode() const { return _data.ui.developer_mode; }
+
     // ==================== Interaction ====================
 
     /**
@@ -483,6 +497,12 @@ signals:
      * @brief Emitted when UI preferences change
      */
     void uiPreferencesChanged();
+
+    /**
+     * @brief Emitted when developer mode is toggled
+     * @param enabled true if developer mode is now active
+     */
+    void developerModeChanged(bool enabled);
 
     /**
      * @brief Emitted when interaction mode changes

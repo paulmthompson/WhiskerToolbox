@@ -35,6 +35,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -641,7 +642,7 @@ void OpenGLWidget::drawGridLines() {
 // TimeRange / ViewState Methods
 ///////////////////////////////////////////////////////////////////////////////
 
-void OpenGLWidget::setMasterTimeFrame(const std::shared_ptr<TimeFrame>& master_time_frame) {
+void OpenGLWidget::setMasterTimeFrame(std::shared_ptr<TimeFrame> const & master_time_frame) {
     _master_time_frame = master_time_frame;
 
     // Initialize time window based on TimeFrame
@@ -1030,6 +1031,9 @@ void OpenGLWidget::renderWithSceneRenderer() {
     // Upload scene to renderer and render
     _scene_renderer->uploadScene(_cache_state.scene);
     _scene_renderer->render(view, projection);
+
+    ++_scene_rebuild_count;
+    emit sceneRebuilt();
 }
 
 void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builder) {
@@ -1344,4 +1348,106 @@ void OpenGLWidget::clearSpikeSorterConfiguration(std::string const & group_name)
     _spike_sorter_configs.erase(group_name);
     _cache_state.layout_response_dirty = true;
     updateCanvas(_time);
+}
+
+DataViewerDiagnostics OpenGLWidget::getDiagnostics() const {
+    DataViewerDiagnostics diag;
+
+    auto const & view_state = _state->viewState();
+    float const effective_y_min = view_state.y_min + view_state.vertical_pan_offset;
+    float const effective_y_max = view_state.y_max + view_state.vertical_pan_offset;
+
+    auto const & layouts = _cache_state.layout_response.layouts;
+
+    // Helper: populate a LaneDiagnostic from a layout entry
+    auto makeLane = [&](CorePlotting::SeriesLayout const & layout,
+                        std::string const & type_str) -> LaneDiagnostic {
+        LaneDiagnostic lane;
+        lane.series_key = layout.series_id;
+        lane.series_type = type_str;
+        lane.lane_index = layout.series_index;
+        lane.transform_offset = layout.y_transform.offset;
+        lane.transform_gain = layout.y_transform.gain;
+        lane.center_y_ndc = layout.y_transform.offset;
+        lane.height_ndc = std::abs(layout.y_transform.gain) * 2.0f;
+
+        float const top = lane.center_y_ndc + lane.height_ndc / 2.0f;
+        float const bot = lane.center_y_ndc - lane.height_ndc / 2.0f;
+        lane.is_on_screen = (top >= effective_y_min) && (bot <= effective_y_max);
+        return lane;
+    };
+
+    // Analog series
+    for (auto const & [key, entry]: _data_store->analogSeries()) {
+        auto const * layout = _cache_state.layout_response.findLayout(key);
+        if (!layout) continue;
+
+        LaneDiagnostic lane = makeLane(*layout, "Analog");
+
+        // Visibility and per-series options from state
+        auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
+        lane.is_visible = opts ? opts->get_is_visible() : true;
+        lane.user_scale_factor = opts ? opts->user_scale_factor : 1.0f;
+
+        // Cached statistics
+        lane.data_mean = entry.data_cache.cached_mean;
+        lane.data_std_dev = entry.data_cache.cached_std_dev;
+
+        // Vertex count from cache
+        lane.vertex_count = static_cast<int>(entry.vertex_cache.size());
+
+        diag.lanes.push_back(std::move(lane));
+    }
+
+    // Digital event series
+    for (auto const & [key, entry]: _data_store->eventSeries()) {
+        auto const * layout = _cache_state.layout_response.findLayout(key);
+        if (!layout) continue;
+
+        LaneDiagnostic lane = makeLane(*layout, "DigitalEvent");
+
+        auto const * opts = _state->seriesOptions().get<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
+        lane.is_visible = opts ? opts->get_is_visible() : true;
+
+        diag.lanes.push_back(std::move(lane));
+    }
+
+    // Digital interval series
+    for (auto const & [key, entry]: _data_store->intervalSeries()) {
+        auto const * layout = _cache_state.layout_response.findLayout(key);
+        if (!layout) continue;
+
+        LaneDiagnostic lane = makeLane(*layout, "DigitalInterval");
+
+        auto const * opts = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
+        lane.is_visible = opts ? opts->get_is_visible() : true;
+
+        diag.lanes.push_back(std::move(lane));
+    }
+
+    // Sort lanes by index for consistent display
+    std::sort(diag.lanes.begin(), diag.lanes.end(),
+              [](auto const & a, auto const & b) { return a.lane_index < b.lane_index; });
+
+    // Rendering stats
+    auto const & scene = _cache_state.scene;
+    diag.rendering.polyline_batch_count = static_cast<int>(scene.poly_line_batches.size());
+    diag.rendering.glyph_batch_count = static_cast<int>(scene.glyph_batches.size());
+    diag.rendering.rectangle_batch_count = static_cast<int>(scene.rectangle_batches.size());
+    diag.rendering.total_entity_count = static_cast<int>(scene.entity_to_series_key.size());
+    diag.rendering.scene_rebuild_count = _scene_rebuild_count;
+
+    int total_verts = 0;
+    for (auto const & batch: scene.poly_line_batches) {
+        total_verts += static_cast<int>(batch.vertices.size()) / 2;
+    }
+    for (auto const & batch: scene.glyph_batches) {
+        total_verts += static_cast<int>(batch.positions.size());
+    }
+    for (auto const & batch: scene.rectangle_batches) {
+        total_verts += static_cast<int>(batch.bounds.size()) * 4;
+    }
+    diag.rendering.total_vertex_count = total_verts;
+
+    return diag;
 }

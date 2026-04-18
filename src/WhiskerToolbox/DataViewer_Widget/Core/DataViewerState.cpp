@@ -251,10 +251,25 @@ void DataViewerState::setPropertiesPanelCollapsed(bool collapsed) {
 
 void DataViewerState::setUIPreferences(DataViewerUIPreferences const & prefs) {
     if (_data.ui.zoom_scaling_mode != prefs.zoom_scaling_mode ||
-        _data.ui.properties_panel_collapsed != prefs.properties_panel_collapsed) {
+        _data.ui.properties_panel_collapsed != prefs.properties_panel_collapsed ||
+        _data.ui.developer_mode != prefs.developer_mode) {
+        bool const dev_mode_changed = _data.ui.developer_mode != prefs.developer_mode;
         _data.ui = prefs;
         markDirty();
         emit uiPreferencesChanged();
+        if (dev_mode_changed) {
+            emit developerModeChanged(_data.ui.developer_mode);
+        }
+    }
+}
+
+// ==================== Developer Mode ====================
+
+void DataViewerState::setDeveloperMode(bool enabled) {
+    if (_data.ui.developer_mode != enabled) {
+        _data.ui.developer_mode = enabled;
+        markDirty();
+        emit developerModeChanged(enabled);
     }
 }
 

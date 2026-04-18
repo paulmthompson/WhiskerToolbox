@@ -51,6 +51,7 @@
  */
 
 
+#include "Core/DataViewerDiagnostics.hpp"
 #include "Core/DataViewerState.hpp"
 #include "Core/SpikeSorterConfigLoader.hpp"
 #include "Core/TimeSeriesDataStore.hpp"
@@ -60,9 +61,9 @@
 #include "Interaction/DataViewerSelectionManager.hpp"
 #include "Interaction/DataViewerTooltipController.hpp"
 
-#include "CorePlotting/CoordinateTransform/TimeRange.hpp" // TimeSeriesViewState
-#include "CorePlotting/Interaction/IGlyphInteractionController.hpp"
+#include "CorePlotting/CoordinateTransform/TimeRange.hpp"// TimeSeriesViewState
 #include "CorePlotting/Interaction/DataCoordinates.hpp"
+#include "CorePlotting/Interaction/IGlyphInteractionController.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
@@ -110,10 +111,10 @@ class SceneBuilder;
 struct SceneCacheState {
     CorePlotting::RenderableScene scene;
     CorePlotting::LayoutResponse layout_response;
-    std::map<size_t, std::string> rectangle_batch_key_map; // interval series keys
-    std::map<size_t, std::string> glyph_batch_key_map;     // event series keys
-    bool scene_dirty{true};           // True when scene needs rebuild
-    bool layout_response_dirty{true}; // True when layout needs recompute
+    std::map<size_t, std::string> rectangle_batch_key_map;// interval series keys
+    std::map<size_t, std::string> glyph_batch_key_map;    // event series keys
+    bool scene_dirty{true};                               // True when scene needs rebuild
+    bool layout_response_dirty{true};                     // True when layout needs recompute
 };
 
 /**
@@ -122,8 +123,8 @@ struct SceneCacheState {
  * Groups OpenGL lifecycle resources including matrices.
  */
 struct OpenGLResourceState {
-    QMatrix4x4 proj;  // Projection matrix (identity default)
-    QMatrix4x4 view;  // View matrix (identity default)
+    QMatrix4x4 proj;// Projection matrix (identity default)
+    QMatrix4x4 view;// View matrix (identity default)
     bool initialized{false};
     QMetaObject::Connection ctx_about_to_be_destroyed_conn;
     ShaderSourceType shader_source_type{ShaderSourceType::Resource};
@@ -276,7 +277,7 @@ public:
      * 
      * @param master_time_frame Shared pointer to the master time frame
      */
-    void setMasterTimeFrame(const std::shared_ptr<TimeFrame>& master_time_frame);
+    void setMasterTimeFrame(std::shared_ptr<TimeFrame> const & master_time_frame);
 
     /**
      * @brief Load spike sorter configuration for a group of analog series
@@ -301,6 +302,16 @@ public:
         return std::make_pair(width(), height());
     }
 
+    /**
+     * @brief Collect a snapshot of layout and rendering diagnostics
+     *
+     * Returns a lightweight struct summarising per-lane transforms, rendering
+     * batch counts, and on-screen status without exposing internal data structures.
+     *
+     * @return DataViewerDiagnostics populated from current cache state
+     */
+    [[nodiscard]] DataViewerDiagnostics getDiagnostics() const;
+
     // Coordinate conversion methods
     [[nodiscard]] float canvasXToTime(float canvas_x) const;
     [[nodiscard]] float canvasYToAnalogValue(float canvas_y, std::string const & series_key) const;
@@ -316,7 +327,7 @@ public slots:
 signals:
     void mouseHover(float time_coordinate, float canvas_y, QString const & series_info);
     void mouseClick(float time_coordinate, float canvas_y, QString const & series_info);
-    
+
     /**
      * @brief Emitted when an entity is selected or deselected
      * @param entity_id The EntityId that was selected/deselected
@@ -340,6 +351,15 @@ signals:
      */
     void interactionCompleted(CorePlotting::Interaction::DataCoordinates const & coords);
 
+    /**
+     * @brief Emitted after the renderable scene is rebuilt
+     *
+     * The debug panel connects to this to refresh the lane table and rendering
+     * statistics.  Only emitted when the scene is actually reconstructed (i.e.
+     * when layout was dirty), not on every repaint.
+     */
+    void sceneRebuilt();
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -357,7 +377,7 @@ protected:
 private:
     void drawAxis();
     void drawGridLines();
-    
+
     /**
      * @brief Draw the preview from the active glyph controller
      * 
@@ -418,7 +438,7 @@ private:
      *         or nullopt if no series is under the cursor
      */
     std::optional<std::pair<std::string, std::string>> findSeriesAtPosition(float canvas_x, float canvas_y) const;
-    
+
     /// Centralized storage for all time series data
     std::unique_ptr<DataViewer::TimeSeriesDataStore> _data_store;
 
@@ -434,14 +454,17 @@ private:
     /// Cached scene and layout for rendering/hit testing
     SceneCacheState _cache_state;
 
+    /// Cumulative count of scene rebuilds (for diagnostics)
+    int _scene_rebuild_count{0};
+
     // ========================================================================
     // Input, Interaction, Selection, and Tooltip Handlers
     // (Extracted from widget for cleaner separation of concerns)
     // ========================================================================
-    
+
     /// Handles mouse events and emits semantic signals
     std::unique_ptr<DataViewer::DataViewerInputHandler> _input_handler;
-    
+
     /// Manages interaction state machine for interval creation/modification
     std::unique_ptr<DataViewer::DataViewerInteractionManager> _interaction_manager;
 
@@ -492,7 +515,6 @@ private:
      * Called automatically when _layout_response_dirty is true.
      */
     void computeAndApplyLayout();
-
 };
 
 #endif//OPENGLWIDGET_HPP
