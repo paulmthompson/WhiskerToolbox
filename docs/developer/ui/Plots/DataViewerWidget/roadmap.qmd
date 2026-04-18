@@ -480,6 +480,12 @@ major feature phases to avoid merge conflicts.
 
 ## Implementation Priority
 
+### Prerequisite
+
+- **[Developer Debug Panel](developer_debug_panel.qmd)** — Diagnostic infrastructure that
+  accelerates development of Phases 1–2 by providing real-time visibility into lane layout,
+  scales, coordinate transforms, and viewport state. Recommended to implement first.
+
 ### Next Up
 
 1. **Phase 1**: Common axis integration — foundation for all subsequent Y-axis work
@@ -527,6 +533,7 @@ major feature phases to avoid merge conflicts.
 # See Also
 
 - [Data Viewer Widget Documentation](index.qmd) — Full architecture and feature documentation
+- [Developer Debug Panel Plan](developer_debug_panel.qmd) — Diagnostic panel and on-canvas overlays for development
 - [Plot Widget Guide](../plot_widget_guide.md) — Shared axis architecture, DataManager integration, testing patterns
 - [EventPlotWidget Roadmap](../EventPlotWidget/roadmap.qmd) — Shared glyph infrastructure (Phase 3), cross-widget linking (Phase 6)
 - [OnionSkinViewWidget Roadmap](../OnionSkinViewWidget/roadmap.qmd) — Shared `PointGlyphOptions` (Phase 1), shared visual options (Phase 6)

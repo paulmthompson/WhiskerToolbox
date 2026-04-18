@@ -231,6 +231,7 @@ website:
                   - developer/ui/Plots/3DPlot/index.qmd
                   - developer/ui/Plots/ACFWidget/index.qmd
                   - developer/ui/Plots/DataViewerWidget/index.qmd
+                  - developer/ui/Plots/DataViewerWidget/developer_debug_panel.qmd
                   - developer/ui/Plots/EventPlotWidget/index.qmd
                   - developer/ui/Plots/HeatmapWidget/index.qmd
                   - developer/ui/Plots/LinePlotWidget/index.qmd

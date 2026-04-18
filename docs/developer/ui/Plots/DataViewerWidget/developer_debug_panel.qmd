@@ -1,0 +1,922 @@
+---
+title: "Developer Debug Panel — Plan & Roadmap"
+format: html
+---
+
+# Developer Debug Panel for DataViewer_Widget
+
+This document describes the plan for adding a **Developer Mode** to `DataViewer_Widget` — a
+togglable diagnostic layer providing real-time visibility into the CorePlotting/PlottingOpenGL
+pipeline without resorting to a C++ debugger.
+
+::: {.callout-tip}
+## Related Issues
+
+- [#247 — Y-Axis, Scalebars, and Lane Labels](https://github.com/paulmthompson/WhiskerToolbox/issues/247)
+- [#248 — Viewport Culling and Configurable Lane Sizing](https://github.com/paulmthompson/WhiskerToolbox/issues/248)
+- [#227 — Mouse-Wheel Modifiers for Y Scaling](https://github.com/paulmthompson/WhiskerToolbox/issues/227)
+:::
+
+---
+
+## Motivation
+
+When developing features for the DataViewer — particularly those involving lane layout (#248),
+Y-axis scaling (#227), and scalebar positioning (#247) — the C++ debugger provides only
+low-level views of raw floats, matrices, and std containers. There is no mid-level diagnostic
+layer that answers questions like:
+
+- How many lanes are on screen right now?
+- What is the effective scale (gain + offset) of the series in Lane 3?
+- What are the NDC positions and pixel heights of each lane?
+- Which series are currently on-screen vs. culled?
+- What coordinate does the mouse cursor map to in each coordinate space?
+
+This feature provides that diagnostic layer, making it significantly easier to develop, debug,
+and validate the plotting pipeline.
+
+---
+
+## Design
+
+### Approach: Panel + On-Canvas Overlays
+
+The developer mode consists of two complementary parts:
+
+1. **Debug Panel (`DataViewerDebugPanel`)** — A dedicated `QWidget` displayed alongside the
+   existing `DataViewerPropertiesWidget`. Shows tabular and textual diagnostics that update
+   in real time.
+
+2. **On-Canvas Overlays** — Semi-transparent visual annotations drawn directly on the OpenGL
+   canvas via `QPainter` after GL rendering completes. Provides spatial context that text
+   alone cannot convey (lane boundaries, coordinate crosshairs, origin markers).
+
+Both are gated behind a single `developer_mode` boolean in `DataViewerStateData`. This flag
+is serialized via reflect-cpp so it persists across workspace saves — useful for ongoing
+development sessions.
+
+### Design Alternatives Considered
+
+| Approach | Pros | Cons | Decision |
+|----------|------|------|----------|
+| **Panel + QPainter overlays** | Integrates with Qt docking; no new dependencies; QPainter natively supported on `QOpenGLWidget` | QPainter text rendering not GPU-accelerated (fine for debug use) | **Chosen** |
+| **Dear ImGui overlay** | Powerful immediate-mode UI; widely used for game debug overlays | New dependency; doesn't integrate with Qt docking; overkill for this scope | Rejected |
+| **spdlog-only logging** | Zero UI work | No spatial feedback; hard to correlate log lines with on-screen elements | Rejected |
+| **Separate diagnostic window** | Fully decoupled from widget | Loses spatial context; harder to correlate with canvas | Rejected |
+
+### Text Rendering Strategy
+
+No OpenGL text renderer exists in the project. The axis label widgets (`VerticalAxisWidget`,
+`HorizontalAxisWidget`) already use `QPainter::drawText()` from QWidget paint events rather
+than GL-based text. The debug overlays follow the same approach: after OpenGL rendering
+completes in `paintGL()`, a `QPainter` session draws text labels and annotations on top. This
+is sufficient for a diagnostic tool and avoids the complexity of font atlas management.
+
+---
+
+## Information Displayed
+
+### A. Debug Panel — Textual Diagnostics
+
+The panel is organized into collapsible sections:
+
+#### A.1 Global View State
+
+| Field | Source | Why Useful |
+|-------|--------|------------|
+| Time window | `TimeSeriesViewState::time_start / time_end` | Verify visible range |
+| Visible duration | `time_end - time_start` | Quick sanity check |
+| Y bounds (effective) | `y_min + vertical_pan_offset`, `y_max + vertical_pan_offset` | Debug Y pan/zoom (#227) |
+| `vertical_pan_offset` | `TimeSeriesViewState` | Track Y panning state |
+| `global_zoom` | `TimeSeriesViewState` | X-axis zoom factor |
+| `global_vertical_scale` | `TimeSeriesViewState` | Y-axis scale factor (#227) |
+| Widget pixel size | `OpenGLWidget::size()` | Verify actual render target |
+| Aspect ratio | `width / height` | Detect layout compression |
+
+#### A.2 Lane Table (one row per series)
+
+This is the core diagnostic — a `QTableWidget` with one row per registered series:
+
+| Column | Source | Debugging Purpose |
+|--------|--------|-------------------|
+| Lane # | `SeriesLayout::series_index` | Ordering verification |
+| Series Key | `SeriesLayout::series_id` | Identification |
+| Type | Analog / Event / Interval | Classification |
+| Visible | `SeriesOptionsData::is_visible` | Visibility filtering |
+| Center Y (NDC) | `LayoutTransform::offset` | Where the series sits on screen |
+| Height (NDC) | Derived from `LayoutTransform::gain` | Lane size (#248) |
+| Y Transform | `offset` + `gain` pair | Full transform debugging (#227) |
+| User Scale | `AnalogSeriesOptionsData::user_scale_factor` | Per-series scale (#227) |
+| Data Mean | `SeriesDataCache::mean` | Normalization reference |
+| Data Std Dev | `SeriesDataCache::std_dev` | Normalization reference |
+| Vertex Count | `AnalogVertexCache` or batch size | Performance / cache state |
+| On-Screen? | Viewport intersection test | Culling verification (#248) |
+
+The "On-Screen?" column computes whether the lane's NDC extent `[center_y - height/2,
+center_y + height/2]` intersects the effective viewport `[y_min + pan, y_max + pan]`.
+This directly validates viewport culling logic for #248.
+
+#### A.3 Rendering Statistics
+
+| Metric | Source | Why Useful |
+|--------|--------|------------|
+| Polyline batch count | `RenderableScene` | Verify scene construction |
+| Glyph batch count | `RenderableScene` | Event series batch count |
+| Rectangle batch count | `RenderableScene` | Interval series batch count |
+| Total vertex count | Sum across all batches | Performance baseline |
+| Total entity count | `entity_to_series_key` map size | Selection system check |
+| Scene rebuild count | Counter in `OpenGLWidget` | Detect unnecessary rebuilds |
+
+#### A.4 Coordinate Inspector
+
+Updates on mouse movement. Displays the cursor position in all four coordinate spaces
+simultaneously:
+
+| Space | Value | Conversion |
+|-------|-------|------------|
+| Canvas (pixels) | `(px_x, px_y)` | Raw mouse event |
+| NDC | `(ndc_x, ndc_y)` | `DataViewerCoordinates::canvasToNDC()` |
+| World | `(world_x, world_y)` | Inverse view/projection matrix |
+| Data | `(time_index, value)` | `DataViewerCoordinates::canvasToData()` |
+| Series under cursor | key string or "none" | `OpenGLWidget::findSeriesAtPosition()` |
+
+This is particularly useful for #227 (Y-scaling) where understanding the mapping between mouse
+position and data value is essential for implementing cursor-anchored zoom.
+
+#### A.5 Interaction State
+
+| Field | Source | Why Useful |
+|-------|--------|------------|
+| Interaction mode | `DataViewerInteractionManager` | Verify mode transitions |
+| Selected entity count | `DataViewerSelectionManager` | Selection debugging |
+| Hover entity | Hit test result | Verify hit detection |
+| Active tool | `InteractionMode` enum | Mode awareness |
+
+### B. On-Canvas Overlays — Visual Annotations
+
+Each overlay type is independently togglable via a checkbox in the debug panel header.
+
+#### B.1 Lane Boundary Lines
+
+Horizontal dashed lines drawn at the top and bottom edges of each lane. Lane boundaries are
+the most direct visualization of the layout engine output.
+
+- Lines drawn at `center_y ± height/2` for each lane (converted from NDC to pixels)
+- Color-coded by series type:
+  - **Analog** — blue (#4A90D9, semi-transparent)
+  - **Digital Event** — green (#5CB85C, semi-transparent)
+  - **Digital Interval** — orange (#F0AD4E, semi-transparent)
+- Small text label at the left margin: `"Lane N: series_key"`
+- Lane number labels make it trivial to cross-reference with the panel table
+
+**Direct support for #248**: Lane boundaries visualize whether lanes are correctly sized and
+positioned when configurable lane heights are implemented. They also make viewport culling
+visible — off-screen lanes' boundaries will extend beyond the canvas.
+
+#### B.2 Series Origin Markers
+
+A small horizontal tick mark or dot at each series' center_y position, representing the
+"zero line" or data origin for that series.
+
+- Drawn as a thin horizontal line segment at `(0, center_y)` extending ~20px from the left edge
+- Same color as the lane boundary lines
+- Shows the transform origin — useful when debugging normalization and offset issues
+
+**Direct support for #227**: When adjusting `user_scale_factor` or `global_vertical_scale`,
+the origin marker shows exactly where the series' neutral point is.
+
+#### B.3 Cursor Crosshair with Readout
+
+Thin crosshair lines following the mouse cursor, with a compact coordinate readout nearby.
+
+- Vertical line at cursor X position (extends full height)
+- Horizontal line at cursor Y position (extends full width)
+- Text label near cursor: `"T=12345  Y=0.73  (Lane 2: channel_3)"`
+- Lines drawn in a neutral color (white with low alpha, or theme-dependent)
+
+**Direct support for #227**: The Y-value readout at the cursor confirms that coordinate
+transforms are working correctly after mouse-wheel scaling changes.
+
+#### B.4 Viewport Bounds Indicator (for future Y pan/zoom)
+
+When the total layout extends beyond the visible viewport (i.e., after [Phase 2](roadmap.qmd#phase-2-y-pan-zoom)
+is implemented), draw a small minimap or extent indicator showing:
+
+- Total data extent as a rectangle
+- Visible portion as a highlighted sub-rectangle
+- Current pan position
+
+This overlay is relevant only once viewport culling and Y pan/zoom are implemented (#248),
+but the infrastructure should be designed to support it.
+
+---
+
+## Architecture
+
+### New Files
+
+```
+DataViewer_Widget/
+└── UI/
+    ├── DataViewerDebugPanel.hpp     # Debug panel widget declaration
+    └── DataViewerDebugPanel.cpp     # Debug panel implementation
+```
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `Core/DataViewerStateData.hpp` | Add `bool developer_mode = false` to `DataViewerUIPreferences` |
+| `Core/DataViewerState.hpp/.cpp` | Add `developerMode()`, `setDeveloperMode()`, `developerModeChanged(bool)` signal |
+| `Rendering/OpenGLWidget.hpp/.cpp` | Add `getDiagnostics()`, `layoutResponse()`, `sceneRebuilt()` signal, QPainter overlay pass in `paintGL()`, `OverlayToggles` struct with public setters |
+| `UI/DataViewerPropertiesWidget.hpp/.cpp` | Add "Developer Mode" checkbox; embed `DataViewerDebugPanel` as collapsible child |
+| `DataViewerWidgetRegistration.cpp` | No changes needed (panel is embedded in PropertiesWidget) |
+| `CMakeLists.txt` | Add `Core/DataViewerDiagnostics.hpp`, `UI/DataViewerDebugPanel.hpp/.cpp` |
+
+### Diagnostics Data Struct
+
+A lightweight struct returned by `OpenGLWidget::getDiagnostics()` to avoid exposing internal
+data structures:
+
+```cpp
+/// @file DataViewerDiagnostics.hpp
+struct LaneDiagnostic {
+    std::string series_key;
+    std::string series_type;    ///< "Analog", "DigitalEvent", "DigitalInterval"
+    int lane_index = 0;
+    bool is_visible = true;
+    float center_y_ndc = 0.0f;
+    float height_ndc = 0.0f;
+    float transform_offset = 0.0f;
+    float transform_gain = 1.0f;
+    float user_scale_factor = 1.0f;     ///< Analog only
+    float data_mean = 0.0f;             ///< Analog only
+    float data_std_dev = 0.0f;          ///< Analog only
+    int vertex_count = 0;
+    bool is_on_screen = true;           ///< Does lane intersect viewport?
+};
+
+struct RenderingStats {
+    int polyline_batch_count = 0;
+    int glyph_batch_count = 0;
+    int rectangle_batch_count = 0;
+    int total_vertex_count = 0;
+    int total_entity_count = 0;
+    int scene_rebuild_count = 0;
+};
+
+struct DataViewerDiagnostics {
+    std::vector<LaneDiagnostic> lanes;
+    RenderingStats rendering;
+};
+```
+
+### Signal / Refresh Flow
+
+```
+DataViewerState::viewStateChanged ──┐
+OpenGLWidget::sceneRebuilt ─────────┤
+OpenGLWidget::mouseMove ────────────┤
+                                    ▼
+                          DataViewerDebugPanel::refresh()
+                                    │
+                    ┌───────────────┼───────────────┐
+                    ▼               ▼               ▼
+             View State        Lane Table     Coordinate
+              Section           Section        Inspector
+```
+
+The panel connects to existing signals. The `sceneRebuilt` signal (or a new one if it doesn't
+exist) triggers a full refresh of the lane table and rendering stats. Mouse move events update
+only the coordinate inspector section for responsiveness.
+
+### QPainter Overlay Integration
+
+```cpp
+// In OpenGLWidget::paintGL()
+void OpenGLWidget::paintGL() {
+    // ... existing GL rendering ...
+
+    if (_state && _state->developerMode()) {
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+        drawDeveloperOverlays(painter);
+        painter.end();
+    }
+}
+```
+
+The `drawDeveloperOverlays()` method reads from the cached `LayoutResponse` and overlay
+toggle flags (stored in a local struct, not serialized — overlay preferences are session-only).
+
+---
+
+## Implementation Phases
+
+### Phase A: State & Infrastructure
+
+**Blocking** — must be completed first.
+
+#### A.1 — Add `developer_mode` to `DataViewerStateData`
+
+**File**: `Core/DataViewerStateData.hpp`
+
+Add the flag to the existing `DataViewerUIPreferences` struct (not top-level). This
+groups it with other UI-scoped preferences and follows the existing pattern:
+
+```cpp
+struct DataViewerUIPreferences {
+    DataViewerZoomScalingMode zoom_scaling_mode = DataViewerZoomScalingMode::Adaptive;
+    bool properties_panel_collapsed = false;
+    bool developer_mode = false;  // ← Add this line
+};
+```
+
+No further serialization code is needed — reflect-cpp auto-serializes all struct fields.
+The JSON output will include `"developer_mode": false` inside the `"ui"` object.
+
+#### A.2 — Add accessor, setter, and signal to `DataViewerState`
+
+**Files**: `Core/DataViewerState.hpp`, `Core/DataViewerState.cpp`
+
+Add a dedicated `developerModeChanged()` signal rather than reusing `uiPreferencesChanged()`.
+The debug panel needs an isolated notification to avoid reacting to unrelated UI pref
+changes (e.g., zoom mode toggles). Follow the `setGridEnabled()` pattern exactly:
+
+**Header** — add to the `// ==================== UI Preferences ====================` section:
+
+```cpp
+// ==================== Developer Mode ====================
+
+void setDeveloperMode(bool enabled);
+[[nodiscard]] bool developerMode() const { return _data.ui.developer_mode; }
+```
+
+**Header** — add to `signals:`:
+
+```cpp
+void developerModeChanged(bool enabled);
+```
+
+**Implementation** — add to `DataViewerState.cpp` after the UI Preferences section:
+
+```cpp
+void DataViewerState::setDeveloperMode(bool enabled) {
+    if (_data.ui.developer_mode != enabled) {
+        _data.ui.developer_mode = enabled;
+        markDirty();
+        emit developerModeChanged(enabled);
+    }
+}
+```
+
+#### A.3 — Create `DataViewerDiagnostics` struct
+
+**New file**: `Core/DataViewerDiagnostics.hpp`
+
+Header-only struct. No `.cpp` file needed. Add the `@file` Doxygen tag.
+The struct bundles all diagnostic data into a single return value — this avoids exposing
+`SceneCacheState`, `TimeSeriesDataStore`, or `LayoutResponse` as public API:
+
+```cpp
+#ifndef DATAVIEWER_DIAGNOSTICS_HPP
+#define DATAVIEWER_DIAGNOSTICS_HPP
+
+#include <string>
+#include <vector>
+
+struct LaneDiagnostic {
+    std::string series_key;
+    std::string series_type;    ///< "Analog", "DigitalEvent", "DigitalInterval"
+    int lane_index = 0;
+    bool is_visible = true;
+    float center_y_ndc = 0.0f;
+    float height_ndc = 0.0f;
+    float transform_offset = 0.0f;
+    float transform_gain = 1.0f;
+    float user_scale_factor = 1.0f;
+    float data_mean = 0.0f;
+    float data_std_dev = 0.0f;
+    int vertex_count = 0;
+    bool is_on_screen = true;
+};
+
+struct RenderingStats {
+    int polyline_batch_count = 0;
+    int glyph_batch_count = 0;
+    int rectangle_batch_count = 0;
+    int total_vertex_count = 0;
+    int total_entity_count = 0;
+    int scene_rebuild_count = 0;
+};
+
+struct DataViewerDiagnostics {
+    std::vector<LaneDiagnostic> lanes;
+    RenderingStats rendering;
+};
+
+#endif // DATAVIEWER_DIAGNOSTICS_HPP
+```
+
+#### A.4 — Add `getDiagnostics()` to `OpenGLWidget`
+
+**Files**: `Rendering/OpenGLWidget.hpp`, `Rendering/OpenGLWidget.cpp`
+
+Add a public method next to the existing accessor group (`getViewState()`,
+`getAnalogSeriesMap()`, etc.):
+
+```cpp
+// In OpenGLWidget.hpp — public section, after getCanvasSize():
+#include "Core/DataViewerDiagnostics.hpp"
+
+[[nodiscard]] DataViewerDiagnostics getDiagnostics() const;
+```
+
+The implementation iterates `_cache_state.layout_response.layouts`, cross-references with
+`_data_store` entries and `_state->seriesOptions()`, and populates each `LaneDiagnostic`.
+For the `is_on_screen` field, compute:
+
+```cpp
+float const effective_y_min = view.y_min + view.vertical_pan_offset;
+float const effective_y_max = view.y_max + view.vertical_pan_offset;
+lane.is_on_screen = (lane.center_y_ndc + lane.height_ndc / 2.0f >= effective_y_min)
+                 && (lane.center_y_ndc - lane.height_ndc / 2.0f <= effective_y_max);
+```
+
+Also add a `sceneRebuilt()` signal if one doesn't already exist — the debug panel needs
+this to know when to refresh the lane table and rendering stats:
+
+```cpp
+// In OpenGLWidget.hpp — signals:
+void sceneRebuilt();
+```
+
+Emit it at the end of `renderWithSceneRenderer()` after the scene is uploaded to the GPU.
+
+**Also expose the `LayoutResponse` directly** for the overlay drawing code (Phase C), which
+needs the raw layout data for NDC→pixel conversion:
+
+```cpp
+[[nodiscard]] CorePlotting::LayoutResponse const & layoutResponse() const {
+    return _cache_state.layout_response;
+}
+```
+
+**Acceptance criteria**: `DataViewerState::developerMode()` round-trips through
+`toJson()` / `fromJson()`. `OpenGLWidget::getDiagnostics()` returns a populated struct
+with correct lane count when series are loaded.
+
+---
+
+### Phase B: Debug Panel Widget
+
+Can proceed in parallel with Phase C.
+
+#### B.1 — Create `DataViewerDebugPanel` skeleton
+
+**New files**: `UI/DataViewerDebugPanel.hpp`, `UI/DataViewerDebugPanel.cpp`
+
+Follow the `DataViewerPropertiesWidget` constructor signature pattern. The debug panel
+needs the same inputs:
+
+```cpp
+// DataViewerDebugPanel.hpp
+#include <QWidget>
+#include <memory>
+
+class DataViewerState;
+class OpenGLWidget;
+class QLabel;
+class QTableWidget;
+class QCheckBox;
+class QGroupBox;
+
+class DataViewerDebugPanel : public QWidget {
+    Q_OBJECT
+public:
+    explicit DataViewerDebugPanel(
+        std::shared_ptr<DataViewerState> state,
+        OpenGLWidget * opengl_widget,
+        QWidget * parent = nullptr);
+
+    ~DataViewerDebugPanel() override = default;
+
+public slots:
+    void refresh();
+    void updateCoordinateInspector(float canvas_x, float canvas_y);
+
+private:
+    std::shared_ptr<DataViewerState> _state;
+    OpenGLWidget * _opengl_widget = nullptr;  ///< Non-owning
+
+    // UI sections
+    QGroupBox * _view_state_group = nullptr;
+    QGroupBox * _lane_table_group = nullptr;
+    QGroupBox * _rendering_stats_group = nullptr;
+    QGroupBox * _coordinate_group = nullptr;
+    QGroupBox * _interaction_group = nullptr;
+
+    // View state labels
+    QLabel * _time_window_label = nullptr;
+    QLabel * _y_bounds_label = nullptr;
+    QLabel * _pan_zoom_label = nullptr;
+    QLabel * _widget_size_label = nullptr;
+
+    // Lane table
+    QTableWidget * _lane_table = nullptr;
+
+    // Rendering stats labels
+    QLabel * _batch_counts_label = nullptr;
+    QLabel * _vertex_count_label = nullptr;
+    QLabel * _entity_count_label = nullptr;
+    QLabel * _rebuild_count_label = nullptr;
+
+    // Coordinate inspector labels
+    QLabel * _canvas_pos_label = nullptr;
+    QLabel * _ndc_pos_label = nullptr;
+    QLabel * _world_pos_label = nullptr;
+    QLabel * _data_pos_label = nullptr;
+    QLabel * _series_under_cursor_label = nullptr;
+
+    // Overlay toggle checkboxes
+    QCheckBox * _lane_boundaries_cb = nullptr;
+    QCheckBox * _origin_markers_cb = nullptr;
+    QCheckBox * _crosshair_cb = nullptr;
+
+    void _buildUI();
+    void _connectSignals();
+    void _refreshViewState();
+    void _refreshLaneTable();
+    void _refreshRenderingStats();
+};
+```
+
+Use a `QVBoxLayout` with `QGroupBox` sections (no `.ui` file needed — the layout is
+entirely programmatic since it's a debug tool).
+
+#### B.2 — Signal connections
+
+In the constructor, connect to existing signals for automatic refresh:
+
+```cpp
+// Full refresh on scene rebuild or view state change
+connect(_opengl_widget, &OpenGLWidget::sceneRebuilt, this, &DataViewerDebugPanel::refresh);
+connect(_state.get(), &DataViewerState::viewStateChanged, this, &DataViewerDebugPanel::refresh);
+
+// Coordinate inspector on mouse hover
+connect(_opengl_widget, &OpenGLWidget::mouseHover,
+        this, [this](float time, float canvas_y, QString const &) {
+            updateCoordinateInspector(time, canvas_y);
+        });
+```
+
+#### B.3–B.6 — Section implementations
+
+Each `_refreshXxx()` method reads from `_opengl_widget->getDiagnostics()` and
+`_state->viewState()`, then updates the corresponding labels and table. The lane table
+uses `QTableWidget::setRowCount()` / `setItem()` with 12 columns matching the table
+in the [Lane Table section](#a.2-lane-table-one-row-per-series).
+
+Format floats to 4 decimal places for NDC values, 2 for scales:
+
+```cpp
+_y_bounds_label->setText(
+    QString("Y: [%1, %2]  pan=%3  v_scale=%4  zoom=%5")
+        .arg(view.y_min + view.vertical_pan_offset, 0, 'f', 4)
+        .arg(view.y_max + view.vertical_pan_offset, 0, 'f', 4)
+        .arg(view.vertical_pan_offset, 0, 'f', 4)
+        .arg(view.global_vertical_scale, 0, 'f', 2)
+        .arg(view.global_zoom, 0, 'f', 2));
+```
+
+**Acceptance criteria**: With 3+ analog series loaded, the panel displays correct lane count,
+positions, and scales. Mouse movement updates the coordinate inspector in real time.
+
+---
+
+### Phase C: On-Canvas Overlays
+
+Can proceed in parallel with Phase B.
+
+#### C.1 — Add QPainter overlay pass in `paintGL()`
+
+**File**: `Rendering/OpenGLWidget.cpp`
+
+Insert the overlay call as the **last operation** in `paintGL()`, after
+`drawInteractionPreview()`. The QPainter session must come after all GL calls:
+
+```cpp
+void OpenGLWidget::paintGL() {
+    // ... existing GL rendering ...
+    drawAxis();
+    drawGridLines();
+    drawInteractionPreview();
+
+    // Developer overlay (QPainter on top of GL)
+    if (_state && _state->developerMode()) {
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+        drawDeveloperOverlays(painter);
+        painter.end();
+    }
+}
+```
+
+Add `#include <QPainter>` to `OpenGLWidget.cpp`. Declare `drawDeveloperOverlays()` as
+a private method in the header.
+
+Store overlay toggle state as a simple struct in `OpenGLWidget` (NOT serialized —
+session-only):
+
+```cpp
+// In OpenGLWidget.hpp — private section:
+struct OverlayToggles {
+    bool lane_boundaries = true;
+    bool origin_markers = true;
+    bool crosshair = true;
+};
+OverlayToggles _overlay_toggles;
+```
+
+Provide public setters so the debug panel checkboxes can control them:
+
+```cpp
+void setOverlayLaneBoundaries(bool enabled);
+void setOverlayOriginMarkers(bool enabled);
+void setOverlayCrosshair(bool enabled);
+```
+
+#### C.2 — NDC to pixel coordinate conversion
+
+All overlay drawing uses QPainter pixel coordinates. The conversion from NDC `[-1, +1]`
+to canvas pixels is:
+
+```cpp
+// NDC Y is bottom-up (-1 = bottom, +1 = top), QPainter Y is top-down (0 = top)
+float ndcToPixelY(float ndc_y, int canvas_height) {
+    return static_cast<float>(canvas_height) * (1.0f - ndc_y) / 2.0f;
+}
+float ndcToPixelX(float ndc_x, int canvas_width) {
+    return static_cast<float>(canvas_width) * (ndc_x + 1.0f) / 2.0f;
+}
+```
+
+These are consistent with the existing inverse in `findSeriesAtPosition()`:
+`ndc_y = -1.0f + 2.0f * (height() - canvas_y) / height()`.
+
+#### C.3 — Lane boundary overlay implementation
+
+Iterate `_cache_state.layout_response.layouts`. For each layout entry:
+
+```cpp
+void OpenGLWidget::drawLaneBoundaries(QPainter & painter) {
+    auto const & layouts = _cache_state.layout_response.layouts;
+    int const h = height();
+    int const w = width();
+
+    QPen pen;
+    pen.setStyle(Qt::DashLine);
+    pen.setWidth(1);
+
+    QFont font("monospace", 8);
+    painter.setFont(font);
+
+    for (size_t i = 0; i < layouts.size(); ++i) {
+        auto const & layout = layouts[i];
+        // Determine color by series type (check _data_store maps)
+        pen.setColor(QColor(74, 144, 217, 128));  // blue for analog
+        painter.setPen(pen);
+
+        float const top_ndc = layout.y_transform.offset + layout.y_transform.gain;
+        float const bot_ndc = layout.y_transform.offset - layout.y_transform.gain;
+        int const top_px = static_cast<int>(ndcToPixelY(top_ndc, h));
+        int const bot_px = static_cast<int>(ndcToPixelY(bot_ndc, h));
+
+        painter.drawLine(0, top_px, w, top_px);
+        painter.drawLine(0, bot_px, w, bot_px);
+
+        // Label at left margin
+        painter.drawText(4, top_px + 12,
+            QString("Lane %1: %2").arg(i).arg(
+                QString::fromStdString(layout.series_id)));
+    }
+}
+```
+
+#### C.4 — Cursor crosshair
+
+Track the last mouse position via `mouseMoveEvent()` (already dispatched to
+`_input_handler`). Store `_last_mouse_pos` as a `QPoint` member. Draw in overlay:
+
+```cpp
+void OpenGLWidget::drawCursorCrosshair(QPainter & painter) {
+    if (_last_mouse_pos.isNull()) return;
+
+    QPen pen(QColor(255, 255, 255, 80));
+    pen.setWidth(1);
+    painter.setPen(pen);
+    painter.drawLine(_last_mouse_pos.x(), 0, _last_mouse_pos.x(), height());
+    painter.drawLine(0, _last_mouse_pos.y(), width(), _last_mouse_pos.y());
+
+    // Compact readout near cursor
+    float const time = canvasXToTime(static_cast<float>(_last_mouse_pos.x()));
+    float const ndc_y = -1.0f + 2.0f * (static_cast<float>(height()) -
+        static_cast<float>(_last_mouse_pos.y())) / static_cast<float>(height());
+    painter.setPen(QColor(255, 255, 255, 200));
+    painter.drawText(_last_mouse_pos.x() + 8, _last_mouse_pos.y() - 8,
+        QString("T=%1  Y=%2").arg(time, 0, 'f', 1).arg(ndc_y, 0, 'f', 4));
+}
+```
+
+**Acceptance criteria**: Lane boundary lines accurately reflect `LayoutResponse` positions.
+Labels match the lane table in the debug panel. Crosshair coordinates match the coordinate
+inspector.
+
+---
+
+### Phase D: Integration & Toggle
+
+Depends on Phases A–C.
+
+#### D.1 — Wire `DataViewerDebugPanel` into the EditorRegistry factory
+
+**File**: `DataViewerWidgetRegistration.cpp`
+
+The debug panel is **not** created inside `DataViewer_Widget`. The widget creation flow
+uses `create_editor_custom` in `DataViewerWidgetRegistration.cpp`, which constructs the
+view, properties, and connects them. The debug panel should be created here, as a second
+properties-zone widget or as an additional tab.
+
+However, the `EditorInstance` struct only supports one `properties` widget. There are
+two approaches:
+
+**Option A (simpler)**: Make the debug panel a child of the properties widget, shown as
+a collapsible section at the bottom. This avoids EditorRegistry changes.
+
+**Option B**: Embed the debug panel inside `DataViewer_Widget` itself (e.g., as a
+bottom dock or splitter pane), toggled by the state flag.
+
+**Recommended: Option A** — Add a collapsible `QGroupBox` at the bottom of
+`DataViewerPropertiesWidget` that contains the `DataViewerDebugPanel`. The properties
+widget already has access to `DataViewerState` and `OpenGLWidget*`.
+
+In `DataViewerPropertiesWidget`:
+
+```cpp
+// In constructor, after existing UI setup:
+_debug_panel = new DataViewerDebugPanel(_state, _opengl_widget, this);
+_debug_panel->setVisible(_state->developerMode());
+ui->mainLayout->addWidget(_debug_panel);  // or insertWidget at bottom
+
+connect(_state.get(), &DataViewerState::developerModeChanged,
+        _debug_panel, &QWidget::setVisible);
+```
+
+#### D.2 — Add "Developer Mode" checkbox
+
+**Files**: `UI/DataViewerPropertiesWidget.hpp/.cpp`
+
+Add a `QCheckBox` to the properties widget header area. Follow the existing pattern for
+connecting UI controls to state:
+
+```cpp
+// In _connectUIControls():
+connect(_developer_mode_cb, &QCheckBox::toggled, this, [this](bool checked) {
+    if (_updating_from_state) return;  // Guard against signal loops
+    _state->setDeveloperMode(checked);
+});
+
+// In _connectStateSignals():
+connect(_state.get(), &DataViewerState::developerModeChanged, this, [this](bool enabled) {
+    QSignalBlocker blocker(_developer_mode_cb);
+    _developer_mode_cb->setChecked(enabled);
+});
+
+// In _initializeFromState():
+_developer_mode_cb->setChecked(_state->developerMode());
+```
+
+#### D.3 — Update `CMakeLists.txt`
+
+**File**: `CMakeLists.txt` (in `DataViewer_Widget/`)
+
+Add new files to the `DATAVIEWER_WIDGET_SOURCES` list in the appropriate section:
+
+```cmake
+# In the Core/ section:
+        Core/DataViewerDiagnostics.hpp
+
+# In the UI/ section:
+        UI/DataViewerDebugPanel.cpp
+        UI/DataViewerDebugPanel.hpp
+```
+
+**Acceptance criteria**: Toggle checkbox enables/disables both the panel and overlays. State
+persists across workspace save/reload. No measurable performance impact when developer mode
+is OFF.
+
+---
+
+### Phase E: Documentation & Cleanup
+
+Depends on Phase D.
+
+| Step | Description |
+|------|-------------|
+| E.1 | Run `clang-format -i` on all new/modified `.hpp/.cpp` files |
+| E.2 | Run `clang-tidy` on all new/modified files via `run-clang-tidy -fix -p out/build/Clang/Release` |
+| E.3 | Verify build: `cmake --build --preset linux-clang-release > build_log.txt 2>&1` |
+| E.4 | Run existing DataViewer tests: `ctest --preset linux-clang-release --output-on-failure -R "DataViewer" > test_log.txt 2>&1` |
+| E.5 | Verify serialization round-trip: enable dev mode → save workspace → reload → still enabled |
+
+---
+
+## Relationship to Roadmap Phases
+
+This feature is **infrastructure** that accelerates development of roadmap Phases 1–2:
+
+| Roadmap Phase | How Developer Mode Helps |
+|---------------|--------------------------|
+| [Phase 1: Common Axis Integration](roadmap.qmd#phase-1-common-axis-integration) | Verify axis state sync by comparing panel values with VerticalAxisState |
+| [Phase 2: Y Pan/Zoom](roadmap.qmd#phase-2-y-pan-zoom) | Lane boundary overlay visualizes fixed-height layout; "On-Screen?" column validates culling; crosshair validates cursor-anchored zoom math |
+| [Phase 3: Event Glyph Options](roadmap.qmd#phase-3-enhanced-event-glyph-options) | Verify glyph transforms and positioning via lane table |
+| [Phase 4: Interval Rendering](roadmap.qmd#phase-4-enhanced-interval-rendering) | Verify interval rectangle bounds match expected layout |
+
+**Recommended sequencing**: Implement the Developer Debug Panel **before** starting Phases 1–2
+of the main roadmap. The diagnostic visibility it provides will significantly reduce iteration
+time on layout, scaling, and culling work.
+
+---
+
+## Performance Considerations
+
+- **Developer mode OFF**: Zero overhead. No diagnostics collected, no QPainter pass, no
+  signal connections for coordinate inspector updates.
+- **Developer mode ON**: The `getDiagnostics()` call iterates series maps (O(N) in number of
+  series) and reads cached layout data. This is negligible compared to GL rendering.
+  QPainter overlay drawing is O(N) in lane count for boundary lines.
+- **Coordinate inspector**: Updates on mouse move. Uses existing `DataViewerCoordinates`
+  conversion functions — no new computation, just formatting.
+- **Refresh throttle**: If needed (unlikely), the panel can be throttled to refresh at most
+  every 100ms via a `QTimer` coalescing mechanism. But given that `viewStateChanged` fires
+  on user interaction (not per-frame), this is unlikely to be necessary.
+
+---
+
+## Future Extensions
+
+These are not in scope for the initial implementation but are noted for future consideration:
+
+1. **Keyboard shortcut toggle** — Bind F12 or Ctrl+Shift+D to toggle developer mode via the
+   `KeymapSystem`. More ergonomic than clicking a checkbox during active development.
+
+2. **Viewport minimap** — After [Phase 2](roadmap.qmd#phase-2-y-pan-zoom) adds Y pan/zoom,
+   add a small minimap overlay (overlay type B.4) showing the visible portion of the total
+   data extent. Similar to VS Code's scroll minimap.
+
+3. **Transform chain visualization** — For analog series, show the full transform composition
+   chain: `data → normalization → user_scale → layout_offset → global_scale → screen`.
+   Could be displayed as a collapsible tree in the panel.
+
+4. **Performance profiling overlay** — Frame time graph, GL draw call count, vertex upload
+   sizes. Useful for #248 (viewport culling performance validation) but better addressed by
+   external tools (Hotspot/perf) for production profiling.
+
+5. **Reusable diagnostic base** — If other plot widgets (ScatterPlot, Heatmap, EventPlot)
+   need similar developer modes, extract a `PlotDiagnosticsPanel` base class with common
+   view-state and coordinate-inspector sections. YAGNI for now — start specific to DataViewer
+   and generalize only if a second widget needs it.
+
+6. **Data value tooltips on lane hover** — When hovering a lane in the panel's lane table,
+   highlight the corresponding lane on the canvas. Conversely, hovering a lane on the canvas
+   could highlight the row in the table. Bidirectional linking improves spatial awareness.
+
+---
+
+## Open Questions
+
+1. **Overlay persistence**: Should overlay toggle preferences (which overlays are active) be
+   serialized in state, or are they session-only? Current recommendation: session-only
+   (not serialized) since they are transient debug preferences, not user-facing settings.
+
+2. **Panel placement**: Should the debug panel be a tab alongside the properties widget, a
+   collapsible section within the properties widget, or a separate dockable panel? Current
+   recommendation: separate dockable panel (follows Qt6AdvancedDocking pattern, allows
+   flexible placement).
+
+3. **Overlay drawing order**: Should overlays be drawn before or after the axis/grid overlay?
+   Current recommendation: after, so developer annotations are always on top.
+
+4. **Multi-DataViewer support**: If multiple DataViewer widgets are open simultaneously, each
+   has its own `DataViewerState` and thus its own `developer_mode` flag. The debug panel
+   should be per-DataViewer instance, not a singleton. This follows naturally from the
+   EditorState pattern.
+
+---
+
+## See Also
+
+- [Data Viewer Widget Documentation](index.qmd) — Full architecture and feature documentation
+- [Data Viewer Widget Roadmap](roadmap.qmd) — Feature roadmap (Phases 1–7)
+- [LayoutTesting Library](../../LayoutTesting/index.qmd) — Related: automated Qt layout violation detection
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared axis architecture and widget patterns
