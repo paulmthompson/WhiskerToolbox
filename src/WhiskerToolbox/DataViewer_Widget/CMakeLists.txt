@@ -44,6 +44,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         UI/DataViewer_Widget.cpp
         UI/DataViewer_Widget.hpp
         UI/DataViewer_Widget.ui
+        UI/DataViewerDebugPanel.cpp
+        UI/DataViewerDebugPanel.hpp
         UI/DataViewerPropertiesWidget.cpp
         UI/DataViewerPropertiesWidget.hpp
         UI/DataViewerPropertiesWidget.ui

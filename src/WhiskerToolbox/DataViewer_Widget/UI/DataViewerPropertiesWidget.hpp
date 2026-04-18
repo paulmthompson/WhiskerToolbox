@@ -39,9 +39,11 @@
 #include <vector>
 
 class DataManager;
+class DataViewerDebugPanel;
 class DataViewerState;
 class Feature_Tree_Model;
 class OpenGLWidget;
+class QCheckBox;
 class TimeFrame;
 
 namespace Ui {
@@ -219,6 +221,14 @@ private:
      * @brief Set up the stacked widget with per-type viewers
      */
     void _setupStackedWidget();
+
+    /**
+     * @brief Set up the developer debug panel and toggle checkbox
+     */
+    void _setupDebugPanel();
+
+    QCheckBox * _developer_mode_cb = nullptr;
+    DataViewerDebugPanel * _debug_panel = nullptr;
 };
 
 #endif// DATA_VIEWER_PROPERTIES_WIDGET_HPP

@@ -3,6 +3,7 @@
 
 #include "Core/DataViewerState.hpp"
 #include "Core/DataViewerStateData.hpp"
+#include "DataViewerDebugPanel.hpp"
 #include "Feature_Tree_Model.hpp"
 #include "Rendering/OpenGLWidget.hpp"
 #include "SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp"
@@ -48,6 +49,7 @@ DataViewerPropertiesWidget::DataViewerPropertiesWidget(std::shared_ptr<DataViewe
     _initializeFromState();
     _connectUIControls();
     _connectStateSignals();
+    _setupDebugPanel();
 }
 
 DataViewerPropertiesWidget::~DataViewerPropertiesWidget() {
@@ -418,4 +420,50 @@ void DataViewerPropertiesWidget::_setupStackedWidget() {
             this, &DataViewerPropertiesWidget::_handleColorChanged);
     connect(group_analog_widget, &GroupAnalogViewer_Widget::colorChanged,
             this, &DataViewerPropertiesWidget::_handleColorChanged);
+}
+
+void DataViewerPropertiesWidget::_setupDebugPanel() {
+    // Find the layout inside scrollAreaWidgetContents and the spacer item
+    auto * scroll_layout = qobject_cast<QVBoxLayout *>(
+            ui->scrollAreaWidgetContents->layout());
+    if (!scroll_layout) {
+        return;
+    }
+
+    // Insert developer mode checkbox before the spacer (last item)
+    int const spacer_index = scroll_layout->count() - 1;
+
+    _developer_mode_cb = new QCheckBox(QStringLiteral("Developer Mode"),
+                                       ui->scrollAreaWidgetContents);
+    scroll_layout->insertWidget(spacer_index, _developer_mode_cb);
+
+    // Create debug panel (hidden initially)
+    _debug_panel = new DataViewerDebugPanel(_state, _opengl_widget,
+                                            ui->scrollAreaWidgetContents);
+    _debug_panel->setVisible(false);
+    scroll_layout->insertWidget(spacer_index + 1, _debug_panel);
+
+    // Initialize checkbox from state
+    if (_state) {
+        _developer_mode_cb->setChecked(_state->developerMode());
+        _debug_panel->setVisible(_state->developerMode());
+    }
+
+    // Checkbox toggles state
+    connect(_developer_mode_cb, &QCheckBox::toggled, this, [this](bool checked) {
+        if (_updating_from_state || !_state) return;
+        _state->setDeveloperMode(checked);
+    });
+
+    // State change updates checkbox and panel visibility
+    if (_state) {
+        connect(_state.get(), &DataViewerState::developerModeChanged,
+                this, [this](bool enabled) {
+                    if (_updating_from_state) return;
+                    _updating_from_state = true;
+                    _developer_mode_cb->setChecked(enabled);
+                    _debug_panel->setVisible(enabled);
+                    _updating_from_state = false;
+                });
+    }
 }

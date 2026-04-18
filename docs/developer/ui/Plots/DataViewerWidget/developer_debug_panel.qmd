@@ -468,129 +468,40 @@ with correct lane count when series are loaded.
 
 ---
 
-### Phase B: Debug Panel Widget
+### Phase B: Debug Panel Widget {.completed}
 
-Can proceed in parallel with Phase C.
+**Status: COMPLETE** — Implemented in `UI/DataViewerDebugPanel.hpp/.cpp`.
 
-#### B.1 — Create `DataViewerDebugPanel` skeleton
+The panel is embedded in `DataViewerPropertiesWidget` as a collapsible child,
+gated by a "Developer Mode" checkbox. When the checkbox is toggled, the state's
+`developer_mode` flag is updated and the panel visibility follows.
 
-**New files**: `UI/DataViewerDebugPanel.hpp`, `UI/DataViewerDebugPanel.cpp`
+#### Files Created
 
-Follow the `DataViewerPropertiesWidget` constructor signature pattern. The debug panel
-needs the same inputs:
+- `UI/DataViewerDebugPanel.hpp` — Widget declaration with section members
+- `UI/DataViewerDebugPanel.cpp` — Full implementation of all five sections
 
-```cpp
-// DataViewerDebugPanel.hpp
-#include <QWidget>
-#include <memory>
+#### Files Modified
 
-class DataViewerState;
-class OpenGLWidget;
-class QLabel;
-class QTableWidget;
-class QCheckBox;
-class QGroupBox;
+- `UI/DataViewerPropertiesWidget.hpp` — Added `_debug_panel`, `_developer_mode_cb`, `_setupDebugPanel()`
+- `UI/DataViewerPropertiesWidget.cpp` — Added `_setupDebugPanel()` method, includes `DataViewerDebugPanel.hpp`
+- `CMakeLists.txt` — Added `UI/DataViewerDebugPanel.cpp` and `UI/DataViewerDebugPanel.hpp`
 
-class DataViewerDebugPanel : public QWidget {
-    Q_OBJECT
-public:
-    explicit DataViewerDebugPanel(
-        std::shared_ptr<DataViewerState> state,
-        OpenGLWidget * opengl_widget,
-        QWidget * parent = nullptr);
+#### Sections Implemented
 
-    ~DataViewerDebugPanel() override = default;
+| Section | Content |
+|---------|---------|
+| **View State** | Time window, duration, effective Y bounds, pan/zoom, widget size, aspect ratio |
+| **Lane Table** | 12-column `QTableWidget` with one row per series (lane index, key, type, visibility, NDC center/height, transform offset/gain, user scale, mean, std dev, on-screen) |
+| **Rendering Stats** | Batch counts (polyline, glyph, rectangle), total vertices, entity count, scene rebuild count |
+| **Coordinate Inspector** | Canvas px, NDC, world, data (time), and series-under-cursor — updated on mouse hover |
+| **Overlay Toggles** | Lane boundaries, origin markers, cursor crosshair checkboxes (wiring deferred to Phase C) |
 
-public slots:
-    void refresh();
-    void updateCoordinateInspector(float canvas_x, float canvas_y);
+#### Signal Connections
 
-private:
-    std::shared_ptr<DataViewerState> _state;
-    OpenGLWidget * _opengl_widget = nullptr;  ///< Non-owning
-
-    // UI sections
-    QGroupBox * _view_state_group = nullptr;
-    QGroupBox * _lane_table_group = nullptr;
-    QGroupBox * _rendering_stats_group = nullptr;
-    QGroupBox * _coordinate_group = nullptr;
-    QGroupBox * _interaction_group = nullptr;
-
-    // View state labels
-    QLabel * _time_window_label = nullptr;
-    QLabel * _y_bounds_label = nullptr;
-    QLabel * _pan_zoom_label = nullptr;
-    QLabel * _widget_size_label = nullptr;
-
-    // Lane table
-    QTableWidget * _lane_table = nullptr;
-
-    // Rendering stats labels
-    QLabel * _batch_counts_label = nullptr;
-    QLabel * _vertex_count_label = nullptr;
-    QLabel * _entity_count_label = nullptr;
-    QLabel * _rebuild_count_label = nullptr;
-
-    // Coordinate inspector labels
-    QLabel * _canvas_pos_label = nullptr;
-    QLabel * _ndc_pos_label = nullptr;
-    QLabel * _world_pos_label = nullptr;
-    QLabel * _data_pos_label = nullptr;
-    QLabel * _series_under_cursor_label = nullptr;
-
-    // Overlay toggle checkboxes
-    QCheckBox * _lane_boundaries_cb = nullptr;
-    QCheckBox * _origin_markers_cb = nullptr;
-    QCheckBox * _crosshair_cb = nullptr;
-
-    void _buildUI();
-    void _connectSignals();
-    void _refreshViewState();
-    void _refreshLaneTable();
-    void _refreshRenderingStats();
-};
-```
-
-Use a `QVBoxLayout` with `QGroupBox` sections (no `.ui` file needed — the layout is
-entirely programmatic since it's a debug tool).
-
-#### B.2 — Signal connections
-
-In the constructor, connect to existing signals for automatic refresh:
-
-```cpp
-// Full refresh on scene rebuild or view state change
-connect(_opengl_widget, &OpenGLWidget::sceneRebuilt, this, &DataViewerDebugPanel::refresh);
-connect(_state.get(), &DataViewerState::viewStateChanged, this, &DataViewerDebugPanel::refresh);
-
-// Coordinate inspector on mouse hover
-connect(_opengl_widget, &OpenGLWidget::mouseHover,
-        this, [this](float time, float canvas_y, QString const &) {
-            updateCoordinateInspector(time, canvas_y);
-        });
-```
-
-#### B.3–B.6 — Section implementations
-
-Each `_refreshXxx()` method reads from `_opengl_widget->getDiagnostics()` and
-`_state->viewState()`, then updates the corresponding labels and table. The lane table
-uses `QTableWidget::setRowCount()` / `setItem()` with 12 columns matching the table
-in the [Lane Table section](#a.2-lane-table-one-row-per-series).
-
-Format floats to 4 decimal places for NDC values, 2 for scales:
-
-```cpp
-_y_bounds_label->setText(
-    QString("Y: [%1, %2]  pan=%3  v_scale=%4  zoom=%5")
-        .arg(view.y_min + view.vertical_pan_offset, 0, 'f', 4)
-        .arg(view.y_max + view.vertical_pan_offset, 0, 'f', 4)
-        .arg(view.vertical_pan_offset, 0, 'f', 4)
-        .arg(view.global_vertical_scale, 0, 'f', 2)
-        .arg(view.global_zoom, 0, 'f', 2));
-```
-
-**Acceptance criteria**: With 3+ analog series loaded, the panel displays correct lane count,
-positions, and scales. Mouse movement updates the coordinate inspector in real time.
+- `OpenGLWidget::sceneRebuilt` → `refresh()` (full table + stats refresh)
+- `DataViewerState::viewStateChanged` → `refresh()` (view state section refresh)
+- `OpenGLWidget::mouseHover` → `updateCoordinateInspector()` (coordinate section only)
 
 ---
 
@@ -734,86 +645,11 @@ inspector.
 
 ---
 
-### Phase D: Integration & Toggle
+### Phase D: Integration & Toggle {.completed}
 
-Depends on Phases A–C.
-
-#### D.1 — Wire `DataViewerDebugPanel` into the EditorRegistry factory
-
-**File**: `DataViewerWidgetRegistration.cpp`
-
-The debug panel is **not** created inside `DataViewer_Widget`. The widget creation flow
-uses `create_editor_custom` in `DataViewerWidgetRegistration.cpp`, which constructs the
-view, properties, and connects them. The debug panel should be created here, as a second
-properties-zone widget or as an additional tab.
-
-However, the `EditorInstance` struct only supports one `properties` widget. There are
-two approaches:
-
-**Option A (simpler)**: Make the debug panel a child of the properties widget, shown as
-a collapsible section at the bottom. This avoids EditorRegistry changes.
-
-**Option B**: Embed the debug panel inside `DataViewer_Widget` itself (e.g., as a
-bottom dock or splitter pane), toggled by the state flag.
-
-**Recommended: Option A** — Add a collapsible `QGroupBox` at the bottom of
-`DataViewerPropertiesWidget` that contains the `DataViewerDebugPanel`. The properties
-widget already has access to `DataViewerState` and `OpenGLWidget*`.
-
-In `DataViewerPropertiesWidget`:
-
-```cpp
-// In constructor, after existing UI setup:
-_debug_panel = new DataViewerDebugPanel(_state, _opengl_widget, this);
-_debug_panel->setVisible(_state->developerMode());
-ui->mainLayout->addWidget(_debug_panel);  // or insertWidget at bottom
-
-connect(_state.get(), &DataViewerState::developerModeChanged,
-        _debug_panel, &QWidget::setVisible);
-```
-
-#### D.2 — Add "Developer Mode" checkbox
-
-**Files**: `UI/DataViewerPropertiesWidget.hpp/.cpp`
-
-Add a `QCheckBox` to the properties widget header area. Follow the existing pattern for
-connecting UI controls to state:
-
-```cpp
-// In _connectUIControls():
-connect(_developer_mode_cb, &QCheckBox::toggled, this, [this](bool checked) {
-    if (_updating_from_state) return;  // Guard against signal loops
-    _state->setDeveloperMode(checked);
-});
-
-// In _connectStateSignals():
-connect(_state.get(), &DataViewerState::developerModeChanged, this, [this](bool enabled) {
-    QSignalBlocker blocker(_developer_mode_cb);
-    _developer_mode_cb->setChecked(enabled);
-});
-
-// In _initializeFromState():
-_developer_mode_cb->setChecked(_state->developerMode());
-```
-
-#### D.3 — Update `CMakeLists.txt`
-
-**File**: `CMakeLists.txt` (in `DataViewer_Widget/`)
-
-Add new files to the `DATAVIEWER_WIDGET_SOURCES` list in the appropriate section:
-
-```cmake
-# In the Core/ section:
-        Core/DataViewerDiagnostics.hpp
-
-# In the UI/ section:
-        UI/DataViewerDebugPanel.cpp
-        UI/DataViewerDebugPanel.hpp
-```
-
-**Acceptance criteria**: Toggle checkbox enables/disables both the panel and overlays. State
-persists across workspace save/reload. No measurable performance impact when developer mode
-is OFF.
+**Status: COMPLETE** — Delivered as part of Phase B. The debug panel is embedded in the
+`DataViewerPropertiesWidget` with a "Developer Mode" checkbox, following Option A from the
+original design. The `CMakeLists.txt` has been updated with the new source files.
 
 ---
 
