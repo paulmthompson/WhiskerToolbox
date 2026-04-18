@@ -72,7 +72,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
     SECTION("Positive threshold, no lockout") {
         auto ats = analog_scenarios::positive_threshold_no_lockout();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogEventThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
@@ -90,7 +90,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
     SECTION("Positive threshold, with lockout") {
         auto ats = analog_scenarios::positive_threshold_with_lockout();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogEventThresholdParams::Direction::positive;
         params.lockout_time = 150.0f;
         
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
@@ -104,7 +104,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
     SECTION("Negative threshold, no lockout") {
         auto ats = analog_scenarios::negative_threshold_no_lockout();
         params.threshold_value = -1.0f;
-        params.direction = "negative";
+        params.direction = AnalogEventThresholdParams::Direction::negative;
         params.lockout_time = 0.0f;
         
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
@@ -118,7 +118,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
     SECTION("Negative threshold, with lockout") {
         auto ats = analog_scenarios::negative_threshold_with_lockout();
         params.threshold_value = -1.0f;
-        params.direction = "negative";
+        params.direction = AnalogEventThresholdParams::Direction::negative;
         params.lockout_time = 150.0f;
         
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
@@ -132,7 +132,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
     SECTION("Absolute threshold, no lockout") {
         auto ats = analog_scenarios::absolute_threshold_no_lockout();
         params.threshold_value = 1.0f;
-        params.direction = "absolute";
+        params.direction = AnalogEventThresholdParams::Direction::absolute;
         params.lockout_time = 0.0f;
         
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
@@ -146,7 +146,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
     SECTION("Absolute threshold, with lockout") {
         auto ats = analog_scenarios::absolute_threshold_with_lockout();
         params.threshold_value = 1.0f;
-        params.direction = "absolute";
+        params.direction = AnalogEventThresholdParams::Direction::absolute;
         params.lockout_time = 150.0f;
         
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
@@ -160,7 +160,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
     SECTION("No events expected (threshold too high)") {
         auto ats = analog_scenarios::no_events_high_threshold();
         params.threshold_value = 10.0f;
-        params.direction = "positive";
+        params.direction = AnalogEventThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
@@ -172,7 +172,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
     SECTION("All events expected (threshold very low, no lockout)") {
         auto ats = analog_scenarios::all_events_low_threshold();
         params.threshold_value = 0.1f;
-        params.direction = "positive";
+        params.direction = AnalogEventThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
@@ -196,7 +196,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Edge Cases",
     SECTION("Empty analog time series") {
         auto ats = analog_scenarios::empty_signal();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogEventThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
@@ -209,7 +209,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Edge Cases",
     SECTION("Lockout time larger than series duration") {
         auto ats = analog_scenarios::lockout_larger_than_duration();
         params.threshold_value = 1.0f;
-        params.direction = "positive";
+        params.direction = AnalogEventThresholdParams::Direction::positive;
         params.lockout_time = 1000.0f;  // Much larger than series
         
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
@@ -222,7 +222,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Edge Cases",
     SECTION("Cancellation support") {
         auto ats = analog_scenarios::all_events_low_threshold();
         params.threshold_value = 0.1f;
-        params.direction = "positive";
+        params.direction = AnalogEventThresholdParams::Direction::positive;
         params.lockout_time = 0.0f;
         
         // Set cancellation flag
@@ -256,9 +256,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThresholdParams - JSON Loading",
         REQUIRE(result);
         auto params = result.value();
         
-        REQUIRE(params.getThresholdValue() == 2.5f);
-        REQUIRE(params.getDirection() == "negative");
-        REQUIRE(params.getLockoutTime() == 100.0f);
+        REQUIRE(params.threshold_value == 2.5f);
+        REQUIRE(params.direction == AnalogEventThresholdParams::Direction::negative);
+        REQUIRE(params.lockout_time.value() == 100.0f);
     }
     
     SECTION("Load empty JSON (uses defaults)") {
@@ -269,9 +269,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThresholdParams - JSON Loading",
         REQUIRE(result);
         auto params = result.value();
         
-        REQUIRE(params.getThresholdValue() == 1.0f);
-        REQUIRE(params.getDirection() == "positive");
-        REQUIRE(params.getLockoutTime() == 0.0f);
+        REQUIRE(params.threshold_value == 1.0f);
+        REQUIRE(params.direction == AnalogEventThresholdParams::Direction::positive);
+        REQUIRE(params.lockout_time.value() == 0.0f);
     }
     
     SECTION("Load with only some fields") {
@@ -285,9 +285,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThresholdParams - JSON Loading",
         REQUIRE(result);
         auto params = result.value();
         
-        REQUIRE(params.getThresholdValue() == 3.0f);
-        REQUIRE(params.getDirection() == "absolute");
-        REQUIRE(params.getLockoutTime() == 0.0f);  // Default
+        REQUIRE(params.threshold_value == 3.0f);
+        REQUIRE(params.direction == AnalogEventThresholdParams::Direction::absolute);
+        REQUIRE(params.lockout_time.value() == 0.0f);  // Default
     }
     
     SECTION("Reject negative lockout time") {
@@ -304,7 +304,7 @@ TEST_CASE("V2 Container Transform: AnalogEventThresholdParams - JSON Loading",
     SECTION("JSON round-trip preserves values") {
         AnalogEventThresholdParams original;
         original.threshold_value = 1.5f;
-        original.direction = "positive";
+        original.direction = AnalogEventThresholdParams::Direction::positive;
         original.lockout_time = rfl::Validator<float, rfl::Minimum<0.0f>>(50.0f);
         
         // Serialize
@@ -316,9 +316,9 @@ TEST_CASE("V2 Container Transform: AnalogEventThresholdParams - JSON Loading",
         auto recovered = result.value();
         
         // Verify values match
-        REQUIRE(recovered.getThresholdValue() == 1.5f);
-        REQUIRE(recovered.getDirection() == "positive");
-        REQUIRE(recovered.getLockoutTime() == 50.0f);
+        REQUIRE(recovered.threshold_value == 1.5f);
+        REQUIRE(recovered.direction == AnalogEventThresholdParams::Direction::positive);
+        REQUIRE(recovered.lockout_time.value() == 50.0f);
     }
 }
 
