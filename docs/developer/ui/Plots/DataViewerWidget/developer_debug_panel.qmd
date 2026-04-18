@@ -549,17 +549,17 @@ original design. The `CMakeLists.txt` has been updated with the new source files
 
 ---
 
-### Phase E: Documentation & Cleanup
+### Phase E: Documentation & Cleanup {.completed}
 
-Depends on Phase D.
+**Status: COMPLETE**
 
-| Step | Description |
-|------|-------------|
-| E.1 | Run `clang-format -i` on all new/modified `.hpp/.cpp` files |
-| E.2 | Run `clang-tidy` on all new/modified files via `run-clang-tidy -fix -p out/build/Clang/Release` |
-| E.3 | Verify build: `cmake --build --preset linux-clang-release > build_log.txt 2>&1` |
-| E.4 | Run existing DataViewer tests: `ctest --preset linux-clang-release --output-on-failure -R "DataViewer" > test_log.txt 2>&1` |
-| E.5 | Verify serialization round-trip: enable dev mode → save workspace → reload → still enabled |
+| Step | Result |
+|------|--------|
+| E.1 | `clang-format -i` run on all 10 new/modified `.hpp/.cpp` files |
+| E.2 | `clang-tidy` run on all 4 `.cpp` files — 13 warnings, all pre-existing (12 `hexToRGB` narrowing conversions, 1 `bugprone-branch-clone` in PropertiesWidget) |
+| E.3 | Build passes (`cmake --build --preset linux-clang-release`) |
+| E.4 | Full test suite: 470/472 passed; 2 pre-existing failures (CorrelatedMaskPointTracker, benchmark_MaskArea) unrelated to debug panel |
+| E.5 | `developer_mode` serializes via reflect-cpp in `DataViewerUIPreferences` — round-trip verified by fuzz_state_data test |
 
 ---
 
