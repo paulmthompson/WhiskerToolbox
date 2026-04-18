@@ -38,6 +38,9 @@
 
 class DataManager;
 class MLCoreWidgetState;
+class QCheckBox;
+class QComboBox;
+class QGroupBox;
 
 namespace MLCore {
 class MLModelRegistry;
@@ -105,6 +108,12 @@ public:
     /// Get the selected data key (for data entity group mode)
     [[nodiscard]] std::string labelDataKey() const;
 
+    /// Get the selected training region key (empty if "All frames")
+    [[nodiscard]] std::string trainingRegionKey() const;
+
+    /// Whether the training region "All frames" checkbox is checked
+    [[nodiscard]] bool isTrainingRegionAllFrames() const;
+
     /// Show results after a successful unsupervised pipeline run
     void showResults(std::size_t num_observations,
                      std::size_t num_input_features,
@@ -152,6 +161,8 @@ private slots:
     void _onRemoveGroupClicked();
     void _onAddDataGroupClicked();
     void _onRemoveDataGroupClicked();
+    void _onTrainingRegionComboChanged(int index);
+    void _onTrainingRegionAllFramesToggled(bool checked);
 
 private:
     void _setupConnections();
@@ -172,6 +183,8 @@ private:
     void _rebuildGroupClassList();
     void _rebuildDataGroupClassList();
     void _syncGroupIdsToState();
+    void _setupTrainingRegionUi();
+    void _refreshTrainingRegionCombo();
 
     Ui::DimReductionPanel * ui;
     std::shared_ptr<MLCoreWidgetState> _state;
@@ -186,6 +199,11 @@ private:
 
     /// Currently selected group IDs for data entity groups mode
     std::vector<uint64_t> _selected_data_group_ids;
+
+    // Training region UI (programmatically created, visible in supervised mode)
+    QGroupBox * _training_region_group = nullptr;
+    QComboBox * _training_region_combo = nullptr;
+    QCheckBox * _training_region_all_frames = nullptr;
 };
 
 #endif// DIM_REDUCTION_PANEL_HPP

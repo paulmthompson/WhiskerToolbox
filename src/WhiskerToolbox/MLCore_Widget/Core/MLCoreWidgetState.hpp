@@ -216,6 +216,9 @@ public:
     void setDimReductionLabelDataKey(std::string const & key);
     [[nodiscard]] std::string const & dimReductionLabelDataKey() const;
 
+    void setDimReductionTrainingRegionKey(std::string const & key);
+    [[nodiscard]] std::string const & dimReductionTrainingRegionKey() const;
+
 signals:
     void featureTensorKeyChanged(QString const & key);
     void classificationZscoreNormalizeChanged(bool enabled);
@@ -264,6 +267,7 @@ signals:
     void dimReductionLabelEventKeyChanged(QString const & key);
     void dimReductionLabelGroupIdsChanged();
     void dimReductionLabelDataKeyChanged(QString const & key);
+    void dimReductionTrainingRegionKeyChanged(QString const & key);
 
 private:
     MLCoreWidgetStateData _data;

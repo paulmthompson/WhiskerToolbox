@@ -276,23 +276,92 @@ before `find_package(Torch)` works around the protobuf target conflict.
 Eliminate the final storage copy by allowing transforms to mutate their input.
 This benefits both CPU and GPU paths.
 
-**TransformsV2 plumbing changes:**
+###### Motivation: Container Transform Return-Type Redesign
+
+Today, container transforms return `std::shared_ptr<OutContainer>`, which forces
+every invocation to heap-allocate a new data object — even when the transform
+could safely mutate the input. `nullptr` is overloaded to mean "failure," so
+there is no way for a transform to signal "I mutated the input, reuse it."
+
+The fix changes the container transform signature to return a raw pointer and
+accept a non-const reference:
+
+```cpp
+// Before (current)
+auto tensorCAR(TensorData const& input, TensorCARParams const& params,
+               ComputeContext const& ctx) -> std::shared_ptr<TensorData>;
+
+// After
+auto tensorCAR(TensorData& input, TensorCARParams const& params,
+               ComputeContext const& ctx) -> TensorData*;
+```
+
+The raw pointer return encodes three unambiguous states:
+
+| Return value        | Meaning                                         | Executor action                              |
+|---------------------|-------------------------------------------------|----------------------------------------------|
+| `new TensorData(…)` | New allocation (out-of-place)                   | Wrap in `shared_ptr` (takes ownership)       |
+| `&input`            | In-place mutation (pointer identity with input) | Reuse original `shared_ptr`                  |
+| `nullptr`           | Failure                                         | Throw / propagate error                      |
+
+: Container transform return-value protocol {.striped}
+
+The executor already holds the `shared_ptr` and can perform the address
+comparison:
+
+```cpp
+auto* raw = transform->execute(*input_ptr, params, ctx);
+if (!raw) {
+    throw std::runtime_error("transform '" + name + "' failed");
+}
+if (raw == input_ptr.get()) {
+    // In-place: reuse existing shared_ptr, no new allocation
+    return DataTypeVariant{input_ptr};
+} else {
+    // New allocation: take ownership
+    return DataTypeVariant{std::shared_ptr<OutContainer>(raw)};
+}
+```
+
+**Backward compatibility:** Existing transforms that accept `InContainer const&`
+bind to `InContainer&` with no source changes. Transforms that currently return
+`std::make_shared<Out>(…)` need a mechanical change to `new Out(…)`.
+
+###### TransformsV2 Plumbing Changes
 
 | File | Change |
 |------|--------|
-| `ContainerTransformMetadata` | Add `bool supports_in_place = false` flag. |
-| `ElementRegistry.hpp` | Add `registerContainerTransformInPlace()` accepting `(Container&, Params, Ctx) → void` signature. |
-| `DataManagerIntegration.cpp` | In `executeStep()`: when `output_key == input_key` and `supports_in_place`, resolve the existing `shared_ptr`, call the in-place variant, then notify observers without replacing the pointer. |
+| `ContainerExecutor.hpp` | `TypedContainerTransform::FuncType`: `InContainer const&` → `InContainer&`, `shared_ptr<Out>` → `Out*`. `IContainerExecutor::execute()`: `DataTypeVariant const&` → `DataTypeVariant&`, return unchanged. |
+| `ElementRegistry.hpp` | `registerContainerTransform()`, `executeContainerTransform()`, `RegisterContainerTransform` RAII helper, `TypedContainerExecutor::executeTyped()` — same signature changes. Add pointer-identity check in `TypedContainerExecutor::execute()`. |
+| All container transform `.cpp` files | Mechanical: `return std::make_shared<T>(…)` → `return new T(…)`; `return nullptr` unchanged. Input parameter `const&` → `&` (only for transforms that opt into mutation). |
 
-**TensorCAR in-place variant:**
+: Files affected by container transform return-type redesign {.striped}
+
+###### TensorCAR In-Place Path
+
+Add `bool in_place = false` to `TensorCARParams`. When true, the transform
+mutates the input's storage directly and returns `&input`:
+
+**Armadillo CPU path:**
 
 ```cpp
-void tensorCARInPlace(TensorData& data, TensorCARParams const& params,
-                      ComputeContext const& ctx);
+auto* arma_storage = input.storage().getMutableAsChecked<ArmadilloTensorStorage>(
+        TensorStorageType::Armadillo);
+arma::fmat& mat = arma_storage->mutableMatrix();
+mat.each_col() -= ref_col;  // zero output allocation
+return &input;
 ```
 
-This mutates the `TensorData`'s internal storage directly (via `setData()`
-or a mutable Armadillo/LibTorch accessor), avoiding all output allocation.
+**LibTorch CPU path:**
+
+```cpp
+auto& t = lt_storage->mutableTensor();
+t.sub_(ref);  // PyTorch in-place subtraction
+return &input;
+```
+
+**LibTorch GPU path:** Upload → compute → download → assign back to
+`mutableTensor()`. Eliminates CPU-side output `TensorData` allocation.
 
 **Savings:** Eliminates the remaining storage copy from Phase 4b, bringing
 total copy overhead to: 1 upload + 1 download (GPU) or 0 copies (CPU in-place).

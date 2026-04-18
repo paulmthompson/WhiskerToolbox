@@ -728,3 +728,105 @@ TEST_CASE("SupervisedDimReductionPipeline - z-score changes LARS selection with 
         CHECK(result_zs.num_output_dimensions <= N_FEATURES);
     }
 }
+
+// ============================================================================
+// Training region filtering
+// ============================================================================
+
+TEST_CASE("SupervisedDimReductionPipeline - training region restricts fitting",
+          "[MLCore][SupervisedDimRed]") {
+    // Create a 2-class dataset with 40 rows per class (80 total).
+    // Class 0 = rows [0,40), class 1 = rows [40,80).
+    // Training region covers only the first 60 rows [0,59].
+    // So fitting uses only 60 of 80 observations, but transform covers all 80.
+    std::string const time_key = "time";
+    std::size_t const per_class = 40;
+    auto dm = makeDM(time_key, static_cast<int>(per_class * 2));
+    createBinaryTensor(*dm, "features", time_key, per_class);
+    createBinaryIntervals(*dm, "labels", time_key, per_class);
+
+    // Create training region interval [0, 59]
+    auto tf = dm->getTime(TimeKey(time_key));
+    auto training_region = std::make_shared<DigitalIntervalSeries>();
+    training_region->setTimeFrame(tf);
+    training_region->addEvent(TimeFrameIndex(0), TimeFrameIndex(59));
+    dm->setData<DigitalIntervalSeries>("training_region", training_region, TimeKey(time_key));
+
+    MLModelRegistry const registry;
+
+    SupervisedDimReductionPipelineConfig config;
+    config.feature_tensor_key = "features";
+    config.label_config = LabelFromIntervals{"Inside", "Outside"};
+    config.label_interval_key = "labels";
+    config.output_key = "logits";
+    config.time_key_str = time_key;
+    config.training_interval_key = "training_region";
+
+    auto result = runSupervisedDimReductionPipeline(*dm, registry, config);
+
+    SECTION("pipeline succeeds with training region") {
+        REQUIRE(result.success);
+        CHECK(result.error_message.empty());
+    }
+
+    SECTION("training used fewer observations than total") {
+        REQUIRE(result.success);
+        // Training region [0,59] has 60 rows, which excludes 20 of the 80 total
+        CHECK(result.num_training_observations < result.num_observations);
+        CHECK(result.rows_excluded_by_training_region == 20);
+    }
+
+    SECTION("output tensor covers all rows") {
+        REQUIRE(result.success);
+        auto out = dm->getData<TensorData>("logits");
+        REQUIRE(out != nullptr);
+        CHECK(out->numRows() == per_class * 2);
+    }
+}
+
+TEST_CASE("SupervisedDimReductionPipeline - missing training region key fails",
+          "[MLCore][SupervisedDimRed]") {
+    std::string const time_key = "time";
+    std::size_t const per_class = 40;
+    auto dm = makeDM(time_key, static_cast<int>(per_class * 2));
+    createBinaryTensor(*dm, "features", time_key, per_class);
+    createBinaryIntervals(*dm, "labels", time_key, per_class);
+
+    MLModelRegistry const registry;
+
+    SupervisedDimReductionPipelineConfig config;
+    config.feature_tensor_key = "features";
+    config.label_config = LabelFromIntervals{"Inside", "Outside"};
+    config.label_interval_key = "labels";
+    config.output_key = "logits";
+    config.time_key_str = time_key;
+    config.training_interval_key = "nonexistent_region";
+
+    auto result = runSupervisedDimReductionPipeline(*dm, registry, config);
+    CHECK_FALSE(result.success);
+    CHECK(result.failed_stage == SupervisedDimReductionStage::FilteringTrainingRegion);
+}
+
+TEST_CASE("SupervisedDimReductionPipeline - empty training region key is no-op",
+          "[MLCore][SupervisedDimRed]") {
+    std::string const time_key = "time";
+    std::size_t const per_class = 40;
+    auto dm = makeDM(time_key, static_cast<int>(per_class * 2));
+    createBinaryTensor(*dm, "features", time_key, per_class);
+    createBinaryIntervals(*dm, "labels", time_key, per_class);
+
+    MLModelRegistry const registry;
+
+    SupervisedDimReductionPipelineConfig config;
+    config.feature_tensor_key = "features";
+    config.label_config = LabelFromIntervals{"Inside", "Outside"};
+    config.label_interval_key = "labels";
+    config.output_key = "logits";
+    config.time_key_str = time_key;
+    // training_interval_key is empty — no filtering
+
+    auto result = runSupervisedDimReductionPipeline(*dm, registry, config);
+    REQUIRE(result.success);
+    CHECK(result.rows_excluded_by_training_region == 0);
+    CHECK(result.num_training_observations == per_class * 2);
+}

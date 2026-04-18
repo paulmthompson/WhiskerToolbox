@@ -111,6 +111,20 @@ struct SupervisedDimReductionPipelineConfig {
      */
     std::string label_event_key;
 
+    // -- Training Region --
+
+    /**
+     * @brief DataManager key of a DigitalIntervalSeries defining the training region
+     *
+     * When non-empty, only feature rows whose TimeFrameIndex falls within these
+     * intervals are used for model fitting. Rows outside the training region are
+     * excluded from fitting but are still projected (transformed) by the fitted model.
+     * This mirrors the classification pipeline's training region concept.
+     *
+     * When empty (default), all labeled rows are used for fitting.
+     */
+    std::string training_interval_key;
+
     // -- Output --
 
     /**
@@ -145,6 +159,7 @@ enum class SupervisedDimReductionStage {
     ValidatingFeatures,
     ConvertingFeatures,
     AssemblingLabels,
+    FilteringTrainingRegion,
     FittingAndTransforming,
     WritingOutput,
     Complete,
@@ -183,6 +198,9 @@ struct SupervisedDimReductionPipelineResult {
 
     /// Observations used for training (labeled rows only)
     std::size_t num_training_observations = 0;
+
+    /// Rows excluded by training region filtering (0 if no training region set)
+    std::size_t rows_excluded_by_training_region = 0;
 
     /// Number of input features (tensor columns)
     std::size_t num_input_features = 0;

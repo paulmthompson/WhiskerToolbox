@@ -1353,6 +1353,11 @@ MLCoreWidget::_buildSupervisedDimReductionPipelineConfig() const {
     // -- Output --
     config.output_key = _dim_reduction_panel->outputKey();
 
+    // -- Training region --
+    if (!_dim_reduction_panel->isTrainingRegionAllFrames()) {
+        config.training_interval_key = _dim_reduction_panel->trainingRegionKey();
+    }
+
     // -- Thread safety --
     config.defer_dm_writes = true;
 

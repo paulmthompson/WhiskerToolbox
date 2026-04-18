@@ -17,9 +17,12 @@
 #include "MLCore/models/MLTaskType.hpp"
 #include "Tensors/TensorData.hpp"
 
+#include <QCheckBox>
+#include <QGroupBox>
 #include <QListWidget>
 #include <QRadioButton>
 #include <QStackedWidget>
+#include <QVBoxLayout>
 #include <QVariant>
 
 #include <algorithm>
@@ -52,6 +55,8 @@ DimReductionPanel::DimReductionPanel(
 
     // Default: unsupervised mode — labels hidden
     ui->labelsGroupBox->setVisible(false);
+
+    _setupTrainingRegionUi();
 
     refreshTensorList();
     _restoreFromState();
@@ -263,6 +268,31 @@ std::string DimReductionPanel::labelDataKey() const {
     return {};
 }
 
+std::string DimReductionPanel::trainingRegionKey() const {
+    if (!_training_region_combo || !_training_region_all_frames) {
+        return {};
+    }
+    if (_training_region_all_frames->isChecked()) {
+        return {};
+    }
+    int const idx = _training_region_combo->currentIndex();
+    if (idx < 0) {
+        return {};
+    }
+    QVariant const data = _training_region_combo->itemData(idx);
+    if (data.isValid() && !data.toString().isEmpty()) {
+        return data.toString().toStdString();
+    }
+    return {};
+}
+
+bool DimReductionPanel::isTrainingRegionAllFrames() const {
+    if (!_training_region_all_frames) {
+        return true;
+    }
+    return _training_region_all_frames->isChecked();
+}
+
 void DimReductionPanel::showResults(
         std::size_t num_observations,
         std::size_t num_input_features,
@@ -430,6 +460,7 @@ void DimReductionPanel::refreshLabelSources() {
     _refreshDataKeyCombo();
     _refreshDataGroupCombo();
     _refreshEventCombo();
+    _refreshTrainingRegionCombo();
 }
 
 // =============================================================================
@@ -983,6 +1014,24 @@ void DimReductionPanel::_restoreFromState() {
                 }
             }
         }
+
+        // Training region
+        auto const & region_key = _state->dimReductionTrainingRegionKey();
+        bool const all_frames = region_key.empty();
+        if (_training_region_all_frames) {
+            _training_region_all_frames->setChecked(all_frames);
+        }
+        if (_training_region_combo) {
+            _training_region_combo->setEnabled(!all_frames);
+            if (!region_key.empty()) {
+                for (int i = 0; i < _training_region_combo->count(); ++i) {
+                    if (_training_region_combo->itemData(i).toString().toStdString() == region_key) {
+                        _training_region_combo->setCurrentIndex(i);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     _updating = false;
@@ -1051,6 +1100,10 @@ void DimReductionPanel::_updateOutputKeyFromInput() {
 
 void DimReductionPanel::_updateSupervisedVisibility(bool supervised) {
     ui->labelsGroupBox->setVisible(supervised);
+
+    if (_training_region_group) {
+        _training_region_group->setVisible(supervised);
+    }
 
     // In supervised mode, hide unsupervised-specific param widgets
     // (the correct widgets will be shown by _populateAlgorithms)
@@ -1287,5 +1340,103 @@ void DimReductionPanel::_syncGroupIdsToState() {
         _state->setDimReductionLabelGroupIds(_selected_group_ids);
     } else if (source == "entity_groups") {
         _state->setDimReductionLabelGroupIds(_selected_data_group_ids);
+    }
+}
+
+// =============================================================================
+// Training region UI
+// =============================================================================
+
+void DimReductionPanel::_setupTrainingRegionUi() {
+    _training_region_group = new QGroupBox(QStringLiteral("Training Region"), this);
+    auto * layout = new QVBoxLayout(_training_region_group);
+
+    _training_region_all_frames = new QCheckBox(QStringLiteral("All frames"), _training_region_group);
+    _training_region_all_frames->setChecked(true);
+    _training_region_all_frames->setToolTip(
+            QStringLiteral("When checked, all labeled rows are used for fitting. "
+                           "Uncheck to restrict fitting to a specific interval region."));
+    layout->addWidget(_training_region_all_frames);
+
+    _training_region_combo = new QComboBox(_training_region_group);
+    _training_region_combo->setToolTip(
+            QStringLiteral("Select a DigitalIntervalSeries to define the training region. "
+                           "Only rows within these intervals will be used for model fitting."));
+    _training_region_combo->setEnabled(false);
+    layout->addWidget(_training_region_combo);
+
+    _training_region_group->setVisible(false);
+
+    // Insert after labelsGroupBox in the main layout
+    auto * main_layout = qobject_cast<QVBoxLayout *>(this->layout());
+    if (main_layout) {
+        int const labels_idx = main_layout->indexOf(ui->labelsGroupBox);
+        if (labels_idx >= 0) {
+            main_layout->insertWidget(labels_idx + 1, _training_region_group);
+        } else {
+            main_layout->addWidget(_training_region_group);
+        }
+    }
+
+    connect(_training_region_all_frames, &QCheckBox::toggled,
+            this, &DimReductionPanel::_onTrainingRegionAllFramesToggled);
+    connect(_training_region_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &DimReductionPanel::_onTrainingRegionComboChanged);
+}
+
+void DimReductionPanel::_refreshTrainingRegionCombo() {
+    if (!_training_region_combo || !_data_manager) {
+        return;
+    }
+
+    _training_region_combo->blockSignals(true);
+
+    QString const current_selection =
+            (_training_region_combo->currentIndex() >= 0)
+                    ? _training_region_combo->currentData().toString()
+                    : QString{};
+
+    _training_region_combo->clear();
+
+    auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
+    for (auto const & key: interval_keys) {
+        _training_region_combo->addItem(QString::fromStdString(key),
+                                        QString::fromStdString(key));
+    }
+
+    // Restore previous selection
+    int restored_idx = -1;
+    for (int i = 0; i < _training_region_combo->count(); ++i) {
+        if (_training_region_combo->itemData(i).toString() == current_selection) {
+            restored_idx = i;
+            break;
+        }
+    }
+
+    if (restored_idx >= 0) {
+        _training_region_combo->setCurrentIndex(restored_idx);
+    } else if (_training_region_combo->count() > 0) {
+        _training_region_combo->setCurrentIndex(0);
+    }
+
+    _training_region_combo->blockSignals(false);
+}
+
+void DimReductionPanel::_onTrainingRegionAllFramesToggled(bool checked) {
+    if (_training_region_combo) {
+        _training_region_combo->setEnabled(!checked);
+    }
+    if (_state) {
+        _state->setDimReductionTrainingRegionKey(
+                checked ? std::string{} : trainingRegionKey());
+    }
+}
+
+void DimReductionPanel::_onTrainingRegionComboChanged(int index) {
+    if (_updating || index < 0) {
+        return;
+    }
+    if (_state && _training_region_all_frames && !_training_region_all_frames->isChecked()) {
+        _state->setDimReductionTrainingRegionKey(trainingRegionKey());
     }
 }

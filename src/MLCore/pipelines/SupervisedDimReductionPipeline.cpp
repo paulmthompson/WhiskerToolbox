@@ -21,6 +21,7 @@
 #include "models/MLModelRegistry.hpp"
 #include "models/MLSupervisedDimReductionOperation.hpp"
 #include "models/MLTaskType.hpp"
+#include "pipelines/BoundingSpan.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -47,6 +48,8 @@ std::string toString(SupervisedDimReductionStage stage) {
             return "Converting features";
         case SupervisedDimReductionStage::AssemblingLabels:
             return "Assembling labels";
+        case SupervisedDimReductionStage::FilteringTrainingRegion:
+            return "Filtering to training region";
         case SupervisedDimReductionStage::FittingAndTransforming:
             return "Fitting and transforming";
         case SupervisedDimReductionStage::WritingOutput:
@@ -404,6 +407,7 @@ SupervisedDimReductionPipelineResult runSupervisedDimReductionPipeline(
 
     arma::mat train_features;
     arma::Row<std::size_t> train_labels;
+    std::vector<TimeFrameIndex> train_row_times;
 
     if (labels.unlabeled_count > 0) {
         // Subset to labeled rows only for training.
@@ -414,13 +418,72 @@ SupervisedDimReductionPipelineResult runSupervisedDimReductionPipeline(
         train_features = converted.matrix.cols(col_uword);
 
         train_labels.set_size(labeled_cols.size());
+        train_row_times.reserve(labeled_cols.size());
         for (std::size_t i = 0; i < labeled_cols.size(); ++i) {
             train_labels[i] = labels.labels[labeled_cols[i]];
+            train_row_times.push_back(valid_row_times[labeled_cols[i]]);
         }
     } else {
         // All rows are labeled — use the full converted matrix.
         train_features = converted.matrix;
         train_labels = labels.labels;
+        train_row_times = valid_row_times;
+    }
+
+    // ========================================================================
+    // Stage 3b: Filter to training region (optional)
+    // ========================================================================
+    // When a training interval key is specified, restrict training data to
+    // only the rows whose times fall within the training intervals. Rows
+    // outside the training region are excluded from model fitting but are
+    // still projected (transformed) by the fitted model across the full dataset.
+    std::size_t rows_excluded_by_training_region = 0;
+
+    if (!config.training_interval_key.empty()) {
+        reportProgress(progress, SupervisedDimReductionStage::FilteringTrainingRegion,
+                       "Filtering training rows to region '" +
+                               config.training_interval_key + "'");
+
+        auto training_intervals = dm.getData<DigitalIntervalSeries>(
+                config.training_interval_key);
+        if (!training_intervals) {
+            return makeFailure(SupervisedDimReductionStage::FilteringTrainingRegion,
+                               "Training interval series '" +
+                                       config.training_interval_key +
+                                       "' not found in DataManager");
+        }
+        if (training_intervals->size() == 0) {
+            return makeFailure(SupervisedDimReductionStage::FilteringTrainingRegion,
+                               "Training interval series '" +
+                                       config.training_interval_key +
+                                       "' is empty — no training region defined");
+        }
+
+        auto const pre_filter_count = train_features.n_cols;
+
+        auto filtered = filterTrainingRowsToIntervals(
+                train_features, train_labels, train_row_times,
+                *training_intervals);
+
+        if (filtered.features.n_cols == 0) {
+            return makeFailure(SupervisedDimReductionStage::FilteringTrainingRegion,
+                               "No training observations remain after filtering "
+                               "to training region '" +
+                                       config.training_interval_key + "'");
+        }
+
+        rows_excluded_by_training_region =
+                pre_filter_count - filtered.features.n_cols;
+
+        reportProgress(progress, SupervisedDimReductionStage::FilteringTrainingRegion,
+                       "Filtered to training region: " +
+                               std::to_string(filtered.features.n_cols) +
+                               " of " + std::to_string(pre_filter_count) +
+                               " observations");
+
+        train_features = std::move(filtered.features);
+        train_labels = std::move(filtered.labels);
+        train_row_times = std::move(filtered.times);
     }
 
     // ========================================================================
@@ -538,6 +601,7 @@ SupervisedDimReductionPipelineResult runSupervisedDimReductionPipeline(
     result.success = true;
     result.num_observations = converted.matrix.n_cols;
     result.num_training_observations = train_features.n_cols;
+    result.rows_excluded_by_training_region = rows_excluded_by_training_region;
     result.num_input_features = converted.matrix.n_rows;
     result.num_output_dimensions = n_dims;
     result.rows_dropped_nan = converted.rows_dropped;

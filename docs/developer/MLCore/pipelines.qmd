@@ -302,7 +302,7 @@ both labeled clusters and unlabeled context points are visible.
 
 ```
 ValidatingFeatures → ConvertingFeatures → AssemblingLabels →
-FittingAndTransforming → WritingOutput → Complete
+FilteringTrainingRegion → FittingAndTransforming → WritingOutput → Complete
 ```
 
 ### Configuration
@@ -325,6 +325,9 @@ config.label_interval_key = "contact_intervals";
 config.conversion_config.drop_nan = true;
 config.conversion_config.zscore_normalize = false;
 
+// Training region (optional — restrict which labeled rows are used for fitting)
+config.training_interval_key = "training_intervals"; // empty = use all labeled rows
+
 // Output
 config.output_key = "logit_projection";
 config.time_key_str = "camera";
@@ -345,6 +348,20 @@ The pipeline supports the same 4 label modes as `ClassificationPipeline`:
 Group-based modes produce **unlabeled rows** (rows with no group assignment), marked with
 sentinel value `num_classes`. These rows are excluded from training but still projected by
 the fitted model into the output tensor.
+
+### Training Region
+
+When `training_interval_key` is set (non-empty), the `FilteringTrainingRegion` stage
+restricts the labeled training rows to only those whose `TimeFrameIndex` falls within any
+interval of the specified `DigitalIntervalSeries`. This uses the same
+`filterTrainingRowsToIntervals()` utility from `BoundingSpan.hpp` as the classification
+pipeline.
+
+- If the key references a missing `DigitalIntervalSeries`, the pipeline fails at
+  `FilteringTrainingRegion` with an error message.
+- If `training_interval_key` is empty, the stage is a no-op and all labeled rows are used.
+- The transform is still applied to **all valid rows** — only training (fitting) is restricted.
+- `result.rows_excluded_by_training_region` reports how many labeled rows were excluded.
 
 ### Column Naming
 
@@ -385,6 +402,7 @@ if (result.success) {
 | `num_output_dimensions` | Number of classes (output columns) |
 | `rows_dropped_nan` | Rows dropped due to NaN/Inf |
 | `unlabeled_count` | Rows excluded from training (group modes) |
+| `rows_excluded_by_training_region` | Labeled rows excluded by training region filter |
 | `num_classes` | Number of classes discovered |
 | `class_names` | Class name per output column (no "Logit:" prefix) |
 | `output_key` | Created TensorData DataManager key |

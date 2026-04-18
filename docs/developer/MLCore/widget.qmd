@@ -111,6 +111,7 @@ MLCore_Widget
 | `dim_reduction_label_event_key` | `string` | Event series key (events mode) |
 | `dim_reduction_label_group_ids` | `vector<uint64_t>` | Group IDs (group modes) |
 | `dim_reduction_label_data_key` | `string` | Data key (entity_groups mode) |
+| `dim_reduction_training_region_key` | `string` | DigitalIntervalSeries key for training region (supervised) |
 
 ### UI State
 
@@ -247,6 +248,10 @@ When "Supervised" is selected, the algorithm list switches to `MLTaskType::Super
 │ Source: [combo ▼ Event Series]                │
 │   Event Key: [combo ▼]                        │
 └───────────────────────────────────────────────┘
+┌─── Training Region ─────────────────────────┐
+│ ☐ Use all frames                              │
+│ Interval: [combo ▼]                           │
+└───────────────────────────────────────────────┘
 ┌─── Output ───────────────────────────────────┐
 │ Output key: [text]                            │
 │ [Run Reduction]                               │
@@ -257,6 +262,12 @@ When "Supervised" is selected, the algorithm list switches to `MLTaskType::Super
 │ unlabeled count, classes, class names          │
 └───────────────────────────────────────────────┘
 ```
+
+The Training Region group is only visible in supervised mode. When "Use all frames" is checked,
+`training_interval_key` is left empty and all labeled rows are used for fitting. When unchecked,
+the combo populates with `DigitalIntervalSeries` keys from `DataManager`, and only labeled rows
+whose `TimeFrameIndex` falls within the selected interval are used for fitting. Transform is still
+applied to all valid rows.
 
 ### Sub-Panel
 

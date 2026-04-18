@@ -195,6 +195,9 @@ struct MLCoreWidgetStateData {
     /// DataManager key for data-entity group labeling (supervised mode)
     std::string dim_reduction_label_data_key;
 
+    /// DigitalIntervalSeries key defining the training region for supervised dim reduction
+    std::string dim_reduction_training_region_key;
+
     // === UI state ===
 
     /// Active workflow tab index (0 = classification, 1 = clustering)

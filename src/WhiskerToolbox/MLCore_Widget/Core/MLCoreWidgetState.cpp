@@ -674,3 +674,15 @@ void MLCoreWidgetState::setDimReductionLabelDataKey(std::string const & key) {
 std::string const & MLCoreWidgetState::dimReductionLabelDataKey() const {
     return _data.dim_reduction_label_data_key;
 }
+
+void MLCoreWidgetState::setDimReductionTrainingRegionKey(std::string const & key) {
+    if (_data.dim_reduction_training_region_key != key) {
+        _data.dim_reduction_training_region_key = key;
+        markDirty();
+        emit dimReductionTrainingRegionKeyChanged(QString::fromStdString(key));
+    }
+}
+
+std::string const & MLCoreWidgetState::dimReductionTrainingRegionKey() const {
+    return _data.dim_reduction_training_region_key;
+}
