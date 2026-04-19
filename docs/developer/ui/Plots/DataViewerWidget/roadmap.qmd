@@ -18,6 +18,17 @@ DataViewer-specific code into shared components or adopt existing shared compone
 feature work.
 :::
 
+::: {.callout-tip}
+## Related GitHub Issues
+
+The following issues track the primary feature work in this roadmap:
+
+- [#223](https://github.com/paulmthompson/WhiskerToolbox/issues/223) — Extract reusable temporal X-axis (CenteredTimeAxis widget)
+- [#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227) — Mouse-wheel modifiers for Y scaling (global, per-lane, viewport zoom)
+- [#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247) — Y-axis scalebars and lane labels
+- [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) — Viewport culling and configurable lane sizing
+:::
+
 ## Completed Work Summary
 
 The following features are complete and documented in [index.qmd](index.qmd):
@@ -37,131 +48,169 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Grouped data**: Group loading with auto-calculated scaling and event spacing
 - **Theme and grid**: Dark/Light themes, configurable grid overlay
 - **DataManager observer**: Combo box population, stale key cleanup
+- **Developer Debug Panel**: Real-time diagnostics for lane layout, scales, coordinate transforms, and viewport state
 
 **Not yet implemented**: Common axis integration, Y pan/zoom for channel navigation, enhanced
 per-type visual options, viewport culling, and shared component extraction described below.
 
 ---
 
-## Phase 1: Common Axis Integration {#phase-1-common-axis-integration}
+## Phase 1: Layout Foundation {#phase-1-layout-foundation}
 
-**Status**: Not started. The DataViewer uses a custom time window and Y bounds managed directly
-in `DataViewerState`/`TimeSeriesViewState` rather than the shared axis system from
-[Plots/Common/](../plot_widget_guide.md#axis-types).
+**Status**: Not started.
+**Issues**: [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) (configurable lane sizing),
+[#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227) (Y-scale naming audit)
 
-**Goal**: Adopt the common axis architecture so the DataViewer benefits from shared axis widgets,
-serialization, and the "silent update" pattern.
+**Goal**: Establish the lane sizing model that all subsequent Y-axis features depend on.
+Currently, `StackedLayoutStrategy` divides viewport space equally among all series — there
+is no configurable lane height and no way to scroll through channels.
 
-### 1.1 CenteredTimeAxis — New Horizontal Axis Variant
+### 1.1 Y-Scale State Audit
 
-The DataViewer's X-axis behavior is unique among the plot widgets: it is **always centered on the
-global time position** with zoom but **no independent X panning**. Neither the existing
-`RelativeTimeAxis` (event-relative, symmetric window) nor `HorizontalAxis` (arbitrary range with
-pan) match this pattern exactly.
+**`TimeSeriesViewState`** currently has two similarly named fields that affect Y-axis scaling:
 
-A new `CenteredTimeAxis` variant should be added to `Plots/Common/`:
+- `global_zoom` — exposed as "Global Y Scale" in `DataViewerPropertiesWidget.ui`
+- `global_vertical_scale` — used in `TransformComposers`
 
-```
-Plots/Common/CenteredTimeAxisWidget/
-├── Core/
-│   ├── CenteredTimeAxisStateData.hpp   # half_window (zoom level), serializable
-│   └── CenteredTimeAxisState.hpp       # QObject with halfWindowChanged signal
-├── CenteredTimeAxisWidget.hpp          # Axis display (tick marks, labels)
-└── CenteredTimeAxisWithRangeControls.hpp  # Factory with zoom spinbox
-```
+Before building more Y-axis interaction on top of these, their semantics must be audited and
+clarified. Determine whether they can be merged into a single field, or document the distinct
+purpose of each and ensure naming is consistent between code and UI.
 
-**State fields:**
+**Files**: `src/CorePlotting/CoordinateTransform/TimeRange.hpp`,
+`src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/Rendering/TransformComposers.hpp`
+
+### 1.2 Configurable Lane Sizing with Dual Policy
+
+Change `StackedLayoutStrategy` to support two lane sizing policies:
+
 ```cpp
-struct CenteredTimeAxisStateData {
-    double half_window = 5000.0;  ///< Visible half-window in time units (±half_window from center)
+enum class LaneSizingPolicy {
+    FitToViewport,  ///< Current behavior: divide viewport equally among series
+    FixedHeight     ///< Fixed height per lane; total extent may exceed viewport
 };
-```
 
-**Key behavior differences from existing axes:**
-
-| Aspect | CenteredTimeAxis | RelativeTimeAxis | HorizontalAxis |
-|--------|-----------------|------------------|----------------|
-| Center | Global time position (external) | 0 (alignment event) | User-adjustable |
-| Pan | None — follows time bar | User-adjustable | User-adjustable |
-| Zoom | Adjusts half_window | Adjusts min/max symmetrically | Adjusts x_min/x_max |
-| Labels | Absolute time values | Relative offsets (±N) | Arbitrary values |
-
-**Signals:** `halfWindowChanged`, `rangeUpdated` (emitted when center or zoom changes)
-
-The axis widget receives the current time position from an external source (the application's
-global time bar emits `timeChanged`). The visible range is computed as:
-`[current_time - half_window, current_time + half_window]`.
-
-**Sharing potential:** This axis variant could also be useful for any future widget that needs a
-time-following view (e.g., a real-time signal monitor). It follows the same four-layer pattern
-described in the [Plot Widget Guide](../plot_widget_guide.md#axis-types):
-`StateData → State → Widget → WithRangeControls`.
-
-### 1.2 VerticalAxis Adoption for Y Pan/Zoom
-
-Adopt the existing `VerticalAxisState` / `VerticalAxisWidget` from
-[Plots/Common/VerticalAxisWidget/](../plot_widget_guide.md) to replace the current direct
-`y_min`/`y_max` management in `DataViewerState`. This provides:
-
-- Shared spinbox range controls via `VerticalAxisWithRangeControls`
-- The "silent update" pattern for pan/zoom feedback loop avoidance
-- `VerticalAxisSynchronizer` for automatic OpenGL viewport sync
-- `AxisMapping` support for custom label formatting (e.g., channel names instead of Y values)
-
-**Integration pattern** (see [Plot Widget Guide — Adding an Axis](../plot_widget_guide.md)):
-
-```cpp
-// In DataViewerState constructor
-_vertical_axis_state = std::make_unique<VerticalAxisState>(this);
-_data.vertical_axis = _vertical_axis_state->data();
-
-// Sync vertical axis ↔ view state
-syncVerticalAxisToViewState(
-    _vertical_axis_state.get(), this,
-    [](auto const & vs) { return std::make_pair(vs.y_min, vs.y_max); }
-);
-```
-
-### 1.3 Migration Steps
-
-1. Add `CenteredTimeAxisStateData` and `CenteredTimeAxisState` to `Plots/Common/`
-2. Add `CenteredTimeAxisWidget` with zoom-only controls (no pan spinbox)
-3. Replace `DataViewerState::setTimeWindow()` / `adjustTimeWindowWidth()` with `CenteredTimeAxisState`
-4. Add `VerticalAxisState` member to `DataViewerState`
-5. Wire `VerticalAxisSynchronizer` to `DataViewerState::viewStateChanged`
-6. Add `VerticalAxisWithRangeControls` to `DataViewerPropertiesWidget`
-7. Update `DataViewerStateData` serialization to include new axis data structs
-
----
-
-## Phase 2: Y Pan/Zoom for Channel Navigation {#phase-2-y-pan-zoom}
-
-**Status**: Not started. Currently, all lanes shrink equally as more series are added, making
-dense channel groups (e.g., 32-channel silicon probes) impractical to view.
-
-**Goal**: Allow users to pan and zoom the Y-axis so they can view a subset of channels at
-readable resolution, inspired by [EventPlotWidget](../EventPlotWidget/index.qmd)'s trial Y
-navigation.
-
-**Depends on**: [Phase 1.2](#phase-1-common-axis-integration) (VerticalAxis adoption).
-
-### 2.1 Fixed Lane Height Model
-
-Change the lane layout from "divide available space equally" to "fixed height per lane":
-
-```cpp
 struct DataViewerLayoutConfig {
-    float lane_height = 80.0f;        ///< Fixed height per lane in world units
+    LaneSizingPolicy sizing_policy = LaneSizingPolicy::FitToViewport;
+    float lane_height = 80.0f;        ///< Height per lane in world units (FixedHeight mode)
     float lane_gap = 5.0f;            ///< Gap between lanes
     bool auto_fit_on_add = true;      ///< Auto-adjust Y range when adding series
 };
 ```
 
-The total Y extent is `num_series * (lane_height + lane_gap)`. The `VerticalAxisState` range
-determines which portion is visible. This is analogous to the EventPlotWidget where the total
+- **`FitToViewport`** preserves the current equal-division behavior (default for backward
+  compatibility and small channel counts).
+- **`FixedHeight`** assigns each lane a fixed height, so the total Y extent is
+  `num_series * (lane_height + lane_gap)`. This is required for Y pan/zoom (Phase 2) and
+  is the enabler for high-channel-count recordings (e.g., 384-channel silicon probes as
+  described in [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248)).
+
+The total Y extent in `FixedHeight` mode is analogous to the EventPlotWidget where the total
 Y extent is `num_trials * row_height` and the user pans/zooms to navigate.
 
-### 2.2 Viewport Visibility Culling
+**Files**: `src/CorePlotting/Layout/StackedLayoutStrategy.hpp`,
+`src/CorePlotting/Layout/StackedLayoutStrategy.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp`
+
+### 1.3 Lane Sizing UI Controls
+
+Expose lane sizing configuration in `DataViewerPropertiesWidget`:
+
+- **Policy selector**: Combo box to switch between `FitToViewport` and `FixedHeight`
+- **Lane height spinbox**: Enabled only in `FixedHeight` mode
+- **Lane gap spinbox**: Spacing between lanes
+
+**Files**: `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui`
+
+### 1.4 Verification
+
+- Load 32+ channels. In `FitToViewport` mode, all lanes visible (current behavior).
+- Switch to `FixedHeight` mode: lanes extend beyond the viewport. Only a subset is visible.
+- Workspace save/restore roundtrips the new layout config fields.
+
+---
+
+## Phase 2: Y-Axis Navigation {#phase-2-y-axis-navigation}
+
+**Status**: Not started.
+**Issues**: [#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227) (wheel modifiers, per-lane scaling),
+[#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) (viewport culling),
+[#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247) (axis synchronization)
+**Depends on**: [Phase 1](#phase-1-layout-foundation) (`FixedHeight` lanes must exist for
+Y pan/zoom to be meaningful).
+
+**Goal**: Allow users to pan and zoom the Y-axis so they can view a subset of channels at
+readable resolution, inspired by [EventPlotWidget](../EventPlotWidget/index.qmd)'s trial Y
+navigation.
+
+### 2.1 VerticalAxis Widget Adoption
+
+Adopt the existing `VerticalAxisState` / `VerticalAxisWidget` from
+[Plots/Common/VerticalAxisWidget/](../plot_widget_guide.md) to replace the current direct
+`y_min`/`y_max` management in `DataViewerState`. This follows the same integration pattern
+used by ScatterPlotWidget and EventPlotWidget:
+
+**Layout**: Place `VerticalAxisWidget` (50px fixed width, QPainter-rendered) in a `QHBoxLayout`
+to the left of `OpenGLWidget`, with the overall structure:
+
+```
+DataViewer_Widget (QWidget)
+├── QVBoxLayout
+│   ├── QHBoxLayout [stretch 1]
+│   │   ├── VerticalAxisWidget (50px fixed width)
+│   │   └── OpenGLWidget [stretch 1]
+│   └── (future: CenteredTimeAxisWidget — Phase 4)
+```
+
+**State integration**:
+
+```cpp
+// In DataViewerState constructor
+_vertical_axis_state = std::make_unique<VerticalAxisState>(this);
+_data.vertical_axis = _vertical_axis_state->data();
+```
+
+**Bidirectional sync** (following the ScatterPlotWidget/EventPlotWidget pattern):
+
+- **Spinbox → Plot**: Connect `VerticalAxisState::rangeChanged` → update `y_min`/`y_max`
+  in `TimeSeriesViewState`
+- **Plot → Spinbox**: On `viewStateChanged`, call `state->setRangeSilent(min, max)` →
+  emits `rangeUpdated` (not `rangeChanged`) → spinboxes and axis widget repaint without
+  feedback loop
+
+**Files**: `src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.hpp`,
+`src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp`,
+`src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp`
+
+### 2.2 AxisMapping for Channel Labels
+
+Use the `AxisMapping` system to display channel names on the `VerticalAxisWidget` at each
+lane's center Y position. This is analogous to EventPlotWidget's `trialIndexAxis()` which
+maps world Y to trial indices.
+
+```cpp
+auto channel_mapping = CorePlotting::AxisMapping{
+    .worldToDomain = [](double world) { return world; },
+    .domainToWorld = [](double domain) { return domain; },
+    .formatLabel = [&channel_names](double domain) {
+        int lane_index = static_cast<int>(std::round(domain));
+        if (lane_index >= 0 && lane_index < channel_names.size()) {
+            return channel_names[lane_index];
+        }
+        return std::string{};
+    }
+};
+y_axis_widget->setAxisMapping(channel_mapping);
+```
+
+Because the axis widget renders via QPainter (not OpenGL), channel name text rendering is
+straightforward — no OpenGL text rendering needed, and the label quality matches all other
+plot widgets in the application.
+
+### 2.3 Viewport Visibility Culling
 
 When many channels are loaded but only a few are visible (e.g., viewing 4 of 32 channels),
 non-visible series should be culled from the rendering pipeline:
@@ -185,41 +234,308 @@ for (auto const & lane : visible_lanes) {
 The `AnalogVertexCache` should also be made viewport-aware — only cache and update vertices
 for series whose lanes intersect the viewport.
 
-### 2.3 Scroll Interaction
+**Files**: `src/WhiskerToolbox/DataViewer_Widget/Rendering/SceneBuildingHelpers.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/Rendering/AnalogVertexCache.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.cpp`
 
-Mouse wheel on the canvas should:
+### 2.4 Wheel Modifier Chords for Y Interaction
 
-- **Scroll Y** (default): Pan through channels vertically
-- **Ctrl+Scroll**: Zoom Y (change visible range)
-- **Shift+Scroll**: Zoom X (change time window width)
+::: {.callout-important}
+## Preserving Existing Behavior
 
-This matches the existing DataViewer scroll behavior but adds proper Y scrolling through
-lanes (currently, Y scroll only affects `global_zoom`).
+The current default mouse wheel behavior (time-axis zoom) must be preserved. Users who do
+not use modifiers should see no change. This is an explicit non-goal from
+[#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227).
+:::
 
-### 2.4 AxisMapping for Channel Labels
+**Current behavior** (unchanged):
 
-Use the `AxisMapping` system from the [Plot Widget Guide](../plot_widget_guide.md#axismapping--custom-label-formatting)
-to display channel names on the Y-axis instead of numeric values:
+| Modifier | Action |
+|----------|--------|
+| None | Time-axis zoom (normal sensitivity) |
+| Shift | Time-axis zoom (fine sensitivity) |
+| Ctrl | Time-axis zoom (coarse sensitivity) |
 
-```cpp
-// Create an axis mapping that shows channel names at lane centers
-auto channel_mapping = CorePlotting::AxisMapping{
-    .worldToDomain = [](double world) { return world; },
-    .domainToWorld = [](double domain) { return domain; },
-    .formatLabel = [&channel_names](double domain) {
-        int lane_index = static_cast<int>(std::round(domain));
-        if (lane_index >= 0 && lane_index < channel_names.size()) {
-            return channel_names[lane_index];
-        }
-        return std::string{};
-    }
-};
-y_axis_widget->setAxisMapping(channel_mapping);
-```
+**New chords** (to be added):
+
+| Modifier | Action | State Field |
+|----------|--------|-------------|
+| TBD | Global Y scale | `global_vertical_scale` (or merged field from 1.1 audit) |
+| TBD | Y viewport pan | `y_min`/`y_max` shift via `VerticalAxisState` |
+| TBD | Y viewport zoom (cursor-anchored) | `y_min`/`y_max` range via `VerticalAxisState` |
+
+Modifier chords must be finalized during implementation. Candidates include `Alt+Scroll`,
+`Alt+Ctrl+Scroll`, or other combinations. The chosen chords must:
+
+- Not conflict with Linux window manager defaults (Alt+click is often window move)
+- Respect `OpenGLWidget::isInteractionActive()` (no zoom while creating/editing intervals)
+- Be documented with a user-facing summary (tooltip, status bar, or User Guide stub)
+
+**Cursor-anchored Y zoom**: The focal point under the mouse should remain stable during zoom,
+consistent with common map/plot UX. Define min/max span clamps so projection and hit testing
+never degenerate.
+
+**Multiple modifier priority**: Document and implement a priority order when multiple modifiers
+are held simultaneously.
+
+**Files**: `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp` (`wheelEvent`),
+`src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp`
+
+### 2.5 Per-Lane Hover Scaling
+
+When a Y-scaling modifier chord is held and the cursor is over an analog lane, adjust the
+**per-series** `user_scale_factor` in `AnalogSeriesOptionsData` for that specific series.
+
+- Use existing `OpenGLWidget::findSeriesAtPosition()` for hit testing
+- No-op (or defined fallback) if cursor is not over an analog lane
+- The per-series scale is already serialized and shown in the properties panel, so this
+  provides a mouse-driven shortcut for an existing feature
+
+**Files**: `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/Core/SeriesOptionsRegistry.cpp`
+
+### 2.6 Range Controls in Properties Panel
+
+Add `VerticalAxisWithRangeControls` to `DataViewerPropertiesWidget` for manual Y viewport
+range editing via spinboxes, using the factory function from `Plots/Common/`.
+
+**Files**: `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui`
+
+### 2.7 Verification
+
+- Load 32+ channels in `FixedHeight` mode.
+- Y pan scrolls through lanes; Y zoom narrows the visible range.
+- Viewport culling skips off-screen series (verify via Developer Debug Panel rendering stats).
+- Per-lane hover scaling adjusts the hovered series only.
+- Channel names appear on the `VerticalAxisWidget`.
+- Workspace save/restore roundtrips all new state.
+- Existing `DataViewer_Widget` tests that assert time window changes after wheel remain green.
 
 ---
 
-## Phase 3: Enhanced Event Glyph Options {#phase-3-enhanced-event-glyph-options}
+## Phase 3: Y-Axis Scalebars and Lane Labels {#phase-3-scalebars-labels}
+
+**Status**: Not started.
+**Issues**: [#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247)
+**Depends on**: [Phase 2](#phase-2-y-axis-navigation) (`VerticalAxisWidget` exists, lane
+bounds available from layout)
+
+**Goal**: Provide per-lane scale context and identification so users can interpret amplitudes
+and identify individual traces, especially with many channels loaded.
+
+::: {.callout-note}
+## Rendering Approach: QPainter in Axis Widget
+
+Per-lane scalebars and labels are rendered via QPainter inside the `VerticalAxisWidget` — the
+same approach used for tick marks and labels in all other plot widgets. This avoids the
+complexity of OpenGL text rendering entirely.
+
+The main design challenge is that DataViewer lanes have **independent amplitude scales** (each
+analog series has its own `user_scale_factor`, data range, and normalization), unlike
+EventPlotWidget where all trials share a uniform Y mapping. The axis widget must render
+**per-lane** scale information rather than a single uniform range.
+:::
+
+### 3.1 MultiLaneVerticalAxisWidget (New Separate Widget)
+
+Create a **new** `MultiLaneVerticalAxisWidget` in `Plots/Common/` — a standalone widget
+rather than a subclass of the existing `VerticalAxisWidget`. The existing single-range
+`VerticalAxisWidget` remains unchanged for widgets that need a single uniform Y range
+(ScatterPlot, EventPlot, etc.).
+
+```
+Plots/Common/MultiLaneVerticalAxisWidget/
+├── Core/
+│   ├── MultiLaneVerticalAxisStateData.hpp   # Per-lane ranges, label text, visibility flags
+│   └── MultiLaneVerticalAxisState.hpp       # QObject with signals
+├── MultiLaneVerticalAxisWidget.hpp          # QPainter rendering
+└── MultiLaneVerticalAxisWithControls.hpp    # Factory (optional range controls)
+```
+
+The widget follows the standard four-layer pattern (`StateData → State → Widget → WithControls`)
+and receives a `std::vector<LaneAxisDescriptor>` describing each lane:
+
+```cpp
+struct LaneAxisDescriptor {
+    int lane_index;
+    float pixel_top;
+    float pixel_bottom;
+    double y_min;
+    double y_max;
+    std::string label;          ///< Channel name
+    bool show_scalebar = true;
+};
+```
+
+- Paint channel name labels at each lane's center Y position
+- Draw lane boundary separators
+- Each lane's pixel extent comes from `StackedLayoutStrategy`'s `LayoutResponse`
+
+The `AxisMapping` from Phase 2.2 handles channel name formatting for the single-range
+`VerticalAxisWidget`; this new widget replaces that approach with per-lane descriptors.
+
+### 3.2 Per-Lane Y-Axis Scalebars
+
+Within each lane's Y band in the axis widget, draw a small scalebar indicating the amplitude
+range:
+
+- A vertical bar with two endpoints and a magnitude label (e.g., "100 µV")
+- The scale is computed from the lane's amplitude range: `user_scale_factor`, data statistics,
+  and any group scaling normalization
+- Scalebars provide absolute scale context that uniform tick marks cannot (since each lane
+  has its own amplitude mapping)
+
+### 3.3 Visibility Toggles
+
+Add options to `DataViewerStateData` and the properties UI:
+
+- Toggle lane labels on/off
+- Toggle scalebars on/off
+- These should be serialized for workspace restore
+
+### 3.4 Group Scaling Verification
+
+Verify that scalebars update correctly when switching between individual and unified group
+scaling modes (`GroupScalingState`), and that labels remain aligned during Y pan/zoom.
+
+### 3.5 Smart Label Positioning
+
+Labels and scalebars must be viewport-aware
+([#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248)):
+
+- When panning in Y, labels for visible lanes must adjust accordingly
+- Labels for off-screen lanes should not be rendered
+- Labels should not overlap when lanes are very short (FixedHeight with small lane_height
+  or FitToViewport with many channels)
+
+### 3.6 Verification
+
+- Each data lane can render an optional Y-axis scalebar indicating its magnitude/units.
+- Each data lane displays its assigned name/identifier (e.g., channel name or series key).
+- Scalebars and labels toggle on/off via properties UI.
+- Correct behavior when switching between individual and unified group scaling modes.
+- Labels remain aligned and visible during vertical panning.
+
+---
+
+## Phase 4: CenteredTimeAxis Widget {#phase-4-centered-time-axis}
+
+**Status**: Not started.
+**Issues**: [#223](https://github.com/paulmthompson/WhiskerToolbox/issues/223)
+**Parallel with**: [Phase 3](#phase-3-scalebars-labels) (no dependency between X and Y axis work)
+
+**Goal**: Extract the DataViewer's temporal X-axis behavior into a reusable `CenteredTimeAxisWidget`
+in `Plots/Common/`, following the established four-layer axis widget pattern
+(`StateData → State → Widget → WithRangeControls`). The `SpectrogramWidget` (currently a stub
+with time-axis state defined but no axis widget) is the primary second consumer.
+
+### 4.1 CenteredTimeAxis — New Horizontal Axis Variant
+
+The DataViewer's X-axis behavior is unique among the plot widgets: it is **always centered on the
+global time position** with zoom but **no independent X panning**. Neither the existing
+`RelativeTimeAxis` (event-relative, symmetric window) nor `HorizontalAxis` (arbitrary range with
+pan) match this pattern exactly.
+
+A new `CenteredTimeAxis` variant should be added to `Plots/Common/`:
+
+```
+Plots/Common/CenteredTimeAxisWidget/
+├── Core/
+│   ├── CenteredTimeAxisStateData.hpp   # half_window (zoom level), serializable
+│   └── CenteredTimeAxisState.hpp       # QObject with zoom math + signals
+├── CenteredTimeAxisWidget.hpp          # Axis display (tick marks, labels) via QPainter
+└── CenteredTimeAxisWithRangeControls.hpp  # Factory with zoom spinbox
+```
+
+**State fields:**
+```cpp
+struct CenteredTimeAxisStateData {
+    double time_start = 0.0;   ///< Visible window start in time units
+    double time_end = 10000.0; ///< Visible window end in time units
+};
+```
+
+The state uses `time_start`/`time_end` rather than `half_window` for consistency with the
+existing `TimeSeriesViewState` representation. The State class provides convenience accessors
+for `halfWindow()` and `center()` computed from these fields.
+
+**Key behavior differences from existing axes:**
+
+| Aspect | CenteredTimeAxis | RelativeTimeAxis | HorizontalAxis |
+|--------|-----------------|------------------|----------------|
+| Center | Global time position (external) | 0 (alignment event) | User-adjustable |
+| Pan | None — follows time bar | User-adjustable | User-adjustable |
+| Zoom | Adjusts window width symmetrically around center | Adjusts min/max symmetrically | Adjusts x_min/x_max |
+| Labels | Absolute time values | Relative offsets (±N) | Arbitrary values |
+
+**Signals:** `rangeChanged` (user action), `rangeUpdated` (silent sync — matches bidirectional
+sync pattern used by all axis widgets)
+
+The axis widget receives the current time position from an external source (the application's
+global time bar emits `timeChanged`). On each time change, the parent widget recenters the
+window: `time_start = current_time - half_window; time_end = current_time + half_window`.
+
+**Sharing potential:** This axis variant could also be useful for any future widget that needs a
+time-following view (e.g., a real-time signal monitor).
+
+### 4.2 Zoom Math Extraction
+
+The wheel-zoom math currently lives in `DataViewer_Widget::wheelEvent` and
+`DataViewerState::adjustTimeWidth`. This logic should be extracted into
+`CenteredTimeAxisState` as reusable methods:
+
+- `applyWheelZoom(int angle_delta, ZoomScalingMode mode, Qt::KeyboardModifiers mods, int64_t total_frames)`
+- Supports both `Adaptive` and `Fixed` scaling modes with `Shift` (fine) / `Ctrl` (coarse) modifiers
+- Optional clamp policy hooks
+- Pure logic that can be unit-tested without QWidget
+
+This addresses the core goal of
+[#223](https://github.com/paulmthompson/WhiskerToolbox/issues/223): making the zoom behavior
+reusable without duplicating the logic in each consumer widget.
+
+### 4.3 DataViewer Migration
+
+Migrate `DataViewer_Widget` to use `CenteredTimeAxisWidget`:
+
+1. Add `CenteredTimeAxisState` member to `DataViewerState`
+2. Place `CenteredTimeAxisWidget` below the OpenGL canvas in the `QVBoxLayout`
+3. Replace `DataViewerState::setTimeWindow()` / `adjustTimeWindowWidth()` with
+   `CenteredTimeAxisState` methods
+4. Wire bidirectional sync following the same pattern as Phase 2.1 (VerticalAxis)
+5. Update `DataViewerStateData` serialization to include `CenteredTimeAxisStateData`
+
+Existing tests that assert time window changes after wheel events must remain green.
+
+### 4.4 SpectrogramWidget Adoption
+
+Adopt the same `CenteredTimeAxisWidget` for `SpectrogramWidget`'s time axis. The
+SpectrogramWidget currently defines `SpectrogramViewState` with `x_min`/`x_max`/`x_zoom`/`x_pan`
+but has no axis widget — it is essentially a stub GUI. This provides:
+
+- Tick marks and time labels via QPainter (matching other plot widgets)
+- Zoom controls via `CenteredTimeAxisWithRangeControls`
+- Consistent wheel-zoom behavior shared with DataViewer
+
+### 4.5 Tests and Documentation
+
+- Port/add unit tests for zoom math (adaptive vs fixed scaling, modifiers) independent of QWidget
+- Update `TimeRange.hpp` / `TimeSeriesViewState` comments to point to the new module
+- Developer documentation entry for the shared temporal axis
+- Link from DataViewer and Spectrogram developer docs
+
+### 4.6 Verification
+
+- DataViewer time-axis behavior unchanged (behavioral parity with pre-migration)
+- `CenteredTimeAxisWidget` renders absolute time tick marks and labels below the OpenGL canvas
+- SpectrogramWidget can use the same axis widget for its time dimension
+- Wheel zoom tests pass for both consumers
+- Workspace save/restore roundtrips `CenteredTimeAxisStateData`
+
+---
+
+## Phase 5: Enhanced Event Glyph Options {#phase-5-enhanced-event-glyph-options}
 
 **Status**: Not started. Events are currently rendered as simple ticks with configurable color
 and spacing but no glyph type selection.
@@ -228,7 +544,7 @@ and spacing but no glyph type selection.
 infrastructure that is now implemented and integrated into TemporalProjectionViewWidget,
 OnionSkinViewWidget, and EventPlotWidget.
 
-### 3.1 Shared GlyphStyleData (Complete)
+### 5.1 Shared GlyphStyleData (Complete)
 
 The shared glyph infrastructure is now available:
 
@@ -243,7 +559,7 @@ The shared glyph infrastructure is now available:
 
 Already integrated into: TemporalProjectionViewWidget, OnionSkinViewWidget, EventPlotWidget.
 
-### 3.2 State and Options Update
+### 5.2 State and Options Update
 
 Extend `DigitalEventSeriesOptionsData` to include glyph options using the shared struct:
 
@@ -265,7 +581,7 @@ struct DigitalEventSeriesOptionsData {
 };
 ```
 
-### 3.3 Properties Panel Controls
+### 5.3 Properties Panel Controls
 
 Embed `GlyphStyleControls` from `Plots/Common/GlyphStyleWidget/` for per-event-key glyph
 customization, following the same pattern used by TemporalProjectionViewWidget and
@@ -277,7 +593,7 @@ OnionSkinViewWidget:
 auto * controls = new GlyphStyleControls(glyph_style_state, parent);
 ```
 
-### 3.4 Scene Building Update
+### 5.4 Scene Building Update
 
 Update `SceneBuildingHelpers::buildEventSeriesBatch()` to use
 `CorePlotting::toRenderableGlyphType()` and `CorePlotting::hexColorToVec4()` from
@@ -285,14 +601,14 @@ Update `SceneBuildingHelpers::buildEventSeriesBatch()` to use
 
 ---
 
-## Phase 4: Enhanced Interval Rendering {#phase-4-enhanced-interval-rendering}
+## Phase 6: Enhanced Interval Rendering {#phase-6-enhanced-interval-rendering}
 
-Status: Not started. Intervals are currently rendered as filled rectangles with configurable
+**Status**: Not started. Intervals are currently rendered as filled rectangles with configurable
 color and alpha but no border or pattern options.
 
-Goal: Rich interval visualization with adjustable border, alpha, and hatching patterns.
+**Goal**: Rich interval visualization with adjustable border, alpha, and hatching patterns.
 
-### 4.1 IntervalRenderingOptions
+### 6.1 IntervalRenderingOptions
 
 Extend `DigitalIntervalSeriesOptionsData`:
 
@@ -321,7 +637,7 @@ struct DigitalIntervalSeriesOptionsData {
 };
 ```
 
-### 4.2 Hatching Patterns
+### 6.2 Hatching Patterns
 
 ```cpp
 enum class IntervalHatchPattern {
@@ -343,12 +659,12 @@ Hatching can be implemented via:
 
 The fragment shader approach is preferred for performance with many intervals.
 
-### 4.3 SVG Export Update
+### 6.3 SVG Export Update
 
 Update `SVGExporter` to support border and hatching in SVG output. SVG natively supports
 `stroke`, `stroke-width`, and `<pattern>` elements for hatching, making this straightforward.
 
-### 4.4 Properties Panel Controls
+### 6.4 Properties Panel Controls
 
 Add to the interval section of `DataViewerPropertiesWidget`:
 
@@ -360,7 +676,7 @@ Add to the interval section of `DataViewerPropertiesWidget`:
 
 ---
 
-## Phase 5: Analog Line Style Enhancements {#phase-5-analog-line-style}
+## Phase 7: Analog Line Style Enhancements {#phase-7-analog-line-style}
 
 **Status**: Partially implemented. Color, alpha, and line thickness exist in
 `AnalogSeriesOptionsData` via `CorePlotting::SeriesStyle`. Gap handling modes exist
@@ -368,7 +684,7 @@ but are basic.
 
 **Goal**: Additional line rendering options for publication-quality analog traces.
 
-### 5.1 Planned Options
+### 7.1 Planned Options
 
 ```cpp
 struct AnalogSeriesOptionsData {
@@ -392,23 +708,23 @@ enum class LineStyle {
 };
 ```
 
-### 5.2 Rendering
+### 7.2 Rendering
 
 Dashed/dotted styles can be implemented via fragment shader stipple patterns or by breaking
 the polyline into segments during scene building. The shader approach is preferred for
-consistency with interval hatching (Phase 4).
+consistency with interval hatching (Phase 6).
 
 ---
 
-## Phase 6: Shared Component Extraction {#phase-6-shared-components}
+## Phase 8: Shared Component Extraction {#phase-8-shared-components}
 
-**Status**: Not started. Design exploration — depends on Phases 1–4 establishing which patterns
+**Status**: Not started. Design exploration — depends on Phases 1–6 establishing which patterns
 are truly shared.
 
 **Goal**: Extract DataViewer-specific implementations that have general utility into shared
 locations, and adopt shared components that are currently duplicated.
 
-### 6.1 Components to Extract from DataViewer
+### 8.1 Components to Extract from DataViewer
 
 | Component | Current Location | Target Location | Also Used By |
 |-----------|-----------------|-----------------|--------------|
@@ -418,17 +734,17 @@ locations, and adopt shared components that are currently duplicated.
 | `DataViewerCoordinates` | `DataViewer_Widget/Interaction/` | Pattern generalizable via `Plots/Common/` | Layout+coordinate queries shared |
 | `SpikeSorterConfigLoader` | `DataViewer_Widget/Core/` | `DataManager/` or `CorePlotting/` | Any widget displaying multi-channel data |
 
-### 6.2 Components to Adopt from Plots/Common/
+### 8.2 Components to Adopt from Plots/Common/
 
 | Shared Component | Current DataViewer Equivalent | Adoption Notes |
 |-----------------|------------------------------|----------------|
-| `VerticalAxisState` + `VerticalAxisWidget` | Direct `y_min`/`y_max` in state | Phase 1.2 |
-| `CenteredTimeAxis` (new) | Direct time window in state | Phase 1.1 |
+| `VerticalAxisState` + `VerticalAxisWidget` | Direct `y_min`/`y_max` in state | Phase 2.1 |
+| `CenteredTimeAxis` (new) | Direct time window in state | Phase 4.1 |
 | `PlotInteractionHelpers` | Custom zoom/pan in `DataViewerInputHandler` | Adopt shared zoom/pan concepts |
-| `AxisMapping` | No custom labels currently | Phase 2.4 for channel names |
-| `VerticalAxisSynchronizer` | Manual view↔axis sync | Phase 1.2 |
+| `AxisMapping` | No custom labels currently | Phase 2.2 for channel names |
+| `VerticalAxisSynchronizer` | Manual view↔axis sync | Phase 2.1 |
 
-### 6.3 Shared Visual Options Infrastructure
+### 8.3 Shared Visual Options Infrastructure
 
 The point glyph options infrastructure is now implemented and centralized:
 
@@ -450,7 +766,7 @@ Already integrated into: TemporalProjectionViewWidget, OnionSkinViewWidget, Even
 
 Remaining shared visual option structs to implement:
 
-- **DataViewer Widget**: Events (Phase 3), Intervals (Phase 4), Analog lines (Phase 5)
+- **DataViewer Widget**: Events (Phase 5), Intervals (Phase 6), Analog lines (Phase 7)
 - **[EventPlotWidget](../EventPlotWidget/roadmap.qmd)**: Phase 3 glyph options
 - **[OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd)**: Phase 1 point options, Phase 2 line options
 - **[ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd)**: Phase 4 point options
@@ -458,14 +774,14 @@ Remaining shared visual option structs to implement:
 
 ---
 
-## Phase 7: Directory Relocation {#phase-7-directory-relocation}
+## Phase 9: Directory Relocation {#phase-9-directory-relocation}
 
 **Status**: Not started. Low priority — functional correctness is unaffected.
 
 **Goal**: Move `src/WhiskerToolbox/DataViewer_Widget/` to `src/WhiskerToolbox/Plots/DataViewerWidget/`
 for consistency with other plot widgets.
 
-### 7.1 Steps
+### 9.1 Steps
 
 1. Move directory `DataViewer_Widget/` → `Plots/DataViewerWidget/`
 2. Update `CMakeLists.txt` references in `src/WhiskerToolbox/` and the widget's own `CMakeLists.txt`
@@ -480,27 +796,38 @@ major feature phases to avoid merge conflicts.
 
 ## Implementation Priority
 
-### Prerequisite
+### Completed Prerequisites
 
-- **[Developer Debug Panel](developer_debug_panel.qmd)** — Diagnostic infrastructure that
-  accelerates development of Phases 1–2 by providing real-time visibility into lane layout,
-  scales, coordinate transforms, and viewport state. Recommended to implement first.
+- **[Developer Debug Panel](developer_debug_panel.qmd)** — Diagnostic infrastructure providing
+  real-time visibility into lane layout, scales, coordinate transforms, and viewport state.
+  **Complete** — accelerates development of Phases 1–3.
 
-### Next Up
+### Next Up (Y-Axis Track — Highest User Impact)
 
-1. **Phase 1**: Common axis integration — foundation for all subsequent Y-axis work
-2. **Phase 2**: Y pan/zoom for channel navigation — highest-impact UX improvement
+1. **Phase 1**: Layout foundation — lane sizing model that all Y-axis work depends on
+   ([#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248),
+   [#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227))
+2. **Phase 2**: Y-axis navigation — pan/zoom, culling, wheel modifiers
+   ([#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227),
+   [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248))
+3. **Phase 3**: Y-axis scalebars and lane labels
+   ([#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247))
 
-### Following
+### Parallel Track (X-Axis Extraction)
 
-3. **Phase 3**: Enhanced event glyph options — shared infrastructure milestone
-4. **Phase 4**: Enhanced interval rendering — border, alpha, hatching
-5. **Phase 5**: Analog line style enhancements
-6. **Phase 6**: Shared component extraction — house-cleaning across widgets
+4. **Phase 4**: CenteredTimeAxis widget — can proceed in parallel with Phase 3
+   ([#223](https://github.com/paulmthompson/WhiskerToolbox/issues/223))
+
+### Following (Visual Enhancements)
+
+5. **Phase 5**: Enhanced event glyph options — shared infrastructure milestone
+6. **Phase 6**: Enhanced interval rendering — border, alpha, hatching
+7. **Phase 7**: Analog line style enhancements
 
 ### Deferred
 
-7. **Phase 7**: Directory relocation — mechanical cleanup
+8. **Phase 8**: Shared component extraction — house-cleaning across widgets
+9. **Phase 9**: Directory relocation — mechanical cleanup
 
 ---
 
@@ -528,6 +855,22 @@ major feature phases to avoid merge conflicts.
    to the three DataViewer series types (analog, event, interval), or should it be generalized
    to support arbitrary option types via a compile-time type list?
 
+6. **Y-axis wheel modifier chords**: Which modifier combinations should be used for Y-axis
+   operations? `Alt+Scroll` is a natural candidate but may conflict with Linux window manager
+   defaults (Alt+click is often window move). Alternatives include right-click+scroll or
+   other combinations.
+
+### Resolved Questions
+
+- **Multi-lane VerticalAxisWidget design** (was Q6): **Decision — new separate widget.**
+  `MultiLaneVerticalAxisWidget` will be a standalone widget in `Plots/Common/`, not a subclass
+  or extension of the existing `VerticalAxisWidget`. The single-range widget remains unchanged
+  for consumers that need a uniform Y range.
+
+- **CenteredTimeAxis state representation** (was Q8): **Decision — `time_start`/`time_end`.**
+  Consistent with `TimeSeriesViewState`. The State class provides `halfWindow()` and `center()`
+  convenience accessors computed from `time_start`/`time_end`.
+
 ---
 
 # See Also
@@ -535,8 +878,8 @@ major feature phases to avoid merge conflicts.
 - [Data Viewer Widget Documentation](index.qmd) — Full architecture and feature documentation
 - [Developer Debug Panel Plan](developer_debug_panel.qmd) — Diagnostic panel and on-canvas overlays for development
 - [Plot Widget Guide](../plot_widget_guide.md) — Shared axis architecture, DataManager integration, testing patterns
-- [EventPlotWidget Roadmap](../EventPlotWidget/roadmap.qmd) — Shared glyph infrastructure (Phase 3), cross-widget linking (Phase 6)
-- [OnionSkinViewWidget Roadmap](../OnionSkinViewWidget/roadmap.qmd) — Shared `PointGlyphOptions` (Phase 1), shared visual options (Phase 6)
+- [EventPlotWidget Roadmap](../EventPlotWidget/roadmap.qmd) — Shared glyph infrastructure (Phase 5), cross-widget linking
+- [OnionSkinViewWidget Roadmap](../OnionSkinViewWidget/roadmap.qmd) — Shared visual options
 - [LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) — Group integration and per-series options patterns
 - [ScatterPlotWidget Roadmap](../ScatterPlotWidget/roadmap.qmd) — Shared point glyph infrastructure
 - [TemporalProjectionViewWidget Roadmap](../TemporalProjectionViewWidget/roadmap.qmd) — Shared point/line visual options
