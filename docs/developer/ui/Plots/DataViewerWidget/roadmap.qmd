@@ -36,7 +36,7 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **EditorState pattern**: `DataViewerState` with `DataViewerStateData` serialization via reflect-cpp
 - **SeriesOptionsRegistry**: Generic type-safe per-series options for analog, event, and interval types
 - **Rendering pipeline**: `SceneBuildingHelpers` → `RenderableBatch` → `PlottingOpenGL::SceneRenderer`
-- **Layout system**: `CorePlotting::LayoutEngine` with `StackedLayoutStrategy`; spike sorter configuration for custom channel ordering
+- **Layout system**: `CorePlotting::LayoutEngine` with `StackedLayoutStrategy`; spike sorter configuration for custom channel ordering; dual lane sizing policy (`FitToViewport` / `FixedHeight`) with configurable lane height and gap
 - **Y-axis transform pipeline**: `TransformComposers` composing data normalization, user adjustments, layout positioning, global scaling
 - **Interaction system**: `DataViewerInteractionManager` state machine (Normal, CreateInterval, ModifyInterval, CreateLine modes)
 - **Interval editing**: Click-to-select, edge dragging, collision prevention, multi-timeframe support
@@ -57,7 +57,7 @@ per-type visual options, viewport culling, and shared component extraction descr
 
 ## Phase 1: Layout Foundation {#phase-1-layout-foundation}
 
-**Status**: 1.1 complete.
+**Status**: 1.1–1.3 complete.
 **Issues**: [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) (configurable lane sizing),
 [#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227) (Y-scale naming audit)
 
@@ -78,7 +78,33 @@ and used consistently in all `TransformComposers` functions.
 **API renamed**: `DataViewerState::setGlobalZoom()`/`globalZoom()` +
 `setGlobalVerticalScale()`/`globalVerticalScale()` → `setGlobalYScale()`/`globalYScale()`
 
-### 1.2 Configurable Lane Sizing with Dual Policy
+### 1.2 Configurable Lane Sizing with Dual Policy {.completed}
+
+**Completed.** `StackedLayoutStrategy` now supports two lane sizing policies via
+`CorePlotting::LaneSizingPolicy` (enum added to `LayoutEngine.hpp`):
+
+- **`FitToViewport`** — preserves the original equal-division behavior (default).
+- **`FixedHeight`** — each stackable lane gets a fixed `lane_height` with configurable
+  `lane_gap` between lanes. The total extent may exceed the viewport.
+
+New fields added to `LayoutRequest`: `lane_sizing_policy`, `lane_height`, `lane_gap`.
+New `computeFixedHeightLayout()` private method in `StackedLayoutStrategy`.
+Full-canvas (non-stackable) series still span the entire viewport in both modes.
+
+**State persistence**: `DataViewerLayoutConfig` struct added to `DataViewerStateData`
+with fields `lane_sizing_policy`, `lane_height`, and `lane_gap`. Serialized via reflect-cpp.
+
+**State API**: `DataViewerState` gained `setLaneSizingPolicy()`, `setLaneHeight()`,
+`setLaneGap()`, `setLayoutConfig()` setters and corresponding getters, plus a
+`layoutConfigChanged()` signal. All setters also emit `viewStateChanged()` to trigger
+layout recomputation in `OpenGLWidget`.
+
+**Integration**: `OpenGLWidget::buildLayoutRequest()` reads the layout config from
+`DataViewerState` and propagates it to `LayoutRequest`.
+
+**Tests**: 7 new Catch2 TEST_CASEs in `tests/CorePlotting/LayoutEngine.test.cpp`:
+FixedHeight single/multiple series, lane gap, viewport overflow, mixed with full-canvas,
+and FitToViewport ignoring lane_height/lane_gap.
 
 Change `StackedLayoutStrategy` to support two lane sizing policies:
 
@@ -110,7 +136,20 @@ Y extent is `num_trials * row_height` and the user pans/zooms to navigate.
 `src/CorePlotting/Layout/StackedLayoutStrategy.cpp`,
 `src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp`
 
-### 1.3 Lane Sizing UI Controls
+### 1.3 Lane Sizing UI Controls {.completed}
+
+**Completed.** A "Layout Settings" group box was added to `DataViewerPropertiesWidget`
+(between Display Settings and Grid Settings) with:
+
+- **Lane Sizing** combo box: switches between `Fit to Viewport` and `Fixed Height`
+- **Lane Height** spinbox: enabled only in `FixedHeight` mode (range 0.01–100.0, step 0.05)
+- **Lane Gap** spinbox: always enabled (range 0.0–10.0, step 0.01)
+
+Bidirectional sync with `DataViewerState::layoutConfigChanged()` signal prevents signal loops
+using the existing `_updating_from_state` guard pattern.
+
+**Files**: `DataViewerPropertiesWidget.ui`, `DataViewerPropertiesWidget.hpp`,
+`DataViewerPropertiesWidget.cpp`
 
 Expose lane sizing configuration in `DataViewerPropertiesWidget`:
 
@@ -129,6 +168,218 @@ Expose lane sizing configuration in `DataViewerPropertiesWidget`:
 
 ---
 
+## Phase 1B: Rendering Pipeline Modernization {#phase-1b-rendering-pipeline}
+
+**Status**: Not started.
+**Depends on**: [Phase 1](#phase-1-layout-foundation) (layout must be stable before changing
+the rendering pipeline).
+
+**Goal**: Migrate DataViewerWidget from `TimeSeriesViewState` to the shared `ViewStateData`
+zoom/pan model used by ScatterPlotWidget and LinePlotWidget. This eliminates the critical
+performance bottleneck where Y-axis panning triggers a full scene rebuild + GPU re-upload
+every frame, instead of a matrix-only update.
+
+::: {.callout-important}
+## Current Performance Problem
+
+The DataViewer's rendering pipeline unconditionally rebuilds the scene (data gathering →
+vertex generation → VBO upload) on every `paintGL()` call. In the newer widgets
+(ScatterPlotWidget, LinePlotWidget), `paintGL()` checks a `_scene_dirty` flag and only
+rebuilds when data actually changed. Pan/zoom are pure projection matrix updates — the GPU
+vertex buffers are cached between frames. This makes panning instant regardless of data size.
+
+**Root cause**: `TimeSeriesViewState` conflates buffer-scope changes (`time_start`/`time_end`)
+with view-transform changes (`vertical_pan_offset`). The `viewStateChanged` signal marks
+`scene_dirty = true` unconditionally, and `renderWithSceneRenderer()` has no dirty guard.
+:::
+
+### 1B.1 ViewStateData Adoption
+
+Replace `TimeSeriesViewState` with `CorePlotting::ViewStateData` in `DataViewerStateData`.
+The mapping between the two is:
+
+| TimeSeriesViewState | ViewStateData | Notes |
+|---------------------|---------------|-------|
+| `time_start` | `x_min` | Cast `int64_t` ↔ `double` |
+| `time_end` | `x_max` | Cast `int64_t` ↔ `double` |
+| `y_min` | `y_min` | Direct match |
+| `y_max` | `y_max` | Direct match |
+| `vertical_pan_offset` | `y_pan` | Direct match |
+| `global_y_scale` | *(kept separate)* | Data amplitude gain — not a view transform |
+| *(none)* | `x_zoom` | Fixed at `1.0` — DataViewer X-zoom is via bounds |
+| *(none)* | `x_pan` | Fixed at `0.0` — DataViewer X-pan is disabled |
+| *(none)* | `y_zoom` | **New** — viewport Y zoom (projection matrix only) |
+
+**Design decisions:**
+
+- **`global_y_scale` and `y_zoom` are separate concepts.** `global_y_scale` is a data gain
+  control — it scales data amplitude and is baked into per-series model matrices via
+  `composeAnalogYTransform`. `y_zoom` is a viewport zoom — it scales the projection matrix
+  without touching the data. Both are kept as independent fields. `global_y_scale` remains
+  in `DataViewerStateData`; `y_zoom` lives in `ViewStateData`.
+- **`x_min`/`x_max` as doubles**: `ViewStateData` uses `double` for bounds; the current
+  `time_start`/`time_end` are `int64_t`. The precision of `double` (53-bit mantissa) is
+  sufficient for time indices up to ~9×10¹⁵, which exceeds any realistic recording length.
+
+**State struct changes:**
+
+```cpp
+struct DataViewerStateData {
+    CorePlotting::ViewStateData view;          // replaces TimeSeriesViewState
+    float global_y_scale{1.0f};               // kept separate — data amplitude scaling
+    // ... other fields unchanged
+};
+```
+
+**Files**: `DataViewerStateData.hpp`, `DataViewerState.hpp`, `DataViewerState.cpp`
+
+### 1B.2 X-Axis Interaction Lock
+
+The DataViewer's X-axis is controlled externally (time bar, scrollbar) — mouse drag and
+wheel should not pan or zoom X. No existing widget disables X-axis interaction, so a
+widget-level guard is used: pass `delta_x = 0` to `handlePanning()`, and route wheel
+events to Y-only zoom instead of the default X-only zoom. This requires no changes to the
+shared `PlotInteractionHelpers`:
+
+```cpp
+// In DataViewer's pan handler — X locked:
+WhiskerToolbox::Plots::handlePanning(
+    *_state, cached_view, 0 /* delta_x locked */, delta_y,
+    widget_width, widget_height);
+
+// In DataViewer's wheel handler — Y-only by default:
+WhiskerToolbox::Plots::handleZoom(
+    *_state, cached_view, delta, true /* y_only */, false);
+```
+
+If other widgets need axis locking in the future, a shared mechanism can be introduced in
+Phase 8 (shared component extraction).
+
+**Files**: `OpenGLWidget.cpp` (pan/zoom handlers)
+
+### 1B.3 Scene Dirty Guard in paintGL
+
+Add the same dirty-flag pattern used by ScatterPlotWidget and LinePlotWidget:
+
+```cpp
+void OpenGLWidget::paintGL() {
+    // ... clear
+    if (_scene_renderer && _scene_renderer->isInitialized()) {
+        if (_scene_dirty) {
+            rebuildScene();    // full data gather → vertex build → VBO upload
+            _scene_dirty = false;
+        }
+        auto [view, projection] = computeMatrices();
+        _scene_renderer->render(view, projection);
+    }
+    // ... axis, grid, overlays
+}
+```
+
+**What triggers `_scene_dirty = true`:**
+
+- `x_min`/`x_max` changed (time window shift → different data samples)
+- Series added/removed/visibility toggled
+- Per-series options changed (color, scale factor, y offset)
+- Selection changed (highlight state baked into batch data)
+
+**What does NOT trigger `_scene_dirty`:**
+
+- `y_pan` changed (projection matrix only)
+- `y_zoom` changed (projection matrix only, if kept as MVP-only)
+- `y_min`/`y_max` changed (projection matrix only — layout is already guarded separately)
+
+The `viewStateChanged` handler must distinguish these cases. The simplest approach is to
+cache the previous `x_min`/`x_max` and only set `scene_dirty` when they change:
+
+```cpp
+connect(_state.get(), &DataViewerState::viewStateChanged, this, [this]() {
+    auto const & view = _state->viewStateData();
+    bool const time_changed = (view.x_min != _cached_x_min || view.x_max != _cached_x_max);
+    if (time_changed) {
+        _scene_dirty = true;
+        _cached_x_min = view.x_min;
+        _cached_x_max = view.x_max;
+    }
+    _cache_state.layout_response_dirty = true;
+    update();
+});
+```
+
+**Files**: `OpenGLWidget.cpp`, `OpenGLWidget.hpp`
+
+### 1B.4 Adopt PlotInteractionHelpers
+
+Replace the custom `DataViewerInputHandler` pan logic with
+`WhiskerToolbox::Plots::handlePanning()` (Y-only via `delta_x = 0`) and
+`WhiskerToolbox::Plots::handleZoom()` for wheel events. This aligns the DataViewer with the
+shared interaction model and ensures consistent zoom/pan feel across all plot widgets.
+
+The `DataViewerInputHandler` class can be retained for DataViewer-specific interactions
+(interval creation, edge dragging, entity clicking) that have no equivalent in other widgets.
+Only the generic pan/zoom logic moves to the shared helpers.
+
+**Files**: `OpenGLWidget.cpp`, `DataViewerInputHandler.cpp`
+
+### 1B.5 Projection Matrix via computeOrthoProjection
+
+Replace the DataViewer's custom `getAnalogProjectionMatrix()` +
+`getAnalogViewMatrix()` with the shared `computeOrthoProjection()` from
+`PlotInteractionHelpers.hpp`. This function already handles the zoom/pan → projection
+matrix math correctly and is used by all newer widgets.
+
+The current two-matrix approach (separate view and projection) can be consolidated into a
+single projection matrix as the newer widgets do — the view matrix was only needed because
+`vertical_pan_offset` was applied as a view transform rather than folded into the projection.
+
+**Files**: `OpenGLWidget.cpp`, potentially `SeriesMatrices.cpp`/`.hpp`
+
+### 1B.6 Separate stateChanged from viewStateChanged
+
+Following the ScatterPlot/LinePlot pattern, ensure the OpenGLWidget has two distinct handlers:
+
+- **`stateChanged`** → sets `_scene_dirty = true` (data/options changed, scene rebuild needed)
+- **`viewStateChanged`** → updates cached view state, recomputes projection matrix, calls
+  `update()` (view transform changed, matrix-only update)
+
+This is the key architectural pattern that makes pan/zoom fast in the newer widgets.
+
+**Files**: `DataViewerState.hpp`, `DataViewerState.cpp`, `OpenGLWidget.cpp`
+
+### 1B.7 Migration of Callers
+
+Update all code that reads or writes `TimeSeriesViewState` fields to use the new
+`ViewStateData` field names. Key callers to update:
+
+- `DataViewer_Widget::wheelEvent()` — time width adjustment
+- `DataViewer_Widget::updateCanvas()` — time window centering
+- `DataViewerPropertiesWidget` — spinbox sync
+- `DataViewerDebugPanel` — diagnostic display
+- `DataViewerCoordinates` — coordinate conversions
+- `SceneBuildingHelpers` — time range for data queries
+- `TransformComposers` — Y transform composition
+- `AnalogVertexCache` — time range tracking
+
+The `TimeSeriesViewState` struct can be removed once all callers are migrated.
+
+**Files**: Multiple across `DataViewer_Widget/`
+
+### 1B.8 Verification
+
+- **Pan performance**: Y-pan with 32+ channels zoomed out temporally should be as responsive
+  as ScatterPlotWidget pan. No per-frame VBO upload during pure Y-pan.
+- **X-axis lock**: Mouse drag does not shift the time window. Only the time bar / scrollbar
+  controls X position.
+- **Zoom behavior**: Mouse wheel zoom adjusts time window width (existing behavior preserved).
+  Shift+wheel zooms Y-axis. Ctrl+wheel zooms both.
+- **Scene rebuild triggers**: Verify via Developer Debug Panel that scene rebuild count
+  (`_scene_rebuild_count`) does not increment during pure Y-pan.
+- **Workspace serialization**: Save/restore roundtrips the new `ViewStateData` fields.
+- **Regression**: All existing `DataViewer_Widget` tests pass. Analog vertex cache still
+  provides incremental scrolling optimization for X-axis time changes.
+
+---
+
 ## Phase 2: Y-Axis Navigation {#phase-2-y-axis-navigation}
 
 **Status**: Not started.
@@ -136,7 +387,8 @@ Expose lane sizing configuration in `DataViewerPropertiesWidget`:
 [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) (viewport culling),
 [#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247) (axis synchronization)
 **Depends on**: [Phase 1](#phase-1-layout-foundation) (`FixedHeight` lanes must exist for
-Y pan/zoom to be meaningful).
+Y pan/zoom to be meaningful), [Phase 1B](#phase-1b-rendering-pipeline) (pan/zoom must be
+performant before adding more interaction modes).
 
 **Goal**: Allow users to pan and zoom the Y-axis so they can view a subset of channels at
 readable resolution, inspired by [EventPlotWidget](../EventPlotWidget/index.qmd)'s trial Y
@@ -804,10 +1056,12 @@ major feature phases to avoid merge conflicts.
 1. **Phase 1**: Layout foundation — lane sizing model that all Y-axis work depends on
    ([#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248),
    [#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227))
-2. **Phase 2**: Y-axis navigation — pan/zoom, culling, wheel modifiers
+2. **Phase 1B**: Rendering pipeline modernization — migrate to `ViewStateData`,
+   add scene dirty guard, adopt shared interaction helpers for fast pan/zoom
+3. **Phase 2**: Y-axis navigation — pan/zoom, culling, wheel modifiers
    ([#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227),
    [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248))
-3. **Phase 3**: Y-axis scalebars and lane labels
+4. **Phase 3**: Y-axis scalebars and lane labels
    ([#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247))
 
 ### Parallel Track (X-Axis Extraction)

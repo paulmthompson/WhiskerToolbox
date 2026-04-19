@@ -53,6 +53,7 @@
 
 #include "CorePlotting/CoordinateTransform/TimeRange.hpp"
 #include "CorePlotting/DataTypes/SeriesStyle.hpp"
+#include "CorePlotting/Layout/LayoutEngine.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -214,6 +215,21 @@ struct DataViewerUIPreferences {
     // Note: splitter sizes not serialized (Qt-specific, layout-dependent)
 };
 
+// ==================== Layout Config ====================
+
+/**
+ * @brief Configurable lane sizing for stacked layout
+ *
+ * Controls how vertical space is allocated among stackable series.
+ * - FitToViewport (default): All lanes share the viewport equally.
+ * - FixedHeight: Each lane gets a fixed height; total extent may exceed viewport.
+ */
+struct DataViewerLayoutConfig {
+    CorePlotting::LaneSizingPolicy lane_sizing_policy = CorePlotting::LaneSizingPolicy::FitToViewport;
+    float lane_height = 0.5f;///< Height per lane in viewport units (FixedHeight mode only)
+    float lane_gap = 0.0f;   ///< Gap between adjacent lanes in viewport units
+};
+
 // ==================== Group Scaling State ====================
 
 /**
@@ -304,6 +320,9 @@ struct DataViewerStateData {
 
     // === UI Preferences ===
     DataViewerUIPreferences ui;///< UI layout preferences
+
+    // === Layout Config ===
+    DataViewerLayoutConfig layout;///< Lane sizing configuration
 
     // === Interaction State ===
     DataViewerInteractionState interaction;///< Current interaction mode

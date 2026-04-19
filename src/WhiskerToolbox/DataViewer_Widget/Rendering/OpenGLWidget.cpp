@@ -1288,9 +1288,13 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
 
 CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     auto const & view_state = _state->viewState();
+    auto const & layout_config = _state->layoutConfig();
     CorePlotting::LayoutRequest request;
     request.viewport_y_min = view_state.y_min;
     request.viewport_y_max = view_state.y_max;
+    request.lane_sizing_policy = layout_config.lane_sizing_policy;
+    request.lane_height = layout_config.lane_height;
+    request.lane_gap = layout_config.lane_gap;
 
     // Collect visible analog series keys and order by spike sorter config
     // Access series through data store, visibility through state
@@ -1539,6 +1543,7 @@ void OpenGLWidget::drawLaneBoundaries(QPainter & painter) {
     auto const & layouts = _cache_state.layout_response.layouts;
     int const h = height();
     int const w = width();
+    float const pan = _state->viewState().vertical_pan_offset;
 
     QFont const font(QStringLiteral("monospace"), 8);
     painter.setFont(font);
@@ -1548,7 +1553,7 @@ void OpenGLWidget::drawLaneBoundaries(QPainter & painter) {
     pen.setWidth(1);
 
     for (auto const & layout: layouts) {
-        float const center_ndc = layout.y_transform.offset;
+        float const center_ndc = layout.y_transform.offset + pan;
         float const half_height = std::abs(layout.y_transform.gain);
 
         float const top_ndc = center_ndc + half_height;
@@ -1588,8 +1593,10 @@ void OpenGLWidget::drawOriginMarkers(QPainter & painter) {
     QPen pen;
     pen.setWidth(2);
 
+    float const pan = _state->viewState().vertical_pan_offset;
+
     for (auto const & layout: layouts) {
-        float const center_ndc = layout.y_transform.offset;
+        float const center_ndc = layout.y_transform.offset + pan;
         float const center_px = ndcToPixelY(center_ndc, h);
 
         QColor const color = overlayColorForType(

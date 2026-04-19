@@ -404,6 +404,58 @@ public:
      */
     [[nodiscard]] bool developerMode() const { return _data.ui.developer_mode; }
 
+    // ==================== Layout Config ====================
+
+    /**
+     * @brief Set the lane sizing policy
+     * @param policy FitToViewport or FixedHeight
+     */
+    void setLaneSizingPolicy(CorePlotting::LaneSizingPolicy policy);
+
+    /**
+     * @brief Get the lane sizing policy
+     * @return Current lane sizing policy
+     */
+    [[nodiscard]] CorePlotting::LaneSizingPolicy laneSizingPolicy() const {
+        return _data.layout.lane_sizing_policy;
+    }
+
+    /**
+     * @brief Set the fixed lane height (used in FixedHeight mode)
+     * @param height Lane height in viewport units
+     */
+    void setLaneHeight(float height);
+
+    /**
+     * @brief Get the fixed lane height
+     * @return Lane height in viewport units
+     */
+    [[nodiscard]] float laneHeight() const { return _data.layout.lane_height; }
+
+    /**
+     * @brief Set the gap between adjacent lanes
+     * @param gap Gap in viewport units
+     */
+    void setLaneGap(float gap);
+
+    /**
+     * @brief Get the gap between adjacent lanes
+     * @return Lane gap in viewport units
+     */
+    [[nodiscard]] float laneGap() const { return _data.layout.lane_gap; }
+
+    /**
+     * @brief Set the complete layout config
+     * @param config New layout configuration
+     */
+    void setLayoutConfig(DataViewerLayoutConfig const & config);
+
+    /**
+     * @brief Get the complete layout config
+     * @return Const reference to DataViewerLayoutConfig
+     */
+    [[nodiscard]] DataViewerLayoutConfig const & layoutConfig() const { return _data.layout; }
+
     // ==================== Interaction ====================
 
     /**
@@ -497,6 +549,11 @@ signals:
      * @param mode New interaction mode
      */
     void interactionModeChanged(DataViewerInteractionMode mode);
+
+    /**
+     * @brief Emitted when layout configuration changes (lane sizing policy, height, gap)
+     */
+    void layoutConfigChanged();
 
     /**
      * @brief Emitted when group scaling state changes

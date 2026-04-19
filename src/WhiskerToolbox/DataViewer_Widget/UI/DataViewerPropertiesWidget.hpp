@@ -182,6 +182,9 @@ private slots:
     void _onXAxisSamplesChanged(int value);
     void _onGridLinesToggled(bool enabled);
     void _onGridSpacingChanged(int value);
+    void _onLaneSizingPolicyChanged(int index);
+    void _onLaneHeightChanged(double value);
+    void _onLaneGapChanged(double value);
     void _handleFeatureSelected(QString const & feature);
     void _handleGroupSelected(std::string const & group_name, std::vector<std::string> const & children);
     void _handleColorChanged(std::string const & feature_key, std::string const & hex_color);

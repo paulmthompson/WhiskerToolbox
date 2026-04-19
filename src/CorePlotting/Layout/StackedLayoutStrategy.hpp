@@ -35,13 +35,9 @@ public:
 
 private:
     /**
-     * @brief Calculate layout for stackable series
+     * @brief Calculate layout for stackable series in FitToViewport mode
      * 
-     * Stackable series include:
-     * - All analog time series
-     * - Digital event series marked as stackable
-     * 
-     * These series divide the viewport height equally among themselves.
+     * Stackable series divide the viewport height equally among themselves.
      * 
      * @param series_info Series metadata
      * @param series_index Global index in series list
@@ -50,31 +46,45 @@ private:
      * @param request Layout parameters
      * @return Computed layout for this series
      */
-    [[nodiscard]] SeriesLayout computeStackableLayout(
+    [[nodiscard]] static SeriesLayout computeStackableLayout(
             SeriesInfo const & series_info,
             int series_index,
             int stackable_index,
             int total_stackable,
-            LayoutRequest const & request) const;
+            LayoutRequest const & request) ;
+
+    /**
+     * @brief Calculate layout for stackable series in FixedHeight mode
+     * 
+     * Each stackable series gets a fixed lane height. The total extent may
+     * exceed the viewport, requiring external Y navigation.
+     * 
+     * @param series_info Series metadata
+     * @param series_index Global index in series list
+     * @param stackable_index Index among stackable series only
+     * @param request Layout parameters (lane_height and lane_gap used)
+     * @return Computed layout for this series
+     */
+    [[nodiscard]] static SeriesLayout computeFixedHeightLayout(
+            SeriesInfo const & series_info,
+            int series_index,
+            int stackable_index,
+            LayoutRequest const & request) ;
 
     /**
      * @brief Calculate layout for full-canvas series
      * 
-     * Full-canvas series include:
-     * - Digital interval series
-     * - Digital event series marked as non-stackable
-     * 
-     * These series span the entire viewport height for maximum visibility.
+     * Full-canvas series span the entire viewport height for maximum visibility.
      * 
      * @param series_info Series metadata
      * @param series_index Global index in series list
      * @param request Layout parameters
      * @return Computed layout for this series
      */
-    [[nodiscard]] SeriesLayout computeFullCanvasLayout(
+    [[nodiscard]] static SeriesLayout computeFullCanvasLayout(
             SeriesInfo const & series_info,
             int series_index,
-            LayoutRequest const & request) const;
+            LayoutRequest const & request) ;
 };
 
 }// namespace CorePlotting

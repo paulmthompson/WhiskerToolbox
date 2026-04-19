@@ -3,11 +3,21 @@
 
 #include "SeriesLayout.hpp"
 
-#include <memory>       // std::unique_ptr
-#include <string>       // std::string
-#include <vector>       // std::vector
+#include <memory>// std::unique_ptr
+#include <string>// std::string
+#include <vector>// std::vector
 
 namespace CorePlotting {
+
+/**
+ * @brief Lane sizing policy for stacked layout
+ *
+ * Controls how vertical space is allocated among stackable series.
+ */
+enum class LaneSizingPolicy {
+    FitToViewport,///< Divide viewport equally among lanes (default)
+    FixedHeight   ///< Each lane has a fixed height; total may exceed viewport
+};
 
 /**
  * @brief Type of data series for layout purposes
@@ -65,6 +75,15 @@ struct LayoutRequest {
     /// Viewport bounds in NDC (typically -1 to +1)
     float viewport_y_min{-1.0f};
     float viewport_y_max{1.0f};
+
+    /// Lane sizing policy (FitToViewport or FixedHeight)
+    LaneSizingPolicy lane_sizing_policy{LaneSizingPolicy::FitToViewport};
+
+    /// Fixed lane height in viewport units (used only when policy is FixedHeight)
+    float lane_height{0.5f};
+
+    /// Gap between adjacent lanes in viewport units
+    float lane_gap{0.0f};
 
     /**
      * @brief Count series of a specific type

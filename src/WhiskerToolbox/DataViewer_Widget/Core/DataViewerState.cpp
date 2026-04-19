@@ -73,6 +73,7 @@ bool DataViewerState::fromJson(std::string const & json) {
         emit themeChanged();
         emit gridChanged();
         emit uiPreferencesChanged();
+        emit layoutConfigChanged();
         emit interactionModeChanged(_data.interaction.mode);
         return true;
     }
@@ -260,6 +261,50 @@ void DataViewerState::setDeveloperMode(bool enabled) {
         _data.ui.developer_mode = enabled;
         markDirty();
         emit developerModeChanged(enabled);
+    }
+}
+
+// ==================== Layout Config ====================
+
+void DataViewerState::setLaneSizingPolicy(CorePlotting::LaneSizingPolicy policy) {
+    if (_data.layout.lane_sizing_policy != policy) {
+        _data.layout.lane_sizing_policy = policy;
+        markDirty();
+        emit layoutConfigChanged();
+        emit viewStateChanged();
+    }
+}
+
+void DataViewerState::setLaneHeight(float height) {
+    constexpr float epsilon = 1e-6f;
+    if (std::abs(_data.layout.lane_height - height) > epsilon) {
+        _data.layout.lane_height = height;
+        markDirty();
+        emit layoutConfigChanged();
+        emit viewStateChanged();
+    }
+}
+
+void DataViewerState::setLaneGap(float gap) {
+    constexpr float epsilon = 1e-6f;
+    if (std::abs(_data.layout.lane_gap - gap) > epsilon) {
+        _data.layout.lane_gap = gap;
+        markDirty();
+        emit layoutConfigChanged();
+        emit viewStateChanged();
+    }
+}
+
+void DataViewerState::setLayoutConfig(DataViewerLayoutConfig const & config) {
+    constexpr float epsilon = 1e-6f;
+    bool const changed = _data.layout.lane_sizing_policy != config.lane_sizing_policy ||
+                         std::abs(_data.layout.lane_height - config.lane_height) > epsilon ||
+                         std::abs(_data.layout.lane_gap - config.lane_gap) > epsilon;
+    if (changed) {
+        _data.layout = config;
+        markDirty();
+        emit layoutConfigChanged();
+        emit viewStateChanged();
     }
 }
 
