@@ -304,6 +304,35 @@ The `AnalogVertexCache` provides a ring buffer-based caching strategy for scroll
 
 This is critical for smooth scrolling with dense electrophysiology data.
 
+## Viewport Visibility Culling
+
+When many channels are loaded but only a few are visible in the Y viewport (e.g., viewing 4 of 32 channels in `FixedHeight` mode), the rendering pipeline uses **additive culling** to avoid building batches for off-screen series while ensuring that panning never permanently loses rendered data.
+
+### Design Principles
+
+1. **Y-panning is a view matrix operation** — it does NOT set `scene_dirty`. This means a scene rebuild is never triggered by panning alone.
+2. **Culling is additive, never subtractive** — once a series is built into the scene, it stays there until a full data change (time window, layout config, or global Y scale) triggers a reset.
+3. **Vertex caches are never invalidated** — off-screen series retain their cached vertex data so they render instantly when panned back into view.
+
+### Mechanism
+
+`SceneCacheState` maintains a `series_in_scene` set tracking which series have been built into the current scene. The set accumulates across additive rebuilds and is only cleared on full data changes.
+
+**Render loop** (`renderWithSceneRenderer`):
+
+1. `computeAndApplyLayout()` — recomputes lane positions if layout is dirty.
+2. `hasNewVisibleSeries()` — checks if any enabled, viewport-visible series is not in `series_in_scene`. If so, sets `scene_dirty = true` to trigger an additive rebuild.
+3. If `scene_dirty`: `rebuildScene()` builds batches for all series that are either viewport-visible OR already in `series_in_scene` (additive). Each built series is inserted into `series_in_scene`.
+4. Render with current view/projection matrices.
+
+**Full reset triggers** (clear `series_in_scene`):
+
+- `timeWindowChanged` — new temporal data range
+- `layoutConfigChanged` — lane sizing policy/height/gap change
+- `global_y_scale` change — vertex data is rebaked
+
+**Key files**: `LayoutEngine.hpp` (`isSeriesVisible`, `visibleSeriesIds`), `OpenGLWidget.hpp` (`SceneCacheState::series_in_scene`, `hasNewVisibleSeries`), `OpenGLWidget.cpp` (additive culling in batch builders).
+
 ## SVG Export
 
 The `SVGExporter` generates publication-quality SVG output from the current view by building the same `RenderableScene` used for OpenGL rendering. It uses a fixed 1920×1080 canvas with `viewBox` for clean scaling, and preserves all visual styles (colors, transparency, line thickness).

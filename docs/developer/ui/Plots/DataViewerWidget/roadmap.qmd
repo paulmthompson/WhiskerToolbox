@@ -222,32 +222,29 @@ _multi_lane_axis_state = std::make_unique<MultiLaneVerticalAxisState>(this);
 `src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp`,
 `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp`
 
-### 2.3 Viewport Visibility Culling
+### 2.3 Viewport Visibility Culling {.completed}
 
 When many channels are loaded but only a few are visible (e.g., viewing 4 of 32 channels),
-non-visible series should be culled from the rendering pipeline:
+non-visible series are culled from the rendering pipeline using **additive culling**:
 
-1. **Layout query**: Determine which lanes overlap the current Y viewport
-2. **Data skip**: Do not query `DataManager` for series outside the viewport
-3. **GPU skip**: Do not build `RenderableBatch` objects for non-visible series
+1. **Layout query**: `LayoutResponse::isSeriesVisible()` and `visibleSeriesIds()` determine
+   which lanes overlap the effective Y viewport (accounting for `y_pan`).
+2. **Additive tracking**: `SceneCacheState::series_in_scene` tracks which series have been
+   built into the current scene. The set accumulates across pan-triggered rebuilds and is
+   only cleared on full data changes (time window, layout config, global Y scale).
+3. **Pan-triggered rebuild**: `hasNewVisibleSeries()` checks if any enabled, viewport-visible
+   series is not yet in `series_in_scene`. If so, an additive rebuild is triggered that
+   builds the new series plus all previously-built series.
+4. **Additive batch building**: `add*BatchesToBuilder` methods skip a series only if it is
+   both off-screen AND not in `series_in_scene`. This ensures panning never removes
+   already-rendered series from the scene.
 
-This provides a meaningful performance optimization for high-channel-count recordings:
+Non-stackable series (full-canvas intervals, full-canvas events) always pass the visibility
+check because their layout spans the entire viewport.
 
-```cpp
-// In scene building
-auto visible_lanes = layout_response.lanesInRange(y_min, y_max);
-for (auto const & lane : visible_lanes) {
-    // Only build batches for visible series
-    auto const & key = lane.series_key;
-    // ... build batch for this series
-}
-```
-
-The `AnalogVertexCache` should also be made viewport-aware — only cache and update vertices
-for series whose lanes intersect the viewport.
-
-**Files**: `src/WhiskerToolbox/DataViewer_Widget/Rendering/SceneBuildingHelpers.cpp`,
-`src/WhiskerToolbox/DataViewer_Widget/Rendering/AnalogVertexCache.cpp`,
+**Key files**: `src/CorePlotting/Layout/LayoutEngine.hpp` (`isSeriesVisible`, `visibleSeriesIds`),
+`src/CorePlotting/Layout/LayoutEngine.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.hpp` (`SceneCacheState::series_in_scene`, `hasNewVisibleSeries`),
 `src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.cpp`
 
 ### 2.4 Wheel Modifier Chords for Y Interaction

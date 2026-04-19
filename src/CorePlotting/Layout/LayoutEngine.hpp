@@ -110,6 +110,38 @@ struct LayoutResponse {
      * @return Pointer to layout, or nullptr if not found
      */
     [[nodiscard]] SeriesLayout const * findLayout(std::string const & series_id) const;
+
+    /**
+     * @brief Check whether a series lane overlaps a Y viewport range
+     *
+     * The lane extent is derived from the series layout's y_transform:
+     *   center = y_transform.offset, half_height = |y_transform.gain|.
+     * A lane is visible when its [center - half_height, center + half_height]
+     * interval intersects [y_min, y_max].
+     *
+     * @param series_id Series to test
+     * @param y_min     Bottom of the effective viewport (includes pan)
+     * @param y_max     Top of the effective viewport (includes pan)
+     * @return true if the lane overlaps the viewport, or if the series has no layout
+     *
+     * @pre y_min <= y_max
+     */
+    [[nodiscard]] bool isSeriesVisible(std::string const & series_id,
+                                       float y_min, float y_max) const;
+
+    /**
+     * @brief Collect IDs of all series whose lanes overlap a Y viewport range
+     *
+     * Non-stackable series (intervals, full-canvas events) that do not appear
+     * in the layout are always included.
+     *
+     * @param y_min Bottom of the effective viewport (includes pan)
+     * @param y_max Top of the effective viewport (includes pan)
+     * @return Vector of visible series IDs
+     *
+     * @pre y_min <= y_max
+     */
+    [[nodiscard]] std::vector<std::string> visibleSeriesIds(float y_min, float y_max) const;
 };
 
 /**

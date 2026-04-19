@@ -53,6 +53,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
     connect(_state.get(), &DataViewerState::timeWindowChanged, this, [this]() {
         _cache_state.layout_response_dirty = true;
         _cache_state.scene_dirty = true;
+        _cache_state.series_in_scene.clear();
         _cached_view_state = _state->viewState();
         _previous_time_start = _state->timeStart();
         _previous_time_end = _state->timeEnd();
@@ -68,6 +69,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
         if (std::abs(current_scale - _cached_global_y_scale) > 1e-6f) {
             _cached_global_y_scale = current_scale;
             _cache_state.scene_dirty = true;
+            _cache_state.series_in_scene.clear();
         }
         // Layout may need recompute if Y bounds changed
         _cache_state.layout_response_dirty = true;
@@ -84,6 +86,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
     connect(_state.get(), &DataViewerState::layoutConfigChanged, this, [this]() {
         _cache_state.layout_response_dirty = true;
         _cache_state.scene_dirty = true;
+        _cache_state.series_in_scene.clear();
         update();
     });
 
@@ -1055,6 +1058,12 @@ void OpenGLWidget::renderWithSceneRenderer() {
     // and all entry.layout_transform fields in TimeSeriesDataStore
     computeAndApplyLayout();
 
+    // Check if panning has revealed series not yet in the scene.
+    // If so, trigger an additive rebuild to include them.
+    if (!_cache_state.scene_dirty && hasNewVisibleSeries()) {
+        _cache_state.scene_dirty = true;
+    }
+
     // Only rebuild scene geometry when data range changed (scene_dirty)
     if (_cache_state.scene_dirty) {
         rebuildScene();
@@ -1136,6 +1145,40 @@ void OpenGLWidget::rebuildScene() {
     emit sceneRebuilt();
 }
 
+bool OpenGLWidget::hasNewVisibleSeries() const {
+    auto const & view_state = _state->viewState();
+    auto const effective_y_min = static_cast<float>(view_state.y_min + view_state.y_pan);
+    auto const effective_y_max = static_cast<float>(view_state.y_max + view_state.y_pan);
+
+    for (auto const & [key, analog_data]: _data_store->analogSeries()) {
+        auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
+        if (!opts || !opts->get_is_visible()) continue;
+        if (_cache_state.layout_response.isSeriesVisible(key, effective_y_min, effective_y_max) && !_cache_state.series_in_scene.contains(key)) {
+            return true;
+        }
+    }
+
+    for (auto const & [key, event_data]: _data_store->eventSeries()) {
+        auto const * opts = _state->seriesOptions().get<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
+        if (!opts || !opts->get_is_visible()) continue;
+        bool const is_stacked = (opts->plotting_mode == EventPlottingModeData::Stacked);
+        if (!is_stacked) continue;// Full-canvas events always span the viewport
+        if (_cache_state.layout_response.isSeriesVisible(key, effective_y_min, effective_y_max) && !_cache_state.series_in_scene.contains(key)) {
+            return true;
+        }
+    }
+
+    for (auto const & [key, interval_data]: _data_store->intervalSeries()) {
+        auto const * opts = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
+        if (!opts || !opts->get_is_visible()) continue;
+        if (_cache_state.layout_response.isSeriesVisible(key, effective_y_min, effective_y_max) && !_cache_state.series_in_scene.contains(key)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builder) {
     if (!_master_time_frame) {
         return;
@@ -1144,6 +1187,10 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
+
+    // Effective viewport Y range (accounting for pan) for visibility culling
+    auto const effective_y_min = static_cast<float>(view_state.y_min + view_state.y_pan);
+    auto const effective_y_max = static_cast<float>(view_state.y_max + view_state.y_pan);
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cached_layout_response
@@ -1155,6 +1202,13 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
         // Get display options from state (serializable)
         auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
         if (!opts || !opts->get_is_visible()) continue;
+
+        // Additive viewport culling: build if in viewport OR previously in scene.
+        // This ensures panning never removes already-rendered series.
+        if (!_cache_state.layout_response.isSeriesVisible(key, effective_y_min, effective_y_max) && !_cache_state.series_in_scene.contains(key)) {
+            continue;
+        }
+        _cache_state.series_in_scene.insert(key);
 
         // Look up layout from cached response
         auto const * series_layout = _cache_state.layout_response.findLayout(key);
@@ -1233,6 +1287,10 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
+    // Effective viewport Y range (accounting for pan) for visibility culling
+    auto const effective_y_min = static_cast<float>(view_state.y_min + view_state.y_pan);
+    auto const effective_y_max = static_cast<float>(view_state.y_max + view_state.y_pan);
+
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cache_state.layout_response
 
@@ -1246,6 +1304,15 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
 
         // Determine plotting mode from state options
         bool const is_stacked = (opts->plotting_mode == EventPlottingModeData::Stacked);
+
+        // Additive viewport culling for stacked events: build if in viewport OR previously in scene.
+        // Full-canvas events always span the viewport, so no culling needed.
+        if (is_stacked && !_cache_state.layout_response.isSeriesVisible(key, effective_y_min, effective_y_max) && !_cache_state.series_in_scene.contains(key)) {
+            continue;
+        }
+        if (is_stacked) {
+            _cache_state.series_in_scene.insert(key);
+        }
 
         // Compose the Y transform based on plotting mode
         CorePlotting::LayoutTransform y_transform;
@@ -1308,6 +1375,10 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
+    // Effective viewport Y range (accounting for pan) for visibility culling
+    auto const effective_y_min = static_cast<float>(view_state.y_min + view_state.y_pan);
+    auto const effective_y_max = static_cast<float>(view_state.y_max + view_state.y_pan);
+
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cache_state.layout_response
 
@@ -1320,6 +1391,14 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         if (!opts) continue;
 
         if (!opts->get_is_visible()) continue;
+
+        // Additive viewport culling: build if in viewport OR previously in scene.
+        // Intervals are typically non-stackable (full-canvas) and will always pass,
+        // but the test is cheap and correct for any future stackable interval series.
+        if (!_cache_state.layout_response.isSeriesVisible(key, effective_y_min, effective_y_max) && !_cache_state.series_in_scene.contains(key)) {
+            continue;
+        }
+        _cache_state.series_in_scene.insert(key);
 
         // Look up layout from cached response
         auto const * series_layout = _cache_state.layout_response.findLayout(key);

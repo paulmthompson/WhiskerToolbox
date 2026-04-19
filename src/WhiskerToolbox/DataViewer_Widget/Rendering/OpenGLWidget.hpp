@@ -88,6 +88,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 class AnalogTimeSeries;
@@ -116,6 +117,11 @@ struct SceneCacheState {
     std::map<size_t, std::string> glyph_batch_key_map;    // event series keys
     bool scene_dirty{true};                               // True when scene needs rebuild
     bool layout_response_dirty{true};                     // True when layout needs recompute
+
+    /// Tracks which series have been built into the current scene.
+    /// Accumulates across additive rebuilds (pan reveals new series).
+    /// Cleared only on full data changes (time window, layout config, global y scale).
+    std::unordered_set<std::string> series_in_scene;
 };
 
 /**
@@ -571,6 +577,15 @@ private:
      * index, and uploads to the SceneRenderer. Only called when scene_dirty.
      */
     void rebuildScene();
+
+    /**
+     * @brief Check if any enabled, viewport-visible series is not yet in the scene
+     *
+     * Compares the current viewport-visible series (from layout + options) against
+     * the cumulative @c series_in_scene set. Returns true if at least one series
+     * needs to be added, triggering an additive scene rebuild.
+     */
+    [[nodiscard]] bool hasNewVisibleSeries() const;
 
     /**
      * @brief Update cached projection and view matrices from current state

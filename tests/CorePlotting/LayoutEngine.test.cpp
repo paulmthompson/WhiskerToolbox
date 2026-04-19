@@ -564,3 +564,89 @@ TEST_CASE("StackedLayoutStrategy - FitToViewport ignores lane_height and lane_ga
     REQUIRE_THAT(getAllocatedHeight(response.layouts[1]),
                  Catch::Matchers::WithinAbs(1.0f, 0.001f));
 }
+
+// ============================================================================
+// LayoutResponse::isSeriesVisible / visibleSeriesIds (viewport culling)
+// ============================================================================
+
+TEST_CASE("LayoutResponse::isSeriesVisible - basic overlap", "[CorePlotting][Layout][Culling]") {
+    // Three lanes stacked at y = 0.5, 1.5, 2.5 (height 1.0 each)
+    LayoutResponse response;
+    response.layouts = {
+            {"s1", LayoutTransform(0.5f, 0.5f), 0},
+            {"s2", LayoutTransform(1.5f, 0.5f), 1},
+            {"s3", LayoutTransform(2.5f, 0.5f), 2}};
+
+    SECTION("Viewport covers all lanes") {
+        REQUIRE(response.isSeriesVisible("s1", 0.0f, 3.0f));
+        REQUIRE(response.isSeriesVisible("s2", 0.0f, 3.0f));
+        REQUIRE(response.isSeriesVisible("s3", 0.0f, 3.0f));
+    }
+
+    SECTION("Viewport covers only first lane") {
+        REQUIRE(response.isSeriesVisible("s1", 0.0f, 1.0f));
+        REQUIRE_FALSE(response.isSeriesVisible("s2", 0.0f, 0.9f));
+        REQUIRE_FALSE(response.isSeriesVisible("s3", 0.0f, 0.9f));
+    }
+
+    SECTION("Viewport covers only last lane") {
+        REQUIRE_FALSE(response.isSeriesVisible("s1", 2.1f, 3.0f));
+        REQUIRE_FALSE(response.isSeriesVisible("s2", 2.1f, 3.0f));
+        REQUIRE(response.isSeriesVisible("s3", 2.1f, 3.0f));
+    }
+
+    SECTION("Viewport partially overlaps a lane boundary") {
+        // Viewport [0.9, 1.1] overlaps both s1 (top=1.0) and s2 (bottom=1.0)
+        REQUIRE(response.isSeriesVisible("s1", 0.9f, 1.1f));
+        REQUIRE(response.isSeriesVisible("s2", 0.9f, 1.1f));
+        REQUIRE_FALSE(response.isSeriesVisible("s3", 0.9f, 1.1f));
+    }
+
+    SECTION("Unknown series is conservatively visible") {
+        REQUIRE(response.isSeriesVisible("unknown_key", 0.0f, 1.0f));
+    }
+}
+
+TEST_CASE("LayoutResponse::isSeriesVisible - exact boundary touch", "[CorePlotting][Layout][Culling]") {
+    LayoutResponse response;
+    response.layouts = {
+            {"s1", LayoutTransform(0.5f, 0.5f), 0}};
+    // Lane s1: [0.0, 1.0]
+
+    SECTION("Viewport top exactly touches lane bottom") {
+        // Viewport [0.0, 0.0] — degenerate but lane_top(1.0) >= y_min(0.0) and lane_bottom(0.0) <= y_max(0.0)
+        REQUIRE(response.isSeriesVisible("s1", 0.0f, 0.0f));
+    }
+
+    SECTION("Viewport entirely below lane") {
+        REQUIRE_FALSE(response.isSeriesVisible("s1", -2.0f, -0.1f));
+    }
+
+    SECTION("Viewport entirely above lane") {
+        REQUIRE_FALSE(response.isSeriesVisible("s1", 1.1f, 2.0f));
+    }
+}
+
+TEST_CASE("LayoutResponse::visibleSeriesIds", "[CorePlotting][Layout][Culling]") {
+    LayoutResponse response;
+    response.layouts = {
+            {"s1", LayoutTransform(0.5f, 0.5f), 0},
+            {"s2", LayoutTransform(1.5f, 0.5f), 1},
+            {"s3", LayoutTransform(2.5f, 0.5f), 2}};
+
+    SECTION("All visible") {
+        auto ids = response.visibleSeriesIds(0.0f, 3.0f);
+        REQUIRE(ids.size() == 3);
+    }
+
+    SECTION("Only middle lane visible") {
+        auto ids = response.visibleSeriesIds(1.1f, 1.9f);
+        REQUIRE(ids.size() == 1);
+        REQUIRE(ids[0] == "s2");
+    }
+
+    SECTION("None visible") {
+        auto ids = response.visibleSeriesIds(5.0f, 6.0f);
+        REQUIRE(ids.empty());
+    }
+}
