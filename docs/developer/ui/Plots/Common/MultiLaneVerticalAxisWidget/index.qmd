@@ -1,0 +1,113 @@
+---
+title: "MultiLaneVerticalAxisWidget"
+format: html
+---
+
+# MultiLaneVerticalAxisWidget
+
+The **MultiLaneVerticalAxisWidget** is a composable Qt widget that displays per-lane channel name
+labels and horizontal separator lines alongside a stacked-lane plot. It lives in
+`src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/` as a reusable static library.
+
+## Purpose
+
+Multi-channel viewers like the DataViewer stack multiple signals into independent vertical lanes.
+Users need to know which lane corresponds to which data channel. This widget provides:
+
+1. **Channel name labels** — centered vertically in each lane, elided if the lane is too narrow
+2. **Lane separator lines** — dashed horizontal lines at lane boundaries
+
+Unlike the single-range [VerticalAxisWidget](../../../ui/Plots/Common/ColormapControls/index.qmd),
+this widget manages an arbitrary number of independently-positioned lanes, each with its own
+Y center and extent.
+
+## Consumers
+
+| Widget | Use Case |
+|--------|----------|
+| [DataViewer](../../DataViewerWidget/index.qmd) | Channel labels for stacked analog/event/interval lanes |
+
+## Architecture
+
+```
+Plots/Common/MultiLaneVerticalAxisWidget/
+├── CMakeLists.txt
+├── MultiLaneVerticalAxisWidget.hpp
+├── MultiLaneVerticalAxisWidget.cpp
+└── Core/
+    ├── MultiLaneVerticalAxisStateData.hpp
+    ├── MultiLaneVerticalAxisState.hpp
+    └── MultiLaneVerticalAxisState.cpp
+```
+
+### Layer Breakdown
+
+| Layer | Class | Role |
+|-------|-------|------|
+| **StateData** | `MultiLaneVerticalAxisStateData` | Serializable POD — vector of `LaneAxisDescriptor`, visibility flags |
+| **State** | `MultiLaneVerticalAxisState` | QObject wrapper emitting `lanesChanged()`, `visibilityChanged()` |
+| **Widget** | `MultiLaneVerticalAxisWidget` | QPainter-based rendering of labels and separators |
+
+### Key Types
+
+#### `LaneAxisDescriptor`
+
+Describes one lane for the axis widget:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `label` | `std::string` | Channel/series name (displayed in the lane) |
+| `y_center` | `float` | NDC Y coordinate of the lane center (from layout offset) |
+| `y_extent` | `float` | Total NDC height of the lane (from layout gain × 2) |
+| `lane_index` | `int` | Index used for ordering |
+
+#### `MultiLaneVerticalAxisStateData`
+
+| Field | Type | Default |
+|-------|------|---------|
+| `lanes` | `std::vector<LaneAxisDescriptor>` | empty |
+| `show_labels` | `bool` | `true` |
+| `show_separators` | `bool` | `true` |
+
+### Dependencies
+
+- **`Qt6::Widgets`** (PRIVATE) — QPainter, QWidget, QFontMetrics
+- No PUBLIC dependencies beyond include directories
+
+## Integration with DataViewer
+
+The DataViewer drives this widget through a three-step process each time the scene is rebuilt:
+
+1. **Layout computation** — `LayoutEngine` produces a `LayoutResponse` with per-series
+   `SeriesLayout` entries (each containing `offset`, `gain`, and `series_id`).
+2. **Descriptor extraction** — `DataViewer_Widget::_updateLaneDescriptors()` converts each
+   `SeriesLayout` into a `LaneAxisDescriptor` (label = series_id, y_center = offset,
+   y_extent = |gain| × 2).
+3. **State update** — Descriptors are pushed into `MultiLaneVerticalAxisState::setLanes()`,
+   which triggers `lanesChanged()` → widget `update()`.
+
+### Viewport Awareness
+
+The widget respects the DataViewer's vertical pan offset (`y_pan` from `ViewStateData`).
+A `PanGetter` callback provides the current pan value. The `ndcToPixelY()` transform
+incorporates this offset, and `isLaneVisible()` culls lanes that are entirely outside the
+viewport `[y_min, y_max]`.
+
+## Visual Layout
+
+```
+┌──────────────┬─────────────────────────────┐
+│  Channel A   │  ═══════════════════════════ │
+│              │        (analog trace)        │
+├──────────────┼─────────────────────────────┤
+│  Channel B   │  ═══════════════════════════ │
+│              │        (event raster)        │
+├──────────────┼─────────────────────────────┤
+│  Channel C   │  ═══════════════════════════ │
+│              │        (interval bars)       │
+└──────────────┴─────────────────────────────┘
+  ← 50px axis →
+```
+
+The axis widget has a fixed width of 50 pixels (`kAxisWidth`). Labels use a small font
+(8pt) and are elided with `Qt::ElideRight` when they exceed the available width.

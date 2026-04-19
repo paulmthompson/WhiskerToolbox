@@ -324,6 +324,19 @@ public:
      */
     [[nodiscard]] DataViewerDiagnostics getDiagnostics() const;
 
+    /**
+     * @brief Get the cached layout response
+     *
+     * Returns the most recently computed layout response. Valid after the
+     * first scene build. Used by DataViewer_Widget to extract lane
+     * descriptors for the MultiLaneVerticalAxisWidget.
+     *
+     * @return Const reference to the cached LayoutResponse
+     */
+    [[nodiscard]] CorePlotting::LayoutResponse const & layoutResponse() const {
+        return _cache_state.layout_response;
+    }
+
     // Coordinate conversion methods
     [[nodiscard]] float canvasXToTime(float canvas_x) const;
     [[nodiscard]] float canvasYToAnalogValue(float canvas_y, std::string const & series_key) const;

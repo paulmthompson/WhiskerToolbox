@@ -11,6 +11,10 @@
 #include "SubWidgets/DigitalEvent/EventViewer_Widget.hpp"
 #include "SubWidgets/DigitalInterval/IntervalViewer_Widget.hpp"
 
+#include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisState.hpp"
+#include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisStateData.hpp"
+#include "Plots/Common/MultiLaneVerticalAxisWidget/MultiLaneVerticalAxisWidget.hpp"
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/utils/statistics.hpp"
 #include "DataManager.hpp"
@@ -25,6 +29,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QFile>
+#include <QHBoxLayout>
 #include <QMenu>
 #include <QMessageBox>
 #include <QMetaObject>
@@ -83,6 +88,50 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Share state with OpenGLWidget
     ui->openGLWidget->setState(_state);
 
+    // --- Multi-Lane Vertical Axis Widget ---
+    // Insert a QHBoxLayout wrapping the axis widget + OpenGLWidget.
+    // The .ui file places openGLWidget directly in plot_layout (QVBoxLayout).
+    // We remove it, wrap it in an HBox with the axis widget, and re-insert.
+    {
+        auto * axis_state = _state->multiLaneAxisState();
+        _multi_lane_axis_widget = new MultiLaneVerticalAxisWidget(axis_state, this);
+
+        // Pan getter: read y_pan from state's ViewStateData
+        _multi_lane_axis_widget->setPanGetter([this]() -> float {
+            return static_cast<float>(_state->viewState().y_pan);
+        });
+
+        // Set Y range to match DataViewer NDC defaults
+        _multi_lane_axis_widget->setYRange(
+                static_cast<float>(_state->viewState().y_min),
+                static_cast<float>(_state->viewState().y_max));
+
+        // Remove OpenGLWidget from its current position in plot_layout
+        ui->plot_layout->removeWidget(ui->openGLWidget);
+
+        // Create horizontal layout: [axis widget | OpenGLWidget]
+        auto * h_layout = new QHBoxLayout();
+        h_layout->setSpacing(0);
+        h_layout->setContentsMargins(0, 0, 0, 0);
+        h_layout->addWidget(_multi_lane_axis_widget);
+        h_layout->addWidget(ui->openGLWidget, 1);// stretch factor 1
+
+        // Insert the HBox at position 0 in the plot_layout (before coordinate_label)
+        ui->plot_layout->insertLayout(0, h_layout, 1);// stretch factor 1
+    }
+
+    // Connect sceneRebuilt to update lane descriptors
+    connect(ui->openGLWidget, &OpenGLWidget::sceneRebuilt,
+            this, &DataViewer_Widget::_updateLaneDescriptors);
+
+    // Connect viewStateChanged to repaint the axis widget (for pan/zoom tracking)
+    connect(_state.get(), &DataViewerState::viewStateChanged,
+            this, [this]() {
+                if (_multi_lane_axis_widget) {
+                    _multi_lane_axis_widget->update();
+                }
+            });
+
     // Note: Layout computation is now handled by OpenGLWidget's internal LayoutEngine
     // (Phase 4.9 migration - unified layout system)
 
@@ -128,10 +177,29 @@ void DataViewer_Widget::setState(std::shared_ptr<DataViewerState> state) {
     // Share with OpenGLWidget
     ui->openGLWidget->setState(_state);
 
+    // Update axis widget to use the new state's MultiLaneVerticalAxisState
+    if (_multi_lane_axis_widget) {
+        _multi_lane_axis_widget->setState(_state->multiLaneAxisState());
+        _multi_lane_axis_widget->setPanGetter([this]() -> float {
+            return static_cast<float>(_state->viewState().y_pan);
+        });
+        _multi_lane_axis_widget->setYRange(
+                static_cast<float>(_state->viewState().y_min),
+                static_cast<float>(_state->viewState().y_max));
+    }
+
     // Connect viewStateChanged to update labels when time range changes
     connect(_state.get(), &DataViewerState::viewStateChanged, this, [this]() {
         _updateLabels();
     });
+
+    // Connect viewStateChanged to repaint the axis widget
+    connect(_state.get(), &DataViewerState::viewStateChanged,
+            this, [this]() {
+                if (_multi_lane_axis_widget) {
+                    _multi_lane_axis_widget->update();
+                }
+            });
 
     _updateLabels();
 }
@@ -511,6 +579,25 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
 void DataViewer_Widget::_updateLabels() {
     ui->neg_x_label->setText(QString::number(_state->timeStart()));
     ui->pos_x_label->setText(QString::number(_state->timeEnd()));
+}
+
+void DataViewer_Widget::_updateLaneDescriptors() {
+    auto * axis_state = _state->multiLaneAxisState();
+    auto const & response = ui->openGLWidget->layoutResponse();
+
+    std::vector<LaneAxisDescriptor> descriptors;
+    descriptors.reserve(response.layouts.size());
+
+    for (auto const & layout: response.layouts) {
+        LaneAxisDescriptor desc;
+        desc.label = layout.series_id;
+        desc.y_center = layout.y_transform.offset;
+        desc.y_extent = std::abs(layout.y_transform.gain) * 2.0f;
+        desc.lane_index = layout.series_index;
+        descriptors.push_back(std::move(desc));
+    }
+
+    axis_state->setLanes(std::move(descriptors));
 }
 
 void DataViewer_Widget::_updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info) {

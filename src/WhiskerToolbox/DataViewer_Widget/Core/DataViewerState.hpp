@@ -71,8 +71,11 @@
 #include <QStringList>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
+
+class MultiLaneVerticalAxisState;
 
 /**
  * @brief State class for DataViewer_Widget
@@ -103,7 +106,7 @@ public:
      */
     explicit DataViewerState(QObject * parent = nullptr);
 
-    ~DataViewerState() override = default;
+    ~DataViewerState() override;
 
     // === Type Identification ===
 
@@ -537,6 +540,17 @@ public:
         return _data.group_scaling;
     }
 
+    // ==================== Multi-Lane Axis ====================
+
+    /**
+     * @brief Get the multi-lane vertical axis state
+     *
+     * Lazily created on first access. Owned by this DataViewerState.
+     *
+     * @return Pointer to the MultiLaneVerticalAxisState
+     */
+    [[nodiscard]] MultiLaneVerticalAxisState * multiLaneAxisState();
+
 signals:
     // === Consolidated Signals ===
 
@@ -623,6 +637,7 @@ signals:
 private:
     DataViewerStateData _data;
     SeriesOptionsRegistry _series_options{&_data, this};
+    std::unique_ptr<MultiLaneVerticalAxisState> _multi_lane_axis_state;
 
     /**
      * @brief Connect registry signals to state signals

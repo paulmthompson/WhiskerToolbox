@@ -102,6 +102,7 @@ add_subdirectory(Plots/Common/PlotAlignmentWidget)
 # Qt, CorePlotting - Shared relative time axis widget
 add_subdirectory(Plots/Common/RelativeTimeAxisWidget)
 add_subdirectory(Plots/Common/VerticalAxisWidget)
+add_subdirectory(Plots/Common/MultiLaneVerticalAxisWidget)
 add_subdirectory(Plots/Common/HorizontalAxisWidget)
 add_subdirectory(Plots/Common/GlyphStyleWidget)
 add_subdirectory(Plots/Common/LineStyleControls)

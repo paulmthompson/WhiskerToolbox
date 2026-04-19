@@ -242,6 +242,8 @@ target_link_libraries(fuzz_real_widget_roundtrip
         CoreUtilities # for color in MediaWidget state
 
         ImageProcessing # for Display Options in Media State
+
+        MultiLaneVerticalAxisWidget # for DataViewerState → MultiLaneVerticalAxisState
 )
 
 target_compile_options(fuzz_real_widget_roundtrip

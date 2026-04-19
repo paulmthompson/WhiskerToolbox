@@ -1,5 +1,7 @@
 #include "DataViewerState.hpp"
 
+#include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisState.hpp"
+
 #include <cmath>
 
 DataViewerState::DataViewerState(QObject * parent)
@@ -10,6 +12,8 @@ DataViewerState::DataViewerState(QObject * parent)
     // Connect registry signals to state signals for forwarding
     _connectRegistrySignals();
 }
+
+DataViewerState::~DataViewerState() = default;
 
 void DataViewerState::_connectRegistrySignals() {
     // Forward registry signals to state signals
@@ -379,4 +383,13 @@ void DataViewerState::removeGroupScaling(std::string const & group_name) {
         emit groupScalingChanged(QString::fromStdString(group_name));
         emit stateChanged();
     }
+}
+
+// ==================== Multi-Lane Axis ====================
+
+MultiLaneVerticalAxisState * DataViewerState::multiLaneAxisState() {
+    if (!_multi_lane_axis_state) {
+        _multi_lane_axis_state = std::make_unique<MultiLaneVerticalAxisState>(this);
+    }
+    return _multi_lane_axis_state.get();
 }

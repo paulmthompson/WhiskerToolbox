@@ -95,6 +95,7 @@ target_link_libraries(DataViewer_Widget PRIVATE Feature_Tree_Widget)
 target_link_libraries(DataViewer_Widget PRIVATE PlottingOpenGL)  # Contains ShaderManager
 target_link_libraries(DataViewer_Widget PRIVATE TimeScrollBar)
 target_link_libraries(DataViewer_Widget PRIVATE CorePlotting)
+target_link_libraries(DataViewer_Widget PRIVATE MultiLaneVerticalAxisWidget)
 target_link_libraries(DataViewer_Widget PRIVATE PlottingSVG)
 target_link_libraries(DataViewer_Widget PRIVATE CoreUtilities)
 

@@ -19,6 +19,7 @@ class DataManager;
 class DataViewerState;
 class EditorRegistry;
 class MainWindow;
+class MultiLaneVerticalAxisWidget;
 class OpenGLWidget;
 class QTableWidget;
 class TimeFrame;
@@ -146,7 +147,7 @@ public:
      */
     void showGroupContextMenu(std::string const & group_name, QPoint const & global_pos);
 
-    void _onTimeChanged(const TimePosition& position);
+    void _onTimeChanged(TimePosition const & position);
 
 protected:
     void closeEvent(QCloseEvent * event) override;
@@ -173,10 +174,21 @@ private:
 
     std::shared_ptr<TimeFrame> _time_frame;
 
+    /// Multi-lane vertical axis widget (non-owning; owned by Qt parent)
+    MultiLaneVerticalAxisWidget * _multi_lane_axis_widget{nullptr};
+
     // Flag to prevent auto-arrange during batch operations
     bool _is_batch_add = false;
 
     void _updateLabels();
+
+    /**
+     * @brief Update lane descriptors for the multi-lane axis widget
+     *
+     * Called after each scene rebuild to extract lane descriptors from the
+     * LayoutResponse and push them to the MultiLaneVerticalAxisState.
+     */
+    void _updateLaneDescriptors();
 
     /**
      * @brief Convert DataManager data type to series type for PlottingManager
@@ -184,7 +196,7 @@ private:
      * @param dm_type DataManager data type
      * @return String identifier for the data type
      */
-    static std::string _convertDataType(DM_DataType dm_type) ;
+    static std::string _convertDataType(DM_DataType dm_type);
 
     void _calculateOptimalScaling(std::vector<std::string> const & group_keys);
 

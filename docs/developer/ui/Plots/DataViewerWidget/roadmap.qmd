@@ -131,7 +131,7 @@ field names (`x_min`/`x_max`/`y_pan` with appropriate casts). `DataViewerCoordin
 
 ## Phase 2: Y-Axis Navigation {#phase-2-y-axis-navigation}
 
-**Status**: Not started.
+**Status**: In progress (Phase 2.1 completed).
 **Issues**: [#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227) (wheel modifiers, per-lane scaling),
 [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) (viewport culling),
 [#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247) (axis synchronization)
@@ -143,7 +143,7 @@ performant before adding more interaction modes).
 readable resolution, inspired by [EventPlotWidget](../EventPlotWidget/index.qmd)'s trial Y
 navigation.
 
-### 2.1 MultiLaneVerticalAxisWidget (Minimal Version)
+### 2.1 MultiLaneVerticalAxisWidget (Minimal Version) {.completed}
 
 Create a new `MultiLaneVerticalAxisWidget` in `Plots/Common/` and integrate it into
 DataViewer. This is a **standalone widget** — not a subclass of the existing single-range
