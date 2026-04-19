@@ -287,9 +287,8 @@ void DataViewerDebugPanel::_refreshViewState() {
                     .arg(static_cast<double>(view.vertical_pan_offset), 0, 'f', 4));
 
     _pan_zoom_label->setText(
-            QStringLiteral("v_scale=%1  zoom=%2")
-                    .arg(static_cast<double>(view.global_vertical_scale), 0, 'f', 2)
-                    .arg(static_cast<double>(view.global_zoom), 0, 'f', 2));
+            QStringLiteral("y_scale=%1")
+                    .arg(static_cast<double>(view.global_y_scale), 0, 'f', 2));
 
     _widget_size_label->setText(
             QStringLiteral("Widget: %1 x %2 px").arg(w).arg(h));

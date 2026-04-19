@@ -16,7 +16,7 @@ namespace DataViewer {
  * 3. Layout positioning (from LayoutEngine)
  * 4. Global scaling (from ViewState) - applied to amplitude only, NOT position
  * 
- * IMPORTANT: Global zoom scales the data amplitude within each lane, but does NOT
+ * IMPORTANT: Global Y scale scales the data amplitude within each lane, but does NOT
  * move the lane center. This is achieved by applying global scaling to the gain
  * component only, after composing data normalization with layout positioning.
  */
@@ -27,8 +27,7 @@ namespace DataViewer {
         float intrinsic_scale,
         float user_scale_factor,
         float user_vertical_offset,
-        float global_zoom,
-        float global_vertical_scale) {
+        float global_y_scale) {
 
     // Use NormalizationHelpers to create the data normalization transform
     // forStdDevRange maps mean ± 3*std_dev to ±1
@@ -48,14 +47,14 @@ namespace DataViewer {
     constexpr float margin_factor = 0.8f;
 
     // Global scaling affects the amplitude within the lane, NOT the lane position
-    // So we apply global_zoom to the gain only
+    // So we apply global_y_scale to the gain only
     float const lane_half_height = layout.y_transform.gain * margin_factor;
-    float const effective_gain = lane_half_height * global_zoom * global_vertical_scale;
+    float const effective_gain = lane_half_height * global_y_scale;
 
     // Final transform:
     // 1. Apply data_transform to normalize the raw data
-    // 2. Scale by effective_gain (includes layout height + global zoom)
-    // 3. Translate to lane center (layout.offset is NOT scaled by global_zoom)
+    // 2. Scale by effective_gain (includes layout height + global Y scale)
+    // 3. Translate to lane center (layout.offset is NOT scaled by global_y_scale)
     float const final_gain = data_transform.gain * effective_gain;
     float const final_offset = data_transform.offset * effective_gain + layout.y_transform.offset;
 
@@ -68,11 +67,11 @@ namespace DataViewer {
 [[nodiscard]] inline CorePlotting::LayoutTransform composeEventYTransform(
         CorePlotting::SeriesLayout const & layout,
         float margin_factor,
-        float global_vertical_scale) {
+        float global_y_scale) {
 
     // Events map [-1, 1] to allocated space with margin
     // Note: layout.y_transform.gain already represents half-height (maps [-1,1] to allocated space)
-    float const half_height = layout.y_transform.gain * margin_factor * global_vertical_scale;
+    float const half_height = layout.y_transform.gain * margin_factor * global_y_scale;
     float const center = layout.y_transform.offset;
 
     return CorePlotting::LayoutTransform{center, half_height};
@@ -97,26 +96,25 @@ namespace DataViewer {
 /**
  * @brief Compose Y transform for interval series
  * 
- * Note: Intervals intentionally ignore global_zoom because:
+ * Note: Intervals intentionally ignore global_y_scale because:
  * 1. They are already in normalized space [-1, 1] representing full height
- * 2. global_zoom is designed for scaling analog data based on std_dev
+ * 2. global_y_scale is designed for scaling analog data based on std_dev
  * 3. Intervals should always fill their allocated canvas space
  */
 [[nodiscard]] inline CorePlotting::LayoutTransform composeIntervalYTransform(
         CorePlotting::SeriesLayout const & layout,
         float margin_factor,
-        [[maybe_unused]] float global_zoom,
-        [[maybe_unused]] float global_vertical_scale) {
+        [[maybe_unused]] float global_y_scale) {
 
     // Intervals map [-1, 1] to allocated space with margin only
     // Note: layout.y_transform.gain already represents half-height (maps [-1,1] to allocated space)
-    // We do NOT apply global_zoom here - intervals should fill their allocated space
+    // We do NOT apply global_y_scale here - intervals should fill their allocated space
     float const half_height = layout.y_transform.gain * margin_factor;
     float const center = layout.y_transform.offset;
 
     return CorePlotting::LayoutTransform{center, half_height};
 }
 
-} // namespace DataViewer
+}// namespace DataViewer
 
-#endif // DATAVIEWER_TRANSFORMCOMPOSERS_HPP
+#endif// DATAVIEWER_TRANSFORMCOMPOSERS_HPP

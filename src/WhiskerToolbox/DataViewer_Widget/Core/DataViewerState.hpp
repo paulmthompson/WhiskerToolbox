@@ -20,7 +20,7 @@
  * 
  * | Category | Description | Example Properties |
  * |----------|-------------|--------------------|
- * | View State | Time window, Y bounds, zoom | time_start, time_end, global_zoom |
+ * | View State | Time window, Y bounds, scale | time_start, time_end, global_y_scale |
  * | Theme | Visual appearance | theme (Dark/Light), background_color |
  * | Grid | Grid overlay settings | enabled, spacing |
  * | UI Preferences | Widget layout | zoom_scaling_mode, panel_collapsed |
@@ -35,7 +35,7 @@
  * 
  * // === View State ===
  * state->setTimeWindow(0, 10000);
- * state->setGlobalZoom(1.5);
+ * state->setGlobalYScale(1.5);
  * 
  * // === Series Options ===
  * AnalogSeriesOptionsData opts;
@@ -241,28 +241,16 @@ public:
     [[nodiscard]] float verticalPanOffset() const { return _data.view.vertical_pan_offset; }
 
     /**
-     * @brief Set the global zoom level
-     * @param zoom Zoom/amplitude scale factor
+     * @brief Set the global Y-axis scale
+     * @param scale Y-axis amplitude scale factor (affects all series uniformly)
      */
-    void setGlobalZoom(float zoom);
+    void setGlobalYScale(float scale);
 
     /**
-     * @brief Get the global zoom level
-     * @return Current global zoom factor
+     * @brief Get the global Y-axis scale
+     * @return Current global Y-axis scale factor
      */
-    [[nodiscard]] float globalZoom() const { return _data.view.global_zoom; }
-
-    /**
-     * @brief Set the global vertical scale
-     * @param scale Vertical scale factor
-     */
-    void setGlobalVerticalScale(float scale);
-
-    /**
-     * @brief Get the global vertical scale
-     * @return Current global vertical scale
-     */
-    [[nodiscard]] float globalVerticalScale() const { return _data.view.global_vertical_scale; }
+    [[nodiscard]] float globalYScale() const { return _data.view.global_y_scale; }
 
     /**
      * @brief Set the complete view state

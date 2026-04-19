@@ -951,7 +951,7 @@ void FuzzDataViewerStateValues(
         int64_t time_end,
         float y_min,
         float y_max,
-        float global_zoom,
+        float global_y_scale,
         bool grid_enabled,
         int grid_spacing,
         std::string const & bg_color,
@@ -975,8 +975,8 @@ void FuzzDataViewerStateValues(
     if (std::isfinite(y_min) && std::isfinite(y_max)) {
         state->setYBounds(y_min, y_max);
     }
-    if (std::isfinite(global_zoom) && global_zoom > 0.0f) {
-        state->setGlobalZoom(global_zoom);
+    if (std::isfinite(global_y_scale) && global_y_scale > 0.0f) {
+        state->setGlobalYScale(global_y_scale);
     }
 
     // Set grid
@@ -1484,7 +1484,7 @@ TEST(RealWidgetDeterministic, DataViewerFieldPreservation) {
 
     state->setTimeWindow(100, 5000);
     state->setYBounds(-2.0f, 2.0f);
-    state->setGlobalZoom(1.5f);
+    state->setGlobalYScale(1.5f);
     state->setGridEnabled(true);
     state->setGridSpacing(250);
     state->setTheme(DataViewerTheme::Light);

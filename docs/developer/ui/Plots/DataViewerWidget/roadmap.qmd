@@ -57,7 +57,7 @@ per-type visual options, viewport culling, and shared component extraction descr
 
 ## Phase 1: Layout Foundation {#phase-1-layout-foundation}
 
-**Status**: Not started.
+**Status**: 1.1 complete.
 **Issues**: [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) (configurable lane sizing),
 [#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227) (Y-scale naming audit)
 
@@ -65,21 +65,18 @@ per-type visual options, viewport culling, and shared component extraction descr
 Currently, `StackedLayoutStrategy` divides viewport space equally among all series — there
 is no configurable lane height and no way to scroll through channels.
 
-### 1.1 Y-Scale State Audit
+### 1.1 Y-Scale State Audit {.completed}
 
-**`TimeSeriesViewState`** currently has two similarly named fields that affect Y-axis scaling:
+**Completed.** The two fields `global_zoom` and `global_vertical_scale` were audited and merged
+into a single `global_y_scale` field. `global_vertical_scale` was dead code (always 1.0,
+never written in production). The merged field is exposed as "Global Y Scale" in the UI
+and used consistently in all `TransformComposers` functions.
 
-- `global_zoom` — exposed as "Global Y Scale" in `DataViewerPropertiesWidget.ui`
-- `global_vertical_scale` — used in `TransformComposers`
+**Fields merged**: `TimeSeriesViewState::global_zoom` + `TimeSeriesViewState::global_vertical_scale`
+→ `TimeSeriesViewState::global_y_scale`
 
-Before building more Y-axis interaction on top of these, their semantics must be audited and
-clarified. Determine whether they can be merged into a single field, or document the distinct
-purpose of each and ensure naming is consistent between code and UI.
-
-**Files**: `src/CorePlotting/CoordinateTransform/TimeRange.hpp`,
-`src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp`,
-`src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp`,
-`src/WhiskerToolbox/DataViewer_Widget/Rendering/TransformComposers.hpp`
+**API renamed**: `DataViewerState::setGlobalZoom()`/`globalZoom()` +
+`setGlobalVerticalScale()`/`globalVerticalScale()` → `setGlobalYScale()`/`globalYScale()`
 
 ### 1.2 Configurable Lane Sizing with Dual Policy
 
@@ -260,7 +257,7 @@ not use modifiers should see no change. This is an explicit non-goal from
 
 | Modifier | Action | State Field |
 |----------|--------|-------------|
-| TBD | Global Y scale | `global_vertical_scale` (or merged field from 1.1 audit) |
+| TBD | Global Y scale | `global_y_scale` |
 | TBD | Y viewport pan | `y_min`/`y_max` shift via `VerticalAxisState` |
 | TBD | Y viewport zoom (cursor-anchored) | `y_min`/`y_max` range via `VerticalAxisState` |
 

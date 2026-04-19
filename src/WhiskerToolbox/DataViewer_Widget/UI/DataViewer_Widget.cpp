@@ -159,7 +159,7 @@ void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
     }
 }
 
-void DataViewer_Widget::_onTimeChanged(const TimePosition& position) {
+void DataViewer_Widget::_onTimeChanged(TimePosition const & position) {
     // Get the TimeFrame for the data this widget is displaying (master clock)
     auto my_tf = _time_frame;
 
@@ -758,7 +758,7 @@ void DataViewer_Widget::_calculateOptimalScaling(std::vector<std::string> const 
                   << ", optimal global scale: " << final_scale << std::endl;
 
         // Apply the calculated settings
-        _state->setGlobalZoom(final_scale);
+        _state->setGlobalYScale(final_scale);
 
         std::cout << "Applied auto-scaling: vertical spacing = " << final_spacing
                   << ", global scale = " << final_scale << std::endl;
@@ -1115,7 +1115,7 @@ void DataViewer_Widget::_autoFillCanvas() {
                       << ", final_scale=" << final_scale << std::endl;
 
             // Apply the calculated global scale
-            _state->setGlobalZoom(final_scale);
+            _state->setGlobalYScale(final_scale);
         }
     }
 

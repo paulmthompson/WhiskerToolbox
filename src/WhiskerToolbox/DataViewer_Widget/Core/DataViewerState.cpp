@@ -131,19 +131,10 @@ void DataViewerState::setVerticalPanOffset(float offset) {
     }
 }
 
-void DataViewerState::setGlobalZoom(float zoom) {
+void DataViewerState::setGlobalYScale(float scale) {
     constexpr float epsilon = 1e-6f;
-    if (std::abs(_data.view.global_zoom - zoom) > epsilon) {
-        _data.view.global_zoom = zoom;
-        markDirty();
-        emit viewStateChanged();
-    }
-}
-
-void DataViewerState::setGlobalVerticalScale(float scale) {
-    constexpr float epsilon = 1e-6f;
-    if (std::abs(_data.view.global_vertical_scale - scale) > epsilon) {
-        _data.view.global_vertical_scale = scale;
+    if (std::abs(_data.view.global_y_scale - scale) > epsilon) {
+        _data.view.global_y_scale = scale;
         markDirty();
         emit viewStateChanged();
     }
@@ -156,10 +147,9 @@ void DataViewerState::setViewState(CorePlotting::TimeSeriesViewState const & vie
     bool const y_changed = std::abs(_data.view.y_min - view.y_min) > epsilon ||
                            std::abs(_data.view.y_max - view.y_max) > epsilon;
     bool const pan_changed = std::abs(_data.view.vertical_pan_offset - view.vertical_pan_offset) > epsilon;
-    bool const zoom_changed = std::abs(_data.view.global_zoom - view.global_zoom) > epsilon;
-    bool const scale_changed = std::abs(_data.view.global_vertical_scale - view.global_vertical_scale) > epsilon;
+    bool const zoom_changed = std::abs(_data.view.global_y_scale - view.global_y_scale) > epsilon;
 
-    if (time_changed || y_changed || pan_changed || zoom_changed || scale_changed) {
+    if (time_changed || y_changed || pan_changed || zoom_changed) {
         _data.view = view;
         markDirty();
         emit viewStateChanged();

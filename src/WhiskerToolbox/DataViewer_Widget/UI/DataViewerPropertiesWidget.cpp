@@ -101,8 +101,8 @@ void DataViewerPropertiesWidget::_initializeFromState() {
     }
     ui->theme_combo->setCurrentIndex(theme_index);
 
-    // Global zoom
-    ui->global_zoom->setValue(static_cast<double>(_state->globalZoom()));
+    // Global Y Scale
+    ui->global_y_scale->setValue(static_cast<double>(_state->globalYScale()));
 
     // X axis samples (time width from view state)
     auto const & view = _state->viewState();
@@ -120,9 +120,9 @@ void DataViewerPropertiesWidget::_connectUIControls() {
     connect(ui->theme_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &DataViewerPropertiesWidget::_onThemeChanged);
 
-    // Global zoom
-    connect(ui->global_zoom, &QDoubleSpinBox::valueChanged,
-            this, &DataViewerPropertiesWidget::_onGlobalZoomChanged);
+    // Global Y Scale
+    connect(ui->global_y_scale, &QDoubleSpinBox::valueChanged,
+            this, &DataViewerPropertiesWidget::_onGlobalYScaleChanged);
 
     // X axis samples
     connect(ui->x_axis_samples, QOverload<int>::of(&QSpinBox::valueChanged),
@@ -195,7 +195,7 @@ void DataViewerPropertiesWidget::_connectStateSignals() {
         if (_updating_from_state) return;
         _updating_from_state = true;
 
-        ui->global_zoom->setValue(static_cast<double>(_state->globalZoom()));
+        ui->global_y_scale->setValue(static_cast<double>(_state->globalYScale()));
         auto const & view = _state->viewState();
         ui->x_axis_samples->setValue(static_cast<int>(view.getTimeWidth()));
 
@@ -226,10 +226,10 @@ void DataViewerPropertiesWidget::_onThemeChanged(int index) {
     _state->setTheme(theme);
 }
 
-void DataViewerPropertiesWidget::_onGlobalZoomChanged(double value) {
+void DataViewerPropertiesWidget::_onGlobalYScaleChanged(double value) {
     if (_updating_from_state || !_state) return;
 
-    _state->setGlobalZoom(static_cast<float>(value));
+    _state->setGlobalYScale(static_cast<float>(value));
 }
 
 void DataViewerPropertiesWidget::_onXAxisSamplesChanged(int value) {

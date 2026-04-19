@@ -178,7 +178,7 @@ signals:
 
 private slots:
     void _onThemeChanged(int index);
-    void _onGlobalZoomChanged(double value);
+    void _onGlobalYScaleChanged(double value);
     void _onXAxisSamplesChanged(int value);
     void _onGridLinesToggled(bool enabled);
     void _onGridSpacingChanged(int value);

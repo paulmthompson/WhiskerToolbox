@@ -88,8 +88,7 @@ The panel is organized into collapsible sections:
 | Visible duration | `time_end - time_start` | Quick sanity check |
 | Y bounds (effective) | `y_min + vertical_pan_offset`, `y_max + vertical_pan_offset` | Debug Y pan/zoom (#227) |
 | `vertical_pan_offset` | `TimeSeriesViewState` | Track Y panning state |
-| `global_zoom` | `TimeSeriesViewState` | X-axis zoom factor |
-| `global_vertical_scale` | `TimeSeriesViewState` | Y-axis scale factor (#227) |
+| `global_y_scale` | `TimeSeriesViewState` | Combined Y-axis scale factor (merged from `global_zoom` + `global_vertical_scale`) |
 | Widget pixel size | `OpenGLWidget::size()` | Verify actual render target |
 | Aspect ratio | `width / height` | Detect layout compression |
 
@@ -182,7 +181,7 @@ A small horizontal tick mark or dot at each series' center_y position, represent
 - Same color as the lane boundary lines
 - Shows the transform origin — useful when debugging normalization and offset issues
 
-**Direct support for #227**: When adjusting `user_scale_factor` or `global_vertical_scale`,
+**Direct support for #227**: When adjusting `user_scale_factor` or `global_y_scale`,
 the origin marker shows exactly where the series' neutral point is.
 
 #### B.3 Cursor Crosshair with Readout

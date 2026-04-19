@@ -35,7 +35,7 @@
  *     "time_end": 10000,
  *     "y_min": -1.0,
  *     "y_max": 1.0,
- *     "global_zoom": 1.5
+ *     "global_y_scale": 1.5
  *   },
  *   "theme": {
  *     "theme": "Dark",

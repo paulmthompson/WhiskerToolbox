@@ -141,7 +141,7 @@ Three signals cover all change types: `optionsChanged`, `optionsRemoved`, `visib
 {
   "instance_id": "abc123",
   "display_name": "Data Viewer",
-  "view": { "time_start": 0, "time_end": 10000, "global_zoom": 1.5 },
+  "view": { "time_start": 0, "time_end": 10000, "global_y_scale": 1.5 },
   "theme": { "theme": "Dark", "background_color": "#000000" },
   "grid": { "enabled": false, "spacing": 100 },
   "analog_options": {
@@ -171,7 +171,7 @@ Each series' vertical positioning is composed from multiple stages via `Transfor
 1.  **Data normalization** — z-score style: maps mean ± 3σ to ±1
 2.  **User adjustments** — intrinsic scale, `user_scale_factor`, vertical offset
 3.  **Layout positioning** — from `LayoutEngine` (lane center + half-height)
-4.  **Global scaling** — `global_zoom` and `global_vertical_scale` applied to amplitude only (lane position is NOT affected)
+4.  **Global scaling** — `global_y_scale` applied to amplitude only (lane position is NOT affected)
 
 ```cpp
 // TransformComposers::composeAnalogYTransform
@@ -179,7 +179,7 @@ auto data_norm = NormalizationHelpers::forStdDevRange(mean, std_dev, 3.0f);
 auto user_adj  = NormalizationHelpers::manual(intrinsic_scale * user_scale_factor, offset);
 auto data_transform = user_adj.compose(data_norm);
 
-float effective_gain = layout.y_transform.gain * margin * global_zoom * global_vertical_scale;
+float effective_gain = layout.y_transform.gain * margin * global_y_scale;
 float final_gain   = data_transform.gain * effective_gain;
 float final_offset = data_transform.offset * effective_gain + layout.y_transform.offset;
 ```

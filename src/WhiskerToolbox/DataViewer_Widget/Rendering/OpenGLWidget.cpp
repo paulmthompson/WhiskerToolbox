@@ -724,8 +724,7 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
             entry.data_cache.intrinsic_scale,
             opts->user_scale_factor,
             opts->y_offset,
-            view.global_zoom,
-            view.global_vertical_scale);
+            view.global_y_scale);
 
     // Step 4: Use DataViewerCoordinates to convert canvas Y to analog value
     return coords.canvasYToAnalogValue(canvas_y, y_transform);
@@ -1092,8 +1091,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
                 analog_data.data_cache.intrinsic_scale,
                 opts->user_scale_factor,
                 opts->y_offset,
-                view_state.global_zoom,
-                view_state.global_vertical_scale);
+                view_state.global_y_scale);
 
         // Create model matrix directly from the composed transform
         glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
@@ -1176,7 +1174,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
             auto const * series_layout = _cache_state.layout_response.findLayout(key);
             if (series_layout) {
                 y_transform = DataViewer::composeEventYTransform(
-                        *series_layout, opts->margin_factor, view_state.global_vertical_scale);
+                        *series_layout, opts->margin_factor, view_state.global_y_scale);
             } else {
                 // Fallback if layout not found
                 CorePlotting::SeriesLayout const fallback{
@@ -1184,7 +1182,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
                         event_data.layout_transform,
                         0};
                 y_transform = DataViewer::composeEventYTransform(
-                        fallback, opts->margin_factor, view_state.global_vertical_scale);
+                        fallback, opts->margin_factor, view_state.global_y_scale);
             }
         }
 
@@ -1245,7 +1243,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         if (series_layout) {
             y_transform = DataViewer::composeIntervalYTransform(
                     *series_layout, opts->margin_factor,
-                    view_state.global_zoom, view_state.global_vertical_scale);
+                    view_state.global_y_scale);
         } else {
             // Fallback if layout not found - use entry's layout_transform
             CorePlotting::SeriesLayout const fallback{
@@ -1254,7 +1252,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
                     0};
             y_transform = DataViewer::composeIntervalYTransform(
                     fallback, opts->margin_factor,
-                    view_state.global_zoom, view_state.global_vertical_scale);
+                    view_state.global_y_scale);
         }
 
         // Create model matrix from composed transform

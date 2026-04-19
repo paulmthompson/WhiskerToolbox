@@ -50,8 +50,7 @@ struct ViewProjectionParams {
     float vertical_pan_offset{0.0f};
 
     // Global scaling
-    float global_zoom{1.0f};
-    float global_vertical_scale{1.0f};
+    float global_y_scale{1.0f};
 };
 
 // ============================================================================

@@ -12,13 +12,13 @@
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/catch_approx.hpp>
 #include <QApplication>
+#include <QDoubleSpinBox>
 #include <QMetaObject>
 #include <QTimer>
 #include <QWidget>
-#include <QDoubleSpinBox>
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -577,18 +577,18 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
     // The public addFeature method is the new way to add features (color is provided by properties widget)
     for (size_t i = 0; i < keys.size(); ++i) {
         auto const & key = keys[i];
-        
+
         // Use the public addFeature method with a default color
-        widget.addFeature(key, "#FF6B6B");  // Default red color
+        widget.addFeature(key, "#FF6B6B");// Default red color
 
         // Process events to allow the UI/OpenGLWidget to add and layout the series
         QApplication::processEvents();
 
         // Validate that the series is now visible via the display options accessor
         auto cfg = widget.state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(
-            QString::fromStdString(key));
+                QString::fromStdString(key));
         //auto cfg = widget.getAnalogConfig(key);
-       // REQUIRE(cfg.has_value());
+        // REQUIRE(cfg.has_value());
         REQUIRE(cfg != nullptr);
         REQUIRE(cfg->style().is_visible);
 
@@ -646,14 +646,14 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
 
     // Instead of using Feature_Tree_Widget (which is now in properties widget),
     // use the public addFeatures API to add all keys as a batch
-    std::vector<std::string> colors(keys.size(), "#FF6B6B");  // Default color for all
+    std::vector<std::string> colors(keys.size(), "#FF6B6B");// Default color for all
     widget.addFeatures(keys, colors);
     QApplication::processEvents();
 
     // Validate all series are now visible
-    for (auto const & key : keys) {
+    for (auto const & key: keys) {
         auto cfg = widget.state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(
-            QString::fromStdString(key));
+                QString::fromStdString(key));
         REQUIRE(cfg != nullptr);
         REQUIRE(cfg->style().is_visible);
     }
@@ -675,7 +675,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
     // Verify that all five analog series became visible
     for (auto const & key: keys) {
         auto cfg = widget.state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(
-            QString::fromStdString(key));
+                QString::fromStdString(key));
         REQUIRE(cfg != nullptr);
         REQUIRE(cfg->get_is_visible());
     }
@@ -688,7 +688,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
     // After removal, options may be removed from registry or have is_visible = false
     for (auto const & key: keys) {
         auto cfg = widget.state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(
-            QString::fromStdString(key));
+                QString::fromStdString(key));
         // Either cfg is null (removed from registry) or is_visible is false
         if (cfg != nullptr) {
             REQUIRE_FALSE(cfg->get_is_visible());
@@ -826,7 +826,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
     // Locate the OpenGLWidget to query XAxis
     auto glw = widget.findChild<OpenGLWidget *>("openGLWidget");
     REQUIRE(glw != nullptr);
-    
+
     // Get state to set time range directly
     auto * state = widget.state();
     REQUIRE(state != nullptr);
@@ -850,7 +850,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
 
     // Change global gain via state and re-draw
     double const new_gain = 2.0;
-    state->setGlobalZoom(static_cast<float>(new_gain));
+    state->setGlobalYScale(static_cast<float>(new_gain));
     QApplication::processEvents();
 
     auto const & view_state_after = glw->getViewState();
@@ -975,7 +975,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     // Allow a small tolerance for layout jitter.
     auto approx_equal = [](float a, float b) {
         float const denom = std::max(1.0f, std::max(std::abs(a), std::abs(b)));
-        return std::abs(a - b) / denom <= 0.1f; // <=10% relative change
+        return std::abs(a - b) / denom <= 0.1f;// <=10% relative change
     };
     REQUIRE(approx_equal(h0_after, h0_before));
     REQUIRE(approx_equal(h1_after, h1_before));
@@ -999,7 +999,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     // Get state and record the global zoom value
     auto * state = widget.state();
     REQUIRE(state != nullptr);
-    float const zoom_before = state->globalZoom();
+    float const zoom_before = state->globalYScale();
 
     // Also capture an analog canvasY->value slope proxy for one series
     auto glw = widget.findChild<OpenGLWidget *>("openGLWidget");
@@ -1026,7 +1026,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     QApplication::processEvents();
 
     // Global zoom should not change when adding a full-canvas interval
-    float const zoom_after = state->globalZoom();
+    float const zoom_after = state->globalYScale();
     INFO("zoom_before=" << zoom_before << ", zoom_after=" << zoom_after);
     REQUIRE(Catch::Approx(zoom_after).margin(zoom_before * 0.05f + 1e-6f) == zoom_before);
 
@@ -1463,29 +1463,29 @@ private:
 TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Short video extreme scrolling regression", "[DataViewer_Widget][XAxis][Regression][ShortVideo]") {
     // This test simulates the reported bug where scrolling out too far on a 704-frame video
     // causes the X axis to get stuck at 2 samples
-    
+
     auto & widget = getWidget();
     auto & dm = getDataManager();
-    
+
     // Open the widget
     widget.openWidget();
     QApplication::processEvents();
-    
+
     // Add the test analog series
     auto const keys = getTestDataKeys();
     REQUIRE(keys.size() == 1);
-    
+
     widget.addFeature(keys[0], "#FF6B6B");
     QApplication::processEvents();
-    
+
     // Locate the OpenGLWidget to query XAxis
     auto glw = widget.findChild<OpenGLWidget *>("openGLWidget");
     REQUIRE(glw != nullptr);
-    
+
     // Get the state for setting time range
     auto * state = widget.state();
     REQUIRE(state != nullptr);
-    
+
     // Set initial time to middle of video
     int const initial_time = 352;
     bool invoked = QMetaObject::invokeMethod(
@@ -1495,103 +1495,102 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
             Q_ARG(int, initial_time));
     REQUIRE(invoked);
     QApplication::processEvents();
-    
+
     INFO("Testing short video (704 frames) extreme zoom regression");
-    
+
     // Cycle 1: Start with a reasonable range (100 samples)
     INFO("Cycle 1: Set range to 100 samples");
     state->setTimeWidth(100);
     QApplication::processEvents();
-    
+
     auto const & view_state_1 = glw->getViewState();
     int64_t range_1 = view_state_1.getTimeWidth();
     INFO("Cycle 1: Achieved range = " << range_1);
     REQUIRE(range_1 > 0);
-    
+
     // Cycle 2: Zoom out to full range
     INFO("Cycle 2: Zoom to full range (704 samples)");
     state->setTimeWidth(704);
     QApplication::processEvents();
-    
+
     auto const & view_state_2 = glw->getViewState();
     int64_t range_2 = view_state_2.getTimeWidth();
     INFO("Cycle 2: Achieved range = " << range_2);
     REQUIRE(range_2 > 0);
-    
+
     // Cycle 3: Zoom way in (10 samples)
     INFO("Cycle 3: Zoom to 10 samples");
     state->setTimeWidth(10);
     QApplication::processEvents();
-    
+
     auto const & view_state_3 = glw->getViewState();
     int64_t range_3 = view_state_3.getTimeWidth();
     INFO("Cycle 3: Achieved range = " << range_3);
     REQUIRE(range_3 > 0);
-    
+
     // Cycle 4: Zoom to 2 samples (the reported stuck state)
     INFO("Cycle 4: Zoom to 2 samples (bug trigger)");
     state->setTimeWidth(2);
     QApplication::processEvents();
-    
+
     auto const & view_state_4 = glw->getViewState();
     int64_t range_4 = view_state_4.getTimeWidth();
     INFO("Cycle 4: Achieved range = " << range_4);
     REQUIRE(range_4 > 0);
-    
+
     // Cycle 5: THE KEY TEST - try to zoom back out from 2 samples
     INFO("Cycle 5: Attempt to zoom out from 2 samples to 200 samples");
     state->setTimeWidth(200);
     QApplication::processEvents();
-    
+
     auto const & view_state_5 = glw->getViewState();
     int64_t range_5 = view_state_5.getTimeWidth();
     INFO("Cycle 5: After requesting 200 samples, achieved range = " << range_5);
-    
+
     // This is the regression test: we should be able to zoom out
-    REQUIRE(range_5 >= 150);  // Should be close to 200 (allow some clamping)
-    REQUIRE(range_5 > 2);     // Should definitely not be stuck at 2!
-    
+    REQUIRE(range_5 >= 150);// Should be close to 200 (allow some clamping)
+    REQUIRE(range_5 > 2);   // Should definitely not be stuck at 2!
+
     // Cycle 6: Multiple rapid extreme zoom cycles
     INFO("Cycle 6: Rapid extreme zoom cycles");
     std::vector<int> test_ranges = {704, 50, 400, 10, 500, 5, 704, 2, 350, 100};
-    
+
     for (size_t i = 0; i < test_ranges.size(); ++i) {
         int requested_range = test_ranges[i];
-        
+
         state->setTimeWidth(requested_range);
         QApplication::processEvents();
-        
+
         auto const & view_state = glw->getViewState();
         int64_t achieved_range = view_state.getTimeWidth();
-        
+
         INFO("Rapid cycle " << i << ": requested=" << requested_range << ", achieved=" << achieved_range);
-        
+
         // Basic validity checks
         REQUIRE(achieved_range > 0);
         REQUIRE(view_state.time_start <= view_state.time_end);
-        
+
         // The range should be reasonably close to what we requested
         // (allow up to 20% difference for boundary clamping)
         if (requested_range <= 704) {
             float const ratio = static_cast<float>(achieved_range) / static_cast<float>(requested_range);
             INFO("  Ratio of achieved/requested: " << ratio);
-            REQUIRE(ratio >= 0.8f);  // At least 80% of requested
-            REQUIRE(ratio <= 1.2f);  // Not more than 120% of requested
+            REQUIRE(ratio >= 0.8f);// At least 80% of requested
+            REQUIRE(ratio <= 1.2f);// Not more than 120% of requested
         }
     }
-    
+
     // Cycle 7: Final verification - zoom to full range after all the abuse
     INFO("Cycle 7: Final verification - full range after stress test");
     state->setTimeWidth(704);
     QApplication::processEvents();
-    
+
     auto const & view_state_final = glw->getViewState();
     int64_t final_range = view_state_final.getTimeWidth();
     INFO("Cycle 7: Final range = " << final_range);
-    
-    REQUIRE(final_range >= 650);  // Should be close to full 704
+
+    REQUIRE(final_range >= 650);// Should be close to full 704
     REQUIRE(final_range <= 704);
-    
+
     widget.close();
 }
-

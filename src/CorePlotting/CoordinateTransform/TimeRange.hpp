@@ -32,7 +32,7 @@ namespace CorePlotting {
  * **Y-axis State:**
  * - Y zoom/pan is purely MVP-based (no buffer changes)
  * - `vertical_pan_offset` allows interactive scrolling
- * - `global_zoom` and `global_vertical_scale` scale all series uniformly
+ * - `global_y_scale` scales all series uniformly
  * 
  * @note Time values are in TimeFrameIndex units (integer indices into TimeFrame)
  */
@@ -40,50 +40,49 @@ struct TimeSeriesViewState {
     // =========================================================================
     // Time Window (X-axis) - Defines buffer scope
     // =========================================================================
-    
+
     /// Start of visible time window (TimeFrameIndex units)
     /// Determines left edge of data loaded into buffers
     int64_t time_start{0};
-    
+
     /// End of visible time window (TimeFrameIndex units, inclusive)
     /// Determines right edge of data loaded into buffers
     int64_t time_end{1000};
-    
+
     // =========================================================================
     // Y-axis State (MVP-only, no buffer changes)
     // =========================================================================
-    
+
     /// Minimum Y in normalized device coordinates (bottom of viewport)
     float y_min{-1.0f};
-    
+
     /// Maximum Y in normalized device coordinates (top of viewport)
     float y_max{1.0f};
-    
+
     /// Vertical pan offset in NDC units (positive = pan up)
     float vertical_pan_offset{0.0f};
-    
+
     // =========================================================================
     // Global Scale Factors
     // =========================================================================
-    
-    /// Global zoom factor applied to all series (affects amplitude scaling)
-    float global_zoom{1.0f};
-    
-    /// Global vertical scale factor applied uniformly to all series
-    float global_vertical_scale{1.0f};
-    
+
+    /// Global Y-axis scale factor applied to all series (affects amplitude scaling)
+    /// Exposed in the UI as "Global Y Scale". Applies to analog data amplitude
+    /// and stacked event sizing. Does NOT affect lane positions.
+    float global_y_scale{1.0f};
+
     // =========================================================================
     // Time Window Methods
     // =========================================================================
-    
+
     /**
      * @brief Get visible time window width
      * @return Number of time indices in current visible range (inclusive count)
      */
-    [[nodiscard]] int64_t getTimeWidth() const { 
-        return time_end - time_start + 1; 
+    [[nodiscard]] int64_t getTimeWidth() const {
+        return time_end - time_start + 1;
     }
-    
+
     /**
      * @brief Get center of visible time window
      * @return Center time index (rounded down for odd widths)
@@ -91,7 +90,7 @@ struct TimeSeriesViewState {
     [[nodiscard]] int64_t getTimeCenter() const {
         return time_start + (time_end - time_start) / 2;
     }
-    
+
     /**
      * @brief Set time window centered on a point with specified width
      * 
@@ -108,12 +107,12 @@ struct TimeSeriesViewState {
         if (width < 1) {
             width = 1;
         }
-        
+
         int64_t const half_width = width / 2;
         time_start = center - half_width;
         time_end = time_start + width - 1;
     }
-    
+
     /**
      * @brief Set time window with explicit start and end
      * 
@@ -123,13 +122,13 @@ struct TimeSeriesViewState {
     void setTimeRange(int64_t start, int64_t end) {
         time_start = start;
         time_end = end;
-        
+
         // Ensure start <= end
         if (time_start > time_end) {
             std::swap(time_start, time_end);
         }
     }
-    
+
     /**
      * @brief Adjust time window width by a delta while keeping center fixed
      * 
@@ -143,7 +142,7 @@ struct TimeSeriesViewState {
         int64_t const new_width = getTimeWidth() + delta;
         setTimeWindow(center, new_width);
     }
-    
+
     /**
      * @brief Set time window width to a specific value while keeping center fixed
      * 
@@ -153,13 +152,13 @@ struct TimeSeriesViewState {
     int64_t setTimeWidth(int64_t width) {
         int64_t const center = getTimeCenter();
         setTimeWindow(center, width);
-        return getTimeWidth();  // Return actual achieved width
+        return getTimeWidth();// Return actual achieved width
     }
-    
+
     // =========================================================================
     // Y-axis Methods
     // =========================================================================
-    
+
     /**
      * @brief Apply vertical pan delta
      * 
@@ -171,14 +170,14 @@ struct TimeSeriesViewState {
     void applyVerticalPanDelta(float delta) {
         vertical_pan_offset += delta;
     }
-    
+
     /**
      * @brief Reset vertical pan to centered
      */
     void resetVerticalPan() {
         vertical_pan_offset = 0.0f;
     }
-    
+
     /**
      * @brief Get effective Y bounds after pan offset
      * 
@@ -190,6 +189,6 @@ struct TimeSeriesViewState {
     }
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_COORDINATETRANSFORM_TIMERANGE_HPP
+#endif// COREPLOTTING_COORDINATETRANSFORM_TIMERANGE_HPP
