@@ -143,21 +143,60 @@ performant before adding more interaction modes).
 readable resolution, inspired by [EventPlotWidget](../EventPlotWidget/index.qmd)'s trial Y
 navigation.
 
-### 2.1 VerticalAxis Widget Adoption
+### 2.1 MultiLaneVerticalAxisWidget (Minimal Version)
 
-Adopt the existing `VerticalAxisState` / `VerticalAxisWidget` from
-[Plots/Common/VerticalAxisWidget/](../plot_widget_guide.md) to replace the current direct
-`y_min`/`y_max` management in `DataViewerState`. This follows the same integration pattern
-used by ScatterPlotWidget and EventPlotWidget:
+Create a new `MultiLaneVerticalAxisWidget` in `Plots/Common/` and integrate it into
+DataViewer. This is a **standalone widget** — not a subclass of the existing single-range
+`VerticalAxisWidget`, which continues to serve ScatterPlotWidget and EventPlotWidget
+unchanged.
 
-**Layout**: Place `VerticalAxisWidget` (50px fixed width, QPainter-rendered) in a `QHBoxLayout`
-to the left of `OpenGLWidget`, with the overall structure:
+The existing `VerticalAxisWidget` manages a single `y_min`/`y_max` range with uniform tick
+marks. DataViewer lanes have **independent amplitude scales** (each series has its own
+`user_scale_factor`, data range, and normalization), so a single-range axis cannot
+meaningfully represent per-lane amplitudes. Building the multi-lane widget from the start
+avoids a throwaway integration cycle.
+
+**New files**:
+
+```
+Plots/Common/MultiLaneVerticalAxisWidget/
+├── Core/
+│   ├── MultiLaneVerticalAxisStateData.hpp   # LaneAxisDescriptor + vector, serializable
+│   └── MultiLaneVerticalAxisState.hpp       # QObject with lane update signals
+├── MultiLaneVerticalAxisWidget.hpp/.cpp     # QPainter rendering: labels + separators
+└── CMakeLists.txt
+```
+
+The widget follows the standard four-layer pattern (`StateData → State → Widget →
+optional WithControls`) and is driven by a `std::vector<LaneAxisDescriptor>`:
+
+```cpp
+struct LaneAxisDescriptor {
+    std::string lane_id;        ///< Series key in DataManager
+    std::string label;          ///< Display name (channel name or series key)
+    float y_center;             ///< Center Y position in world coordinates
+    float y_half_height;        ///< Half-height of the lane in world coordinates
+};
+```
+
+**Minimal rendering scope** (Phase 2 only):
+
+- Channel name labels painted at each lane's center Y position
+- Lane boundary separators (horizontal lines between lanes)
+- Viewport-aware: only renders labels for lanes visible in the current Y viewport
+- Fixed 50px width (matching existing `VerticalAxisWidget` `sizeHint`)
+
+Scalebars, visibility toggles, and per-lane range annotations are deferred to
+[Phase 3](#phase-3-scalebars-labels), which adds them incrementally to this same widget.
+
+**Layout**: Place `MultiLaneVerticalAxisWidget` in a `QHBoxLayout` to the left of
+`OpenGLWidget`:
 
 ```
 DataViewer_Widget (QWidget)
 ├── QVBoxLayout
 │   ├── QHBoxLayout [stretch 1]
-│   │   ├── VerticalAxisWidget (50px fixed width)
+│   │   ├── MultiLaneVerticalAxisWidget (50px fixed width)
 │   │   └── OpenGLWidget [stretch 1]
 │   └── (future: CenteredTimeAxisWidget — Phase 4)
 ```
@@ -165,48 +204,23 @@ DataViewer_Widget (QWidget)
 **State integration**:
 
 ```cpp
-// In DataViewerState constructor
-_vertical_axis_state = std::make_unique<VerticalAxisState>(this);
-_data.vertical_axis = _vertical_axis_state->data();
+// In DataViewerState
+_multi_lane_axis_state = std::make_unique<MultiLaneVerticalAxisState>(this);
 ```
 
-**Bidirectional sync** (following the ScatterPlotWidget/EventPlotWidget pattern):
+**Data flow** (one-directional — labels are read-only display):
 
-- **Spinbox → Plot**: Connect `VerticalAxisState::rangeChanged` → update `y_min`/`y_max`
-  in `TimeSeriesViewState`
-- **Plot → Spinbox**: On `viewStateChanged`, call `state->setRangeSilent(min, max)` →
-  emits `rangeUpdated` (not `rangeChanged`) → spinboxes and axis widget repaint without
-  feedback loop
+- After each layout computation, DataViewer extracts `LaneAxisDescriptor` entries from
+  `LayoutResponse` and pushes them to `MultiLaneVerticalAxisState`
+- `DataViewerState::viewStateChanged` → widget repaint (for Y pan/zoom tracking)
+- No bidirectional range sync is needed (Y pan/zoom originates from wheel events on
+  `OpenGLWidget`, not from the axis widget)
 
-**Files**: `src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.hpp`,
+**Files**: `src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/` (new),
+`src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.hpp`,
 `src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp`,
 `src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp`,
 `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp`
-
-### 2.2 AxisMapping for Channel Labels
-
-Use the `AxisMapping` system to display channel names on the `VerticalAxisWidget` at each
-lane's center Y position. This is analogous to EventPlotWidget's `trialIndexAxis()` which
-maps world Y to trial indices.
-
-```cpp
-auto channel_mapping = CorePlotting::AxisMapping{
-    .worldToDomain = [](double world) { return world; },
-    .domainToWorld = [](double domain) { return domain; },
-    .formatLabel = [&channel_names](double domain) {
-        int lane_index = static_cast<int>(std::round(domain));
-        if (lane_index >= 0 && lane_index < channel_names.size()) {
-            return channel_names[lane_index];
-        }
-        return std::string{};
-    }
-};
-y_axis_widget->setAxisMapping(channel_mapping);
-```
-
-Because the axis widget renders via QPainter (not OpenGL), channel name text rendering is
-straightforward — no OpenGL text rendering needed, and the label quality matches all other
-plot widgets in the application.
 
 ### 2.3 Viewport Visibility Culling
 
@@ -242,8 +256,8 @@ for series whose lanes intersect the viewport.
 ## Preserving Existing Behavior
 
 The current default mouse wheel behavior (time-axis zoom) must be preserved. Users who do
-not use modifiers should see no change. This is an explicit non-goal from
-[#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227).
+not use modifiers should see no change. Y-axis panning is already handled by left-click
+drag (via `DataViewerInputHandler`) and does not need a wheel chord.
 :::
 
 **Current behavior** (unchanged):
@@ -253,126 +267,126 @@ not use modifiers should see no change. This is an explicit non-goal from
 | None | Time-axis zoom (normal sensitivity) |
 | Shift | Time-axis zoom (fine sensitivity) |
 | Ctrl | Time-axis zoom (coarse sensitivity) |
+| Left-drag | Y-axis pan |
 
-**New chords** (to be added):
+**New chords** — all Y-axis wheel actions share `Alt` as the common prefix, distinguishing
+them from X-axis zoom (no `Alt`):
 
-| Modifier | Action | State Field |
-|----------|--------|-------------|
-| TBD | Global Y scale | `global_y_scale` |
-| TBD | Y viewport pan | `y_min`/`y_max` shift via `VerticalAxisState` |
-| TBD | Y viewport zoom (cursor-anchored) | `y_min`/`y_max` range via `VerticalAxisState` |
+| Modifier | Action | Scope | State Field |
+|----------|--------|-------|-------------|
+| Alt+Scroll | Global Y scale | All lanes | `global_y_scale` |
+| Alt+Shift+Scroll | Per-lane Y scale | Hovered lane | `user_scale_factor` in `AnalogSeriesOptionsData` |
+| Alt+Ctrl+Scroll | Y viewport zoom (cursor-anchored) | View matrix | `y_zoom` in `ViewStateData` |
 
-Modifier chords must be finalized during implementation. Candidates include `Alt+Scroll`,
-`Alt+Ctrl+Scroll`, or other combinations. The chosen chords must:
+**Global Y scale** (`Alt+Scroll`): Adjusts `global_y_scale`, which amplifies all series
+uniformly within their lanes. This is a data gain factor baked into vertices, so it triggers
+a scene rebuild.
 
-- Not conflict with Linux window manager defaults (Alt+click is often window move)
+**Per-lane Y scale** (`Alt+Shift+Scroll`): Adjusts the `user_scale_factor` for the analog
+series under the cursor. Uses `OpenGLWidget::findSeriesAtPosition()` for hit testing.
+No-op if the cursor is not over an analog lane. The per-series scale is already serialized
+and shown in the properties panel, so this provides a mouse-driven shortcut for an existing
+feature. `Shift` narrows the scope from global to local.
+
+**Y viewport zoom** (`Alt+Ctrl+Scroll`): Adjusts `y_zoom` in `ViewStateData`, which scales
+the view matrix — making lane heights appear larger or smaller without changing the data
+gain. This is a cheap matrix-only update (no scene rebuild). Cursor-anchored: the focal
+point under the mouse remains stable during zoom. Define min/max span clamps so projection
+and hit testing never degenerate.
+
+**Implementation notes**:
+
+- `Alt+click` is window-move on some Linux WMs, but `Alt+Scroll` is generally safe
 - Respect `OpenGLWidget::isInteractionActive()` (no zoom while creating/editing intervals)
-- Be documented with a user-facing summary (tooltip, status bar, or User Guide stub)
+- When multiple modifiers match (e.g., `Alt+Ctrl+Shift`), the most specific chord wins:
+  per-lane (`Alt+Shift`) > viewport zoom (`Alt+Ctrl`) > global scale (`Alt`)
+- Document chords in a user-facing summary (tooltip, status bar, or User Guide stub)
 
-**Cursor-anchored Y zoom**: The focal point under the mouse should remain stable during zoom,
-consistent with common map/plot UX. Define min/max span clamps so projection and hit testing
-never degenerate.
+**Spinbox synchronization**: The properties panel already has spinboxes for `global_y_scale`
+and per-series `user_scale_factor`. Wheel-driven changes must update these spinboxes without
+triggering feedback loops. Follow the bidirectional sync pattern used by
+`VerticalAxisState` / `HorizontalAxisState`:
 
-**Multiple modifier priority**: Document and implement a priority order when multiple modifiers
-are held simultaneously.
+- **Wheel → State → Spinbox**: Wheel handler calls a "silent" setter on `DataViewerState`
+  (e.g., `setGlobalYScaleSilent()`), which updates the value and emits a `*Updated` signal
+  (not `*Changed`). The spinbox connects to `*Updated` and sets its value with signals
+  blocked (or via an anti-recursion guard).
+- **Spinbox → State → Scene**: User edits spinbox → emits `valueChanged` → calls the normal
+  setter (e.g., `setGlobalYScale()`), which emits `*Changed` and triggers a scene rebuild.
+- The same dual-signal pattern (`Changed` for user input, `Updated` for programmatic sync)
+  prevents wheel → spinbox → state → scene feedback loops.
 
 **Files**: `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp` (`wheelEvent`),
-`src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp`
-
-### 2.5 Per-Lane Hover Scaling
-
-When a Y-scaling modifier chord is held and the cursor is over an analog lane, adjust the
-**per-series** `user_scale_factor` in `AnalogSeriesOptionsData` for that specific series.
-
-- Use existing `OpenGLWidget::findSeriesAtPosition()` for hit testing
-- No-op (or defined fallback) if cursor is not over an analog lane
-- The per-series scale is already serialized and shown in the properties panel, so this
-  provides a mouse-driven shortcut for an existing feature
-
-**Files**: `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp`,
 `src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp`,
-`src/WhiskerToolbox/DataViewer_Widget/Core/SeriesOptionsRegistry.cpp`
+`src/WhiskerToolbox/DataViewer_Widget/Core/SeriesOptionsRegistry.cpp`,
+`src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp`
 
-### 2.6 Range Controls in Properties Panel
+### 2.5 Visible Lane Indicator in Properties Panel
 
-Add `VerticalAxisWithRangeControls` to `DataViewerPropertiesWidget` for manual Y viewport
-range editing via spinboxes, using the factory function from `Plots/Common/`.
+Add a read-only "Visible lanes: N of M" label to `DataViewerPropertiesWidget` that updates
+whenever the viewport or lane count changes. This provides at-a-glance context for Y
+navigation without requiring single-range spinbox controls (which don't map naturally to a
+multi-lane axis).
 
 **Files**: `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp`,
 `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui`
 
-### 2.7 Verification
+### 2.6 Verification
 
 - Load 32+ channels in `FixedHeight` mode.
 - Y pan scrolls through lanes; Y zoom narrows the visible range.
 - Viewport culling skips off-screen series (verify via Developer Debug Panel rendering stats).
 - Per-lane hover scaling adjusts the hovered series only.
-- Channel names appear on the `VerticalAxisWidget`.
+- Channel name labels appear on the `MultiLaneVerticalAxisWidget` at correct Y positions.
+- Labels scroll correctly during Y pan and recompute when series are added/removed.
+- "Visible lanes: N of M" indicator updates correctly.
 - Workspace save/restore roundtrips all new state.
 - Existing `DataViewer_Widget` tests that assert time window changes after wheel remain green.
+- Existing `VerticalAxisWidget` consumers (ScatterPlot, EventPlot) are unaffected.
 
 ---
 
-## Phase 3: Y-Axis Scalebars and Lane Labels {#phase-3-scalebars-labels}
+## Phase 3: Y-Axis Scalebars and Enhanced Lane Annotations {#phase-3-scalebars-labels}
 
 **Status**: Not started.
 **Issues**: [#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247)
-**Depends on**: [Phase 2](#phase-2-y-axis-navigation) (`VerticalAxisWidget` exists, lane
-bounds available from layout)
+**Depends on**: [Phase 2](#phase-2-y-axis-navigation) (`MultiLaneVerticalAxisWidget` exists
+with minimal label + separator rendering)
 
-**Goal**: Provide per-lane scale context and identification so users can interpret amplitudes
-and identify individual traces, especially with many channels loaded.
+**Goal**: Extend the `MultiLaneVerticalAxisWidget` created in Phase 2.1 with per-lane
+scalebars, visibility toggles, and smart label positioning so users can interpret amplitudes
+and identify individual traces at a glance.
 
 ::: {.callout-note}
-## Rendering Approach: QPainter in Axis Widget
+## Incremental Enhancement — No Widget Replacement
 
-Per-lane scalebars and labels are rendered via QPainter inside the `VerticalAxisWidget` — the
-same approach used for tick marks and labels in all other plot widgets. This avoids the
-complexity of OpenGL text rendering entirely.
-
-The main design challenge is that DataViewer lanes have **independent amplitude scales** (each
-analog series has its own `user_scale_factor`, data range, and normalization), unlike
-EventPlotWidget where all trials share a uniform Y mapping. The axis widget must render
-**per-lane** scale information rather than a single uniform range.
+Phase 2.1 creates the `MultiLaneVerticalAxisWidget` with channel name labels and lane
+separators. All Phase 3 work is **additive** to that same widget — extending
+`LaneAxisDescriptor` with amplitude range fields, adding scalebar rendering to
+`paintEvent()`, and wiring new toggle controls. No widget is replaced or discarded.
 :::
 
-### 3.1 MultiLaneVerticalAxisWidget (New Separate Widget)
+### 3.1 Extend LaneAxisDescriptor with Amplitude Information
 
-Create a **new** `MultiLaneVerticalAxisWidget` in `Plots/Common/` — a standalone widget
-rather than a subclass of the existing `VerticalAxisWidget`. The existing single-range
-`VerticalAxisWidget` remains unchanged for widgets that need a single uniform Y range
-(ScatterPlot, EventPlot, etc.).
-
-```
-Plots/Common/MultiLaneVerticalAxisWidget/
-├── Core/
-│   ├── MultiLaneVerticalAxisStateData.hpp   # Per-lane ranges, label text, visibility flags
-│   └── MultiLaneVerticalAxisState.hpp       # QObject with signals
-├── MultiLaneVerticalAxisWidget.hpp          # QPainter rendering
-└── MultiLaneVerticalAxisWithControls.hpp    # Factory (optional range controls)
-```
-
-The widget follows the standard four-layer pattern (`StateData → State → Widget → WithControls`)
-and receives a `std::vector<LaneAxisDescriptor>` describing each lane:
+Add per-lane amplitude fields to `LaneAxisDescriptor` so the widget can render scalebars:
 
 ```cpp
 struct LaneAxisDescriptor {
-    int lane_index;
-    float pixel_top;
-    float pixel_bottom;
-    double y_min;
-    double y_max;
-    std::string label;          ///< Channel name
-    bool show_scalebar = true;
+    std::string lane_id;        ///< Series key in DataManager
+    std::string label;          ///< Display name (channel name or series key)
+    float y_center;             ///< Center Y position in world coordinates
+    float y_half_height;        ///< Half-height of the lane in world coordinates
+    double amplitude_min;       ///< Data-space minimum (after user_scale_factor)
+    double amplitude_max;       ///< Data-space maximum (after user_scale_factor)
+    std::string unit;           ///< Amplitude unit label (e.g., "µV", "mV")
+    bool show_scalebar = true;  ///< Per-lane scalebar visibility
 };
 ```
 
-- Paint channel name labels at each lane's center Y position
-- Draw lane boundary separators
-- Each lane's pixel extent comes from `StackedLayoutStrategy`'s `LayoutResponse`
+DataViewer populates the new fields from per-series statistics, `user_scale_factor`, and
+group scaling normalization during layout computation.
 
-The `AxisMapping` from Phase 2.2 handles channel name formatting for the single-range
-`VerticalAxisWidget`; this new widget replaces that approach with per-lane descriptors.
+**Files**: `src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisStateData.hpp`
 
 ### 3.2 Per-Lane Y-Axis Scalebars
 
@@ -501,7 +515,7 @@ Migrate `DataViewer_Widget` to use `CenteredTimeAxisWidget`:
 2. Place `CenteredTimeAxisWidget` below the OpenGL canvas in the `QVBoxLayout`
 3. Replace `DataViewerState::setTimeWindow()` / `adjustTimeWindowWidth()` with
    `CenteredTimeAxisState` methods
-4. Wire bidirectional sync following the same pattern as Phase 2.1 (VerticalAxis)
+4. Wire state sync: `CenteredTimeAxisState` → `DataViewerState` time window updates
 5. Update `DataViewerStateData` serialization to include `CenteredTimeAxisStateData`
 
 Existing tests that assert time window changes after wheel events must remain green.
@@ -739,8 +753,6 @@ locations, and adopt shared components that are currently duplicated.
 | `VerticalAxisState` + `VerticalAxisWidget` | Direct `y_min`/`y_max` in state | Phase 2.1 |
 | `CenteredTimeAxis` (new) | Direct time window in state | Phase 4.1 |
 | `PlotInteractionHelpers` | Custom zoom/pan in `DataViewerInputHandler` | Adopt shared zoom/pan concepts |
-| `AxisMapping` | No custom labels currently | Phase 2.2 for channel names |
-| `VerticalAxisSynchronizer` | Manual view↔axis sync | Phase 2.1 |
 
 ### 8.3 Shared Visual Options Infrastructure
 
