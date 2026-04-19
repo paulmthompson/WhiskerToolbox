@@ -845,8 +845,8 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
     QApplication::processEvents();
 
     auto const & view_state_before = glw->getViewState();
-    auto const start_before = view_state_before.time_start;
-    auto const end_before = view_state_before.time_end;
+    auto const start_before = static_cast<int64_t>(view_state_before.x_min);
+    auto const end_before = static_cast<int64_t>(view_state_before.x_max);
 
     // Change global gain via state and re-draw
     double const new_gain = 2.0;
@@ -854,8 +854,8 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
     QApplication::processEvents();
 
     auto const & view_state_after = glw->getViewState();
-    auto const start_after = view_state_after.time_start;
-    auto const end_after = view_state_after.time_end;
+    auto const start_after = static_cast<int64_t>(view_state_after.x_min);
+    auto const end_after = static_cast<int64_t>(view_state_after.x_max);
 
     // Verify X window did not change
     REQUIRE(start_before == start_after);
@@ -1504,7 +1504,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_1 = glw->getViewState();
-    int64_t range_1 = view_state_1.getTimeWidth();
+    int64_t range_1 = static_cast<int64_t>(view_state_1.x_max - view_state_1.x_min) + 1;
     INFO("Cycle 1: Achieved range = " << range_1);
     REQUIRE(range_1 > 0);
 
@@ -1514,7 +1514,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_2 = glw->getViewState();
-    int64_t range_2 = view_state_2.getTimeWidth();
+    int64_t range_2 = static_cast<int64_t>(view_state_2.x_max - view_state_2.x_min) + 1;
     INFO("Cycle 2: Achieved range = " << range_2);
     REQUIRE(range_2 > 0);
 
@@ -1524,7 +1524,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_3 = glw->getViewState();
-    int64_t range_3 = view_state_3.getTimeWidth();
+    int64_t range_3 = static_cast<int64_t>(view_state_3.x_max - view_state_3.x_min) + 1;
     INFO("Cycle 3: Achieved range = " << range_3);
     REQUIRE(range_3 > 0);
 
@@ -1534,7 +1534,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_4 = glw->getViewState();
-    int64_t range_4 = view_state_4.getTimeWidth();
+    int64_t range_4 = static_cast<int64_t>(view_state_4.x_max - view_state_4.x_min) + 1;
     INFO("Cycle 4: Achieved range = " << range_4);
     REQUIRE(range_4 > 0);
 
@@ -1544,7 +1544,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_5 = glw->getViewState();
-    int64_t range_5 = view_state_5.getTimeWidth();
+    int64_t range_5 = static_cast<int64_t>(view_state_5.x_max - view_state_5.x_min) + 1;
     INFO("Cycle 5: After requesting 200 samples, achieved range = " << range_5);
 
     // This is the regression test: we should be able to zoom out
@@ -1562,13 +1562,13 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
         QApplication::processEvents();
 
         auto const & view_state = glw->getViewState();
-        int64_t achieved_range = view_state.getTimeWidth();
+        int64_t achieved_range = static_cast<int64_t>(view_state.x_max - view_state.x_min) + 1;
 
         INFO("Rapid cycle " << i << ": requested=" << requested_range << ", achieved=" << achieved_range);
 
         // Basic validity checks
         REQUIRE(achieved_range > 0);
-        REQUIRE(view_state.time_start <= view_state.time_end);
+        REQUIRE(view_state.x_min <= view_state.x_max);
 
         // The range should be reasonably close to what we requested
         // (allow up to 20% difference for boundary clamping)
@@ -1586,7 +1586,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_final = glw->getViewState();
-    int64_t final_range = view_state_final.getTimeWidth();
+    int64_t final_range = static_cast<int64_t>(view_state_final.x_max - view_state_final.x_min) + 1;
     INFO("Cycle 7: Final range = " << final_range);
 
     REQUIRE(final_range >= 650);// Should be close to full 704

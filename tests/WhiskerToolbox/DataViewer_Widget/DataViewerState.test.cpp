@@ -112,18 +112,17 @@ TEST_CASE("DataViewerState view state", "[DataViewerState]") {
     }
 
     SECTION("setViewState changes all values") {
-        CorePlotting::TimeSeriesViewState view;
-        view.time_start = 500;
-        view.time_end = 1500;
-        view.y_min = -3.0f;
-        view.y_max = 3.0f;
-        view.global_y_scale = 2.0f;
+        CorePlotting::ViewStateData view;
+        view.x_min = 500;
+        view.x_max = 1500;
+        view.y_min = -3.0;
+        view.y_max = 3.0;
 
         state.setViewState(view);
 
-        REQUIRE(state.viewState().time_start == 500);
-        REQUIRE(state.viewState().time_end == 1500);
-        REQUIRE_THAT(state.viewState().y_min, Catch::Matchers::WithinAbs(-3.0f, 1e-6f));
+        REQUIRE(static_cast<int64_t>(state.viewState().x_min) == 500);
+        REQUIRE(static_cast<int64_t>(state.viewState().x_max) == 1500);
+        REQUIRE_THAT(static_cast<float>(state.viewState().y_min), Catch::Matchers::WithinAbs(-3.0f, 1e-6f));
     }
 
     SECTION("setting same values does not emit signal") {
@@ -444,8 +443,8 @@ TEST_CASE("DataViewerState direct data access", "[DataViewerState]") {
         state.setTimeWindow(100, 5000);
 
         auto const & data = state.data();
-        REQUIRE(data.view.time_start == 100);
-        REQUIRE(data.view.time_end == 5000);
+        REQUIRE(static_cast<int64_t>(data.view.x_min) == 100);
+        REQUIRE(static_cast<int64_t>(data.view.x_max) == 5000);
     }
 
     SECTION("data() reflects series options changes") {

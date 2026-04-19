@@ -16,7 +16,7 @@
  * connects to for actual state changes and rendering updates.
  */
 
-#include "CorePlotting/CoordinateTransform/TimeRange.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Interaction/HitTestResult.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
@@ -40,7 +40,7 @@ namespace DataViewer {
  * @brief Context information needed by the input handler for coordinate transforms
  */
 struct InputContext {
-    CorePlotting::TimeSeriesViewState const * view_state{nullptr};
+    CorePlotting::ViewStateData const * view_state{nullptr};
     CorePlotting::LayoutResponse const * layout_response{nullptr};
     CorePlotting::RenderableScene const * scene{nullptr};
     std::unordered_set<EntityId> const * selected_entities{nullptr};

@@ -83,50 +83,64 @@ bool DataViewerState::fromJson(std::string const & json) {
 // ==================== View State ====================
 
 void DataViewerState::setTimeWindow(int64_t start, int64_t end) {
-    if (_data.view.time_start != start || _data.view.time_end != end) {
-        _data.view.time_start = start;
-        _data.view.time_end = end;
+    auto const current_start = static_cast<int64_t>(_data.view.x_min);
+    auto const current_end = static_cast<int64_t>(_data.view.x_max);
+    if (current_start != start || current_end != end) {
+        _data.view.x_min = static_cast<double>(start);
+        _data.view.x_max = static_cast<double>(end);
         markDirty();
+        emit timeWindowChanged();
         emit viewStateChanged();
     }
 }
 
 std::pair<int64_t, int64_t> DataViewerState::timeWindow() const {
-    return {_data.view.time_start, _data.view.time_end};
+    return {static_cast<int64_t>(_data.view.x_min), static_cast<int64_t>(_data.view.x_max)};
 }
 
 void DataViewerState::adjustTimeWidth(int64_t delta) {
-    _data.view.adjustTimeWidth(delta);
-    markDirty();
-    emit viewStateChanged();
+    int64_t const center = timeCenter();
+    int64_t new_width = timeWidth() + delta;
+    if (new_width < 1) {
+        new_width = 1;
+    }
+    int64_t const half_width = new_width / 2;
+    int64_t const new_start = center - half_width;
+    int64_t const new_end = new_start + new_width - 1;
+    setTimeWindow(new_start, new_end);
 }
 
 int64_t DataViewerState::setTimeWidth(int64_t width) {
-    int64_t const actual_width = _data.view.setTimeWidth(width);
-    markDirty();
-    emit viewStateChanged();
-    return actual_width;
+    if (width < 1) {
+        width = 1;
+    }
+    int64_t const center = timeCenter();
+    int64_t const half_width = width / 2;
+    int64_t const new_start = center - half_width;
+    int64_t const new_end = new_start + width - 1;
+    setTimeWindow(new_start, new_end);
+    return timeWidth();
 }
 
 void DataViewerState::setYBounds(float y_min, float y_max) {
     constexpr float epsilon = 1e-6f;
-    if (std::abs(_data.view.y_min - y_min) > epsilon ||
-        std::abs(_data.view.y_max - y_max) > epsilon) {
-        _data.view.y_min = y_min;
-        _data.view.y_max = y_max;
+    if (std::abs(static_cast<float>(_data.view.y_min) - y_min) > epsilon ||
+        std::abs(static_cast<float>(_data.view.y_max) - y_max) > epsilon) {
+        _data.view.y_min = static_cast<double>(y_min);
+        _data.view.y_max = static_cast<double>(y_max);
         markDirty();
         emit viewStateChanged();
     }
 }
 
 std::pair<float, float> DataViewerState::yBounds() const {
-    return {_data.view.y_min, _data.view.y_max};
+    return {static_cast<float>(_data.view.y_min), static_cast<float>(_data.view.y_max)};
 }
 
 void DataViewerState::setVerticalPanOffset(float offset) {
     constexpr float epsilon = 1e-6f;
-    if (std::abs(_data.view.vertical_pan_offset - offset) > epsilon) {
-        _data.view.vertical_pan_offset = offset;
+    if (std::abs(static_cast<float>(_data.view.y_pan) - offset) > epsilon) {
+        _data.view.y_pan = static_cast<double>(offset);
         markDirty();
         emit viewStateChanged();
     }
@@ -134,25 +148,31 @@ void DataViewerState::setVerticalPanOffset(float offset) {
 
 void DataViewerState::setGlobalYScale(float scale) {
     constexpr float epsilon = 1e-6f;
-    if (std::abs(_data.view.global_y_scale - scale) > epsilon) {
-        _data.view.global_y_scale = scale;
+    if (std::abs(_data.global_y_scale - scale) > epsilon) {
+        _data.global_y_scale = scale;
         markDirty();
         emit viewStateChanged();
     }
 }
 
-void DataViewerState::setViewState(CorePlotting::TimeSeriesViewState const & view) {
+void DataViewerState::setViewState(CorePlotting::ViewStateData const & view) {
     constexpr float epsilon = 1e-6f;
-    bool const time_changed = _data.view.time_start != view.time_start ||
-                              _data.view.time_end != view.time_end;
-    bool const y_changed = std::abs(_data.view.y_min - view.y_min) > epsilon ||
-                           std::abs(_data.view.y_max - view.y_max) > epsilon;
-    bool const pan_changed = std::abs(_data.view.vertical_pan_offset - view.vertical_pan_offset) > epsilon;
-    bool const zoom_changed = std::abs(_data.view.global_y_scale - view.global_y_scale) > epsilon;
+    auto const old_start = static_cast<int64_t>(_data.view.x_min);
+    auto const old_end = static_cast<int64_t>(_data.view.x_max);
+    auto const new_start = static_cast<int64_t>(view.x_min);
+    auto const new_end = static_cast<int64_t>(view.x_max);
+    bool const time_changed = old_start != new_start || old_end != new_end;
+    bool const y_changed = std::abs(static_cast<float>(_data.view.y_min) - static_cast<float>(view.y_min)) > epsilon ||
+                           std::abs(static_cast<float>(_data.view.y_max) - static_cast<float>(view.y_max)) > epsilon;
+    bool const pan_changed = std::abs(static_cast<float>(_data.view.y_pan) - static_cast<float>(view.y_pan)) > epsilon;
+    bool const zoom_changed = std::abs(static_cast<float>(_data.view.y_zoom) - static_cast<float>(view.y_zoom)) > epsilon;
 
     if (time_changed || y_changed || pan_changed || zoom_changed) {
         _data.view = view;
         markDirty();
+        if (time_changed) {
+            emit timeWindowChanged();
+        }
         emit viewStateChanged();
     }
 }
@@ -269,6 +289,8 @@ void DataViewerState::setDeveloperMode(bool enabled) {
 void DataViewerState::setLaneSizingPolicy(CorePlotting::LaneSizingPolicy policy) {
     if (_data.layout.lane_sizing_policy != policy) {
         _data.layout.lane_sizing_policy = policy;
+        // Reset vertical pan so the view centers on the data in the new layout mode
+        _data.view.y_pan = 0.0;
         markDirty();
         emit layoutConfigChanged();
         emit viewStateChanged();

@@ -57,9 +57,9 @@ void DataViewerDebugPanel::updateCoordinateInspector(
 
     // Reconstruct canvas_x from time_coord using time window
     float const time_frac =
-            (view.time_end > view.time_start)
-                    ? (time_coord - static_cast<float>(view.time_start)) /
-                              static_cast<float>(view.time_end - view.time_start)
+            (view.x_max > view.x_min)
+                    ? (time_coord - static_cast<float>(view.x_min)) /
+                              static_cast<float>(view.x_max - view.x_min)
                     : 0.0f;
     float const canvas_x = time_frac * static_cast<float>(w);
 
@@ -68,7 +68,7 @@ void DataViewerDebugPanel::updateCoordinateInspector(
 
     // World coordinates (NDC Y with pan offset applied)
     float const world_x = time_coord;
-    float const world_y = ndc.y + view.vertical_pan_offset;
+    float const world_y = ndc.y + static_cast<float>(view.y_pan);
 
     _canvas_pos_label->setText(
             QStringLiteral("Canvas: (%1, %2) px")
@@ -271,24 +271,24 @@ void DataViewerDebugPanel::_refreshViewState() {
 
     _time_window_label->setText(
             QStringLiteral("Time: [%1, %2]")
-                    .arg(view.time_start)
-                    .arg(view.time_end));
+                    .arg(static_cast<int64_t>(view.x_min))
+                    .arg(static_cast<int64_t>(view.x_max)));
 
     _visible_duration_label->setText(
             QStringLiteral("Duration: %1 frames")
-                    .arg(view.time_end - view.time_start));
+                    .arg(static_cast<int64_t>(view.x_max - view.x_min)));
 
-    float const eff_y_min = view.y_min + view.vertical_pan_offset;
-    float const eff_y_max = view.y_max + view.vertical_pan_offset;
+    float const eff_y_min = static_cast<float>(view.y_min) + static_cast<float>(view.y_pan);
+    float const eff_y_max = static_cast<float>(view.y_max) + static_cast<float>(view.y_pan);
     _y_bounds_label->setText(
             QStringLiteral("Y: [%1, %2]  pan=%3")
                     .arg(static_cast<double>(eff_y_min), 0, 'f', 4)
                     .arg(static_cast<double>(eff_y_max), 0, 'f', 4)
-                    .arg(static_cast<double>(view.vertical_pan_offset), 0, 'f', 4));
+                    .arg(view.y_pan, 0, 'f', 4));
 
     _pan_zoom_label->setText(
             QStringLiteral("y_scale=%1")
-                    .arg(static_cast<double>(view.global_y_scale), 0, 'f', 2));
+                    .arg(static_cast<double>(_state->globalYScale()), 0, 'f', 2));
 
     _widget_size_label->setText(
             QStringLiteral("Widget: %1 x %2 px").arg(w).arg(h));

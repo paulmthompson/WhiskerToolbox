@@ -15,7 +15,7 @@
  * widget to update the DataManager accordingly.
  */
 
-#include "CorePlotting/CoordinateTransform/TimeRange.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Interaction/DataCoordinates.hpp"
 #include "CorePlotting/Interaction/HitTestResult.hpp"
 #include "CorePlotting/Interaction/IGlyphInteractionController.hpp"
@@ -46,7 +46,7 @@ enum class InteractionMode {
  * @brief Context information needed for coordinate conversions
  */
 struct InteractionContext {
-    CorePlotting::TimeSeriesViewState const * view_state{nullptr};
+    CorePlotting::ViewStateData const * view_state{nullptr};
     CorePlotting::RenderableScene const * scene{nullptr};
     int widget_width{0};
     int widget_height{0};

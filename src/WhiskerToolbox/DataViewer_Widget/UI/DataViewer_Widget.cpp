@@ -443,8 +443,7 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     auto const numDegrees = static_cast<float>(event->angleDelta().y()) / 8.0f;
     auto const numSteps = numDegrees / 15.0f;
 
-    auto const & view_state = _state->viewState();
-    auto const current_range = static_cast<int>(view_state.getTimeWidth());
+    auto const current_range = static_cast<int>(_state->timeWidth());
     auto const total_frames = static_cast<float>(_time_frame->getTotalFrameCount());
 
     // Determine zoom sensitivity based on modifier keys:
@@ -510,9 +509,8 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
 }
 
 void DataViewer_Widget::_updateLabels() {
-    auto const & view_state = _state->viewState();
-    ui->neg_x_label->setText(QString::number(view_state.time_start));
-    ui->pos_x_label->setText(QString::number(view_state.time_end));
+    ui->neg_x_label->setText(QString::number(_state->timeStart()));
+    ui->pos_x_label->setText(QString::number(_state->timeEnd()));
 }
 
 void DataViewer_Widget::_updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info) {

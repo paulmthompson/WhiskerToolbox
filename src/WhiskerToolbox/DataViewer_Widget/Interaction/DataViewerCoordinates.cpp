@@ -5,10 +5,10 @@
 namespace DataViewer {
 
 DataViewerCoordinates::DataViewerCoordinates(
-        CorePlotting::TimeSeriesViewState const & view_state,
+        CorePlotting::ViewStateData const & view_state,
         int width, int height)
-    : _time_params(view_state.time_start, view_state.time_end, width),
-      _y_params(view_state.y_min, view_state.y_max, height, view_state.vertical_pan_offset) {
+    : _time_params(static_cast<int64_t>(view_state.x_min), static_cast<int64_t>(view_state.x_max), width),
+      _y_params(static_cast<float>(view_state.y_min), static_cast<float>(view_state.y_max), height, static_cast<float>(view_state.y_pan)) {
 }
 
 // ============================================================================

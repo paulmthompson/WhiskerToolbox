@@ -27,8 +27,8 @@ SVGExporter::SVGExporter(OpenGLWidget * gl_widget)
 QString SVGExporter::exportToSVG() {
     // Get current visible time window from OpenGL widget view state
     auto const & view_state = gl_widget_->getViewState();
-    auto const start_time = view_state.time_start;
-    auto const end_time = view_state.time_end;
+    auto const start_time = static_cast<int64_t>(view_state.x_min);
+    auto const end_time = static_cast<int64_t>(view_state.x_max);
 
     std::cout << "SVG Export - Time range: "
               << start_time << " to "
@@ -82,13 +82,13 @@ CorePlotting::RenderableScene SVGExporter::buildScene(int start_time, int end_ti
     auto const view_state = gl_widget_->getViewState();
     auto const * state = gl_widget_->state();
 
-    auto const y_min = view_state.y_min;
-    auto const y_max = view_state.y_max;
+    auto const y_min = static_cast<float>(view_state.y_min);
+    auto const y_max = static_cast<float>(view_state.y_max);
 
     // Build shared View and Projection matrices
     // Get view state parameters from OpenGLWidget
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = view_state.vertical_pan_offset;
+    view_params.vertical_pan_offset = static_cast<float>(view_state.y_pan);
 
     scene.view_matrix = CorePlotting::getAnalogViewMatrix(view_params);
     scene.projection_matrix = CorePlotting::getAnalogProjectionMatrix(
@@ -178,7 +178,7 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
             data_cache.intrinsic_scale,
             options.user_scale_factor,
             options.y_offset,
-            view_state.global_y_scale);
+            gl_widget_->state()->globalYScale());
 
     // Create model matrix from composed transform
     glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
@@ -218,8 +218,8 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
 
     auto const view_state = gl_widget_->getViewState();
 
-    auto const y_min = view_state.y_min;
-    auto const y_max = view_state.y_max;
+    auto const y_min = static_cast<float>(view_state.y_min);
+    auto const y_max = static_cast<float>(view_state.y_max);
 
     // Create layout from layout_transform
     CorePlotting::SeriesLayout const layout{
@@ -232,7 +232,7 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     if (options.plotting_mode == EventPlottingModeData::FullCanvas) {
         y_transform = DataViewer::composeEventFullCanvasYTransform(y_min, y_max, options.margin_factor);
     } else {
-        y_transform = DataViewer::composeEventYTransform(layout, options.margin_factor, view_state.global_y_scale);
+        y_transform = DataViewer::composeEventYTransform(layout, options.margin_factor, gl_widget_->state()->globalYScale());
     }
 
     // Create model matrix from composed transform
@@ -287,7 +287,7 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
     CorePlotting::LayoutTransform const y_transform = DataViewer::composeIntervalYTransform(
             layout,
             options.margin_factor,
-            view_state.global_y_scale);
+            gl_widget_->state()->globalYScale());
 
     // Create model matrix from composed transform
     glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);

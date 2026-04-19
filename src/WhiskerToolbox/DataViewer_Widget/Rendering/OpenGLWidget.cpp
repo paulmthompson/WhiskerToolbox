@@ -10,6 +10,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
@@ -47,16 +48,42 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
       _state(std::make_shared<DataViewerState>()) {
     setMouseTracking(true);// Enable mouse tracking for hover events
 
-    // Connect state signals
-    connect(_state.get(), &DataViewerState::viewStateChanged, this, [this]() {
+    // Connect state signals — separate time window changes from Y-axis changes
+    // Time window changes require scene rebuild (different data in viewport)
+    connect(_state.get(), &DataViewerState::timeWindowChanged, this, [this]() {
         _cache_state.layout_response_dirty = true;
         _cache_state.scene_dirty = true;
+        _cached_view_state = _state->viewState();
+        _previous_time_start = _state->timeStart();
+        _previous_time_end = _state->timeEnd();
+        updateMatrices();
+        update();
+    });
+    // View state changes (Y bounds, pan, zoom) only need matrix update
+    connect(_state.get(), &DataViewerState::viewStateChanged, this, [this]() {
+        _cached_view_state = _state->viewState();
+        updateMatrices();
+        // global_y_scale is baked into per-series vertices, so changes require scene rebuild
+        auto const current_scale = _state->globalYScale();
+        if (std::abs(current_scale - _cached_global_y_scale) > 1e-6f) {
+            _cached_global_y_scale = current_scale;
+            _cache_state.scene_dirty = true;
+        }
+        // Layout may need recompute if Y bounds changed
+        _cache_state.layout_response_dirty = true;
         update();
     });
     connect(_state.get(), &DataViewerState::themeChanged, this, [this]() {
         update();
     });
     connect(_state.get(), &DataViewerState::gridChanged, this, [this]() {
+        update();
+    });
+    // Layout config changes (lane sizing policy, height, gap) require scene rebuild
+    // because layout transforms are baked into per-series vertices
+    connect(_state.get(), &DataViewerState::layoutConfigChanged, this, [this]() {
+        _cache_state.layout_response_dirty = true;
+        _cache_state.scene_dirty = true;
         update();
     });
 
@@ -102,10 +129,9 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
 
     // Connect input handler signals
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::panDelta, this, [this](float normalized_dy) {
-        // Apply pan delta directly to the state's view state
-        auto view = _state->viewState();
-        view.applyVerticalPanDelta(normalized_dy);
-        _state->setViewState(view);
+        // Apply pan delta directly to the state's vertical pan offset
+        float const current_pan = _state->verticalPanOffset();
+        _state->setVerticalPanOffset(current_pan + normalized_dy);
         update();
     });
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::clicked, this, &OpenGLWidget::mouseClick);
@@ -197,10 +223,15 @@ void OpenGLWidget::updateCanvas(TimeFrameIndex time) {
     _time = time;
 
     // Update view state immediately so labels are correct before paintGL runs
-    // Use the underlying TimeSeriesViewState's setTimeWindow(center, width) method
+    // Preserve current width, center on the new time position
+    int64_t const width = _state->timeWidth();
+    int64_t const half_width = width / 2;
+    int64_t const new_start = _time.getValue() - half_width;
+    int64_t const new_end = new_start + width - 1;
+
     auto view = _state->viewState();
-    int64_t const width = view.getTimeWidth();
-    view.setTimeWindow(_time.getValue(), width);
+    view.x_min = static_cast<double>(new_start);
+    view.x_max = static_cast<double>(new_end);
     _state->setViewState(view);
 
     // Mark layout and scene as dirty since external changes may have occurred
@@ -294,16 +325,38 @@ void OpenGLWidget::setState(std::shared_ptr<DataViewerState> state) {
     _state = std::move(state);
 
     if (_state) {
-        // Connect state signals - state changes trigger redraws
-        connect(_state.get(), &DataViewerState::viewStateChanged, this, [this]() {
+        // Connect state signals — separate time window from Y-axis changes
+        connect(_state.get(), &DataViewerState::timeWindowChanged, this, [this]() {
             _cache_state.layout_response_dirty = true;
             _cache_state.scene_dirty = true;
+            _cached_view_state = _state->viewState();
+            _previous_time_start = _state->timeStart();
+            _previous_time_end = _state->timeEnd();
+            updateMatrices();
+            update();
+        });
+        connect(_state.get(), &DataViewerState::viewStateChanged, this, [this]() {
+            _cached_view_state = _state->viewState();
+            updateMatrices();
+            // global_y_scale is baked into per-series vertices, so changes require scene rebuild
+            auto const current_scale = _state->globalYScale();
+            if (std::abs(current_scale - _cached_global_y_scale) > 1e-6f) {
+                _cached_global_y_scale = current_scale;
+                _cache_state.scene_dirty = true;
+            }
+            _cache_state.layout_response_dirty = true;
             update();
         });
         connect(_state.get(), &DataViewerState::themeChanged, this, [this]() {
             update();
         });
         connect(_state.get(), &DataViewerState::gridChanged, this, [this]() {
+            update();
+        });
+        // Layout config changes (lane sizing policy, height, gap) require scene rebuild
+        connect(_state.get(), &DataViewerState::layoutConfigChanged, this, [this]() {
+            _cache_state.layout_response_dirty = true;
+            _cache_state.scene_dirty = true;
             update();
         });
 
@@ -316,7 +369,7 @@ void OpenGLWidget::setState(std::shared_ptr<DataViewerState> state) {
     updateCanvas(_time);
 }
 
-CorePlotting::TimeSeriesViewState const & OpenGLWidget::getViewState() const {
+CorePlotting::ViewStateData const & OpenGLWidget::getViewState() const {
     return _state->viewState();
 }
 
@@ -487,8 +540,8 @@ void OpenGLWidget::drawAxis() {
     // Configure axis using AxisRenderer
     PlottingOpenGL::AxisConfig axis_config;
     axis_config.x_position = 0.0f;
-    axis_config.y_min = view.y_min;
-    axis_config.y_max = view.y_max;
+    axis_config.y_min = static_cast<float>(view.y_min);
+    axis_config.y_max = static_cast<float>(view.y_max);
     axis_config.color = glm::vec3(r, g, b);
     axis_config.alpha = 1.0f;
 
@@ -633,11 +686,11 @@ void OpenGLWidget::drawGridLines() {
     // Configure grid
     auto const & view = _state->viewState();
     PlottingOpenGL::GridConfig grid_config;
-    grid_config.time_start = view.time_start;
-    grid_config.time_end = view.time_end;
+    grid_config.time_start = static_cast<int64_t>(view.x_min);
+    grid_config.time_end = static_cast<int64_t>(view.x_max);
     grid_config.spacing = grid.spacing;
-    grid_config.y_min = view.y_min;
-    grid_config.y_max = view.y_max;
+    grid_config.y_min = static_cast<float>(view.y_min);
+    grid_config.y_max = static_cast<float>(view.y_max);
     grid_config.color = glm::vec3(0.5f, 0.5f, 0.5f);// Gray grid lines
     grid_config.alpha = 0.5f;
     grid_config.dash_length = 3.0f;
@@ -673,12 +726,11 @@ void OpenGLWidget::setMasterTimeFrame(std::shared_ptr<TimeFrame> const & master_
 
         // Center at the beginning of the data
         int64_t const initial_center = initial_range / 2;
-        auto view = _state->viewState();
-        view.setTimeWindow(initial_center, initial_range);
-        _state->setViewState(view);
+        int64_t const half_range = initial_range / 2;
+        _state->setTimeWindow(initial_center - half_range, initial_center + half_range - 1);
     } else {
         // Reset to default time window
-        _state->setViewState(CorePlotting::TimeSeriesViewState());
+        _state->setViewState(CorePlotting::ViewStateData());
     }
 }
 
@@ -724,7 +776,7 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
             entry.data_cache.intrinsic_scale,
             opts->user_scale_factor,
             opts->y_offset,
-            view.global_y_scale);
+            _state->globalYScale());
 
     // Step 4: Use DataViewerCoordinates to convert canvas Y to analog value
     return coords.canvasYToAnalogValue(canvas_y, y_transform);
@@ -917,7 +969,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
     float const ndc_y = -1.0f + 2.0f * (static_cast<float>(height()) - canvas_y) / static_cast<float>(height());
 
     // Apply vertical pan offset to get the actual Y position in the coordinate system
-    float const world_y = ndc_y - _state->viewState().vertical_pan_offset;
+    float const world_y = ndc_y - static_cast<float>(_state->viewState().y_pan);
     float const world_x = canvasXToTime(canvas_x);
 
     // First try full hit test if we have a cached scene with spatial index
@@ -1003,16 +1055,45 @@ void OpenGLWidget::renderWithSceneRenderer() {
     // and all entry.layout_transform fields in TimeSeriesDataStore
     computeAndApplyLayout();
 
+    // Only rebuild scene geometry when data range changed (scene_dirty)
+    if (_cache_state.scene_dirty) {
+        rebuildScene();
+    }
+
+    // Always render with current matrices (handles Y-axis pan/zoom without rebuild)
+    _scene_renderer->render(_cached_view_matrix, _cached_projection_matrix);
+}
+
+void OpenGLWidget::updateMatrices() {
     auto const & view_state = _state->viewState();
-    auto const start_time = TimeFrameIndex(view_state.time_start);
-    auto const end_time = TimeFrameIndex(view_state.time_end);
+    auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
+    auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
+
+    _cached_projection_matrix = CorePlotting::getAnalogProjectionMatrix(
+            start_time, end_time,
+            static_cast<float>(view_state.y_min),
+            static_cast<float>(view_state.y_max));
+
+    CorePlotting::ViewProjectionParams view_params;
+    view_params.vertical_pan_offset = static_cast<float>(view_state.y_pan);
+
+    _cached_view_matrix = CorePlotting::getAnalogViewMatrix(view_params);
+}
+
+void OpenGLWidget::rebuildScene() {
+    auto const & view_state = _state->viewState();
+    auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
+    auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
     // Build shared View and Projection matrices
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = view_state.vertical_pan_offset;
+    view_params.vertical_pan_offset = static_cast<float>(view_state.y_pan);
 
     // Shared projection matrix (time range to NDC)
-    glm::mat4 const projection = CorePlotting::getAnalogProjectionMatrix(start_time, end_time, view_state.y_min, view_state.y_max);
+    glm::mat4 const projection = CorePlotting::getAnalogProjectionMatrix(
+            start_time, end_time,
+            static_cast<float>(view_state.y_min),
+            static_cast<float>(view_state.y_max));
 
     // Shared view matrix (global pan)
     glm::mat4 const view = CorePlotting::getAnalogViewMatrix(view_params);
@@ -1021,9 +1102,9 @@ void OpenGLWidget::renderWithSceneRenderer() {
     // Bounds are in world coordinates: X = [start_time, end_time], Y = [y_min, y_max]
     BoundingBox const scene_bounds(
             static_cast<float>(start_time.getValue()),// min_x
-            view_state.y_min,                         // min_y
+            static_cast<float>(view_state.y_min),     // min_y
             static_cast<float>(end_time.getValue()),  // max_x
-            view_state.y_max                          // max_y
+            static_cast<float>(view_state.y_max)      // max_y
     );
 
     CorePlotting::SceneBuilder builder;
@@ -1046,7 +1127,10 @@ void OpenGLWidget::renderWithSceneRenderer() {
 
     // Upload scene to renderer and render
     _scene_renderer->uploadScene(_cache_state.scene);
-    _scene_renderer->render(view, projection);
+
+    // Update cached matrices
+    _cached_projection_matrix = projection;
+    _cached_view_matrix = view;
 
     ++_scene_rebuild_count;
     emit sceneRebuilt();
@@ -1058,8 +1142,8 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
     }
 
     auto const & view_state = _state->viewState();
-    auto const start_time = TimeFrameIndex(view_state.time_start);
-    auto const end_time = TimeFrameIndex(view_state.time_end);
+    auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
+    auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cached_layout_response
@@ -1091,7 +1175,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
                 analog_data.data_cache.intrinsic_scale,
                 opts->user_scale_factor,
                 opts->y_offset,
-                view_state.global_y_scale);
+                _state->globalYScale());
 
         // Create model matrix directly from the composed transform
         glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
@@ -1146,8 +1230,8 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
     }
 
     auto const & view_state = _state->viewState();
-    auto const start_time = TimeFrameIndex(view_state.time_start);
-    auto const end_time = TimeFrameIndex(view_state.time_end);
+    auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
+    auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cache_state.layout_response
@@ -1168,13 +1252,13 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
         if (!is_stacked) {
             // Full canvas mode - events extend full viewport height
             y_transform = DataViewer::composeEventFullCanvasYTransform(
-                    view_state.y_min, view_state.y_max, opts->margin_factor);
+                    static_cast<float>(view_state.y_min), static_cast<float>(view_state.y_max), opts->margin_factor);
         } else {
             // Stacked mode - look up layout from cached response
             auto const * series_layout = _cache_state.layout_response.findLayout(key);
             if (series_layout) {
                 y_transform = DataViewer::composeEventYTransform(
-                        *series_layout, opts->margin_factor, view_state.global_y_scale);
+                        *series_layout, opts->margin_factor, _state->globalYScale());
             } else {
                 // Fallback if layout not found
                 CorePlotting::SeriesLayout const fallback{
@@ -1182,7 +1266,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
                         event_data.layout_transform,
                         0};
                 y_transform = DataViewer::composeEventYTransform(
-                        fallback, opts->margin_factor, view_state.global_y_scale);
+                        fallback, opts->margin_factor, _state->globalYScale());
             }
         }
 
@@ -1221,8 +1305,8 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
     }
 
     auto const & view_state = _state->viewState();
-    auto const start_time = TimeFrameIndex(view_state.time_start);
-    auto const end_time = TimeFrameIndex(view_state.time_end);
+    auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
+    auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cache_state.layout_response
@@ -1243,7 +1327,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         if (series_layout) {
             y_transform = DataViewer::composeIntervalYTransform(
                     *series_layout, opts->margin_factor,
-                    view_state.global_y_scale);
+                    _state->globalYScale());
         } else {
             // Fallback if layout not found - use entry's layout_transform
             CorePlotting::SeriesLayout const fallback{
@@ -1252,7 +1336,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
                     0};
             y_transform = DataViewer::composeIntervalYTransform(
                     fallback, opts->margin_factor,
-                    view_state.global_y_scale);
+                    _state->globalYScale());
         }
 
         // Create model matrix from composed transform
@@ -1290,8 +1374,8 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     auto const & view_state = _state->viewState();
     auto const & layout_config = _state->layoutConfig();
     CorePlotting::LayoutRequest request;
-    request.viewport_y_min = view_state.y_min;
-    request.viewport_y_max = view_state.y_max;
+    request.viewport_y_min = static_cast<float>(view_state.y_min);
+    request.viewport_y_max = static_cast<float>(view_state.y_max);
     request.lane_sizing_policy = layout_config.lane_sizing_policy;
     request.lane_height = layout_config.lane_height;
     request.lane_gap = layout_config.lane_gap;
@@ -1373,8 +1457,8 @@ DataViewerDiagnostics OpenGLWidget::getDiagnostics() const {
     DataViewerDiagnostics diag;
 
     auto const & view_state = _state->viewState();
-    float const effective_y_min = view_state.y_min + view_state.vertical_pan_offset;
-    float const effective_y_max = view_state.y_max + view_state.vertical_pan_offset;
+    float const effective_y_min = static_cast<float>(view_state.y_min) + static_cast<float>(view_state.y_pan);
+    float const effective_y_max = static_cast<float>(view_state.y_max) + static_cast<float>(view_state.y_pan);
 
     auto const & layouts = _cache_state.layout_response.layouts;
 
@@ -1543,7 +1627,7 @@ void OpenGLWidget::drawLaneBoundaries(QPainter & painter) {
     auto const & layouts = _cache_state.layout_response.layouts;
     int const h = height();
     int const w = width();
-    float const pan = _state->viewState().vertical_pan_offset;
+    auto const pan = static_cast<float>(_state->viewState().y_pan);
 
     QFont const font(QStringLiteral("monospace"), 8);
     painter.setFont(font);
@@ -1593,7 +1677,7 @@ void OpenGLWidget::drawOriginMarkers(QPainter & painter) {
     QPen pen;
     pen.setWidth(2);
 
-    float const pan = _state->viewState().vertical_pan_offset;
+    auto const pan = static_cast<float>(_state->viewState().y_pan);
 
     for (auto const & layout: layouts) {
         float const center_ndc = layout.y_transform.offset + pan;

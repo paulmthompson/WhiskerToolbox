@@ -212,59 +212,59 @@ TEST_CASE("DigitalIntervalSeriesOptionsData serialization", "[DataViewerStateDat
     }
 }
 
-// ==================== DataViewerViewState Tests ====================
+// ==================== ViewStateData Tests ====================
 
-TEST_CASE("DataViewerViewState serialization", "[DataViewerStateData]") {
+TEST_CASE("ViewStateData serialization", "[DataViewerStateData]") {
     SECTION("Default values") {
-        CorePlotting::TimeSeriesViewState view;
+        CorePlotting::ViewStateData view;
 
         auto json = rfl::json::write(view);
-        auto result = rfl::json::read<CorePlotting::TimeSeriesViewState>(json);
+        auto result = rfl::json::read<CorePlotting::ViewStateData>(json);
 
         REQUIRE(result);
         auto const & data = result.value();
-        REQUIRE(data.time_start == 0);
-        REQUIRE(data.time_end == 1000);
-        REQUIRE(data.y_min == Approx(-1.0f));
-        REQUIRE(data.y_max == Approx(1.0f));
-        REQUIRE(data.vertical_pan_offset == Approx(0.0f));
-        REQUIRE(data.global_y_scale == Approx(1.0f));
+        REQUIRE(data.x_min == Approx(-500.0));
+        REQUIRE(data.x_max == Approx(500.0));
+        REQUIRE(data.y_min == Approx(0.0));
+        REQUIRE(data.y_max == Approx(100.0));
+        REQUIRE(data.y_pan == Approx(0.0));
+        REQUIRE(data.y_zoom == Approx(1.0));
     }
 
     SECTION("Custom values round-trip") {
-        CorePlotting::TimeSeriesViewState view;
-        view.time_start = 1000;
-        view.time_end = 50000;
-        view.y_min = -2.0f;
-        view.y_max = 2.0f;
-        view.vertical_pan_offset = 0.5f;
-        view.global_y_scale = 1.5f;
+        CorePlotting::ViewStateData view;
+        view.x_min = 1000.0;
+        view.x_max = 50000.0;
+        view.y_min = -2.0;
+        view.y_max = 2.0;
+        view.y_pan = 0.5;
+        view.y_zoom = 1.5;
 
         auto json = rfl::json::write(view);
-        auto result = rfl::json::read<CorePlotting::TimeSeriesViewState>(json);
+        auto result = rfl::json::read<CorePlotting::ViewStateData>(json);
 
         REQUIRE(result);
         auto const & data = result.value();
-        REQUIRE(data.time_start == 1000);
-        REQUIRE(data.time_end == 50000);
-        REQUIRE(data.y_min == Approx(-2.0f));
-        REQUIRE(data.y_max == Approx(2.0f));
-        REQUIRE(data.vertical_pan_offset == Approx(0.5f));
-        REQUIRE(data.global_y_scale == Approx(1.5f));
+        REQUIRE(data.x_min == Approx(1000.0));
+        REQUIRE(data.x_max == Approx(50000.0));
+        REQUIRE(data.y_min == Approx(-2.0));
+        REQUIRE(data.y_max == Approx(2.0));
+        REQUIRE(data.y_pan == Approx(0.5));
+        REQUIRE(data.y_zoom == Approx(1.5));
     }
 
-    SECTION("Large time values (int64_t)") {
-        CorePlotting::TimeSeriesViewState view;
-        view.time_start = 1000000000LL;
-        view.time_end = 9000000000LL;
+    SECTION("Large time values (double)") {
+        CorePlotting::ViewStateData view;
+        view.x_min = 1000000000.0;
+        view.x_max = 9000000000.0;
 
         auto json = rfl::json::write(view);
-        auto result = rfl::json::read<CorePlotting::TimeSeriesViewState>(json);
+        auto result = rfl::json::read<CorePlotting::ViewStateData>(json);
 
         REQUIRE(result);
         auto const & data = result.value();
-        REQUIRE(data.time_start == 1000000000LL);
-        REQUIRE(data.time_end == 9000000000LL);
+        REQUIRE(data.x_min == Approx(1000000000.0));
+        REQUIRE(data.x_max == Approx(9000000000.0));
     }
 }
 
@@ -441,7 +441,7 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         REQUIRE(data.display_name == "Data Viewer");
 
         // Nested objects should have defaults
-        REQUIRE(data.view.time_start == 0);
+        REQUIRE(data.view.x_min == Approx(0.0));
         REQUIRE(data.theme.theme == DataViewerTheme::Dark);
         REQUIRE(data.grid.enabled == false);
         REQUIRE(data.ui.zoom_scaling_mode == DataViewerZoomScalingMode::Adaptive);
@@ -459,9 +459,9 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         state.display_name = "Neural Data Viewer";
 
         // Configure view
-        state.view.time_start = 5000;
-        state.view.time_end = 50000;
-        state.view.global_y_scale = 2.0f;
+        state.view.x_min = 5000.0;
+        state.view.x_max = 50000.0;
+        state.global_y_scale = 2.0f;
 
         // Configure theme
         state.theme.theme = DataViewerTheme::Light;
@@ -514,9 +514,9 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         REQUIRE(data.display_name == "Neural Data Viewer");
 
         // Verify view
-        REQUIRE(data.view.time_start == 5000);
-        REQUIRE(data.view.time_end == 50000);
-        REQUIRE(data.view.global_y_scale == Approx(2.0f));
+        REQUIRE(data.view.x_min == Approx(5000.0));
+        REQUIRE(data.view.x_max == Approx(50000.0));
+        REQUIRE(data.global_y_scale == Approx(2.0f));
 
         // Verify theme
         REQUIRE(data.theme.theme == DataViewerTheme::Light);
@@ -555,7 +555,7 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
     SECTION("JSON structure validation") {
         DataViewerStateData state;
         state.instance_id = "test";
-        state.view.time_start = 100;
+        state.view.x_min = 100.0;
         state.theme.theme = DataViewerTheme::Dark;
 
         AnalogSeriesOptionsData opts;

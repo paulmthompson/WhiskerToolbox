@@ -63,6 +63,8 @@
 #include "SeriesOptionsRegistry.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
@@ -238,7 +240,7 @@ public:
      * @brief Get the vertical pan offset
      * @return Current vertical pan offset
      */
-    [[nodiscard]] float verticalPanOffset() const { return _data.view.vertical_pan_offset; }
+    [[nodiscard]] float verticalPanOffset() const { return static_cast<float>(_data.view.y_pan); }
 
     /**
      * @brief Set the global Y-axis scale
@@ -250,19 +252,41 @@ public:
      * @brief Get the global Y-axis scale
      * @return Current global Y-axis scale factor
      */
-    [[nodiscard]] float globalYScale() const { return _data.view.global_y_scale; }
+    [[nodiscard]] float globalYScale() const { return _data.global_y_scale; }
+
+    // ==================== Convenience Time Accessors ====================
+
+    /**
+     * @brief Get the start of the visible time window as integer index
+     */
+    [[nodiscard]] int64_t timeStart() const { return static_cast<int64_t>(_data.view.x_min); }
+
+    /**
+     * @brief Get the end of the visible time window as integer index
+     */
+    [[nodiscard]] int64_t timeEnd() const { return static_cast<int64_t>(_data.view.x_max); }
+
+    /**
+     * @brief Get visible time window width
+     */
+    [[nodiscard]] int64_t timeWidth() const { return timeEnd() - timeStart() + 1; }
+
+    /**
+     * @brief Get center of visible time window
+     */
+    [[nodiscard]] int64_t timeCenter() const { return timeStart() + (timeEnd() - timeStart()) / 2; }
 
     /**
      * @brief Set the complete view state
      * @param view New view state
      */
-    void setViewState(CorePlotting::TimeSeriesViewState const & view);
+    void setViewState(CorePlotting::ViewStateData const & view);
 
     /**
      * @brief Get the complete view state
-     * @return Const reference to CorePlotting::TimeSeriesViewState
+     * @return Const reference to CorePlotting::ViewStateData
      */
-    [[nodiscard]] CorePlotting::TimeSeriesViewState const & viewState() const { return _data.view; }
+    [[nodiscard]] CorePlotting::ViewStateData const & viewState() const { return _data.view; }
 
     // ==================== Theme ====================
 
@@ -520,8 +544,19 @@ signals:
      * @brief Emitted when any view state property changes
      * 
      * This includes time window, Y bounds, zoom, pan, and spacing changes.
+     * For Y-axis-only changes (pan, zoom, bounds), the scene does NOT need
+     * rebuilding — only the projection matrix needs updating.
      */
     void viewStateChanged();
+
+    /**
+     * @brief Emitted when the time window (x_min/x_max) changes
+     * 
+     * This signal indicates that the data range has changed and buffers
+     * need rebuilding. Connect to this for scene-dirty operations.
+     * Always emitted together with viewStateChanged().
+     */
+    void timeWindowChanged();
 
     /**
      * @brief Emitted when theme or colors change

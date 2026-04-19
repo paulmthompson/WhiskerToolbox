@@ -13,7 +13,7 @@
  * - Series data stored in typed maps (_analog_series, _digital_event_series, _digital_interval_series)
  * - Each series has associated DisplayOptions controlling appearance and layout
  * 
- * **Layer 2: View State (CorePlotting::TimeSeriesViewState)**
+ * **Layer 2: View State (CorePlotting::ViewStateData)**
  * - X-axis: TimeRange with bounds-aware scrolling/zooming
  * - Y-axis: y_min/y_max viewport bounds + vertical_pan_offset
  * - Global scaling: global_zoom and global_vertical_scale applied to all series
@@ -61,7 +61,7 @@
 #include "Interaction/DataViewerSelectionManager.hpp"
 #include "Interaction/DataViewerTooltipController.hpp"
 
-#include "CorePlotting/CoordinateTransform/TimeRange.hpp"// TimeSeriesViewState
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Interaction/DataCoordinates.hpp"
 #include "CorePlotting/Interaction/IGlyphInteractionController.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
@@ -256,10 +256,10 @@ public:
 
     // Accessors for SVG export and external queries
     /**
-     * @brief Get the current view state (time window and Y-axis state)
-     * @return Reference to CorePlotting::TimeSeriesViewState with current state
+     * @brief Get the current view state
+     * @return Reference to CorePlotting::ViewStateData with current state
      */
-    [[nodiscard]] CorePlotting::TimeSeriesViewState const & getViewState() const;
+    [[nodiscard]] CorePlotting::ViewStateData const & getViewState() const;
 
     [[nodiscard]] std::string getBackgroundColor() const;
     [[nodiscard]] std::shared_ptr<TimeFrame> getMasterTimeFrame() const { return _master_time_frame; }
@@ -550,6 +550,30 @@ private:
      * Called automatically when _layout_response_dirty is true.
      */
     void computeAndApplyLayout();
+
+    /**
+     * @brief Rebuild the renderable scene from current data and state
+     * 
+     * Builds all series batches, constructs the RenderableScene with spatial
+     * index, and uploads to the SceneRenderer. Only called when scene_dirty.
+     */
+    void rebuildScene();
+
+    /**
+     * @brief Update cached projection and view matrices from current state
+     * 
+     * Called when view state changes (Y bounds, pan, zoom). Does NOT
+     * trigger scene rebuild — only updates the MVP matrices used for rendering.
+     */
+    void updateMatrices();
+
+    // === Cached view state for dirty detection ===
+    CorePlotting::ViewStateData _cached_view_state;
+    int64_t _previous_time_start{0};
+    int64_t _previous_time_end{1000};
+    float _cached_global_y_scale{1.0f};
+    glm::mat4 _cached_projection_matrix{1.0f};
+    glm::mat4 _cached_view_matrix{1.0f};
 };
 
 #endif//OPENGLWIDGET_HPP

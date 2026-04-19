@@ -106,8 +106,7 @@ void DataViewerPropertiesWidget::_initializeFromState() {
     ui->global_y_scale->setValue(static_cast<double>(_state->globalYScale()));
 
     // X axis samples (time width from view state)
-    auto const & view = _state->viewState();
-    ui->x_axis_samples->setValue(static_cast<int>(view.getTimeWidth()));
+    ui->x_axis_samples->setValue(static_cast<int>(_state->timeWidth()));
 
     // Grid settings
     ui->grid_lines_enabled->setChecked(_state->gridEnabled());
@@ -215,8 +214,7 @@ void DataViewerPropertiesWidget::_connectStateSignals() {
         _updating_from_state = true;
 
         ui->global_y_scale->setValue(static_cast<double>(_state->globalYScale()));
-        auto const & view = _state->viewState();
-        ui->x_axis_samples->setValue(static_cast<int>(view.getTimeWidth()));
+        ui->x_axis_samples->setValue(static_cast<int>(_state->timeWidth()));
 
         _updating_from_state = false;
     });

@@ -51,7 +51,7 @@
  * @see TimeSeriesDataStore for runtime data storage
  */
 
-#include "CorePlotting/CoordinateTransform/TimeRange.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/DataTypes/SeriesStyle.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 
@@ -312,7 +312,18 @@ struct DataViewerStateData {
     std::string display_name = "Data Viewer";///< User-visible name for this widget
 
     // === View State ===
-    CorePlotting::TimeSeriesViewState view;///< Time window, Y bounds, zoom
+    CorePlotting::ViewStateData view{
+            .x_min = 0.0,
+            .x_max = 1000.0,
+            .y_min = -1.0,
+            .y_max = 1.0,
+            .x_zoom = 1.0,
+            .y_zoom = 1.0,
+            .x_pan = 0.0,
+            .y_pan = 0.0};///< Time window (x_min/x_max), Y bounds, zoom/pan
+
+    // === Global Y Scale (data amplitude gain, NOT a view transform) ===
+    float global_y_scale = 1.0f;///< Uniform amplitude scale for all series
 
     // === Theme and Grid ===
     DataViewerThemeState theme;///< Visual theme settings

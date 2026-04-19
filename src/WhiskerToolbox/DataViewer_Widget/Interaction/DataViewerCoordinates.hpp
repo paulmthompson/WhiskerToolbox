@@ -36,7 +36,7 @@
  */
 
 #include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
-#include "CorePlotting/CoordinateTransform/TimeRange.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Layout/LayoutTransform.hpp"
 
 namespace DataViewer {
@@ -53,11 +53,11 @@ public:
     /**
      * @brief Construct from view state and dimensions
      * 
-     * @param view_state Current TimeSeriesViewState with time bounds and Y-axis state
+     * @param view_state Current ViewStateData with time bounds and Y-axis state
      * @param width Canvas width in pixels
      * @param height Canvas height in pixels
      */
-    DataViewerCoordinates(CorePlotting::TimeSeriesViewState const & view_state,
+    DataViewerCoordinates(CorePlotting::ViewStateData const & view_state,
                           int width, int height);
 
     /**
