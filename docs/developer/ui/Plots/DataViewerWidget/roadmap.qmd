@@ -257,6 +257,15 @@ not use modifiers should see no change. Y-axis panning is already handled by lef
 drag (via `DataViewerInputHandler`) and does not need a wheel chord.
 :::
 
+::: {.callout-warning}
+## Known Limitation — Y Viewport Zoom Not Yet Rendered
+
+The `Alt+Ctrl+Scroll` chord correctly updates `y_zoom` and `y_pan` in `ViewStateData`, but
+the DataViewer rendering pipeline does not yet incorporate `y_zoom` into the projection or
+view matrices. As a result, the gesture currently appears as a pan rather than a zoom. See
+[Phase 2.7](#phase-2-7-y-viewport-zoom) for the rendering refactoring plan.
+:::
+
 **Current behavior** (unchanged):
 
 | Modifier | Action |
@@ -357,6 +366,158 @@ The effective viewport is computed as `[y_min + y_pan, y_max + y_pan]` and passe
 - Workspace save/restore roundtrips all new state.
 - Existing `DataViewer_Widget` tests that assert time window changes after wheel remain green.
 - Existing `VerticalAxisWidget` consumers (ScatterPlot, EventPlot) are unaffected.
+
+### 2.7 Y Viewport Zoom Rendering Support {#phase-2-7-y-viewport-zoom}
+
+**Status**: Not started.
+
+::: {.callout-warning}
+## Background — Why Alt+Ctrl+Scroll Currently Acts as a Pan
+
+The `_handleYViewportZoomWheel()` handler (Phase 2.4) correctly updates both `y_zoom` and
+`y_pan` in `ViewStateData`. However, the DataViewer's rendering pipeline does **not**
+incorporate `y_zoom` anywhere — it only reads `y_pan` as a vertical translation in the
+view matrix. Changing `y_zoom` therefore has no visible zoom effect; the only visible
+result is the `y_pan` adjustment (the cursor-anchoring logic), which makes the gesture
+appear as a pure pan.
+
+Other plot widgets (EventPlot, ScatterPlot, OnionSkinView) avoid this problem because they
+use `WhiskerToolbox::Plots::computeOrthoProjection()` from `PlotInteractionHelpers.hpp`,
+which divides the Y range by `y_zoom` when building the orthographic projection matrix.
+DataViewer instead builds its own projection via `CorePlotting::getAnalogProjectionMatrix()`
+(which ignores zoom) and its own view matrix via `CorePlotting::getAnalogViewMatrix()` (which
+only applies `vertical_pan_offset`).
+:::
+
+**Goal**: Make `y_zoom` in `ViewStateData` actually affect the rendered output in DataViewer,
+so `Alt+Ctrl+Scroll` produces a true cursor-anchored Y viewport zoom.
+
+#### Problem Analysis
+
+The DataViewer rendering pipeline currently flows through:
+
+1. `OpenGLWidget::updateMatrices()` — builds projection + view matrices
+2. `OpenGLWidget::rebuildScene()` — builds projection + view matrices for scene context
+3. Various `add*BatchesToBuilder()` methods — use `effective_y_min/max` for visibility culling
+
+All of these read `y_pan` but ignore `y_zoom`. The specific code paths:
+
+| Location | Current code | Issue |
+|----------|-------------|-------|
+| `updateMatrices()` | `getAnalogProjectionMatrix(start, end, y_min, y_max)` | No zoom applied to Y bounds |
+| `updateMatrices()` | `ViewProjectionParams{.vertical_pan_offset = y_pan}` | No zoom in view matrix |
+| `rebuildScene()` | Same as above | Same |
+| `hasNewVisibleSeries()` | `effective_y_min = y_min + y_pan` | Effective viewport ignores zoom |
+| `add*BatchesToBuilder()` | `effective_y_min = y_min + y_pan` | Culling ignores zoom |
+| `DataViewerDebugPanel` | `effective_y_min = y_min + y_pan` | Debug display ignores zoom |
+| `DataViewerWidgetRegistration` | `effective_y_min = y_min + y_pan` | Visible lane indicator ignores zoom |
+
+#### Proposed Approach: Zoom via Projection Matrix
+
+The cleanest approach is to incorporate `y_zoom` into the projection matrix, matching how
+`computeOrthoProjection()` works in other widgets. This keeps zoom as a view-level
+transform (no scene rebuild needed).
+
+**Step 1 — Effective viewport helper**: Add a helper function (or method on `DataViewerState`)
+that computes the effective Y viewport bounds accounting for both zoom and pan:
+
+```cpp
+/// Compute the effective Y viewport range after applying zoom and pan.
+/// y_zoom > 1 narrows the range (zooms in), y_zoom < 1 widens it.
+struct EffectiveYViewport {
+    float y_min;
+    float y_max;
+};
+
+[[nodiscard]] EffectiveYViewport computeEffectiveYViewport(
+        CorePlotting::ViewStateData const & vs) {
+    float const y_range = static_cast<float>(vs.y_max - vs.y_min);
+    float const y_center = static_cast<float>(vs.y_min + vs.y_max) / 2.0f;
+    float const safe_zoom = (vs.y_zoom > 0.0) ? static_cast<float>(vs.y_zoom) : 1.0f;
+    float const zoomed_half = (y_range / safe_zoom) / 2.0f;
+    float const pan = static_cast<float>(vs.y_pan);
+    return {y_center - zoomed_half + pan, y_center + zoomed_half + pan};
+}
+```
+
+**Step 2 — Projection matrix**: Modify `updateMatrices()` and `rebuildScene()` to pass the
+effective (zoomed + panned) Y bounds directly to `glm::ortho`, replacing the current
+`getAnalogProjectionMatrix()` + separate view matrix approach. With zoom folded into the
+projection, the view matrix can become identity (or only carry non-Y transforms).
+
+```cpp
+void OpenGLWidget::updateMatrices() {
+    auto const & vs = _state->viewState();
+    auto const eff = computeEffectiveYViewport(vs);
+
+    _cached_projection_matrix = glm::ortho(
+        static_cast<float>(vs.x_min), static_cast<float>(vs.x_max),
+        eff.y_min, eff.y_max);
+
+    // View matrix: identity (pan is now folded into projection)
+    _cached_view_matrix = glm::mat4(1.0f);
+}
+```
+
+**Step 3 — Culling consistency**: Replace all instances of `effective_y_min = y_min + y_pan`
+with calls to `computeEffectiveYViewport()`:
+
+- `hasNewVisibleSeries()`
+- All `add*BatchesToBuilder()` methods
+- `DataViewerDebugPanel`
+- `DataViewerWidgetRegistration` (visible lane indicator)
+
+**Step 4 — SVG export**: `SVGExporter` currently reads `y_pan` for its own coordinate
+transforms. Update to use the effective viewport helper.
+
+**Step 5 — Coordinate transforms**: `DataViewerCoordinates` methods that map between canvas
+pixels and world coordinates must account for zoom. Any NDC ↔ world conversion that uses
+`y_pan` directly needs updating.
+
+**Step 6 — Input handler**: `DataViewerInputHandler` (left-drag Y pan) adjusts `y_pan`
+based on pixel delta divided by widget height. With zoom active, the same pixel delta should
+produce a larger world-space pan (since the visible range is narrower). The pan sensitivity
+should scale inversely with `y_zoom`.
+
+#### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `OpenGLWidget.cpp` | `updateMatrices()`, `rebuildScene()`, `hasNewVisibleSeries()`, all `add*BatchesToBuilder()` |
+| `OpenGLWidget.hpp` | Possibly cache effective viewport bounds |
+| `DataViewerCoordinates.hpp/.cpp` | Canvas ↔ world Y conversions |
+| `DataViewerInputHandler.cpp` | Pan sensitivity scaling |
+| `DataViewerDebugPanel.cpp` | Effective viewport display |
+| `DataViewerWidgetRegistration.cpp` | Visible lane indicator |
+| `SVGExporter.cpp` | Y coordinate transforms |
+| `SeriesMatrices.hpp/.cpp` (CorePlotting) | Optionally add zoom to `ViewProjectionParams` and `getAnalogViewMatrix()`, or deprecate in favor of direct `glm::ortho` |
+
+#### Risks and Considerations
+
+- **Scene vertex coordinates**: Series vertices are built in world coordinates with
+  `TransformComposers` baking in lane positions and `global_y_scale`. These are
+  zoom-independent, so `y_zoom` via the projection matrix should "just work" — vertices
+  don't need rebuilding when zoom changes.
+- **Interaction hit testing**: `findSeriesAtPosition()` and the spatial index use world
+  coordinates. The NDC-to-world conversion must account for zoom, or hit testing will
+  be wrong at non-1.0 zoom levels.
+- **`y_pan` semantics**: Currently `y_pan` is in NDC space (raw translation on the view
+  matrix). With zoom in the projection, the meaning of `y_pan` may need to change to
+  world-space offset (matching other widgets). This requires updating
+  `_handleYViewportZoomWheel()` cursor-anchoring math and `DataViewerInputHandler` drag.
+- **Backward compatibility**: Existing workspaces with `y_zoom = 1.0` (the default) will
+  be unaffected. Workspaces saved with non-1.0 `y_zoom` from Phase 2.4 experiments will
+  now render differently (correctly).
+
+#### Testing
+
+- Unit tests: Y viewport zoom changes effective viewport bounds (not just pan)
+- Unit tests: `computeEffectiveYViewport()` correctness for zoom > 1, zoom < 1, with pan
+- Integration: Alt+Ctrl+Scroll visibly narrows the Y range (lanes grow taller)
+- Integration: Cursor-anchored — lane under cursor stays in place during zoom
+- Integration: Culling respects zoomed viewport (off-screen lanes not rebuilt)
+- Integration: Left-drag pan still works correctly at non-1.0 zoom levels
+- Integration: SVG export at zoomed viewport matches on-screen rendering
 
 ---
 
