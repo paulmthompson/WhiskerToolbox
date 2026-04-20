@@ -34,48 +34,49 @@ to Qt signals so all existing widget code continues to work unchanged.
 | Phase | Status |
 |-------|--------|
 | **Phase 1** — `TimeController` library + tests | **Complete** — builds cleanly; `test_timecontroller` exercises state, callbacks, re-entrancy guard, equality short-circuit, and `setActiveTimeKey`. |
-| **Phase 2** — `EditorRegistry` owns and delegates | Not started |
+| **Phase 2** — `EditorRegistry` owns and delegates | **Complete** — `std::unique_ptr<TimeController> _time_controller`; ctor wires `setOnTimeChanged` / `setOnTimeKeyChanged` to `timeChanged` / `activeTimeKeyChanged`; public time API is thin wrappers; `timeController()` exposes a non-owning pointer; rarely used accessors are `[[deprecated]]` in favor of `timeController()->…` (§2.4); `EditorState` links `WhiskerToolbox::TimeController`. |
 | **Phase 3** — `CommandContext` + commands | Not started |
 
 Phase 1 also added a short developer note at `docs/developer/TimeController/TimeController.qmd` (linked from the TimeFrame section in `docs/_quarto.yml`) and a one-line architecture entry in `AGENTS.md` / `.github/copilot-instructions.md`.
 
 ## Current State
 
+*(After Phase 2, visualization time lives in `TimeController`; `EditorRegistry` only bridges to Qt signals.)*
+
 ### Time-Related API on EditorRegistry
 
-| Method | Pure C++? | Callers |
-|--------|-----------|---------|
-| `setCurrentTime(TimePosition const&)` | Body is pure C++ + `emit` | TimeScrollBar (2), 13 widget registrations |
-| `setCurrentTime(TimeFrameIndex, shared_ptr<TimeFrame>)` | Delegates to above | 0 direct callers |
-| `setCurrentTime(int64_t)` | Deprecated | 0 callers found |
-| `currentPosition() const` | Yes | TimeScrollBar (3), Export_Video, Tongue/Whisker/DataInspector registrations |
-| `currentTimeIndex() const` | Yes | 0 callers (unused) |
-| `currentTimeFrame() const` | Yes | 0 callers (unused) |
-| `setActiveTimeKey(TimeKey)` | Body is pure C++ + `emit` | 0 callers (dead code) |
-| `activeTimeKey() const` | Yes | 0 callers (dead code) |
+| Method | Implementation | Callers |
+|--------|----------------|----------|
+| `setCurrentTime(TimePosition const&)` | Forwards to `_time_controller`; `emit timeChanged` from callback | TimeScrollBar (2), 13 widget registrations |
+| `setCurrentTime(TimeFrameIndex, shared_ptr<TimeFrame>)` | Forwards to controller | 0 direct callers |
+| `setCurrentTime(int64_t)` | Deprecated; forwards to controller | 0 callers found |
+| `currentPosition() const` | Forwards to controller | TimeScrollBar (3), Export_Video, Tongue/Whisker/DataInspector registrations |
+| `currentTimeIndex() const` | Forwards; **deprecated** → `timeController()->currentTimeIndex()` | 0 callers (unused) |
+| `currentTimeFrame() const` | Forwards; **deprecated** → `timeController()->currentTimeFrame()` | 0 callers (unused) |
+| `setActiveTimeKey(TimeKey)` | Forwards; **deprecated** → `timeController()->setActiveTimeKey()` | 0 callers (dead code) |
+| `activeTimeKey() const` | Forwards; **deprecated** → `timeController()->activeTimeKey()` | 0 callers (dead code) |
+| `timeController() const` | Returns `_time_controller.get()` | For Phase 3 / `CommandContext` wiring |
 
 ### Signals
 
 | Signal | Connections |
 |--------|------------|
-| `timeChanged(TimePosition)` | 9 unique widgets (some connected twice via dual factory paths) |
-| `activeTimeKeyChanged(TimeKey, TimeKey)` | 0 connections (dead code) |
+| `timeChanged(TimePosition)` | 9 unique widgets (some connected twice via dual factory paths); emitted from `TimeController` callback |
+| `activeTimeKeyChanged(TimeKey, TimeKey)` | 0 connections (dead code); emitted from controller when key changes |
 
 ### Private State (time-related)
 
-- `TimePosition _current_position`
-- `TimeKey _active_time_key{TimeKey("time")}`
-- `bool _time_update_in_progress{false}`
+- `std::unique_ptr<TimeController> _time_controller` (re-entrancy guard and `TimePosition` / `TimeKey` live inside the controller)
 
 ### CMake
 
-`EditorState` links `Qt6::Core`, `Qt6::Widgets`, `reflectcpp`, `TimeFrame`.
+`EditorState` links `Qt6::Core`, `Qt6::Widgets`, `reflectcpp`, `TimeFrame`, and **`WhiskerToolbox::TimeController`**.
 
 ---
 
 ## Phase 1 — Create TimeController Library
 
-**Status:** complete (library is integrated in the tree; `EditorRegistry` still uses its own fields until Phase 2).
+**Status:** complete (`EditorRegistry` delegates time to `TimeController` as of Phase 2).
 
 ### 1.1 New Library: `TimeController`
 
@@ -134,6 +135,8 @@ Catch2 tests in `tests/TimeController/`:
 
 ## Phase 2 — Integrate into EditorRegistry
 
+**Status:** complete (full build and `ctest` green; widget code unchanged at call sites).
+
 ### 2.1 EditorRegistry Owns TimeController
 
 Add `std::unique_ptr<TimeController>` (or value member) to `EditorRegistry`.
@@ -145,9 +148,11 @@ _time_controller->setOnTimeChanged([this](TimePosition const& pos) {
     emit timeChanged(pos);
 });
 _time_controller->setOnTimeKeyChanged([this](TimeKey nk, TimeKey ok) {
-    emit activeTimeKeyChanged(nk, ok);
+    emit activeTimeKeyChanged(std::move(nk), std::move(ok));
 });
 ```
+
+**Delivered:** `_time_controller` is initialized in the constructor’s member initializer list; the lambdas above run in the constructor body immediately afterward.
 
 ### 2.2 Delegate Time Methods
 
@@ -190,6 +195,8 @@ The exploration found several unused APIs:
 These can either be kept on `TimeController` for future use or removed. If
 kept, mark the EditorRegistry wrappers as deprecated to steer callers toward
 `timeController()` directly for new code.
+
+**Delivered (2.4):** The thin `EditorRegistry` wrappers listed in §2.4 carry `[[deprecated]]` attributes pointing at `timeController()->…`; the signals and deprecated `setCurrentTime(int64_t)` remain for compatibility.
 
 ---
 
@@ -243,10 +250,10 @@ dependency.
 
 1. **Unit tests (Phase 1):** ✅ `TimeController` standalone tests — state
    management, callback, re-entrancy guard (`ctest` discovers cases from `test_timecontroller`).
-2. **Build (Phase 2):** Full build succeeds with zero changes to any widget
-   code. All existing `EditorRegistry` callers and signal connections compile.
-3. **Existing test suite (Phase 2):** `ctest --preset linux-clang-release`
-   passes — no regressions.
+2. **Build (Phase 2):** ✅ Full build succeeds without changing widget call sites;
+   existing `EditorRegistry` methods and signal connections compile.
+3. **Existing test suite (Phase 2):** ✅ `ctest --preset linux-clang-release`
+   passes — no regressions observed after integration.
 4. **Command tests (Phase 3):** `AdvanceFrame` command test with a standalone
    `TimeController` (no Qt, no EditorRegistry).
 5. **Integration (Phase 3):** JSON sequence "SetEventAtTime + AdvanceFrame" via
@@ -271,8 +278,8 @@ dependency.
 |------|-------|--------|--------|
 | `src/CMakeLists.txt` | 1 | Add `TimeController` subdirectory | Done |
 | `tests/CMakeLists.txt` | 1 | Add `TimeController` test subdirectory | Done |
-| `src/WhiskerToolbox/EditorState/EditorRegistry.hpp` | 2 | Add `unique_ptr<TimeController>`, delegate methods | Pending |
-| `src/WhiskerToolbox/EditorState/EditorRegistry.cpp` | 2 | Wire callback → signal bridge, delegate implementations | Pending |
-| `src/WhiskerToolbox/EditorState/CMakeLists.txt` | 2 | Add `TimeController` dependency | Pending |
+| `src/WhiskerToolbox/EditorState/EditorRegistry.hpp` | 2 | Add `unique_ptr<TimeController>`, delegate methods | Done |
+| `src/WhiskerToolbox/EditorState/EditorRegistry.cpp` | 2 | Wire callback → signal bridge, delegate implementations | Done |
+| `src/WhiskerToolbox/EditorState/CMakeLists.txt` | 2 | Add `TimeController` dependency | Done |
 | `src/Commands/Core/CommandContext.hpp` | 3 | Add `TimeController *` field | Pending |
 | `src/Commands/CMakeLists.txt` | 3 | Add `TimeController` dependency | Pending |

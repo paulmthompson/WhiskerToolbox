@@ -4,6 +4,7 @@
 #include "OperationContext.hpp"
 #include "SelectionContext.hpp"
 #include "StrongTypes.hpp"
+#include "TimeController/TimeController.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -37,12 +38,18 @@ struct SerializedWorkspace {
 EditorRegistry::EditorRegistry(QObject * parent)
     : QObject(parent),
       _selection_context(std::make_unique<SelectionContext>(this)),
-      _operation_context(std::make_unique<EditorLib::OperationContext>(this, this)) {
+      _operation_context(std::make_unique<EditorLib::OperationContext>(this, this)),
+      _time_controller(std::make_unique<TimeController>()) {
 
     // Wire SelectionContext changes to OperationContext
     // (operations may auto-close when selection changes)
     connect(_selection_context.get(), &SelectionContext::selectionChanged,
             _operation_context.get(), &EditorLib::OperationContext::onSelectionChanged);
+
+    _time_controller->setOnTimeChanged([this](TimePosition const & pos) { emit timeChanged(pos); });
+    _time_controller->setOnTimeKeyChanged([this](TimeKey new_key, TimeKey old_key) {
+        emit activeTimeKeyChanged(std::move(new_key), std::move(old_key));
+    });
 }
 
 EditorRegistry::~EditorRegistry() = default;
@@ -194,7 +201,7 @@ std::shared_ptr<EditorState> EditorRegistry::createState(EditorTypeId const & ty
     return it->second.create_state();
 }
 
-QWidget * EditorRegistry::createView(const std::shared_ptr<EditorState>& state) {
+QWidget * EditorRegistry::createView(std::shared_ptr<EditorState> const & state) {
     if (!state) {
         return nullptr;
     }
@@ -214,7 +221,7 @@ QWidget * EditorRegistry::createView(const std::shared_ptr<EditorState>& state) 
     return it->second.create_view(state);
 }
 
-QWidget * EditorRegistry::createProperties(const std::shared_ptr<EditorState>& state) {
+QWidget * EditorRegistry::createProperties(std::shared_ptr<EditorState> const & state) {
     if (!state) {
         return nullptr;
     }
@@ -236,7 +243,7 @@ QWidget * EditorRegistry::createProperties(const std::shared_ptr<EditorState>& s
 
 // === State Registry ===
 
-void EditorRegistry::registerState(const std::shared_ptr<EditorState>& state) {
+void EditorRegistry::registerState(std::shared_ptr<EditorState> const & state) {
     if (!state) {
         return;
     }
@@ -437,37 +444,40 @@ void EditorRegistry::markAllClean() {
 
 // === Global Time ===
 
-void EditorRegistry::setCurrentTime(const TimePosition& position) {
-
-    // Guard against re-entrant calls to prevent infinite loops
-    if (_time_update_in_progress) {
-        return;// Silently ignore recursive calls
-    }
-
-    // Check if state actually changed (pointer comparison + index comparison)
-    if (_current_position == position) {
-        return;// No change, no signal
-    }
-
-    // Set guard flag (prevents re-entrant calls during signal emission)
-    _time_update_in_progress = true;
-
-    // Update state
-    _current_position = position;
-
-    // Emit new signal (preferred)
-    emit timeChanged(position);
-
-    // Clear guard flag after all signals are emitted
-    _time_update_in_progress = false;
+void EditorRegistry::setCurrentTime(TimePosition const & position) {
+    _time_controller->setCurrentTime(position);
 }
 
 void EditorRegistry::setCurrentTime(TimeFrameIndex index, std::shared_ptr<TimeFrame> time_frame) {
-    setCurrentTime(TimePosition(index, std::move(time_frame)));
+    _time_controller->setCurrentTime(index, std::move(time_frame));
 }
 
 TimePosition EditorRegistry::currentPosition() const {
-    return _current_position;
+    return _time_controller->currentPosition();
+}
+
+void EditorRegistry::setActiveTimeKey(TimeKey key) {
+    _time_controller->setActiveTimeKey(std::move(key));
+}
+
+TimeKey EditorRegistry::activeTimeKey() const {
+    return _time_controller->activeTimeKey();
+}
+
+TimeFrameIndex EditorRegistry::currentTimeIndex() const {
+    return _time_controller->currentTimeIndex();
+}
+
+std::shared_ptr<TimeFrame> EditorRegistry::currentTimeFrame() const {
+    return _time_controller->currentTimeFrame();
+}
+
+TimeController * EditorRegistry::timeController() const {
+    return _time_controller.get();
+}
+
+void EditorRegistry::setCurrentTime(int64_t time) {
+    _time_controller->setCurrentTime(TimePosition(time, nullptr));
 }
 
 // === Private ===

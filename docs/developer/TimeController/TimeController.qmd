@@ -6,4 +6,4 @@ title: "TimeController"
 
 The `TimeController` library (`src/TimeController`) holds the current visualization `TimePosition`, the active `TimeKey`, and a re-entrancy guard for time updates. It is Qt-free and depends only on `TimeFrame`.
 
-`EditorRegistry` is planned to own a `TimeController` and bridge its `std::function` callbacks to Qt signals; see `docs/developer/ui/EditorState/time_controller_extraction_roadmap.md`.
+`EditorRegistry` owns a `TimeController` (`std::unique_ptr`) and bridges its `std::function` callbacks to `timeChanged` / `activeTimeKeyChanged`; see `docs/developer/ui/EditorState/time_controller_extraction_roadmap.md`.

@@ -65,6 +65,7 @@ using EditorLib::EditorTypeId;
 class DataManager;
 class EditorState;
 class SelectionContext;
+class TimeController;
 
 namespace EditorLib {
 class OperationContext;
@@ -229,13 +230,13 @@ public:
     /**
      * @brief Create view widget for an existing state
      */
-    [[nodiscard]] QWidget * createView(const std::shared_ptr<EditorState>& state);
+    [[nodiscard]] QWidget * createView(std::shared_ptr<EditorState> const & state);
 
     /**
      * @brief Create properties widget for an existing state
      * @return Properties widget, or nullptr if type has no properties factory
      */
-    [[nodiscard]] QWidget * createProperties(const std::shared_ptr<EditorState>& state);
+    [[nodiscard]] QWidget * createProperties(std::shared_ptr<EditorState> const & state);
 
     // ========== State Registry ==========
 
@@ -244,7 +245,7 @@ public:
      *
      * Use for states created via createState() or deserialized.
      */
-    void registerState(const std::shared_ptr<EditorState>& state);
+    void registerState(std::shared_ptr<EditorState> const & state);
 
     /**
      * @brief Unregister a state by instance ID
@@ -402,12 +403,13 @@ public:
      * Note: This is a UI/visualization concept, not data storage. The actual
      * time data lives in DataManager's TimeFrame objects.
      * 
-     * This method includes cycle prevention to avoid infinite loops when widgets
-     * respond to time changes by calling setCurrentTime() again.
-     * 
+     * Time updates are handled by an internal `TimeController` (re-entrancy guard
+     * and equality checks); this method forwards to it and `timeChanged` is emitted
+     * from the controller callback.
+     *
      * @param position The TimePosition (index + TimeFrame pointer) to set
      */
-    void setCurrentTime(const TimePosition& position);
+    void setCurrentTime(TimePosition const & position);
 
     /**
      * @brief Set the current visualization time with TimeFrameIndex and TimeFrame
@@ -422,19 +424,19 @@ public:
 
     /**
      * @brief Set the active TimeKey
-     * 
+     *
      * Changes which TimeFrame is considered active. This will emit
      * activeTimeKeyChanged() if the key actually changes.
-     * 
+     *
      * @param key The TimeKey to make active
      */
-    void setActiveTimeKey(TimeKey key);
+    [[deprecated("Use timeController()->setActiveTimeKey() for new code")]] void setActiveTimeKey(TimeKey key);
 
     /**
      * @brief Get the active TimeKey
      * @return The currently active TimeKey (defaults to "time")
      */
-    [[nodiscard]] TimeKey activeTimeKey() const;
+    [[deprecated("Use timeController()->activeTimeKey() for new code")]] [[nodiscard]] TimeKey activeTimeKey() const;
 
     /**
      * @brief Get the current time position (includes TimeFrame context)
@@ -446,17 +448,21 @@ public:
      * @brief Get the current time index
      * @return Current TimeFrameIndex being displayed
      */
-    [[nodiscard]] TimeFrameIndex currentTimeIndex() const {
-        return _current_position.index;
-    }
+    [[deprecated("Use timeController()->currentTimeIndex() for new code")]] [[nodiscard]] TimeFrameIndex
+    currentTimeIndex() const;
 
     /**
      * @brief Get the current TimeFrame (may be nullptr)
      * @return The TimeFrame for the current position
      */
-    [[nodiscard]] std::shared_ptr<TimeFrame> currentTimeFrame() const {
-        return _current_position.time_frame;
-    }
+    [[deprecated("Use timeController()->currentTimeFrame() for new code")]] [[nodiscard]] std::shared_ptr<TimeFrame>
+    currentTimeFrame() const;
+
+    /**
+     * @brief Non-owning pointer to the Qt-free time state (for CommandContext, tests, etc.)
+     * @return Pointer owned by this registry; never null after construction
+     */
+    [[nodiscard]] TimeController * timeController() const;
 
 signals:
     /// Emitted when a new type is registered
@@ -540,10 +546,8 @@ private:
     /// NOT serialized into workspace; cleared on fromJson()
     std::map<EditorTypeId, std::string> _closed_state_cache;
 
-    /// Current visualization time state
-    TimePosition _current_position;           ///< Current time position (index + TimeFrame pointer)
-    TimeKey _active_time_key{TimeKey("time")};///< Currently selected TimeFrame key (defaults to "time")
-    bool _time_update_in_progress{false};     ///< Guard flag to prevent re-entrant time updates
+    /// Current visualization time (delegates to Qt signals via callbacks)
+    std::unique_ptr<TimeController> _time_controller;
 
     OpenEditorCallback _open_editor_callback;
 

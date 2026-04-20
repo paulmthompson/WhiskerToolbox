@@ -29,6 +29,7 @@ target_link_libraries(EditorState
         Qt6::Widgets
         reflectcpp::reflectcpp
         TimeFrame
+        WhiskerToolbox::TimeController
 )
 
 target_include_directories(EditorState
