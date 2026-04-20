@@ -16,13 +16,13 @@ false-positive/false-negative cleanup burden that can negate the savings.
 
 This plan optimizes the manual triage workflow across five phases:
 
-| Phase | Goal | Dependencies |
-|-------|------|--------------|
-| 1 | Atomic frame-level Commands | None |
-| 2 | Hotkey → Command Sequence bridge | Phase 1 |
-| 3 | Sub-25 FPS playback | None (parallel) |
-| 4 | Dynamic frame filter on TimeScrollBar | None (parallel) |
-| 5 | Adaptive FPS from ML confidence | Phases 3 & 4 |
+| Phase | Goal | Dependencies | Status |
+|-------|------|--------------|--------|
+| 1 | Atomic frame-level Commands | None | **Done** |
+| 2 | Hotkey → Command Sequence bridge | Phase 1 | Not started |
+| 3 | Sub-25 FPS playback | None (parallel) | Not started |
+| 4 | Dynamic frame filter on TimeScrollBar | None (parallel) | Not started |
+| 5 | Adaptive FPS from ML confidence | Phases 3 & 4 | Not started |
 
 ---
 
@@ -38,6 +38,9 @@ This plan optimizes the manual triage workflow across five phases:
 | Tracked regions stored as intervals | `tracked_regions` key in `TriageSessionState` |
 | Keymap system with scopes + adapter dispatch | `KeymapSystem` (`AlwaysRouted`, `EditorFocused`, `Global`) |
 | Command architecture with sequencing | `Commands/Core` (`CommandSequenceDescriptor`, `executeSequence`) |
+| Atomic triage commands (`ICommand`) | `SetEventAtTime`, `FlipEventAtTime`, `AdvanceFrame` in `src/Commands/`; registered in `register_core_commands.cpp` |
+| `TimeController` on `CommandContext` | `src/Commands/Core/CommandContext.hpp` — optional pointer for navigation commands |
+| Tests: frame commands + sequences | `src/Commands/SetEventAtTime.test.cpp`, `src/Commands/AdvanceFrame.test.cpp` |
 | Timeline arrow keys (±1, ±N jump) | `TimeScrollBar` + `KeymapSystem` |
 | Playback ≥ 25 FPS | `TimeScrollBar` — QTimer at 40 ms × integer `_play_speed` |
 
@@ -47,16 +50,20 @@ This plan optimizes the manual triage workflow across five phases:
 |---|---|
 | Sub-25 FPS playback | Timer period hardcoded at 40 ms; `_play_speed` is `int ≥ 1` |
 | Frame filtering / skip during playback | No filter concept in `TimeScrollBar` or `TimeFrame` |
-| Direct hotkey → command sequence binding | `KeymapSystem` and Commands are architecturally separate |
-| Atomic commands for flip / mark-tracked / advance | Only widget-level methods exist; no `ICommand` implementations |
+| Direct hotkey → command sequence binding | `KeymapSystem` and Commands are architecturally separate (Phase 2) |
 | Adaptive FPS from ML confidence | No infrastructure |
 
 ---
 
 ## Phase 1 — Atomic Frame-Level Commands
 
-Create three new commands in `src/Commands/` that serve as composable
-primitives for triage hotkey sequences. No dependencies on other phases.
+**Status: complete.** Three commands in `src/Commands/` are registered as composable
+primitives for triage hotkey sequences (see also
+[Concrete Commands](../DataManager/Commands/commands.qmd)). No dependencies on other phases.
+
+**Layout:** Each command uses a paired `.hpp` / `.cpp` at `src/Commands/<Name>.{hpp,cpp}`
+(not per-command subdirectories). `TimeController *` on `CommandContext` was introduced
+with `AdvanceFrame` so navigation stays inside `executeSequence()` like other commands.
 
 ### 1.1 `SetEventAtTime`
 
@@ -76,9 +83,9 @@ This is the primitive for the single-key toggle hotkey.
 
 ### 1.3 `AdvanceFrame`
 
-- **Parameters:** `delta` (int, default 1), `time_key` (optional string)
-- **Action:** Uses `TimeController` (added to `CommandContext`) to advance the current time position.
-- **Category:** `ui_navigation`
+- **Parameters:** `delta` (`int64_t`, default `1`) — signed frame step
+- **Action:** Uses `CommandContext::time_controller` (`TimeController`) to advance the current time position.
+- **Category:** `navigation` (registry metadata; same intent as “UI navigation”)
 
 `TimeController` is a Qt-free class extracted from `EditorRegistry`.
 It depends only on `TimeFrame`, so adding it to `CommandContext` preserves the
@@ -133,12 +140,9 @@ On key press, if the resolved action is a command-action, `KeymapManager`:
 
 ### 2.2 `TimeController` on `CommandContext`
 
-Add an optional `TimeController *` field to `CommandContext` (see
+**Done in Phase 1.** `CommandContext` already carries an optional `TimeController *` (see
 [TimeController Extraction Roadmap](../ui/EditorState/time_controller_extraction_roadmap.md)).
-`TimeController` is a Qt-free class depending only on `TimeFrame`, so this does
-not introduce any Qt dependency into the Command architecture. This allows
-`AdvanceFrame` (and future UI-navigation commands) to work as regular commands
-inside sequences.
+Phase 2 only needs callers (e.g. `KeymapManager`) to populate it when building the context.
 
 ### 2.3 User-Configurable Hotkeys
 
@@ -328,8 +332,10 @@ A new class that modulates `target_fps` based on a per-frame signal:
 
 | File | Phase | Change |
 |------|-------|--------|
-| `src/Commands/Core/CommandContext.hpp` | 2 | Add optional `TimeController *` field |
-| `src/Commands/CMakeLists.txt` | 2 | Add `TimeController` dependency (Qt-free) |
+| `src/Commands/Core/CommandContext.hpp` | 1 | Optional `TimeController *` (done) |
+| `src/Commands/CMakeLists.txt` | 1 | Sources + link `WhiskerToolbox::TimeController` (done) |
+| `src/Commands/register_core_commands.cpp` | 1 | Register `SetEventAtTime`, `FlipEventAtTime`, `AdvanceFrame` (done) |
+| `tests/Commands/CMakeLists.txt` | 1 | Add `SetEventAtTime.test.cpp` to `test_commands` (done) |
 | `src/WhiskerToolbox/KeymapSystem/KeymapManager.hpp` / `.cpp` | 2 | Add `registerCommandAction()` |
 | `src/WhiskerToolbox/KeymapSystem/KeyAction.hpp` | 2 | Extend action descriptor for command sequences |
 | `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` / `.cpp` | 3, 4 | Playback refactor + filter integration |
@@ -341,9 +347,10 @@ A new class that modulates `target_fps` based on a per-frame signal:
 
 | File | Phase | Purpose |
 |------|-------|---------|
-| `src/Commands/SetEventAtTime/` | 1 | New command |
-| `src/Commands/FlipEventAtTime/` | 1 | New command |
-| `src/Commands/AdvanceFrame/` | 1 | New command |
+| `src/Commands/SetEventAtTime.hpp` / `SetEventAtTime.cpp` | 1 | `SetEventAtTime` command (**done**) |
+| `src/Commands/FlipEventAtTime.hpp` / `FlipEventAtTime.cpp` | 1 | `FlipEventAtTime` command (**done**) |
+| `src/Commands/AdvanceFrame.hpp` / `AdvanceFrame.cpp` | 1 | `AdvanceFrame` command (**done**) |
+| `src/Commands/SetEventAtTime.test.cpp` | 1 | Catch2 tests for interval commands + triage sequence (**done**) |
 | `src/WhiskerToolbox/TimeScrollBar/FrameFilter.hpp` / `.cpp` | 4 | Frame filter interface + concrete implementation |
 | `src/WhiskerToolbox/TimeScrollBar/AdaptiveFPSController.hpp` / `.cpp` | 5 | FPS modulation controller |
 
@@ -351,16 +358,16 @@ A new class that modulates `target_fps` based on a per-frame signal:
 
 ## Verification
 
-1. **Catch2 tests for new commands**: Exercise `SetEventAtTime` and
-   `FlipEventAtTime` with a `DataManager` containing a
-   `DigitalIntervalSeries`. Verify flip toggles correctly; verify
-   `${current_frame}` variable substitution.
+1. **Catch2 tests for new commands** — **Done** (`SetEventAtTime.test.cpp`): `SetEventAtTime`
+   and `FlipEventAtTime` with `DigitalIntervalSeries`; flip toggles; `${current_frame}`
+   substitution; JSON sequence “mark contact + mark tracked + `AdvanceFrame`” via
+   `executeSequence()`.
 2. **Catch2 test for `FrameFilter`**: Test `shouldSkip()` with known intervals.
    Verify boundary behavior (first frame, last frame, empty series, fully
    tracked).
-3. **Integration test for command sequences**: JSON sequence "flip contact +
-   mark tracked + advance frame" via `executeSequence()`. Verify all three
-   mutations occur.
+3. **Integration test (alternate triage chord)** — **Optional / Phase 2 UX**: JSON sequence
+   “`FlipEventAtTime`(contact) + `SetEventAtTime`(tracked) + `AdvanceFrame`” (e.g. planned `D`
+   binding) — same machinery as item 1; add a dedicated test if desired.
 4. **Manual — sub-25 FPS**: Play video at 0.5 FPS, verify frames advance
    approximately every 2 seconds. Test speed transitions across the full preset
    range.

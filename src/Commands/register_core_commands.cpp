@@ -11,10 +11,12 @@
 #include "AddInterval.hpp"
 #include "AdvanceFrame.hpp"
 #include "CopyByTimeRange.hpp"
+#include "FlipEventAtTime.hpp"
 #include "ForEachKey.hpp"
 #include "IO/LoadData.hpp"
 #include "IO/SaveData.hpp"
 #include "MoveByTimeRange.hpp"
+#include "SetEventAtTime.hpp"
 #include "SynthesizeData.hpp"
 
 namespace commands {
@@ -62,6 +64,24 @@ void register_core_commands() {
              .category = "navigation",
              .supports_undo = false,
              .supported_data_types = {}});
+
+    registerTypedCommand<SetEventAtTime, SetEventAtTimeParams>(
+            reg,
+            "SetEventAtTime",
+            {.name = "SetEventAtTime",
+             .description = "Set or clear DigitalIntervalSeries membership at a single time index",
+             .category = "data_mutation",
+             .supports_undo = false,
+             .supported_data_types = {"DigitalIntervalSeries"}});
+
+    registerTypedCommand<FlipEventAtTime, FlipEventAtTimeParams>(
+            reg,
+            "FlipEventAtTime",
+            {.name = "FlipEventAtTime",
+             .description = "Toggle DigitalIntervalSeries membership at a single time index",
+             .category = "data_mutation",
+             .supports_undo = false,
+             .supported_data_types = {"DigitalIntervalSeries"}});
 
     registerTypedCommand<ForEachKey, ForEachKeyParams>(
             reg,

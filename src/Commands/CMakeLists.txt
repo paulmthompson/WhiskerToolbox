@@ -32,6 +32,10 @@ set(COMMAND_SOURCES
         AddInterval.cpp
         AdvanceFrame.hpp
         AdvanceFrame.cpp
+        FlipEventAtTime.hpp
+        FlipEventAtTime.cpp
+        SetEventAtTime.hpp
+        SetEventAtTime.cpp
         ForEachKey.hpp
         ForEachKey.cpp
         SynthesizeData.hpp

@@ -1,13 +1,13 @@
 ---
 title: "Concrete Commands"
-description: "First four command implementations: MoveByTimeRange, CopyByTimeRange, AddInterval, ForEachKey"
+description: "Move/Copy/interval primitives, triage frame commands, ForEachKey meta-command"
 ---
 
 ## Overview
 
-This page documents the first four concrete `ICommand` implementations for data mutation
-and meta operations. Each command has a reflect-cpp–serializable parameter struct and lives
-in `src/Commands/`. All commands are registered in the centralized
+This page documents concrete `ICommand` implementations for data mutation, manual triage
+at a single frame index, and meta operations. Each command has a reflect-cpp–serializable
+parameter struct and lives in `src/Commands/`. All commands are registered in the centralized
 `createCommand()` factory.
 
 For the persistence command (`SaveData`), see [SaveData Command](save_data.qmd).
@@ -17,8 +17,13 @@ For the persistence command (`SaveData`), see [SaveData Command](save_data.qmd).
 - `src/Commands/MoveByTimeRange.hpp` / `.cpp`
 - `src/Commands/CopyByTimeRange.hpp` / `.cpp`
 - `src/Commands/AddInterval.hpp` / `.cpp`
+- `src/Commands/SetEventAtTime.hpp` / `.cpp`
+- `src/Commands/FlipEventAtTime.hpp` / `.cpp`
+- `src/Commands/AdvanceFrame.hpp` / `.cpp`
 - `src/Commands/ForEachKey.hpp` / `.cpp`
-- `src/Commands/Commands.test.cpp` — Unit tests
+- `src/Commands/Commands.test.cpp` — Unit tests (Move/Copy/AddInterval/ForEachKey)
+- `src/Commands/SetEventAtTime.test.cpp` — `SetEventAtTime`, `FlipEventAtTime`, triage sequences
+- `src/Commands/AdvanceFrame.test.cpp` — `AdvanceFrame` and `TimeController` wiring
 
 All code lives in the `commands` namespace with no Qt dependency.
 
@@ -112,6 +117,58 @@ command creates an empty `DigitalIntervalSeries` with the default `TimeKey("time
 
 Not undoable (default).
 
+## SetEventAtTime
+
+Sets or clears `DigitalIntervalSeries` membership at one time index by calling
+`DigitalIntervalSeries::setEventAtTime()`. Use `event: true` to mark the frame (one-frame
+interval) and `false` to clear it. Intended for triage keys such as contact labels and
+tracked regions.
+
+### Parameters
+
+```cpp
+struct SetEventAtTimeParams {
+    std::string data_key;
+    int64_t time = 0;
+    bool event = false;
+};
+```
+
+`time` accepts `${current_frame}` when the sequence executor fills `CommandContext::runtime_variables`
+(see [Sequence Execution](sequence_execution.qmd)).
+
+### Undo
+
+Not undoable (default).
+
+## FlipEventAtTime
+
+Toggles membership at one index: reads `hasIntervalAtTime()` then `setEventAtTime()` with the
+opposite value. Same `data_key` / `time` / variable-substitution conventions as `SetEventAtTime`.
+
+### Parameters
+
+```cpp
+struct FlipEventAtTimeParams {
+    std::string data_key;
+    int64_t time = 0;
+};
+```
+
+### Undo
+
+Not undoable (default).
+
+## AdvanceFrame
+
+Shifts the current visualization index via `CommandContext::time_controller` (Qt-free
+`TimeController`). Parameters: `delta` (signed frame step). Requires a non-null
+`time_controller` in the context.
+
+### Undo
+
+Not undoable (default).
+
 ## ForEachKey
 
 A meta-command that iterates a list of string values, binds each to a template variable,
@@ -173,11 +230,12 @@ one for `w1_raw → w1_labeled`, and one for `w2_raw → w2_labeled`.
 
 ## Tests
 
-Tests live in `Commands.test.cpp` alongside the command sources.
+Primary coverage lives in `Commands.test.cpp` (Move/Copy/AddInterval/ForEachKey). Triage
+frame commands are covered in `SetEventAtTime.test.cpp` and `AdvanceFrame.test.cpp`.
 
 | Test Group | Command | Sections |
 |------------|---------|----------|
-| Factory | All four | Valid params → non-null, invalid → null |
+| Factory | Core set | Valid params → non-null, invalid → null |
 | MoveByTimeRange execute | `MoveByTimeRange` | Subset move, move all, move nothing, missing keys, type mismatch |
 | MoveByTimeRange undo | `MoveByTimeRange` | Undo restores source and destination |
 | MoveByTimeRange DigitalEventSeries | `MoveByTimeRange` | Move with DigitalEventSeries data |
