@@ -168,17 +168,17 @@ TEST_CASE("extractParameterSchema - AnalogEventThresholdParams", "[transforms][v
     auto * threshold = schema.field("threshold_value");
     REQUIRE(threshold != nullptr);
     CHECK(threshold->type_name == "float");
-    CHECK(threshold->is_optional);
+    CHECK_FALSE(threshold->is_optional);
     CHECK(threshold->display_name == "Threshold Value");
 
     auto * direction = schema.field("direction");
     REQUIRE(direction != nullptr);
-    CHECK(direction->is_optional);
+    CHECK_FALSE(direction->is_optional);
 
     auto * lockout = schema.field("lockout_time");
     REQUIRE(lockout != nullptr);
     CHECK(lockout->type_name == "float");
-    CHECK(lockout->is_optional);
+    CHECK_FALSE(lockout->is_optional);
     // lockout_time has rfl::Minimum<0.0f> validator
     CHECK(hasValidator(lockout->raw_type_name));
     CHECK_FALSE(lockout->is_exclusive_min);// Minimum is inclusive
