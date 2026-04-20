@@ -2,6 +2,8 @@ add_subdirectory(Observer)
 
 add_subdirectory(TimeFrame)
 
+add_subdirectory(TimeController)
+
 add_subdirectory(Entity)
 
 add_subdirectory(CoreGeometry)

@@ -142,6 +142,7 @@ website:
         - section: "TimeFrame"
           contents:
             - developer/TimeFrame/roadmap.md
+            - developer/TimeController/TimeController.qmd
         - section: "Media Processing Pipeline"
           href: developer/MediaProcessingPipeline/index.qmd
         - section: "Data Inspectors"

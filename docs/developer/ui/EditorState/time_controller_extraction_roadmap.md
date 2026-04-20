@@ -29,6 +29,16 @@ Qt-free `TimeController` class that:
 `EditorRegistry` retains ownership of `TimeController` and bridges its callback
 to Qt signals so all existing widget code continues to work unchanged.
 
+## Progress
+
+| Phase | Status |
+|-------|--------|
+| **Phase 1** — `TimeController` library + tests | **Complete** — builds cleanly; `test_timecontroller` exercises state, callbacks, re-entrancy guard, equality short-circuit, and `setActiveTimeKey`. |
+| **Phase 2** — `EditorRegistry` owns and delegates | Not started |
+| **Phase 3** — `CommandContext` + commands | Not started |
+
+Phase 1 also added a short developer note at `docs/developer/TimeController/TimeController.qmd` (linked from the TimeFrame section in `docs/_quarto.yml`) and a one-line architecture entry in `AGENTS.md` / `.github/copilot-instructions.md`.
+
 ## Current State
 
 ### Time-Related API on EditorRegistry
@@ -64,6 +74,8 @@ to Qt signals so all existing widget code continues to work unchanged.
 ---
 
 ## Phase 1 — Create TimeController Library
+
+**Status:** complete (library is integrated in the tree; `EditorRegistry` still uses its own fields until Phase 2).
 
 ### 1.1 New Library: `TimeController`
 
@@ -115,6 +127,8 @@ Catch2 tests in `tests/TimeController/`:
 - Verify re-entrancy guard prevents recursive calls
 - Verify equality short-circuit (same position → no callback)
 - Verify `setActiveTimeKey()` callback
+
+**Delivered:** `tests/TimeController/TimeController.test.cpp` implements the above via `test_timecontroller` (CMake: `tests/TimeController/CMakeLists.txt`), including the `setCurrentTime(TimeFrameIndex, shared_ptr<TimeFrame>)` convenience overload.
 
 ---
 
@@ -227,8 +241,8 @@ dependency.
 
 ## Verification
 
-1. **Unit tests (Phase 1):** `TimeController` standalone tests — state
-   management, callback, re-entrancy guard.
+1. **Unit tests (Phase 1):** ✅ `TimeController` standalone tests — state
+   management, callback, re-entrancy guard (`ctest` discovers cases from `test_timecontroller`).
 2. **Build (Phase 2):** Full build succeeds with zero changes to any widget
    code. All existing `EditorRegistry` callers and signal connections compile.
 3. **Existing test suite (Phase 2):** `ctest --preset linux-clang-release`
@@ -243,22 +257,22 @@ dependency.
 
 ## Files to Create
 
-| File | Phase | Purpose |
-|------|-------|---------|
-| `src/TimeController/TimeController.hpp` | 1 | Qt-free time state class |
-| `src/TimeController/TimeController.cpp` | 1 | Implementation |
-| `src/TimeController/CMakeLists.txt` | 1 | Static library, depends on `TimeFrame` |
-| `tests/TimeController/TimeController.test.cpp` | 1 | Unit tests |
-| `tests/TimeController/CMakeLists.txt` | 1 | Test binary |
+| File | Phase | Purpose | Status |
+|------|-------|---------|--------|
+| `src/TimeController/TimeController.hpp` | 1 | Qt-free time state class | Done |
+| `src/TimeController/TimeController.cpp` | 1 | Implementation | Done |
+| `src/TimeController/CMakeLists.txt` | 1 | Static library, depends on `TimeFrame` | Done |
+| `tests/TimeController/TimeController.test.cpp` | 1 | Unit tests | Done |
+| `tests/TimeController/CMakeLists.txt` | 1 | Test binary | Done |
 
 ## Files to Modify
 
-| File | Phase | Change |
-|------|-------|--------|
-| `src/CMakeLists.txt` | 1 | Add `TimeController` subdirectory |
-| `tests/CMakeLists.txt` | 1 | Add `TimeController` test subdirectory |
-| `src/WhiskerToolbox/EditorState/EditorRegistry.hpp` | 2 | Add `unique_ptr<TimeController>`, delegate methods |
-| `src/WhiskerToolbox/EditorState/EditorRegistry.cpp` | 2 | Wire callback → signal bridge, delegate implementations |
-| `src/WhiskerToolbox/EditorState/CMakeLists.txt` | 2 | Add `TimeController` dependency |
-| `src/Commands/Core/CommandContext.hpp` | 3 | Add `TimeController *` field |
-| `src/Commands/CMakeLists.txt` | 3 | Add `TimeController` dependency |
+| File | Phase | Change | Status |
+|------|-------|--------|--------|
+| `src/CMakeLists.txt` | 1 | Add `TimeController` subdirectory | Done |
+| `tests/CMakeLists.txt` | 1 | Add `TimeController` test subdirectory | Done |
+| `src/WhiskerToolbox/EditorState/EditorRegistry.hpp` | 2 | Add `unique_ptr<TimeController>`, delegate methods | Pending |
+| `src/WhiskerToolbox/EditorState/EditorRegistry.cpp` | 2 | Wire callback → signal bridge, delegate implementations | Pending |
+| `src/WhiskerToolbox/EditorState/CMakeLists.txt` | 2 | Add `TimeController` dependency | Pending |
+| `src/Commands/Core/CommandContext.hpp` | 3 | Add `TimeController *` field | Pending |
+| `src/Commands/CMakeLists.txt` | 3 | Add `TimeController` dependency | Pending |
