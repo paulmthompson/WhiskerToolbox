@@ -21,16 +21,18 @@
 #include "nlohmann/json.hpp"
 
 // Concrete EditorState subclasses
-#include "DataManager_Widget/DataManagerWidgetState.hpp"
-#include "TimeScrollBar/TimeScrollBarState.hpp"
-#include "DataTransform_Widget/DataTransformWidgetState.hpp"
-#include "GroupManagementWidget/GroupManagementWidgetState.hpp"
 #include "DataImport_Widget/DataImportWidgetState.hpp"
 #include "DataInspector_Widget/DataInspectorState.hpp"
-#include "Plots/LinePlotWidget/Core/LinePlotState.hpp"
-#include "Plots/EventPlotWidget/Core/EventPlotState.hpp"
+#include "DataManager_Widget/DataManagerWidgetState.hpp"
+#include "DataTransform_Widget/DataTransformWidgetState.hpp"
+#include "GroupManagementWidget/GroupManagementWidgetState.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Plots/EventPlotWidget/Core/EventPlotState.hpp"
+#include "Plots/LinePlotWidget/Core/LinePlotState.hpp"
+#include "TimeScrollBar/TimeScrollBarPlayback.hpp"
+#include "TimeScrollBar/TimeScrollBarState.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 
@@ -68,8 +70,8 @@ void ExpectJsonEqual(std::string const & json1, std::string const & json2) {
     auto parsed1 = nlohmann::json::parse(json1);
     auto parsed2 = nlohmann::json::parse(json2);
     EXPECT_EQ(parsed1, parsed2)
-        << "JSON mismatch:\n  First:  " << json1.substr(0, 500)
-        << "\n  Second: " << json2.substr(0, 500);
+            << "JSON mismatch:\n  First:  " << json1.substr(0, 500)
+            << "\n  Second: " << json2.substr(0, 500);
 }
 
 // ============================================================================
@@ -77,25 +79,24 @@ void ExpectJsonEqual(std::string const & json1, std::string const & json2) {
 // ============================================================================
 
 void VerifyEditorStateRoundTrip(
-    EditorState & state1,
-    EditorState & state2,
-    std::string const & json1)
-{
+        EditorState & state1,
+        EditorState & state2,
+        std::string const & json1) {
     // fromJson should succeed
     ASSERT_TRUE(state2.fromJson(json1))
-        << "fromJson failed for type: " << state1.getTypeName().toStdString();
+            << "fromJson failed for type: " << state1.getTypeName().toStdString();
 
     // Instance ID must survive
     EXPECT_EQ(state1.getInstanceId(), state2.getInstanceId())
-        << "Instance ID not preserved for type: " << state1.getTypeName().toStdString();
+            << "Instance ID not preserved for type: " << state1.getTypeName().toStdString();
 
     // Display name must survive
     EXPECT_EQ(state1.getDisplayName(), state2.getDisplayName())
-        << "Display name not preserved for type: " << state1.getTypeName().toStdString();
+            << "Display name not preserved for type: " << state1.getTypeName().toStdString();
 
     // Type name must match
     EXPECT_EQ(state1.getTypeName(), state2.getTypeName())
-        << "Type name mismatch";
+            << "Type name mismatch";
 
     // Second serialization must be identical (idempotency)
     auto json2 = state2.toJson();
@@ -111,7 +112,7 @@ void VerifySignalEmission(EditorState & state, std::string const & json) {
     bool result = state.fromJson(json);
     if (result) {
         EXPECT_GE(spy.count(), 1)
-            << "stateChanged() not emitted for type: " << state.getTypeName().toStdString();
+                << "stateChanged() not emitted for type: " << state.getTypeName().toStdString();
     }
 }
 
@@ -120,9 +121,8 @@ void VerifySignalEmission(EditorState & state, std::string const & json) {
 // ============================================================================
 
 void FuzzDataManagerWidgetStateRoundTrip(
-    std::string const & display_name,
-    std::string const & selected_data_key)
-{
+        std::string const & display_name,
+        std::string const & selected_data_key) {
     auto state1 = std::make_shared<DataManagerWidgetState>();
     state1->setDisplayName(QString::fromStdString(display_name));
     state1->setSelectedDataKey(QString::fromStdString(selected_data_key));
@@ -141,23 +141,24 @@ void FuzzDataManagerWidgetStateRoundTrip(
               QString::fromStdString(selected_data_key));
 }
 FUZZ_TEST(EditorStateRoundTrip, FuzzDataManagerWidgetStateRoundTrip)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(200),
-        fuzztest::PrintableAsciiString().WithMaxSize(200));
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(200),
+                fuzztest::PrintableAsciiString().WithMaxSize(200));
 
 // ============================================================================
-// 2. TimeScrollBarState — ints + bool
+// 2. TimeScrollBarState — float preset + ints + bool
 // ============================================================================
 
 void FuzzTimeScrollBarStateRoundTrip(
-    std::string const & display_name,
-    int play_speed,
-    int frame_jump,
-    bool is_playing)
-{
+        std::string const & display_name,
+        int preset_index,
+        int frame_jump,
+        bool is_playing) {
+    int const idx = std::clamp(preset_index, 0, static_cast<int>(time_scroll_bar::kFpsPresets.size()) - 1);
+    float const target_fps = time_scroll_bar::kFpsPresets[static_cast<std::size_t>(idx)];
     auto state1 = std::make_shared<TimeScrollBarState>();
     state1->setDisplayName(QString::fromStdString(display_name));
-    state1->setPlaySpeed(play_speed);
+    state1->setTargetFps(target_fps);
     state1->setFrameJump(frame_jump);
     state1->setIsPlaying(is_playing);
 
@@ -167,27 +168,26 @@ void FuzzTimeScrollBarStateRoundTrip(
     VerifyEditorStateRoundTrip(*state1, *state2, json1);
 
     // Verify specific field preservation
-    EXPECT_EQ(state2->playSpeed(), play_speed);
+    EXPECT_FLOAT_EQ(state2->targetFps(), target_fps);
     EXPECT_EQ(state2->frameJump(), frame_jump);
     EXPECT_EQ(state2->isPlaying(), is_playing);
 }
 FUZZ_TEST(EditorStateRoundTrip, FuzzTimeScrollBarStateRoundTrip)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::Arbitrary<int>(),
-        fuzztest::Arbitrary<int>(),
-        fuzztest::Arbitrary<bool>());
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::InRange(0, 8),
+                fuzztest::Arbitrary<int>(),
+                fuzztest::Arbitrary<bool>());
 
 // ============================================================================
 // 3. DataTransformWidgetState — all string fields
 // ============================================================================
 
 void FuzzDataTransformWidgetStateRoundTrip(
-    std::string const & display_name,
-    std::string const & selected_input_data_key,
-    std::string const & selected_operation,
-    std::string const & last_output_name)
-{
+        std::string const & display_name,
+        std::string const & selected_input_data_key,
+        std::string const & selected_operation,
+        std::string const & last_output_name) {
     auto state1 = std::make_shared<DataTransformWidgetState>();
     state1->setDisplayName(QString::fromStdString(display_name));
     state1->setSelectedInputDataKey(QString::fromStdString(selected_input_data_key));
@@ -208,20 +208,19 @@ void FuzzDataTransformWidgetStateRoundTrip(
               QString::fromStdString(last_output_name));
 }
 FUZZ_TEST(EditorStateRoundTrip, FuzzDataTransformWidgetStateRoundTrip)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(200),
-        fuzztest::PrintableAsciiString().WithMaxSize(200),
-        fuzztest::PrintableAsciiString().WithMaxSize(200),
-        fuzztest::PrintableAsciiString().WithMaxSize(200));
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(200),
+                fuzztest::PrintableAsciiString().WithMaxSize(200),
+                fuzztest::PrintableAsciiString().WithMaxSize(200),
+                fuzztest::PrintableAsciiString().WithMaxSize(200));
 
 // ============================================================================
 // 4. GroupManagementWidgetState — int
 // ============================================================================
 
 void FuzzGroupManagementWidgetStateRoundTrip(
-    std::string const & display_name,
-    int selected_group_id)
-{
+        std::string const & display_name,
+        int selected_group_id) {
     auto state1 = std::make_shared<GroupManagementWidgetState>();
     state1->setDisplayName(QString::fromStdString(display_name));
     state1->setSelectedGroupId(selected_group_id);
@@ -235,21 +234,20 @@ void FuzzGroupManagementWidgetStateRoundTrip(
     EXPECT_EQ(state2->selectedGroupId(), selected_group_id);
 }
 FUZZ_TEST(EditorStateRoundTrip, FuzzGroupManagementWidgetStateRoundTrip)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::Arbitrary<int>());
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::Arbitrary<int>());
 
 // ============================================================================
 // 5. DataImportWidgetState — strings + map<string,string>
 // ============================================================================
 
 void FuzzDataImportWidgetStateRoundTrip(
-    std::string const & display_name,
-    std::string const & selected_import_type,
-    std::string const & last_used_directory,
-    std::vector<std::string> const & pref_keys,
-    std::vector<std::string> const & pref_values)
-{
+        std::string const & display_name,
+        std::string const & selected_import_type,
+        std::string const & last_used_directory,
+        std::vector<std::string> const & pref_keys,
+        std::vector<std::string> const & pref_values) {
     auto state1 = std::make_shared<DataImportWidgetState>();
     state1->setDisplayName(QString::fromStdString(display_name));
     state1->setSelectedImportType(QString::fromStdString(selected_import_type));
@@ -259,8 +257,8 @@ void FuzzDataImportWidgetStateRoundTrip(
     auto const n = std::min(pref_keys.size(), pref_values.size());
     for (size_t i = 0; i < n; ++i) {
         state1->setFormatPreference(
-            QString::fromStdString(pref_keys[i]),
-            QString::fromStdString(pref_values[i]));
+                QString::fromStdString(pref_keys[i]),
+                QString::fromStdString(pref_values[i]));
     }
 
     auto json1 = state1->toJson();
@@ -275,22 +273,21 @@ void FuzzDataImportWidgetStateRoundTrip(
               QString::fromStdString(last_used_directory));
 }
 FUZZ_TEST(EditorStateRoundTrip, FuzzDataImportWidgetStateRoundTrip)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(200),
-        fuzztest::VectorOf(fuzztest::PrintableAsciiString().WithMaxSize(50)).WithMaxSize(10),
-        fuzztest::VectorOf(fuzztest::PrintableAsciiString().WithMaxSize(50)).WithMaxSize(10));
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(200),
+                fuzztest::VectorOf(fuzztest::PrintableAsciiString().WithMaxSize(50)).WithMaxSize(10),
+                fuzztest::VectorOf(fuzztest::PrintableAsciiString().WithMaxSize(50)).WithMaxSize(10));
 
 // ============================================================================
 // 6. DataInspectorState — strings + bool
 // ============================================================================
 
 void FuzzDataInspectorStateRoundTrip(
-    std::string const & display_name,
-    std::string const & inspected_data_key,
-    bool is_pinned)
-{
+        std::string const & display_name,
+        std::string const & inspected_data_key,
+        bool is_pinned) {
     auto state1 = std::make_shared<DataInspectorState>();
     state1->setDisplayName(QString::fromStdString(display_name));
     state1->setInspectedDataKey(QString::fromStdString(inspected_data_key));
@@ -307,10 +304,10 @@ void FuzzDataInspectorStateRoundTrip(
     EXPECT_EQ(state2->isPinned(), is_pinned);
 }
 FUZZ_TEST(EditorStateRoundTrip, FuzzDataInspectorStateRoundTrip)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(200),
-        fuzztest::Arbitrary<bool>());
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(200),
+                fuzztest::Arbitrary<bool>());
 
 // ============================================================================
 // 7. LinePlotState — full setter fuzzing including alignment and view state
@@ -319,13 +316,12 @@ FUZZ_TEST(EditorStateRoundTrip, FuzzDataInspectorStateRoundTrip)
 // ============================================================================
 
 void FuzzLinePlotStateRoundTrip(
-    std::string const & display_name,
-    std::string const & alignment_event_key,
-    double offset,
-    double window_size,
-    double x_min, double x_max,
-    double y_min, double y_max)
-{
+        std::string const & display_name,
+        std::string const & alignment_event_key,
+        double offset,
+        double window_size,
+        double x_min, double x_max,
+        double y_min, double y_max) {
     auto state1 = std::make_shared<LinePlotState>();
     state1->setDisplayName(QString::fromStdString(display_name));
     state1->setAlignmentEventKey(QString::fromStdString(alignment_event_key));
@@ -340,15 +336,15 @@ void FuzzLinePlotStateRoundTrip(
     VerifyEditorStateRoundTrip(*state1, *state2, json1);
 }
 FUZZ_TEST(EditorStateRoundTrip, FuzzLinePlotStateRoundTrip)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::Finite<double>(),
-        fuzztest::Finite<double>(),
-        fuzztest::Finite<double>(),
-        fuzztest::Finite<double>(),
-        fuzztest::Finite<double>(),
-        fuzztest::Finite<double>());
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::Finite<double>(),
+                fuzztest::Finite<double>(),
+                fuzztest::Finite<double>(),
+                fuzztest::Finite<double>(),
+                fuzztest::Finite<double>(),
+                fuzztest::Finite<double>());
 
 // ============================================================================
 // 8. EventPlotState — alignment, background color, pinned, sorting
@@ -357,13 +353,12 @@ FUZZ_TEST(EditorStateRoundTrip, FuzzLinePlotStateRoundTrip)
 // ============================================================================
 
 void FuzzEventPlotStateRoundTrip(
-    std::string const & display_name,
-    std::string const & alignment_event_key,
-    double offset,
-    double window_size,
-    std::string const & background_color,
-    bool pinned)
-{
+        std::string const & display_name,
+        std::string const & alignment_event_key,
+        double offset,
+        double window_size,
+        std::string const & background_color,
+        bool pinned) {
     auto state1 = std::make_shared<EventPlotState>();
     state1->setDisplayName(QString::fromStdString(display_name));
     state1->setAlignmentEventKey(QString::fromStdString(alignment_event_key));
@@ -381,25 +376,24 @@ void FuzzEventPlotStateRoundTrip(
     EXPECT_EQ(state2->isPinned(), pinned);
 }
 FUZZ_TEST(EditorStateRoundTrip, FuzzEventPlotStateRoundTrip)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::Finite<double>(),
-        fuzztest::Finite<double>(),
-        fuzztest::PrintableAsciiString().WithMaxSize(20),
-        fuzztest::Arbitrary<bool>());
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::Finite<double>(),
+                fuzztest::Finite<double>(),
+                fuzztest::PrintableAsciiString().WithMaxSize(20),
+                fuzztest::Arbitrary<bool>());
 
 // ============================================================================
 // 9. MediaWidgetState — complex: viewport, display options, tool modes
 // ============================================================================
 
 void FuzzMediaWidgetStateRoundTrip(
-    std::string const & display_name,
-    std::string const & displayed_media_key,
-    double zoom,
-    double pan_x, double pan_y,
-    int canvas_width, int canvas_height)
-{
+        std::string const & display_name,
+        std::string const & displayed_media_key,
+        double zoom,
+        double pan_x, double pan_y,
+        int canvas_width, int canvas_height) {
     auto state1 = std::make_shared<MediaWidgetState>();
     state1->setDisplayName(QString::fromStdString(display_name));
     state1->setDisplayedDataKey(QString::fromStdString(displayed_media_key));
@@ -417,14 +411,14 @@ void FuzzMediaWidgetStateRoundTrip(
     EXPECT_DOUBLE_EQ(state2->zoom(), zoom);
 }
 FUZZ_TEST(EditorStateRoundTrip, FuzzMediaWidgetStateRoundTrip)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::Finite<double>(),
-        fuzztest::Finite<double>(),
-        fuzztest::Finite<double>(),
-        fuzztest::InRange(0, 10000),
-        fuzztest::InRange(0, 10000));
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::Finite<double>(),
+                fuzztest::Finite<double>(),
+                fuzztest::Finite<double>(),
+                fuzztest::InRange(0, 10000),
+                fuzztest::InRange(0, 10000));
 
 // ============================================================================
 // 10. Default-constructed round-trip (all types)
@@ -436,10 +430,10 @@ TEST(EditorStateRoundTrip, DefaultConstructedRoundTrips) {
         auto json1 = state->toJson();
         auto state2 = std::make_shared<std::remove_reference_t<decltype(*state)>>();
         ASSERT_TRUE(state2->fromJson(json1))
-            << "fromJson failed for: " << state->getTypeName().toStdString();
+                << "fromJson failed for: " << state->getTypeName().toStdString();
 
         EXPECT_EQ(state->getInstanceId(), state2->getInstanceId())
-            << "Instance ID not preserved for: " << state->getTypeName().toStdString();
+                << "Instance ID not preserved for: " << state->getTypeName().toStdString();
 
         auto json2 = state2->toJson();
         ExpectJsonEqual(json1, json2);
@@ -470,7 +464,7 @@ TEST(EditorStateRoundTrip, FromJsonEmitsStateChanged) {
         QSignalSpy spy(state2.get(), &EditorState::stateChanged);
         ASSERT_TRUE(state2->fromJson(json));
         EXPECT_GE(spy.count(), 1)
-            << "stateChanged not emitted for: " << state->getTypeName().toStdString();
+                << "stateChanged not emitted for: " << state->getTypeName().toStdString();
     };
 
     verify_signal(std::make_shared<DataManagerWidgetState>());
@@ -497,12 +491,12 @@ TEST(EditorStateRoundTrip, InstanceIdStableAcrossMultipleRoundTrips) {
         for (int i = 0; i < 3; ++i) {
             auto restored = std::make_shared<std::remove_reference_t<decltype(*state)>>();
             ASSERT_TRUE(restored->fromJson(json))
-                << "Round-trip " << i << " failed for: "
-                << state->getTypeName().toStdString();
+                    << "Round-trip " << i << " failed for: "
+                    << state->getTypeName().toStdString();
 
             EXPECT_EQ(restored->getInstanceId(), original_id)
-                << "Instance ID changed at round-trip " << i
-                << " for: " << state->getTypeName().toStdString();
+                    << "Instance ID changed at round-trip " << i
+                    << " for: " << state->getTypeName().toStdString();
 
             // Use the restored state's JSON for next iteration
             json = restored->toJson();
@@ -520,4 +514,4 @@ TEST(EditorStateRoundTrip, InstanceIdStableAcrossMultipleRoundTrips) {
     verify_stability(std::make_shared<MediaWidgetState>());
 }
 
-} // namespace
+}// namespace

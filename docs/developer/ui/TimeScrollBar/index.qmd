@@ -1,0 +1,24 @@
+---
+title: TimeScrollBar
+---
+
+# TimeScrollBar
+
+The timeline widget (`TimeScrollBar`) drives the active `TimeFrame` and syncs with `EditorRegistry`.
+
+## Playback (Phase 3)
+
+Playback advances **one frame per timer tick**. The tick interval is `1000 / target_fps` milliseconds, so rates below 25 FPS (for example **0.5 FPS**, one frame every two seconds) are supported for slow manual triage.
+
+### Discrete FPS presets
+
+Rewind and fast-forward step through this ladder (also used when persisting `target_fps` in `TimeScrollBarStateData`):
+
+`0.5 → 1 → 2 → 5 → 10 → 25 → 50 → 100 → 200`
+
+Shared helpers live in `TimeScrollBarPlayback.hpp` (`time_scroll_bar::kFpsPresets`, `snapTargetFpsToPreset`, `timerPeriodMsForTargetFps`).
+
+### Workspace JSON
+
+- Current field: `target_fps` (`float`), snapped to a preset when set via `TimeScrollBarState::setTargetFps`.
+- Legacy: `play_speed` (integer multiplier on a fixed 25 FPS base) is migrated on `fromJson` to `target_fps = 25 * play_speed`.

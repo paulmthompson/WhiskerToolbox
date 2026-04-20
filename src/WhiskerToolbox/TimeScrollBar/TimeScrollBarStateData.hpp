@@ -22,13 +22,13 @@
  * All members should be default-constructible and serializable.
  */
 struct TimeScrollBarStateData {
-    std::string instance_id;                          ///< Unique instance ID (preserved across serialization)
-    std::string display_name = "Timeline";            ///< User-visible name
+    std::string instance_id;              ///< Unique instance ID (preserved across serialization)
+    std::string display_name = "Timeline";///< User-visible name
 
     // Playback parameters
-    int play_speed = 1;                               ///< Play speed multiplier (1x, 2x, etc.)
-    int frame_jump = 10;                              ///< Frame jump value for keyboard shortcuts
-    bool is_playing = false;                          ///< Whether video is currently playing
+    float target_fps = 25.F;///< Playback rate (snapped to discrete presets in the UI)
+    int frame_jump = 10;    ///< Frame jump value for keyboard shortcuts
+    bool is_playing = false;///< Whether video is currently playing
 };
 
-#endif // TIMESCROLLBAR_STATE_DATA_HPP
+#endif// TIMESCROLLBAR_STATE_DATA_HPP

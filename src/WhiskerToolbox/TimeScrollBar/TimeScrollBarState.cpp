@@ -1,5 +1,11 @@
 #include "TimeScrollBarState.hpp"
 
+#include "TimeScrollBarPlayback.hpp"
+
+#include <nlohmann/json.hpp>
+
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 
 TimeScrollBarState::TimeScrollBarState(QObject * parent)
@@ -34,9 +40,25 @@ std::string TimeScrollBarState::toJson() const {
 
 bool TimeScrollBarState::fromJson(std::string const & json) {
     try {
-        auto result = rfl::json::read<TimeScrollBarStateData>(json);
+        nlohmann::json j = nlohmann::json::parse(json);
+        if (!j.is_object()) {
+            return false;
+        }
+        if (j.contains("target_fps") && j.contains("play_speed")) {
+            j.erase("play_speed");
+        }
+        if (!j.contains("target_fps") && j.contains("play_speed")) {
+            int const legacy = std::max(1, j["play_speed"].get<int>());
+            j["target_fps"] = 25.F * static_cast<float>(legacy);
+            j.erase("play_speed");
+        }
+        auto result = rfl::json::read<TimeScrollBarStateData>(j.dump());
         if (result) {
             _data = result.value();
+            if (!std::isfinite(_data.target_fps)) {
+                _data.target_fps = 25.F;
+            }
+            _data.target_fps = time_scroll_bar::snapTargetFpsToPreset(_data.target_fps);
             // Restore instance ID from serialized data
             if (!_data.instance_id.empty()) {
                 setInstanceId(QString::fromStdString(_data.instance_id));
@@ -53,8 +75,8 @@ bool TimeScrollBarState::fromJson(std::string const & json) {
 
 // === Getters ===
 
-int TimeScrollBarState::playSpeed() const {
-    return _data.play_speed;
+float TimeScrollBarState::targetFps() const {
+    return _data.target_fps;
 }
 
 int TimeScrollBarState::frameJump() const {
@@ -67,11 +89,15 @@ bool TimeScrollBarState::isPlaying() const {
 
 // === Setters ===
 
-void TimeScrollBarState::setPlaySpeed(int speed) {
-    if (_data.play_speed != speed) {
-        _data.play_speed = speed;
+void TimeScrollBarState::setTargetFps(float fps) {
+    if (!std::isfinite(fps)) {
+        fps = 25.F;
+    }
+    float const snapped = time_scroll_bar::snapTargetFpsToPreset(fps);
+    if (std::abs(_data.target_fps - snapped) > 1e-4F) {
+        _data.target_fps = snapped;
         markDirty();
-        emit playSpeedChanged(speed);
+        emit targetFpsChanged(snapped);
     }
 }
 

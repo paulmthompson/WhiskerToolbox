@@ -8,14 +8,28 @@
 #include "KeymapSystem/KeymapManager.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"// For TimeKey
 #include "TimeFrame/TimeFrame.hpp"
+#include "TimeScrollBarPlayback.hpp"
 #include "TimeScrollBarState.hpp"
 
 #include <QComboBox>
 #include <QFileDialog>
 #include <QTimer>
 
+#include <cmath>
 #include <iostream>
 #include <utility>
+
+namespace {
+
+[[nodiscard]] QString formatFpsLabel(float fps) noexcept {
+    float const r = std::round(fps);
+    if (std::abs(fps - r) < 1e-3F) {
+        return QString::number(static_cast<int>(r));
+    }
+    return QString::number(static_cast<double>(fps), 'f', 1);
+}
+
+}// namespace
 
 /**
  * @brief Helper function to setup common UI connections
@@ -58,12 +72,10 @@ void TimeScrollBar::_initializeFromState() {
     ui->frame_jump_spinbox->blockSignals(true);
 
     // Set UI values from state
-    _play_speed = _state->playSpeed();
+    _target_fps = _state->targetFps();
     ui->frame_jump_spinbox->setValue(_state->frameJump());
 
-    // Update the FPS label based on play speed
-    int const play_speed_base_fps = 25;
-    ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
+    ui->fps_label->setText(formatFpsLabel(_target_fps));
 
     // Unblock signals
     ui->frame_jump_spinbox->blockSignals(false);
@@ -214,8 +226,6 @@ void TimeScrollBar::updateScrollBarNewMax(int new_max) {
 
 void TimeScrollBar::PlayButton() {
 
-    int const timer_period_ms = 40;
-
     if (_play_mode) {
 
         _timer->stop();
@@ -232,7 +242,9 @@ void TimeScrollBar::PlayButton() {
 
     } else {
         ui->play_button->setText(QString("Pause"));
-        _timer->start(timer_period_ms);
+        int const period_ms = time_scroll_bar::timerPeriodMsForTargetFps(_target_fps);
+        _timer->setInterval(period_ms);
+        _timer->start(period_ms);
         _play_mode = true;
     }
 
@@ -241,33 +253,43 @@ void TimeScrollBar::PlayButton() {
     }
 }
 
-/*
-Increases the speed of a playing video in increments of the base_fps (default = 25)
-*/
-void TimeScrollBar::RewindButton() {
-    int const play_speed_base_fps = 25;
-    if (_play_speed > 1) {
-        _play_speed--;
-        ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
-
-        if (_state) {
-            _state->setPlaySpeed(_play_speed);
-        }
+void TimeScrollBar::_updatePlaybackTimerInterval() {
+    if (!_play_mode) {
+        return;
+    }
+    int const period_ms = time_scroll_bar::timerPeriodMsForTargetFps(_target_fps);
+    _timer->setInterval(period_ms);
+    if (!_timer->isActive()) {
+        _timer->start(period_ms);
     }
 }
 
-/*
-Decreases the speed of a playing video in increments of the base_fps (default = 25)
-*/
-void TimeScrollBar::FastForwardButton() {
-    int const play_speed_base_fps = 25;
-
-    _play_speed++;
-    ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
+void TimeScrollBar::RewindButton() {
+    std::size_t const idx = time_scroll_bar::presetIndexForTargetFps(_target_fps);
+    if (idx == 0) {
+        return;
+    }
+    _target_fps = time_scroll_bar::kFpsPresets[idx - 1];
+    ui->fps_label->setText(formatFpsLabel(_target_fps));
 
     if (_state) {
-        _state->setPlaySpeed(_play_speed);
+        _state->setTargetFps(_target_fps);
     }
+    _updatePlaybackTimerInterval();
+}
+
+void TimeScrollBar::FastForwardButton() {
+    std::size_t const idx = time_scroll_bar::presetIndexForTargetFps(_target_fps);
+    if (idx + 1 >= time_scroll_bar::kFpsPresets.size()) {
+        return;
+    }
+    _target_fps = time_scroll_bar::kFpsPresets[idx + 1];
+    ui->fps_label->setText(formatFpsLabel(_target_fps));
+
+    if (_state) {
+        _state->setTargetFps(_target_fps);
+    }
+    _updatePlaybackTimerInterval();
 }
 
 void TimeScrollBar::_vidLoop() {
@@ -275,7 +297,7 @@ void TimeScrollBar::_vidLoop() {
     int current_time = 0;
     auto current_pos = _editor_registry->currentPosition();
     if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
-        current_time = static_cast<int>(current_pos.index.getValue()) + _play_speed;
+        current_time = static_cast<int>(current_pos.index.getValue()) + 1;
     }
 
     ui->horizontalScrollBar->setSliderPosition(current_time);
@@ -396,7 +418,7 @@ void TimeScrollBar::setKeymapManager(KeymapSystem::KeymapManager * manager) {
     manager->registerAdapter(_key_adapter);
 }
 
-void TimeScrollBar::setTimeFrame(const std::shared_ptr<TimeFrame>& tf, TimeKey display_key) {
+void TimeScrollBar::setTimeFrame(std::shared_ptr<TimeFrame> const & tf, TimeKey display_key) {
     _current_time_frame = tf;
     _current_display_key = std::move(display_key);
 
@@ -442,7 +464,7 @@ void TimeScrollBar::_onTimeKeyChanged(QString const & key_str) {
     }
 }
 
-void TimeScrollBar::_onEditorRegistryTimeChanged(const TimePosition& position) {
+void TimeScrollBar::_onEditorRegistryTimeChanged(TimePosition const & position) {
     // Only update if the time change is for the same clock we're controlling
     if (!position.isValid()) {
         std::cout << "TimeScrollBar::_onEditorRegistryTimeChanged: Invalid time position" << std::endl;

@@ -8,6 +8,7 @@ find_package(reflectcpp CONFIG REQUIRED)
 set(TIMESCROLLBAR_SOURCES
     TimeScrollBar.hpp
     TimeScrollBar.cpp
+    TimeScrollBarPlayback.hpp
     TimeScrollBar.ui
     TimeScrollBarState.hpp
     TimeScrollBarState.cpp

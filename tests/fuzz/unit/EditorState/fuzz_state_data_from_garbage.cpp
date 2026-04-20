@@ -16,15 +16,15 @@
 #include <rfl/json.hpp>
 
 // StateData headers (pure data — no Qt dependency)
-#include "Test_Widget/TestWidgetStateData.hpp"
-#include "DataManager_Widget/DataManagerWidgetStateData.hpp"
-#include "TimeScrollBar/TimeScrollBarStateData.hpp"
-#include "DataTransform_Widget/DataTransformWidgetStateData.hpp"
-#include "GroupManagementWidget/GroupManagementWidgetStateData.hpp"
 #include "DataImport_Widget/DataImportWidgetStateData.hpp"
 #include "DataInspector_Widget/DataInspectorStateData.hpp"
-#include "Plots/LinePlotWidget/Core/LinePlotStateData.hpp"
+#include "DataManager_Widget/DataManagerWidgetStateData.hpp"
+#include "DataTransform_Widget/DataTransformWidgetStateData.hpp"
+#include "GroupManagementWidget/GroupManagementWidgetStateData.hpp"
 #include "Plots/EventPlotWidget/Core/EventPlotStateData.hpp"
+#include "Plots/LinePlotWidget/Core/LinePlotStateData.hpp"
+#include "Test_Widget/TestWidgetStateData.hpp"
+#include "TimeScrollBar/TimeScrollBarStateData.hpp"
 
 namespace {
 
@@ -41,39 +41,39 @@ namespace {
 void FuzzStateDataFromGarbage(std::string const & json_str) {
     // Each read may succeed or fail — we only care that it doesn't crash
     try {
-        (void)rfl::json::read<TestWidgetStateData>(json_str);
+        (void) rfl::json::read<TestWidgetStateData>(json_str);
     } catch (std::exception const &) {}
 
     try {
-        (void)rfl::json::read<DataManagerWidgetStateData>(json_str);
+        (void) rfl::json::read<DataManagerWidgetStateData>(json_str);
     } catch (std::exception const &) {}
 
     try {
-        (void)rfl::json::read<TimeScrollBarStateData>(json_str);
+        (void) rfl::json::read<TimeScrollBarStateData>(json_str);
     } catch (std::exception const &) {}
 
     try {
-        (void)rfl::json::read<DataTransformWidgetStateData>(json_str);
+        (void) rfl::json::read<DataTransformWidgetStateData>(json_str);
     } catch (std::exception const &) {}
 
     try {
-        (void)rfl::json::read<GroupManagementWidgetStateData>(json_str);
+        (void) rfl::json::read<GroupManagementWidgetStateData>(json_str);
     } catch (std::exception const &) {}
 
     try {
-        (void)rfl::json::read<DataImportWidgetStateData>(json_str);
+        (void) rfl::json::read<DataImportWidgetStateData>(json_str);
     } catch (std::exception const &) {}
 
     try {
-        (void)rfl::json::read<DataInspectorStateData>(json_str);
+        (void) rfl::json::read<DataInspectorStateData>(json_str);
     } catch (std::exception const &) {}
 
     try {
-        (void)rfl::json::read<LinePlotStateData>(json_str);
+        (void) rfl::json::read<LinePlotStateData>(json_str);
     } catch (std::exception const &) {}
 
     try {
-        (void)rfl::json::read<EventPlotStateData>(json_str);
+        (void) rfl::json::read<EventPlotStateData>(json_str);
     } catch (std::exception const &) {}
 }
 FUZZ_TEST(StateDataCrashResistance, FuzzStateDataFromGarbage);
@@ -91,9 +91,8 @@ FUZZ_TEST(StateDataCrashResistance, FuzzStateDataFromGarbage);
  * extra unexpected fields, etc.
  */
 void FuzzStateDataFromRandomJsonObject(
-    std::vector<std::string> const & keys,
-    std::vector<std::string> const & values)
-{
+        std::vector<std::string> const & keys,
+        std::vector<std::string> const & values) {
     // Build a JSON object string manually
     std::string json_str = "{";
     auto const n = std::min(keys.size(), values.size());
@@ -101,45 +100,74 @@ void FuzzStateDataFromRandomJsonObject(
         if (i > 0) json_str += ",";
         // Escape the key and value minimally for valid JSON
         json_str += "\"";
-        for (char c : keys[i]) {
+        for (char c: keys[i]) {
             if (c == '"') json_str += "\\\"";
-            else if (c == '\\') json_str += "\\\\";
-            else if (c == '\n') json_str += "\\n";
-            else if (c == '\r') json_str += "\\r";
-            else if (c == '\t') json_str += "\\t";
-            else if (static_cast<unsigned char>(c) < 0x20) json_str += " ";
-            else json_str += c;
+            else if (c == '\\')
+                json_str += "\\\\";
+            else if (c == '\n')
+                json_str += "\\n";
+            else if (c == '\r')
+                json_str += "\\r";
+            else if (c == '\t')
+                json_str += "\\t";
+            else if (static_cast<unsigned char>(c) < 0x20)
+                json_str += " ";
+            else
+                json_str += c;
         }
         json_str += "\":\"";
-        for (char c : values[i]) {
+        for (char c: values[i]) {
             if (c == '"') json_str += "\\\"";
-            else if (c == '\\') json_str += "\\\\";
-            else if (c == '\n') json_str += "\\n";
-            else if (c == '\r') json_str += "\\r";
-            else if (c == '\t') json_str += "\\t";
-            else if (static_cast<unsigned char>(c) < 0x20) json_str += " ";
-            else json_str += c;
+            else if (c == '\\')
+                json_str += "\\\\";
+            else if (c == '\n')
+                json_str += "\\n";
+            else if (c == '\r')
+                json_str += "\\r";
+            else if (c == '\t')
+                json_str += "\\t";
+            else if (static_cast<unsigned char>(c) < 0x20)
+                json_str += " ";
+            else
+                json_str += c;
         }
         json_str += "\"";
     }
     json_str += "}";
 
     // No crashes allowed
-    try { (void)rfl::json::read<TestWidgetStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<DataManagerWidgetStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<TimeScrollBarStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<DataTransformWidgetStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<GroupManagementWidgetStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<DataImportWidgetStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<DataInspectorStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<LinePlotStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<EventPlotStateData>(json_str); } catch (...) {}
+    try {
+        (void) rfl::json::read<TestWidgetStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataManagerWidgetStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<TimeScrollBarStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataTransformWidgetStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<GroupManagementWidgetStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataImportWidgetStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataInspectorStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<LinePlotStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<EventPlotStateData>(json_str);
+    } catch (...) {}
 }
 FUZZ_TEST(StateDataCrashResistance, FuzzStateDataFromRandomJsonObject)
-    .WithDomains(
-        fuzztest::VectorOf(fuzztest::Arbitrary<std::string>().WithMaxSize(50)).WithMaxSize(20),
-        fuzztest::VectorOf(fuzztest::Arbitrary<std::string>().WithMaxSize(100)).WithMaxSize(20)
-    );
+        .WithDomains(
+                fuzztest::VectorOf(fuzztest::Arbitrary<std::string>().WithMaxSize(50)).WithMaxSize(20),
+                fuzztest::VectorOf(fuzztest::Arbitrary<std::string>().WithMaxSize(100)).WithMaxSize(20));
 
 // ============================================================================
 // Partial valid JSON: mix real field names with garbage values
@@ -150,42 +178,64 @@ FUZZ_TEST(StateDataCrashResistance, FuzzStateDataFromRandomJsonObject)
  *        (type mismatches, out-of-range values, etc.)
  */
 void FuzzStateDataPartiallyValid(
-    std::string const & display_name_val,
-    std::string const & instance_id_val,
-    std::string const & extra_field_val,
-    int numeric_val,
-    bool bool_val)
-{
+        std::string const & display_name_val,
+        std::string const & instance_id_val,
+        std::string const & extra_field_val,
+        int numeric_val,
+        bool bool_val) {
     // Use real field names but potentially wrong types
     std::string json_str = R"({
-        "display_name": ")" + display_name_val + R"(",
-        "instance_id": ")" + instance_id_val + R"(",
-        "show_grid": )" + (bool_val ? "true" : "false") + R"(,
-        "zoom_level": )" + std::to_string(numeric_val) + R"(,
-        "play_speed": )" + std::to_string(numeric_val) + R"(,
-        "selected_data_key": ")" + extra_field_val + R"(",
+        "display_name": ")" +
+                           display_name_val + R"(",
+        "instance_id": ")" +
+                           instance_id_val + R"(",
+        "show_grid": )" + (bool_val ? "true" : "false") +
+                           R"(,
+        "zoom_level": )" + std::to_string(numeric_val) +
+                           R"(,
+        "target_fps": )" + std::to_string(numeric_val) +
+                           R"(,
+        "selected_data_key": ")" +
+                           extra_field_val + R"(",
         "nonexistent_field": "should be ignored"
     })";
 
     // No crashes allowed
-    try { (void)rfl::json::read<TestWidgetStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<DataManagerWidgetStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<TimeScrollBarStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<DataTransformWidgetStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<GroupManagementWidgetStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<DataImportWidgetStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<DataInspectorStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<LinePlotStateData>(json_str); } catch (...) {}
-    try { (void)rfl::json::read<EventPlotStateData>(json_str); } catch (...) {}
+    try {
+        (void) rfl::json::read<TestWidgetStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataManagerWidgetStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<TimeScrollBarStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataTransformWidgetStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<GroupManagementWidgetStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataImportWidgetStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataInspectorStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<LinePlotStateData>(json_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<EventPlotStateData>(json_str);
+    } catch (...) {}
 }
 FUZZ_TEST(StateDataCrashResistance, FuzzStateDataPartiallyValid)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(50),
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::Arbitrary<int>(),
-        fuzztest::Arbitrary<bool>()
-    );
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(50),
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::Arbitrary<int>(),
+                fuzztest::Arbitrary<bool>());
 
 // ============================================================================
 // Minimal JSON: empty object should parse without crash for all types
@@ -193,54 +243,126 @@ FUZZ_TEST(StateDataCrashResistance, FuzzStateDataPartiallyValid)
 
 TEST(StateDataCrashResistance, EmptyObjectDoesNotCrash) {
     std::string const empty_obj = "{}";
-    try { (void)rfl::json::read<TestWidgetStateData>(empty_obj); } catch (...) {}
-    try { (void)rfl::json::read<DataManagerWidgetStateData>(empty_obj); } catch (...) {}
-    try { (void)rfl::json::read<TimeScrollBarStateData>(empty_obj); } catch (...) {}
-    try { (void)rfl::json::read<DataTransformWidgetStateData>(empty_obj); } catch (...) {}
-    try { (void)rfl::json::read<GroupManagementWidgetStateData>(empty_obj); } catch (...) {}
-    try { (void)rfl::json::read<DataImportWidgetStateData>(empty_obj); } catch (...) {}
-    try { (void)rfl::json::read<DataInspectorStateData>(empty_obj); } catch (...) {}
-    try { (void)rfl::json::read<LinePlotStateData>(empty_obj); } catch (...) {}
-    try { (void)rfl::json::read<EventPlotStateData>(empty_obj); } catch (...) {}
+    try {
+        (void) rfl::json::read<TestWidgetStateData>(empty_obj);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataManagerWidgetStateData>(empty_obj);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<TimeScrollBarStateData>(empty_obj);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataTransformWidgetStateData>(empty_obj);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<GroupManagementWidgetStateData>(empty_obj);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataImportWidgetStateData>(empty_obj);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataInspectorStateData>(empty_obj);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<LinePlotStateData>(empty_obj);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<EventPlotStateData>(empty_obj);
+    } catch (...) {}
 }
 
 TEST(StateDataCrashResistance, NullDoesNotCrash) {
     std::string const null_str = "null";
-    try { (void)rfl::json::read<TestWidgetStateData>(null_str); } catch (...) {}
-    try { (void)rfl::json::read<DataManagerWidgetStateData>(null_str); } catch (...) {}
-    try { (void)rfl::json::read<TimeScrollBarStateData>(null_str); } catch (...) {}
-    try { (void)rfl::json::read<DataTransformWidgetStateData>(null_str); } catch (...) {}
-    try { (void)rfl::json::read<GroupManagementWidgetStateData>(null_str); } catch (...) {}
-    try { (void)rfl::json::read<DataImportWidgetStateData>(null_str); } catch (...) {}
-    try { (void)rfl::json::read<DataInspectorStateData>(null_str); } catch (...) {}
-    try { (void)rfl::json::read<LinePlotStateData>(null_str); } catch (...) {}
-    try { (void)rfl::json::read<EventPlotStateData>(null_str); } catch (...) {}
+    try {
+        (void) rfl::json::read<TestWidgetStateData>(null_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataManagerWidgetStateData>(null_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<TimeScrollBarStateData>(null_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataTransformWidgetStateData>(null_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<GroupManagementWidgetStateData>(null_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataImportWidgetStateData>(null_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataInspectorStateData>(null_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<LinePlotStateData>(null_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<EventPlotStateData>(null_str);
+    } catch (...) {}
 }
 
 TEST(StateDataCrashResistance, EmptyStringDoesNotCrash) {
     std::string const empty_str;
-    try { (void)rfl::json::read<TestWidgetStateData>(empty_str); } catch (...) {}
-    try { (void)rfl::json::read<DataManagerWidgetStateData>(empty_str); } catch (...) {}
-    try { (void)rfl::json::read<TimeScrollBarStateData>(empty_str); } catch (...) {}
-    try { (void)rfl::json::read<DataTransformWidgetStateData>(empty_str); } catch (...) {}
-    try { (void)rfl::json::read<GroupManagementWidgetStateData>(empty_str); } catch (...) {}
-    try { (void)rfl::json::read<DataImportWidgetStateData>(empty_str); } catch (...) {}
-    try { (void)rfl::json::read<DataInspectorStateData>(empty_str); } catch (...) {}
-    try { (void)rfl::json::read<LinePlotStateData>(empty_str); } catch (...) {}
-    try { (void)rfl::json::read<EventPlotStateData>(empty_str); } catch (...) {}
+    try {
+        (void) rfl::json::read<TestWidgetStateData>(empty_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataManagerWidgetStateData>(empty_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<TimeScrollBarStateData>(empty_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataTransformWidgetStateData>(empty_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<GroupManagementWidgetStateData>(empty_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataImportWidgetStateData>(empty_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataInspectorStateData>(empty_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<LinePlotStateData>(empty_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<EventPlotStateData>(empty_str);
+    } catch (...) {}
 }
 
 TEST(StateDataCrashResistance, ArrayDoesNotCrash) {
     std::string const array_str = "[1, 2, 3]";
-    try { (void)rfl::json::read<TestWidgetStateData>(array_str); } catch (...) {}
-    try { (void)rfl::json::read<DataManagerWidgetStateData>(array_str); } catch (...) {}
-    try { (void)rfl::json::read<TimeScrollBarStateData>(array_str); } catch (...) {}
-    try { (void)rfl::json::read<DataTransformWidgetStateData>(array_str); } catch (...) {}
-    try { (void)rfl::json::read<GroupManagementWidgetStateData>(array_str); } catch (...) {}
-    try { (void)rfl::json::read<DataImportWidgetStateData>(array_str); } catch (...) {}
-    try { (void)rfl::json::read<DataInspectorStateData>(array_str); } catch (...) {}
-    try { (void)rfl::json::read<LinePlotStateData>(array_str); } catch (...) {}
-    try { (void)rfl::json::read<EventPlotStateData>(array_str); } catch (...) {}
+    try {
+        (void) rfl::json::read<TestWidgetStateData>(array_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataManagerWidgetStateData>(array_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<TimeScrollBarStateData>(array_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataTransformWidgetStateData>(array_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<GroupManagementWidgetStateData>(array_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataImportWidgetStateData>(array_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<DataInspectorStateData>(array_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<LinePlotStateData>(array_str);
+    } catch (...) {}
+    try {
+        (void) rfl::json::read<EventPlotStateData>(array_str);
+    } catch (...) {}
 }
 
-} // namespace
+}// namespace

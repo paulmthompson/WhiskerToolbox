@@ -32,6 +32,7 @@
 #include "Plots/EventPlotWidget/Core/EventPlotStateData.hpp"
 #include "Plots/LinePlotWidget/Core/LinePlotStateData.hpp"
 #include "Test_Widget/TestWidgetStateData.hpp"
+#include "TimeScrollBar/TimeScrollBarPlayback.hpp"
 #include "TimeScrollBar/TimeScrollBarStateData.hpp"
 
 namespace {
@@ -127,16 +128,18 @@ FUZZ_TEST(StateDataRoundTrip, FuzzDataManagerWidgetStateDataRoundTrip)
                 fuzztest::PrintableAsciiString().WithMaxSize(200));
 
 // ============================================================================
-// 3. TimeScrollBarStateData — ints + bool
+// 3. TimeScrollBarStateData — float preset + ints + bool
 // ============================================================================
 
 void FuzzTimeScrollBarStateDataRoundTrip(
-        int play_speed,
+        int preset_index,
         int frame_jump,
         bool is_playing,
         std::string const & display_name) {
+    int const idx = std::clamp(preset_index, 0, static_cast<int>(time_scroll_bar::kFpsPresets.size()) - 1);
+    float const target_fps = time_scroll_bar::kFpsPresets[static_cast<std::size_t>(idx)];
     TimeScrollBarStateData data;
-    data.play_speed = play_speed;
+    data.target_fps = target_fps;
     data.frame_jump = frame_jump;
     data.is_playing = is_playing;
     data.display_name = display_name;
@@ -149,13 +152,13 @@ void FuzzTimeScrollBarStateDataRoundTrip(
     auto json2 = rfl::json::write(*result);
     ExpectJsonEqual(json1, json2);
 
-    EXPECT_EQ((*result).play_speed, play_speed);
+    EXPECT_FLOAT_EQ((*result).target_fps, target_fps);
     EXPECT_EQ((*result).frame_jump, frame_jump);
     EXPECT_EQ((*result).is_playing, is_playing);
 }
 FUZZ_TEST(StateDataRoundTrip, FuzzTimeScrollBarStateDataRoundTrip)
         .WithDomains(
-                fuzztest::Arbitrary<int>(),
+                fuzztest::InRange(0, 8),
                 fuzztest::Arbitrary<int>(),
                 fuzztest::Arbitrary<bool>(),
                 fuzztest::PrintableAsciiString().WithMaxSize(100));

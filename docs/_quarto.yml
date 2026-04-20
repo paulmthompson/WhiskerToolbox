@@ -213,6 +213,7 @@ website:
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd
             - developer/ui/data_transform/data_transform_widget.qmd
+            - developer/ui/TimeScrollBar/index.qmd
             - developer/ui/media_widget/media_widget.qmd
             - developer/ui/media_widget/media_point_widget.qmd
             - developer/ui/media_widget/media_line_widget.qmd

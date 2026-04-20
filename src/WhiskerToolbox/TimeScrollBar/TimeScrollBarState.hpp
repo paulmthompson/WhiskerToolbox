@@ -9,7 +9,7 @@
  * enabling workspace save/restore and integration with the EditorRegistry system.
  * 
  * State tracked:
- * - Play speed multiplier
+ * - Target playback FPS (discrete presets, e.g. 0.5–200)
  * - Frame jump value
  * - Play mode (playing/paused)
  * 
@@ -20,8 +20,8 @@
  * @see TimeScrollBar for the widget implementation
  */
 
-#include "TimeScrollBar/TimeScrollBarStateData.hpp"
 #include "EditorState/EditorState.hpp"
+#include "TimeScrollBar/TimeScrollBarStateData.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -42,7 +42,7 @@
  * registry->registerState(state);
  * 
  * // Modify settings
- * state->setPlaySpeed(2);
+ * state->setTargetFps(50.F);
  * state->setFrameJump(25);
  * 
  * // Serialize for workspace save
@@ -98,21 +98,21 @@ public:
 
     // === State Properties - Getters ===
 
-    [[nodiscard]] int playSpeed() const;
+    [[nodiscard]] float targetFps() const;
     [[nodiscard]] int frameJump() const;
     [[nodiscard]] bool isPlaying() const;
 
     // === State Properties - Setters ===
 
-    void setPlaySpeed(int speed);
+    void setTargetFps(float fps);
     void setFrameJump(int jump);
     void setIsPlaying(bool playing);
 
 signals:
     /**
-     * @brief Emitted when play speed changes
+     * @brief Emitted when target playback FPS changes
      */
-    void playSpeedChanged(int speed);
+    void targetFpsChanged(float fps);
 
     /**
      * @brief Emitted when frame jump value changes
@@ -128,4 +128,4 @@ private:
     TimeScrollBarStateData _data;
 };
 
-#endif // TIMESCROLLBAR_STATE_HPP
+#endif// TIMESCROLLBAR_STATE_HPP

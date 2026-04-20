@@ -20,7 +20,7 @@ This plan optimizes the manual triage workflow across five phases:
 |-------|------|--------------|--------|
 | 1 | Atomic frame-level Commands | None | **Done** |
 | 2 | Hotkey → Command Sequence bridge | Phase 1 | **Done** |
-| 3 | Sub-25 FPS playback | None (parallel) | Not started |
+| 3 | Sub-25 FPS playback | None (parallel) | **Done** |
 | 4 | Dynamic frame filter on TimeScrollBar | None (parallel) | Not started |
 | 5 | Adaptive FPS from ML confidence | Phases 3 & 4 | Not started |
 
@@ -45,14 +45,15 @@ This plan optimizes the manual triage workflow across five phases:
 | Tests: frame commands + sequences | `src/Commands/SetEventAtTime.test.cpp`, `src/Commands/AdvanceFrame.test.cpp` |
 | Tests: keymap command bridge | `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` — `registerCommandAction`, `executeCommandSequenceFromRegistry` |
 | Timeline arrow keys (±1, ±N jump) | `TimeScrollBar` + `KeymapSystem` |
-| Playback ≥ 25 FPS | `TimeScrollBar` — QTimer at 40 ms × integer `_play_speed` |
+| Playback 0.5–200 FPS (preset ladder) | `TimeScrollBar` + `time_scroll_bar::timerPeriodMsForTargetFps()` — QTimer interval `1000/target_fps` ms (clamped), **one frame per tick**; rewind / fast-forward step discrete presets (`TimeScrollBarPlayback.hpp`) |
+| Persisted playback rate | `TimeScrollBarStateData::target_fps` (`float`); `TimeScrollBarState::setTargetFps()` snaps to presets; workspace JSON migration from legacy `play_speed` (`25 × multiplier`) in `TimeScrollBarState::fromJson()` |
+| Doc: timeline playback | [TimeScrollBar developer note](../ui/TimeScrollBar/index.qmd) |
 
 ### What is Missing
 
 | Capability | Notes |
 |---|---|
-| Sub-25 FPS playback | Timer period hardcoded at 40 ms; `_play_speed` is `int ≥ 1` |
-| Frame filtering / skip during playback | No filter concept in `TimeScrollBar` or `TimeFrame` |
+| Frame filtering / skip during playback | No filter concept in `TimeScrollBar` or `TimeFrame` (Phase 4) |
 | Adaptive FPS from ML confidence | No infrastructure |
 
 ---
@@ -165,30 +166,29 @@ Registration: `TriageSessionWidgetRegistration.cpp` (alongside Mark/Commit/Recal
 
 ## Phase 3 — Sub-25 FPS Playback
 
-Independent of Phases 1–2; can be developed in parallel.
+**Status: complete.** Independent of Phases 1–2; developed in parallel.
 
-### 3.1 Variable Timer Period
+### 3.1 Variable Timer Period (implemented)
 
-Currently `TimeScrollBar` uses a fixed 40 ms timer (25 Hz) and an integer
-`_play_speed` multiplier (≥ 1), giving a minimum of 25 FPS.
+- `TimeScrollBar` keeps `float _target_fps` (default 25). Playback uses
+  `time_scroll_bar::timerPeriodMsForTargetFps(_target_fps)` for the QTimer
+  interval (milliseconds rounded from `1000 / target_fps`, clamped to a 1 ms minimum and a large upper bound for safety).
+- Each timer tick advances **exactly one frame** (`_vidLoop()`), regardless of
+  target FPS. Rates above ~1000 FPS are limited by the 1 ms minimum interval.
 
-Refactor to:
+### 3.2 Discrete FPS Presets (implemented)
 
-- Replace `int _play_speed` with `float _target_fps`.
-- Timer period becomes `1000.0 / _target_fps` ms, always advancing 1 frame per
-  tick.
-- Supported range: 0.5–500+ FPS.
-
-### 3.2 Discrete FPS Presets
-
-Rewind / FastForward buttons step through discrete presets:
+Rewind / FastForward step the same ladder used for snapping persisted values:
 
 ```
 0.5  →  1  →  2  →  5  →  10  →  25  →  50  →  100  →  200
 ```
 
-The `fps_label` displays the current preset. Persist `target_fps` as `float` in
-`TimeScrollBarStateData`.
+The `fps_label` shows the current preset (integers without decimals; `0.5` as
+one decimal). `TimeScrollBarStateData` stores `target_fps`; `TimeScrollBarState`
+snaps with `snapTargetFpsToPreset()`. Legacy workspace JSON that only had
+integer `play_speed` is migrated to `target_fps = 25 × play_speed` before
+deserialization.
 
 ### 3.3 Why This Matters
 
@@ -344,9 +344,12 @@ A new class that modulates `target_fps` based on a per-frame signal:
 | `src/Commands/Core/SequenceExecution.hpp` | 2 | Include `ICommand.hpp` so `SequenceResult` destructs when used from UI TU (**done**) |
 | `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 2 | `KeymapManager::setDataManager(_data_manager)` (**done**) |
 | `src/WhiskerToolbox/TriageSession_Widget/TriageSessionWidgetRegistration.cpp` | 2 | Default **F** / **D** / **G** contact triage chords (**done**) |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` / `.cpp` | 3, 4 | Playback refactor + filter integration |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarStateData.hpp` | 3, 4 | Persist `target_fps` and filter settings |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarRegistration.cpp` | 3 | Update FPS-related action registration if needed |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` / `.cpp` | 3, 4 | Phase **3 done**: `_target_fps`, timer interval, preset stepping, 1 frame/tick (**done**); Phase 4: filter integration (pending) |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarState.hpp` / `.cpp` | 3 | `targetFps` / `setTargetFps`, `fromJson` migration from `play_speed` (**done**) |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarStateData.hpp` | 3, 4 | Phase **3 done**: `target_fps` float (**done**); Phase 4: filter settings (pending) |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarRegistration.cpp` | 3 | No keymap changes required for FPS (**n/a**) |
+| `tests/fuzz/unit/EditorState/fuzz_*_roundtrip.cpp`, `fuzz_editor_state_from_json.cpp`, `fuzz_state_data_from_garbage.cpp` | 3 | `target_fps` / preset-index fuzzing; `TimeScrollBarMigratesLegacyPlaySpeedJson` (**done**) |
+| `docs/developer/ui/TimeScrollBar/index.qmd`, `docs/_quarto.yml` | 3 | Playback + persistence overview (**done**) |
 | `src/MLCore/models/supervised/HiddenMarkovModelOperation.hpp` / `.cpp` | 5 (Option B) | Expose $\xi$ computation |
 
 ## Files to Create
@@ -358,6 +361,7 @@ A new class that modulates `target_fps` based on a per-frame signal:
 | `src/Commands/AdvanceFrame.hpp` / `AdvanceFrame.cpp` | 1 | `AdvanceFrame` command (**done**) |
 | `src/Commands/SetEventAtTime.test.cpp` | 1 | Catch2 tests for interval commands + triage sequence (**done**) |
 | `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | 2 | `registerCommandAction` + bridge smoke test (**done**) |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarPlayback.hpp` | 3 | Preset table, snap, timer ms helper (**done**) |
 | `src/WhiskerToolbox/TimeScrollBar/FrameFilter.hpp` / `.cpp` | 4 | Frame filter interface + concrete implementation |
 | `src/WhiskerToolbox/TimeScrollBar/AdaptiveFPSController.hpp` / `.cpp` | 5 | FPS modulation controller |
 
@@ -375,9 +379,11 @@ A new class that modulates `target_fps` based on a per-frame signal:
 3. **Integration test (alternate triage chord)** — The `D` chord is registered by default
    (`triage.contact_flip_tracked_advance`); same command machinery as item 1. A dedicated
    Catch2 test is optional; keymap tests cover the bridge.
-4. **Manual — sub-25 FPS**: Play video at 0.5 FPS, verify frames advance
-   approximately every 2 seconds. Test speed transitions across the full preset
-   range.
+4. **Manual — sub-25 FPS** — *Implementation done; smoke in fuzz.* Play at **0.5** on
+   the preset ladder (~2 s per frame). Step **Rewind** / **FastForward** through
+   the full `0.5 … 200` range while playing and paused; confirm `fps_label` and
+   restored workspace JSON match. Automated: `TimeScrollBarMigratesLegacyPlaySpeedJson`
+   (`tests/fuzz/unit/EditorState/fuzz_editor_state_from_json.cpp`).
 5. **Manual — frame filter**: Mark frames as tracked, enable filter, verify
    arrow keys and playback skip tracked frames. Verify dynamic exclusion (mark →
    immediate skip).

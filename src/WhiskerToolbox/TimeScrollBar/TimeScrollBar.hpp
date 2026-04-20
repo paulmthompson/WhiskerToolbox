@@ -94,7 +94,7 @@ public:
      * @param tf The TimeFrame to control (can be nullptr)
      * @param display_key The TimeKey for UI display (defaults to "time")
      */
-    void setTimeFrame(const std::shared_ptr<TimeFrame>& tf, TimeKey display_key = TimeKey("time"));
+    void setTimeFrame(std::shared_ptr<TimeFrame> const & tf, TimeKey display_key = TimeKey("time"));
 
 protected:
 private:
@@ -111,7 +111,7 @@ private:
     int _data_manager_observer_id{-1};// Observer ID for DataManager notifications
 
     bool _verbose{true};
-    int _play_speed{1};
+    float _target_fps{25.F};
     bool _play_mode{false};
 
     /// Adapter for receiving keymap dispatches (owned via QObject parenting)
@@ -122,6 +122,11 @@ private:
 
     void _updateFrameLabels(int frame_num);
     void _vidLoop();
+
+    /**
+     * @brief Apply current `_target_fps` to the playback QTimer when playing.
+     */
+    void _updatePlaybackTimerInterval();
 
     // State management helpers
     void _setupConnections();
@@ -153,7 +158,7 @@ private:
      * 
      * @param position The new TimePosition
      */
-    void _onEditorRegistryTimeChanged(const TimePosition& position);
+    void _onEditorRegistryTimeChanged(TimePosition const & position);
 
     /**
      * @brief Handle DataManager state changes

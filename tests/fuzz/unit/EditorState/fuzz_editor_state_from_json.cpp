@@ -15,15 +15,15 @@
 #include <QCoreApplication>
 
 // Concrete EditorState subclasses
-#include "DataManager_Widget/DataManagerWidgetState.hpp"
-#include "TimeScrollBar/TimeScrollBarState.hpp"
-#include "DataTransform_Widget/DataTransformWidgetState.hpp"
-#include "GroupManagementWidget/GroupManagementWidgetState.hpp"
 #include "DataImport_Widget/DataImportWidgetState.hpp"
 #include "DataInspector_Widget/DataInspectorState.hpp"
-#include "Plots/LinePlotWidget/Core/LinePlotState.hpp"
-#include "Plots/EventPlotWidget/Core/EventPlotState.hpp"
+#include "DataManager_Widget/DataManagerWidgetState.hpp"
+#include "DataTransform_Widget/DataTransformWidgetState.hpp"
+#include "GroupManagementWidget/GroupManagementWidgetState.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Plots/EventPlotWidget/Core/EventPlotState.hpp"
+#include "Plots/LinePlotWidget/Core/LinePlotState.hpp"
+#include "TimeScrollBar/TimeScrollBarState.hpp"
 
 #include <memory>
 #include <string>
@@ -62,7 +62,7 @@ template<typename StateT>
 void TryFromJson(std::string const & json_str) {
     try {
         auto state = std::make_shared<StateT>();
-        (void)state->fromJson(json_str);
+        (void) state->fromJson(json_str);
         // No crash = success. Return value (true/false) is irrelevant.
     } catch (std::exception const &) {
         // Exceptions are acceptable
@@ -91,33 +91,44 @@ FUZZ_TEST(EditorStateCrashResistance, FuzzEditorStateFromGarbage);
 // ============================================================================
 
 void FuzzEditorStateFromRandomJsonObject(
-    std::vector<std::string> const & keys,
-    std::vector<std::string> const & values)
-{
+        std::vector<std::string> const & keys,
+        std::vector<std::string> const & values) {
     // Build a JSON object string manually
     std::string json_str = "{";
     auto const n = std::min(keys.size(), values.size());
     for (size_t i = 0; i < n; ++i) {
         if (i > 0) json_str += ",";
         json_str += "\"";
-        for (char c : keys[i]) {
+        for (char c: keys[i]) {
             if (c == '"') json_str += "\\\"";
-            else if (c == '\\') json_str += "\\\\";
-            else if (c == '\n') json_str += "\\n";
-            else if (c == '\r') json_str += "\\r";
-            else if (c == '\t') json_str += "\\t";
-            else if (static_cast<unsigned char>(c) < 0x20) json_str += " ";
-            else json_str += c;
+            else if (c == '\\')
+                json_str += "\\\\";
+            else if (c == '\n')
+                json_str += "\\n";
+            else if (c == '\r')
+                json_str += "\\r";
+            else if (c == '\t')
+                json_str += "\\t";
+            else if (static_cast<unsigned char>(c) < 0x20)
+                json_str += " ";
+            else
+                json_str += c;
         }
         json_str += "\":\"";
-        for (char c : values[i]) {
+        for (char c: values[i]) {
             if (c == '"') json_str += "\\\"";
-            else if (c == '\\') json_str += "\\\\";
-            else if (c == '\n') json_str += "\\n";
-            else if (c == '\r') json_str += "\\r";
-            else if (c == '\t') json_str += "\\t";
-            else if (static_cast<unsigned char>(c) < 0x20) json_str += " ";
-            else json_str += c;
+            else if (c == '\\')
+                json_str += "\\\\";
+            else if (c == '\n')
+                json_str += "\\n";
+            else if (c == '\r')
+                json_str += "\\r";
+            else if (c == '\t')
+                json_str += "\\t";
+            else if (static_cast<unsigned char>(c) < 0x20)
+                json_str += " ";
+            else
+                json_str += c;
         }
         json_str += "\"";
     }
@@ -134,31 +145,38 @@ void FuzzEditorStateFromRandomJsonObject(
     TryFromJson<MediaWidgetState>(json_str);
 }
 FUZZ_TEST(EditorStateCrashResistance, FuzzEditorStateFromRandomJsonObject)
-    .WithDomains(
-        fuzztest::VectorOf(fuzztest::Arbitrary<std::string>().WithMaxSize(50)).WithMaxSize(20),
-        fuzztest::VectorOf(fuzztest::Arbitrary<std::string>().WithMaxSize(100)).WithMaxSize(20));
+        .WithDomains(
+                fuzztest::VectorOf(fuzztest::Arbitrary<std::string>().WithMaxSize(50)).WithMaxSize(20),
+                fuzztest::VectorOf(fuzztest::Arbitrary<std::string>().WithMaxSize(100)).WithMaxSize(20));
 
 // ============================================================================
 // 3. Partially valid JSON (real field names, wrong types/values)
 // ============================================================================
 
 void FuzzEditorStatePartiallyValid(
-    std::string const & display_name_val,
-    std::string const & instance_id_val,
-    std::string const & extra_field_val,
-    int numeric_val,
-    bool bool_val)
-{
+        std::string const & display_name_val,
+        std::string const & instance_id_val,
+        std::string const & extra_field_val,
+        int numeric_val,
+        bool bool_val) {
     // Use real field names from various state types but potentially wrong types
     std::string json_str = R"({
-        "display_name": ")" + display_name_val + R"(",
-        "instance_id": ")" + instance_id_val + R"(",
-        "show_grid": )" + (bool_val ? "true" : "false") + R"(,
-        "zoom_level": )" + std::to_string(numeric_val) + R"(,
-        "play_speed": )" + std::to_string(numeric_val) + R"(,
-        "selected_data_key": ")" + extra_field_val + R"(",
-        "displayed_media_key": ")" + extra_field_val + R"(",
-        "alignment_event_key": ")" + extra_field_val + R"(",
+        "display_name": ")" +
+                           display_name_val + R"(",
+        "instance_id": ")" +
+                           instance_id_val + R"(",
+        "show_grid": )" + (bool_val ? "true" : "false") +
+                           R"(,
+        "zoom_level": )" + std::to_string(numeric_val) +
+                           R"(,
+        "target_fps": )" + std::to_string(numeric_val) +
+                           R"(,
+        "selected_data_key": ")" +
+                           extra_field_val + R"(",
+        "displayed_media_key": ")" +
+                           extra_field_val + R"(",
+        "alignment_event_key": ")" +
+                           extra_field_val + R"(",
         "nonexistent_field": "should be ignored"
     })";
 
@@ -173,16 +191,23 @@ void FuzzEditorStatePartiallyValid(
     TryFromJson<MediaWidgetState>(json_str);
 }
 FUZZ_TEST(EditorStateCrashResistance, FuzzEditorStatePartiallyValid)
-    .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::PrintableAsciiString().WithMaxSize(50),
-        fuzztest::PrintableAsciiString().WithMaxSize(100),
-        fuzztest::Arbitrary<int>(),
-        fuzztest::Arbitrary<bool>());
+        .WithDomains(
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::PrintableAsciiString().WithMaxSize(50),
+                fuzztest::PrintableAsciiString().WithMaxSize(100),
+                fuzztest::Arbitrary<int>(),
+                fuzztest::Arbitrary<bool>());
 
 // ============================================================================
 // 4. Deterministic edge cases
 // ============================================================================
+
+TEST(EditorStateCrashResistance, TimeScrollBarMigratesLegacyPlaySpeedJson) {
+    std::string const json = R"({"display_name":"Timeline","play_speed":2,"frame_jump":10,"is_playing":false})";
+    auto state = std::make_shared<TimeScrollBarState>();
+    ASSERT_TRUE(state->fromJson(json));
+    EXPECT_FLOAT_EQ(state->targetFps(), 50.F);
+}
 
 TEST(EditorStateCrashResistance, EmptyObjectDoesNotCrash) {
     std::string const empty_obj = "{}";
@@ -241,26 +266,26 @@ TEST(EditorStateCrashResistance, FromJsonReturnsFalseForInvalidInput) {
     auto verify_false_return = [](auto state, std::string const & input,
                                   std::string const & description) {
         EXPECT_FALSE(state->fromJson(input))
-            << state->getTypeName().toStdString()
-            << " returned true for: " << description;
+                << state->getTypeName().toStdString()
+                << " returned true for: " << description;
     };
 
     std::vector<std::string> const invalid_inputs = {
-        "",
-        "null",
-        "42",
-        "\"string\"",
-        "[1,2,3]",
-        "true",
+            "",
+            "null",
+            "42",
+            "\"string\"",
+            "[1,2,3]",
+            "true",
     };
 
     std::vector<std::string> const descriptions = {
-        "empty string",
-        "null",
-        "bare number",
-        "bare string",
-        "array",
-        "bare boolean",
+            "empty string",
+            "null",
+            "bare number",
+            "bare string",
+            "array",
+            "bare boolean",
     };
 
     for (size_t i = 0; i < invalid_inputs.size(); ++i) {
@@ -290,9 +315,9 @@ TEST(EditorStateCrashResistance, FailedFromJsonPreservesInstanceId) {
 
         // State should be unchanged
         EXPECT_EQ(state->getInstanceId(), original_id)
-            << "Instance ID corrupted for: " << state->getTypeName().toStdString();
+                << "Instance ID corrupted for: " << state->getTypeName().toStdString();
         EXPECT_EQ(state->getDisplayName(), original_name)
-            << "Display name corrupted for: " << state->getTypeName().toStdString();
+                << "Display name corrupted for: " << state->getTypeName().toStdString();
     };
 
     verify_preserved(std::make_shared<DataManagerWidgetState>());
@@ -306,4 +331,4 @@ TEST(EditorStateCrashResistance, FailedFromJsonPreservesInstanceId) {
     verify_preserved(std::make_shared<MediaWidgetState>());
 }
 
-} // namespace
+}// namespace
