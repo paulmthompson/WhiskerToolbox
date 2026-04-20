@@ -194,6 +194,7 @@ website:
         - section: "Triage Session"
           contents:
             - developer/TriageSession/index.qmd
+            - developer/TriageSession/optimized_contact_triage_plan.md
         - section: "Architecture"
           contents:
             - developer/WidgetDevelopment/index.qmd
@@ -204,6 +205,9 @@ website:
                 - developer/KeymapSystem/roadmap.md
                 - developer/KeymapSystem/library_reference.qmd
                 - developer/KeybindingEditor/index.qmd
+            - section: "Editor State"
+              contents:
+                - developer/ui/EditorState/time_controller_extraction_roadmap.md
         - section: "User Interface"
           contents:
             - developer/ui/data_manager/data_manager_widget.qmd
