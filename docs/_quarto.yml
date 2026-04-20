@@ -41,6 +41,7 @@ website:
         - developer/python_bindings/python_integration.qmd
         - developer/benchmark/benchmarking.qmd
         - developer/benchmark/tensor_car_gpu_cpu.qmd
+        - developer/benchmark/dataviewer_rendering_pipeline.qmd
         - developer/building.qmd
         - developer/copilot.qmd
         - developer/contributing_code.qmd
