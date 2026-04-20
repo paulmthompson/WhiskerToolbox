@@ -15,7 +15,10 @@
 #include <QKeySequence>
 #include <QString>
 
+#include "Commands/Core/CommandDescriptor.hpp"
 #include "EditorState/StrongTypes.hpp"
+
+#include <optional>
 
 namespace KeymapSystem {
 
@@ -71,6 +74,8 @@ struct KeyActionDescriptor {
     QString category;            ///< Grouping for the keybinding editor (e.g. "Media Viewer")
     KeyActionScope scope;        ///< When this action is eligible for dispatch
     QKeySequence default_binding;///< Shipped default key (may be empty = unbound)
+    /// When set, key dispatch runs @c commands::executeSequence() instead of adapters
+    std::optional<commands::CommandSequenceDescriptor> command_sequence;
 };
 
 }// namespace KeymapSystem

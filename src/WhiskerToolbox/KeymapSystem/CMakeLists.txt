@@ -6,6 +6,8 @@ qt_add_library(KeymapSystem STATIC
     Keymap.hpp
     KeyActionAdapter.hpp
     KeyActionAdapter.cpp
+    KeymapCommandBridge.hpp
+    KeymapCommandBridge.cpp
     KeymapManager.hpp
     KeymapManager.cpp
 )
@@ -16,7 +18,9 @@ set_target_properties(KeymapSystem PROPERTIES
 
 target_link_libraries(KeymapSystem
     PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets
+    PUBLIC Commands
     PUBLIC EditorState
+    PRIVATE DataManager
     PRIVATE spdlog::spdlog_header_only
 )
 

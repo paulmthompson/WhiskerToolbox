@@ -19,7 +19,7 @@ This plan optimizes the manual triage workflow across five phases:
 | Phase | Goal | Dependencies | Status |
 |-------|------|--------------|--------|
 | 1 | Atomic frame-level Commands | None | **Done** |
-| 2 | Hotkey → Command Sequence bridge | Phase 1 | Not started |
+| 2 | Hotkey → Command Sequence bridge | Phase 1 | **Done** |
 | 3 | Sub-25 FPS playback | None (parallel) | Not started |
 | 4 | Dynamic frame filter on TimeScrollBar | None (parallel) | Not started |
 | 5 | Adaptive FPS from ML confidence | Phases 3 & 4 | Not started |
@@ -40,7 +40,10 @@ This plan optimizes the manual triage workflow across five phases:
 | Command architecture with sequencing | `Commands/Core` (`CommandSequenceDescriptor`, `executeSequence`) |
 | Atomic triage commands (`ICommand`) | `SetEventAtTime`, `FlipEventAtTime`, `AdvanceFrame` in `src/Commands/`; registered in `register_core_commands.cpp` |
 | `TimeController` on `CommandContext` | `src/Commands/Core/CommandContext.hpp` — optional pointer for navigation commands |
+| Hotkey → command sequences | `KeymapManager::registerCommandAction()` + optional `command_sequence` on `KeyActionDescriptor`; `KeymapCommandBridge` builds `CommandContext` and calls `executeSequence()`; `MainWindow` sets `KeymapManager::setDataManager()`; `TimeController *` from `EditorRegistry::timeController()` |
+| Default contact triage chords (global) | `TriageSessionWidgetRegistration.cpp` — **F** / **D** / **G** (`triage.contact_mark_tracked_advance`, `triage.contact_flip_tracked_advance`, `triage.tracked_advance`) |
 | Tests: frame commands + sequences | `src/Commands/SetEventAtTime.test.cpp`, `src/Commands/AdvanceFrame.test.cpp` |
+| Tests: keymap command bridge | `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` — `registerCommandAction`, `executeCommandSequenceFromRegistry` |
 | Timeline arrow keys (±1, ±N jump) | `TimeScrollBar` + `KeymapSystem` |
 | Playback ≥ 25 FPS | `TimeScrollBar` — QTimer at 40 ms × integer `_play_speed` |
 
@@ -50,7 +53,6 @@ This plan optimizes the manual triage workflow across five phases:
 |---|---|
 | Sub-25 FPS playback | Timer period hardcoded at 40 ms; `_play_speed` is `int ≥ 1` |
 | Frame filtering / skip during playback | No filter concept in `TimeScrollBar` or `TimeFrame` |
-| Direct hotkey → command sequence binding | `KeymapSystem` and Commands are architecturally separate (Phase 2) |
 | Adaptive FPS from ML confidence | No infrastructure |
 
 ---
@@ -116,48 +118,48 @@ a `CommandSequenceDescriptor`:
 
 ## Phase 2 — Hotkey → Command Sequence Bridge
 
-Depends on Phase 1. Currently `KeymapSystem` and `Commands` are architecturally
-separate; only `TriageSession` bridges them. This phase creates a direct path.
+**Status: complete.** `KeymapSystem` can register actions whose payload is a
+`CommandSequenceDescriptor` and run `executeSequence()` on key press, without
+going through `TriageSession::commit()`.
 
 ### 2.1 `registerCommandAction()` on `KeymapManager`
 
-Add a new registration method:
+Implemented signature (includes `KeyActionScope`, same as `registerAction`):
 
 ```
 registerCommandAction(action_id, display_name, category,
-                      default_binding, CommandSequenceDescriptor)
+                      scope, default_binding, CommandSequenceDescriptor)
 ```
 
-On key press, if the resolved action is a command-action, `KeymapManager`:
+`KeyActionDescriptor` carries an optional `command_sequence`. When present,
+`KeymapManager::eventFilter()` dispatches via `KeymapSystem::executeCommandSequenceFromRegistry()`
+instead of widget adapters.
 
-1. Builds a `CommandContext` with `DataManager`, `TimeController`, and runtime
-   variables (`${current_frame}` from `TimeController::currentPosition()`,
-   `${current_time_key}` from the active TimeKey).
-2. Calls `executeSequence()`.
+That helper builds `CommandContext` with:
 
-`KeymapManager` obtains the `TimeController *` via
-`EditorRegistry::timeController()`. The `CommandContext` itself remains Qt-free.
+1. **`std::shared_ptr<DataManager>`** — from `KeymapManager::setDataManager()`, called in `MainWindow` with the app-wide manager (not stored on `EditorRegistry`).
+2. **`TimeController *`** — from `EditorRegistry::timeController()` when the registry pointer is non-null.
+3. **Runtime variables** — `current_frame` from `TimeController::currentTimeIndex()`, `current_time_key` from `activeTimeKey().str()`.
+
+Then `executeSequence()` runs as usual; `CommandContext` stays Qt-free.
 
 ### 2.2 `TimeController` on `CommandContext`
 
-**Done in Phase 1.** `CommandContext` already carries an optional `TimeController *` (see
-[TimeController Extraction Roadmap](../ui/EditorState/time_controller_extraction_roadmap.md)).
-Phase 2 only needs callers (e.g. `KeymapManager`) to populate it when building the context.
+**Done in Phase 1.** Phase 2 passes the registry’s `TimeController` into the context via the bridge.
 
 ### 2.3 User-Configurable Hotkeys
 
-The `KeybindingEditor` already shows all registered actions. Command-actions
-appear alongside widget actions. The `TriageWidget`'s guided pipeline editor
-can export sequences as hotkey-bound actions.
+The `KeybindingEditor` lists registered command-actions like any other action.
+Defaults shipped for contact triage (**Global** scope, category **Contact Triage**):
 
-Example bindings:
+| Key | Action ID | Sequence |
+|-----|-----------|----------|
+| `F` | `triage.contact_mark_tracked_advance` | SetEventAtTime(contact) + SetEventAtTime(tracked_regions) + AdvanceFrame(1) |
+| `D` | `triage.contact_flip_tracked_advance` | FlipEventAtTime(contact) + SetEventAtTime(tracked_regions) + AdvanceFrame(1) |
+| `G` | `triage.tracked_advance` | SetEventAtTime(tracked_regions) + AdvanceFrame(1) |
+| `Right` | `timeline.next_frame` | AdvanceFrame(1) *(existing timeline binding — unchanged)* |
 
-| Key | Sequence |
-|-----|----------|
-| `F` | SetEventAtTime(contact, true) + SetEventAtTime(tracked, true) + AdvanceFrame(1) |
-| `D` | FlipEventAtTime(contact) + SetEventAtTime(tracked, true) + AdvanceFrame(1) |
-| `G` | SetEventAtTime(tracked, true) + AdvanceFrame(1) |
-| `Right` | AdvanceFrame(1) *(existing — unchanged)* |
+Registration: `TriageSessionWidgetRegistration.cpp` (alongside Mark/Commit/Recall).
 
 ---
 
@@ -336,8 +338,12 @@ A new class that modulates `target_fps` based on a per-frame signal:
 | `src/Commands/CMakeLists.txt` | 1 | Sources + link `WhiskerToolbox::TimeController` (done) |
 | `src/Commands/register_core_commands.cpp` | 1 | Register `SetEventAtTime`, `FlipEventAtTime`, `AdvanceFrame` (done) |
 | `tests/Commands/CMakeLists.txt` | 1 | Add `SetEventAtTime.test.cpp` to `test_commands` (done) |
-| `src/WhiskerToolbox/KeymapSystem/KeymapManager.hpp` / `.cpp` | 2 | Add `registerCommandAction()` |
-| `src/WhiskerToolbox/KeymapSystem/KeyAction.hpp` | 2 | Extend action descriptor for command sequences |
+| `src/WhiskerToolbox/KeymapSystem/KeymapManager.hpp` / `.cpp` | 2 | `registerCommandAction()`, `setDataManager()`, dispatch to bridge (**done**) |
+| `src/WhiskerToolbox/KeymapSystem/KeyAction.hpp` | 2 | Optional `command_sequence` on descriptor (**done**) |
+| `src/WhiskerToolbox/KeymapSystem/KeymapCommandBridge.hpp` / `.cpp` | 2 | `executeCommandSequenceFromRegistry(dm, registry, seq)` (**done**) |
+| `src/Commands/Core/SequenceExecution.hpp` | 2 | Include `ICommand.hpp` so `SequenceResult` destructs when used from UI TU (**done**) |
+| `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 2 | `KeymapManager::setDataManager(_data_manager)` (**done**) |
+| `src/WhiskerToolbox/TriageSession_Widget/TriageSessionWidgetRegistration.cpp` | 2 | Default **F** / **D** / **G** contact triage chords (**done**) |
 | `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` / `.cpp` | 3, 4 | Playback refactor + filter integration |
 | `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarStateData.hpp` | 3, 4 | Persist `target_fps` and filter settings |
 | `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarRegistration.cpp` | 3 | Update FPS-related action registration if needed |
@@ -351,6 +357,7 @@ A new class that modulates `target_fps` based on a per-frame signal:
 | `src/Commands/FlipEventAtTime.hpp` / `FlipEventAtTime.cpp` | 1 | `FlipEventAtTime` command (**done**) |
 | `src/Commands/AdvanceFrame.hpp` / `AdvanceFrame.cpp` | 1 | `AdvanceFrame` command (**done**) |
 | `src/Commands/SetEventAtTime.test.cpp` | 1 | Catch2 tests for interval commands + triage sequence (**done**) |
+| `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | 2 | `registerCommandAction` + bridge smoke test (**done**) |
 | `src/WhiskerToolbox/TimeScrollBar/FrameFilter.hpp` / `.cpp` | 4 | Frame filter interface + concrete implementation |
 | `src/WhiskerToolbox/TimeScrollBar/AdaptiveFPSController.hpp` / `.cpp` | 5 | FPS modulation controller |
 
@@ -365,9 +372,9 @@ A new class that modulates `target_fps` based on a per-frame signal:
 2. **Catch2 test for `FrameFilter`**: Test `shouldSkip()` with known intervals.
    Verify boundary behavior (first frame, last frame, empty series, fully
    tracked).
-3. **Integration test (alternate triage chord)** — **Optional / Phase 2 UX**: JSON sequence
-   “`FlipEventAtTime`(contact) + `SetEventAtTime`(tracked) + `AdvanceFrame`” (e.g. planned `D`
-   binding) — same machinery as item 1; add a dedicated test if desired.
+3. **Integration test (alternate triage chord)** — The `D` chord is registered by default
+   (`triage.contact_flip_tracked_advance`); same command machinery as item 1. A dedicated
+   Catch2 test is optional; keymap tests cover the bridge.
 4. **Manual — sub-25 FPS**: Play video at 0.5 FPS, verify frames advance
    approximately every 2 seconds. Test speed transitions across the full preset
    range.
@@ -375,4 +382,5 @@ A new class that modulates `target_fps` based on a per-frame signal:
    arrow keys and playback skip tracked frames. Verify dynamic exclusion (mark →
    immediate skip).
 6. **Manual — hotkey → command**: Bind a command sequence to a single key, press
-   it, verify data mutation + frame advance.
+   it, verify data mutation + frame advance. *(Automated smoke tests cover registration +
+   `executeCommandSequenceFromRegistry`; full UI exercise remains manual.)*

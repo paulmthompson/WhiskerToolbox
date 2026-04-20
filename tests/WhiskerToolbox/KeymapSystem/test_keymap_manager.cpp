@@ -5,13 +5,19 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "Commands/Core/CommandDescriptor.hpp"
+#include "DataManager/DataManager.hpp"
+#include "EditorState/EditorRegistry.hpp"
 #include "KeymapSystem/KeyAction.hpp"
 #include "KeymapSystem/KeyActionAdapter.hpp"
 #include "KeymapSystem/Keymap.hpp"
+#include "KeymapSystem/KeymapCommandBridge.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
 
 #include <QCoreApplication>
 #include <QKeySequence>
+
+#include <rfl/json.hpp>
 
 #include <array>
 
@@ -1065,4 +1071,45 @@ TEST_CASE("E2E: AlwaysRouted actions reach the correct inspector instance") {
         CHECK(handler_calls_1 == 2);// Got the action
         CHECK(handler_calls_2 == 1);// Unchanged
     }
+}
+
+// ============================================================
+// Command sequence actions (Phase 2 hotkey bridge)
+// ============================================================
+
+TEST_CASE("registerCommandAction attaches command_sequence to descriptor",
+          "[keymap][commands]") {
+    KeymapManager mgr;
+
+    commands::CommandSequenceDescriptor seq;
+    seq.name = "test_seq";
+
+    REQUIRE(mgr.registerCommandAction(QStringLiteral("test.cmd_seq"),
+                                      QStringLiteral("Test Cmd"),
+                                      QStringLiteral("Test"),
+                                      KeyActionScope::global(),
+                                      QKeySequence(Qt::Key_J),
+                                      std::move(seq)));
+
+    auto const d = mgr.action(QStringLiteral("test.cmd_seq"));
+    REQUIRE(d.has_value());
+    REQUIRE(d->command_sequence.has_value());
+    CHECK(d->command_sequence->name == "test_seq");
+}
+
+TEST_CASE("executeCommandSequenceFromRegistry runs AdvanceFrame using EditorRegistry time state",
+          "[keymap][commands]") {
+    EditorRegistry registry;
+    auto dm = std::make_shared<DataManager>();
+    registry.setCurrentTime(TimeFrameIndex(4), nullptr);
+
+    commands::CommandSequenceDescriptor seq;
+    commands::CommandDescriptor step;
+    step.command_name = "AdvanceFrame";
+    step.parameters = rfl::json::read<rfl::Generic>(R"({"delta": 1})").value();
+    seq.commands = {step};
+
+    auto const out = executeCommandSequenceFromRegistry(dm, &registry, seq);
+    REQUIRE(out.result.success);
+    CHECK(registry.currentTimeIndex().getValue() == 5);
 }

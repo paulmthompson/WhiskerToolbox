@@ -290,11 +290,6 @@ public:
      */
     [[nodiscard]] EditorLib::OperationContext * operationContext() const;
 
-    /**
-     * @brief Get the DataManager
-     */
-    [[nodiscard]] std::shared_ptr<DataManager> dataManager() const;
-
     // ========== Editor Opening ==========
 
     /// Callback type for opening/focusing an editor and returning its state

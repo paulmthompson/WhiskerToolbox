@@ -6,7 +6,9 @@
 #include "KeymapSystem/KeymapManager.hpp"
 
 #include "KeymapSystem/KeyActionAdapter.hpp"
+#include "KeymapSystem/KeymapCommandBridge.hpp"
 
+#include "DataManager/DataManager.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/EditorState.hpp"
 #include "EditorState/SelectionContext.hpp"
@@ -95,6 +97,25 @@ bool KeymapManager::eventFilter(QObject * obj, QEvent * event) {
         return false;
     }
 
+    if (desc->command_sequence.has_value()) {
+        auto const dm = _data_manager;
+        if (!dm) {
+            spdlog::warn("[KeymapManager] Command action '{}' skipped: DataManager not set on KeymapManager",
+                         action_id->toStdString());
+            return false;
+        }
+        auto const seq_result = executeCommandSequenceFromRegistry(
+                dm,
+                _editor_registry,
+                desc->command_sequence.value());
+        if (!seq_result.result.success) {
+            spdlog::warn("[KeymapManager] Command action '{}' failed: {}",
+                         action_id->toStdString(),
+                         seq_result.result.error_message);
+        }
+        return true;
+    }
+
     // Determine target type for dispatch
     EditorLib::EditorTypeId target_type_id;
     EditorLib::EditorInstanceId target_instance_id;
@@ -131,10 +152,32 @@ bool KeymapManager::eventFilter(QObject * obj, QEvent * event) {
     return false;
 }
 
+bool KeymapManager::registerCommandAction(QString const & action_id,
+                                          QString const & display_name,
+                                          QString const & category,
+                                          KeyActionScope const & scope,
+                                          QKeySequence const & default_binding,
+                                          commands::CommandSequenceDescriptor sequence) {
+
+    KeyActionDescriptor descriptor;
+    descriptor.action_id = action_id;
+    descriptor.display_name = display_name;
+    descriptor.category = category;
+    descriptor.scope = scope;
+    descriptor.default_binding = default_binding;
+    descriptor.command_sequence = std::move(sequence);
+
+    return registerAction(descriptor);
+}
+
 // --- Editor registry integration ---
 
 void KeymapManager::setEditorRegistry(EditorRegistry * registry) {
     _editor_registry = registry;
+}
+
+void KeymapManager::setDataManager(std::shared_ptr<DataManager> dm) {
+    _data_manager = std::move(dm);
 }
 
 // --- Text-input bypass ---

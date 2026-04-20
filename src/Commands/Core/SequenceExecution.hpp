@@ -8,6 +8,7 @@
 
 #include "CommandContext.hpp"
 #include "CommandResult.hpp"
+#include "ICommand.hpp"
 
 #include <memory>
 #include <string>
@@ -16,7 +17,6 @@
 namespace commands {
 
 class CommandRecorder;
-class ICommand;
 struct CommandSequenceDescriptor;
 
 /// @brief Result of executing a command sequence

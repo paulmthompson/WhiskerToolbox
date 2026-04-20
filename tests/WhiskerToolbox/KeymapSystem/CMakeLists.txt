@@ -15,6 +15,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_keymap_system
+    ${CMAKE_SOURCE_DIR}/tests/shared/RegisterCommandsListener.cpp
     test_keymap_manager.cpp
 )
 
@@ -24,6 +25,9 @@ set_target_properties(test_keymap_system PROPERTIES
 
 target_link_libraries(test_keymap_system PRIVATE
     Catch2::Catch2WithMain
+    Commands
+    DataManager
+    EditorState
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets

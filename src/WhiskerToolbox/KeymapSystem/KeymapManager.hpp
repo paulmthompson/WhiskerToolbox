@@ -24,10 +24,14 @@
 #include "KeymapSystem/Keymap.hpp"
 
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
+#include "Commands/Core/CommandDescriptor.hpp"
+
+class DataManager;
 class EditorRegistry;
 class QEvent;
 
@@ -85,6 +89,12 @@ public:
      */
     void setEditorRegistry(EditorRegistry * registry);
 
+    /**
+     * @brief Set application DataManager for command-sequence execution (mutation / navigation)
+     * @param dm Shared DataManager from MainWindow (typically); null clears the pointer
+     */
+    void setDataManager(std::shared_ptr<DataManager> dm);
+
     // --- Registration (called during widget type setup) ---
 
     /**
@@ -103,6 +113,21 @@ public:
      *      keybinding editor (enforcement: none)
      */
     bool registerAction(KeyActionDescriptor const & descriptor);
+
+    /**
+     * @brief Register a shortcut that executes a CommandSequenceDescriptor (command architecture)
+     * @param sequence Serialized sequence; substitutions use @c ctx.runtime_variables (current_frame,
+     *        current_time_key) populated from EditorRegistry via KeymapCommandBridge.
+     * @return true when registered (same duplicate rules as registerAction)
+     *
+     * @pre When scope is AlwaysRouted or EditorFocused, @c scope.editor_type_id must be non-empty.
+     */
+    bool registerCommandAction(QString const & action_id,
+                               QString const & display_name,
+                               QString const & category,
+                               KeyActionScope const & scope,
+                               QKeySequence const & default_binding,
+                               commands::CommandSequenceDescriptor sequence);
 
     /**
      * @brief Unregister an action by ID
@@ -271,6 +296,9 @@ private:
 
     /// Non-owning pointer to the editor registry for focus tracking
     EditorRegistry * _editor_registry = nullptr;
+
+    /// Application DataManager — set by MainWindow for executeSequence command actions
+    std::shared_ptr<DataManager> _data_manager;
 
     /// Check if the currently focused widget is a text-input widget
     [[nodiscard]] static bool _isTextInputWidget(QWidget * widget);

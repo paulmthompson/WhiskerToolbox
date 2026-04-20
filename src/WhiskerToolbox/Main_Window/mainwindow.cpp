@@ -209,6 +209,7 @@ MainWindow::MainWindow(QWidget * parent)
     // Created BEFORE _registerEditorTypes() so widget modules can register their actions
     _keymap_manager = new KeymapSystem::KeymapManager(this);
     _keymap_manager->setEditorRegistry(_editor_registry.get());
+    _keymap_manager->setDataManager(_data_manager);
 
     // Register editor types with the factory
     // Must be called AFTER creating dependencies (TimeScrollBar, GroupManager, KeymapManager)
