@@ -8,7 +8,10 @@ DataViewerCoordinates::DataViewerCoordinates(
         CorePlotting::ViewStateData const & view_state,
         int width, int height)
     : _time_params(static_cast<int64_t>(view_state.x_min), static_cast<int64_t>(view_state.x_max), width),
-      _y_params(static_cast<float>(view_state.y_min), static_cast<float>(view_state.y_max), height, static_cast<float>(view_state.y_pan)) {
+      _y_params([&]() {
+          auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
+          return CorePlotting::YAxisParams(eff.y_min, eff.y_max, height, 0.0f);
+      }()) {
 }
 
 // ============================================================================

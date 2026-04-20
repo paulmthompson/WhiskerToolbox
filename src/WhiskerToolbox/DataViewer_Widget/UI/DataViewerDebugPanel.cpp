@@ -10,6 +10,7 @@
 #include "Rendering/OpenGLWidget.hpp"
 
 #include "CorePlotting/CoordinateTransform/InverseTransform.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 
 #include <QCheckBox>
 #include <QGroupBox>
@@ -66,9 +67,12 @@ void DataViewerDebugPanel::updateCoordinateInspector(
     // NDC conversion
     auto const ndc = CorePlotting::canvasToNDC(canvas_x, canvas_y, w, h);
 
-    // World coordinates (NDC Y with pan offset applied)
+    // World coordinates (canvas Y to world Y via effective viewport)
     float const world_x = time_coord;
-    float const world_y = ndc.y + static_cast<float>(view.y_pan);
+    auto const eff = CorePlotting::computeEffectiveYViewport(view);
+    float const eff_range = eff.y_max - eff.y_min;
+    float const norm_y = 1.0f - canvas_y / static_cast<float>(h);
+    float const world_y = eff.y_min + norm_y * eff_range;
 
     _canvas_pos_label->setText(
             QStringLiteral("Canvas: (%1, %2) px")
@@ -278,13 +282,15 @@ void DataViewerDebugPanel::_refreshViewState() {
             QStringLiteral("Duration: %1 frames")
                     .arg(static_cast<int64_t>(view.x_max - view.x_min)));
 
-    float const eff_y_min = static_cast<float>(view.y_min) + static_cast<float>(view.y_pan);
-    float const eff_y_max = static_cast<float>(view.y_max) + static_cast<float>(view.y_pan);
+    auto const eff = CorePlotting::computeEffectiveYViewport(view);
+    float const eff_y_min = eff.y_min;
+    float const eff_y_max = eff.y_max;
     _y_bounds_label->setText(
-            QStringLiteral("Y: [%1, %2]  pan=%3")
+            QStringLiteral("Y: [%1, %2]  pan=%3  zoom=%4")
                     .arg(static_cast<double>(eff_y_min), 0, 'f', 4)
                     .arg(static_cast<double>(eff_y_max), 0, 'f', 4)
-                    .arg(view.y_pan, 0, 'f', 4));
+                    .arg(view.y_pan, 0, 'f', 4)
+                    .arg(view.y_zoom, 0, 'f', 2));
 
     _pan_zoom_label->setText(
             QStringLiteral("y_scale=%1")

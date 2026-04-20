@@ -51,17 +51,45 @@ namespace CorePlotting {
 struct ViewStateData {
     // === Data Bounds (changing these triggers scene rebuild) ===
     double x_min = -500.0;
-    double x_max =  500.0;
-    double y_min =    0.0;
-    double y_max =  100.0;
+    double x_max = 500.0;
+    double y_min = 0.0;
+    double y_max = 100.0;
 
     // === View Transform (changing these only updates projection matrix) ===
     double x_zoom = 1.0;
     double y_zoom = 1.0;
-    double x_pan  = 0.0;
-    double y_pan  = 0.0;
+    double x_pan = 0.0;
+    double y_pan = 0.0;
 };
 
-} // namespace CorePlotting
+/**
+ * @brief Effective Y viewport bounds after applying zoom and pan.
+ *
+ * Used by DataViewer to compute the visible Y range for projection matrices,
+ * visibility culling, and coordinate transforms. y_zoom > 1 narrows the
+ * range (zooms in), y_zoom < 1 widens it.
+ */
+struct EffectiveYViewport {
+    float y_min;
+    float y_max;
+};
 
-#endif // COREPLOTTING_COORDINATETRANSFORM_VIEWSTATEDATA_HPP
+/**
+ * @brief Compute the effective Y viewport range after applying zoom and pan.
+ *
+ * @param vs The view state containing y_min, y_max, y_zoom, and y_pan.
+ * @return EffectiveYViewport with the zoomed and panned Y bounds.
+ */
+[[nodiscard]] inline EffectiveYViewport computeEffectiveYViewport(
+        ViewStateData const & vs) {
+    float const y_range = static_cast<float>(vs.y_max - vs.y_min);
+    float const y_center = static_cast<float>(vs.y_min + vs.y_max) / 2.0f;
+    float const safe_zoom = (vs.y_zoom > 0.0) ? static_cast<float>(vs.y_zoom) : 1.0f;
+    float const zoomed_half = (y_range / safe_zoom) / 2.0f;
+    float const pan = static_cast<float>(vs.y_pan);
+    return {y_center - zoomed_half + pan, y_center + zoomed_half + pan};
+}
+
+}// namespace CorePlotting
+
+#endif// COREPLOTTING_COORDINATETRANSFORM_VIEWSTATEDATA_HPP

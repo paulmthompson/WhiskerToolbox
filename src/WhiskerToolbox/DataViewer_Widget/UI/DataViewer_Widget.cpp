@@ -4,6 +4,7 @@
 #include "Core/DataViewerState.hpp"
 #include "Core/DataViewerStateData.hpp"
 #include "Core/SpikeSorterConfigLoader.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "Feature_Tree_Model.hpp"
 #include "Rendering/OpenGLWidget.hpp"
 #include "Rendering/SVGExporter.hpp"
@@ -96,9 +97,10 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         auto * axis_state = _state->multiLaneAxisState();
         _multi_lane_axis_widget = new MultiLaneVerticalAxisWidget(axis_state, this);
 
-        // Pan getter: read y_pan from state's ViewStateData
-        _multi_lane_axis_widget->setPanGetter([this]() -> float {
-            return static_cast<float>(_state->viewState().y_pan);
+        // Viewport getter: returns effective Y bounds accounting for zoom and pan
+        _multi_lane_axis_widget->setViewportGetter([this]() -> std::pair<float, float> {
+            auto const eff = CorePlotting::computeEffectiveYViewport(_state->viewState());
+            return {eff.y_min, eff.y_max};
         });
 
         // Set Y range to match DataViewer NDC defaults
@@ -180,8 +182,9 @@ void DataViewer_Widget::setState(std::shared_ptr<DataViewerState> state) {
     // Update axis widget to use the new state's MultiLaneVerticalAxisState
     if (_multi_lane_axis_widget) {
         _multi_lane_axis_widget->setState(_state->multiLaneAxisState());
-        _multi_lane_axis_widget->setPanGetter([this]() -> float {
-            return static_cast<float>(_state->viewState().y_pan);
+        _multi_lane_axis_widget->setViewportGetter([this]() -> std::pair<float, float> {
+            auto const eff = CorePlotting::computeEffectiveYViewport(_state->viewState());
+            return {eff.y_min, eff.y_max};
         });
         _multi_lane_axis_widget->setYRange(
                 static_cast<float>(_state->viewState().y_min),
@@ -649,7 +652,7 @@ void DataViewer_Widget::_handlePerLaneYScaleWheel(float numSteps, QPointF const 
 }
 
 void DataViewer_Widget::_handleYViewportZoomWheel(float numSteps, QPointF const & pos) {
-    // Alt+Ctrl+Scroll: adjust y_zoom in ViewStateData (view matrix only, no scene rebuild)
+    // Alt+Ctrl+Scroll: adjust y_zoom in ViewStateData (projection only, no scene rebuild)
     // Cursor-anchored: the focal point under the mouse remains stable during zoom
     float constexpr zoom_factor_per_step = 0.05f;
     float constexpr min_zoom = 0.1f;
@@ -658,17 +661,25 @@ void DataViewer_Widget::_handleYViewportZoomWheel(float numSteps, QPointF const 
     auto view = _state->viewState();
 
     // Compute the world-Y coordinate under the cursor before zoom
-    float const ndc_y = -1.0f + 2.0f * (static_cast<float>(ui->openGLWidget->height()) - static_cast<float>(pos.y())) / static_cast<float>(ui->openGLWidget->height());
-    float const world_y_before = (ndc_y - static_cast<float>(view.y_pan)) / static_cast<float>(view.y_zoom);
+    auto const eff_before = CorePlotting::computeEffectiveYViewport(view);
+    auto const canvas_height = static_cast<float>(ui->openGLWidget->height());
+    float const norm_y = 1.0f - static_cast<float>(pos.y()) / canvas_height;
+    float const world_y = eff_before.y_min + norm_y * (eff_before.y_max - eff_before.y_min);
 
     // Apply zoom
     auto const old_zoom = static_cast<float>(view.y_zoom);
     float const new_zoom = std::clamp(old_zoom * (1.0f + numSteps * zoom_factor_per_step), min_zoom, max_zoom);
     view.y_zoom = static_cast<double>(new_zoom);
 
-    // Adjust y_pan so world_y_before remains at the same screen position
-    // ndc_y = world_y * y_zoom + y_pan  →  y_pan = ndc_y - world_y * y_zoom
-    view.y_pan = static_cast<double>(ndc_y - world_y_before * new_zoom);
+    // Adjust y_pan so world_y remains at the same screen position under new zoom
+    // From computeEffectiveYViewport: eff_y_min = y_center - (y_range / zoom) / 2 + pan
+    // We need: eff_new_y_min + norm_y * (y_range / new_zoom) = world_y
+    // => y_center - y_range/(2*new_zoom) + new_pan + norm_y * y_range/new_zoom = world_y
+    // => new_pan = world_y - y_center - y_range * (norm_y - 0.5) / new_zoom
+    auto const y_range = static_cast<float>(view.y_max - view.y_min);
+    float const y_center = static_cast<float>(view.y_min + view.y_max) / 2.0f;
+    float const new_pan = world_y - y_center - y_range * (norm_y - 0.5f) / new_zoom;
+    view.y_pan = static_cast<double>(new_pan);
 
     _state->setViewState(view);
 }

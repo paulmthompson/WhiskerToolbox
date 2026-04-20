@@ -1,6 +1,7 @@
 #include "DataViewerWidgetRegistration.hpp"
 
 #include "Core/DataViewerState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "Rendering/OpenGLWidget.hpp"
 #include "UI/DataViewerPropertiesWidget.hpp"
 #include "UI/DataViewer_Widget.hpp"
@@ -15,7 +16,7 @@
 namespace DataViewerWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager) {
+                   const std::shared_ptr<DataManager>& data_manager) {
 
     if (!registry) {
         std::cerr << "DataViewerWidgetModule::registerTypes: registry is null" << std::endl;
@@ -23,7 +24,7 @@ void registerTypes(EditorRegistry * registry,
     }
 
     // Capture dependencies for lambdas
-    const auto& dm = std::move(data_manager);
+    auto const & dm = std::move(data_manager);
     auto reg = registry;
 
     registry->registerType({.type_id = QStringLiteral("DataViewerWidget"),
@@ -41,7 +42,7 @@ void registerTypes(EditorRegistry * registry,
                             .create_state = []() { return std::make_shared<DataViewerState>(); },
 
                             // View factory - creates DataViewer_Widget (the view component)
-                            .create_view = [dm, reg](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                            .create_view = [dm, reg](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto viewer_state = std::dynamic_pointer_cast<DataViewerState>(state);
                                 if (!viewer_state) {
                                     std::cerr << "DataViewerWidgetModule: Failed to cast state to DataViewerState" << std::endl;
@@ -63,7 +64,7 @@ void registerTypes(EditorRegistry * registry,
                             },
 
                             // Properties factory - creates DataViewerPropertiesWidget
-                            .create_properties = [dm](const std::shared_ptr<EditorState>& state) -> QWidget * {
+                            .create_properties = [dm](std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto viewer_state = std::dynamic_pointer_cast<DataViewerState>(state);
                                 if (!viewer_state) {
                                     std::cerr << "DataViewerWidgetModule: Failed to cast state to DataViewerState for properties" << std::endl;
@@ -144,10 +145,9 @@ void registerTypes(EditorRegistry * registry,
                                     auto const & response = opengl_widget->layoutResponse();
                                     int const total = static_cast<int>(response.layouts.size());
                                     auto const & vs = state->viewState();
-                                    auto const effective_y_min = static_cast<float>(vs.y_min + vs.y_pan);
-                                    auto const effective_y_max = static_cast<float>(vs.y_max + vs.y_pan);
+                                    auto const eff = CorePlotting::computeEffectiveYViewport(vs);
                                     int const visible = static_cast<int>(
-                                            response.visibleSeriesIds(effective_y_min, effective_y_max).size());
+                                            response.visibleSeriesIds(eff.y_min, eff.y_max).size());
                                     props->updateVisibleLaneCount(visible, total);
                                 };
                                 QObject::connect(opengl_widget, &OpenGLWidget::sceneRebuilt, props, update_lane_count);

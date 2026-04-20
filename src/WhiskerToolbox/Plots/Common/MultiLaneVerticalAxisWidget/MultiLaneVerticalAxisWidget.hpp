@@ -37,12 +37,12 @@ class MultiLaneVerticalAxisWidget : public QWidget {
 
 public:
     /**
-     * @brief Function type that returns the current vertical pan offset
+     * @brief Function type that returns the effective Y viewport bounds
      *
-     * The pan offset is in NDC units (matching ViewStateData::y_pan).
+     * Returns {y_min, y_max} in world coordinates after applying zoom and pan.
      * Used to keep labels aligned with the OpenGL rendering surface.
      */
-    using PanGetter = std::function<float()>;
+    using ViewportGetter = std::function<std::pair<float, float>()>;
 
     /**
      * @brief Construct a MultiLaneVerticalAxisWidget
@@ -64,10 +64,17 @@ public:
     void setState(MultiLaneVerticalAxisState * state);
 
     /**
+     * @brief Set the function to get the current effective Y viewport bounds
+     * @param getter Function returning {y_min, y_max} in world coordinates
+     */
+    void setViewportGetter(ViewportGetter getter);
+
+    /**
      * @brief Set the function to get the current vertical pan offset
      * @param getter Function returning y_pan in NDC units
+     * @deprecated Use setViewportGetter instead
      */
-    void setPanGetter(PanGetter getter);
+    void setPanGetter(std::function<float()> getter);
 
     /**
      * @brief Set the visible Y range in NDC
@@ -92,7 +99,7 @@ protected:
 private:
     MultiLaneVerticalAxisState * _state{nullptr};
 
-    PanGetter _pan_getter;
+    ViewportGetter _viewport_getter;
     float _y_min{-1.0f};
     float _y_max{1.0f};
 

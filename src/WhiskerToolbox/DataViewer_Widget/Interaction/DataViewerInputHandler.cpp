@@ -75,8 +75,12 @@ bool DataViewerInputHandler::handleMouseMove(QMouseEvent * event) {
 
         // Convert to normalized device coordinates
         // A positive deltaY (moving down) should move the view up
+        // Scale inversely with y_zoom so the same drag distance pans the visible range
+        float const y_zoom = (_ctx.view_state && _ctx.view_state->y_zoom > 0.0)
+                                     ? static_cast<float>(_ctx.view_state->y_zoom)
+                                     : 1.0f;
         float const normalized_dy = -1.0f * static_cast<float>(deltaY) /
-                                    static_cast<float>(_ctx.widget_height) * 2.0f;
+                                    static_cast<float>(_ctx.widget_height) * 2.0f / y_zoom;
 
         emit panDelta(normalized_dy);
 
@@ -160,7 +164,7 @@ CorePlotting::HitTestResult DataViewerInputHandler::findIntervalEdgeAtPosition(
     config.edge_tolerance = edge_tolerance;
     config.point_tolerance = edge_tolerance;
 
-    CorePlotting::SceneHitTester tester(config);
+    CorePlotting::SceneHitTester const tester(config);
 
     // Use EntityId-based hit testing for interval edges
     static_cast<void>(canvas_y);// Y not used for edge detection
@@ -196,7 +200,7 @@ CorePlotting::HitTestResult DataViewerInputHandler::hitTestAtPosition(
     config.point_tolerance = tolerance;
     config.prioritize_discrete = true;
 
-    CorePlotting::SceneHitTester tester(config);
+    CorePlotting::SceneHitTester const tester(config);
 
     // Check for intervals (body hits)
     CorePlotting::HitTestResult result = tester.queryIntervals(
@@ -215,7 +219,7 @@ CorePlotting::HitTestResult DataViewerInputHandler::hitTestAtPosition(
 
 QString DataViewerInputHandler::buildSeriesInfoString(float canvas_x, float canvas_y) const {
     if (!_series_info_callback || !_analog_value_callback) {
-        return QString();
+        return {};
     }
 
     auto series_info = _series_info_callback(canvas_x, canvas_y);
@@ -229,7 +233,7 @@ QString DataViewerInputHandler::buildSeriesInfoString(float canvas_x, float canv
         }
     }
 
-    return QString();
+    return {};
 }
 
 }// namespace DataViewer

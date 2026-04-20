@@ -50,8 +50,19 @@ void MultiLaneVerticalAxisWidget::setState(MultiLaneVerticalAxisState * state) {
     update();
 }
 
-void MultiLaneVerticalAxisWidget::setPanGetter(PanGetter getter) {
-    _pan_getter = std::move(getter);
+void MultiLaneVerticalAxisWidget::setViewportGetter(ViewportGetter getter) {
+    _viewport_getter = std::move(getter);
+    update();
+}
+
+void MultiLaneVerticalAxisWidget::setPanGetter(std::function<float()> getter) {
+    // Legacy compatibility: wrap pan getter as viewport getter using stored y_min/y_max
+    auto y_min = _y_min;
+    auto y_max = _y_max;
+    _viewport_getter = [pan_fn = std::move(getter), y_min, y_max]() -> std::pair<float, float> {
+        float const pan = pan_fn ? pan_fn() : 0.0f;
+        return {y_min + pan, y_max + pan};
+    };
     update();
 }
 
@@ -147,25 +158,27 @@ void MultiLaneVerticalAxisWidget::paintEvent(QPaintEvent * /* event */) {
 }
 
 int MultiLaneVerticalAxisWidget::ndcToPixelY(float ndc_y) const {
-    float const pan = _pan_getter ? _pan_getter() : 0.0f;
-    float const effective_y = ndc_y + pan;
+    auto const [eff_y_min, eff_y_max] = _viewport_getter
+                                                ? _viewport_getter()
+                                                : std::make_pair(_y_min, _y_max);
 
-    // NDC y_max maps to pixel 0 (top), y_min maps to pixel height (bottom)
-    float const range = _y_max - _y_min;
+    float const range = eff_y_max - eff_y_min;
     if (std::abs(range) < 1e-10f) {
         return 0;
     }
 
-    float const normalized = (effective_y - _y_min) / range;
+    float const normalized = (ndc_y - eff_y_min) / range;
     return static_cast<int>(static_cast<float>(height()) * (1.0f - normalized));
 }
 
 bool MultiLaneVerticalAxisWidget::isLaneVisible(float center, float extent) const {
-    float const pan = _pan_getter ? _pan_getter() : 0.0f;
+    auto const [eff_y_min, eff_y_max] = _viewport_getter
+                                                ? _viewport_getter()
+                                                : std::make_pair(_y_min, _y_max);
     float const half = extent / 2.0f;
-    float const lane_top = center + half + pan;
-    float const lane_bottom = center - half + pan;
+    float const lane_top = center + half;
+    float const lane_bottom = center - half;
 
-    // Lane is visible if it overlaps the viewport [y_min, y_max]
-    return lane_top >= _y_min && lane_bottom <= _y_max;
+    // Lane is visible if it overlaps the effective viewport
+    return lane_top >= eff_y_min && lane_bottom <= eff_y_max;
 }

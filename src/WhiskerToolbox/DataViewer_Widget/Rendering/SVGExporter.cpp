@@ -8,6 +8,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CoreUtilities/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -82,17 +83,13 @@ CorePlotting::RenderableScene SVGExporter::buildScene(int start_time, int end_ti
     auto const view_state = gl_widget_->getViewState();
     auto const * state = gl_widget_->state();
 
-    auto const y_min = static_cast<float>(view_state.y_min);
-    auto const y_max = static_cast<float>(view_state.y_max);
+    // Fold y_zoom and y_pan into projection via effective viewport
+    auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
 
-    // Build shared View and Projection matrices
-    // Get view state parameters from OpenGLWidget
-    CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = static_cast<float>(view_state.y_pan);
-
-    scene.view_matrix = CorePlotting::getAnalogViewMatrix(view_params);
+    // View matrix is identity — pan and zoom fully handled by projection
+    scene.view_matrix = glm::mat4(1.0f);
     scene.projection_matrix = CorePlotting::getAnalogProjectionMatrix(
-            TimeFrameIndex(start_time), TimeFrameIndex(end_time), y_min, y_max);
+            TimeFrameIndex(start_time), TimeFrameIndex(end_time), eff.y_min, eff.y_max);
 
     // 1. Build interval batches (rendered as background)
     auto const & interval_series_map = gl_widget_->getDigitalIntervalSeriesMap();

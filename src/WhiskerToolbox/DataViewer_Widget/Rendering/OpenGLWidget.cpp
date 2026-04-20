@@ -967,13 +967,11 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
         return std::nullopt;
     }
 
-    // Convert canvas Y to world Y coordinate
-    // In OpenGL, Y is inverted: top of window is -1, bottom is +1 in our view
-    float const ndc_y = -1.0f + 2.0f * (static_cast<float>(height()) - canvas_y) / static_cast<float>(height());
-
-    // Apply vertical pan offset to get the actual Y position in the coordinate system
-    float const world_y = ndc_y - static_cast<float>(_state->viewState().y_pan);
-    float const world_x = canvasXToTime(canvas_x);
+    // Convert canvas coordinates to world coordinates via DataViewerCoordinates
+    // (accounts for zoom and pan through effective viewport)
+    DataViewer::DataViewerCoordinates const coords(_state->viewState(), width(), height());
+    float const world_y = coords.canvasYToWorldY(canvas_y);
+    float const world_x = coords.canvasXToWorldX(canvas_x);
 
     // First try full hit test if we have a cached scene with spatial index
     // This can identify specific discrete elements (events, points)
@@ -1078,15 +1076,14 @@ void OpenGLWidget::updateMatrices() {
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
+    // Fold both y_zoom and y_pan into the projection matrix via effective viewport
+    auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
+
     _cached_projection_matrix = CorePlotting::getAnalogProjectionMatrix(
-            start_time, end_time,
-            static_cast<float>(view_state.y_min),
-            static_cast<float>(view_state.y_max));
+            start_time, end_time, eff.y_min, eff.y_max);
 
-    CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = static_cast<float>(view_state.y_pan);
-
-    _cached_view_matrix = CorePlotting::getAnalogViewMatrix(view_params);
+    // View matrix is identity — pan and zoom are fully handled by the projection
+    _cached_view_matrix = glm::mat4(1.0f);
 }
 
 void OpenGLWidget::rebuildScene() {
@@ -1094,18 +1091,15 @@ void OpenGLWidget::rebuildScene() {
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
-    // Build shared View and Projection matrices
-    CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = static_cast<float>(view_state.y_pan);
+    // Fold y_zoom and y_pan into projection via effective viewport
+    auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
 
-    // Shared projection matrix (time range to NDC)
+    // Shared projection matrix (time range + zoomed/panned Y to NDC)
     glm::mat4 const projection = CorePlotting::getAnalogProjectionMatrix(
-            start_time, end_time,
-            static_cast<float>(view_state.y_min),
-            static_cast<float>(view_state.y_max));
+            start_time, end_time, eff.y_min, eff.y_max);
 
-    // Shared view matrix (global pan)
-    glm::mat4 const view = CorePlotting::getAnalogViewMatrix(view_params);
+    // View matrix is identity — pan and zoom fully handled by projection
+    glm::mat4 const view = glm::mat4(1.0f);
 
     // Create SceneBuilder and set bounds for spatial indexing
     // Bounds are in world coordinates: X = [start_time, end_time], Y = [y_min, y_max]
@@ -1147,8 +1141,9 @@ void OpenGLWidget::rebuildScene() {
 
 bool OpenGLWidget::hasNewVisibleSeries() const {
     auto const & view_state = _state->viewState();
-    auto const effective_y_min = static_cast<float>(view_state.y_min + view_state.y_pan);
-    auto const effective_y_max = static_cast<float>(view_state.y_max + view_state.y_pan);
+    auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
+    auto const effective_y_min = eff.y_min;
+    auto const effective_y_max = eff.y_max;
 
     for (auto const & [key, analog_data]: _data_store->analogSeries()) {
         auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
@@ -1188,9 +1183,10 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
-    // Effective viewport Y range (accounting for pan) for visibility culling
-    auto const effective_y_min = static_cast<float>(view_state.y_min + view_state.y_pan);
-    auto const effective_y_max = static_cast<float>(view_state.y_max + view_state.y_pan);
+    // Effective viewport Y range (accounting for pan and zoom) for visibility culling
+    auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
+    auto const effective_y_min = eff.y_min;
+    auto const effective_y_max = eff.y_max;
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cached_layout_response
@@ -1287,9 +1283,10 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
-    // Effective viewport Y range (accounting for pan) for visibility culling
-    auto const effective_y_min = static_cast<float>(view_state.y_min + view_state.y_pan);
-    auto const effective_y_max = static_cast<float>(view_state.y_max + view_state.y_pan);
+    // Effective viewport Y range (accounting for pan and zoom) for visibility culling
+    auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
+    auto const effective_y_min = eff.y_min;
+    auto const effective_y_max = eff.y_max;
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cache_state.layout_response
@@ -1375,9 +1372,10 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
 
-    // Effective viewport Y range (accounting for pan) for visibility culling
-    auto const effective_y_min = static_cast<float>(view_state.y_min + view_state.y_pan);
-    auto const effective_y_max = static_cast<float>(view_state.y_max + view_state.y_pan);
+    // Effective viewport Y range (accounting for pan and zoom) for visibility culling
+    auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
+    auto const effective_y_min = eff.y_min;
+    auto const effective_y_max = eff.y_max;
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cache_state.layout_response
@@ -1536,8 +1534,9 @@ DataViewerDiagnostics OpenGLWidget::getDiagnostics() const {
     DataViewerDiagnostics diag;
 
     auto const & view_state = _state->viewState();
-    float const effective_y_min = static_cast<float>(view_state.y_min) + static_cast<float>(view_state.y_pan);
-    float const effective_y_max = static_cast<float>(view_state.y_max) + static_cast<float>(view_state.y_pan);
+    auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
+    float const effective_y_min = eff.y_min;
+    float const effective_y_max = eff.y_max;
 
     auto const & layouts = _cache_state.layout_response.layouts;
 
@@ -1670,6 +1669,18 @@ float ndcToPixelY(float ndc_y, int canvas_height) {
     return static_cast<float>(canvas_height) * (1.0f - ndc_y) / 2.0f;
 }
 
+/// Convert world Y to canvas pixel Y via effective viewport (accounts for zoom and pan)
+float worldYToPixel(float world_y, CorePlotting::EffectiveYViewport const & eff, int canvas_height) {
+    float const y_range = eff.y_max - eff.y_min;
+    if (y_range <= 0.0f || canvas_height <= 0) {
+        return 0.0f;
+    }
+    // normalized_y: 0 = bottom (eff.y_min), 1 = top (eff.y_max)
+    float const normalized_y = (world_y - eff.y_min) / y_range;
+    // Canvas: 0 = top, height = bottom → invert
+    return static_cast<float>(canvas_height) * (1.0f - normalized_y);
+}
+
 /// Convert NDC X [-1, +1] to canvas pixel X (left-to-right)
 float ndcToPixelX(float ndc_x, int canvas_width) {
     return static_cast<float>(canvas_width) * (ndc_x + 1.0f) / 2.0f;
@@ -1706,7 +1717,7 @@ void OpenGLWidget::drawLaneBoundaries(QPainter & painter) {
     auto const & layouts = _cache_state.layout_response.layouts;
     int const h = height();
     int const w = width();
-    auto const pan = static_cast<float>(_state->viewState().y_pan);
+    auto const eff = CorePlotting::computeEffectiveYViewport(_state->viewState());
 
     QFont const font(QStringLiteral("monospace"), 8);
     painter.setFont(font);
@@ -1716,14 +1727,14 @@ void OpenGLWidget::drawLaneBoundaries(QPainter & painter) {
     pen.setWidth(1);
 
     for (auto const & layout: layouts) {
-        float const center_ndc = layout.y_transform.offset + pan;
+        float const center_world = layout.y_transform.offset;
         float const half_height = std::abs(layout.y_transform.gain);
 
-        float const top_ndc = center_ndc + half_height;
-        float const bot_ndc = center_ndc - half_height;
+        float const top_world = center_world + half_height;
+        float const bot_world = center_world - half_height;
 
-        float const top_px = ndcToPixelY(top_ndc, h);
-        float const bot_px = ndcToPixelY(bot_ndc, h);
+        float const top_px = worldYToPixel(top_world, eff, h);
+        float const bot_px = worldYToPixel(bot_world, eff, h);
 
         QColor const color = overlayColorForType(
                 _data_store->analogSeries().count(layout.series_id)  ? "Analog"
@@ -1756,11 +1767,11 @@ void OpenGLWidget::drawOriginMarkers(QPainter & painter) {
     QPen pen;
     pen.setWidth(2);
 
-    auto const pan = static_cast<float>(_state->viewState().y_pan);
+    auto const eff = CorePlotting::computeEffectiveYViewport(_state->viewState());
 
     for (auto const & layout: layouts) {
-        float const center_ndc = layout.y_transform.offset + pan;
-        float const center_px = ndcToPixelY(center_ndc, h);
+        float const center_world = layout.y_transform.offset;
+        float const center_px = worldYToPixel(center_world, eff, h);
 
         QColor const color = overlayColorForType(
                 _data_store->analogSeries().count(layout.series_id)  ? "Analog"
