@@ -21,6 +21,7 @@ add_executable(test_commands
         ${CMAKE_SOURCE_DIR}/src/Commands/Core/VariableSubstitution.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/GetEntityIdsInRange.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/Commands.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Commands/AdvanceFrame.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/SaveData.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/SaveDataDigitalEvent.test.cpp
         ${CMAKE_SOURCE_DIR}/src/Commands/IO/SaveDataDigitalInterval.test.cpp
@@ -32,6 +33,7 @@ add_executable(test_commands
 )
 
 target_link_libraries(test_commands PRIVATE Catch2::Catch2WithMain DataManager Commands)
+target_link_libraries(test_commands PRIVATE WhiskerToolbox::TimeController)
 target_link_libraries(test_commands PRIVATE WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(test_commands PRIVATE WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(test_commands PRIVATE WhiskerToolbox::PointData)

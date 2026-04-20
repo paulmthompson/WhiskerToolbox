@@ -30,6 +30,8 @@ set(COMMAND_SOURCES
         CopyByTimeRange.cpp
         AddInterval.hpp
         AddInterval.cpp
+        AdvanceFrame.hpp
+        AdvanceFrame.cpp
         ForEachKey.hpp
         ForEachKey.cpp
         SynthesizeData.hpp
@@ -51,6 +53,7 @@ target_include_directories(Commands PUBLIC
 )
 
 target_link_libraries(Commands PRIVATE DataManager)
+target_link_libraries(Commands PRIVATE WhiskerToolbox::TimeController)
 target_link_libraries(Commands PRIVATE DataManagerIO)
 target_link_libraries(Commands PRIVATE WhiskerToolbox::DataSynthesizer)
 target_link_libraries(Commands PUBLIC reflectcpp::reflectcpp)

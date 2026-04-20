@@ -45,6 +45,7 @@ void TriageSession::recall() {
 
 commands::CommandResult TriageSession::commit(TimeFrameIndex current_frame,
                                               std::shared_ptr<DataManager> dm,
+                                              TimeController * time_controller,
                                               commands::CommandRecorder * recorder) {
     if (_state != State::Marking) {
         return commands::CommandResult::error("Cannot commit: session is not in Marking state");
@@ -60,6 +61,7 @@ commands::CommandResult TriageSession::commit(TimeFrameIndex current_frame,
 
     commands::CommandContext ctx;
     ctx.data_manager = std::move(dm);
+    ctx.time_controller = time_controller;
     ctx.recorder = recorder;
     ctx.runtime_variables["mark_frame"] = std::to_string(_mark_frame.getValue());
     ctx.runtime_variables["current_frame"] = std::to_string(current_frame.getValue());

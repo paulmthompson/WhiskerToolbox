@@ -12,6 +12,8 @@
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
+#include "TimeController/TimeController.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -335,4 +337,25 @@ TEST_CASE("TriageSession commit populates correct runtime variables",
     auto tracked = dm->getData<DigitalIntervalSeries>("tracked");
     REQUIRE(tracked != nullptr);
     REQUIRE(tracked->size() == 1);
+}
+
+TEST_CASE("TriageSession commit forwards time_controller to CommandContext", "[triage]") {
+    TimeController tc;
+    tc.setCurrentTime(TimePosition(TimeFrameIndex(10), nullptr));
+
+    CommandSequenceDescriptor seq;
+    CommandDescriptor step;
+    step.command_name = "AdvanceFrame";
+    step.parameters = rfl::json::read<rfl::Generic>(R"({"delta": 4})").value();
+    seq.commands = {step};
+
+    TriageSession session;
+    session.setPipeline(seq);
+    session.mark(TimeFrameIndex(0));
+
+    auto dm = makeTestDataManager();
+    auto const result = session.commit(TimeFrameIndex(1), dm, &tc);
+
+    REQUIRE(result.success);
+    REQUIRE(tc.currentTimeIndex() == TimeFrameIndex(14));
 }

@@ -19,6 +19,7 @@
 #include <vector>
 
 class DataManager;
+class TimeController;
 
 namespace commands {
 class CommandRecorder;
@@ -65,11 +66,13 @@ public:
     ///        transition to Idle on success.
     /// @param current_frame The end frame of the triage range
     /// @param dm The DataManager to operate on
+    /// @param time_controller Optional pointer passed to `CommandContext` (e.g. for `AdvanceFrame`)
     /// @param recorder Optional CommandRecorder for recording executed commands
     /// @return CommandResult indicating success or failure.
     ///         On failure, state remains Marking so the user can retry or recall.
     commands::CommandResult commit(TimeFrameIndex current_frame,
                                    std::shared_ptr<DataManager> dm,
+                                   TimeController * time_controller = nullptr,
                                    commands::CommandRecorder * recorder = nullptr);
 
     // -- Query ----------------------------------------------------------------

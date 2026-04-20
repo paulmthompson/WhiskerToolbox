@@ -190,7 +190,9 @@ void TriageSessionProperties_Widget::_onCommitClicked() {
         return;
     }
 
-    auto result = _session->commit(_current_frame, _state->dataManager(), _command_recorder);
+    TimeController * const time_controller =
+            _editor_registry != nullptr ? _editor_registry->timeController() : nullptr;
+    auto result = _session->commit(_current_frame, _state->dataManager(), time_controller, _command_recorder);
 
     if (!result.success) {
         QMessageBox::warning(this, tr("Commit Failed"),

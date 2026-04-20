@@ -23,6 +23,7 @@ target_link_libraries(test_triage_session PRIVATE
     WhiskerToolbox::TriageSession
 )
 
+target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::TimeController)
 target_link_libraries(test_triage_session PRIVATE DataManager)
 target_link_libraries(test_triage_session PRIVATE Commands)
 target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::LineData)

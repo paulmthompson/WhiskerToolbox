@@ -80,8 +80,7 @@ This is the primitive for the single-key toggle hotkey.
 - **Action:** Uses `TimeController` (added to `CommandContext`) to advance the current time position.
 - **Category:** `ui_navigation`
 
-`TimeController` is a Qt-free class extracted from `EditorRegistry` (see
-[TimeController Extraction Roadmap](../ui/EditorState/time_controller_extraction_roadmap.md)).
+`TimeController` is a Qt-free class extracted from `EditorRegistry`.
 It depends only on `TimeFrame`, so adding it to `CommandContext` preserves the
 Qt-free boundary of the Command architecture. `EditorRegistry` retains ownership
 of `TimeController` and bridges its callbacks to Qt signals — all existing

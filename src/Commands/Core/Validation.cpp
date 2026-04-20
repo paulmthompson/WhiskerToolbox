@@ -224,6 +224,7 @@ ValidationResult validateSequence(
                 // variable as resolved so check 3 passes.
                 CommandContext sub_ctx;
                 sub_ctx.runtime_variables = ctx.runtime_variables;
+                sub_ctx.time_controller = ctx.time_controller;
                 sub_ctx.runtime_variables[params.variable] = "__foreach_placeholder__";
 
                 auto sub_result = validateSequence(sub_seq, sub_ctx);

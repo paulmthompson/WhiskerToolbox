@@ -9,6 +9,7 @@
 #include "Core/CommandRegistry.hpp"
 
 #include "AddInterval.hpp"
+#include "AdvanceFrame.hpp"
 #include "CopyByTimeRange.hpp"
 #include "ForEachKey.hpp"
 #include "IO/LoadData.hpp"
@@ -52,6 +53,15 @@ void register_core_commands() {
              .category = "data_mutation",
              .supports_undo = false,
              .supported_data_types = {"DigitalIntervalSeries"}});
+
+    registerTypedCommand<AdvanceFrame, AdvanceFrameParams>(
+            reg,
+            "AdvanceFrame",
+            {.name = "AdvanceFrame",
+             .description = "Shift the current visualization frame by a signed delta",
+             .category = "navigation",
+             .supports_undo = false,
+             .supported_data_types = {}});
 
     registerTypedCommand<ForEachKey, ForEachKeyParams>(
             reg,
