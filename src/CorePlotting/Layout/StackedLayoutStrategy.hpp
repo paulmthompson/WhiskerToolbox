@@ -35,7 +35,7 @@ public:
 
 private:
     /**
-     * @brief Calculate layout for stackable series in FitToViewport mode
+     * @brief Calculate layout for stackable series
      * 
      * Stackable series divide the viewport height equally among themselves.
      * 
@@ -51,25 +51,7 @@ private:
             int series_index,
             int stackable_index,
             int total_stackable,
-            LayoutRequest const & request) ;
-
-    /**
-     * @brief Calculate layout for stackable series in FixedHeight mode
-     * 
-     * Each stackable series gets a fixed lane height. The total extent may
-     * exceed the viewport, requiring external Y navigation.
-     * 
-     * @param series_info Series metadata
-     * @param series_index Global index in series list
-     * @param stackable_index Index among stackable series only
-     * @param request Layout parameters (lane_height and lane_gap used)
-     * @return Computed layout for this series
-     */
-    [[nodiscard]] static SeriesLayout computeFixedHeightLayout(
-            SeriesInfo const & series_info,
-            int series_index,
-            int stackable_index,
-            LayoutRequest const & request) ;
+            LayoutRequest const & request);
 
     /**
      * @brief Calculate layout for full-canvas series
@@ -84,7 +66,7 @@ private:
     [[nodiscard]] static SeriesLayout computeFullCanvasLayout(
             SeriesInfo const & series_info,
             int series_index,
-            LayoutRequest const & request) ;
+            LayoutRequest const & request);
 };
 
 }// namespace CorePlotting

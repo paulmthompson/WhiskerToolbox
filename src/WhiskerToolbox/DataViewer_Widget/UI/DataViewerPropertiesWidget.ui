@@ -189,79 +189,29 @@
          </property>
          <layout class="QGridLayout" name="layout_settings_layout">
           <item row="0" column="0">
-           <widget class="QLabel" name="lane_sizing_label">
+           <widget class="QLabel" name="margin_factor_label">
             <property name="text">
-             <string>Lane Sizing:</string>
+             <string>Lane Margin:</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QComboBox" name="lane_sizing_combo">
-            <item>
-             <property name="text">
-              <string>Fit to Viewport</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Fixed Height</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="lane_height_label">
-            <property name="text">
-             <string>Lane Height:</string>
-            </property>
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="lane_height_spinbox">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
+           <widget class="QDoubleSpinBox" name="margin_factor_spinbox">
             <property name="minimum">
-             <double>0.010000000000000</double>
+             <double>0.100000000000000</double>
             </property>
             <property name="maximum">
-             <double>100.000000000000000</double>
+             <double>1.000000000000000</double>
             </property>
             <property name="singleStep">
              <double>0.050000000000000</double>
             </property>
             <property name="value">
-             <double>0.500000000000000</double>
+             <double>0.800000000000000</double>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="lane_gap_label">
-            <property name="text">
-             <string>Lane Gap:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="lane_gap_spinbox">
-            <property name="minimum">
-             <double>0.000000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>10.000000000000000</double>
-            </property>
-            <property name="singleStep">
-             <double>0.010000000000000</double>
-            </property>
-            <property name="value">
-             <double>0.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0" colspan="2">
+          <item row="1" column="0" colspan="2">
            <widget class="QLabel" name="visible_lanes_label">
             <property name="text">
              <string>Visible lanes: 0 of 0</string>

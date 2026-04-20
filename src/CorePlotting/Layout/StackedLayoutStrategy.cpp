@@ -15,8 +15,6 @@ LayoutResponse StackedLayoutStrategy::compute(LayoutRequest const & request) con
     // Count stackable series to determine height allocation
     int const total_stackable = request.countStackableSeries();
 
-    bool const use_fixed_height = (request.lane_sizing_policy == LaneSizingPolicy::FixedHeight);
-
     // Track stackable index separately from global index
     int stackable_index = 0;
 
@@ -27,13 +25,8 @@ LayoutResponse StackedLayoutStrategy::compute(LayoutRequest const & request) con
         SeriesLayout layout;
 
         if (series_info.is_stackable) {
-            if (use_fixed_height) {
-                layout = computeFixedHeightLayout(
-                        series_info, static_cast<int>(i), stackable_index, request);
-            } else {
-                layout = computeStackableLayout(
-                        series_info, static_cast<int>(i), stackable_index, total_stackable, request);
-            }
+            layout = computeStackableLayout(
+                    series_info, static_cast<int>(i), stackable_index, total_stackable, request);
             ++stackable_index;
         } else {
             // Full-canvas series: use entire viewport
@@ -79,30 +72,6 @@ SeriesLayout StackedLayoutStrategy::computeStackableLayout(
     float const offset = allocated_center;
 
     LayoutTransform const y_transform(offset, gain);
-    return {series_info.id, y_transform, series_index};
-}
-
-SeriesLayout StackedLayoutStrategy::computeFixedHeightLayout(
-        SeriesInfo const & series_info,
-        int series_index,
-        int stackable_index,
-        LayoutRequest const & request) {
-
-    float const lane_height = request.lane_height;
-    float const lane_gap = request.lane_gap;
-
-    // Each lane occupies lane_height, with lane_gap between adjacent lanes.
-    // Total stride per lane = lane_height + lane_gap
-    float const stride = lane_height + lane_gap;
-
-    // Center of lane i starting from viewport_y_min
-    float const allocated_center =
-            request.viewport_y_min + stride * static_cast<float>(stackable_index) + lane_height * 0.5f;
-
-    // Gain maps normalized [-1,1] input to lane_height
-    float const gain = lane_height * 0.5f;
-
-    LayoutTransform const y_transform(allocated_center, gain);
     return {series_info.id, y_transform, series_index};
 }
 

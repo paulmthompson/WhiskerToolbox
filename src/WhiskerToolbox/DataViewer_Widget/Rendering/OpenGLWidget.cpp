@@ -779,7 +779,8 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
             entry.data_cache.intrinsic_scale,
             opts->user_scale_factor,
             opts->y_offset,
-            _state->globalYScale());
+            _state->globalYScale(),
+            _state->marginFactor());
 
     // Step 4: Use DataViewerCoordinates to convert canvas Y to analog value
     return coords.canvasYToAnalogValue(canvas_y, y_transform);
@@ -1225,7 +1226,8 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
                 analog_data.data_cache.intrinsic_scale,
                 opts->user_scale_factor,
                 opts->y_offset,
-                _state->globalYScale());
+                _state->globalYScale(),
+                _state->marginFactor());
 
         // Create model matrix directly from the composed transform
         glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);
@@ -1449,13 +1451,9 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
 
 CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     auto const & view_state = _state->viewState();
-    auto const & layout_config = _state->layoutConfig();
     CorePlotting::LayoutRequest request;
     request.viewport_y_min = static_cast<float>(view_state.y_min);
     request.viewport_y_max = static_cast<float>(view_state.y_max);
-    request.lane_sizing_policy = layout_config.lane_sizing_policy;
-    request.lane_height = layout_config.lane_height;
-    request.lane_gap = layout_config.lane_gap;
 
     // Collect visible analog series keys and order by spike sorter config
     // Access series through data store, visibility through state

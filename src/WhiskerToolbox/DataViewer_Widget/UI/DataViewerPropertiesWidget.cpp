@@ -118,14 +118,7 @@ void DataViewerPropertiesWidget::_initializeFromState() {
     ui->grid_spacing->setValue(_state->gridSpacing());
 
     // Layout settings
-    auto const & layout_config = _state->layoutConfig();
-    int const policy_index = (layout_config.lane_sizing_policy == CorePlotting::LaneSizingPolicy::FixedHeight) ? 1 : 0;
-    ui->lane_sizing_combo->setCurrentIndex(policy_index);
-    ui->lane_height_spinbox->setValue(static_cast<double>(layout_config.lane_height));
-    ui->lane_gap_spinbox->setValue(static_cast<double>(layout_config.lane_gap));
-    bool const is_fixed = (policy_index == 1);
-    ui->lane_height_spinbox->setEnabled(is_fixed);
-    ui->lane_height_label->setEnabled(is_fixed);
+    ui->margin_factor_spinbox->setValue(static_cast<double>(_state->marginFactor()));
 
     _updating_from_state = false;
 }
@@ -150,12 +143,8 @@ void DataViewerPropertiesWidget::_connectUIControls() {
             this, &DataViewerPropertiesWidget::_onGridSpacingChanged);
 
     // Layout controls
-    connect(ui->lane_sizing_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &DataViewerPropertiesWidget::_onLaneSizingPolicyChanged);
-    connect(ui->lane_height_spinbox, &QDoubleSpinBox::valueChanged,
-            this, &DataViewerPropertiesWidget::_onLaneHeightChanged);
-    connect(ui->lane_gap_spinbox, &QDoubleSpinBox::valueChanged,
-            this, &DataViewerPropertiesWidget::_onLaneGapChanged);
+    connect(ui->margin_factor_spinbox, &QDoubleSpinBox::valueChanged,
+            this, &DataViewerPropertiesWidget::_onMarginFactorChanged);
 
     // Auto-arrange button
     connect(ui->auto_arrange_button, &QPushButton::clicked,
@@ -229,14 +218,7 @@ void DataViewerPropertiesWidget::_connectStateSignals() {
         if (_updating_from_state) return;
         _updating_from_state = true;
 
-        auto const & layout_config = _state->layoutConfig();
-        int const policy_index = (layout_config.lane_sizing_policy == CorePlotting::LaneSizingPolicy::FixedHeight) ? 1 : 0;
-        ui->lane_sizing_combo->setCurrentIndex(policy_index);
-        ui->lane_height_spinbox->setValue(static_cast<double>(layout_config.lane_height));
-        ui->lane_gap_spinbox->setValue(static_cast<double>(layout_config.lane_gap));
-        bool const is_fixed = (policy_index == 1);
-        ui->lane_height_spinbox->setEnabled(is_fixed);
-        ui->lane_height_label->setEnabled(is_fixed);
+        ui->margin_factor_spinbox->setValue(static_cast<double>(_state->marginFactor()));
 
         _updating_from_state = false;
     });
@@ -289,28 +271,10 @@ void DataViewerPropertiesWidget::_onGridSpacingChanged(int value) {
     _state->setGridSpacing(value);
 }
 
-void DataViewerPropertiesWidget::_onLaneSizingPolicyChanged(int index) {
+void DataViewerPropertiesWidget::_onMarginFactorChanged(double value) {
     if (_updating_from_state || !_state) return;
 
-    auto const policy = (index == 1) ? CorePlotting::LaneSizingPolicy::FixedHeight
-                                     : CorePlotting::LaneSizingPolicy::FitToViewport;
-    _state->setLaneSizingPolicy(policy);
-
-    bool const is_fixed = (index == 1);
-    ui->lane_height_spinbox->setEnabled(is_fixed);
-    ui->lane_height_label->setEnabled(is_fixed);
-}
-
-void DataViewerPropertiesWidget::_onLaneHeightChanged(double value) {
-    if (_updating_from_state || !_state) return;
-
-    _state->setLaneHeight(static_cast<float>(value));
-}
-
-void DataViewerPropertiesWidget::_onLaneGapChanged(double value) {
-    if (_updating_from_state || !_state) return;
-
-    _state->setLaneGap(static_cast<float>(value));
+    _state->setMarginFactor(static_cast<float>(value));
 }
 
 void DataViewerPropertiesWidget::_handleFeatureSelected(QString const & feature) {

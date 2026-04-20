@@ -73,7 +73,7 @@ TEST_CASE("StackedLayoutStrategy - Single analog series", "[CorePlotting][Layout
     request.viewport_y_min = -1.0f;
     request.viewport_y_max = 1.0f;
 
-    StackedLayoutStrategy strategy;
+    StackedLayoutStrategy const strategy;
     LayoutResponse response = strategy.compute(request);
 
     REQUIRE(response.layouts.size() == 1);
@@ -98,7 +98,7 @@ TEST_CASE("StackedLayoutStrategy - Multiple analog series", "[CorePlotting][Layo
     request.viewport_y_min = -1.0f;
     request.viewport_y_max = 1.0f;
 
-    StackedLayoutStrategy strategy;
+    StackedLayoutStrategy const strategy;
     LayoutResponse response = strategy.compute(request);
 
     REQUIRE(response.layouts.size() == 3);
@@ -148,7 +148,7 @@ TEST_CASE("StackedLayoutStrategy - Mixed stackable and full-canvas series", "[Co
     request.viewport_y_min = -1.0f;
     request.viewport_y_max = 1.0f;
 
-    StackedLayoutStrategy strategy;
+    StackedLayoutStrategy const strategy;
     LayoutResponse response = strategy.compute(request);
 
     REQUIRE(response.layouts.size() == 4);
@@ -192,8 +192,8 @@ TEST_CASE("StackedLayoutStrategy - Empty request", "[CorePlotting][Layout]") {
     request.viewport_y_min = -1.0f;
     request.viewport_y_max = 1.0f;
 
-    StackedLayoutStrategy strategy;
-    LayoutResponse response = strategy.compute(request);
+    StackedLayoutStrategy const strategy;
+    LayoutResponse const response = strategy.compute(request);
 
     REQUIRE(response.layouts.empty());
 }
@@ -204,7 +204,7 @@ TEST_CASE("RowLayoutStrategy - Single series", "[CorePlotting][Layout]") {
     request.viewport_y_min = -1.0f;
     request.viewport_y_max = 1.0f;
 
-    RowLayoutStrategy strategy;
+    RowLayoutStrategy const strategy;
     LayoutResponse response = strategy.compute(request);
 
     REQUIRE(response.layouts.size() == 1);
@@ -230,7 +230,7 @@ TEST_CASE("RowLayoutStrategy - Multiple rows", "[CorePlotting][Layout]") {
     request.viewport_y_min = -1.0f;
     request.viewport_y_max = 1.0f;
 
-    RowLayoutStrategy strategy;
+    RowLayoutStrategy const strategy;
     LayoutResponse response = strategy.compute(request);
 
     REQUIRE(response.layouts.size() == 4);
@@ -278,8 +278,8 @@ TEST_CASE("RowLayoutStrategy - Ignores is_stackable flag", "[CorePlotting][Layou
     request.viewport_y_min = -1.0f;
     request.viewport_y_max = 1.0f;
 
-    RowLayoutStrategy strategy;
-    LayoutResponse response = strategy.compute(request);
+    RowLayoutStrategy const strategy;
+    LayoutResponse const response = strategy.compute(request);
 
     REQUIRE(response.layouts.size() == 3);
 
@@ -297,8 +297,8 @@ TEST_CASE("RowLayoutStrategy - Empty request", "[CorePlotting][Layout]") {
     request.viewport_y_min = -1.0f;
     request.viewport_y_max = 1.0f;
 
-    RowLayoutStrategy strategy;
-    LayoutResponse response = strategy.compute(request);
+    RowLayoutStrategy const strategy;
+    LayoutResponse const response = strategy.compute(request);
 
     REQUIRE(response.layouts.empty());
 }
@@ -314,7 +314,7 @@ TEST_CASE("LayoutEngine - Strategy switching", "[CorePlotting][Layout]") {
     LayoutEngine engine(std::make_unique<StackedLayoutStrategy>());
 
     SECTION("Initial strategy works") {
-        LayoutResponse response = engine.compute(request);
+        LayoutResponse const response = engine.compute(request);
         REQUIRE(response.layouts.size() == 2);
     }
 
@@ -336,9 +336,9 @@ TEST_CASE("LayoutEngine - No strategy set", "[CorePlotting][Layout]") {
     request.series = {{"series1", SeriesType::Analog, true}};
 
     // Create engine with null strategy
-    LayoutEngine engine(nullptr);
+    LayoutEngine const engine(nullptr);
 
-    LayoutResponse response = engine.compute(request);
+    LayoutResponse const response = engine.compute(request);
     REQUIRE(response.layouts.empty());
 }
 
@@ -351,7 +351,7 @@ TEST_CASE("StackedLayoutStrategy - Custom viewport bounds", "[CorePlotting][Layo
     request.viewport_y_min = 0.0f;
     request.viewport_y_max = 100.0f;
 
-    StackedLayoutStrategy strategy;
+    StackedLayoutStrategy const strategy;
     LayoutResponse response = strategy.compute(request);
 
     REQUIRE(response.layouts.size() == 2);
@@ -378,7 +378,7 @@ TEST_CASE("RowLayoutStrategy - Custom viewport bounds", "[CorePlotting][Layout]"
     request.viewport_y_min = 10.0f;
     request.viewport_y_max = 20.0f;
 
-    RowLayoutStrategy strategy;
+    RowLayoutStrategy const strategy;
     LayoutResponse response = strategy.compute(request);
 
     REQUIRE(response.layouts.size() == 2);
@@ -394,175 +394,6 @@ TEST_CASE("RowLayoutStrategy - Custom viewport bounds", "[CorePlotting][Layout]"
                  Catch::Matchers::WithinAbs(12.5f, 0.001f));
     REQUIRE_THAT(getAllocatedYCenter(response.layouts[1]),
                  Catch::Matchers::WithinAbs(17.5f, 0.001f));
-}
-
-// ==================== FixedHeight Lane Sizing Tests ====================
-
-TEST_CASE("StackedLayoutStrategy - FixedHeight single series", "[CorePlotting][Layout]") {
-    LayoutRequest request;
-    request.series = {{"analog1", SeriesType::Analog, true}};
-    request.viewport_y_min = -1.0f;
-    request.viewport_y_max = 1.0f;
-    request.lane_sizing_policy = LaneSizingPolicy::FixedHeight;
-    request.lane_height = 0.5f;
-    request.lane_gap = 0.0f;
-
-    StackedLayoutStrategy strategy;
-    LayoutResponse response = strategy.compute(request);
-
-    REQUIRE(response.layouts.size() == 1);
-
-    auto const & layout = response.layouts[0];
-    REQUIRE(layout.series_id == "analog1");
-
-    // Lane height should be 0.5, gain = 0.25
-    REQUIRE_THAT(getAllocatedHeight(layout),
-                 Catch::Matchers::WithinAbs(0.5f, 0.001f));
-    // Center at viewport_y_min + lane_height/2 = -1.0 + 0.25 = -0.75
-    REQUIRE_THAT(getAllocatedYCenter(layout),
-                 Catch::Matchers::WithinAbs(-0.75f, 0.001f));
-}
-
-TEST_CASE("StackedLayoutStrategy - FixedHeight multiple series", "[CorePlotting][Layout]") {
-    LayoutRequest request;
-    request.series = {
-            {"analog1", SeriesType::Analog, true},
-            {"analog2", SeriesType::Analog, true},
-            {"analog3", SeriesType::Analog, true}};
-    request.viewport_y_min = -1.0f;
-    request.viewport_y_max = 1.0f;
-    request.lane_sizing_policy = LaneSizingPolicy::FixedHeight;
-    request.lane_height = 0.5f;
-    request.lane_gap = 0.0f;
-
-    StackedLayoutStrategy strategy;
-    LayoutResponse response = strategy.compute(request);
-
-    REQUIRE(response.layouts.size() == 3);
-
-    // All lanes should have height 0.5
-    for (auto const & layout: response.layouts) {
-        REQUIRE_THAT(getAllocatedHeight(layout),
-                     Catch::Matchers::WithinAbs(0.5f, 0.001f));
-    }
-
-    // Centers: -0.75, -0.25, 0.25
-    REQUIRE_THAT(getAllocatedYCenter(response.layouts[0]),
-                 Catch::Matchers::WithinAbs(-0.75f, 0.001f));
-    REQUIRE_THAT(getAllocatedYCenter(response.layouts[1]),
-                 Catch::Matchers::WithinAbs(-0.25f, 0.001f));
-    REQUIRE_THAT(getAllocatedYCenter(response.layouts[2]),
-                 Catch::Matchers::WithinAbs(0.25f, 0.001f));
-}
-
-TEST_CASE("StackedLayoutStrategy - FixedHeight with lane gap", "[CorePlotting][Layout]") {
-    LayoutRequest request;
-    request.series = {
-            {"analog1", SeriesType::Analog, true},
-            {"analog2", SeriesType::Analog, true}};
-    request.viewport_y_min = 0.0f;
-    request.viewport_y_max = 10.0f;
-    request.lane_sizing_policy = LaneSizingPolicy::FixedHeight;
-    request.lane_height = 2.0f;
-    request.lane_gap = 1.0f;
-
-    StackedLayoutStrategy strategy;
-    LayoutResponse response = strategy.compute(request);
-
-    REQUIRE(response.layouts.size() == 2);
-
-    // Both lanes should have height 2.0
-    REQUIRE_THAT(getAllocatedHeight(response.layouts[0]),
-                 Catch::Matchers::WithinAbs(2.0f, 0.001f));
-    REQUIRE_THAT(getAllocatedHeight(response.layouts[1]),
-                 Catch::Matchers::WithinAbs(2.0f, 0.001f));
-
-    // Stride = lane_height + lane_gap = 3.0
-    // Lane 0 center: viewport_y_min + 0 * stride + lane_height/2 = 0.0 + 0.0 + 1.0 = 1.0
-    // Lane 1 center: viewport_y_min + 1 * stride + lane_height/2 = 0.0 + 3.0 + 1.0 = 4.0
-    REQUIRE_THAT(getAllocatedYCenter(response.layouts[0]),
-                 Catch::Matchers::WithinAbs(1.0f, 0.001f));
-    REQUIRE_THAT(getAllocatedYCenter(response.layouts[1]),
-                 Catch::Matchers::WithinAbs(4.0f, 0.001f));
-}
-
-TEST_CASE("StackedLayoutStrategy - FixedHeight exceeds viewport", "[CorePlotting][Layout]") {
-    // 10 series with height 0.5 each = total 5.0, viewport is only 2.0
-    LayoutRequest request;
-    for (int i = 0; i < 10; ++i) {
-        request.series.emplace_back("ch" + std::to_string(i), SeriesType::Analog, true);
-    }
-    request.viewport_y_min = -1.0f;
-    request.viewport_y_max = 1.0f;
-    request.lane_sizing_policy = LaneSizingPolicy::FixedHeight;
-    request.lane_height = 0.5f;
-    request.lane_gap = 0.0f;
-
-    StackedLayoutStrategy strategy;
-    LayoutResponse response = strategy.compute(request);
-
-    REQUIRE(response.layouts.size() == 10);
-
-    // Last lane center should exceed viewport_y_max
-    float const last_center = getAllocatedYCenter(response.layouts[9]);
-    // Center of lane 9: -1.0 + 0.5 * 9 + 0.25 = -1.0 + 4.5 + 0.25 = 3.75
-    REQUIRE_THAT(last_center, Catch::Matchers::WithinAbs(3.75f, 0.001f));
-    REQUIRE(last_center > request.viewport_y_max);
-}
-
-TEST_CASE("StackedLayoutStrategy - FixedHeight mixed with full-canvas", "[CorePlotting][Layout]") {
-    LayoutRequest request;
-    request.series = {
-            {"analog1", SeriesType::Analog, true},
-            {"interval1", SeriesType::DigitalInterval, false},
-            {"analog2", SeriesType::Analog, true}};
-    request.viewport_y_min = -1.0f;
-    request.viewport_y_max = 1.0f;
-    request.lane_sizing_policy = LaneSizingPolicy::FixedHeight;
-    request.lane_height = 0.5f;
-    request.lane_gap = 0.0f;
-
-    StackedLayoutStrategy strategy;
-    LayoutResponse response = strategy.compute(request);
-
-    REQUIRE(response.layouts.size() == 3);
-
-    SECTION("Stackable series use fixed height") {
-        REQUIRE_THAT(getAllocatedHeight(response.layouts[0]),
-                     Catch::Matchers::WithinAbs(0.5f, 0.001f));
-        REQUIRE_THAT(getAllocatedHeight(response.layouts[2]),
-                     Catch::Matchers::WithinAbs(0.5f, 0.001f));
-    }
-
-    SECTION("Full-canvas series still span entire viewport") {
-        REQUIRE_THAT(getAllocatedHeight(response.layouts[1]),
-                     Catch::Matchers::WithinAbs(2.0f, 0.001f));
-        REQUIRE_THAT(getAllocatedYCenter(response.layouts[1]),
-                     Catch::Matchers::WithinAbs(0.0f, 0.001f));
-    }
-}
-
-TEST_CASE("StackedLayoutStrategy - FitToViewport ignores lane_height and lane_gap", "[CorePlotting][Layout]") {
-    LayoutRequest request;
-    request.series = {
-            {"analog1", SeriesType::Analog, true},
-            {"analog2", SeriesType::Analog, true}};
-    request.viewport_y_min = -1.0f;
-    request.viewport_y_max = 1.0f;
-    request.lane_sizing_policy = LaneSizingPolicy::FitToViewport;
-    request.lane_height = 99.0f;// Should be ignored
-    request.lane_gap = 42.0f;   // Should be ignored
-
-    StackedLayoutStrategy strategy;
-    LayoutResponse response = strategy.compute(request);
-
-    REQUIRE(response.layouts.size() == 2);
-
-    // Each series should get viewport_height / 2 = 1.0
-    REQUIRE_THAT(getAllocatedHeight(response.layouts[0]),
-                 Catch::Matchers::WithinAbs(1.0f, 0.001f));
-    REQUIRE_THAT(getAllocatedHeight(response.layouts[1]),
-                 Catch::Matchers::WithinAbs(1.0f, 0.001f));
 }
 
 // ============================================================================

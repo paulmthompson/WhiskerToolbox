@@ -21,12 +21,15 @@ feature work.
 ::: {.callout-tip}
 ## Related GitHub Issues
 
-The following issues track the primary feature work in this roadmap:
+Open issues tracking remaining feature work:
 
 - [#223](https://github.com/paulmthompson/WhiskerToolbox/issues/223) — Extract reusable temporal X-axis (CenteredTimeAxis widget)
 - [#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227) — Mouse-wheel modifiers for Y scaling (global, per-lane, viewport zoom)
 - [#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247) — Y-axis scalebars and lane labels
-- [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) — Viewport culling and configurable lane sizing
+
+Closed issues:
+
+- [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) — Viewport culling and configurable lane sizing (completed in Phases 1 + 2)
 :::
 
 ## Completed Work Summary
@@ -36,7 +39,7 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **EditorState pattern**: `DataViewerState` with `DataViewerStateData` serialization via reflect-cpp
 - **SeriesOptionsRegistry**: Generic type-safe per-series options for analog, event, and interval types
 - **Rendering pipeline**: `SceneBuildingHelpers` → `RenderableBatch` → `PlottingOpenGL::SceneRenderer`
-- **Layout system**: `CorePlotting::LayoutEngine` with `StackedLayoutStrategy`; spike sorter configuration for custom channel ordering; dual lane sizing policy (`FitToViewport` / `FixedHeight`) with configurable lane height and gap
+- **Layout system**: `CorePlotting::LayoutEngine` with `StackedLayoutStrategy`; spike sorter configuration for custom channel ordering; FitToViewport lane sizing with configurable `margin_factor`
 - **Y-axis transform pipeline**: `TransformComposers` composing data normalization, user adjustments, layout positioning, global scaling
 - **Interaction system**: `DataViewerInteractionManager` state machine (Normal, CreateInterval, ModifyInterval, CreateLine modes)
 - **Interval editing**: Click-to-select, edge dragging, collision prevention, multi-timeframe support
@@ -68,23 +71,30 @@ per-type visual options, viewport culling, and shared component extraction descr
 Merged `global_zoom` and `global_vertical_scale` into a single `global_y_scale` field.
 Exposed as "Global Y Scale" in the UI and used consistently in all `TransformComposers` functions.
 
-### 1.2 Configurable Lane Sizing with Dual Policy {.completed}
+### 1.2 Configurable Lane Sizing {.completed}
 
-`StackedLayoutStrategy` supports `FitToViewport` (equal division, default) and `FixedHeight`
-(fixed `lane_height` + `lane_gap` per lane; total extent may exceed viewport). Layout config
-persisted in `DataViewerLayoutConfig` via reflect-cpp. State API: `setLaneSizingPolicy()`,
-`setLaneHeight()`, `setLaneGap()`, `layoutConfigChanged()` signal.
+`StackedLayoutStrategy` uses FitToViewport (equal division of viewport among stackable lanes).
+Layout config persisted in `DataViewerLayoutConfig` via reflect-cpp with a user-configurable
+`margin_factor` (fraction of allocated lane height used for data rendering, default 0.8).
+State API: `setMarginFactor()`, `marginFactor()`, `layoutConfigChanged()` signal.
+
+::: {.callout-note}
+The former `FixedHeight` lane sizing policy (with `lane_height` and `lane_gap` parameters)
+was removed because Y viewport zoom (`y_zoom` + `y_pan` in `ViewStateData`) provides the
+same functionality — users zoom into the viewport to see a subset of channels at larger
+resolution, rather than setting a fixed pixel height per lane.
+:::
 
 **Key files**: `StackedLayoutStrategy.hpp/.cpp`, `DataViewerStateData.hpp`, `DataViewerState.hpp/.cpp`
 
 ### 1.3 Lane Sizing UI Controls {.completed}
 
-"Layout Settings" group in `DataViewerPropertiesWidget`: policy combo box, lane height spinbox
-(FixedHeight only), lane gap spinbox. Bidirectional sync via `layoutConfigChanged()`.
+"Layout Settings" group in `DataViewerPropertiesWidget`: margin factor spinbox (0.1–1.0).
+Bidirectional sync via `layoutConfigChanged()`.
 
 ### 1.4 Verification {.completed}
 
-32+ channels in `FitToViewport` all visible. `FixedHeight` shows subset with panning.
+32+ channels in `FitToViewport` all visible. Y viewport zoom shows subset with panning.
 Workspace save/restore roundtrips layout config.
 
 ---
@@ -135,9 +145,9 @@ field names (`x_min`/`x_max`/`y_pan` with appropriate casts). `DataViewerCoordin
 **Issues**: [#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227) (wheel modifiers, per-lane scaling),
 [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) (viewport culling),
 [#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247) (axis synchronization)
-**Depends on**: [Phase 1](#phase-1-layout-foundation) (`FixedHeight` lanes must exist for
-Y pan/zoom to be meaningful), [Phase 1B](#phase-1b-rendering-pipeline) (pan/zoom must be
-performant before adding more interaction modes).
+**Depends on**: [Phase 1](#phase-1-layout-foundation) (layout foundation must exist),
+[Phase 1B](#phase-1b-rendering-pipeline) (pan/zoom must be performant before adding more
+interaction modes).
 
 **Goal**: Allow users to pan and zoom the Y-axis so they can view a subset of channels at
 readable resolution, inspired by [EventPlotWidget](../EventPlotWidget/index.qmd)'s trial Y
@@ -356,7 +366,7 @@ The effective viewport is computed as `[y_min + y_pan, y_max + y_pan]` and passe
 
 ### 2.6 Verification
 
-- Load 32+ channels in `FixedHeight` mode.
+- Load 32+ channels.
 - Y pan scrolls through lanes; Y zoom narrows the visible range.
 - Viewport culling skips off-screen series (verify via Developer Debug Panel rendering stats).
 - Per-lane hover scaling adjusts the hovered series only.
@@ -470,8 +480,7 @@ Labels and scalebars must be viewport-aware
 
 - When panning in Y, labels for visible lanes must adjust accordingly
 - Labels for off-screen lanes should not be rendered
-- Labels should not overlap when lanes are very short (FixedHeight with small lane_height
-  or FitToViewport with many channels)
+- Labels should not overlap when lanes are very short (many channels or high Y zoom)
 
 ### 3.6 Verification
 
@@ -863,16 +872,19 @@ major feature phases to avoid merge conflicts.
   real-time visibility into lane layout, scales, coordinate transforms, and viewport state.
   **Complete** — accelerates development of Phases 1–3.
 
-### Next Up (Y-Axis Track — Highest User Impact)
+### Completed (Y-Axis Track)
 
-1. **Phase 1**: Layout foundation — lane sizing model that all Y-axis work depends on
-   ([#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248),
+1. **Phase 1**: Layout foundation — lane sizing model with configurable margin_factor
+   ([#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) ✓,
    [#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227))
-2. **Phase 1B**: Rendering pipeline modernization — migrate to `ViewStateData`,
-   add scene dirty guard, adopt shared interaction helpers for fast pan/zoom
-3. **Phase 2**: Y-axis navigation — pan/zoom, culling, wheel modifiers
+2. **Phase 1B**: Rendering pipeline modernization — `ViewStateData`, scene dirty guard,
+   shared interaction helpers for fast pan/zoom
+3. **Phase 2**: Y-axis navigation — pan/zoom, viewport culling, wheel modifiers
    ([#227](https://github.com/paulmthompson/WhiskerToolbox/issues/227),
-   [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248))
+   [#248](https://github.com/paulmthompson/WhiskerToolbox/issues/248) ✓)
+
+### Next Up
+
 4. **Phase 3**: Y-axis scalebars and lane labels
    ([#247](https://github.com/paulmthompson/WhiskerToolbox/issues/247))
 

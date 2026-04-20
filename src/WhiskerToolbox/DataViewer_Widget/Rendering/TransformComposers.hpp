@@ -19,6 +19,8 @@ namespace DataViewer {
  * IMPORTANT: Global Y scale scales the data amplitude within each lane, but does NOT
  * move the lane center. This is achieved by applying global scaling to the gain
  * component only, after composing data normalization with layout positioning.
+ *
+ * @param margin_factor Fraction of allocated lane height used for data (0..1]
  */
 [[nodiscard]] inline CorePlotting::LayoutTransform composeAnalogYTransform(
         CorePlotting::SeriesLayout const & layout,
@@ -27,7 +29,8 @@ namespace DataViewer {
         float intrinsic_scale,
         float user_scale_factor,
         float user_vertical_offset,
-        float global_y_scale) {
+        float global_y_scale,
+        float margin_factor = 0.8f) {
 
     // Use NormalizationHelpers to create the data normalization transform
     // forStdDevRange maps mean ± 3*std_dev to ±1
@@ -43,9 +46,6 @@ namespace DataViewer {
     auto data_transform = user_adj.compose(data_norm);
 
     // Layout provides: offset = lane center, gain = half_height of lane
-    // Apply 80% margin factor within allocated space
-    constexpr float margin_factor = 0.8f;
-
     // Global scaling affects the amplitude within the lane, NOT the lane position
     // So we apply global_y_scale to the gain only
     float const lane_half_height = layout.y_transform.gain * margin_factor;

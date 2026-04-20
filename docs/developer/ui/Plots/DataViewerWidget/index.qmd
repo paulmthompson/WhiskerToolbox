@@ -329,7 +329,7 @@ This is critical for smooth scrolling with dense electrophysiology data.
 
 ## Viewport Visibility Culling
 
-When many channels are loaded but only a few are visible in the Y viewport (e.g., viewing 4 of 32 channels in `FixedHeight` mode), the rendering pipeline uses **additive culling** to avoid building batches for off-screen series while ensuring that panning never permanently loses rendered data.
+When many channels are loaded but only a few are visible in the Y viewport (e.g., viewing 4 of 32 channels after Y zooming in), the rendering pipeline uses **additive culling** to avoid building batches for off-screen series while ensuring that panning never permanently loses rendered data.
 
 ### Design Principles
 

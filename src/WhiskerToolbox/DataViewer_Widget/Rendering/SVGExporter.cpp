@@ -175,7 +175,8 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
             data_cache.intrinsic_scale,
             options.user_scale_factor,
             options.y_offset,
-            gl_widget_->state()->globalYScale());
+            gl_widget_->state()->globalYScale(),
+            gl_widget_->state()->marginFactor());
 
     // Create model matrix from composed transform
     glm::mat4 const model_matrix = CorePlotting::createModelMatrix(y_transform);

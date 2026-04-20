@@ -53,7 +53,6 @@
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/DataTypes/SeriesStyle.hpp"
-#include "CorePlotting/Layout/LayoutEngine.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -218,16 +217,13 @@ struct DataViewerUIPreferences {
 // ==================== Layout Config ====================
 
 /**
- * @brief Configurable lane sizing for stacked layout
+ * @brief Configurable layout parameters for stacked series
  *
- * Controls how vertical space is allocated among stackable series.
- * - FitToViewport (default): All lanes share the viewport equally.
- * - FixedHeight: Each lane gets a fixed height; total extent may exceed viewport.
+ * Controls the margin between adjacent lanes. Series divide the viewport
+ * equally (FitToViewport); Y viewport zoom and pan handle navigation.
  */
 struct DataViewerLayoutConfig {
-    CorePlotting::LaneSizingPolicy lane_sizing_policy = CorePlotting::LaneSizingPolicy::FitToViewport;
-    float lane_height = 0.5f;///< Height per lane in viewport units (FixedHeight mode only)
-    float lane_gap = 0.0f;   ///< Gap between adjacent lanes in viewport units
+    float margin_factor = 0.8f;///< Fraction of allocated lane height used for data (0..1]
 };
 
 // ==================== Group Scaling State ====================

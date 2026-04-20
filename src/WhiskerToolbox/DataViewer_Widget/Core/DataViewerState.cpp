@@ -290,47 +290,22 @@ void DataViewerState::setDeveloperMode(bool enabled) {
 
 // ==================== Layout Config ====================
 
-void DataViewerState::setLaneSizingPolicy(CorePlotting::LaneSizingPolicy policy) {
-    if (_data.layout.lane_sizing_policy != policy) {
-        _data.layout.lane_sizing_policy = policy;
-        // Reset vertical pan so the view centers on the data in the new layout mode
-        _data.view.y_pan = 0.0;
-        markDirty();
-        emit layoutConfigChanged();
-        emit viewStateChanged();
-    }
-}
-
-void DataViewerState::setLaneHeight(float height) {
+void DataViewerState::setMarginFactor(float factor) {
     constexpr float epsilon = 1e-6f;
-    if (std::abs(_data.layout.lane_height - height) > epsilon) {
-        _data.layout.lane_height = height;
+    if (std::abs(_data.layout.margin_factor - factor) > epsilon) {
+        _data.layout.margin_factor = factor;
         markDirty();
         emit layoutConfigChanged();
-        emit viewStateChanged();
-    }
-}
-
-void DataViewerState::setLaneGap(float gap) {
-    constexpr float epsilon = 1e-6f;
-    if (std::abs(_data.layout.lane_gap - gap) > epsilon) {
-        _data.layout.lane_gap = gap;
-        markDirty();
-        emit layoutConfigChanged();
-        emit viewStateChanged();
     }
 }
 
 void DataViewerState::setLayoutConfig(DataViewerLayoutConfig const & config) {
     constexpr float epsilon = 1e-6f;
-    bool const changed = _data.layout.lane_sizing_policy != config.lane_sizing_policy ||
-                         std::abs(_data.layout.lane_height - config.lane_height) > epsilon ||
-                         std::abs(_data.layout.lane_gap - config.lane_gap) > epsilon;
+    bool const changed = std::abs(_data.layout.margin_factor - config.margin_factor) > epsilon;
     if (changed) {
         _data.layout = config;
         markDirty();
         emit layoutConfigChanged();
-        emit viewStateChanged();
     }
 }
 

@@ -434,42 +434,16 @@ public:
     // ==================== Layout Config ====================
 
     /**
-     * @brief Set the lane sizing policy
-     * @param policy FitToViewport or FixedHeight
+     * @brief Set the lane margin factor
+     * @param factor Fraction of allocated lane height used for data (0..1]
      */
-    void setLaneSizingPolicy(CorePlotting::LaneSizingPolicy policy);
+    void setMarginFactor(float factor);
 
     /**
-     * @brief Get the lane sizing policy
-     * @return Current lane sizing policy
+     * @brief Get the lane margin factor
+     * @return Current margin factor
      */
-    [[nodiscard]] CorePlotting::LaneSizingPolicy laneSizingPolicy() const {
-        return _data.layout.lane_sizing_policy;
-    }
-
-    /**
-     * @brief Set the fixed lane height (used in FixedHeight mode)
-     * @param height Lane height in viewport units
-     */
-    void setLaneHeight(float height);
-
-    /**
-     * @brief Get the fixed lane height
-     * @return Lane height in viewport units
-     */
-    [[nodiscard]] float laneHeight() const { return _data.layout.lane_height; }
-
-    /**
-     * @brief Set the gap between adjacent lanes
-     * @param gap Gap in viewport units
-     */
-    void setLaneGap(float gap);
-
-    /**
-     * @brief Get the gap between adjacent lanes
-     * @return Lane gap in viewport units
-     */
-    [[nodiscard]] float laneGap() const { return _data.layout.lane_gap; }
+    [[nodiscard]] float marginFactor() const { return _data.layout.margin_factor; }
 
     /**
      * @brief Set the complete layout config
