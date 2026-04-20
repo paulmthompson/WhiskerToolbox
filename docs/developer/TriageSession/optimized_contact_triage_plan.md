@@ -21,7 +21,7 @@ This plan optimizes the manual triage workflow across five phases:
 | 1 | Atomic frame-level Commands | None | **Done** |
 | 2 | Hotkey → Command Sequence bridge | Phase 1 | **Done** |
 | 3 | Sub-25 FPS playback | None (parallel) | **Done** |
-| 4 | Dynamic frame filter on TimeScrollBar | None (parallel) | Not started |
+| 4 | Dynamic frame filter on TimeScrollBar | None (parallel) | **Done** |
 | 5 | Adaptive FPS from ML confidence | Phases 3 & 4 | Not started |
 
 ---
@@ -53,8 +53,7 @@ This plan optimizes the manual triage workflow across five phases:
 
 | Capability | Notes |
 |---|---|
-| Frame filtering / skip during playback | No filter concept in `TimeScrollBar` or `TimeFrame` (Phase 4) |
-| Adaptive FPS from ML confidence | No infrastructure |
+| Adaptive FPS from ML confidence | No infrastructure (Phase 5) |
 
 ---
 
@@ -344,9 +343,10 @@ A new class that modulates `target_fps` based on a per-frame signal:
 | `src/Commands/Core/SequenceExecution.hpp` | 2 | Include `ICommand.hpp` so `SequenceResult` destructs when used from UI TU (**done**) |
 | `src/WhiskerToolbox/Main_Window/mainwindow.cpp` | 2 | `KeymapManager::setDataManager(_data_manager)` (**done**) |
 | `src/WhiskerToolbox/TriageSession_Widget/TriageSessionWidgetRegistration.cpp` | 2 | Default **F** / **D** / **G** contact triage chords (**done**) |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` / `.cpp` | 3, 4 | Phase **3 done**: `_target_fps`, timer interval, preset stepping, 1 frame/tick (**done**); Phase 4: filter integration (pending) |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.hpp` / `.cpp` | 3, 4 | Phase **3 done**: `_target_fps`, timer interval, preset stepping, 1 frame/tick; Phase **4 done**: `setFrameFilter()`, `_frame_filter`, filter integration in `_vidLoop()` + `changeScrollBarValue()`, `_rebuildFrameFilter()` (**done**) |
 | `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarState.hpp` / `.cpp` | 3 | `targetFps` / `setTargetFps`, `fromJson` migration from `play_speed` (**done**) |
-| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarStateData.hpp` | 3, 4 | Phase **3 done**: `target_fps` float (**done**); Phase 4: filter settings (pending) |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarStateData.hpp` | 3 | `target_fps` float (**done**) |
+| `src/WhiskerToolbox/TimeScrollBar/TimeScrollBar.ui` | 4 | `skip_tracked_checkbox` + `filter_key_combobox` row (**done**) |
 | `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarRegistration.cpp` | 3 | No keymap changes required for FPS (**n/a**) |
 | `tests/fuzz/unit/EditorState/fuzz_*_roundtrip.cpp`, `fuzz_editor_state_from_json.cpp`, `fuzz_state_data_from_garbage.cpp` | 3 | `target_fps` / preset-index fuzzing; `TimeScrollBarMigratesLegacyPlaySpeedJson` (**done**) |
 | `docs/developer/ui/TimeScrollBar/index.qmd`, `docs/_quarto.yml` | 3 | Playback + persistence overview (**done**) |
@@ -362,7 +362,9 @@ A new class that modulates `target_fps` based on a per-frame signal:
 | `src/Commands/SetEventAtTime.test.cpp` | 1 | Catch2 tests for interval commands + triage sequence (**done**) |
 | `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | 2 | `registerCommandAction` + bridge smoke test (**done**) |
 | `src/WhiskerToolbox/TimeScrollBar/TimeScrollBarPlayback.hpp` | 3 | Preset table, snap, timer ms helper (**done**) |
-| `src/WhiskerToolbox/TimeScrollBar/FrameFilter.hpp` / `.cpp` | 4 | Frame filter interface + concrete implementation |
+| `src/WhiskerToolbox/TimeScrollBar/FrameFilter.hpp` / `.cpp` | 4 | `FrameFilter` interface + `DataKeyFrameFilter` + `frame_filter::scanToNextNonSkipped` (**done**) |
+| `tests/WhiskerToolbox/TimeScrollBar/test_frame_filter.cpp` | 4 | Catch2 tests for `FrameFilter` and scan utility (**done**) |
+| `tests/WhiskerToolbox/TimeScrollBar/CMakeLists.txt` | 4 | Test executable for `test_frame_filter` (**done**) |
 | `src/WhiskerToolbox/TimeScrollBar/AdaptiveFPSController.hpp` / `.cpp` | 5 | FPS modulation controller |
 
 ---
@@ -373,9 +375,7 @@ A new class that modulates `target_fps` based on a per-frame signal:
    and `FlipEventAtTime` with `DigitalIntervalSeries`; flip toggles; `${current_frame}`
    substitution; JSON sequence “mark contact + mark tracked + `AdvanceFrame`” via
    `executeSequence()`.
-2. **Catch2 test for `FrameFilter`**: Test `shouldSkip()` with known intervals.
-   Verify boundary behavior (first frame, last frame, empty series, fully
-   tracked).
+2. **Catch2 test for `FrameFilter`** — **Done** (`tests/WhiskerToolbox/TimeScrollBar/test_frame_filter.cpp`): `shouldSkip()` with known intervals; inverted mode; boundary cases (first frame, last frame, empty series, fully tracked); `scanToNextNonSkipped` forward/backward/all-skipped/boundary.
 3. **Integration test (alternate triage chord)** — The `D` chord is registered by default
    (`triage.contact_flip_tracked_advance`); same command machinery as item 1. A dedicated
    Catch2 test is optional; keymap tests cover the bridge.

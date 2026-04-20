@@ -3,7 +3,9 @@
 #include "ui_TimeScrollBar.h"
 
 #include "DataManager/DataManager.hpp"
+#include "DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "FrameFilter.hpp"
 #include "KeymapSystem/KeyActionAdapter.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"// For TimeKey
@@ -11,6 +13,7 @@
 #include "TimeScrollBarPlayback.hpp"
 #include "TimeScrollBarState.hpp"
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QFileDialog>
 #include <QTimer>
@@ -59,6 +62,20 @@ void TimeScrollBar::_setupConnections() {
     if (ui->timekey_combobox) {
         connect(ui->timekey_combobox, QOverload<QString const &>::of(&QComboBox::currentTextChanged),
                 this, &TimeScrollBar::_onTimeKeyChanged);
+    }
+
+    // Connect frame-filter controls if present
+    if (ui->skip_tracked_checkbox) {
+        connect(ui->skip_tracked_checkbox, &QCheckBox::toggled, this, [this](bool /*checked*/) {
+            _rebuildFrameFilter();
+        });
+    }
+    if (ui->filter_key_combobox) {
+        connect(ui->filter_key_combobox,
+                QOverload<QString const &>::of(&QComboBox::currentTextChanged),
+                this, [this](QString const & /*key*/) {
+                    _rebuildFrameFilter();
+                });
     }
 }
 
@@ -300,13 +317,33 @@ void TimeScrollBar::_vidLoop() {
         current_time = static_cast<int>(current_pos.index.getValue()) + 1;
     }
 
+    // Apply frame filter: scan forward until a non-skipped frame is found.
+    if (_frame_filter) {
+        int const max_value = ui->horizontalScrollBar->maximum();
+        int const candidate = frame_filter::scanToNextNonSkipped(
+                *_frame_filter, current_time, /*direction=*/1,
+                ui->horizontalScrollBar->minimum(), max_value);
+        if (candidate < 0) {
+            // All remaining frames are skipped — stop playback.
+            _timer->stop();
+            ui->play_button->setText(QStringLiteral("Play"));
+            _play_mode = false;
+            if (_state) {
+                _state->setIsPlaying(false);
+            }
+            return;
+        }
+        current_time = candidate;
+    }
+
     ui->horizontalScrollBar->setSliderPosition(current_time);
 }
 
 void TimeScrollBar::changeScrollBarValue(int new_value, bool relative) {
-    auto min_value = ui->horizontalScrollBar->minimum();
-    auto max_value = ui->horizontalScrollBar->maximum();
+    int const min_value = ui->horizontalScrollBar->minimum();
+    int const max_value = ui->horizontalScrollBar->maximum();
 
+    int direction = 1;// default: forward
     if (relative) {
         // Get current time from EditorRegistry if available, otherwise from DataManager
         int current_time = 0;
@@ -315,6 +352,7 @@ void TimeScrollBar::changeScrollBarValue(int new_value, bool relative) {
         if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
             current_time = static_cast<int>(current_pos.index.getValue());
         }
+        direction = (new_value >= 0) ? 1 : -1;
         new_value = current_time + new_value;
     }
 
@@ -326,6 +364,17 @@ void TimeScrollBar::changeScrollBarValue(int new_value, bool relative) {
     if (new_value > max_value) {
         std::cout << "Cannot set value above maximum" << std::endl;
         return;
+    }
+
+    // Apply frame filter: find the nearest non-skipped frame in the intended direction.
+    if (_frame_filter) {
+        int const candidate = frame_filter::scanToNextNonSkipped(
+                *_frame_filter, new_value, direction, min_value, max_value);
+        if (candidate < 0) {
+            // No non-skipped frame found — do not move.
+            return;
+        }
+        new_value = candidate;
     }
 
     Slider_Scroll(new_value);
@@ -426,8 +475,26 @@ void TimeScrollBar::setTimeFrame(std::shared_ptr<TimeFrame> const & tf, TimeKey 
         updateScrollBarNewMax(static_cast<int>(tf->getTotalFrameCount() - 1));
     }
 
+    // Propagate the new TimeFrame to the active filter so coordinate conversion
+    // remains correct after a timeframe switch.
+    if (_frame_filter) {
+        if (auto * dkf = dynamic_cast<DataKeyFrameFilter *>(_frame_filter.get())) {
+            dkf->setTimeFrame(_current_time_frame);
+        }
+    }
+
     // Reset to frame 0
     changeScrollBarValue(0);
+}
+
+void TimeScrollBar::setFrameFilter(std::unique_ptr<FrameFilter> filter) {
+    _frame_filter = std::move(filter);
+    // Ensure the filter knows the current TimeFrame.
+    if (_frame_filter) {
+        if (auto * dkf = dynamic_cast<DataKeyFrameFilter *>(_frame_filter.get())) {
+            dkf->setTimeFrame(_current_time_frame);
+        }
+    }
 }
 
 void TimeScrollBar::_populateTimeKeySelector() {
@@ -462,6 +529,53 @@ void TimeScrollBar::_onTimeKeyChanged(QString const & key_str) {
     if (tf) {
         setTimeFrame(tf, key);
     }
+}
+
+void TimeScrollBar::_populateFilterKeySelector() {
+    if (!_data_manager || !ui->filter_key_combobox) {
+        return;
+    }
+
+    // Preserve currently selected key so we can restore it after repopulating.
+    QString const previous = ui->filter_key_combobox->currentText();
+
+    ui->filter_key_combobox->blockSignals(true);
+    ui->filter_key_combobox->clear();
+
+    for (auto const & key: _data_manager->getKeys<DigitalIntervalSeries>()) {
+        ui->filter_key_combobox->addItem(QString::fromStdString(key));
+    }
+
+    // Restore the previous selection if it still exists.
+    int const idx = ui->filter_key_combobox->findText(previous);
+    if (idx >= 0) {
+        ui->filter_key_combobox->setCurrentIndex(idx);
+    }
+
+    ui->filter_key_combobox->blockSignals(false);
+}
+
+void TimeScrollBar::_rebuildFrameFilter() {
+    if (!ui->skip_tracked_checkbox || !ui->filter_key_combobox) {
+        _frame_filter = nullptr;
+        return;
+    }
+
+    if (!ui->skip_tracked_checkbox->isChecked()) {
+        _frame_filter = nullptr;
+        return;
+    }
+
+    QString const key_str = ui->filter_key_combobox->currentText();
+    if (key_str.isEmpty() || !_data_manager) {
+        _frame_filter = nullptr;
+        return;
+    }
+
+    auto filter = std::make_unique<DataKeyFrameFilter>(
+            _data_manager, key_str.toStdString(), /*skip_tracked=*/true);
+    filter->setTimeFrame(_current_time_frame);
+    _frame_filter = std::move(filter);
 }
 
 void TimeScrollBar::_onEditorRegistryTimeChanged(TimePosition const & position) {
@@ -531,6 +645,9 @@ void TimeScrollBar::_onDataManagerChanged() {
 
         // Repopulate TimeKey selector to reflect current state
         _populateTimeKeySelector();
+
+        // Repopulate filter key selector (new DigitalIntervalSeries may have been added)
+        _populateFilterKeySelector();
     } else {
         // No timeframe available - clear it
         _current_time_frame = nullptr;

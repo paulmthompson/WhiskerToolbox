@@ -30,6 +30,8 @@ add_subdirectory(AutoParamWidget)
 
 add_subdirectory(KeymapSystem)
 
+add_subdirectory(TimeScrollBar)
+
 add_subdirectory(LayoutTesting)
 
 # Docking behavior test programs (manual GUI tests, not automated)

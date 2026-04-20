@@ -14,6 +14,8 @@ set(TIMESCROLLBAR_SOURCES
     TimeScrollBarState.cpp
     TimeScrollBarRegistration.hpp
     TimeScrollBarRegistration.cpp
+    FrameFilter.hpp
+    FrameFilter.cpp
 )
 
 # Add conditional video support

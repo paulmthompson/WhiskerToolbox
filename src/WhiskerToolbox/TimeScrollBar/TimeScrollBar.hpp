@@ -10,6 +10,8 @@
 
 class DataManager;
 class EditorRegistry;
+class FrameFilter;
+class QCheckBox;
 class QComboBox;
 class QTimer;
 class TimeScrollBarState;
@@ -96,6 +98,17 @@ public:
      */
     void setTimeFrame(std::shared_ptr<TimeFrame> const & tf, TimeKey display_key = TimeKey("time"));
 
+    /**
+     * @brief Install a frame filter for skip-frame-during-playback behaviour.
+     *
+     * Replaces any previously installed filter. Pass nullptr to disable filtering.
+     * The filter's TimeFrame is automatically updated when the scrollbar's own
+     * TimeFrame changes.
+     *
+     * @param filter Owning pointer to the new filter, or nullptr to clear.
+     */
+    void setFrameFilter(std::unique_ptr<FrameFilter> filter);
+
 protected:
 private:
     Ui::TimeScrollBar * ui;
@@ -113,6 +126,9 @@ private:
     bool _verbose{true};
     float _target_fps{25.F};
     bool _play_mode{false};
+
+    /// Active frame-skip filter (nullptr → no filtering)
+    std::unique_ptr<FrameFilter> _frame_filter;
 
     /// Adapter for receiving keymap dispatches (owned via QObject parenting)
     KeymapSystem::KeyActionAdapter * _key_adapter{nullptr};
@@ -149,6 +165,18 @@ private:
      * @param key_str The selected TimeKey as a string
      */
     void _onTimeKeyChanged(QString const & key_str);
+
+    /**
+     * @brief Populate the frame-filter data-key combo box with DigitalIntervalSeries keys.
+     */
+    void _populateFilterKeySelector();
+
+    /**
+     * @brief Rebuild the active FrameFilter from current UI state.
+     *
+     * Called when the skip-tracked checkbox is toggled or the filter data key changes.
+     */
+    void _rebuildFrameFilter();
 
     /**
      * @brief Handle time changes from EditorRegistry
