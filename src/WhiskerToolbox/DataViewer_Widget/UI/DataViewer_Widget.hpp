@@ -8,6 +8,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QPoint>
+#include <QPointF>
 #include <QWidget>
 
 #include <memory>
@@ -265,6 +266,28 @@ private:
 
     // Parsing helper
     static std::vector<ChannelPosition> _parseSpikeSorterConfig(std::string const & text);
+
+    // ==================== Wheel Modifier Helpers ====================
+
+    /**
+     * @brief Handle Alt+Scroll → Global Y scale adjustment
+     * @param numSteps Normalized wheel steps (positive = scroll up)
+     */
+    void _handleGlobalYScaleWheel(float numSteps);
+
+    /**
+     * @brief Handle Alt+Shift+Scroll → Per-lane Y scale for hovered analog series
+     * @param numSteps Normalized wheel steps
+     * @param pos Mouse position in widget coordinates
+     */
+    void _handlePerLaneYScaleWheel(float numSteps, QPointF const & pos);
+
+    /**
+     * @brief Handle Alt+Ctrl+Scroll → Y viewport zoom (cursor-anchored)
+     * @param numSteps Normalized wheel steps
+     * @param pos Mouse position in widget coordinates
+     */
+    void _handleYViewportZoomWheel(float numSteps, QPointF const & pos);
 };
 
 

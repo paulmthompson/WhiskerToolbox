@@ -80,6 +80,11 @@ void DataViewerPropertiesWidget::setXAxisSamplesMaximum(int max) {
     ui->x_axis_samples->setMaximum(max);
 }
 
+void DataViewerPropertiesWidget::updateVisibleLaneCount(int visible, int total) {
+    ui->visible_lanes_label->setText(
+            QStringLiteral("Visible lanes: %1 of %2").arg(visible).arg(total));
+}
+
 void DataViewerPropertiesWidget::_initializeFromState() {
     if (!_state) {
         return;

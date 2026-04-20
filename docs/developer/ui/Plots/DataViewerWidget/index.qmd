@@ -247,6 +247,29 @@ Channel arrangement can be customized via **spike sorter configuration**, which 
 
 # Interaction System
 
+## Mouse Wheel Chords
+
+The mouse wheel supports modifier-key chords for X-axis and Y-axis operations:
+
+| Modifier | Action | Scope | State Field |
+|----------|--------|-------|-------------|
+| None | Time-axis zoom (normal) | X-axis | `x_min`/`x_max` |
+| Shift | Time-axis zoom (fine) | X-axis | `x_min`/`x_max` |
+| Ctrl | Time-axis zoom (coarse) | X-axis | `x_min`/`x_max` |
+| Alt | Global Y scale | All lanes | `global_y_scale` |
+| Alt+Shift | Per-lane Y scale | Hovered analog lane | `user_scale_factor` |
+| Alt+Ctrl | Y viewport zoom (cursor-anchored) | View matrix | `y_zoom` in `ViewStateData` |
+
+All Y-axis chords share **Alt** as a common prefix. `Alt+Shift` narrows the scope from global
+to local. `Alt+Ctrl` adjusts the view matrix only (no scene rebuild). Cursor-anchored zoom
+keeps the focal point under the mouse stable during zoom.
+
+Wheel events are suppressed when `isInteractionActive()` is true (e.g., during interval
+creation/modification).
+
+**Key files**: `DataViewer_Widget.cpp` (`wheelEvent`, `_handleGlobalYScaleWheel`,
+`_handlePerLaneYScaleWheel`, `_handleYViewportZoomWheel`)
+
 ## Interaction Modes
 
 The `DataViewerInteractionManager` implements a state machine with four modes:

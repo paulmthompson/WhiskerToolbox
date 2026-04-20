@@ -347,6 +347,20 @@ public:
     [[nodiscard]] float canvasXToTime(float canvas_x) const;
     [[nodiscard]] float canvasYToAnalogValue(float canvas_y, std::string const & series_key) const;
 
+    /**
+     * @brief Find the series under the mouse cursor
+     * 
+     * Checks analog series and digital event series (in stacked mode) to determine
+     * which series is under the given canvas coordinates. Used by tooltip controller,
+     * input handler, and wheel modifier chords for series identification.
+     * 
+     * @param canvas_x X coordinate in canvas pixels
+     * @param canvas_y Y coordinate in canvas pixels
+     * @return Optional pair containing series type ("Analog", "Event", "Interval") and series key,
+     *         or nullopt if no series is under the cursor
+     */
+    [[nodiscard]] std::optional<std::pair<std::string, std::string>> findSeriesAtPosition(float canvas_x, float canvas_y) const;
+
     // State access for display options (use these instead of deprecated getXxxConfig methods)
     [[nodiscard]] DataViewerState * state() { return _state.get(); }
     [[nodiscard]] DataViewerState const * state() const { return _state.get(); }
@@ -467,20 +481,6 @@ private:
      * @param builder The SceneBuilder to add batches to
      */
     void addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & builder);
-
-    /**
-     * @brief Find the series under the mouse cursor
-     * 
-     * Checks analog series and digital event series (in stacked mode) to determine
-     * which series is under the given canvas coordinates. Used by tooltip controller
-     * and input handler for series identification.
-     * 
-     * @param canvas_x X coordinate in canvas pixels
-     * @param canvas_y Y coordinate in canvas pixels
-     * @return Optional pair containing series type ("Analog", "Event", "Interval") and series key,
-     *         or nullopt if no series is under the cursor
-     */
-    std::optional<std::pair<std::string, std::string>> findSeriesAtPosition(float canvas_x, float canvas_y) const;
 
     /// Centralized storage for all time series data
     std::unique_ptr<DataViewer::TimeSeriesDataStore> _data_store;

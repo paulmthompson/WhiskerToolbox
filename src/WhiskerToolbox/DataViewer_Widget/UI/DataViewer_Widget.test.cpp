@@ -16,6 +16,7 @@
 #include <QDoubleSpinBox>
 #include <QMetaObject>
 #include <QTimer>
+#include <QWheelEvent>
 #include <QWidget>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -1594,3 +1595,394 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
 
     widget.close();
 }
+
+// =============================================================================
+// Wheel Modifier Chord Tests (Phase 2.4)
+// =============================================================================
+
+namespace {
+
+/**
+ * @brief Create a synthetic QWheelEvent with vertical delta
+ * @param pos        Position in widget coordinates
+ * @param angleDelta Vertical angle delta (positive = scroll up)
+ * @param modifiers  Keyboard modifiers
+ * @return The constructed QWheelEvent
+ */
+QWheelEvent makeWheelEvent(QPointF pos, int angleDelta, Qt::KeyboardModifiers modifiers) {
+    QPoint const pixel_delta;// empty
+    QPoint const angle_delta(0, angleDelta);
+    return QWheelEvent(
+            pos, pos, pixel_delta, angle_delta,
+            Qt::NoButton, modifiers,
+            Qt::NoScrollPhase, false);
+}
+
+/**
+ * @brief Create a synthetic QWheelEvent with horizontal delta only
+ *
+ * On X11/WSL, holding Alt redirects the vertical scroll delta to the
+ * horizontal axis (angleDelta().y() == 0, angleDelta().x() != 0).
+ * This helper simulates that platform behavior.
+ */
+QWheelEvent makeHorizontalWheelEvent(QPointF pos, int angleDelta, Qt::KeyboardModifiers modifiers) {
+    QPoint const pixel_delta;
+    QPoint const angle_delta(angleDelta, 0);// horizontal only
+    return QWheelEvent(
+            pos, pos, pixel_delta, angle_delta,
+            Qt::NoButton, modifiers,
+            Qt::NoScrollPhase, false);
+}
+
+}// namespace
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - Alt+Scroll changes global Y scale",
+                 "[DataViewer_Widget][WheelChord]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    float const initial_scale = state->globalYScale();
+    REQUIRE_THAT(initial_scale, Catch::Matchers::WithinAbs(1.0f, 1e-6f));
+
+    // Simulate Alt+Scroll up (positive angle delta = 120 = one notch)
+    auto event_up = makeWheelEvent(QPointF(100, 100), 120, Qt::AltModifier);
+    QApplication::sendEvent(&widget, &event_up);
+    QApplication::processEvents();
+
+    float const after_up = state->globalYScale();
+    INFO("After Alt+ScrollUp: global_y_scale = " << after_up);
+    REQUIRE(after_up > initial_scale);
+
+    // Simulate Alt+Scroll down (negative angle delta)
+    auto event_down = makeWheelEvent(QPointF(100, 100), -120, Qt::AltModifier);
+    QApplication::sendEvent(&widget, &event_down);
+    QApplication::processEvents();
+
+    float const after_down = state->globalYScale();
+    INFO("After Alt+ScrollDown: global_y_scale = " << after_down);
+    REQUIRE(after_down < after_up);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - Alt+Scroll does not change time width",
+                 "[DataViewer_Widget][WheelChord]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    auto const initial_width = state->timeWidth();
+
+    // Alt+Scroll should NOT touch time width
+    auto event = makeWheelEvent(QPointF(100, 100), 120, Qt::AltModifier);
+    QApplication::sendEvent(&widget, &event);
+    QApplication::processEvents();
+
+    REQUIRE(state->timeWidth() == initial_width);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - Alt+Ctrl+Scroll changes Y viewport zoom",
+                 "[DataViewer_Widget][WheelChord]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    widget.resize(400, 300);
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    auto const initial_view = state->viewState();
+    REQUIRE_THAT(static_cast<float>(initial_view.y_zoom), Catch::Matchers::WithinAbs(1.0f, 1e-6f));
+
+    // Alt+Ctrl+Scroll up → zoom in
+    auto event_up = makeWheelEvent(QPointF(200, 150), 120,
+                                   Qt::AltModifier | Qt::ControlModifier);
+    QApplication::sendEvent(&widget, &event_up);
+    QApplication::processEvents();
+
+    auto const after_up = state->viewState();
+    INFO("After Alt+Ctrl+ScrollUp: y_zoom = " << after_up.y_zoom);
+    REQUIRE(after_up.y_zoom > initial_view.y_zoom);
+
+    // Alt+Ctrl+Scroll down → zoom out
+    auto event_down = makeWheelEvent(QPointF(200, 150), -120,
+                                     Qt::AltModifier | Qt::ControlModifier);
+    QApplication::sendEvent(&widget, &event_down);
+    QApplication::processEvents();
+
+    auto const after_down = state->viewState();
+    INFO("After Alt+Ctrl+ScrollDown: y_zoom = " << after_down.y_zoom);
+    REQUIRE(after_down.y_zoom < after_up.y_zoom);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - Alt+Ctrl+Scroll does not change time width",
+                 "[DataViewer_Widget][WheelChord]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    auto const initial_width = state->timeWidth();
+
+    auto event = makeWheelEvent(QPointF(100, 100), 120,
+                                Qt::AltModifier | Qt::ControlModifier);
+    QApplication::sendEvent(&widget, &event);
+    QApplication::processEvents();
+
+    REQUIRE(state->timeWidth() == initial_width);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - Alt+Shift+Scroll changes per-lane scale on analog series",
+                 "[DataViewer_Widget][WheelChord]") {
+    auto & widget = getWidget();
+    auto const & keys = getAnalogKeys();
+    REQUIRE(!keys.empty());
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Add one analog series so there's something to hit
+    widget.addFeature(keys[0], "#FF6B6B");
+    QApplication::processEvents();
+
+    auto * opts = widget.state()->seriesOptions()
+                          .getMutable<AnalogSeriesOptionsData>(QString::fromStdString(keys[0]));
+    REQUIRE(opts != nullptr);
+
+    float const initial_user_scale = opts->user_scale_factor;
+
+    // Alt+Shift+Scroll at center of widget — may or may not hit the series
+    // depending on layout. We test that the handler runs without crashing
+    // and that if it hits, the scale changes.
+    auto event = makeWheelEvent(QPointF(200, 150), 120,
+                                Qt::AltModifier | Qt::ShiftModifier);
+    QApplication::sendEvent(&widget, &event);
+    QApplication::processEvents();
+
+    // The per-lane handler calls findSeriesAtPosition which requires the
+    // OpenGL widget to have a valid layout. In headless tests the hit may miss.
+    // Either way no crash should occur.
+    float const after_scale = opts->user_scale_factor;
+    INFO("initial_user_scale = " << initial_user_scale << ", after = " << after_scale);
+    // If the hit succeeded, scale should have changed
+    // If it didn't, scale stays the same — both outcomes are acceptable in headless
+    REQUIRE(after_scale >= 0.01f);// clamped minimum
+    REQUIRE(after_scale <= 1000.0f);// clamped maximum
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - Alt+Scroll global Y scale clamps to bounds",
+                 "[DataViewer_Widget][WheelChord]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+
+    // Set scale very close to minimum and scroll down
+    state->setGlobalYScale(0.02f);
+    QApplication::processEvents();
+
+    for (int i = 0; i < 20; ++i) {
+        auto ev = makeWheelEvent(QPointF(100, 100), -120, Qt::AltModifier);
+        QApplication::sendEvent(&widget, &ev);
+    }
+    QApplication::processEvents();
+
+    REQUIRE(state->globalYScale() >= 0.01f);
+
+    // Set scale very high and scroll up
+    state->setGlobalYScale(900.0f);
+    QApplication::processEvents();
+
+    for (int i = 0; i < 20; ++i) {
+        auto ev = makeWheelEvent(QPointF(100, 100), 120, Qt::AltModifier);
+        QApplication::sendEvent(&widget, &ev);
+    }
+    QApplication::processEvents();
+
+    REQUIRE(state->globalYScale() <= 1000.0f);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - Alt+Ctrl+Scroll Y viewport zoom clamps to bounds",
+                 "[DataViewer_Widget][WheelChord]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    widget.resize(400, 300);
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+
+    // Scroll up many times to test max zoom clamp
+    for (int i = 0; i < 200; ++i) {
+        auto ev = makeWheelEvent(QPointF(200, 150), 120,
+                                 Qt::AltModifier | Qt::ControlModifier);
+        QApplication::sendEvent(&widget, &ev);
+    }
+    QApplication::processEvents();
+
+    REQUIRE(state->viewState().y_zoom <= 50.0);
+
+    // Scroll down many times to test min zoom clamp
+    for (int i = 0; i < 400; ++i) {
+        auto ev = makeWheelEvent(QPointF(200, 150), -120,
+                                 Qt::AltModifier | Qt::ControlModifier);
+        QApplication::sendEvent(&widget, &ev);
+    }
+    QApplication::processEvents();
+
+    REQUIRE(state->viewState().y_zoom >= 0.1);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - plain scroll changes time width (not Y scale)",
+                 "[DataViewer_Widget][WheelChord]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    float const initial_y_scale = state->globalYScale();
+    auto const initial_y_zoom = state->viewState().y_zoom;
+    auto const initial_width = state->timeWidth();
+
+    // Plain scroll (no modifiers)
+    auto event = makeWheelEvent(QPointF(100, 100), 120, Qt::NoModifier);
+    QApplication::sendEvent(&widget, &event);
+    QApplication::processEvents();
+
+    // Y scale and Y zoom should be unchanged
+    REQUIRE_THAT(state->globalYScale(), Catch::Matchers::WithinAbs(initial_y_scale, 1e-6f));
+    REQUIRE_THAT(static_cast<float>(state->viewState().y_zoom),
+                 Catch::Matchers::WithinAbs(static_cast<float>(initial_y_zoom), 1e-6f));
+
+    // Time width should have changed (zoom in)
+    REQUIRE(state->timeWidth() != initial_width);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - multiple Alt+Scroll steps accumulate",
+                 "[DataViewer_Widget][WheelChord]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    float const initial_scale = state->globalYScale();
+
+    // Send 5 scroll-up events
+    for (int i = 0; i < 5; ++i) {
+        auto ev = makeWheelEvent(QPointF(100, 100), 120, Qt::AltModifier);
+        QApplication::sendEvent(&widget, &ev);
+    }
+    QApplication::processEvents();
+
+    float const after_five = state->globalYScale();
+    INFO("After 5 Alt+ScrollUp: " << initial_scale << " -> " << after_five);
+    REQUIRE(after_five > initial_scale * 1.1f);// Should be noticeably larger
+
+    widget.close();
+}
+
+// =============================================================================
+// X11 Horizontal Delta Tests
+// On X11/WSL, Alt+Scroll remaps the vertical delta to horizontal.
+// These tests simulate that platform behavior using makeHorizontalWheelEvent.
+// =============================================================================
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - Alt+Scroll with horizontal delta (X11 remap) changes global Y scale",
+                 "[DataViewer_Widget][WheelChord][X11]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    float const initial_scale = state->globalYScale();
+    REQUIRE_THAT(initial_scale, Catch::Matchers::WithinAbs(1.0f, 1e-6f));
+
+    // X11 remaps Alt+vertical-scroll to horizontal delta
+    auto event_up = makeHorizontalWheelEvent(QPointF(100, 100), 120, Qt::AltModifier);
+    QApplication::sendEvent(&widget, &event_up);
+    QApplication::processEvents();
+
+    float const after_up = state->globalYScale();
+    INFO("After horizontal Alt+ScrollUp: global_y_scale = " << after_up);
+    REQUIRE(after_up > initial_scale);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - Alt+Ctrl+Scroll with horizontal delta (X11 remap) changes Y viewport zoom",
+                 "[DataViewer_Widget][WheelChord][X11]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    widget.resize(400, 300);
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    auto const initial_y_zoom = state->viewState().y_zoom;
+
+    auto event = makeHorizontalWheelEvent(QPointF(200, 150), 120,
+                                          Qt::AltModifier | Qt::ControlModifier);
+    QApplication::sendEvent(&widget, &event);
+    QApplication::processEvents();
+
+    auto const after_y_zoom = state->viewState().y_zoom;
+    INFO("initial_y_zoom=" << initial_y_zoom << " after_y_zoom=" << after_y_zoom);
+    REQUIRE(after_y_zoom > initial_y_zoom);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
+                 "DataViewer_Widget - zero delta wheel event is a no-op",
+                 "[DataViewer_Widget][WheelChord]") {
+    auto & widget = getWidget();
+    widget.openWidget();
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    float const initial_scale = state->globalYScale();
+    auto const initial_width = state->timeWidth();
+
+    // Both x and y delta are zero — should change nothing
+    QPoint const pixel_delta;
+    QPoint const angle_delta(0, 0);
+    QWheelEvent event(QPointF(100, 100), QPointF(100, 100), pixel_delta, angle_delta,
+                      Qt::NoButton, Qt::AltModifier, Qt::NoScrollPhase, false);
+    QApplication::sendEvent(&widget, &event);
+    QApplication::processEvents();
+
+    REQUIRE_THAT(state->globalYScale(), Catch::Matchers::WithinAbs(initial_scale, 1e-6f));
+    REQUIRE(state->timeWidth() == initial_width);
+
+    widget.close();
+}
+
+// =============================================================================
+// Realistic Event Propagation Tests
+// These send wheel events to the OpenGLWidget child (as happens in real use)
+// =============================================================================

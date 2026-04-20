@@ -247,7 +247,7 @@ check because their layout spans the entire viewport.
 `src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.hpp` (`SceneCacheState::series_in_scene`, `hasNewVisibleSeries`),
 `src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.cpp`
 
-### 2.4 Wheel Modifier Chords for Y Interaction
+### 2.4 Wheel Modifier Chords for Y Interaction {.completed}
 
 ::: {.callout-important}
 ## Preserving Existing Behavior
@@ -300,33 +300,50 @@ and hit testing never degenerate.
 - Document chords in a user-facing summary (tooltip, status bar, or User Guide stub)
 
 **Spinbox synchronization**: The properties panel already has spinboxes for `global_y_scale`
-and per-series `user_scale_factor`. Wheel-driven changes must update these spinboxes without
-triggering feedback loops. Follow the bidirectional sync pattern used by
-`VerticalAxisState` / `HorizontalAxisState`:
+and per-series `user_scale_factor`. Wheel-driven changes update these spinboxes without
+triggering feedback loops by leveraging the existing `_updating_from_state` guard in
+`DataViewerPropertiesWidget::_connectStateSignals()`:
 
-- **Wheel → State → Spinbox**: Wheel handler calls a "silent" setter on `DataViewerState`
-  (e.g., `setGlobalYScaleSilent()`), which updates the value and emits a `*Updated` signal
-  (not `*Changed`). The spinbox connects to `*Updated` and sets its value with signals
-  blocked (or via an anti-recursion guard).
-- **Spinbox → State → Scene**: User edits spinbox → emits `valueChanged` → calls the normal
-  setter (e.g., `setGlobalYScale()`), which emits `*Changed` and triggers a scene rebuild.
-- The same dual-signal pattern (`Changed` for user input, `Updated` for programmatic sync)
-  prevents wheel → spinbox → state → scene feedback loops.
+- **Global Y scale**: `_handleGlobalYScaleWheel()` calls `setGlobalYScale()` on the state,
+  which emits `viewStateChanged`. The properties widget's `viewStateChanged` handler sets
+  `_updating_from_state = true`, updates the spinbox value, then clears the guard — preventing
+  the spinbox's `valueChanged` signal from re-entering the state setter.
+- **Per-lane Y scale**: `_handlePerLaneYScaleWheel()` uses the same `getMutable()` + `update()`
+  pattern as `AnalogViewer_Widget::_setAnalogScaleFactor()`. No spinbox sync is needed because
+  the AnalogViewer_Widget sub-panel only shows when the user explicitly selects a series in the
+  feature tree, and the spinbox value is set when `setActiveKey()` is called.
+
+**Key implementation details**:
+
+- Three new private helper methods in `DataViewer_Widget`: `_handleGlobalYScaleWheel()`,
+  `_handlePerLaneYScaleWheel()`, `_handleYViewportZoomWheel()`
+- `OpenGLWidget::findSeriesAtPosition()` moved from private to public for hit testing
+- All wheel handlers use multiplicative 5% steps with `std::clamp` for bounds
+- Y viewport zoom is cursor-anchored: computes world-Y under cursor before zoom, then
+  adjusts `y_pan` so the same world-Y maps back to the same screen position after zoom
 
 **Files**: `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp` (`wheelEvent`),
 `src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp`,
 `src/WhiskerToolbox/DataViewer_Widget/Core/SeriesOptionsRegistry.cpp`,
 `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp`
 
-### 2.5 Visible Lane Indicator in Properties Panel
+### 2.5 Visible Lane Indicator in Properties Panel {.completed}
 
-Add a read-only "Visible lanes: N of M" label to `DataViewerPropertiesWidget` that updates
-whenever the viewport or lane count changes. This provides at-a-glance context for Y
-navigation without requiring single-range spinbox controls (which don't map naturally to a
-multi-lane axis).
+A read-only "Visible lanes: N of M" label in `DataViewerPropertiesWidget` updates
+whenever the viewport or lane count changes. Added to the Layout Settings group in the
+properties panel UI. The update is driven by two signal connections wired in
+`DataViewerWidgetRegistration::create_editor_custom`:
+
+- `OpenGLWidget::sceneRebuilt` → recomputes visible/total from layout response
+- `DataViewerState::viewStateChanged` → recomputes when Y pan/zoom changes
+
+The effective viewport is computed as `[y_min + y_pan, y_max + y_pan]` and passed to
+`LayoutResponse::visibleSeriesIds()` to count visible lanes.
 
 **Files**: `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp`,
-`src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui`
+`src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.hpp`,
+`src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui`,
+`src/WhiskerToolbox/DataViewer_Widget/DataViewerWidgetRegistration.cpp`
 
 ### 2.6 Verification
 

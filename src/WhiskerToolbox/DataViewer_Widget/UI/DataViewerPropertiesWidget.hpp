@@ -117,6 +117,17 @@ public:
      */
     void setXAxisSamplesMaximum(int max);
 
+    /**
+     * @brief Update the visible lane count indicator
+     * 
+     * Displays "Visible lanes: N of M" in the Layout Settings group.
+     * Called by the view widget after layout computation or viewport changes.
+     * 
+     * @param visible Number of lanes currently visible in the viewport
+     * @param total Total number of lanes
+     */
+    void updateVisibleLaneCount(int visible, int total);
+
 signals:
     /**
      * @brief Emitted when the auto-arrange button is clicked

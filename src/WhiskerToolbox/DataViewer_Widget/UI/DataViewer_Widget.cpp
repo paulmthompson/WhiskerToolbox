@@ -508,9 +508,37 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
         return;
     }
 
-    auto const numDegrees = static_cast<float>(event->angleDelta().y()) / 8.0f;
+    // On some platforms (X11/WSL), holding Alt redirects the vertical scroll
+    // delta to the horizontal axis. Use whichever axis has a non-zero value.
+    auto const & delta = event->angleDelta();
+    int const raw_delta = (delta.y() != 0) ? delta.y() : delta.x();
+    auto const numDegrees = static_cast<float>(raw_delta) / 8.0f;
     auto const numSteps = numDegrees / 15.0f;
 
+    bool const has_alt = event->modifiers() & Qt::AltModifier;
+    bool const has_shift = event->modifiers() & Qt::ShiftModifier;
+    bool const has_ctrl = event->modifiers() & Qt::ControlModifier;
+
+    // ----------------------------------------------------------------
+    // Y-axis wheel chords (all require Alt as a common prefix)
+    // ----------------------------------------------------------------
+    if (has_alt) {
+        if (has_shift && !has_ctrl) {
+            // Alt+Shift+Scroll → Per-lane Y scale (hovered lane)
+            _handlePerLaneYScaleWheel(numSteps, event->position());
+        } else if (has_ctrl && !has_shift) {
+            // Alt+Ctrl+Scroll → Y viewport zoom (cursor-anchored)
+            _handleYViewportZoomWheel(numSteps, event->position());
+        } else if (!has_shift && !has_ctrl) {
+            // Alt+Scroll → Global Y scale (all lanes)
+            _handleGlobalYScaleWheel(numSteps);
+        }
+        return;
+    }
+
+    // ----------------------------------------------------------------
+    // X-axis time zoom (existing behavior, unchanged)
+    // ----------------------------------------------------------------
     auto const current_range = static_cast<int>(_state->timeWidth());
     auto const total_frames = static_cast<float>(_time_frame->getTotalFrameCount());
 
@@ -518,8 +546,8 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     // - Shift: Fine mode (very small steps for precise adjustment)
     // - Ctrl: Coarse mode (large steps for quick navigation)
     // - None: Normal mode (balanced default behavior)
-    bool const fine_mode = event->modifiers() & Qt::ShiftModifier;
-    bool const coarse_mode = event->modifiers() & Qt::ControlModifier;
+    bool const fine_mode = has_shift;
+    bool const coarse_mode = has_ctrl;
 
     float rangeFactor;
     if (_state->zoomScalingMode() == DataViewerZoomScalingMode::Adaptive) {
@@ -574,6 +602,75 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     _state->adjustTimeWidth(range_delta);
 
     _updateLabels();
+}
+
+void DataViewer_Widget::_handleGlobalYScaleWheel(float numSteps) {
+    // Alt+Scroll: adjust global_y_scale (data amplitude gain, affects all lanes)
+    // Wheel up → increase scale, wheel down → decrease scale
+    float constexpr scale_factor_per_step = 0.05f;
+    float constexpr min_scale = 0.01f;
+    float constexpr max_scale = 1000.0f;
+
+    float const current = _state->globalYScale();
+    float const delta = numSteps * current * scale_factor_per_step;
+    float const new_scale = std::clamp(current + delta, min_scale, max_scale);
+
+    _state->setGlobalYScale(new_scale);
+}
+
+void DataViewer_Widget::_handlePerLaneYScaleWheel(float numSteps, QPointF const & pos) {
+    // Alt+Shift+Scroll: adjust user_scale_factor for the analog series under the cursor
+    auto const hit = ui->openGLWidget->findSeriesAtPosition(
+            static_cast<float>(pos.x()), static_cast<float>(pos.y()));
+    if (!hit) {
+        return;
+    }
+
+    auto const & [series_type, series_key] = *hit;
+    if (series_type != "Analog") {
+        return;// Per-lane scaling only applies to analog series
+    }
+
+    auto * opts = _state->seriesOptions()
+                          .getMutable<AnalogSeriesOptionsData>(QString::fromStdString(series_key));
+    if (!opts) {
+        return;
+    }
+
+    float constexpr scale_factor_per_step = 0.05f;
+    float constexpr min_scale = 0.01f;
+    float constexpr max_scale = 1000.0f;
+
+    float const delta = numSteps * opts->user_scale_factor * scale_factor_per_step;
+    opts->user_scale_factor = std::clamp(opts->user_scale_factor + delta, min_scale, max_scale);
+
+    // Trigger repaint (matches existing pattern in AnalogViewer_Widget)
+    ui->openGLWidget->update();
+}
+
+void DataViewer_Widget::_handleYViewportZoomWheel(float numSteps, QPointF const & pos) {
+    // Alt+Ctrl+Scroll: adjust y_zoom in ViewStateData (view matrix only, no scene rebuild)
+    // Cursor-anchored: the focal point under the mouse remains stable during zoom
+    float constexpr zoom_factor_per_step = 0.05f;
+    float constexpr min_zoom = 0.1f;
+    float constexpr max_zoom = 50.0f;
+
+    auto view = _state->viewState();
+
+    // Compute the world-Y coordinate under the cursor before zoom
+    float const ndc_y = -1.0f + 2.0f * (static_cast<float>(ui->openGLWidget->height()) - static_cast<float>(pos.y())) / static_cast<float>(ui->openGLWidget->height());
+    float const world_y_before = (ndc_y - static_cast<float>(view.y_pan)) / static_cast<float>(view.y_zoom);
+
+    // Apply zoom
+    auto const old_zoom = static_cast<float>(view.y_zoom);
+    float const new_zoom = std::clamp(old_zoom * (1.0f + numSteps * zoom_factor_per_step), min_zoom, max_zoom);
+    view.y_zoom = static_cast<double>(new_zoom);
+
+    // Adjust y_pan so world_y_before remains at the same screen position
+    // ndc_y = world_y * y_zoom + y_pan  →  y_pan = ndc_y - world_y * y_zoom
+    view.y_pan = static_cast<double>(ndc_y - world_y_before * new_zoom);
+
+    _state->setViewState(view);
 }
 
 void DataViewer_Widget::_updateLabels() {
