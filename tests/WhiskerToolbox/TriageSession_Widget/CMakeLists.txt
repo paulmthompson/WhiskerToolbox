@@ -33,4 +33,6 @@ else()
     )
 endif()
 
+set_target_compiler_warnings(TriageSessionState_test)
+
 enable_whiskertoolbox_shared_test_pch(TriageSessionState_test)

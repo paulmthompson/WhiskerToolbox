@@ -34,4 +34,12 @@ target_link_libraries(test_keymap_system PRIVATE
     WhiskerToolbox::KeymapSystem
 )
 
-catch_discover_tests(test_keymap_system)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_keymap_system)
+else()
+    add_test(NAME test_keymap_system_all
+        COMMAND test_keymap_system
+    )
+endif()
+
+set_target_compiler_warnings(test_keymap_system)

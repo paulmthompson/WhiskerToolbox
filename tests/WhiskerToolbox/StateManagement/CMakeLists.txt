@@ -27,27 +27,18 @@ target_link_libraries(test_state_management_data PRIVATE
     WhiskerToolbox::StateManagement
 )
 
-if (WIN32)
-    catch_discover_tests(test_state_management_data
-        DL_PATHS
-        "$ENV{PATH}"
-        "${CMAKE_BINARY_DIR}"
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_state_management_data PROPERTIES 
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
     )
 else()
-    catch_discover_tests(test_state_management_data PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+    add_test(NAME test_state_management_data_all
+        COMMAND test_state_management_data
+        )
+    set_property(TEST test_state_management_data_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_state_management_data PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_state_management_data PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_state_management_data PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_state_management_data)
 
 enable_whiskertoolbox_shared_test_pch(test_state_management_data)
 
@@ -72,26 +63,17 @@ set_target_properties(test_state_management PROPERTIES
     AUTORCC ON
 )
 
-if (WIN32)
-    catch_discover_tests(test_state_management
-        DL_PATHS
-        "$ENV{PATH}"
-        "${CMAKE_BINARY_DIR}"
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_state_management PROPERTIES 
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
     )
 else()
-    catch_discover_tests(test_state_management PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+    add_test(NAME test_state_management_all
+        COMMAND test_state_management
+        )
+    set_property(TEST test_state_management_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(test_state_management PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_state_management PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(test_state_management PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(test_state_management)
 
 enable_whiskertoolbox_shared_test_pch(test_state_management)

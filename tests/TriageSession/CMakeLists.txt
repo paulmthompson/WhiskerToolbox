@@ -29,14 +29,12 @@ target_link_libraries(test_triage_session PRIVATE Commands)
 target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::LineData)
 target_link_libraries(test_triage_session PRIVATE WhiskerToolbox::DigitalTimeSeries)
 
-if (WIN32)
-    catch_discover_tests(test_triage_session
-        DL_PATHS
-        "$ENV{PATH}"
-        "${CMAKE_BINARY_DIR}"
-    )
-else()
+if(ENABLE_DETAILED_TEST_DISCOVERY)
     catch_discover_tests(test_triage_session)
+else()
+    add_test(NAME test_triage_session_all
+        COMMAND test_triage_session
+    )
 endif()
 
 set_target_compiler_warnings(test_triage_session)
