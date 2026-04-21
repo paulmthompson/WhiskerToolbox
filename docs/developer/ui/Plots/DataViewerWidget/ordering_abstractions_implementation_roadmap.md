@@ -163,17 +163,17 @@ Add persisted relative-order constraints to support richer semantics.
 
 ### Tasks
 
-- [ ] Add serialized constraints schema to DataViewerStateData.
-- [ ] Add state API for set/clear/query constraints.
-- [ ] Add normalization and validation in DataViewerState.
-- [ ] Implement stable topological ordering for stackable-series constraints.
-- [ ] Define deterministic behavior for cycles/conflicts.
+- [x] Add serialized constraints schema to DataViewerStateData.
+- [x] Add state API for set/clear/query constraints.
+- [x] Add normalization and validation in DataViewerState.
+- [x] Implement stable topological ordering for stackable-series constraints.
+- [x] Define deterministic behavior for cycles/conflicts.
 
 ### Acceptance Criteria
 
-- [ ] Constraints survive serialization roundtrip.
-- [ ] Constraints combine correctly with explicit lane_order precedence.
-- [ ] Constraint conflicts produce deterministic outcomes.
+- [x] Constraints survive serialization roundtrip.
+- [x] Constraints combine correctly with explicit lane_order precedence.
+- [x] Constraint conflicts produce deterministic outcomes.
 
 ---
 

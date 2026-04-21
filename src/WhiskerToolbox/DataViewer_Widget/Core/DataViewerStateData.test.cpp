@@ -599,6 +599,16 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         lane_meta.lane_weight = 2.0f;
         state.lane_overrides["lane_a"] = lane_meta;
 
+        StackableOrderingConstraintData c1;
+        c1.above_series_key = "spikes_1";
+        c1.below_series_key = "channel_1";
+        state.ordering_constraints.push_back(c1);
+
+        StackableOrderingConstraintData c2;
+        c2.above_series_key = "channel_2";
+        c2.below_series_key = "spikes_1";
+        state.ordering_constraints.push_back(c2);
+
         // Serialize and deserialize
         auto json = rfl::json::write(state);
         auto result = rfl::json::read<DataViewerStateData>(json);
@@ -662,6 +672,12 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         REQUIRE(data.lane_overrides.at("lane_a").display_label == "Motor lane");
         REQUIRE(data.lane_overrides.at("lane_a").lane_weight.has_value());
         REQUIRE(data.lane_overrides.at("lane_a").lane_weight.value_or(-1.0f) == Approx(2.0f));
+
+        REQUIRE(data.ordering_constraints.size() == 2);
+        REQUIRE(data.ordering_constraints[0].above_series_key == "spikes_1");
+        REQUIRE(data.ordering_constraints[0].below_series_key == "channel_1");
+        REQUIRE(data.ordering_constraints[1].above_series_key == "channel_2");
+        REQUIRE(data.ordering_constraints[1].below_series_key == "spikes_1");
     }
 
     SECTION("JSON structure validation") {
@@ -690,6 +706,7 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         // Verify mixed-lane maps are present in serialized schema
         REQUIRE(json.find("\"series_lane_overrides\":{") != std::string::npos);
         REQUIRE(json.find("\"lane_overrides\":{") != std::string::npos);
+        REQUIRE(json.find("\"ordering_constraints\":[") != std::string::npos);
 
         // Verify rfl::Flatten produces flat structure within series options
         // (hex_color should NOT be nested under "style")
@@ -713,6 +730,7 @@ TEST_CASE("DataViewerStateData edge cases", "[DataViewerStateData]") {
         REQUIRE(result.value().interval_options.empty());
         REQUIRE(result.value().series_lane_overrides.empty());
         REQUIRE(result.value().lane_overrides.empty());
+        REQUIRE(result.value().ordering_constraints.empty());
     }
 
     SECTION("Special characters in keys") {

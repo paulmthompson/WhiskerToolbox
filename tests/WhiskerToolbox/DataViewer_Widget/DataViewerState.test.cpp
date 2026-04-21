@@ -374,6 +374,8 @@ TEST_CASE("DataViewerState serialization", "[DataViewerState]") {
         event_opts.hex_color() = "#00ff00";
         original.seriesOptions().set("events_1", event_opts);
 
+        original.addOrderingConstraint(StackableOrderingConstraintData{"events_2", "channel_1"});
+
         // Serialize
         std::string const json = original.toJson();
         REQUIRE_FALSE(json.empty());
@@ -406,6 +408,9 @@ TEST_CASE("DataViewerState serialization", "[DataViewerState]") {
         REQUIRE_THAT(restored_analog->user_scale_factor, Catch::Matchers::WithinAbs(2.0f, 1e-6f));
 
         REQUIRE(restored.seriesOptions().has<DigitalEventSeriesOptionsData>("events_1"));
+        REQUIRE(restored.orderingConstraints().size() == 1);
+        REQUIRE(restored.orderingConstraints()[0].above_series_key == "events_2");
+        REQUIRE(restored.orderingConstraints()[0].below_series_key == "channel_1");
     }
 
     SECTION("fromJson returns false on invalid JSON") {
@@ -591,5 +596,45 @@ TEST_CASE("DataViewerState mixed-lane override API", "[DataViewerState]") {
         REQUIRE(series_spy.takeFirst().at(0).toString() == "channel_1");
         REQUIRE(lane_spy.count() == 1);
         REQUIRE(lane_spy.takeFirst().at(0).toString() == "lane_a");
+    }
+
+    SECTION("set ordering constraints normalizes and deduplicates") {
+        std::vector<StackableOrderingConstraintData> constraints;
+        constraints.push_back(StackableOrderingConstraintData{"event_2", "analog_7"});
+        constraints.push_back(StackableOrderingConstraintData{"event_2", "analog_7"});
+        constraints.push_back(StackableOrderingConstraintData{"", "analog_7"});
+        constraints.push_back(StackableOrderingConstraintData{"event_2", "event_2"});
+
+        state.setOrderingConstraints(constraints);
+
+        auto const & normalized = state.orderingConstraints();
+        REQUIRE(normalized.size() == 1);
+        REQUIRE(normalized[0].above_series_key == "event_2");
+        REQUIRE(normalized[0].below_series_key == "analog_7");
+    }
+
+    SECTION("add remove and clear ordering constraints") {
+        StackableOrderingConstraintData const c1{"event_2", "analog_7"};
+        StackableOrderingConstraintData const c2{"event_3", "analog_7"};
+
+        state.addOrderingConstraint(c1);
+        state.addOrderingConstraint(c1);
+        state.addOrderingConstraint(c2);
+        REQUIRE(state.orderingConstraints().size() == 2);
+
+        state.removeOrderingConstraint(c1);
+        REQUIRE(state.orderingConstraints().size() == 1);
+        REQUIRE(state.orderingConstraints()[0].above_series_key == "event_3");
+
+        state.clearOrderingConstraints();
+        REQUIRE(state.orderingConstraints().empty());
+    }
+
+    SECTION("ordering constraints signal is emitted") {
+        QSignalSpy const constraints_spy(&state, &DataViewerState::orderingConstraintsChanged);
+
+        state.addOrderingConstraint(StackableOrderingConstraintData{"event_2", "analog_7"});
+
+        REQUIRE(constraints_spy.count() == 1);
     }
 }

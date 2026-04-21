@@ -187,7 +187,15 @@ void applyOrderingRules(LayoutRequestBuildContext const & context,
                 candidate.insertion_index});
     }
 
-    OrderingResolution const resolution = resolveOrdering(resolver_input, analog_order_rank);
+    std::vector<OrderingConstraint> resolver_constraints;
+    resolver_constraints.reserve(context.state.orderingConstraints().size());
+    for (auto const & constraint: context.state.orderingConstraints()) {
+        resolver_constraints.push_back(OrderingConstraint{
+                constraint.above_series_key,
+                constraint.below_series_key});
+    }
+
+    OrderingResolution const resolution = resolveOrdering(resolver_input, analog_order_rank, resolver_constraints);
 
     std::vector<StackableSeriesCandidate> ordered_candidates;
     ordered_candidates.reserve(candidates.size());

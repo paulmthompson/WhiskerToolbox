@@ -32,8 +32,20 @@ struct OrderingInputItem {
  */
 enum class OrderingDiagnosticReason {
     ExplicitLaneOrder,
+    RelationalConstraint,
     FallbackSortableRank,
+    ConstraintCycleBreak,
     DeterministicTieBreak,
+};
+
+/**
+ * @brief Relative ordering constraint between two series keys.
+ *
+ * `above_key` must appear above `below_key` in stackable ordering.
+ */
+struct OrderingConstraint {
+    std::string above_key;
+    std::string below_key;
 };
 
 /**
@@ -63,7 +75,8 @@ struct OrderingResolution {
  */
 [[nodiscard]] OrderingResolution resolveOrdering(
         std::vector<OrderingInputItem> const & input_items,
-        SortableRankMap const & fallback_ranks);
+        SortableRankMap const & fallback_ranks,
+        std::vector<OrderingConstraint> const & constraints = {});
 
 }// namespace DataViewer
 

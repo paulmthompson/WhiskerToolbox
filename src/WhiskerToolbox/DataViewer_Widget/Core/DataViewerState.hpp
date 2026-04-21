@@ -75,6 +75,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 class MultiLaneVerticalAxisState;
 
@@ -571,6 +572,36 @@ public:
         return _data.lane_overrides;
     }
 
+    /**
+     * @brief Replace all stackable ordering constraints
+     * @param constraints Relative ordering constraints (normalized before storage)
+     */
+    void setOrderingConstraints(std::vector<StackableOrderingConstraintData> const & constraints);
+
+    /**
+     * @brief Add one stackable ordering constraint
+     * @param constraint Relative ordering constraint to add
+     */
+    void addOrderingConstraint(StackableOrderingConstraintData const & constraint);
+
+    /**
+     * @brief Remove one stackable ordering constraint
+     * @param constraint Relative ordering constraint to remove
+     */
+    void removeOrderingConstraint(StackableOrderingConstraintData const & constraint);
+
+    /**
+     * @brief Remove all stackable ordering constraints
+     */
+    void clearOrderingConstraints();
+
+    /**
+     * @brief Get all stackable ordering constraints
+     */
+    [[nodiscard]] std::vector<StackableOrderingConstraintData> const & orderingConstraints() const {
+        return _data.ordering_constraints;
+    }
+
     // ==================== Multi-Lane Axis ====================
 
     /**
@@ -652,6 +683,11 @@ signals:
      * @param lane_id Lane identifier whose override changed
      */
     void laneOverrideChanged(QString const & lane_id);
+
+    /**
+     * @brief Emitted when stackable ordering constraints are changed
+     */
+    void orderingConstraintsChanged();
 
     // === Series Options Signals (Forwarded from Registry) ===
 

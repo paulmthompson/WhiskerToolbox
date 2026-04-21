@@ -61,6 +61,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <vector>
 
 // ==================== Per-Series Display Options ====================
 
@@ -259,6 +260,19 @@ struct LaneOverrideData {
     std::optional<float> lane_weight = std::nullopt;///< Optional lane-level weight override (> 0)
 };
 
+// ==================== Ordering Constraints ====================
+
+/**
+ * @brief Relative ordering constraint for stackable series
+ *
+ * A valid constraint means the series identified by `above_series_key`
+ * must be placed above the series identified by `below_series_key`.
+ */
+struct StackableOrderingConstraintData {
+    std::string above_series_key;///< Series key that should appear above
+    std::string below_series_key;///< Series key that should appear below
+};
+
 // ==================== Group Scaling State ====================
 
 /**
@@ -379,6 +393,12 @@ struct DataViewerStateData {
     // lane_overrides: key is lane_id, value is lane-level metadata and optional lane weight override.
     std::map<std::string, SeriesLaneOverrideData> series_lane_overrides;
     std::map<std::string, LaneOverrideData> lane_overrides;
+
+    // === Stackable Ordering Constraints ===
+    // Relative ordering rules for stackable series only.
+    // Conflict handling is applied by DataViewerState normalization and
+    // ordering policy resolution.
+    std::vector<StackableOrderingConstraintData> ordering_constraints;
 
     // === Group Scaling ===
     // Maps group name (e.g., "voltage") to scaling state.

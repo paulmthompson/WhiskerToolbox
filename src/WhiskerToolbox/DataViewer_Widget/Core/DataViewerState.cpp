@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <set>
+#include <tuple>
 
 namespace {
 
@@ -49,6 +50,65 @@ namespace {
     return value.display_label.empty() && !value.lane_weight.has_value();
 }
 
+[[nodiscard]] std::optional<StackableOrderingConstraintData> normalizeOrderingConstraint(
+        StackableOrderingConstraintData const & value) {
+    if (value.above_series_key.empty() || value.below_series_key.empty()) {
+        return std::nullopt;
+    }
+    if (value.above_series_key == value.below_series_key) {
+        return std::nullopt;
+    }
+    return value;
+}
+
+void normalizeAllOrderingConstraints(DataViewerStateData & data) {
+    std::set<std::tuple<std::string, std::string>> seen;
+    std::vector<StackableOrderingConstraintData> normalized;
+    normalized.reserve(data.ordering_constraints.size());
+
+    for (auto const & constraint: data.ordering_constraints) {
+        auto const maybe_normalized = normalizeOrderingConstraint(constraint);
+        if (!maybe_normalized.has_value()) {
+            continue;
+        }
+
+        auto const key = std::make_tuple(maybe_normalized->above_series_key,
+                                         maybe_normalized->below_series_key);
+        if (seen.contains(key)) {
+            continue;
+        }
+
+        seen.insert(key);
+        normalized.push_back(*maybe_normalized);
+    }
+
+    std::sort(normalized.begin(), normalized.end(),
+              [](StackableOrderingConstraintData const & lhs,
+                 StackableOrderingConstraintData const & rhs) {
+                  if (lhs.above_series_key != rhs.above_series_key) {
+                      return lhs.above_series_key < rhs.above_series_key;
+                  }
+                  return lhs.below_series_key < rhs.below_series_key;
+              });
+
+    data.ordering_constraints = std::move(normalized);
+}
+
+[[nodiscard]] bool orderingConstraintsEqual(std::vector<StackableOrderingConstraintData> const & lhs,
+                                            std::vector<StackableOrderingConstraintData> const & rhs) {
+    if (lhs.size() != rhs.size()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < lhs.size(); ++i) {
+        if (lhs[i].above_series_key != rhs[i].above_series_key ||
+            lhs[i].below_series_key != rhs[i].below_series_key) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void normalizeAllLaneOverrides(DataViewerStateData & data) {
     std::map<std::string, SeriesLaneOverrideData> normalized_series;
     for (auto const & [series_key, override_data]: data.series_lane_overrides) {
@@ -84,6 +144,8 @@ void normalizeAllLaneOverrides(DataViewerStateData & data) {
         }
     }
     data.lane_overrides = std::move(normalized_lanes);
+
+    normalizeAllOrderingConstraints(data);
 }
 
 }// namespace
@@ -542,6 +604,82 @@ LaneOverrideData const * DataViewerState::getLaneOverride(std::string const & la
         return &it->second;
     }
     return nullptr;
+}
+
+void DataViewerState::setOrderingConstraints(std::vector<StackableOrderingConstraintData> const & constraints) {
+    DataViewerStateData scratch = _data;
+    scratch.ordering_constraints = constraints;
+    normalizeAllOrderingConstraints(scratch);
+
+    if (orderingConstraintsEqual(_data.ordering_constraints, scratch.ordering_constraints)) {
+        return;
+    }
+
+    _data.ordering_constraints = std::move(scratch.ordering_constraints);
+
+    markDirty();
+    emit orderingConstraintsChanged();
+    emit stateChanged();
+}
+
+void DataViewerState::addOrderingConstraint(StackableOrderingConstraintData const & constraint) {
+    auto const maybe_normalized = normalizeOrderingConstraint(constraint);
+    if (!maybe_normalized.has_value()) {
+        return;
+    }
+
+    auto updated = _data.ordering_constraints;
+    updated.push_back(*maybe_normalized);
+
+    DataViewerStateData scratch = _data;
+    scratch.ordering_constraints = std::move(updated);
+    normalizeAllOrderingConstraints(scratch);
+
+    if (orderingConstraintsEqual(_data.ordering_constraints, scratch.ordering_constraints)) {
+        return;
+    }
+
+    _data.ordering_constraints = std::move(scratch.ordering_constraints);
+    markDirty();
+    emit orderingConstraintsChanged();
+    emit stateChanged();
+}
+
+void DataViewerState::removeOrderingConstraint(StackableOrderingConstraintData const & constraint) {
+    auto const maybe_normalized = normalizeOrderingConstraint(constraint);
+    if (!maybe_normalized.has_value()) {
+        return;
+    }
+
+    auto updated = _data.ordering_constraints;
+    auto const original_size = updated.size();
+    updated.erase(std::remove_if(updated.begin(), updated.end(),
+                                 [&maybe_normalized](StackableOrderingConstraintData const & entry) {
+                                     return entry.above_series_key == maybe_normalized->above_series_key &&
+                                            entry.below_series_key == maybe_normalized->below_series_key;
+                                 }),
+                  updated.end());
+
+    if (updated.size() == original_size) {
+        return;
+    }
+
+    _data.ordering_constraints = std::move(updated);
+    normalizeAllOrderingConstraints(_data);
+    markDirty();
+    emit orderingConstraintsChanged();
+    emit stateChanged();
+}
+
+void DataViewerState::clearOrderingConstraints() {
+    if (_data.ordering_constraints.empty()) {
+        return;
+    }
+
+    _data.ordering_constraints.clear();
+    markDirty();
+    emit orderingConstraintsChanged();
+    emit stateChanged();
 }
 
 // ==================== Multi-Lane Axis ====================
