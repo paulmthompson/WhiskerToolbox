@@ -1,5 +1,6 @@
 #include "OpenGLWidget.hpp"
 
+#include "Core/LayoutRequestBuilder.hpp"
 #include "Core/TimeSeriesDataStore.hpp"
 #include "Interaction/DataViewerCoordinates.hpp"
 #include "Interaction/DataViewerSelectionManager.hpp"
@@ -84,6 +85,18 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
     // Layout config changes (lane sizing policy, height, gap) require scene rebuild
     // because layout transforms are baked into per-series vertices
     connect(_state.get(), &DataViewerState::layoutConfigChanged, this, [this]() {
+        _cache_state.layout_response_dirty = true;
+        _cache_state.scene_dirty = true;
+        _cache_state.series_in_scene.clear();
+        update();
+    });
+    connect(_state.get(), &DataViewerState::seriesLaneOverrideChanged, this, [this](QString const &) {
+        _cache_state.layout_response_dirty = true;
+        _cache_state.scene_dirty = true;
+        _cache_state.series_in_scene.clear();
+        update();
+    });
+    connect(_state.get(), &DataViewerState::laneOverrideChanged, this, [this](QString const &) {
         _cache_state.layout_response_dirty = true;
         _cache_state.scene_dirty = true;
         _cache_state.series_in_scene.clear();
@@ -360,6 +373,19 @@ void OpenGLWidget::setState(std::shared_ptr<DataViewerState> state) {
         connect(_state.get(), &DataViewerState::layoutConfigChanged, this, [this]() {
             _cache_state.layout_response_dirty = true;
             _cache_state.scene_dirty = true;
+            _cache_state.series_in_scene.clear();
+            update();
+        });
+        connect(_state.get(), &DataViewerState::seriesLaneOverrideChanged, this, [this](QString const &) {
+            _cache_state.layout_response_dirty = true;
+            _cache_state.scene_dirty = true;
+            _cache_state.series_in_scene.clear();
+            update();
+        });
+        connect(_state.get(), &DataViewerState::laneOverrideChanged, this, [this](QString const &) {
+            _cache_state.layout_response_dirty = true;
+            _cache_state.scene_dirty = true;
+            _cache_state.series_in_scene.clear();
             update();
         });
 
@@ -1460,48 +1486,13 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
 
 CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     auto const & view_state = _state->viewState();
-    CorePlotting::LayoutRequest request;
-    request.viewport_y_min = static_cast<float>(view_state.y_min);
-    request.viewport_y_max = static_cast<float>(view_state.y_max);
-
-    // Collect visible analog series keys and order by spike sorter config
-    // Access series through data store, visibility through state
-    std::vector<std::string> visible_analog_keys;
-    for (auto const & [key, data]: _data_store->analogSeries()) {
-        auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
-        if (opts && opts->get_is_visible()) {
-            visible_analog_keys.push_back(key);
-        }
-    }
-
-    // Apply spike sorter ordering if any configs exist
-    if (!_spike_sorter_configs.empty()) {
-        visible_analog_keys = orderKeysBySpikeSorterConfig(visible_analog_keys, _spike_sorter_configs);
-    }
-
-    // Add analog series in order
-    for (auto const & key: visible_analog_keys) {
-        request.series.emplace_back(key, CorePlotting::SeriesType::Analog, true);
-    }
-
-    // Add digital event series (stacked events after analog series, full-canvas events as non-stackable)
-    for (auto const & [key, data]: _data_store->eventSeries()) {
-        auto const * opts = _state->seriesOptions().get<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
-        if (!opts || !opts->get_is_visible()) continue;
-
-        bool const is_stacked = (opts->plotting_mode == EventPlottingModeData::Stacked);
-        request.series.emplace_back(key, CorePlotting::SeriesType::DigitalEvent, is_stacked);
-    }
-
-    // Add digital interval series (always full-canvas, non-stackable)
-    for (auto const & [key, data]: _data_store->intervalSeries()) {
-        auto const * opts = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
-        if (!opts || !opts->get_is_visible()) continue;
-
-        request.series.emplace_back(key, CorePlotting::SeriesType::DigitalInterval, false);
-    }
-
-    return request;
+    return DataViewer::buildLayoutRequest({
+            .state = *_state,
+            .data_store = *_data_store,
+            .spike_sorter_configs = _spike_sorter_configs,
+            .viewport_y_min = static_cast<float>(view_state.y_min),
+            .viewport_y_max = static_cast<float>(view_state.y_max),
+    });
 }
 
 void OpenGLWidget::computeAndApplyLayout() {

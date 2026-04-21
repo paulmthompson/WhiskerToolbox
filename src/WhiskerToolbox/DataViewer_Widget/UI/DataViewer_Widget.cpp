@@ -46,7 +46,10 @@
 #include <cctype>
 #include <cmath>
 #include <iostream>
+#include <limits>
+#include <map>
 #include <sstream>
+#include <unordered_map>
 
 namespace {
 
@@ -73,6 +76,78 @@ std::string extractGroupName(std::string const & key) {
         return key.substr(0, pos);
     }
     return key;
+}
+
+[[nodiscard]] std::string laneIdForSeries(DataViewerState const * state,
+                                          std::string const & series_id) {
+    if (state != nullptr) {
+        if (auto const * override_data = state->getSeriesLaneOverride(series_id);
+            override_data != nullptr && !override_data->lane_id.empty()) {
+            return override_data->lane_id;
+        }
+    }
+    return std::string("__auto_lane__") + series_id;
+}
+
+[[nodiscard]] bool isStackableLaneSeries(DataViewerState const * state,
+                                         DataManager const * data_manager,
+                                         std::string const & series_id) {
+    if (state == nullptr || data_manager == nullptr) {
+        return false;
+    }
+
+    DM_DataType const type = data_manager->getType(series_id);
+    if (type == DM_DataType::Analog) {
+        auto const * opts = state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(series_id));
+        return opts != nullptr && opts->get_is_visible();
+    }
+
+    if (type == DM_DataType::DigitalEvent) {
+        auto const * opts = state->seriesOptions().get<DigitalEventSeriesOptionsData>(QString::fromStdString(series_id));
+        return opts != nullptr && opts->get_is_visible() && opts->plotting_mode == EventPlottingModeData::Stacked;
+    }
+
+    return false;
+}
+
+struct LaneAggregate {
+    std::string lane_id;
+    std::vector<std::string> series_ids;
+    float y_center{0.0f};
+    float y_extent{0.0f};
+    int first_series_index{std::numeric_limits<int>::max()};
+};
+
+[[nodiscard]] std::string chooseLaneLabel(DataViewerState const * state,
+                                          DataManager const * data_manager,
+                                          LaneAggregate const & lane) {
+    if (state != nullptr) {
+        if (auto const * lane_override = state->getLaneOverride(lane.lane_id);
+            lane_override != nullptr && !lane_override->display_label.empty()) {
+            return lane_override->display_label;
+        }
+    }
+
+    if (lane.series_ids.empty()) {
+        return lane.lane_id;
+    }
+
+    if (lane.series_ids.size() == 1) {
+        return lane.series_ids.front();
+    }
+
+    std::string primary_label = lane.series_ids.front();
+    if (data_manager != nullptr) {
+        auto analog_it = std::find_if(lane.series_ids.begin(), lane.series_ids.end(),
+                                      [data_manager](std::string const & key) {
+                                          return data_manager->getType(key) == DM_DataType::Analog;
+                                      });
+        if (analog_it != lane.series_ids.end()) {
+            primary_label = *analog_it;
+        }
+    }
+
+    return primary_label + " +" + std::to_string(lane.series_ids.size() - 1);
 }
 
 }// anonymous namespace
@@ -693,16 +768,49 @@ void DataViewer_Widget::_updateLaneDescriptors() {
     auto * axis_state = _state->multiLaneAxisState();
     auto const & response = ui->openGLWidget->layoutResponse();
 
-    std::vector<LaneAxisDescriptor> descriptors;
-    descriptors.reserve(response.layouts.size());
-
+    std::map<std::string, LaneAggregate> lanes_by_id;
     for (auto const & layout: response.layouts) {
-        LaneAxisDescriptor desc;
-        desc.label = layout.series_id;
-        desc.y_center = layout.y_transform.offset;
-        desc.y_extent = std::abs(layout.y_transform.gain) * 2.0f;
-        desc.lane_index = layout.series_index;
-        descriptors.push_back(std::move(desc));
+        if (!isStackableLaneSeries(_state.get(), _data_manager.get(), layout.series_id)) {
+            continue;
+        }
+
+        std::string const lane_id = laneIdForSeries(_state.get(), layout.series_id);
+        auto & lane = lanes_by_id[lane_id];
+        lane.lane_id = lane_id;
+        lane.series_ids.push_back(layout.series_id);
+        lane.y_center = layout.y_transform.offset;
+        lane.y_extent = std::abs(layout.y_transform.gain) * 2.0f;
+        lane.first_series_index = std::min(lane.first_series_index, layout.series_index);
+    }
+
+    std::vector<LaneAggregate> ordered_lanes;
+    ordered_lanes.reserve(lanes_by_id.size());
+    for (auto & [lane_id, lane]: lanes_by_id) {
+        std::sort(lane.series_ids.begin(), lane.series_ids.end());
+        ordered_lanes.push_back(std::move(lane));
+    }
+
+    std::sort(ordered_lanes.begin(), ordered_lanes.end(),
+              [](LaneAggregate const & lhs, LaneAggregate const & rhs) {
+                  if (std::abs(lhs.y_center - rhs.y_center) > 1e-6f) {
+                      return lhs.y_center < rhs.y_center;
+                  }
+                  if (lhs.first_series_index != rhs.first_series_index) {
+                      return lhs.first_series_index < rhs.first_series_index;
+                  }
+                  return lhs.lane_id < rhs.lane_id;
+              });
+
+    std::vector<LaneAxisDescriptor> descriptors;
+    descriptors.reserve(ordered_lanes.size());
+    for (int index = 0; index < static_cast<int>(ordered_lanes.size()); ++index) {
+        auto const & lane = ordered_lanes[static_cast<size_t>(index)];
+        LaneAxisDescriptor descriptor;
+        descriptor.label = chooseLaneLabel(_state.get(), _data_manager.get(), lane);
+        descriptor.y_center = lane.y_center;
+        descriptor.y_extent = lane.y_extent;
+        descriptor.lane_index = index;
+        descriptors.push_back(std::move(descriptor));
     }
 
     axis_state->setLanes(std::move(descriptors));

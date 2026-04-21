@@ -3,6 +3,7 @@
 #include "Core/DataViewerState.hpp"
 #include "Core/DataViewerStateData.hpp"
 #include "Core/TimeSeriesDataStore.hpp"
+#include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisState.hpp"
 #include "Rendering/OpenGLWidget.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -151,7 +152,7 @@ protected:
      * @brief Get the test data keys
      * @return Vector of test data keys
      */
-    std::vector<std::string> getTestDataKeys() const { return m_test_data_keys; }
+    [[nodiscard]] std::vector<std::string> getTestDataKeys() const { return m_test_data_keys; }
 
 private:
     void populateWithTestData() {
@@ -168,10 +169,10 @@ private:
 
 
         // Add test AnalogTimeSeries
-        std::vector<float> analog_values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        std::vector<float> const analog_values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
         auto analog_data = std::make_shared<AnalogTimeSeries>(analog_values, analog_values.size());
         m_data_manager->setData<AnalogTimeSeries>("test_analog", analog_data, time_key);
-        m_test_data_keys.push_back("test_analog");
+        m_test_data_keys.emplace_back("test_analog");
 
         // Add test DigitalEventSeries
         auto event_data = std::make_shared<DigitalEventSeries>();
@@ -179,14 +180,14 @@ private:
         event_data->addEvent(TimeFrameIndex(2000));
         event_data->addEvent(TimeFrameIndex(3000));
         m_data_manager->setData<DigitalEventSeries>("test_events", event_data, time_key);
-        m_test_data_keys.push_back("test_events");
+        m_test_data_keys.emplace_back("test_events");
 
         // Add test DigitalIntervalSeries
         auto interval_data = std::make_shared<DigitalIntervalSeries>();
         interval_data->addEvent(TimeFrameIndex(500), TimeFrameIndex(1500));
         interval_data->addEvent(TimeFrameIndex(2500), TimeFrameIndex(3500));
         m_data_manager->setData<DigitalIntervalSeries>("test_intervals", interval_data, time_key);
-        m_test_data_keys.push_back("test_intervals");
+        m_test_data_keys.emplace_back("test_intervals");
     }
 
     std::unique_ptr<QApplication> m_app;
@@ -207,7 +208,7 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Lifecy
     REQUIRE(&widget != nullptr);
 
     // Allow any queued init to run
-    app->processEvents();
+    QCoreApplication::processEvents();
 }
 
 TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Lifecycle (Open/Close)", "[DataViewer_Widget][Lifecycle]") {
@@ -218,11 +219,11 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Lifecy
 
     // Open and process events
     widget.openWidget();
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Close event by hiding the widget (avoid deep teardown here)
     widget.hide();
-    app->processEvents();
+    QCoreApplication::processEvents();
 }
 
 TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Lifecycle (Show/Hide/Destroy)", "[DataViewer_Widget][Lifecycle]") {
@@ -238,9 +239,9 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Lifecy
     {
         DataViewer_Widget dvw(data_manager, nullptr);
         dvw.openWidget();
-        app->processEvents();
+        QCoreApplication::processEvents();
         dvw.hide();
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 
     // If we reached here without a crash, basic lifecycle is OK
@@ -296,7 +297,7 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Data C
 
         // Delete data from DataManager
         for (auto const & key: test_keys) {
-            bool deleted = dm.deleteData(key);
+            bool const deleted = dm.deleteData(key);
             REQUIRE(deleted);
         }
 
@@ -315,7 +316,7 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Data C
         QApplication::processEvents();
 
         // Delete only the analog time series
-        bool deleted = dm.deleteData("test_analog");
+        bool const deleted = dm.deleteData("test_analog");
         REQUIRE(deleted);
 
         // Process Qt events
@@ -413,9 +414,9 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Memory
         REQUIRE(interval_data.use_count() > 1);
 
         // Create weak references for correctness of lifetime checks
-        std::weak_ptr<AnalogTimeSeries> weak_analog = analog_data;
-        std::weak_ptr<DigitalEventSeries> weak_event = event_data;
-        std::weak_ptr<DigitalIntervalSeries> weak_interval = interval_data;
+        std::weak_ptr<AnalogTimeSeries> const weak_analog = analog_data;
+        std::weak_ptr<DigitalEventSeries> const weak_event = event_data;
+        std::weak_ptr<DigitalIntervalSeries> const weak_interval = interval_data;
 
         // Delete data from DataManager
         dm.deleteData("test_analog");
@@ -450,7 +451,7 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Observ
         // This is implicit in the cleanup tests, but we can verify the behavior
 
         // Delete data and verify cleanup happens automatically
-        bool deleted = dm.deleteData("test_analog");
+        bool const deleted = dm.deleteData("test_analog");
         REQUIRE(deleted);
 
         // Process Qt events to trigger observer callback
@@ -467,10 +468,10 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Observ
         QApplication::processEvents();
 
         // Delete multiple data items in sequence
-        std::vector<std::string> keys_to_delete = {"test_analog", "test_events", "test_intervals"};
+        std::vector<std::string> const keys_to_delete = {"test_analog", "test_events", "test_intervals"};
 
         for (auto const & key: keys_to_delete) {
-            bool deleted = dm.deleteData(key);
+            bool const deleted = dm.deleteData(key);
             REQUIRE(deleted);
 
             // Process events after each deletion
@@ -529,7 +530,7 @@ protected:
 
     DataViewer_Widget & getWidget() { return *m_widget; }
     DataManager & getDataManager() { return *m_data_manager; }
-    std::vector<std::string> const & getAnalogKeys() const { return m_analog_keys; }
+    [[nodiscard]] std::vector<std::string> const & getAnalogKeys() const { return m_analog_keys; }
 
 private:
     void populateAnalogSeries(int count) {
@@ -647,7 +648,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
 
     // Instead of using Feature_Tree_Widget (which is now in properties widget),
     // use the public addFeatures API to add all keys as a batch
-    std::vector<std::string> colors(keys.size(), "#FF6B6B");// Default color for all
+    std::vector<std::string> const colors(keys.size(), "#FF6B6B");// Default color for all
     widget.addFeatures(keys, colors);
     QApplication::processEvents();
 
@@ -669,7 +670,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
     QApplication::processEvents();
 
     // 1) Enable all keys as a group using public addFeatures API
-    std::vector<std::string> colors(keys.size(), "#FF6B6B");
+    std::vector<std::string> const colors(keys.size(), "#FF6B6B");
     widget.addFeatures(keys, colors);
     QApplication::processEvents();
 
@@ -710,8 +711,8 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
     auto layout_single = TestHelpers::getAnalogLayoutTransform(widget, single_key);
     REQUIRE(layout_single.has_value());
 
-    float const center = static_cast<float>(layout_single->offset);
-    float const height = static_cast<float>(layout_single->gain * 2.0f);
+    auto const center = static_cast<float>(layout_single->offset);
+    auto const height = static_cast<float>(layout_single->gain * 2.0f);
 
     // Center should be near 0.0
     REQUIRE(std::abs(center - 0.0f) <= 0.25f);
@@ -761,7 +762,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ap
             "4 4 0 400\n";
 
     // Load configuration directly via helper to avoid file dialogs
-    bool invoked = QMetaObject::invokeMethod(
+    bool const invoked = QMetaObject::invokeMethod(
             &widget,
             "_loadSpikeSorterConfigurationFromText",
             Qt::DirectConnection,
@@ -791,10 +792,10 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ap
 
     // Ensure at least one center changed due to configuration ordering
     bool any_changed = false;
-    for (size_t i = 0; i < centers_before.size(); ++i) {
-        for (size_t j = 0; j < centers_after.size(); ++j) {
-            if (centers_before[i].first == centers_after[j].first) {
-                if (std::abs(centers_before[i].second - centers_after[j].second) > 1e-6f) {
+    for (auto & i: centers_before) {
+        for (auto & j: centers_after) {
+            if (i.first == j.first) {
+                if (std::abs(i.second - j.second) > 1e-6f) {
                     any_changed = true;
                 }
             }
@@ -812,10 +813,116 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ap
     REQUIRE(key_center[3].first == keys[1]);
 }
 
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Analog ordering deterministic without overrides or config", "[DataViewer_Widget][Analog][Ordering][Deterministic]") {
+    auto & widget = getWidget();
+    auto const keys = getAnalogKeys();
+    REQUIRE(keys.size() >= 4);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Enable four channels with no lane overrides and no spike-sorter config.
+    for (size_t i = 0; i < 4; ++i) {
+        widget.addFeature(keys[i], "#FF6B6B");
+        QApplication::processEvents();
+    }
+
+    std::vector<std::pair<std::string, float>> key_center;
+    for (size_t i = 0; i < 4; ++i) {
+        auto layout = TestHelpers::getAnalogLayoutTransform(widget, keys[i]);
+        REQUIRE(layout.has_value());
+        key_center.emplace_back(keys[i], static_cast<float>(layout->offset));
+    }
+
+    // Top-to-bottom order should be deterministic and stable.
+    std::sort(key_center.begin(), key_center.end(), [](auto const & a, auto const & b) { return a.second > b.second; });
+
+    REQUIRE(key_center.size() == 4);
+    REQUIRE(key_center[0].first == keys[3]);
+    REQUIRE(key_center[1].first == keys[2]);
+    REQUIRE(key_center[2].first == keys[1]);
+    REQUIRE(key_center[3].first == keys[0]);
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Explicit lane order overrides spikesorter fallback", "[DataViewer_Widget][Analog][Config][Precedence]") {
+    auto & widget = getWidget();
+    auto const keys = getAnalogKeys();
+    REQUIRE(keys.size() >= 4);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    for (size_t i = 0; i < 4; ++i) {
+        widget.addFeature(keys[i], "#FF6B6B");
+        QApplication::processEvents();
+    }
+
+    // Load a spike-sorter config that would otherwise produce: key4, key1, key3, key2 (top->bottom)
+    char const * cfg =
+            "poly2\n"
+            "1 1 0 300\n"
+            "2 2 0 100\n"
+            "3 3 0 200\n"
+            "4 4 0 400\n";
+
+    bool const invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_loadSpikeSorterConfigurationFromText",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString("analog")),
+            Q_ARG(QString, QString(cfg)));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    // Explicit lane ordering should take precedence over spike-sorter fallback.
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+
+    SeriesLaneOverrideData o0;
+    o0.lane_id = "lane_0";
+    o0.lane_order = 10;
+    state->setSeriesLaneOverride(keys[0], o0);
+
+    SeriesLaneOverrideData o1;
+    o1.lane_id = "lane_1";
+    o1.lane_order = 20;
+    state->setSeriesLaneOverride(keys[1], o1);
+
+    SeriesLaneOverrideData o2;
+    o2.lane_id = "lane_2";
+    o2.lane_order = 30;
+    state->setSeriesLaneOverride(keys[2], o2);
+
+    SeriesLaneOverrideData o3;
+    o3.lane_id = "lane_3";
+    o3.lane_order = 40;
+    state->setSeriesLaneOverride(keys[3], o3);
+
+    auto * glw = widget.getOpenGLWidget();
+    REQUIRE(glw != nullptr);
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    std::vector<std::pair<std::string, float>> key_center;
+    for (size_t i = 0; i < 4; ++i) {
+        auto layout = TestHelpers::getAnalogLayoutTransform(widget, keys[i]);
+        REQUIRE(layout.has_value());
+        key_center.emplace_back(keys[i], static_cast<float>(layout->offset));
+    }
+
+    std::sort(key_center.begin(), key_center.end(), [](auto const & a, auto const & b) { return a.second > b.second; });
+
+    REQUIRE(key_center.size() == 4);
+    REQUIRE(key_center[0].first == keys[3]);
+    REQUIRE(key_center[1].first == keys[2]);
+    REQUIRE(key_center[2].first == keys[1]);
+    REQUIRE(key_center[3].first == keys[0]);
+}
+
 TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X axis unchanged on global gain change", "[DataViewer_Widget][Analog][XAxis]") {
     auto & widget = getWidget();
     auto const keys = getAnalogKeys();
-    REQUIRE(keys.size() >= 1);
+    REQUIRE(!keys.empty());
 
     widget.openWidget();
     QApplication::processEvents();
@@ -834,7 +941,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
 
     // Set an initial center (time) and range width via state
     int const initial_time_index = 1000;
-    bool invoked = QMetaObject::invokeMethod(
+    bool const invoked = QMetaObject::invokeMethod(
             &widget,
             "_updatePlot",
             Qt::DirectConnection,
@@ -873,7 +980,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Pr
     QApplication::processEvents();
 
     // Enable 3 out of 5 analog series (sparse selection)
-    std::vector<std::string> enabled = {keys[0], keys[2], keys[4]};
+    std::vector<std::string> const enabled = {keys[0], keys[2], keys[4]};
     for (auto const & k: enabled) {
         widget.addFeature(k, "#FF6B6B");
         QApplication::processEvents();
@@ -934,8 +1041,8 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     auto layout_a1_before = TestHelpers::getAnalogLayoutTransform(widget, keys[1]);
     REQUIRE(layout_a0_before.has_value());
     REQUIRE(layout_a1_before.has_value());
-    float const h0_before = static_cast<float>(layout_a0_before->gain * 2.0f);
-    float const h1_before = static_cast<float>(layout_a1_before->gain * 2.0f);
+    auto const h0_before = static_cast<float>(layout_a0_before->gain * 2.0f);
+    auto const h1_before = static_cast<float>(layout_a1_before->gain * 2.0f);
     // Sanity: they should be similar (two-lane stacking)
     if (std::min(h0_before, h1_before) > 0.0f) {
         REQUIRE((std::max(h0_before, h1_before) / std::min(h0_before, h1_before)) <= 1.4f);
@@ -966,8 +1073,8 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     auto layout_a1_after = TestHelpers::getAnalogLayoutTransform(widget, keys[1]);
     REQUIRE(layout_a0_after.has_value());
     REQUIRE(layout_a1_after.has_value());
-    float const h0_after = static_cast<float>(layout_a0_after->gain * 2.0f);
-    float const h1_after = static_cast<float>(layout_a1_after->gain * 2.0f);
+    auto const h0_after = static_cast<float>(layout_a0_after->gain * 2.0f);
+    auto const h1_after = static_cast<float>(layout_a1_after->gain * 2.0f);
 
     INFO("h0_before=" << h0_before << ", h0_after=" << h0_after);
     INFO("h1_before=" << h1_before << ", h1_after=" << h1_after);
@@ -1007,7 +1114,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     REQUIRE(glw != nullptr);
     QApplication::processEvents();
     auto size = glw->getCanvasSize();
-    float const h = static_cast<float>(size.second);
+    auto const h = static_cast<float>(size.second);
     float const y1 = h * 0.25f;
     float const y2 = h * 0.75f;
     auto map_delta = [&](std::string const & key) {
@@ -1072,7 +1179,7 @@ protected:
 
     DataViewer_Widget & getWidget() { return *m_widget; }
     DataManager & getDataManager() { return *m_data_manager; }
-    std::vector<std::string> const & getEventKeys() const { return m_event_keys; }
+    [[nodiscard]] std::vector<std::string> const & getEventKeys() const { return m_event_keys; }
 
 private:
     void populateEventSeries(int count) {
@@ -1187,7 +1294,7 @@ protected:
                 values[static_cast<size_t>(j)] = std::sin(static_cast<float>(j) * 0.01f) * (1.0f + 0.1f * static_cast<float>(i));
             }
             auto series = std::make_shared<AnalogTimeSeries>(values, values.size());
-            std::string key = std::string("analog_") + std::to_string(i + 1);
+            std::string const key = std::string("analog_") + std::to_string(i + 1);
             m_analog_keys.push_back(key);
             m_data_manager->setData<AnalogTimeSeries>(key, series, m_time_key);
         }
@@ -1198,7 +1305,7 @@ protected:
             series->addEvent(TimeFrameIndex(1000));
             series->addEvent(TimeFrameIndex(2000));
             series->addEvent(TimeFrameIndex(3000));
-            std::string key = std::string("event_") + std::to_string(i + 1);
+            std::string const key = std::string("event_") + std::to_string(i + 1);
             m_event_keys.push_back(key);
             m_data_manager->setData<DigitalEventSeries>(key, series, m_time_key);
         }
@@ -1209,8 +1316,8 @@ protected:
     ~DataViewerWidgetMixedStackingTestFixture() = default;
 
     DataViewer_Widget & getWidget() { return *m_widget; }
-    std::vector<std::string> const & getAnalogKeys() const { return m_analog_keys; }
-    std::vector<std::string> const & getEventKeys() const { return m_event_keys; }
+    [[nodiscard]] std::vector<std::string> const & getAnalogKeys() const { return m_analog_keys; }
+    [[nodiscard]] std::vector<std::string> const & getEventKeys() const { return m_event_keys; }
 
 private:
     std::unique_ptr<QApplication> m_app;
@@ -1309,6 +1416,50 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - 
     }
 }
 
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - Mixed stackable fallback ordering is deterministic", "[DataViewer_Widget][Mixed][Ordering][Deterministic]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() >= 2);
+    REQUIRE(ev.size() >= 2);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // No overrides and no spike-sorter config for this mixed case.
+    // Baseline tie-break should be deterministic by type precedence, then key.
+    widget.addFeature(analog[0], "#FF6B6B");
+    widget.addFeature(analog[1], "#FF6B6B");
+    widget.addFeature(ev[0], "#4ECDC4");
+    widget.addFeature(ev[1], "#4ECDC4");
+    QApplication::processEvents();
+
+    std::vector<std::pair<std::string, float>> key_center;
+
+    auto layout_a0 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_a1 = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    auto layout_e0 = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    auto layout_e1 = TestHelpers::getEventLayoutTransform(widget, ev[1]);
+    REQUIRE(layout_a0.has_value());
+    REQUIRE(layout_a1.has_value());
+    REQUIRE(layout_e0.has_value());
+    REQUIRE(layout_e1.has_value());
+
+    key_center.emplace_back(analog[0], static_cast<float>(layout_a0->offset));
+    key_center.emplace_back(analog[1], static_cast<float>(layout_a1->offset));
+    key_center.emplace_back(ev[0], static_cast<float>(layout_e0->offset));
+    key_center.emplace_back(ev[1], static_cast<float>(layout_e1->offset));
+
+    // Bottom-to-top order corresponds to ascending center offset.
+    std::sort(key_center.begin(), key_center.end(), [](auto const & a, auto const & b) { return a.second < b.second; });
+
+    REQUIRE(key_center.size() == 4);
+    REQUIRE(key_center[0].first == analog[0]);
+    REQUIRE(key_center[1].first == analog[1]);
+    REQUIRE(key_center[2].first == ev[0]);
+    REQUIRE(key_center[3].first == ev[1]);
+}
+
 // -----------------------------------------------------------------------------
 // Mode regression test: ensure FullCanvas event uses full height and Stacked stays in lane
 // -----------------------------------------------------------------------------
@@ -1365,6 +1516,128 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - 
 
     // Stacked should be a lane with significantly smaller height
     REQUIRE(layout_stacked->gain * 2.0f < layout_full->gain * 2.0f);
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - Mixed lane overrides intersperse analog and events", "[DataViewer_Widget][Mixed][LaneOverride]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() >= 2);
+    REQUIRE(ev.size() >= 2);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeature(analog[0], "#FF6B6B");
+    widget.addFeature(analog[1], "#FF6B6B");
+    widget.addFeature(ev[0], "#4ECDC4");
+    widget.addFeature(ev[1], "#4ECDC4");
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+
+    SeriesLaneOverrideData a0_override;
+    a0_override.lane_id = "lane_a0";
+    a0_override.lane_order = 10;
+    state->setSeriesLaneOverride(analog[0], a0_override);
+
+    SeriesLaneOverrideData e0_override;
+    e0_override.lane_id = "lane_e0";
+    e0_override.lane_order = 20;
+    state->setSeriesLaneOverride(ev[0], e0_override);
+
+    SeriesLaneOverrideData a1_override;
+    a1_override.lane_id = "lane_a1";
+    a1_override.lane_order = 30;
+    state->setSeriesLaneOverride(analog[1], a1_override);
+
+    SeriesLaneOverrideData e1_override;
+    e1_override.lane_id = "lane_e1";
+    e1_override.lane_order = 40;
+    state->setSeriesLaneOverride(ev[1], e1_override);
+
+    auto * glw = widget.getOpenGLWidget();
+    REQUIRE(glw != nullptr);
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    auto layout_a0 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_e0 = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    auto layout_a1 = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    auto layout_e1 = TestHelpers::getEventLayoutTransform(widget, ev[1]);
+    REQUIRE(layout_a0.has_value());
+    REQUIRE(layout_e0.has_value());
+    REQUIRE(layout_a1.has_value());
+    REQUIRE(layout_e1.has_value());
+
+    REQUIRE(layout_a0->offset < layout_e0->offset);
+    REQUIRE(layout_e0->offset < layout_a1->offset);
+    REQUIRE(layout_a1->offset < layout_e1->offset);
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - Shared lane overlays aggregate axis labels", "[DataViewer_Widget][Mixed][LaneOverride][Axis]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() >= 2);
+    REQUIRE(!ev.empty());
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeature(analog[0], "#FF6B6B");
+    widget.addFeature(analog[1], "#FF6B6B");
+    widget.addFeature(ev[0], "#4ECDC4");
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+
+    SeriesLaneOverrideData shared_analog;
+    shared_analog.lane_id = "shared_lane";
+    shared_analog.lane_order = 10;
+    state->setSeriesLaneOverride(analog[0], shared_analog);
+
+    SeriesLaneOverrideData shared_event;
+    shared_event.lane_id = "shared_lane";
+    shared_event.lane_order = 11;
+    state->setSeriesLaneOverride(ev[0], shared_event);
+
+    SeriesLaneOverrideData analog_other;
+    analog_other.lane_id = "lane_other";
+    analog_other.lane_order = 30;
+    state->setSeriesLaneOverride(analog[1], analog_other);
+
+    LaneOverrideData lane_override;
+    lane_override.display_label = "Shared AE";
+    state->setLaneOverride("shared_lane", lane_override);
+
+    auto * glw = widget.getOpenGLWidget();
+    REQUIRE(glw != nullptr);
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    auto layout_analog_shared = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_event_shared = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    auto layout_analog_other = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    REQUIRE(layout_analog_shared.has_value());
+    REQUIRE(layout_event_shared.has_value());
+    REQUIRE(layout_analog_other.has_value());
+
+    REQUIRE(layout_analog_shared->offset == Catch::Approx(layout_event_shared->offset).margin(1e-5));
+    REQUIRE(layout_analog_shared->gain == Catch::Approx(layout_event_shared->gain).margin(1e-5));
+    REQUIRE(layout_analog_shared->offset != Catch::Approx(layout_analog_other->offset).margin(1e-5));
+
+    auto * axis_state = state->multiLaneAxisState();
+    REQUIRE(axis_state != nullptr);
+    auto const & lanes = axis_state->lanes();
+    REQUIRE(lanes.size() == 2);
+
+    auto const has_shared_label = std::any_of(lanes.begin(), lanes.end(), [](LaneAxisDescriptor const & lane) {
+        return lane.label == "Shared AE";
+    });
+    REQUIRE(has_shared_label);
 }
 
 // -----------------------------------------------------------------------------
@@ -1430,7 +1703,7 @@ protected:
 
     DataViewer_Widget & getWidget() { return *m_widget; }
     DataManager & getDataManager() { return *m_data_manager; }
-    std::vector<std::string> getTestDataKeys() const { return m_test_data_keys; }
+    [[nodiscard]] std::vector<std::string> getTestDataKeys() const { return m_test_data_keys; }
 
 private:
     void populateWithShortVideoData() {
@@ -1452,7 +1725,7 @@ private:
         }
         auto analog_data = std::make_shared<AnalogTimeSeries>(analog_values, video_length);
         m_data_manager->setData<AnalogTimeSeries>("test_analog_704", analog_data, time_key);
-        m_test_data_keys.push_back("test_analog_704");
+        m_test_data_keys.emplace_back("test_analog_704");
     }
 
     std::unique_ptr<QApplication> m_app;
@@ -1489,7 +1762,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
 
     // Set initial time to middle of video
     int const initial_time = 352;
-    bool invoked = QMetaObject::invokeMethod(
+    bool const invoked = QMetaObject::invokeMethod(
             &widget,
             "_updatePlot",
             Qt::DirectConnection,
@@ -1505,7 +1778,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_1 = glw->getViewState();
-    int64_t range_1 = static_cast<int64_t>(view_state_1.x_max - view_state_1.x_min) + 1;
+    int64_t const range_1 = static_cast<int64_t>(view_state_1.x_max - view_state_1.x_min) + 1;
     INFO("Cycle 1: Achieved range = " << range_1);
     REQUIRE(range_1 > 0);
 
@@ -1515,7 +1788,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_2 = glw->getViewState();
-    int64_t range_2 = static_cast<int64_t>(view_state_2.x_max - view_state_2.x_min) + 1;
+    int64_t const range_2 = static_cast<int64_t>(view_state_2.x_max - view_state_2.x_min) + 1;
     INFO("Cycle 2: Achieved range = " << range_2);
     REQUIRE(range_2 > 0);
 
@@ -1525,7 +1798,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_3 = glw->getViewState();
-    int64_t range_3 = static_cast<int64_t>(view_state_3.x_max - view_state_3.x_min) + 1;
+    int64_t const range_3 = static_cast<int64_t>(view_state_3.x_max - view_state_3.x_min) + 1;
     INFO("Cycle 3: Achieved range = " << range_3);
     REQUIRE(range_3 > 0);
 
@@ -1535,7 +1808,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_4 = glw->getViewState();
-    int64_t range_4 = static_cast<int64_t>(view_state_4.x_max - view_state_4.x_min) + 1;
+    int64_t const range_4 = static_cast<int64_t>(view_state_4.x_max - view_state_4.x_min) + 1;
     INFO("Cycle 4: Achieved range = " << range_4);
     REQUIRE(range_4 > 0);
 
@@ -1545,7 +1818,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_5 = glw->getViewState();
-    int64_t range_5 = static_cast<int64_t>(view_state_5.x_max - view_state_5.x_min) + 1;
+    int64_t const range_5 = static_cast<int64_t>(view_state_5.x_max - view_state_5.x_min) + 1;
     INFO("Cycle 5: After requesting 200 samples, achieved range = " << range_5);
 
     // This is the regression test: we should be able to zoom out
@@ -1557,13 +1830,13 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     std::vector<int> test_ranges = {704, 50, 400, 10, 500, 5, 704, 2, 350, 100};
 
     for (size_t i = 0; i < test_ranges.size(); ++i) {
-        int requested_range = test_ranges[i];
+        int const requested_range = test_ranges[i];
 
         state->setTimeWidth(requested_range);
         QApplication::processEvents();
 
         auto const & view_state = glw->getViewState();
-        int64_t achieved_range = static_cast<int64_t>(view_state.x_max - view_state.x_min) + 1;
+        int64_t const achieved_range = static_cast<int64_t>(view_state.x_max - view_state.x_min) + 1;
 
         INFO("Rapid cycle " << i << ": requested=" << requested_range << ", achieved=" << achieved_range);
 
@@ -1587,7 +1860,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     QApplication::processEvents();
 
     auto const & view_state_final = glw->getViewState();
-    int64_t final_range = static_cast<int64_t>(view_state_final.x_max - view_state_final.x_min) + 1;
+    int64_t const final_range = static_cast<int64_t>(view_state_final.x_max - view_state_final.x_min) + 1;
     INFO("Cycle 7: Final range = " << final_range);
 
     REQUIRE(final_range >= 650);// Should be close to full 704
@@ -1757,8 +2030,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
     widget.addFeature(keys[0], "#FF6B6B");
     QApplication::processEvents();
 
-    auto * opts = widget.state()->seriesOptions()
-                          .getMutable<AnalogSeriesOptionsData>(QString::fromStdString(keys[0]));
+    auto * opts = widget.state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(keys[0]));
     REQUIRE(opts != nullptr);
 
     float const initial_user_scale = opts->user_scale_factor;
@@ -1778,7 +2050,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
     INFO("initial_user_scale = " << initial_user_scale << ", after = " << after_scale);
     // If the hit succeeded, scale should have changed
     // If it didn't, scale stays the same — both outcomes are acceptable in headless
-    REQUIRE(after_scale >= 0.01f);// clamped minimum
+    REQUIRE(after_scale >= 0.01f);  // clamped minimum
     REQUIRE(after_scale <= 1000.0f);// clamped maximum
 
     widget.close();

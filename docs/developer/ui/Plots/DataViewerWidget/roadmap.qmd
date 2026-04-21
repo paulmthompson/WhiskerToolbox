@@ -8,6 +8,9 @@ format: html
 This document tracks remaining development tasks for the Data Viewer Widget. For documentation
 of completed features and current architecture, see the [main developer documentation](index.qmd).
 
+For the mixed-lane ordering refactor that precedes interactive lane drag-and-drop, see
+[ordering abstractions implementation roadmap](ordering_abstractions_implementation_roadmap.md).
+
 ::: {.callout-note}
 ## Pre-Architecture Widget
 

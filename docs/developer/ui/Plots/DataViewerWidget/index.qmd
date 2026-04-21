@@ -233,6 +233,23 @@ Multiple series are arranged vertically in **stacked lanes**, with each series o
 
 Currently, when many series are added (e.g., 32 electrophysiology channels), each lane shrinks proportionally. This becomes impractical for analog signals where detail matters. The [roadmap](roadmap.qmd) proposes adopting EventPlotWidget-style Y pan/zoom so users can zoom into a subset of channels even when many are loaded.
 
+Mixed-lane placement is now wired through state overrides (`series_lane_overrides` and
+`lane_overrides`). Ordering precedence for stackable lanes is:
+
+1. Explicit `lane_order` overrides (per-series)
+2. Analog spike-sorter ordering fallback (analog-only, no explicit lane order)
+3. Legacy type-based fallback (analog before stacked digital events)
+
+Shared lane overlays (same `lane_id`) are aggregated to a single axis lane descriptor,
+with lane labels resolved from `lane_overrides[lane_id].display_label` when provided,
+otherwise from deterministic series-derived fallback labels.
+
+`OpenGLWidget::buildLayoutRequest()` now delegates to
+`DataViewer::buildLayoutRequest(...)` in
+`DataViewer_Widget/Core/LayoutRequestBuilder.cpp`, which isolates ordering policy
+rules (explicit lane order, optional spike-sorter fallback, and deterministic
+type/key fallback) from rendering code.
+
 # Visualization Capabilities
 
 ## Series Types

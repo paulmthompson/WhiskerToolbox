@@ -41,9 +41,10 @@ Out of scope for this first delivery:
 2. Phase 2: Mixed-lane data model and serialization
 3. Phase 3: Layout engine implementation for grouped and weighted lanes
 4. Phase 4: DataViewer wiring for ordering, rendering, and axis descriptors
-5. Phase 4b: Interactive lane drag-and-drop reordering
-6. Phase 5: Compatibility and migration testing
-7. Phase 6: Documentation and handoff
+5. Ordering abstractions roadmap (prerequisite for Phase 4b)
+6. Phase 4b: Interactive lane drag-and-drop reordering
+7. Phase 5: Compatibility and migration testing
+8. Phase 6: Documentation and handoff
 
 ## Progress Update (2026-04-21)
 
@@ -60,7 +61,8 @@ Current status by phase:
 - Phase 1: completed
 - Phase 2: completed
 - Phase 3: completed
-- Phase 4: not started
+- Phase 4: completed
+- Ordering abstractions roadmap: not started
 - Phase 4b: not started
 - Phase 5: not started
 - Phase 6: in progress (roadmap/doc updates)
@@ -208,11 +210,11 @@ Ordering precedence:
 
 ### Tasks
 
-- [ ] Replace type-bucket request assembly with unified series ordering path.
-- [ ] Map per-series overrides into layout request metadata.
-- [ ] Keep non-stackable FullCanvas behavior unchanged.
-- [ ] Update lane-axis descriptor generation to lane-level aggregation in shared lanes.
-- [ ] Define lane label policy for overlay lanes.
+- [x] Replace type-bucket request assembly with unified series ordering path.
+- [x] Map per-series overrides into layout request metadata.
+- [x] Keep non-stackable FullCanvas behavior unchanged.
+- [x] Update lane-axis descriptor generation to lane-level aggregation in shared lanes.
+- [x] Define lane label policy for overlay lanes.
 
 ### Primary Files
 
@@ -224,13 +226,17 @@ Ordering precedence:
 
 ### Acceptance Criteria
 
-- [ ] Developers can intersperse analog and event lanes through state overrides.
-- [ ] Developers can assign multiple analog/event series to a single lane.
-- [ ] Axis labels remain stable and meaningful for overlays.
+- [x] Developers can intersperse analog and event lanes through state overrides.
+- [x] Developers can assign multiple analog/event series to a single lane.
+- [x] Axis labels remain stable and meaningful for overlays.
 
 ---
 
 ## Phase 4b: Interactive Lane Drag-and-Drop Reordering
+
+Prerequisite roadmap:
+
+- docs/developer/ui/Plots/DataViewerWidget/ordering_abstractions_implementation_roadmap.md
 
 ### Goal
 
