@@ -95,14 +95,14 @@ Introduce a normalized ordering input model independent of file format details.
 
 ### Tasks
 
-- [ ] Add an internal ordering item model (series identity, stackability, lane hints, explicit order, normalized group/channel identity).
-- [ ] Extract group/channel key parsing into a dedicated identity utility.
-- [ ] Keep LayoutRequestBuilder as a thin assembly layer from resolved ordering to CorePlotting SeriesInfo.
+- [x] Add an internal ordering item model (series identity, stackability, lane hints, explicit order, normalized group/channel identity).
+- [x] Extract group/channel key parsing into a dedicated identity utility.
+- [x] Keep LayoutRequestBuilder as a thin assembly layer from resolved ordering to CorePlotting SeriesInfo.
 
 ### Acceptance Criteria
 
-- [ ] LayoutRequestBuilder stops containing identity parsing logic.
-- [ ] Ordering inputs are represented by one normalized internal type.
+- [x] LayoutRequestBuilder stops containing identity parsing logic.
+- [x] Ordering inputs are represented by one normalized internal type.
 
 ---
 
@@ -114,14 +114,14 @@ Separate spike-sorter file parsing from ordering-policy execution.
 
 ### Tasks
 
-- [ ] Split spike-sorter module responsibilities into parser and rank adapter layers.
-- [ ] Convert channel-position metadata into provider-style sortable ranks.
-- [ ] Replace direct sort-by-file-format logic in ordering flow with provider output.
+- [x] Split spike-sorter module responsibilities into parser and rank adapter layers.
+- [x] Convert channel-position metadata into provider-style sortable ranks.
+- [x] Replace direct sort-by-file-format logic in ordering flow with provider output.
 
 ### Acceptance Criteria
 
-- [ ] Parser can be used without invoking ordering.
-- [ ] Ordering can consume non-spike-sorter rank providers.
+- [x] Parser can be used without invoking ordering.
+- [x] Ordering can consume non-spike-sorter rank providers.
 
 ---
 
@@ -140,14 +140,14 @@ Centralize ordering precedence logic in a dedicated resolver.
 
 ### Tasks
 
-- [ ] Introduce resolver API that returns resolved ordering/ranks.
-- [ ] Move comparator layering out of LayoutRequestBuilder.
-- [ ] Add lightweight diagnostics for why each series received its position.
+- [x] Introduce resolver API that returns resolved ordering/ranks.
+- [x] Move comparator layering out of LayoutRequestBuilder.
+- [x] Add lightweight diagnostics for why each series received its position.
 
 ### Acceptance Criteria
 
-- [ ] LayoutRequestBuilder delegates policy decisions to resolver.
-- [ ] Resolver output is deterministic and test-covered.
+- [x] LayoutRequestBuilder delegates policy decisions to resolver.
+- [x] Resolver output is deterministic and test-covered.
 
 ---
 

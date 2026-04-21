@@ -1,0 +1,39 @@
+# Ordering Policy Resolver
+
+`OrderingPolicyResolver` centralizes stackable-series ordering precedence for `DataViewer_Widget` and returns deterministic diagnostics for each resolved position.
+
+## Location
+
+- Source: `src/WhiskerToolbox/DataViewer_Widget/Core/OrderingPolicyResolver.hpp`
+- Source: `src/WhiskerToolbox/DataViewer_Widget/Core/OrderingPolicyResolver.cpp`
+
+## Inputs and output
+
+`resolveOrdering(...)` consumes a vector of normalized ordering items and a fallback sortable-rank map.
+
+Input fields include:
+
+- series key
+- series type
+- normalized identity (`group`, optional `channel_id`)
+- optional explicit lane order
+- insertion index
+
+It returns an `OrderingResolution` with:
+
+- `ordered_input_indices`: stable resolved order as original input indices
+- `diagnostics`: per-series reason metadata (`ExplicitLaneOrder`, `FallbackSortableRank`, or `DeterministicTieBreak`)
+
+## Precedence
+
+Resolver precedence is:
+
+1. explicit `lane_order`
+2. fallback sortable provider rank
+3. deterministic tie-breaks: group, channel, series-type precedence, key, insertion index
+
+## Integration point
+
+`LayoutRequestBuilder` constructs `OrderingInputItem` entries from stackable candidates, delegates ordering to the resolver, then rebuilds candidate order using `ordered_input_indices`.
+
+This keeps policy decisions out of the layout assembly path while preserving deterministic behavior.

@@ -7,6 +7,7 @@
 
 #include "DataViewerState.hpp"
 #include "DataViewerStateData.hpp"
+#include "OrderingPolicyResolver.hpp"
 #include "TimeSeriesDataStore.hpp"
 
 #include <QString>
@@ -27,25 +28,13 @@ namespace {
 struct StackableSeriesCandidate {
     std::string key;
     CorePlotting::SeriesType type;
+    bool is_stackable{true};
+    std::string lane_id_hint;
+    float lane_weight_hint{1.0F};
+    NormalizedSeriesIdentity identity;
     std::optional<int> explicit_lane_order;
     int insertion_index{0};
 };
-
-/**
- * @brief Return deterministic fallback precedence for series types.
- * @pre type must be a valid CorePlotting::SeriesType enum value (enforcement: none)
- */
-[[nodiscard]] int typePrecedence(CorePlotting::SeriesType type) {
-    switch (type) {
-        case CorePlotting::SeriesType::Analog:
-            return 0;
-        case CorePlotting::SeriesType::DigitalEvent:
-            return 1;
-        case CorePlotting::SeriesType::DigitalInterval:
-            return 2;
-    }
-    return 3;
-}
 
 /**
  * @brief Check whether every candidate is analog.
@@ -55,6 +44,39 @@ struct StackableSeriesCandidate {
     return std::all_of(candidates.begin(), candidates.end(), [](StackableSeriesCandidate const & c) {
         return c.type == CorePlotting::SeriesType::Analog;
     });
+}
+
+/**
+ * @brief Build a normalized ordering item for one visible stackable series.
+ * @pre key must refer to a stable series identifier in current state/data-store view (enforcement: none)
+ */
+[[nodiscard]] StackableSeriesCandidate makeStackableCandidate(LayoutRequestBuildContext const & context,
+                                                              std::string key,
+                                                              CorePlotting::SeriesType type,
+                                                              int insertion_index) {
+    std::optional<int> explicit_order = std::nullopt;
+    std::string lane_id_hint;
+    float lane_weight_hint = 1.0F;
+
+    if (auto const * lane_override = context.state.getSeriesLaneOverride(key); lane_override != nullptr) {
+        lane_id_hint = lane_override->lane_id;
+        lane_weight_hint = lane_override->lane_weight;
+        if (lane_override->lane_order.has_value()) {
+            explicit_order = lane_override->lane_order;
+        }
+    }
+
+    auto const identity = parseSeriesIdentity(key);
+
+    return StackableSeriesCandidate{
+            std::move(key),
+            type,
+            true,
+            std::move(lane_id_hint),
+            lane_weight_hint,
+            identity,
+            explicit_order,
+            insertion_index};
 }
 
 /**
@@ -106,13 +128,11 @@ void appendNonStackableSeries(LayoutRequestBuildContext const & context,
             continue;
         }
 
-        std::optional<int> explicit_order = std::nullopt;
-        if (auto const * lane_override = context.state.getSeriesLaneOverride(key);
-            lane_override != nullptr && lane_override->lane_order.has_value()) {
-            explicit_order = lane_override->lane_order;
-        }
-
-        candidates.push_back(StackableSeriesCandidate{key, CorePlotting::SeriesType::Analog, explicit_order, insertion_index++});
+        candidates.push_back(makeStackableCandidate(
+                context,
+                key,
+                CorePlotting::SeriesType::Analog,
+                insertion_index++));
         visible_analog_keys.push_back(key);
     }
 
@@ -123,13 +143,11 @@ void appendNonStackableSeries(LayoutRequestBuildContext const & context,
             continue;
         }
 
-        std::optional<int> explicit_order = std::nullopt;
-        if (auto const * lane_override = context.state.getSeriesLaneOverride(key);
-            lane_override != nullptr && lane_override->lane_order.has_value()) {
-            explicit_order = lane_override->lane_order;
-        }
-
-        candidates.push_back(StackableSeriesCandidate{key, CorePlotting::SeriesType::DigitalEvent, explicit_order, insertion_index++});
+        candidates.push_back(makeStackableCandidate(
+                context,
+                key,
+                CorePlotting::SeriesType::DigitalEvent,
+                insertion_index++));
     }
 
     return candidates;
@@ -153,56 +171,30 @@ void applyOrderingRules(LayoutRequestBuildContext const & context,
                                              allCandidatesAnalog(candidates) &&
                                              !context.spike_sorter_configs.empty();
 
-    std::unordered_map<std::string, int> analog_order_rank;
+    SortableRankMap analog_order_rank;
     if (allow_spike_sorter_fallback) {
-        auto sorted_analog_keys = orderKeysBySpikeSorterConfig(visible_analog_keys, context.spike_sorter_configs);
-        for (int index = 0; index < static_cast<int>(sorted_analog_keys.size()); ++index) {
-            analog_order_rank[sorted_analog_keys[static_cast<size_t>(index)]] = index;
-        }
+        analog_order_rank = buildSpikeSorterSortableRanks(visible_analog_keys, context.spike_sorter_configs);
     }
 
-    std::stable_sort(candidates.begin(), candidates.end(),
-                     [&](StackableSeriesCandidate const & lhs, StackableSeriesCandidate const & rhs) {
-                         bool const lhs_explicit = lhs.explicit_lane_order.has_value();
-                         bool const rhs_explicit = rhs.explicit_lane_order.has_value();
-                         if (lhs_explicit != rhs_explicit) {
-                             return lhs_explicit && !rhs_explicit;
-                         }
+    std::vector<OrderingInputItem> resolver_input;
+    resolver_input.reserve(candidates.size());
+    for (auto const & candidate: candidates) {
+        resolver_input.push_back(OrderingInputItem{
+                candidate.key,
+                candidate.type,
+                candidate.identity,
+                candidate.explicit_lane_order,
+                candidate.insertion_index});
+    }
 
-                         if (lhs_explicit && rhs_explicit) {
-                             int const lhs_order = lhs.explicit_lane_order.value();
-                             int const rhs_order = rhs.explicit_lane_order.value();
-                             if (lhs_order != rhs_order) {
-                                 return lhs_order < rhs_order;
-                             }
-                         }
+    OrderingResolution const resolution = resolveOrdering(resolver_input, analog_order_rank);
 
-                         if (allow_spike_sorter_fallback &&
-                             lhs.type == CorePlotting::SeriesType::Analog &&
-                             rhs.type == CorePlotting::SeriesType::Analog) {
-                             int const lhs_rank = analog_order_rank.contains(lhs.key)
-                                                          ? analog_order_rank.at(lhs.key)
-                                                          : std::numeric_limits<int>::max();
-                             int const rhs_rank = analog_order_rank.contains(rhs.key)
-                                                          ? analog_order_rank.at(rhs.key)
-                                                          : std::numeric_limits<int>::max();
-                             if (lhs_rank != rhs_rank) {
-                                 return lhs_rank < rhs_rank;
-                             }
-                         }
-
-                         int const lhs_type = typePrecedence(lhs.type);
-                         int const rhs_type = typePrecedence(rhs.type);
-                         if (lhs_type != rhs_type) {
-                             return lhs_type < rhs_type;
-                         }
-
-                         if (lhs.key != rhs.key) {
-                             return lhs.key < rhs.key;
-                         }
-
-                         return lhs.insertion_index < rhs.insertion_index;
-                     });
+    std::vector<StackableSeriesCandidate> ordered_candidates;
+    ordered_candidates.reserve(candidates.size());
+    for (int const input_index: resolution.ordered_input_indices) {
+        ordered_candidates.push_back(candidates[static_cast<size_t>(input_index)]);
+    }
+    candidates = std::move(ordered_candidates);
 }
 
 /**
@@ -215,19 +207,11 @@ void appendStackableSeries(LayoutRequestBuildContext const & context,
                            std::vector<StackableSeriesCandidate> const & candidates,
                            CorePlotting::LayoutRequest & request) {
     for (auto const & candidate: candidates) {
-        auto const * series_override = context.state.getSeriesLaneOverride(candidate.key);
+        std::string lane_id = candidate.lane_id_hint;
+        float lane_weight = candidate.lane_weight_hint;
+        int const custom_stack_index = candidate.explicit_lane_order.value_or(-1);
 
-        std::string lane_id;
-        float lane_weight = 1.0F;
-        int custom_stack_index = -1;
-
-        if (series_override != nullptr && !series_override->lane_id.empty()) {
-            lane_id = series_override->lane_id;
-            lane_weight = series_override->lane_weight;
-            if (series_override->lane_order.has_value()) {
-                custom_stack_index = *series_override->lane_order;
-            }
-
+        if (!lane_id.empty()) {
             if (auto const * lane_override = context.state.getLaneOverride(lane_id);
                 lane_override != nullptr && lane_override->lane_weight.has_value()) {
                 lane_weight = *lane_override->lane_weight;

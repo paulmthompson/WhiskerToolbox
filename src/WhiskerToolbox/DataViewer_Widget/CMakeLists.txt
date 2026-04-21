@@ -13,6 +13,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         Core/DataViewerDiagnostics.hpp
         Core/LayoutRequestBuilder.cpp
         Core/LayoutRequestBuilder.hpp
+        Core/OrderingPolicyResolver.cpp
+        Core/OrderingPolicyResolver.hpp
         Core/SeriesOptionsRegistry.cpp
         Core/SeriesOptionsRegistry.hpp
         Core/SpikeSorterConfigLoader.cpp

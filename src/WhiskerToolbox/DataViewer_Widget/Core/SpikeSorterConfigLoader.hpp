@@ -28,6 +28,8 @@
  * @endcode
  */
 
+#include <functional>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -43,6 +45,33 @@ struct ChannelPosition {
     float x{0.0f};    ///< X position (unused for vertical stacking)
     float y{0.0f};    ///< Y position (used for ordering)
 };
+
+/**
+ * @brief Normalized identity parsed from a DataViewer series key.
+ *
+ * Keys in the expected form "group_N" produce:
+ * - group = "group"
+ * - channel_id = N-1 (0-based)
+ *
+ * Keys that do not match this pattern are still representable:
+ * - group = full key
+ * - channel_id = std::nullopt
+ */
+struct NormalizedSeriesIdentity {
+    std::string group;
+    std::optional<int> channel_id;
+};
+
+/**
+ * @brief Parse a series key into a normalized group/channel identity.
+ *
+ * This utility is ingestion-agnostic and can be used by ordering policy,
+ * spike-sorter rank adapters, and future providers.
+ *
+ * @param key Series key to parse (e.g., "ephys_32")
+ * @return Normalized identity. Non-conforming keys return group=key, channel_id=nullopt.
+ */
+[[nodiscard]] NormalizedSeriesIdentity parseSeriesIdentity(std::string const & key);
 
 /**
  * @brief Parse spike sorter configuration from text content
@@ -80,6 +109,32 @@ struct ChannelPosition {
 using SpikeSorterConfigMap = std::unordered_map<std::string, std::vector<ChannelPosition>>;
 
 /**
+ * @brief Generic sortable-rank map consumed by ordering policy.
+ *
+ * Lower rank values appear earlier in ordering.
+ */
+using SortableRankMap = std::unordered_map<std::string, int>;
+
+/**
+ * @brief Provider contract for external sortable-rank sources.
+ */
+using SortableRankProvider = std::function<SortableRankMap(std::vector<std::string> const &)>;
+
+/**
+ * @brief Convert spike-sorter channel-position metadata into sortable ranks.
+ *
+ * This adapter layer is independent from parser usage and can be swapped with
+ * any other rank provider that returns SortableRankMap.
+ *
+ * @param keys Keys to rank (e.g., analog series keys)
+ * @param configs Parsed spike-sorter config map
+ * @return key->rank map (lower rank = earlier ordering)
+ */
+[[nodiscard]] SortableRankMap buildSpikeSorterSortableRanks(
+        std::vector<std::string> const & keys,
+        SpikeSorterConfigMap const & configs);
+
+/**
  * @brief Order series keys according to spike sorter configuration
  * 
  * Returns series keys sorted by group name, then by Y position within groups
@@ -94,4 +149,4 @@ using SpikeSorterConfigMap = std::unordered_map<std::string, std::vector<Channel
         std::vector<std::string> const & keys,
         SpikeSorterConfigMap const & configs);
 
-#endif // SPIKESORTER_CONFIG_LOADER_HPP
+#endif// SPIKESORTER_CONFIG_LOADER_HPP

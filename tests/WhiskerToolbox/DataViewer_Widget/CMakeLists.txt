@@ -21,6 +21,7 @@ add_executable(test_data_viewer_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp
 
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.test.cpp
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataViewer_Widget/OrderingPolicyResolver.test.cpp
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataViewer_Widget/DataViewerState.test.cpp
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataViewer_Widget/DataViewerState.integration.test.cpp
 

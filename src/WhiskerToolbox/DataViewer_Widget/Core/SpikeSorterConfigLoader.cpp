@@ -1,45 +1,85 @@
 #include "SpikeSorterConfigLoader.hpp"
 
 #include <algorithm>
+#include <charconv>
+#include <limits>
 #include <sstream>
+
+namespace {
+
+[[nodiscard]] float lookupChannelY(std::vector<ChannelPosition> const & config,
+                                   int channel_id) {
+    for (auto const & position: config) {
+        if (position.channel_id == channel_id) {
+            return position.y;
+        }
+    }
+    return 0.0f;
+}
+
+}// namespace
+
+NormalizedSeriesIdentity parseSeriesIdentity(std::string const & key) {
+    NormalizedSeriesIdentity identity;
+    identity.group = key;
+    identity.channel_id = std::nullopt;
+
+    auto const pos = key.rfind('_');
+    if (pos == std::string::npos || pos + 1 >= key.size()) {
+        return identity;
+    }
+
+    std::string const parsed_group = key.substr(0, pos);
+    std::string const channel_text = key.substr(pos + 1);
+    int parsed_channel = 0;
+    auto const * parse_begin = channel_text.data();
+    auto const * parse_end = channel_text.data() + channel_text.size();
+    auto const parse_result = std::from_chars(parse_begin, parse_end, parsed_channel);
+    if (parse_result.ec == std::errc{} && parse_result.ptr == parse_end) {
+        identity.group = parsed_group;
+        identity.channel_id = (parsed_channel > 0) ? parsed_channel - 1 : parsed_channel;
+    }
+
+    return identity;
+}
 
 std::vector<ChannelPosition> parseSpikeSorterConfig(std::string const & text) {
     std::vector<ChannelPosition> out;
     std::istringstream ss(text);
     std::string line;
     bool first = true;
-    
+
     while (std::getline(ss, line)) {
         if (line.empty()) {
             continue;
         }
         if (first) {
             first = false;
-            continue;  // skip header row
+            continue;// skip header row
         }
-        
+
         std::istringstream ls(line);
         int row = 0;
         int ch = 0;
         float x = 0.0f;
         float y = 0.0f;
-        
+
         if (!(ls >> row >> ch >> x >> y)) {
             continue;
         }
-        
+
         // SpikeSorter is 1-based; convert to 0-based for our program
         if (ch > 0) {
             ch -= 1;
         }
-        
+
         ChannelPosition p;
         p.channel_id = ch;
         p.x = x;
         p.y = y;
         out.push_back(p);
     }
-    
+
     return out;
 }
 
@@ -47,84 +87,110 @@ bool extractGroupAndChannelFromKey(
         std::string const & key,
         std::string & group,
         int & channel_id) {
-    channel_id = -1;
-    group.clear();
-    
-    auto const pos = key.rfind('_');
-    if (pos == std::string::npos || pos + 1 >= key.size()) {
-        return false;
-    }
-    
-    group = key.substr(0, pos);
-    
-    try {
-        int const parsed = std::stoi(key.substr(pos + 1));
-        channel_id = parsed > 0 ? parsed - 1 : parsed;
-    } catch (...) {
+    auto const identity = parseSeriesIdentity(key);
+    if (!identity.channel_id.has_value()) {
+        group = identity.group;
         channel_id = -1;
         return false;
     }
-    
+
+    group = identity.group;
+    channel_id = *identity.channel_id;
     return true;
 }
 
 std::vector<std::string> orderKeysBySpikeSorterConfig(
         std::vector<std::string> const & keys,
         SpikeSorterConfigMap const & configs) {
-    
+
+    auto const rank_map = buildSpikeSorterSortableRanks(keys, configs);
+
     // Internal helper struct for sorting
     struct Item {
         std::string key;
-        std::string group;
-        int channel;
+        int rank;
+        int insertion_index;
     };
-    
+
     std::vector<Item> items;
     items.reserve(keys.size());
-    
-    for (auto const & key : keys) {
-        std::string group_name;
-        int channel_id;
-        (void)extractGroupAndChannelFromKey(key, group_name, channel_id);
-        Item it{key, group_name, channel_id};
+
+    int insertion_index = 0;
+    for (auto const & key: keys) {
+        int const rank = rank_map.contains(key) ? rank_map.at(key) : std::numeric_limits<int>::max();
+        Item it{key, rank, insertion_index++};
         items.push_back(std::move(it));
     }
 
-    // Sort with configuration: by group; within group, if config present, by ascending y; else by channel id
-    std::stable_sort(items.begin(), items.end(), [&configs](Item const & a, Item const & b) {
-        if (a.group != b.group) {
-            return a.group < b.group;
+    std::stable_sort(items.begin(), items.end(), [](Item const & a, Item const & b) {
+        if (a.rank != b.rank) {
+            return a.rank < b.rank;
         }
-        
-        auto cfg_it = configs.find(a.group);
-        if (cfg_it == configs.end()) {
-            return a.channel < b.channel;
+        if (a.key != b.key) {
+            return a.key < b.key;
         }
-        
-        auto const & cfg = cfg_it->second;
-        auto find_y = [&cfg](int ch) {
-            for (auto const & p : cfg) {
-                if (p.channel_id == ch) {
-                    return p.y;
-                }
-            }
-            return 0.0f;
-        };
-        
-        float ya = find_y(a.channel);
-        float yb = find_y(b.channel);
-        
-        if (ya == yb) {
-            return a.channel < b.channel;
-        }
-        return ya < yb;  // ascending by y so larger y get larger index (top)
+        return a.insertion_index < b.insertion_index;
     });
 
     std::vector<std::string> result;
     result.reserve(items.size());
-    for (auto const & it : items) {
+    for (auto const & it: items) {
         result.push_back(it.key);
     }
-    
+
     return result;
+}
+
+SortableRankMap buildSpikeSorterSortableRanks(
+        std::vector<std::string> const & keys,
+        SpikeSorterConfigMap const & configs) {
+
+    struct RankedItem {
+        std::string key;
+        std::string group;
+        int channel;
+        float y_rank;
+    };
+
+    std::vector<RankedItem> ranked_items;
+    ranked_items.reserve(keys.size());
+
+    for (auto const & key: keys) {
+        auto const identity = parseSeriesIdentity(key);
+        int const channel = identity.channel_id.value_or(-1);
+
+        float y_rank = 0.0f;
+        if (auto cfg_it = configs.find(identity.group); cfg_it != configs.end()) {
+            y_rank = lookupChannelY(cfg_it->second, channel);
+        }
+
+        ranked_items.push_back(RankedItem{key, identity.group, channel, y_rank});
+    }
+
+    std::stable_sort(ranked_items.begin(), ranked_items.end(),
+                     [&configs](RankedItem const & a, RankedItem const & b) {
+                         if (a.group != b.group) {
+                             return a.group < b.group;
+                         }
+
+                         bool const group_has_config = configs.contains(a.group);
+                         if (group_has_config) {
+                             if (a.y_rank != b.y_rank) {
+                                 return a.y_rank < b.y_rank;
+                             }
+                         }
+
+                         if (a.channel != b.channel) {
+                             return a.channel < b.channel;
+                         }
+
+                         return a.key < b.key;
+                     });
+
+    SortableRankMap ranks;
+    for (int index = 0; index < static_cast<int>(ranked_items.size()); ++index) {
+        ranks[ranked_items[static_cast<size_t>(index)].key] = index;
+    }
+
+    return ranks;
 }
