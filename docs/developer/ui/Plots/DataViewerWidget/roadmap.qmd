@@ -951,6 +951,7 @@ major feature phases to avoid merge conflicts.
 # See Also
 
 - [Data Viewer Widget Documentation](index.qmd) — Full architecture and feature documentation
+- [Mixed Lanes + Scaling Implementation Roadmap](mixed_lanes_and_scaling_implementation_roadmap.md) — Detailed developer execution plan for Y-scaling bug fix and mixed-lane layout support
 - [Developer Debug Panel Plan](developer_debug_panel.qmd) — Diagnostic panel and on-canvas overlays for development
 - [Plot Widget Guide](../plot_widget_guide.md) — Shared axis architecture, DataManager integration, testing patterns
 - [EventPlotWidget Roadmap](../EventPlotWidget/roadmap.qmd) — Shared glyph infrastructure (Phase 5), cross-widget linking

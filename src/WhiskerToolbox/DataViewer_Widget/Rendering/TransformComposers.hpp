@@ -5,6 +5,8 @@
 #include "CorePlotting/Layout/NormalizationHelpers.hpp"
 #include "CorePlotting/Layout/SeriesLayout.hpp"
 
+#include <algorithm>
+
 namespace DataViewer {
 
 /**
@@ -26,7 +28,7 @@ namespace DataViewer {
         CorePlotting::SeriesLayout const & layout,
         float data_mean,
         float std_dev,
-        float intrinsic_scale,
+        [[maybe_unused]] float intrinsic_scale,
         float user_scale_factor,
         float user_vertical_offset,
         float global_y_scale,
@@ -37,8 +39,11 @@ namespace DataViewer {
     auto data_norm = CorePlotting::NormalizationHelpers::forStdDevRange(data_mean, std_dev, 3.0f);
 
     // User adjustments: additional scaling and offset
+    // NOTE: std-dev normalization is already handled by data_norm above.
+    // Keep user_scale_factor as the only multiplicative user adjustment to
+    // avoid accidental double normalization of analog amplitude.
     auto user_adj = CorePlotting::NormalizationHelpers::manual(
-            intrinsic_scale * user_scale_factor,
+            user_scale_factor,
             user_vertical_offset);
 
     // Compose data normalization with user adjustments
@@ -91,6 +96,36 @@ namespace DataViewer {
     float const half_height = height * 0.5f;
 
     return CorePlotting::LayoutTransform{center, half_height};
+}
+
+/**
+ * @brief Compute glyph size for event ticks from explicit world-space event height
+ *
+ * The rendered tick world height is:
+ *   glyph_size * composed_event_y_transform.gain
+ *
+ * We derive glyph_size from an explicit event_height target (clamped to lane
+ * height), so event sizing remains predictable and controllable by state.
+ */
+[[nodiscard]] inline float computeEventGlyphSize(
+        CorePlotting::LayoutTransform const & composed_event_y_transform,
+        float lane_half_height,
+        float event_height,
+        float margin_factor,
+        float fallback_line_thickness) {
+
+    constexpr float kEpsilon = 1e-6f;
+
+    float const lane_height = std::max(2.0f * lane_half_height, kEpsilon);
+    float const clamped_margin = std::clamp(margin_factor, 0.0f, 1.0f);
+    float const desired_world_height =
+            std::min(std::max(event_height, 0.0f), lane_height) * clamped_margin;
+
+    if (std::abs(composed_event_y_transform.gain) <= kEpsilon) {
+        return fallback_line_thickness;
+    }
+
+    return desired_world_height / composed_event_y_transform.gain;
 }
 
 /**

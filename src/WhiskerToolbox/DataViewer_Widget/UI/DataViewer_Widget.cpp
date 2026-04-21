@@ -1263,53 +1263,24 @@ void DataViewer_Widget::_autoFillCanvas() {
 
     // Calculate optimal global scale for analog series to use their allocated space effectively
     if (visible_analog_count > 0) {
-        // Sample a few analog series to estimate appropriate scaling
-        std::vector<float> sample_std_devs;
-        sample_std_devs.reserve(std::min(5, visible_analog_count));// Sample up to 5 series
+        // Analog data is normalized by std-dev in the transform pipeline.
+        // Target a fraction of each lane's height directly rather than dividing
+        // by measured std-dev again (which can significantly underscale traces).
+        float const target_amplitude_fraction = 0.6f;
+        float const margin_factor = std::clamp(_state->marginFactor(), 0.05f, 1.0f);
+        float const optimal_global_scale = target_amplitude_fraction / margin_factor;
 
-        int sampled = 0;
-        for (auto const & key: analog_keys) {
-            if (sampled >= 5) break;
+        // Clamp to reasonable bounds
+        float const min_scale = 0.05f;
+        float const max_scale = 20.0f;
+        float const final_scale = std::clamp(optimal_global_scale, min_scale, max_scale);
 
-            auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
-            if (opts && opts->get_is_visible()) {
-                auto series = _data_manager->getData<AnalogTimeSeries>(key);
-                if (series) {
-                    float const std_dev = calculate_std_dev_approximate(*series);
-                    if (std_dev > 0.0f) {
-                        sample_std_devs.push_back(std_dev);
-                        sampled++;
-                    }
-                }
-            }
-        }
+        std::cout << "Calculated optimal global scale: target_fraction=" << target_amplitude_fraction
+                  << ", margin_factor=" << margin_factor
+                  << ", final_scale=" << final_scale << std::endl;
 
-        if (!sample_std_devs.empty()) {
-            // Use median standard deviation for scaling calculation
-            std::sort(sample_std_devs.begin(), sample_std_devs.end());
-            float const median_std_dev = sample_std_devs[sample_std_devs.size() / 2];
-
-            // Calculate scale so that ±3 standard deviations use ~60% of allocated space
-            float const target_amplitude_fraction = 0.6f;
-            float const target_amplitude_pixels = optimal_spacing_pixels * target_amplitude_fraction;
-            float const target_amplitude_normalized = (target_amplitude_pixels / static_cast<float>(canvas_height)) * 2.0f;
-
-            // For ±3σ coverage
-            float const three_sigma_coverage = target_amplitude_normalized;
-            float const optimal_global_scale = three_sigma_coverage / (6.0f * median_std_dev);
-
-            // Clamp to reasonable bounds
-            float const min_scale = 0.01f;
-            float const max_scale = 100.0f;
-            float const final_scale = std::clamp(optimal_global_scale, min_scale, max_scale);
-
-            std::cout << "Calculated optimal global scale: median_std_dev=" << median_std_dev
-                      << ", target_amplitude=" << target_amplitude_pixels << " pixels"
-                      << ", final_scale=" << final_scale << std::endl;
-
-            // Apply the calculated global scale
-            _state->setGlobalYScale(final_scale);
-        }
+        // Apply the calculated global scale
+        _state->setGlobalYScale(final_scale);
     }
 
     std::cout << "Auto-fill canvas completed" << std::endl;

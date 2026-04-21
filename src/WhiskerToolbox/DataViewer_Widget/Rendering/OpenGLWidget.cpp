@@ -1315,14 +1315,17 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
 
         // Compose the Y transform based on plotting mode
         CorePlotting::LayoutTransform y_transform;
+        float lane_half_height = 0.0f;
         if (!is_stacked) {
             // Full canvas mode - events extend full viewport height
             y_transform = DataViewer::composeEventFullCanvasYTransform(
                     static_cast<float>(view_state.y_min), static_cast<float>(view_state.y_max), opts->margin_factor);
+            lane_half_height = static_cast<float>((view_state.y_max - view_state.y_min) * 0.5);
         } else {
             // Stacked mode - look up layout from cached response
             auto const * series_layout = _cache_state.layout_response.findLayout(key);
             if (series_layout) {
+                lane_half_height = series_layout->y_transform.gain;
                 y_transform = DataViewer::composeEventYTransform(
                         *series_layout, opts->margin_factor, _state->globalYScale());
             } else {
@@ -1331,6 +1334,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
                         key,
                         event_data.layout_transform,
                         0};
+                lane_half_height = fallback.y_transform.gain;
                 y_transform = DataViewer::composeEventYTransform(
                         fallback, opts->margin_factor, _state->globalYScale());
             }
@@ -1352,7 +1356,12 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
                 static_cast<float>(g) / 255.0f,
                 static_cast<float>(b) / 255.0f,
                 opts->get_alpha());
-        batch_params.glyph_size = opts->get_line_thickness();
+        batch_params.glyph_size = DataViewer::computeEventGlyphSize(
+                y_transform,
+                lane_half_height,
+                opts->event_height,
+                opts->margin_factor,
+                opts->get_line_thickness());
         batch_params.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
 
         // Build and add batch using simplified API

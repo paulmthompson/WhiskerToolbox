@@ -227,10 +227,13 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
 
     // Compose Y transform based on plotting mode
     CorePlotting::LayoutTransform y_transform;
+    float lane_half_height = 0.0f;
     if (options.plotting_mode == EventPlottingModeData::FullCanvas) {
         y_transform = DataViewer::composeEventFullCanvasYTransform(y_min, y_max, options.margin_factor);
+        lane_half_height = (y_max - y_min) * 0.5f;
     } else {
         y_transform = DataViewer::composeEventYTransform(layout, options.margin_factor, gl_widget_->state()->globalYScale());
+        lane_half_height = layout.y_transform.gain;
     }
 
     // Create model matrix from composed transform
@@ -250,7 +253,12 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     batch_params.start_time = TimeFrameIndex(start_time);
     batch_params.end_time = TimeFrameIndex(end_time);
     batch_params.color = color;
-    batch_params.glyph_size = static_cast<float>(options.get_line_thickness());
+    batch_params.glyph_size = DataViewer::computeEventGlyphSize(
+            y_transform,
+            lane_half_height,
+            options.event_height,
+            options.margin_factor,
+            static_cast<float>(options.get_line_thickness()));
     batch_params.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
 
     // Use simplified API (takes pre-composed model matrix)
