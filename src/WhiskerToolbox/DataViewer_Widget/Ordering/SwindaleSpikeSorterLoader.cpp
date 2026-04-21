@@ -1,9 +1,19 @@
-#include "SpikeSorterConfigLoader.hpp"
+/**
+ * @file SwindaleSpikeSorterLoader.cpp
+ * @brief Parser and rank adapter for the Swindale SpikeSorter electrode configuration format.
+ *
+ * Reference:
+ *   Swindale NV, Spacek MA. "SpikeSorter: Sorting large sets of waveforms from
+ *   tetrode recordings." eNeuro. 2014. PMID: 28287541.
+ */
+
+#include "Ordering/SwindaleSpikeSorterLoader.hpp"
 
 #include <algorithm>
-#include <charconv>
 #include <limits>
 #include <sstream>
+#include <string>
+#include <vector>
 
 namespace {
 
@@ -19,31 +29,7 @@ namespace {
 
 }// namespace
 
-NormalizedSeriesIdentity parseSeriesIdentity(std::string const & key) {
-    NormalizedSeriesIdentity identity;
-    identity.group = key;
-    identity.channel_id = std::nullopt;
-
-    auto const pos = key.rfind('_');
-    if (pos == std::string::npos || pos + 1 >= key.size()) {
-        return identity;
-    }
-
-    std::string const parsed_group = key.substr(0, pos);
-    std::string const channel_text = key.substr(pos + 1);
-    int parsed_channel = 0;
-    auto const * parse_begin = channel_text.data();
-    auto const * parse_end = channel_text.data() + channel_text.size();
-    auto const parse_result = std::from_chars(parse_begin, parse_end, parsed_channel);
-    if (parse_result.ec == std::errc{} && parse_result.ptr == parse_end) {
-        identity.group = parsed_group;
-        identity.channel_id = (parsed_channel > 0) ? parsed_channel - 1 : parsed_channel;
-    }
-
-    return identity;
-}
-
-std::vector<ChannelPosition> parseSpikeSorterConfig(std::string const & text) {
+std::vector<ChannelPosition> parseSwindaleSpikeSorterConfig(std::string const & text) {
     std::vector<ChannelPosition> out;
     std::istringstream ss(text);
     std::string line;
@@ -68,7 +54,7 @@ std::vector<ChannelPosition> parseSpikeSorterConfig(std::string const & text) {
             continue;
         }
 
-        // SpikeSorter is 1-based; convert to 0-based for our program
+        // SpikeSorter uses 1-based channel numbers; convert to 0-based
         if (ch > 0) {
             ch -= 1;
         }
@@ -99,51 +85,9 @@ bool extractGroupAndChannelFromKey(
     return true;
 }
 
-std::vector<std::string> orderKeysBySpikeSorterConfig(
+SortableRankMap buildSwindaleSpikeSorterRanks(
         std::vector<std::string> const & keys,
-        SpikeSorterConfigMap const & configs) {
-
-    auto const rank_map = buildSpikeSorterSortableRanks(keys, configs);
-
-    // Internal helper struct for sorting
-    struct Item {
-        std::string key;
-        int rank;
-        int insertion_index;
-    };
-
-    std::vector<Item> items;
-    items.reserve(keys.size());
-
-    int insertion_index = 0;
-    for (auto const & key: keys) {
-        int const rank = rank_map.contains(key) ? rank_map.at(key) : std::numeric_limits<int>::max();
-        Item it{key, rank, insertion_index++};
-        items.push_back(std::move(it));
-    }
-
-    std::stable_sort(items.begin(), items.end(), [](Item const & a, Item const & b) {
-        if (a.rank != b.rank) {
-            return a.rank < b.rank;
-        }
-        if (a.key != b.key) {
-            return a.key < b.key;
-        }
-        return a.insertion_index < b.insertion_index;
-    });
-
-    std::vector<std::string> result;
-    result.reserve(items.size());
-    for (auto const & it: items) {
-        result.push_back(it.key);
-    }
-
-    return result;
-}
-
-SortableRankMap buildSpikeSorterSortableRanks(
-        std::vector<std::string> const & keys,
-        SpikeSorterConfigMap const & configs) {
+        ChannelPositionMap const & configs) {
 
     struct RankedItem {
         std::string key;
@@ -193,4 +137,44 @@ SortableRankMap buildSpikeSorterSortableRanks(
     }
 
     return ranks;
+}
+
+std::vector<std::string> orderKeysBySwindaleSpikeSorter(
+        std::vector<std::string> const & keys,
+        ChannelPositionMap const & configs) {
+
+    auto const rank_map = buildSwindaleSpikeSorterRanks(keys, configs);
+
+    struct Item {
+        std::string key;
+        int rank;
+        int insertion_index;
+    };
+
+    std::vector<Item> items;
+    items.reserve(keys.size());
+
+    int insertion_index = 0;
+    for (auto const & key: keys) {
+        int const rank = rank_map.contains(key) ? rank_map.at(key) : std::numeric_limits<int>::max();
+        items.push_back(Item{key, rank, insertion_index++});
+    }
+
+    std::stable_sort(items.begin(), items.end(), [](Item const & a, Item const & b) {
+        if (a.rank != b.rank) {
+            return a.rank < b.rank;
+        }
+        if (a.key != b.key) {
+            return a.key < b.key;
+        }
+        return a.insertion_index < b.insertion_index;
+    });
+
+    std::vector<std::string> result;
+    result.reserve(items.size());
+    for (auto const & it: items) {
+        result.push_back(it.key);
+    }
+
+    return result;
 }

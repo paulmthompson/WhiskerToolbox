@@ -53,7 +53,7 @@
 
 #include "Core/DataViewerDiagnostics.hpp"
 #include "Core/DataViewerState.hpp"
-#include "Core/SpikeSorterConfigLoader.hpp"
+#include "Ordering/ChannelPositionMetadata.hpp"
 #include "Core/TimeSeriesDataStore.hpp"
 #include "Interaction/DataViewerCoordinates.hpp"
 #include "Interaction/DataViewerInputHandler.hpp"
@@ -527,7 +527,7 @@ private:
 
     // Spike sorter configuration for custom series ordering
     // Maps group_name -> vector of channel positions
-    SpikeSorterConfigMap _spike_sorter_configs;
+    ChannelPositionMap _spike_sorter_configs;
 
     // PlottingOpenGL Renderers
     // These use the new CorePlotting RenderableBatch approach for rendering.

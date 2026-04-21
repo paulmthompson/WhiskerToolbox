@@ -7,7 +7,7 @@
 
 #include "DataViewerState.hpp"
 #include "DataViewerStateData.hpp"
-#include "OrderingPolicyResolver.hpp"
+#include "Ordering/OrderingPolicyResolver.hpp"
 #include "TimeSeriesDataStore.hpp"
 
 #include <QString>
@@ -173,7 +173,7 @@ void applyOrderingRules(LayoutRequestBuildContext const & context,
 
     SortableRankMap analog_order_rank;
     if (allow_spike_sorter_fallback) {
-        analog_order_rank = buildSpikeSorterSortableRanks(visible_analog_keys, context.spike_sorter_configs);
+        analog_order_rank = buildSwindaleSpikeSorterRanks(visible_analog_keys, context.spike_sorter_configs);
     }
 
     std::vector<OrderingInputItem> resolver_input;

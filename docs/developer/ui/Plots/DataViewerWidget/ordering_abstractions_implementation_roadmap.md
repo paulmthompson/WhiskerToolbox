@@ -185,14 +185,50 @@ Ensure ownership and signal flow align with EditorState architecture.
 
 ### Tasks
 
-- [ ] Move ordering rule ownership to state/core services (not renderer).
-- [ ] Keep UI file-load actions ingestion-only (update state/provider data).
-- [ ] Ensure ordering updates trigger layout invalidation through state signals.
+- [x] **F1 – Extract metadata types into a dedicated header.**
+  Create `ChannelPositionMetadata.hpp` containing `ChannelPosition`, `SpikeSorterConfigMap`,
+  `SortableRankMap`, `SortableRankProvider`, and `NormalizedSeriesIdentity`.
+  `SpikeSorterConfigLoader.hpp` becomes a pure parser header that includes
+  `ChannelPositionMetadata.hpp`. Future loaders reference the metadata header only,
+  not the spike-sorter parser.
+
+- [ ] **F2 – Move `_spike_sorter_configs` ownership from renderer to state.**
+  Remove `SpikeSorterConfigMap _spike_sorter_configs` and its load/clear methods from
+  `OpenGLWidget`. Add a non-serializable runtime map to `DataViewerState` (or a
+  companion runtime-state struct). Route `loadSpikeSorterConfiguration()` and
+  `clearSpikeSorterConfiguration()` calls through state, emitting `orderingConstraintsChanged`
+  (or a new `rankProviderChanged`) to trigger layout invalidation.
+
+- [ ] **F3 – Replace `spike_sorter_configs` in `LayoutRequestBuildContext` with a `SortableRankProvider`.**
+  `LayoutRequestBuildContext::spike_sorter_configs` (type `SpikeSorterConfigMap const &`)
+  becomes `SortableRankProvider rank_provider` (or a pre-built `SortableRankMap`).
+  The caller (OpenGLWidget) binds `buildSpikeSorterSortableRanks` to the provider using
+  the state-owned config map. The context is then source-agnostic.
+
+- [ ] **F4 – Wire `SortableRankProvider` through `applyOrderingRules`.**
+  Replace the direct `buildSpikeSorterSortableRanks` call in `applyOrderingRules` with
+  an invocation of the provider from the context. This makes the already-declared
+  `SortableRankProvider` type alias functional rather than decorative.
+
+- [ ] **F5 – Remove the legacy `TimeSeriesDataStore::buildLayoutRequest()` spike-sorter path.**
+  `TimeSeriesDataStore::buildLayoutRequest(float, float, SpikeSorterConfigMap const &)` still
+  contains its own spike-sorter ordering call that bypasses the resolver entirely. Remove this
+  overload (or strip the ordering logic from it) and redirect any remaining callers to
+  `DataViewer::buildLayoutRequest()`.
+
+- [ ] **F6 – Fix the `allCandidatesAnalog` gate in `applyOrderingRules`.**
+  The current guard disables all fallback rank ordering the moment any stacked
+  `DigitalEventSeries` is present. Instead, apply the rank provider only to analog candidates;
+  digital candidates should still participate in constraints and deterministic tie-break
+  regardless of whether a rank provider is present.
 
 ### Acceptance Criteria
 
 - [ ] OpenGLWidget has no policy-specific ingestion dependencies.
+- [ ] `LayoutRequestBuildContext` contains no spike-sorter-specific field.
+- [ ] Spike-sorter ranks apply to analog candidates even when stacked digital series are present.
 - [ ] Ordering changes flow through state and update layout predictably.
+- [ ] `TimeSeriesDataStore` legacy ordering path is removed.
 
 ---
 

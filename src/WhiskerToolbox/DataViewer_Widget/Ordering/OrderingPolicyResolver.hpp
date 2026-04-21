@@ -6,7 +6,7 @@
  * @brief Resolves stackable-series ordering precedence with lightweight diagnostics.
  */
 
-#include "Core/SpikeSorterConfigLoader.hpp"
+#include "Ordering/ChannelPositionMetadata.hpp"
 
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 
@@ -70,8 +70,9 @@ struct OrderingResolution {
 /**
  * @brief Resolve ordering with precedence:
  * 1) explicit lane order
- * 2) fallback provider ranks
- * 3) deterministic tie-breaks
+ * 2) relational constraints (when present)
+ * 3) fallback provider ranks
+ * 4) deterministic tie-breaks
  */
 [[nodiscard]] OrderingResolution resolveOrdering(
         std::vector<OrderingInputItem> const & input_items,

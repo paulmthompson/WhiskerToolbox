@@ -270,7 +270,7 @@ void TimeSeriesDataStore::setSeriesOptionsRegistry(SeriesOptionsRegistry * regis
 CorePlotting::LayoutRequest TimeSeriesDataStore::buildLayoutRequest(
         float viewport_y_min,
         float viewport_y_max,
-        SpikeSorterConfigMap const & spike_sorter_configs) const {
+        ChannelPositionMap const & spike_sorter_configs) const {
 
     CorePlotting::LayoutRequest request;
     request.viewport_y_min = viewport_y_min;
@@ -293,7 +293,7 @@ CorePlotting::LayoutRequest TimeSeriesDataStore::buildLayoutRequest(
 
     // Apply spike sorter ordering if any configs exist
     if (!spike_sorter_configs.empty()) {
-        visible_analog_keys = orderKeysBySpikeSorterConfig(visible_analog_keys, spike_sorter_configs);
+        visible_analog_keys = orderKeysBySwindaleSpikeSorter(visible_analog_keys, spike_sorter_configs);
     }
 
     // Add analog series in order

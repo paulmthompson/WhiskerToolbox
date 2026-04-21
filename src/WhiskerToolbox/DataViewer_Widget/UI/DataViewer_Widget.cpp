@@ -3,7 +3,7 @@
 
 #include "Core/DataViewerState.hpp"
 #include "Core/DataViewerStateData.hpp"
-#include "Core/SpikeSorterConfigLoader.hpp"
+#include "Ordering/SwindaleSpikeSorterLoader.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "Feature_Tree_Model.hpp"
 #include "Rendering/OpenGLWidget.hpp"
@@ -1249,7 +1249,7 @@ void DataViewer_Widget::_clearConfigurationForGroup(QString const & group_name) 
 }
 
 std::vector<ChannelPosition> DataViewer_Widget::_parseSpikeSorterConfig(std::string const & text) {
-    return parseSpikeSorterConfig(text);
+    return parseSwindaleSpikeSorterConfig(text);
 }
 
 void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text) {

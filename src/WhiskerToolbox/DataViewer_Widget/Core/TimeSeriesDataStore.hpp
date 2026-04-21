@@ -20,7 +20,8 @@
  */
 
 #include "Rendering/AnalogVertexCache.hpp"
-#include "SpikeSorterConfigLoader.hpp"
+#include "Ordering/ChannelPositionMetadata.hpp"
+#include "Ordering/SwindaleSpikeSorterLoader.hpp"
 
 #include "CorePlotting/DataTypes/SeriesDataCache.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
@@ -338,7 +339,7 @@ public:
     [[nodiscard]] CorePlotting::LayoutRequest buildLayoutRequest(
             float viewport_y_min,
             float viewport_y_max,
-            SpikeSorterConfigMap const & spike_sorter_configs) const;
+            ChannelPositionMap const & spike_sorter_configs) const;
 
     /**
      * @brief Apply layout response to display options

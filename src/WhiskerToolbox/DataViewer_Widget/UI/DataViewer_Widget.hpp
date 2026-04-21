@@ -1,7 +1,8 @@
 #ifndef DATAVIEWER_WIDGET_HPP
 #define DATAVIEWER_WIDGET_HPP
 
-#include "Core/SpikeSorterConfigLoader.hpp"
+#include "Ordering/ChannelPositionMetadata.hpp"
+#include "Ordering/SwindaleSpikeSorterLoader.hpp"
 
 #include "DataTypeEnum/DM_DataType.hpp"
 #include "EditorState/StrongTypes.hpp"// For TimePosition

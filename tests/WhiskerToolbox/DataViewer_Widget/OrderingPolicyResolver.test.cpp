@@ -3,7 +3,7 @@
  * @brief Unit tests for DataViewer ordering policy resolver precedence and diagnostics.
  */
 
-#include "DataViewer_Widget/Core/OrderingPolicyResolver.hpp"
+#include "DataViewer_Widget/Ordering/OrderingPolicyResolver.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

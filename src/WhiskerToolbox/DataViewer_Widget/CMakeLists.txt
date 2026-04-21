@@ -13,14 +13,17 @@ set(DATAVIEWER_WIDGET_SOURCES
         Core/DataViewerDiagnostics.hpp
         Core/LayoutRequestBuilder.cpp
         Core/LayoutRequestBuilder.hpp
-        Core/OrderingPolicyResolver.cpp
-        Core/OrderingPolicyResolver.hpp
         Core/SeriesOptionsRegistry.cpp
         Core/SeriesOptionsRegistry.hpp
-        Core/SpikeSorterConfigLoader.cpp
-        Core/SpikeSorterConfigLoader.hpp
         Core/TimeSeriesDataStore.cpp
         Core/TimeSeriesDataStore.hpp
+
+        Ordering/ChannelPositionMetadata.cpp
+        Ordering/ChannelPositionMetadata.hpp
+        Ordering/OrderingPolicyResolver.cpp
+        Ordering/OrderingPolicyResolver.hpp
+        Ordering/SwindaleSpikeSorterLoader.cpp
+        Ordering/SwindaleSpikeSorterLoader.hpp
 
         DataViewerWidgetRegistration.cpp
         DataViewerWidgetRegistration.hpp

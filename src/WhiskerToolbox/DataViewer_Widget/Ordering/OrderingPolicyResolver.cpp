@@ -3,7 +3,7 @@
  * @brief Policy resolver for stackable-series ordering precedence.
  */
 
-#include "OrderingPolicyResolver.hpp"
+#include "Ordering/OrderingPolicyResolver.hpp"
 
 #include <algorithm>
 #include <limits>
