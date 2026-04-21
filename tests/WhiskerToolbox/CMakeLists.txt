@@ -29,6 +29,7 @@ add_subdirectory(DeepLearning_Widget)
 add_subdirectory(AutoParamWidget)
 
 add_subdirectory(KeymapSystem)
+add_subdirectory(TriageSession_Widget)
 
 add_subdirectory(TimeScrollBar)
 

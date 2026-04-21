@@ -13,6 +13,7 @@
 #include "KeymapSystem/Keymap.hpp"
 #include "KeymapSystem/KeymapCommandBridge.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
+#include "TimeController/TimeController.hpp"
 
 #include <QCoreApplication>
 #include <QKeySequence>
@@ -1111,5 +1112,81 @@ TEST_CASE("executeCommandSequenceFromRegistry runs AdvanceFrame using EditorRegi
 
     auto const out = executeCommandSequenceFromRegistry(dm, &registry, seq);
     REQUIRE(out.result.success);
-    CHECK(registry.currentTimeIndex().getValue() == 5);
+    REQUIRE(registry.timeController() != nullptr);
+    CHECK(registry.timeController()->currentTimeIndex().getValue() == 5);
+}
+
+TEST_CASE("executeCommandSequenceFromRegistry resolves current_frame runtime variable",
+          "[keymap][commands]") {
+    EditorRegistry registry;
+    auto dm = std::make_shared<DataManager>();
+    registry.setCurrentTime(TimeFrameIndex(12), nullptr);
+
+    commands::CommandSequenceDescriptor seq;
+    commands::CommandDescriptor step;
+    step.command_name = "AdvanceFrame";
+    step.parameters = rfl::json::read<rfl::Generic>(
+                              R"({"delta": "${current_frame}"})")
+                              .value();
+    seq.commands = {step};
+
+    auto const out = executeCommandSequenceFromRegistry(dm, &registry, seq);
+    REQUIRE(out.result.success);
+    REQUIRE(registry.timeController() != nullptr);
+    CHECK(registry.timeController()->currentTimeIndex().getValue() == 24);
+}
+
+TEST_CASE("triage sequence slot actions register with editor-focused scope and digit defaults",
+          "[keymap][triage]") {
+    KeymapManager mgr;
+    auto const scope = KeyActionScope::editorFocused(
+            EditorTypeId(QStringLiteral("TriageSessionWidget")));
+    QString const category = QStringLiteral("Triage Session");
+
+    for (int slot_index = 1; slot_index <= 9; ++slot_index) {
+        auto const action_id = QStringLiteral("triage.sequence_slot_%1").arg(slot_index);
+        auto const display_name = QStringLiteral("Execute Sequence Slot %1").arg(slot_index);
+        auto const default_binding = QKeySequence(static_cast<Qt::Key>(Qt::Key_0 + slot_index));
+
+        REQUIRE(mgr.registerAction({.action_id = action_id,
+                                    .display_name = display_name,
+                                    .category = category,
+                                    .scope = scope,
+                                    .default_binding = default_binding,
+                                    .command_sequence = std::nullopt}));
+    }
+
+    for (int slot_index = 1; slot_index <= 9; ++slot_index) {
+        auto const action_id = QStringLiteral("triage.sequence_slot_%1").arg(slot_index);
+        auto const expected_binding = QKeySequence(static_cast<Qt::Key>(Qt::Key_0 + slot_index));
+
+        auto const desc = mgr.action(action_id);
+        REQUIRE(desc.has_value());
+        CHECK(desc->scope.kind == KeyActionScopeKind::EditorFocused);
+        CHECK(desc->scope.editor_type_id == EditorTypeId("TriageSessionWidget"));
+        CHECK(desc->category == category);
+        CHECK(mgr.bindingFor(action_id) == expected_binding);
+    }
+}
+
+TEST_CASE("triage sequence slot actions dispatch to triage adapter",
+          "[keymap][triage]") {
+    KeymapManager mgr;
+    auto const triage_type = EditorTypeId("TriageSessionWidget");
+
+    auto * adapter = new KeyActionAdapter(&mgr);
+    adapter->setTypeId(triage_type);
+
+    QString last_action;
+    adapter->setHandler([&last_action](QString const & action_id) -> bool {
+        last_action = action_id;
+        return true;
+    });
+    mgr.registerAdapter(adapter);
+
+    for (int slot_index = 1; slot_index <= 9; ++slot_index) {
+        auto const action_id = QStringLiteral("triage.sequence_slot_%1").arg(slot_index);
+        REQUIRE(mgr.dispatchAction(action_id, triage_type));
+        CHECK(last_action == action_id);
+    }
 }

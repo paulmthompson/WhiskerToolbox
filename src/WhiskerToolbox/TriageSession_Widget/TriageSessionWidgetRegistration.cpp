@@ -5,98 +5,37 @@
 
 #include "TriageSessionWidgetRegistration.hpp"
 
-#include "Commands/Core/CommandDescriptor.hpp"
 #include "Core/TriageSessionState.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
 #include "UI/TriageSessionProperties_Widget.hpp"
 
 #include <QKeySequence>
-
-#include <rfl/json.hpp>
-
-#include <cassert>
 #include <utility>
 
 namespace TriageSessionWidgetModule {
 
 namespace {
 
-commands::CommandDescriptor makeCommand(char const * command_name, char const * params_json) {
-    commands::CommandDescriptor step;
-    step.command_name = command_name;
-    auto params = rfl::json::read<rfl::Generic>(params_json);
-    assert(params.has_value() && "makeCommand: invalid JSON parameters");
-    step.parameters = std::move(*params);
-    return step;
-}
-
-commands::CommandSequenceDescriptor sequenceContactMarkTrackedAdvance() {
-    commands::CommandSequenceDescriptor seq;
-    seq.name = "contact_mark_tracked_advance";
-    seq.commands = {
-            makeCommand("SetEventAtTime",
-                        R"({"data_key": "contact", "time": "${current_frame}", "event": true})"),
-            makeCommand("SetEventAtTime",
-                        R"({"data_key": "tracked_regions", "time": "${current_frame}", "event": true})"),
-            makeCommand("AdvanceFrame", R"({"delta": 1})"),
-    };
-    return seq;
-}
-
-commands::CommandSequenceDescriptor sequenceContactFlipTrackedAdvance() {
-    commands::CommandSequenceDescriptor seq;
-    seq.name = "contact_flip_tracked_advance";
-    seq.commands = {
-            makeCommand("FlipEventAtTime",
-                        R"({"data_key": "contact", "time": "${current_frame}"})"),
-            makeCommand("SetEventAtTime",
-                        R"({"data_key": "tracked_regions", "time": "${current_frame}", "event": true})"),
-            makeCommand("AdvanceFrame", R"({"delta": 1})"),
-    };
-    return seq;
-}
-
-commands::CommandSequenceDescriptor sequenceTrackedAdvance() {
-    commands::CommandSequenceDescriptor seq;
-    seq.name = "tracked_advance";
-    seq.commands = {
-            makeCommand("SetEventAtTime",
-                        R"({"data_key": "tracked_regions", "time": "${current_frame}", "event": true})"),
-            makeCommand("AdvanceFrame", R"({"delta": 1})"),
-    };
-    return seq;
-}
-
-/// Phase 2 contact triage chords (global scope — available outside the triage panel).
-void registerContactTriageChordActions(KeymapSystem::KeymapManager * km) {
+void registerSequenceSlotActions(KeymapSystem::KeymapManager * km,
+                                 KeymapSystem::KeyActionScope const & scope,
+                                 QString const & category) {
     if (!km) {
         return;
     }
 
-    auto const scope = KeymapSystem::KeyActionScope::global();
-    QString const category = QStringLiteral("Contact Triage");
+    for (int slot_index = 1; slot_index <= TriageSessionState::sequenceSlotCount(); ++slot_index) {
+        auto const action_id = QStringLiteral("triage.sequence_slot_%1").arg(slot_index);
+        auto const display_name = QStringLiteral("Execute Sequence Slot %1").arg(slot_index);
+        auto const default_binding = QKeySequence(static_cast<Qt::Key>(Qt::Key_0 + slot_index));
 
-    km->registerCommandAction(QStringLiteral("triage.contact_mark_tracked_advance"),
-                              QStringLiteral("Mark contact + tracked + next frame"),
-                              category,
-                              scope,
-                              QKeySequence(Qt::Key_F),
-                              sequenceContactMarkTrackedAdvance());
-
-    km->registerCommandAction(QStringLiteral("triage.contact_flip_tracked_advance"),
-                              QStringLiteral("Flip contact + tracked + next frame"),
-                              category,
-                              scope,
-                              QKeySequence(Qt::Key_D),
-                              sequenceContactFlipTrackedAdvance());
-
-    km->registerCommandAction(QStringLiteral("triage.tracked_advance"),
-                              QStringLiteral("Mark tracked + next frame"),
-                              category,
-                              scope,
-                              QKeySequence(Qt::Key_G),
-                              sequenceTrackedAdvance());
+        km->registerAction({.action_id = action_id,
+                            .display_name = display_name,
+                            .category = category,
+                            .scope = scope,
+                            .default_binding = default_binding,
+                            .command_sequence = std::nullopt});
+    }
 }
 
 void registerEditorActions(KeymapSystem::KeymapManager * km) {
@@ -112,21 +51,24 @@ void registerEditorActions(KeymapSystem::KeymapManager * km) {
                         .display_name = QStringLiteral("Mark"),
                         .category = category,
                         .scope = scope,
-                        .default_binding = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_M)});
+                        .default_binding = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_M),
+                        .command_sequence = std::nullopt});
 
     km->registerAction({.action_id = QStringLiteral("triage.commit"),
                         .display_name = QStringLiteral("Commit"),
                         .category = category,
                         .scope = scope,
-                        .default_binding = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C)});
+                        .default_binding = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C),
+                        .command_sequence = std::nullopt});
 
     km->registerAction({.action_id = QStringLiteral("triage.recall"),
                         .display_name = QStringLiteral("Recall"),
                         .category = category,
                         .scope = scope,
-                        .default_binding = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R)});
+                        .default_binding = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R),
+                        .command_sequence = std::nullopt});
 
-    registerContactTriageChordActions(km);
+    registerSequenceSlotActions(km, scope, category);
 }
 
 }// namespace
