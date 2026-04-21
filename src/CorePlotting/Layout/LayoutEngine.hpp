@@ -3,9 +3,11 @@
 
 #include "SeriesLayout.hpp"
 
-#include <memory>// std::unique_ptr
-#include <string>// std::string
-#include <vector>// std::vector
+#include <cmath>   // std::isfinite
+#include <memory>  // std::unique_ptr
+#include <optional>// std::optional
+#include <string>  // std::string
+#include <vector>  // std::vector
 
 namespace CorePlotting {
 
@@ -26,6 +28,14 @@ struct SeriesInfo {
     SeriesType type;  ///< Type of series
     bool is_stackable;///< Whether series participates in stacking (vs full-canvas)
 
+    /// Optional lane assignment for grouped stacking.
+    /// Empty string preserves legacy one-series-per-lane behavior.
+    std::string lane_id;
+
+    /// Optional per-lane weight hint for grouped stacking.
+    /// Non-finite or non-positive values are normalized to 1.0.
+    float lane_weight{1.0f};
+
     /// Optional custom layout index (for spike sorter config etc.)
     /// If >= 0, overrides computed stacking order for this series.
     int custom_stack_index{-1};
@@ -39,6 +49,19 @@ struct SeriesInfo {
         : id(std::move(series_id)),
           type(series_type),
           is_stackable(stackable),
+          custom_stack_index(stack_index) {}
+
+    SeriesInfo(std::string series_id,
+               SeriesType series_type,
+               bool stackable,
+               std::string lane,
+               float weight,
+               int stack_index = -1)
+        : id(std::move(series_id)),
+          type(series_type),
+          is_stackable(stackable),
+          lane_id(std::move(lane)),
+          lane_weight((std::isfinite(weight) && weight > 0.0F) ? weight : 1.0F),
           custom_stack_index(stack_index) {}
 };
 

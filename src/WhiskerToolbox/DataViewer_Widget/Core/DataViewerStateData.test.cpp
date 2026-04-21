@@ -11,7 +11,7 @@ using Catch::Approx;
 
 TEST_CASE("SeriesStyleData serialization", "[DataViewerStateData]") {
     SECTION("Default values serialize correctly") {
-        CorePlotting::SeriesStyle style;
+        CorePlotting::SeriesStyle const style;
 
         auto json = rfl::json::write(style);
         auto result = rfl::json::read<CorePlotting::SeriesStyle>(json);
@@ -47,7 +47,7 @@ TEST_CASE("SeriesStyleData serialization", "[DataViewerStateData]") {
 
 TEST_CASE("AnalogSeriesOptionsData serialization", "[DataViewerStateData]") {
     SECTION("Default values") {
-        AnalogSeriesOptionsData opts;
+        AnalogSeriesOptionsData const opts;
 
         auto json = rfl::json::write(opts);
         auto result = rfl::json::read<AnalogSeriesOptionsData>(json);
@@ -125,7 +125,7 @@ TEST_CASE("AnalogSeriesOptionsData serialization", "[DataViewerStateData]") {
 
 TEST_CASE("DigitalEventSeriesOptionsData serialization", "[DataViewerStateData]") {
     SECTION("Default values") {
-        DigitalEventSeriesOptionsData opts;
+        DigitalEventSeriesOptionsData const opts;
 
         auto json = rfl::json::write(opts);
         auto result = rfl::json::read<DigitalEventSeriesOptionsData>(json);
@@ -177,7 +177,7 @@ TEST_CASE("DigitalEventSeriesOptionsData serialization", "[DataViewerStateData]"
 
 TEST_CASE("DigitalIntervalSeriesOptionsData serialization", "[DataViewerStateData]") {
     SECTION("Default values") {
-        DigitalIntervalSeriesOptionsData opts;
+        DigitalIntervalSeriesOptionsData const opts;
 
         auto json = rfl::json::write(opts);
         auto result = rfl::json::read<DigitalIntervalSeriesOptionsData>(json);
@@ -216,7 +216,7 @@ TEST_CASE("DigitalIntervalSeriesOptionsData serialization", "[DataViewerStateDat
 
 TEST_CASE("ViewStateData serialization", "[DataViewerStateData]") {
     SECTION("Default values") {
-        CorePlotting::ViewStateData view;
+        CorePlotting::ViewStateData const view;
 
         auto json = rfl::json::write(view);
         auto result = rfl::json::read<CorePlotting::ViewStateData>(json);
@@ -272,7 +272,7 @@ TEST_CASE("ViewStateData serialization", "[DataViewerStateData]") {
 
 TEST_CASE("DataViewerThemeState serialization", "[DataViewerStateData]") {
     SECTION("Default values (Dark theme)") {
-        DataViewerThemeState theme;
+        DataViewerThemeState const theme;
 
         auto json = rfl::json::write(theme);
         auto result = rfl::json::read<DataViewerThemeState>(json);
@@ -316,7 +316,7 @@ TEST_CASE("DataViewerThemeState serialization", "[DataViewerStateData]") {
 
 TEST_CASE("DataViewerGridState serialization", "[DataViewerStateData]") {
     SECTION("Default values") {
-        DataViewerGridState grid;
+        DataViewerGridState const grid;
 
         auto json = rfl::json::write(grid);
         auto result = rfl::json::read<DataViewerGridState>(json);
@@ -346,7 +346,7 @@ TEST_CASE("DataViewerGridState serialization", "[DataViewerStateData]") {
 
 TEST_CASE("DataViewerUIPreferences serialization", "[DataViewerStateData]") {
     SECTION("Default values") {
-        DataViewerUIPreferences ui;
+        DataViewerUIPreferences const ui;
 
         auto json = rfl::json::write(ui);
         auto result = rfl::json::read<DataViewerUIPreferences>(json);
@@ -385,7 +385,7 @@ TEST_CASE("DataViewerUIPreferences serialization", "[DataViewerStateData]") {
 
 TEST_CASE("DataViewerInteractionState serialization", "[DataViewerStateData]") {
     SECTION("Default values") {
-        DataViewerInteractionState interaction;
+        DataViewerInteractionState const interaction;
 
         auto json = rfl::json::write(interaction);
         auto result = rfl::json::read<DataViewerInteractionState>(json);
@@ -405,7 +405,7 @@ TEST_CASE("DataViewerInteractionState serialization", "[DataViewerStateData]") {
     }
 
     SECTION("All interaction modes round-trip") {
-        std::vector<DataViewerInteractionMode> modes = {
+        std::vector<DataViewerInteractionMode> const modes = {
                 DataViewerInteractionMode::Normal,
                 DataViewerInteractionMode::CreateInterval,
                 DataViewerInteractionMode::ModifyInterval,
@@ -421,6 +421,84 @@ TEST_CASE("DataViewerInteractionState serialization", "[DataViewerStateData]") {
             REQUIRE(result);
             REQUIRE(result.value().mode == mode);
         }
+    }
+}
+
+// ==================== Mixed-Lane Override Tests ====================
+
+TEST_CASE("SeriesLaneOverrideData serialization", "[DataViewerStateData]") {
+    SECTION("Default values") {
+        SeriesLaneOverrideData const override_data;
+
+        auto json = rfl::json::write(override_data);
+        auto result = rfl::json::read<SeriesLaneOverrideData>(json);
+
+        REQUIRE(result);
+        auto const & data = result.value();
+        REQUIRE(data.lane_id.empty());
+        REQUIRE_FALSE(data.lane_order.has_value());
+        REQUIRE(data.lane_weight == Approx(1.0f));
+        REQUIRE(data.overlay_mode == LaneOverlayMode::Auto);
+        REQUIRE(data.overlay_z == 0);
+    }
+
+    SECTION("Full values round-trip") {
+        SeriesLaneOverrideData override_data;
+        override_data.lane_id = "lane_primary";
+        override_data.lane_order = 7;
+        override_data.lane_weight = 2.5f;
+        override_data.overlay_mode = LaneOverlayMode::Overlay;
+        override_data.overlay_z = 3;
+
+        auto json = rfl::json::write(override_data);
+        auto result = rfl::json::read<SeriesLaneOverrideData>(json);
+
+        REQUIRE(result);
+        auto const & data = result.value();
+        REQUIRE(data.lane_id == "lane_primary");
+        REQUIRE(data.lane_order.has_value());
+        REQUIRE(data.lane_order == std::optional<int>{7});
+        REQUIRE(data.lane_weight == Approx(2.5f));
+        REQUIRE(data.overlay_mode == LaneOverlayMode::Overlay);
+        REQUIRE(data.overlay_z == 3);
+    }
+
+    SECTION("LaneOverlayMode enum serializes as string") {
+        SeriesLaneOverrideData override_data;
+        override_data.overlay_mode = LaneOverlayMode::Separate;
+
+        auto json = rfl::json::write(override_data);
+
+        REQUIRE(json.find("\"Separate\"") != std::string::npos);
+    }
+}
+
+TEST_CASE("LaneOverrideData serialization", "[DataViewerStateData]") {
+    SECTION("Default values") {
+        LaneOverrideData const override_data;
+
+        auto json = rfl::json::write(override_data);
+        auto result = rfl::json::read<LaneOverrideData>(json);
+
+        REQUIRE(result);
+        auto const & data = result.value();
+        REQUIRE(data.display_label.empty());
+        REQUIRE_FALSE(data.lane_weight.has_value());
+    }
+
+    SECTION("Optional lane weight round-trip") {
+        LaneOverrideData override_data;
+        override_data.display_label = "L2: Motor";
+        override_data.lane_weight = 1.75f;
+
+        auto json = rfl::json::write(override_data);
+        auto result = rfl::json::read<LaneOverrideData>(json);
+
+        REQUIRE(result);
+        auto const & data = result.value();
+        REQUIRE(data.display_label == "L2: Motor");
+        REQUIRE(data.lane_weight.has_value());
+        REQUIRE(data.lane_weight.value_or(-1.0f) == Approx(1.75f));
     }
 }
 
@@ -502,6 +580,25 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         interval1.alpha() = 0.4f;
         state.interval_options["trial_markers"] = interval1;
 
+        // Add mixed-lane overrides
+        SeriesLaneOverrideData lane_override_1;
+        lane_override_1.lane_id = "lane_a";
+        lane_override_1.lane_order = 10;
+        lane_override_1.lane_weight = 1.2f;
+        lane_override_1.overlay_mode = LaneOverlayMode::Overlay;
+        lane_override_1.overlay_z = 1;
+        state.series_lane_overrides["channel_1"] = lane_override_1;
+
+        SeriesLaneOverrideData lane_override_2;
+        lane_override_2.lane_id = "lane_b";
+        lane_override_2.overlay_mode = LaneOverlayMode::Separate;
+        state.series_lane_overrides["spikes_1"] = lane_override_2;
+
+        LaneOverrideData lane_meta;
+        lane_meta.display_label = "Motor lane";
+        lane_meta.lane_weight = 2.0f;
+        state.lane_overrides["lane_a"] = lane_meta;
+
         // Serialize and deserialize
         auto json = rfl::json::write(state);
         auto result = rfl::json::read<DataViewerStateData>(json);
@@ -550,6 +647,21 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         REQUIRE(data.interval_options.size() == 1);
         REQUIRE(data.interval_options.at("trial_markers").hex_color() == "#00ff00");
         REQUIRE(data.interval_options.at("trial_markers").get_alpha() == Approx(0.4f));
+
+        // Verify mixed-lane overrides
+        REQUIRE(data.series_lane_overrides.size() == 2);
+        REQUIRE(data.series_lane_overrides.at("channel_1").lane_id == "lane_a");
+        REQUIRE(data.series_lane_overrides.at("channel_1").lane_order.has_value());
+        REQUIRE(data.series_lane_overrides.at("channel_1").lane_order == std::optional<int>{10});
+        REQUIRE(data.series_lane_overrides.at("channel_1").lane_weight == Approx(1.2f));
+        REQUIRE(data.series_lane_overrides.at("channel_1").overlay_mode == LaneOverlayMode::Overlay);
+        REQUIRE(data.series_lane_overrides.at("channel_1").overlay_z == 1);
+        REQUIRE(data.series_lane_overrides.at("spikes_1").overlay_mode == LaneOverlayMode::Separate);
+
+        REQUIRE(data.lane_overrides.size() == 1);
+        REQUIRE(data.lane_overrides.at("lane_a").display_label == "Motor lane");
+        REQUIRE(data.lane_overrides.at("lane_a").lane_weight.has_value());
+        REQUIRE(data.lane_overrides.at("lane_a").lane_weight.value_or(-1.0f) == Approx(2.0f));
     }
 
     SECTION("JSON structure validation") {
@@ -575,6 +687,10 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         REQUIRE(json.find("\"analog_options\":{") != std::string::npos);
         REQUIRE(json.find("\"test_series\":{") != std::string::npos);
 
+        // Verify mixed-lane maps are present in serialized schema
+        REQUIRE(json.find("\"series_lane_overrides\":{") != std::string::npos);
+        REQUIRE(json.find("\"lane_overrides\":{") != std::string::npos);
+
         // Verify rfl::Flatten produces flat structure within series options
         // (hex_color should NOT be nested under "style")
         REQUIRE(json.find("\"hex_color\":\"#123456\"") != std::string::npos);
@@ -595,6 +711,8 @@ TEST_CASE("DataViewerStateData edge cases", "[DataViewerStateData]") {
         REQUIRE(result.value().analog_options.empty());
         REQUIRE(result.value().event_options.empty());
         REQUIRE(result.value().interval_options.empty());
+        REQUIRE(result.value().series_lane_overrides.empty());
+        REQUIRE(result.value().lane_overrides.empty());
     }
 
     SECTION("Special characters in keys") {

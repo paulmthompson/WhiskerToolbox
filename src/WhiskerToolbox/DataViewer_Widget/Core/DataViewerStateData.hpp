@@ -59,6 +59,7 @@
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
 
 // ==================== Per-Series Display Options ====================
@@ -226,6 +227,38 @@ struct DataViewerLayoutConfig {
     float margin_factor = 0.8f;///< Fraction of allocated lane height used for data (0..1]
 };
 
+// ==================== Mixed-Lane Overrides ====================
+
+/**
+ * @brief Overlay behavior hint for mixed-lane rendering
+ */
+enum class LaneOverlayMode {
+    Auto,   ///< Let renderer/layout decide overlay behavior
+    Overlay,///< Force overlay behavior within the target lane
+    Separate///< Keep series visually separated even if lane is shared
+};
+
+/**
+ * @brief Per-series lane placement override
+ *
+ * An empty lane_id means the series falls back to legacy auto-lane behavior.
+ */
+struct SeriesLaneOverrideData {
+    std::string lane_id;                                 ///< Target lane identifier; empty means legacy auto lane
+    std::optional<int> lane_order = std::nullopt;        ///< Optional explicit lane ordering key
+    float lane_weight = 1.0f;                            ///< Relative lane height weight (> 0)
+    LaneOverlayMode overlay_mode = LaneOverlayMode::Auto;///< Overlay policy for this series
+    int overlay_z = 0;                                   ///< Z-order within an overlaid lane
+};
+
+/**
+ * @brief Lane-level metadata override keyed by lane_id
+ */
+struct LaneOverrideData {
+    std::string display_label;                      ///< Optional custom lane label
+    std::optional<float> lane_weight = std::nullopt;///< Optional lane-level weight override (> 0)
+};
+
 // ==================== Group Scaling State ====================
 
 /**
@@ -340,6 +373,12 @@ struct DataViewerStateData {
     std::map<std::string, AnalogSeriesOptionsData> analog_options;
     std::map<std::string, DigitalEventSeriesOptionsData> event_options;
     std::map<std::string, DigitalIntervalSeriesOptionsData> interval_options;
+
+    // === Mixed-Lane Placement Overrides ===
+    // series_lane_overrides: key is series key, value is per-series lane placement metadata.
+    // lane_overrides: key is lane_id, value is lane-level metadata and optional lane weight override.
+    std::map<std::string, SeriesLaneOverrideData> series_lane_overrides;
+    std::map<std::string, LaneOverrideData> lane_overrides;
 
     // === Group Scaling ===
     // Maps group name (e.g., "voltage") to scaling state.

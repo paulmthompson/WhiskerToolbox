@@ -71,6 +71,7 @@
 #include <QStringList>
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -514,6 +515,62 @@ public:
         return _data.group_scaling;
     }
 
+    // ==================== Mixed-Lane Overrides ====================
+
+    /**
+     * @brief Set or update a per-series lane placement override
+     * @param series_key Data key for the series
+     * @param override_data Lane placement override (normalized before storage)
+     */
+    void setSeriesLaneOverride(std::string const & series_key, SeriesLaneOverrideData const & override_data);
+
+    /**
+     * @brief Remove a per-series lane placement override
+     * @param series_key Data key for the series
+     */
+    void clearSeriesLaneOverride(std::string const & series_key);
+
+    /**
+     * @brief Get per-series lane placement override
+     * @param series_key Data key for the series
+     * @return Pointer to override data, or nullptr when unset
+     */
+    [[nodiscard]] SeriesLaneOverrideData const * getSeriesLaneOverride(std::string const & series_key) const;
+
+    /**
+     * @brief Get all per-series lane placement overrides
+     */
+    [[nodiscard]] std::map<std::string, SeriesLaneOverrideData> const & allSeriesLaneOverrides() const {
+        return _data.series_lane_overrides;
+    }
+
+    /**
+     * @brief Set or update lane-level metadata override
+     * @param lane_id Lane identifier
+     * @param override_data Lane-level metadata (normalized before storage)
+     */
+    void setLaneOverride(std::string const & lane_id, LaneOverrideData const & override_data);
+
+    /**
+     * @brief Remove lane-level metadata override
+     * @param lane_id Lane identifier
+     */
+    void clearLaneOverride(std::string const & lane_id);
+
+    /**
+     * @brief Get lane-level metadata override
+     * @param lane_id Lane identifier
+     * @return Pointer to lane override, or nullptr when unset
+     */
+    [[nodiscard]] LaneOverrideData const * getLaneOverride(std::string const & lane_id) const;
+
+    /**
+     * @brief Get all lane-level metadata overrides
+     */
+    [[nodiscard]] std::map<std::string, LaneOverrideData> const & allLaneOverrides() const {
+        return _data.lane_overrides;
+    }
+
     // ==================== Multi-Lane Axis ====================
 
     /**
@@ -583,6 +640,18 @@ signals:
      * @param group_name The group whose scaling changed
      */
     void groupScalingChanged(QString const & group_name);
+
+    /**
+     * @brief Emitted when a per-series lane override is changed or removed
+     * @param series_key Data key of the series whose override changed
+     */
+    void seriesLaneOverrideChanged(QString const & series_key);
+
+    /**
+     * @brief Emitted when a lane-level override is changed or removed
+     * @param lane_id Lane identifier whose override changed
+     */
+    void laneOverrideChanged(QString const & lane_id);
 
     // === Series Options Signals (Forwarded from Registry) ===
 

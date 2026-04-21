@@ -32,7 +32,7 @@ Out of scope for this first delivery:
 1. Analog channels are visible at sane global scale defaults in high-channel-count datasets.
 2. Mixed analog and digital-event datasets are readable without extreme tuning.
 3. Developers can define lane placement and overlay via serialized state.
-4. Existing workspaces load unchanged when no new layout overrides are present.
+4. Backward compatibility with legacy serialized JSON is not required for this implementation branch.
 5. Existing analog external sorter behavior remains intact as a fallback ordering source.
 
 ## High-Level Delivery Order
@@ -41,8 +41,9 @@ Out of scope for this first delivery:
 2. Phase 2: Mixed-lane data model and serialization
 3. Phase 3: Layout engine implementation for grouped and weighted lanes
 4. Phase 4: DataViewer wiring for ordering, rendering, and axis descriptors
-5. Phase 5: Compatibility and migration testing
-6. Phase 6: Documentation and handoff
+5. Phase 4b: Interactive lane drag-and-drop reordering
+6. Phase 5: Compatibility and migration testing
+7. Phase 6: Documentation and handoff
 
 ## Progress Update (2026-04-21)
 
@@ -57,11 +58,17 @@ Completed in Phase 1:
 Current status by phase:
 
 - Phase 1: completed
-- Phase 2: not started
-- Phase 3: not started
+- Phase 2: completed
+- Phase 3: completed
 - Phase 4: not started
+- Phase 4b: not started
 - Phase 5: not started
 - Phase 6: in progress (roadmap/doc updates)
+
+Branch decision for this implementation:
+
+- Legacy JSON backward compatibility is intentionally not maintained.
+- The state schema now prioritizes the mixed-lane model directly.
 
 ---
 
@@ -130,10 +137,10 @@ Optional lane-level map keyed by lane_id:
 
 ### Tasks
 
-- [ ] Add new serializable structs and fields in DataViewer state data.
-- [ ] Add state API methods for set, clear, and query of lane overrides.
-- [ ] Add validation for invalid or conflicting override values.
-- [ ] Add roundtrip tests for new schema.
+- [x] Add new serializable structs and fields in DataViewer state data.
+- [x] Add state API methods for set, clear, and query of lane overrides.
+- [x] Add validation for invalid or conflicting override values.
+- [x] Add roundtrip tests for new schema.
 
 ### Primary Files
 
@@ -144,9 +151,9 @@ Optional lane-level map keyed by lane_id:
 
 ### Acceptance Criteria
 
-- [ ] New fields serialize and deserialize correctly.
-- [ ] Legacy saved state loads unchanged.
-- [ ] Invalid override input is rejected or normalized deterministically.
+- [x] New fields serialize and deserialize correctly.
+- [x] Legacy saved state loads unchanged. (intentionally not required in this implementation)
+- [x] Invalid override input is rejected or normalized deterministically.
 
 ---
 
@@ -165,10 +172,10 @@ Allow multiple series to share one lane transform and support lane-height weight
 
 ### Tasks
 
-- [ ] Extend layout request series metadata with lane assignment fields.
-- [ ] Implement grouped-lane allocation in stacked layout strategy.
-- [ ] Preserve visibility and culling behavior for grouped lanes.
-- [ ] Add CorePlotting layout tests for overlay lanes and weighted lanes.
+- [x] Extend layout request series metadata with lane assignment fields.
+- [x] Implement grouped-lane allocation in stacked layout strategy.
+- [x] Preserve visibility and culling behavior for grouped lanes.
+- [x] Add CorePlotting layout tests for overlay lanes and weighted lanes.
 
 ### Primary Files
 
@@ -179,9 +186,9 @@ Allow multiple series to share one lane transform and support lane-height weight
 
 ### Acceptance Criteria
 
-- [ ] Equal weights reproduce current lane sizing behavior.
-- [ ] Weighted lanes produce expected relative heights.
-- [ ] Shared lanes map all assigned series to same vertical band.
+- [x] Equal weights reproduce current lane sizing behavior.
+- [x] Weighted lanes produce expected relative heights.
+- [x] Shared lanes map all assigned series to same vertical band.
 
 ---
 
@@ -220,6 +227,75 @@ Ordering precedence:
 - [ ] Developers can intersperse analog and event lanes through state overrides.
 - [ ] Developers can assign multiple analog/event series to a single lane.
 - [ ] Axis labels remain stable and meaningful for overlays.
+
+---
+
+## Phase 4b: Interactive Lane Drag-and-Drop Reordering
+
+### Goal
+
+Allow users to click-drag a lane on the vertical axis and drop it between other lanes, with deterministic persistence through lane override state.
+
+### Why this fits after Phase 4
+
+- Phase 4 establishes lane identity and ordering in DataViewer request construction.
+- Drag-and-drop should mutate the same source of truth (`series_lane_overrides` / `lane_overrides`) rather than introducing a parallel ordering path.
+
+### UX Model (first release)
+
+- Drag handle surface: `MultiLaneVerticalAxisWidget` lane label area.
+- Start drag: left-click press within a visible lane hit region.
+- During drag: show insertion marker between target lanes and ghost highlight on dragged lane.
+- Drop: commit a new lane ordering by updating lane-level order, then recompute layout.
+- Cancel: Escape key or mouse release outside valid target keeps existing order.
+
+### Data/State Model Requirements
+
+1. Add stable lane identity to axis descriptors:
+	- Extend `LaneAxisDescriptor` with `lane_id` (stable key used by overrides).
+	- Keep `label` as display-only.
+
+2. Add optional lane order at lane-level state:
+	- Introduce lane-level order field in lane metadata (recommended: `lane_order` in `LaneOverrideData`).
+	- Keep per-series `lane_order` for explicit series-level overrides; lane-level order is preferred for drag/drop lane moves.
+
+3. Ordering precedence update:
+	1. explicit lane-level order (interactive drag/drop result)
+	2. explicit per-series order override
+	3. analog spike-sorter fallback (analog-only/no explicit overrides)
+	4. legacy type-based fallback
+
+### Implementation Tasks
+
+- [ ] Extend axis descriptor payload with stable lane identity and any needed drag metadata.
+- [ ] Add mouse interaction handling to `MultiLaneVerticalAxisWidget` (`mousePressEvent`, `mouseMoveEvent`, `mouseReleaseEvent`, optional `keyPressEvent` for Escape).
+- [ ] Add hit-testing helpers in axis widget to map pixel Y to lane index and insertion slot.
+- [ ] Add a lane reorder callback/signal from axis widget to DataViewer (e.g., `laneReorderRequested(source_lane_id, target_slot)`).
+- [ ] In `DataViewer_Widget`, translate reorder requests into deterministic `DataViewerState` override updates.
+- [ ] Ensure OpenGL layout refresh is triggered from override changes (signal wiring for `seriesLaneOverrideChanged` / `laneOverrideChanged`).
+- [ ] Add rendering affordances in axis widget for drag preview and insertion marker.
+- [ ] Add tests for drag reorder behavior, state persistence, and mixed analog/event interspersing outcomes.
+
+### Primary Files
+
+- src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisStateData.hpp
+- src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/MultiLaneVerticalAxisWidget.hpp
+- src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/MultiLaneVerticalAxisWidget.cpp
+- src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp
+- src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp
+- src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.hpp
+- src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp
+- src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.cpp
+- src/CorePlotting/Layout/StackedLayoutStrategy.cpp
+- src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp
+
+### Acceptance Criteria
+
+- [ ] User can drag a visible lane and drop it between two lanes using the Y-axis widget.
+- [ ] Reorder result persists in `DataViewerState` and survives serialization roundtrip.
+- [ ] Mixed analog/event lanes can be interspersed interactively without manual JSON edits.
+- [ ] Reordering a shared overlay lane moves the lane as a unit (all member series remain grouped).
+- [ ] Full-canvas event/interval behavior remains unchanged.
 
 ---
 
@@ -294,6 +370,7 @@ This ordering minimizes integration risk and keeps each review set focused.
 1. Event vertical sizing source of truth: event_height, line_thickness, or explicit combined model.
 2. Overlay lane label policy: primary analog label only versus composite lane labels.
 3. Validation strategy for conflicting lane_order values: strict reject versus deterministic tie-break.
+4. Lane drag-drop order authority: lane-level `lane_order` only, or synchronized lane-level + per-series order fields.
 
 ## Definition of Done
 

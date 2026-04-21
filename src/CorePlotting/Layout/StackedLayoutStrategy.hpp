@@ -35,25 +35,6 @@ public:
 
 private:
     /**
-     * @brief Calculate layout for stackable series
-     * 
-     * Stackable series divide the viewport height equally among themselves.
-     * 
-     * @param series_info Series metadata
-     * @param series_index Global index in series list
-     * @param stackable_index Index among stackable series only
-     * @param total_stackable Total number of stackable series
-     * @param request Layout parameters
-     * @return Computed layout for this series
-     */
-    [[nodiscard]] static SeriesLayout computeStackableLayout(
-            SeriesInfo const & series_info,
-            int series_index,
-            int stackable_index,
-            int total_stackable,
-            LayoutRequest const & request);
-
-    /**
      * @brief Calculate layout for full-canvas series
      * 
      * Full-canvas series span the entire viewport height for maximum visibility.

@@ -19,7 +19,7 @@
 
 TEST_CASE("DataViewerState construction", "[DataViewerState]") {
     SECTION("default construction creates valid state") {
-        DataViewerState state;
+        DataViewerState const state;
 
         REQUIRE(state.getTypeName() == "DataViewerWidget");
         REQUIRE(state.getDisplayName() == "Data Viewer");
@@ -28,8 +28,8 @@ TEST_CASE("DataViewerState construction", "[DataViewerState]") {
     }
 
     SECTION("instance IDs are unique") {
-        DataViewerState state1;
-        DataViewerState state2;
+        DataViewerState const state1;
+        DataViewerState const state2;
 
         REQUIRE(state1.getInstanceId() != state2.getInstanceId());
     }
@@ -64,7 +64,7 @@ TEST_CASE("DataViewerState display name", "[DataViewerState]") {
 
     SECTION("setting same name does not emit signal") {
         state.setDisplayName("Test");
-        QSignalSpy spy(&state, &DataViewerState::displayNameChanged);
+        QSignalSpy const spy(&state, &DataViewerState::displayNameChanged);
 
         state.setDisplayName("Test");
 
@@ -86,7 +86,7 @@ TEST_CASE("DataViewerState view state", "[DataViewerState]") {
     }
 
     SECTION("setTimeWindow emits viewStateChanged") {
-        QSignalSpy spy(&state, &DataViewerState::viewStateChanged);
+        QSignalSpy const spy(&state, &DataViewerState::viewStateChanged);
 
         state.setTimeWindow(0, 10000);
 
@@ -127,7 +127,7 @@ TEST_CASE("DataViewerState view state", "[DataViewerState]") {
 
     SECTION("setting same values does not emit signal") {
         state.setTimeWindow(0, 1000);
-        QSignalSpy spy(&state, &DataViewerState::viewStateChanged);
+        QSignalSpy const spy(&state, &DataViewerState::viewStateChanged);
 
         state.setTimeWindow(0, 1000);
 
@@ -146,7 +146,7 @@ TEST_CASE("DataViewerState theme", "[DataViewerState]") {
     }
 
     SECTION("setTheme emits themeChanged") {
-        QSignalSpy spy(&state, &DataViewerState::themeChanged);
+        QSignalSpy const spy(&state, &DataViewerState::themeChanged);
 
         state.setTheme(DataViewerTheme::Light);
 
@@ -190,7 +190,7 @@ TEST_CASE("DataViewerState grid", "[DataViewerState]") {
     }
 
     SECTION("setGridEnabled emits gridChanged") {
-        QSignalSpy spy(&state, &DataViewerState::gridChanged);
+        QSignalSpy const spy(&state, &DataViewerState::gridChanged);
 
         state.setGridEnabled(true);
 
@@ -225,7 +225,7 @@ TEST_CASE("DataViewerState UI preferences", "[DataViewerState]") {
     }
 
     SECTION("setZoomScalingMode emits uiPreferencesChanged") {
-        QSignalSpy spy(&state, &DataViewerState::uiPreferencesChanged);
+        QSignalSpy const spy(&state, &DataViewerState::uiPreferencesChanged);
 
         state.setZoomScalingMode(DataViewerZoomScalingMode::Fixed);
 
@@ -276,7 +276,7 @@ TEST_CASE("DataViewerState interaction", "[DataViewerState]") {
 
     SECTION("setting same mode does not emit signal") {
         state.setInteractionMode(DataViewerInteractionMode::Normal);
-        QSignalSpy spy(&state, &DataViewerState::interactionModeChanged);
+        QSignalSpy const spy(&state, &DataViewerState::interactionModeChanged);
 
         state.setInteractionMode(DataViewerInteractionMode::Normal);
 
@@ -301,9 +301,9 @@ TEST_CASE("DataViewerState registry integration", "[DataViewerState]") {
     }
 
     SECTION("registry changes emit state signals") {
-        QSignalSpy spy(&state, &DataViewerState::seriesOptionsChanged);
+        QSignalSpy const spy(&state, &DataViewerState::seriesOptionsChanged);
 
-        AnalogSeriesOptionsData opts;
+        AnalogSeriesOptionsData const opts;
         state.seriesOptions().set("channel_1", opts);
 
         REQUIRE(spy.count() == 1);
@@ -314,17 +314,17 @@ TEST_CASE("DataViewerState registry integration", "[DataViewerState]") {
     SECTION("registry changes mark state dirty") {
         state.markClean();
 
-        AnalogSeriesOptionsData opts;
+        AnalogSeriesOptionsData const opts;
         state.seriesOptions().set("channel_1", opts);
 
         REQUIRE(state.isDirty());
     }
 
     SECTION("registry remove emits seriesOptionsRemoved") {
-        AnalogSeriesOptionsData opts;
+        AnalogSeriesOptionsData const opts;
         state.seriesOptions().set("channel_1", opts);
 
-        QSignalSpy spy(&state, &DataViewerState::seriesOptionsRemoved);
+        QSignalSpy const spy(&state, &DataViewerState::seriesOptionsRemoved);
         state.seriesOptions().remove<AnalogSeriesOptionsData>("channel_1");
 
         REQUIRE(spy.count() == 1);
@@ -336,7 +336,7 @@ TEST_CASE("DataViewerState registry integration", "[DataViewerState]") {
         opts.is_visible() = true;
         state.seriesOptions().set("channel_1", opts);
 
-        QSignalSpy spy(&state, &DataViewerState::seriesVisibilityChanged);
+        QSignalSpy const spy(&state, &DataViewerState::seriesVisibilityChanged);
         state.seriesOptions().setVisible("channel_1", "analog", false);
 
         REQUIRE(spy.count() == 1);
@@ -375,7 +375,7 @@ TEST_CASE("DataViewerState serialization", "[DataViewerState]") {
         original.seriesOptions().set("events_1", event_opts);
 
         // Serialize
-        std::string json = original.toJson();
+        std::string const json = original.toJson();
         REQUIRE_FALSE(json.empty());
 
         // Deserialize into new state
@@ -419,12 +419,12 @@ TEST_CASE("DataViewerState serialization", "[DataViewerState]") {
         DataViewerState original;
         original.setTimeWindow(100, 5000);
         original.setTheme(DataViewerTheme::Light);
-        std::string json = original.toJson();
+        std::string const json = original.toJson();
 
         DataViewerState restored;
-        QSignalSpy state_spy(&restored, &DataViewerState::stateChanged);
-        QSignalSpy view_spy(&restored, &DataViewerState::viewStateChanged);
-        QSignalSpy theme_spy(&restored, &DataViewerState::themeChanged);
+        QSignalSpy const state_spy(&restored, &DataViewerState::stateChanged);
+        QSignalSpy const view_spy(&restored, &DataViewerState::viewStateChanged);
+        QSignalSpy const theme_spy(&restored, &DataViewerState::themeChanged);
 
         REQUIRE(restored.fromJson(json));
 
@@ -455,5 +455,141 @@ TEST_CASE("DataViewerState direct data access", "[DataViewerState]") {
         auto const & data = state.data();
         REQUIRE(data.analog_options.contains("ch1"));
         REQUIRE(data.analog_options.at("ch1").hex_color() == "#ff0000");
+    }
+}
+
+// ==================== Mixed-Lane Override API Tests ====================
+
+TEST_CASE("DataViewerState mixed-lane override API", "[DataViewerState]") {
+    DataViewerState state;
+
+    SECTION("set/get series lane override") {
+        SeriesLaneOverrideData override_data;
+        override_data.lane_id = "lane_a";
+        override_data.lane_order = 5;
+        override_data.lane_weight = 1.5f;
+        override_data.overlay_mode = LaneOverlayMode::Overlay;
+        override_data.overlay_z = 2;
+
+        state.setSeriesLaneOverride("channel_1", override_data);
+
+        auto const * restored = state.getSeriesLaneOverride("channel_1");
+        REQUIRE(restored != nullptr);
+        REQUIRE(restored->lane_id == "lane_a");
+        REQUIRE(restored->lane_order.has_value());
+        REQUIRE(restored->lane_order == std::optional<int>{5});
+        REQUIRE_THAT(restored->lane_weight, Catch::Matchers::WithinAbs(1.5f, 1e-6f));
+        REQUIRE(restored->overlay_mode == LaneOverlayMode::Overlay);
+        REQUIRE(restored->overlay_z == 2);
+    }
+
+    SECTION("clear series lane override") {
+        SeriesLaneOverrideData override_data;
+        override_data.lane_id = "lane_a";
+        state.setSeriesLaneOverride("channel_1", override_data);
+        REQUIRE(state.getSeriesLaneOverride("channel_1") != nullptr);
+
+        state.clearSeriesLaneOverride("channel_1");
+        REQUIRE(state.getSeriesLaneOverride("channel_1") == nullptr);
+    }
+
+    SECTION("invalid series lane values are normalized") {
+        SeriesLaneOverrideData override_data;
+        override_data.lane_id = "lane_a";
+        override_data.lane_weight = -3.0f;
+
+        state.setSeriesLaneOverride("channel_1", override_data);
+
+        auto const * restored = state.getSeriesLaneOverride("channel_1");
+        REQUIRE(restored != nullptr);
+        REQUIRE_THAT(restored->lane_weight, Catch::Matchers::WithinAbs(1.0f, 1e-6f));
+    }
+
+    SECTION("empty lane id clears override") {
+        SeriesLaneOverrideData override_data;
+        override_data.lane_id = "lane_a";
+        state.setSeriesLaneOverride("channel_1", override_data);
+        REQUIRE(state.getSeriesLaneOverride("channel_1") != nullptr);
+
+        SeriesLaneOverrideData clear_value;
+        clear_value.lane_id = "";
+        state.setSeriesLaneOverride("channel_1", clear_value);
+
+        REQUIRE(state.getSeriesLaneOverride("channel_1") == nullptr);
+    }
+
+    SECTION("conflicting lane_order values are resolved deterministically") {
+        SeriesLaneOverrideData a;
+        a.lane_id = "lane_a";
+        a.lane_order = 10;
+
+        SeriesLaneOverrideData b;
+        b.lane_id = "lane_b";
+        b.lane_order = 10;
+
+        state.setSeriesLaneOverride("alpha", a);
+        state.setSeriesLaneOverride("beta", b);
+
+        auto const * alpha = state.getSeriesLaneOverride("alpha");
+        auto const * beta = state.getSeriesLaneOverride("beta");
+        REQUIRE(alpha != nullptr);
+        REQUIRE(beta != nullptr);
+        REQUIRE(alpha->lane_order.has_value());
+        REQUIRE(beta->lane_order.has_value());
+        REQUIRE(alpha->lane_order != beta->lane_order);
+    }
+
+    SECTION("set/get lane override") {
+        LaneOverrideData lane;
+        lane.display_label = "Motor";
+        lane.lane_weight = 2.5f;
+
+        state.setLaneOverride("lane_a", lane);
+
+        auto const * restored = state.getLaneOverride("lane_a");
+        REQUIRE(restored != nullptr);
+        REQUIRE(restored->display_label == "Motor");
+        REQUIRE(restored->lane_weight.has_value());
+        REQUIRE_THAT(restored->lane_weight.value_or(-1.0f), Catch::Matchers::WithinAbs(2.5f, 1e-6f));
+    }
+
+    SECTION("invalid lane weight override is normalized") {
+        LaneOverrideData lane;
+        lane.display_label = "Motor";
+        lane.lane_weight = -1.0f;
+
+        state.setLaneOverride("lane_a", lane);
+
+        auto const * restored = state.getLaneOverride("lane_a");
+        REQUIRE(restored != nullptr);
+        REQUIRE_FALSE(restored->lane_weight.has_value());
+    }
+
+    SECTION("clear lane override") {
+        LaneOverrideData lane;
+        lane.display_label = "Motor";
+        state.setLaneOverride("lane_a", lane);
+        REQUIRE(state.getLaneOverride("lane_a") != nullptr);
+
+        state.clearLaneOverride("lane_a");
+        REQUIRE(state.getLaneOverride("lane_a") == nullptr);
+    }
+
+    SECTION("lane override signals are emitted") {
+        QSignalSpy series_spy(&state, &DataViewerState::seriesLaneOverrideChanged);
+        QSignalSpy lane_spy(&state, &DataViewerState::laneOverrideChanged);
+
+        SeriesLaneOverrideData series_override;
+        series_override.lane_id = "lane_a";
+        state.setSeriesLaneOverride("channel_1", series_override);
+
+        LaneOverrideData lane_override;
+        lane_override.display_label = "Lane A";
+        state.setLaneOverride("lane_a", lane_override);
+
+        REQUIRE(series_spy.count() == 1);
+        REQUIRE(series_spy.takeFirst().at(0).toString() == "channel_1");
+        REQUIRE(lane_spy.count() == 1);
+        REQUIRE(lane_spy.takeFirst().at(0).toString() == "lane_a");
     }
 }

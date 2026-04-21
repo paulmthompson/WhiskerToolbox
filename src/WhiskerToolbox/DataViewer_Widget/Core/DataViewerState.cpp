@@ -2,7 +2,91 @@
 
 #include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisState.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <set>
+
+namespace {
+
+[[nodiscard]] bool isNearlyEqual(float a, float b, float epsilon = 1e-6F) {
+    return std::abs(a - b) <= epsilon;
+}
+
+[[nodiscard]] SeriesLaneOverrideData normalizeSeriesLaneOverride(SeriesLaneOverrideData value) {
+    if (!std::isfinite(value.lane_weight) || value.lane_weight <= 0.0F) {
+        value.lane_weight = 1.0F;
+    }
+
+    if (value.lane_id.empty()) {
+        value.lane_order = std::nullopt;
+        value.lane_weight = 1.0F;
+        value.overlay_mode = LaneOverlayMode::Auto;
+        value.overlay_z = 0;
+    }
+
+    return value;
+}
+
+[[nodiscard]] bool isDefaultSeriesLaneOverride(SeriesLaneOverrideData const & value) {
+    return value.lane_id.empty() &&
+           !value.lane_order.has_value() &&
+           isNearlyEqual(value.lane_weight, 1.0F) &&
+           value.overlay_mode == LaneOverlayMode::Auto &&
+           value.overlay_z == 0;
+}
+
+[[nodiscard]] LaneOverrideData normalizeLaneOverride(LaneOverrideData value) {
+    if (value.lane_weight.has_value()) {
+        float const candidate = *value.lane_weight;
+        if (!std::isfinite(candidate) || candidate <= 0.0F) {
+            value.lane_weight = std::nullopt;
+        }
+    }
+    return value;
+}
+
+[[nodiscard]] bool isDefaultLaneOverride(LaneOverrideData const & value) {
+    return value.display_label.empty() && !value.lane_weight.has_value();
+}
+
+void normalizeAllLaneOverrides(DataViewerStateData & data) {
+    std::map<std::string, SeriesLaneOverrideData> normalized_series;
+    for (auto const & [series_key, override_data]: data.series_lane_overrides) {
+        auto normalized = normalizeSeriesLaneOverride(override_data);
+        if (!isDefaultSeriesLaneOverride(normalized)) {
+            normalized_series[series_key] = normalized;
+        }
+    }
+
+    // Resolve conflicting lane_order values deterministically by series key ordering.
+    std::set<int> used_lane_orders;
+    for (auto & [_, override_data]: normalized_series) {
+        if (!override_data.lane_order.has_value()) {
+            continue;
+        }
+        int lane_order = *override_data.lane_order;
+        while (used_lane_orders.contains(lane_order)) {
+            ++lane_order;
+        }
+        override_data.lane_order = lane_order;
+        used_lane_orders.insert(lane_order);
+    }
+    data.series_lane_overrides = std::move(normalized_series);
+
+    std::map<std::string, LaneOverrideData> normalized_lanes;
+    for (auto const & [lane_id, override_data]: data.lane_overrides) {
+        if (lane_id.empty()) {
+            continue;
+        }
+        auto normalized = normalizeLaneOverride(override_data);
+        if (!isDefaultLaneOverride(normalized)) {
+            normalized_lanes[lane_id] = normalized;
+        }
+    }
+    data.lane_overrides = std::move(normalized_lanes);
+}
+
+}// namespace
 
 DataViewerState::DataViewerState(QObject * parent)
     : EditorState(parent) {
@@ -59,6 +143,7 @@ std::string DataViewerState::toJson() const {
     // Include instance_id in serialization for restoration
     DataViewerStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();
+    normalizeAllLaneOverrides(data_to_serialize);
     return rfl::json::write(data_to_serialize);
 }
 
@@ -66,6 +151,7 @@ bool DataViewerState::fromJson(std::string const & json) {
     auto result = rfl::json::read<DataViewerStateData>(json);
     if (result) {
         _data = *result;
+        normalizeAllLaneOverrides(_data);
 
         // Restore instance ID from serialized data
         if (!_data.instance_id.empty()) {
@@ -358,6 +444,104 @@ void DataViewerState::removeGroupScaling(std::string const & group_name) {
         emit groupScalingChanged(QString::fromStdString(group_name));
         emit stateChanged();
     }
+}
+
+// ==================== Mixed-Lane Overrides ====================
+
+void DataViewerState::setSeriesLaneOverride(std::string const & series_key, SeriesLaneOverrideData const & override_data) {
+    auto normalized = normalizeSeriesLaneOverride(override_data);
+
+    bool changed = false;
+    if (isDefaultSeriesLaneOverride(normalized)) {
+        auto it = _data.series_lane_overrides.find(series_key);
+        if (it != _data.series_lane_overrides.end()) {
+            _data.series_lane_overrides.erase(it);
+            changed = true;
+        }
+    } else {
+        auto it = _data.series_lane_overrides.find(series_key);
+        if (it == _data.series_lane_overrides.end() || it->second.lane_id != normalized.lane_id ||
+            it->second.lane_order != normalized.lane_order ||
+            !isNearlyEqual(it->second.lane_weight, normalized.lane_weight) ||
+            it->second.overlay_mode != normalized.overlay_mode ||
+            it->second.overlay_z != normalized.overlay_z) {
+            _data.series_lane_overrides[series_key] = normalized;
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        normalizeAllLaneOverrides(_data);
+        markDirty();
+        emit seriesLaneOverrideChanged(QString::fromStdString(series_key));
+        emit stateChanged();
+    }
+}
+
+void DataViewerState::clearSeriesLaneOverride(std::string const & series_key) {
+    auto it = _data.series_lane_overrides.find(series_key);
+    if (it != _data.series_lane_overrides.end()) {
+        _data.series_lane_overrides.erase(it);
+        markDirty();
+        emit seriesLaneOverrideChanged(QString::fromStdString(series_key));
+        emit stateChanged();
+    }
+}
+
+SeriesLaneOverrideData const * DataViewerState::getSeriesLaneOverride(std::string const & series_key) const {
+    auto it = _data.series_lane_overrides.find(series_key);
+    if (it != _data.series_lane_overrides.end()) {
+        return &it->second;
+    }
+    return nullptr;
+}
+
+void DataViewerState::setLaneOverride(std::string const & lane_id, LaneOverrideData const & override_data) {
+    if (lane_id.empty()) {
+        return;
+    }
+
+    auto normalized = normalizeLaneOverride(override_data);
+    bool changed = false;
+    if (isDefaultLaneOverride(normalized)) {
+        auto it = _data.lane_overrides.find(lane_id);
+        if (it != _data.lane_overrides.end()) {
+            _data.lane_overrides.erase(it);
+            changed = true;
+        }
+    } else {
+        auto it = _data.lane_overrides.find(lane_id);
+        if (it == _data.lane_overrides.end() ||
+            it->second.display_label != normalized.display_label ||
+            it->second.lane_weight != normalized.lane_weight) {
+            _data.lane_overrides[lane_id] = normalized;
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        markDirty();
+        emit laneOverrideChanged(QString::fromStdString(lane_id));
+        emit stateChanged();
+    }
+}
+
+void DataViewerState::clearLaneOverride(std::string const & lane_id) {
+    auto it = _data.lane_overrides.find(lane_id);
+    if (it != _data.lane_overrides.end()) {
+        _data.lane_overrides.erase(it);
+        markDirty();
+        emit laneOverrideChanged(QString::fromStdString(lane_id));
+        emit stateChanged();
+    }
+}
+
+LaneOverrideData const * DataViewerState::getLaneOverride(std::string const & lane_id) const {
+    auto it = _data.lane_overrides.find(lane_id);
+    if (it != _data.lane_overrides.end()) {
+        return &it->second;
+    }
+    return nullptr;
 }
 
 // ==================== Multi-Lane Axis ====================

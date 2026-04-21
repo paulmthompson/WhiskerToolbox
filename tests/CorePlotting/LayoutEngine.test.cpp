@@ -187,6 +187,84 @@ TEST_CASE("StackedLayoutStrategy - Mixed stackable and full-canvas series", "[Co
     }
 }
 
+TEST_CASE("StackedLayoutStrategy - Shared lane groups reuse one transform", "[CorePlotting][Layout]") {
+    LayoutRequest request;
+    request.series = {
+            {"analog1", SeriesType::Analog, true, "lane_shared", 1.0f},
+            {"event1", SeriesType::DigitalEvent, true, "lane_shared", 1.0f},
+            {"analog2", SeriesType::Analog, true, "lane_other", 1.0f}};
+    request.viewport_y_min = -1.0f;
+    request.viewport_y_max = 1.0f;
+
+    StackedLayoutStrategy const strategy;
+    LayoutResponse response = strategy.compute(request);
+
+    REQUIRE(response.layouts.size() == 3);
+
+    auto const & analog1 = response.layouts[0];
+    auto const & event1 = response.layouts[1];
+    auto const & analog2 = response.layouts[2];
+
+    // Two lanes total: each gets half of viewport height.
+    REQUIRE_THAT(getAllocatedHeight(analog1),
+                 Catch::Matchers::WithinAbs(1.0f, 0.001f));
+    REQUIRE_THAT(getAllocatedHeight(analog2),
+                 Catch::Matchers::WithinAbs(1.0f, 0.001f));
+
+    // Shared lane members must reuse the same transform.
+    REQUIRE_THAT(getAllocatedHeight(analog1),
+                 Catch::Matchers::WithinAbs(getAllocatedHeight(event1), 0.001f));
+    REQUIRE_THAT(getAllocatedYCenter(analog1),
+                 Catch::Matchers::WithinAbs(getAllocatedYCenter(event1), 0.001f));
+
+    // Different lane gets a different center.
+    REQUIRE_FALSE(getAllocatedYCenter(analog1) == getAllocatedYCenter(analog2));
+}
+
+TEST_CASE("StackedLayoutStrategy - Weighted lanes allocate proportional heights", "[CorePlotting][Layout]") {
+    LayoutRequest request;
+    request.series = {
+            {"analog1", SeriesType::Analog, true, "lane_heavy", 2.0f},
+            {"event1", SeriesType::DigitalEvent, true, "lane_light", 1.0f}};
+    request.viewport_y_min = -1.0f;
+    request.viewport_y_max = 1.0f;
+
+    StackedLayoutStrategy const strategy;
+    LayoutResponse response = strategy.compute(request);
+
+    REQUIRE(response.layouts.size() == 2);
+
+    float const total_height = request.viewport_y_max - request.viewport_y_min;
+    float const heavy_expected = total_height * (2.0f / 3.0f);
+    float const light_expected = total_height * (1.0f / 3.0f);
+
+    REQUIRE_THAT(getAllocatedHeight(response.layouts[0]),
+                 Catch::Matchers::WithinAbs(heavy_expected, 0.001f));
+    REQUIRE_THAT(getAllocatedHeight(response.layouts[1]),
+                 Catch::Matchers::WithinAbs(light_expected, 0.001f));
+}
+
+TEST_CASE("StackedLayoutStrategy - Shared lane visibility stays consistent", "[CorePlotting][Layout][Culling]") {
+    LayoutRequest request;
+    request.series = {
+            {"analog1", SeriesType::Analog, true, "lane_shared", 1.0f},
+            {"event1", SeriesType::DigitalEvent, true, "lane_shared", 1.0f},
+            {"analog2", SeriesType::Analog, true, "lane_other", 1.0f}};
+    request.viewport_y_min = -1.0f;
+    request.viewport_y_max = 1.0f;
+
+    StackedLayoutStrategy const strategy;
+    LayoutResponse response = strategy.compute(request);
+
+    auto const shared_center = getAllocatedYCenter(response.layouts[0]);
+    auto const half_height = getAllocatedHeight(response.layouts[0]) * 0.5f;
+    float const y_min = shared_center - half_height + 0.01f;
+    float const y_max = shared_center + half_height - 0.01f;
+
+    REQUIRE(response.isSeriesVisible("analog1", y_min, y_max));
+    REQUIRE(response.isSeriesVisible("event1", y_min, y_max));
+}
+
 TEST_CASE("StackedLayoutStrategy - Empty request", "[CorePlotting][Layout]") {
     LayoutRequest request;
     request.viewport_y_min = -1.0f;

@@ -144,6 +144,21 @@ Three signals cover all change types: `optionsChanged`, `optionsRemoved`, `visib
   "view": { "time_start": 0, "time_end": 10000, "global_y_scale": 1.5 },
   "theme": { "theme": "Dark", "background_color": "#000000" },
   "grid": { "enabled": false, "spacing": 100 },
+  "series_lane_overrides": {
+    "channel_1": {
+      "lane_id": "lane_a",
+      "lane_order": 10,
+      "lane_weight": 1.2,
+      "overlay_mode": "Overlay",
+      "overlay_z": 1
+    }
+  },
+  "lane_overrides": {
+    "lane_a": {
+      "display_label": "Motor lane",
+      "lane_weight": 2.0
+    }
+  },
   "analog_options": {
     "channel_1": { "hex_color": "#0000ff", "is_visible": true, "user_scale_factor": 1.0 }
   }
@@ -151,6 +166,12 @@ Three signals cover all change types: `optionsChanged`, `optionsRemoved`, `visib
 ```
 
 All enums serialize as human-readable strings. Style fields use `rfl::Flatten` for a flat JSON structure.
+
+Mixed-lane override validation is normalized in `DataViewerState` before persistence:
+
+- Non-positive or non-finite `lane_weight` values normalize to defaults.
+- Duplicate `lane_order` values are resolved deterministically.
+- Empty `lane_id` overrides are treated as legacy auto-lane behavior and removed.
 
 # Rendering Pipeline
 
