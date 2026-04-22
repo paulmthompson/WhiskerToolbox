@@ -111,6 +111,7 @@ target_link_libraries(DataViewer_Widget PRIVATE CorePlotting)
 target_link_libraries(DataViewer_Widget PRIVATE MultiLaneVerticalAxisWidget)
 target_link_libraries(DataViewer_Widget PRIVATE PlottingSVG)
 target_link_libraries(DataViewer_Widget PRIVATE CoreUtilities)
+target_link_libraries(DataViewer_Widget PRIVATE spdlog::spdlog_header_only)
 
 target_link_libraries(DataViewer_Widget PRIVATE WhiskerToolbox::StateManagement)
 
