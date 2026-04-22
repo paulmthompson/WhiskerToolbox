@@ -8,8 +8,9 @@
 
 #include <QWidget>
 #include <QString>
-#include "IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
 
+
+struct BinaryAnalogLoaderOptions;
 namespace Ui {
 class BinaryAnalogImport_Widget;
 }
@@ -37,7 +38,7 @@ signals:
      * @brief Emitted when user requests to load analog data from binary file
      * @param options The configured loader options
      */
-    void loadBinaryAnalogRequested(BinaryAnalogLoaderOptions options);
+    void loadBinaryAnalogRequested(BinaryAnalogLoaderOptions const & options);
 
 private slots:
     void _onBrowseButtonClicked();

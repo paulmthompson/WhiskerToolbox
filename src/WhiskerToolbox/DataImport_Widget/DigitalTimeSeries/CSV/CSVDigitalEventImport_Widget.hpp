@@ -6,11 +6,9 @@
  * @brief Widget for configuring CSV digital event data import options
  */
 
-#include "IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
-
 #include <QWidget>
-#include <QString>
 
+struct CSVEventLoaderOptions;
 namespace Ui {
 class CSVDigitalEventImport_Widget;
 }
@@ -36,7 +34,7 @@ signals:
      * @brief Emitted when user requests to load CSV event data
      * @param options Configured loader options
      */
-    void loadCSVEventRequested(CSVEventLoaderOptions options);
+    void loadCSVEventRequested(CSVEventLoaderOptions & options);
 
 private slots:
     void _onBrowseButtonClicked();

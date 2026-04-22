@@ -12,7 +12,6 @@
 #include <QWidget>
 
 #include <memory>
-#include <string>
 #include <vector>
 
 class DataManager;
@@ -61,7 +60,7 @@ private:
 
 private slots:
     void _onLoaderTypeChanged(int index);
-    void _handleLoadCSVEventRequested(CSVEventLoaderOptions options);
+    void _handleLoadCSVEventRequested(CSVEventLoaderOptions & options);
 };
 
 #endif // DIGITAL_EVENT_IMPORT_WIDGET_HPP

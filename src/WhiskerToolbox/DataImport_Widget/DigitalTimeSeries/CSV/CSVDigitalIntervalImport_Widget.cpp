@@ -1,14 +1,15 @@
 #include "CSVDigitalIntervalImport_Widget.hpp"
 #include "ui_CSVDigitalIntervalImport_Widget.h"
 
+#include "IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
+#include "StateManagement/AppFileDialog.hpp"
+
 #include <QPushButton>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QMessageBox>
-
-#include "StateManagement/AppFileDialog.hpp"
 
 CSVDigitalIntervalImport_Widget::CSVDigitalIntervalImport_Widget(QWidget * parent)
     : QWidget(parent),

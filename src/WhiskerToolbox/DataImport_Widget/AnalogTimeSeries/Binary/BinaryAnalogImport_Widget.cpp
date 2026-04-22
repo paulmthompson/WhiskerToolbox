@@ -1,6 +1,9 @@
 #include "BinaryAnalogImport_Widget.hpp"
 #include "ui_BinaryAnalogImport_Widget.h"
 
+#include "IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
+#include "StateManagement/AppFileDialog.hpp"
+
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
@@ -8,8 +11,6 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSpinBox>
-
-#include "StateManagement/AppFileDialog.hpp"
 
 BinaryAnalogImport_Widget::BinaryAnalogImport_Widget(QWidget * parent)
     : QWidget(parent),

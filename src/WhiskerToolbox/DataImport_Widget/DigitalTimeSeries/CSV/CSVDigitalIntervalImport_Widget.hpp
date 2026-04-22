@@ -7,9 +7,8 @@
  */
 
 #include <QWidget>
-#include <QString>
-#include "IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 
+struct CSVIntervalLoaderOptions;
 namespace Ui {
 class CSVDigitalIntervalImport_Widget;
 }
@@ -24,7 +23,7 @@ public:
     ~CSVDigitalIntervalImport_Widget() override;
 
 signals:
-    void loadCSVIntervalRequested(CSVIntervalLoaderOptions options);
+    void loadCSVIntervalRequested(CSVIntervalLoaderOptions const & options);
 
 private slots:
     void _onBrowseButtonClicked();

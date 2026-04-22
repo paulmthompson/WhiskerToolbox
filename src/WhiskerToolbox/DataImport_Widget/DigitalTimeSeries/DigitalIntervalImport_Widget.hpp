@@ -6,14 +6,12 @@
  * @brief Widget for importing digital interval series data into DataManager
  */
 
-#include "DigitalTimeSeries/CSV/CSVDigitalIntervalImport_Widget.hpp"
-#include "DigitalTimeSeries/Binary/BinaryDigitalIntervalImport_Widget.hpp"
-
 #include <QWidget>
 
 #include <memory>
-#include <string>
 
+struct BinaryIntervalLoaderOptions;
+struct CSVIntervalLoaderOptions;
 class DataManager;
 
 namespace Ui {
@@ -38,8 +36,8 @@ private:
 
 private slots:
     void _onLoaderTypeChanged(int index);
-    void _handleCSVLoadRequested(CSVIntervalLoaderOptions options);
-    void _handleBinaryLoadRequested(BinaryIntervalLoaderOptions options);
+    void _handleCSVLoadRequested(CSVIntervalLoaderOptions const & options);
+    void _handleBinaryLoadRequested(BinaryIntervalLoaderOptions const & options);
 };
 
 #endif // DIGITAL_INTERVAL_IMPORT_WIDGET_HPP

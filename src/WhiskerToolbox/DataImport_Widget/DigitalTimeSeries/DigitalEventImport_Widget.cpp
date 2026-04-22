@@ -43,7 +43,7 @@ void DigitalEventImport_Widget::_onLoaderTypeChanged(int index) {
     }
 }
 
-void DigitalEventImport_Widget::_handleLoadCSVEventRequested(CSVEventLoaderOptions options) {
+void DigitalEventImport_Widget::_handleLoadCSVEventRequested(CSVEventLoaderOptions & options) {
     try {
         std::string data_name = ui->data_name_text->text().toStdString();
         if (data_name.empty()) {
