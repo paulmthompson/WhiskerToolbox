@@ -1,6 +1,9 @@
 #include "CSVDigitalEventImport_Widget.hpp"
 #include "ui_CSVDigitalEventImport_Widget.h"
 
+#include "IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
+#include "StateManagement/AppFileDialog.hpp"
+
 #include <QPushButton>
 #include <QLineEdit>
 #include <QComboBox>
@@ -8,8 +11,6 @@
 #include <QCheckBox>
 #include <QLabel>
 #include <QMessageBox>
-
-#include "StateManagement/AppFileDialog.hpp"
 
 CSVDigitalEventImport_Widget::CSVDigitalEventImport_Widget(QWidget * parent)
     : QWidget(parent),

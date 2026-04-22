@@ -1,14 +1,15 @@
 #include "CSVAnalogImport_Widget.hpp"
 #include "ui_CSVAnalogImport_Widget.h"
 
+#include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
+#include "StateManagement/AppFileDialog.hpp"
+
 #include <QPushButton>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QMessageBox>
-
-#include "StateManagement/AppFileDialog.hpp"
 
 CSVAnalogImport_Widget::CSVAnalogImport_Widget(QWidget * parent)
     : QWidget(parent),

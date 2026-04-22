@@ -1,13 +1,14 @@
 #include "BinaryDigitalIntervalImport_Widget.hpp"
 #include "ui_BinaryDigitalIntervalImport_Widget.h"
 
+#include "IO/formats/Binary/digitaltimeseries/Digital_Interval_Series_Binary.hpp"
+#include "StateManagement/AppFileDialog.hpp"
+
 #include <QPushButton>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QMessageBox>
-
-#include "StateManagement/AppFileDialog.hpp"
 
 BinaryDigitalIntervalImport_Widget::BinaryDigitalIntervalImport_Widget(QWidget * parent)
     : QWidget(parent),

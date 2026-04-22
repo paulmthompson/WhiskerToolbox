@@ -10,14 +10,12 @@
  * format-specific import widgets and handles the actual data loading into DataManager.
  */
 
-#include "AnalogTimeSeries/CSV/CSVAnalogImport_Widget.hpp"
-#include "AnalogTimeSeries/Binary/BinaryAnalogImport_Widget.hpp"
-
 #include <QWidget>
 
 #include <memory>
-#include <string>
 
+struct BinaryAnalogLoaderOptions;
+struct CSVAnalogLoaderOptions;
 class DataManager;
 
 namespace Ui {
@@ -55,7 +53,7 @@ private:
 
 private slots:
     void _onLoaderTypeChanged(int index);
-    void _handleCSVLoadRequested(const CSVAnalogLoaderOptions& options);
+    void _handleCSVLoadRequested(CSVAnalogLoaderOptions const & options);
     void _handleBinaryLoadRequested(const BinaryAnalogLoaderOptions& options);
 };
 

@@ -8,8 +8,8 @@
 
 #include <QWidget>
 #include <QString>
-#include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 
+struct CSVAnalogLoaderOptions;
 namespace Ui {
 class CSVAnalogImport_Widget;
 }
@@ -35,7 +35,7 @@ signals:
      * @brief Emitted when user requests to load analog data from CSV
      * @param options The configured loader options
      */
-    void loadAnalogCSVRequested(CSVAnalogLoaderOptions options);
+    void loadAnalogCSVRequested(CSVAnalogLoaderOptions const & options);
 
 private slots:
     void _onBrowseButtonClicked();

@@ -2,6 +2,9 @@
 
 #include "ui_AnalogImport_Widget.h"
 
+#include "AnalogTimeSeries/Binary/BinaryAnalogImport_Widget.hpp"
+#include "AnalogTimeSeries/CSV/CSVAnalogImport_Widget.hpp"
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataImportTypeRegistry.hpp"
 #include "DataManager/DataManager.hpp"
@@ -56,7 +59,7 @@ void AnalogImport_Widget::_onLoaderTypeChanged(int index) {
     }
 }
 
-void AnalogImport_Widget::_handleCSVLoadRequested(const CSVAnalogLoaderOptions& options) {
+void AnalogImport_Widget::_handleCSVLoadRequested(CSVAnalogLoaderOptions const & options) {
     auto const analog_key = ui->data_name_text->text().toStdString();
     if (analog_key.empty()) {
         QMessageBox::warning(this, tr("Import Error"), tr("Data name cannot be empty."));
@@ -84,7 +87,7 @@ void AnalogImport_Widget::_handleCSVLoadRequested(const CSVAnalogLoaderOptions& 
     }
 }
 
-void AnalogImport_Widget::_handleBinaryLoadRequested(const BinaryAnalogLoaderOptions& options) {
+void AnalogImport_Widget::_handleBinaryLoadRequested(BinaryAnalogLoaderOptions const & options) {
     auto const analog_key = ui->data_name_text->text().toStdString();
     if (analog_key.empty()) {
         QMessageBox::warning(this, tr("Import Error"), tr("Data name cannot be empty."));

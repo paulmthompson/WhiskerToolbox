@@ -7,9 +7,8 @@
  */
 
 #include <QWidget>
-#include <QString>
-#include "IO/formats/Binary/digitaltimeseries/Digital_Interval_Series_Binary.hpp"
 
+struct BinaryIntervalLoaderOptions;
 namespace Ui {
 class BinaryDigitalIntervalImport_Widget;
 }
@@ -24,7 +23,7 @@ public:
     ~BinaryDigitalIntervalImport_Widget() override;
 
 signals:
-    void loadBinaryIntervalRequested(BinaryIntervalLoaderOptions options);
+    void loadBinaryIntervalRequested(BinaryIntervalLoaderOptions const & options);
 
 private slots:
     void _onBrowseButtonClicked();

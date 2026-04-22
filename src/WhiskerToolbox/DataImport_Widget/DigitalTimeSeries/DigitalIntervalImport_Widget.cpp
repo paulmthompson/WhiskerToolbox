@@ -2,10 +2,14 @@
 
 #include "ui_DigitalIntervalImport_Widget.h"
 
+#include "DigitalTimeSeries/Binary/BinaryDigitalIntervalImport_Widget.hpp"
+#include "DigitalTimeSeries/CSV/CSVDigitalIntervalImport_Widget.hpp"
+
+#include "DataImportTypeRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
-#include "DataImportTypeRegistry.hpp"
+#include "IO/formats/Binary/digitaltimeseries/Digital_Interval_Series_Binary.hpp"
 
 #include <QFileDialog>
 #include <QComboBox>
@@ -54,7 +58,7 @@ void DigitalIntervalImport_Widget::_onLoaderTypeChanged(int index) {
     }
 }
 
-void DigitalIntervalImport_Widget::_handleCSVLoadRequested(CSVIntervalLoaderOptions options) {
+void DigitalIntervalImport_Widget::_handleCSVLoadRequested(CSVIntervalLoaderOptions const & options) {
     auto const interval_key = ui->data_name_text->text().toStdString();
     if (interval_key.empty()) {
         QMessageBox::warning(this, tr("Import Error"), tr("Data name cannot be empty."));
@@ -82,7 +86,7 @@ void DigitalIntervalImport_Widget::_handleCSVLoadRequested(CSVIntervalLoaderOpti
     }
 }
 
-void DigitalIntervalImport_Widget::_handleBinaryLoadRequested(BinaryIntervalLoaderOptions options) {
+void DigitalIntervalImport_Widget::_handleBinaryLoadRequested(BinaryIntervalLoaderOptions const & options) {
     auto const interval_key = ui->data_name_text->text().toStdString();
     if (interval_key.empty()) {
         QMessageBox::warning(this, tr("Import Error"), tr("Data name cannot be empty."));
