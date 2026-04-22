@@ -69,7 +69,7 @@ Current status by phase:
 - Phase 4b: completed
 - Phase 4C: completed
 - Phase 4D: completed
-- Phase 4E: not started
+- Phase 4E: completed
 - Phase 5: not started
 - Phase 6: in progress (roadmap/doc updates)
 
@@ -441,15 +441,15 @@ For each unique `digital_channel`, the `analog_channel` that appears most often 
 
 ### Implementation Tasks
 
-- [ ] Create `SpikeToAnalogPairingLoader.hpp/.cpp` (`DataViewer_Widget/Ordering/`): define `struct SpikeToAnalogPairing { int digital_channel; int analog_channel; }` (both 0-based). Implement `parseSpikeToAnalogCSV(std::string const& text)` — skip malformed rows, count `(digital_ch → analog_ch)` occurrences, return one `SpikeToAnalogPairing` per unique digital channel (mode analog channel).
-- [ ] Create `SpikeToAnalogConfigDialog.hpp/.cpp` (`DataViewer_Widget/UI/`): `QLineEdit` for digital group prefix (default `"spikes_"`), `QLineEdit` for analog group prefix (default `"voltage_"`), `QComboBox` for placement mode ("Adjacent Below" / "Adjacent Above" / "Overlay"), a file-path `QLineEdit` + "Browse…" button, OK/Cancel.
-- [ ] Edit `DataViewerPropertiesWidget.ui`: add a `QPushButton` `load_spike_analog_button` ("Load Spike-to-Analog Pairing…") to an appropriate existing or new group box.
-- [ ] Add signal to `DataViewerPropertiesWidget.hpp`: `void loadSpikeToAnalogPairingRequested()`.
-- [ ] Wire button in `DataViewerPropertiesWidget.cpp` → emit signal.
-- [ ] Wire signal in `DataViewerWidgetRegistration.cpp` → `DataViewer_Widget::_loadSpikeToAnalogPairing`.
-- [ ] Add `OpenGLWidget::loadSpikeToAnalogPairing(digital_group, analog_group, pairings, PlacementMode)` (`OpenGLWidget.hpp/.cpp`). For **Overlay**: get `voltage_M`'s effective `lane_id` from overrides (or `"__auto_lane__" + key`), set `spikes_N.lane_id` to same and `overlay_mode = Overlay`. For **Adjacent**: read current visual order from `_multi_lane_axis_state->lanes()`, insert each digital auto-lane at `analog_slot + 1` (Below) or `analog_slot` (Above) — process in reverse analog-slot order to avoid index shifts — then assign `lane_order = (N - i) * 10` and call `setSeriesLaneOverride` for each digital key.
-- [ ] Implement `DataViewer_Widget::_loadSpikeToAnalogPairing()` and test-accessible `_loadSpikeToAnalogPairingFromText(QString digital_group, QString analog_group, QString text, int placement_mode)` (matching the pattern of `_loadSpikeSorterConfigurationFromText`): show `SpikeToAnalogConfigDialog`, on accept parse CSV, delegate to `openGLWidget->loadSpikeToAnalogPairing(...)`, call `updateCanvas()`.
-- [ ] Add tests in `DataViewer_Widget.test.cpp`: CSV parse correctness (mode wins ties deterministically), adjacent below placement, adjacent above placement, overlay lane sharing.
+- [x] Create `SpikeToAnalogPairingLoader.hpp/.cpp` (`DataViewer_Widget/Ordering/`): define `struct SpikeToAnalogPairing { int digital_channel; int analog_channel; }` (both 0-based). Implement `parseSpikeToAnalogCSV(std::string const& text)` — skip malformed rows, count `(digital_ch → analog_ch)` occurrences, return one `SpikeToAnalogPairing` per unique digital channel (mode analog channel).
+- [x] Create `SpikeToAnalogConfigDialog.hpp/.cpp` (`DataViewer_Widget/UI/`): `QLineEdit` for digital group prefix (default `"spikes_"`), `QLineEdit` for analog group prefix (default `"voltage_"`), `QComboBox` for placement mode ("Adjacent Below" / "Adjacent Above" / "Overlay"), a file-path `QLineEdit` + "Browse…" button, OK/Cancel.
+- [x] Edit `DataViewerPropertiesWidget.ui`: add a `QPushButton` `load_spike_analog_button` ("Load Spike-to-Analog Pairing…") to an appropriate existing or new group box.
+- [x] Add signal to `DataViewerPropertiesWidget.hpp`: `void loadSpikeToAnalogPairingRequested()`.
+- [x] Wire button in `DataViewerPropertiesWidget.cpp` → emit signal.
+- [x] Wire signal in `DataViewerWidgetRegistration.cpp` → `DataViewer_Widget::_loadSpikeToAnalogPairing`.
+- [x] Add `OpenGLWidget::loadSpikeToAnalogPairing(digital_group, analog_group, pairings, PlacementMode)` (`OpenGLWidget.hpp/.cpp`). For **Overlay**: assigns a shared explicit `lane_id` to both the analog and digital series (minting `"__auto_lane__" + ana_key` if analog had no prior override), sets `overlay_mode = Overlay` on the digital series. For **Adjacent**: reads current visual order from `_state->multiLaneAxisState()->lanes()`, inserts each digital auto-lane at `analog_slot + 1` (Below) or `analog_slot` (Above) — processes in reverse analog-slot order to avoid index shifts — then assigns `lane_order = (N - i) * 10` and calls `setSeriesLaneOverride` for each key.
+- [x] Implement `DataViewer_Widget::_loadSpikeToAnalogPairing()` and test-accessible `_loadSpikeToAnalogPairingFromText(QString digital_group, QString analog_group, QString text, int placement_mode)` (matching the pattern of `_loadSpikeSorterConfigurationFromText`): show `SpikeToAnalogConfigDialog`, on accept parse CSV, delegate to `openGLWidget->loadSpikeToAnalogPairing(...)`, call `updateCanvas()`.
+- [x] Add tests in `DataViewer_Widget.test.cpp`: CSV parse correctness (mode wins ties deterministically), adjacent below placement, adjacent above placement, overlay lane sharing.
 
 ### Primary Files
 
@@ -467,12 +467,12 @@ For each unique `digital_channel`, the `analog_channel` that appears most often 
 
 ### Acceptance Criteria
 
-- [ ] `parseSpikeToAnalogCSV` returns one pairing per unique digital channel (mode analog channel); malformed rows are skipped.
-- [ ] "Adjacent Below" places each `spikes_N` in its own lane immediately below its paired `voltage_M`.
-- [ ] "Adjacent Above" places each `spikes_N` immediately above its paired `voltage_M`.
-- [ ] "Overlay" assigns `spikes_N` to `voltage_M`'s lane band (same `lane_id`).
-- [ ] Placements are committed via `setSeriesLaneOverride` and survive a `toJson`/`fromJson` roundtrip.
-- [ ] A test-accessible text-based entry point exists for automated tests (no file dialog).
+- [x] `parseSpikeToAnalogCSV` returns one pairing per unique digital channel (mode analog channel); malformed rows are skipped.
+- [x] "Adjacent Below" places each `spikes_N` in its own lane immediately below its paired `voltage_M`.
+- [x] "Adjacent Above" places each `spikes_N` immediately above its paired `voltage_M`.
+- [x] "Overlay" assigns `spikes_N` to `voltage_M`'s lane band (same `lane_id`).
+- [x] Placements are committed via `setSeriesLaneOverride` and survive a `toJson`/`fromJson` roundtrip.
+- [x] A test-accessible text-based entry point exists for automated tests (no file dialog).
 
 ---
 

@@ -2,6 +2,7 @@
 #define DATAVIEWER_WIDGET_HPP
 
 #include "Ordering/ChannelPositionMetadata.hpp"
+#include "Ordering/SpikeToAnalogPairingLoader.hpp"
 #include "Ordering/SwindaleSpikeSorterLoader.hpp"
 
 #include "DataTypeEnum/DM_DataType.hpp"
@@ -178,6 +179,19 @@ private slots:
      */
     void _handleLaneReorderRequest(QString const & source_lane_id, int target_visual_slot);
 
+    /**
+     * @brief Core worker for spike-to-analog pairing: parse CSV with the given config
+     *        and apply lane placement overrides.
+     *
+     * Called by both @c _loadSpikeToAnalogPairing (interactive, full config) and
+     * @c _loadSpikeToAnalogPairingFromText (test slot, default config).
+     */
+    void _applyAnalogPairing(std::string const & digital_group,
+                             std::string const & analog_group,
+                             std::string const & text,
+                             SpikeToAnalogPlacementMode mode,
+                             SpikeToAnalogParseConfig const & config);
+
 public slots:
     /**
      * @brief Save the current lane layout (displayed series + overrides) to a JSON file
@@ -197,6 +211,32 @@ public slots:
      * from the DataManager are silently skipped.
      */
     void _loadLaneLayout();
+
+    /**
+     * @brief Load spike-to-analog pairing CSV via a file dialog and apply placement overrides.
+     *
+     * Opens @c SpikeToAnalogConfigDialog to collect all parse options, group prefixes,
+     * placement mode, and CSV file path, then reads the file and delegates to
+     * _applyAnalogPairing.
+     */
+    void _loadSpikeToAnalogPairing();
+
+    /**
+     * @brief Parse spike-to-analog CSV text and apply lane placement overrides.
+     *
+     * Uses the default @c SpikeToAnalogParseConfig (comma delimiter, columns 2 and 3,
+     * 1-based indexing). Exposed as a named slot so that unit tests can invoke it via
+     * QMetaObject::invokeMethod without needing to pass a parse config.
+     *
+     * @param digital_group  Group prefix for digital spike series (e.g. "spikes_")
+     * @param analog_group   Group prefix for analog LFP series (e.g. "voltage_")
+     * @param text           Raw CSV content
+     * @param placement_mode Cast of SpikeToAnalogPlacementMode to int
+     */
+    void _loadSpikeToAnalogPairingFromText(QString const & digital_group,
+                                           QString const & analog_group,
+                                           QString const & text,
+                                           int placement_mode);
 
     /**
      * @brief Handle a relative placement request from the properties widget context menu.

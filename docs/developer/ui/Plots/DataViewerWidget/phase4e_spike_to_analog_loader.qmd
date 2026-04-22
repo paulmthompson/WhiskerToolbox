@@ -1,0 +1,96 @@
+---
+title: "Phase 4E: CSV Spike-to-Analog Pairing Loader"
+---
+
+## Overview
+
+Phase 4E implements a CSV-based workflow that reads spike event records, computes
+the **modal analog channel** assignment for each digital channel, and then places
+each `spikes_N` series **adjacent to** (or **overlaid on**) its paired `voltage_M`
+series in the DataViewer lane stack.
+
+## CSV Format
+
+Each row contains three whitespace- or comma-delimited columns:
+
+| Column | Description |
+|--------|-------------|
+| `timestamp` | Ignored during parsing |
+| `digital_channel` | 1-based digital (spike) channel index |
+| `analog_channel` | 1-based analog (voltage) channel index |
+
+Example:
+
+```
+0.01493,  8, 20
+0.01670, 24,  6
+0.04320, 24,  6
+```
+
+For each unique `digital_channel`, the `analog_channel` value that appears most
+often (statistical mode) is used. Ties are broken by choosing the smallest
+`analog_channel` index. Both channel numbers are converted to 0-based internally
+before lookup.
+
+## Placement Modes
+
+| Mode | Behaviour |
+|------|-----------|
+| **Adjacent Below** | The digital series receives its own lane inserted immediately below the paired analog lane. |
+| **Adjacent Above** | The digital series receives its own lane inserted immediately above the paired analog lane. |
+| **Overlay** | Both the digital and analog series share the same `lane_id`, rendering within the same lane band. |
+
+## Architecture
+
+### New Files
+
+- `src/WhiskerToolbox/DataViewer_Widget/Ordering/SpikeToAnalogPairingLoader.hpp/.cpp`
+  — Declares `SpikeToAnalogPairing`, `SpikeToAnalogPlacementMode`, and
+    `parseSpikeToAnalogCSV()`.
+
+- `src/WhiskerToolbox/DataViewer_Widget/UI/SpikeToAnalogConfigDialog.hpp/.cpp`
+  — Qt dialog for selecting the CSV file, digital/analog group prefixes (default
+    `spikes_` / `voltage_`), and placement mode.
+
+### Modified Files
+
+- `DataViewerPropertiesWidget.ui/.hpp/.cpp` — Added `load_spike_analog_button`
+  that emits `loadSpikeToAnalogPairingRequested()`.
+
+- `DataViewerWidgetRegistration.cpp` — Wires the signal to
+  `DataViewer_Widget::_loadSpikeToAnalogPairing`.
+
+- `OpenGLWidget.hpp/.cpp` — Added `loadSpikeToAnalogPairing(digital_group,
+  analog_group, pairings, mode)`.  All state changes go through
+  `_state->setSeriesLaneOverride()`, which already triggers layout invalidation
+  and repaint.
+
+- `DataViewer_Widget.hpp/.cpp` — Added `_loadSpikeToAnalogPairing()` (interactive)
+  and `_loadSpikeToAnalogPairingFromText(...)` (test-accessible, no file dialog).
+
+## Overlay Mode Implementation Note
+
+For **Overlay** mode, the implementation must assign an **explicit `lane_id`** to
+*both* the analog and digital series so the layout engine groups them into the same
+lane band.  Simply setting `lane_id` on the digital series is insufficient because
+a series without an override uses an auto-generated `lane_id` based on insertion
+index (not series key).
+
+The fix: when processing an Overlay pairing, the analog series is given an
+explicit override `lane_id = "__auto_lane__" + ana_key` if it does not already
+have one.  The digital series then receives the same `lane_id` with
+`overlay_mode = LaneOverlayMode::Overlay`.
+
+## Tests
+
+Seven Catch2 test cases were added to `DataViewer_Widget.test.cpp`:
+
+1. CSV parser — modal analog wins tie by smallest index.
+2. CSV parser — tie-break picks smallest analog index.
+3. CSV parser — malformed rows are silently skipped.
+4. CSV parser — empty input returns empty vector.
+5. Widget integration — **Overlay** places event in the analog lane (equal offsets).
+6. Widget integration — **AdjacentBelow** places event below analog.
+7. Widget integration — **AdjacentAbove** places event above analog.
+
+All tests are tagged `[Phase4E]` and run in the `test_data_viewer_widget_all` ctest bundle.

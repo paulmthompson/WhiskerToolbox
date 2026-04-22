@@ -157,6 +157,10 @@ void DataViewerPropertiesWidget::_connectUIControls() {
     connect(ui->load_lane_layout_button, &QPushButton::clicked,
             this, &DataViewerPropertiesWidget::loadLaneLayoutRequested);
 
+    // Spike-to-analog pairing button (Phase 4E)
+    connect(ui->load_spike_analog_button, &QPushButton::clicked,
+            this, &DataViewerPropertiesWidget::loadSpikeToAnalogPairingRequested);
+
     // Export SVG button
     connect(ui->export_svg_button, &QPushButton::clicked, this, [this]() {
         bool const includeScalebar = ui->svg_scalebar_checkbox->isChecked();

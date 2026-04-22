@@ -3,6 +3,7 @@
 #include "Core/DataViewerState.hpp"
 #include "Core/DataViewerStateData.hpp"
 #include "Core/TimeSeriesDataStore.hpp"
+#include "Ordering/SpikeToAnalogPairingLoader.hpp"
 #include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisState.hpp"
 #include "Rendering/OpenGLWidget.hpp"
 
@@ -1310,6 +1311,20 @@ protected:
             m_data_manager->setData<DigitalEventSeries>(key, series, m_time_key);
         }
 
+        // One pair of 0-based-named series for key-naming tests (suffix = channel directly).
+        // "voltage_19" has suffix 19 meaning channel 19 when key_one_based=false.
+        // "spikes_7"   has suffix  7 meaning channel  7 when key_one_based=false.
+        constexpr int kNumSamples = 1000;
+        std::vector<float> zero_values(kNumSamples, 0.0f);
+        m_data_manager->setData<AnalogTimeSeries>(
+                "voltage_19",
+                std::make_shared<AnalogTimeSeries>(zero_values, zero_values.size()),
+                m_time_key);
+
+        auto spikes7 = std::make_shared<DigitalEventSeries>();
+        spikes7->addEvent(TimeFrameIndex(500));
+        m_data_manager->setData<DigitalEventSeries>("spikes_7", spikes7, m_time_key);
+
         m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, nullptr);
     }
 
@@ -1318,6 +1333,10 @@ protected:
     DataViewer_Widget & getWidget() { return *m_widget; }
     [[nodiscard]] std::vector<std::string> const & getAnalogKeys() const { return m_analog_keys; }
     [[nodiscard]] std::vector<std::string> const & getEventKeys() const { return m_event_keys; }
+    /// Returns the 0-based-named analog series key added for key-naming tests.
+    [[nodiscard]] std::string const & getZeroBasedAnalogKey() const { return m_zero_based_analog_key; }
+    /// Returns the 0-based-named event series key added for key-naming tests.
+    [[nodiscard]] std::string const & getZeroBasedEventKey() const { return m_zero_based_event_key; }
 
 private:
     std::unique_ptr<QApplication> m_app;
@@ -1326,6 +1345,8 @@ private:
     TimeKey m_time_key{"time"};
     std::vector<std::string> m_analog_keys;
     std::vector<std::string> m_event_keys;
+    std::string m_zero_based_analog_key{"voltage_19"};
+    std::string m_zero_based_event_key{"spikes_7"};
 };
 
 TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - Mixed stacking for analog + digital events", "[DataViewer_Widget][Mixed][Stacking]") {
@@ -2971,6 +2992,335 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
                 widget.getOpenGLWidget()->getDigitalIntervalSeriesMap().count(entry.key) > 0;
         REQUIRE(!in_data_manager);
     }
+
+    widget.close();
+}
+
+// =============================================================================
+// Phase 4E: CSV Spike-to-Analog Pairing Loader
+// =============================================================================
+
+// Helper: invoke _loadSpikeToAnalogPairingFromText via QMetaObject
+static bool invokeSpikeToAnalogFromText(DataViewer_Widget & widget,
+                                        std::string const & digital_group,
+                                        std::string const & analog_group,
+                                        std::string const & csv_text,
+                                        SpikeToAnalogPlacementMode mode) {
+    return QMetaObject::invokeMethod(
+            &widget,
+            "_loadSpikeToAnalogPairingFromText",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(digital_group)),
+            Q_ARG(QString, QString::fromStdString(analog_group)),
+            Q_ARG(QString, QString::fromStdString(csv_text)),
+            Q_ARG(int, static_cast<int>(mode)));
+}
+
+TEST_CASE("parseSpikeToAnalogCSV - modal analog wins tie by smallest index",
+          "[SpikeToAnalogPairingLoader][Phase4E]") {
+    // digital ch 8 paired with analog ch 20 twice, analog ch 6 once → ch 20 wins
+    std::string const csv = "0.01,8,20\n0.02,8,20\n0.03,8,6\n";
+    auto const pairings = parseSpikeToAnalogCSV(csv);
+    REQUIRE(pairings.size() == 1);
+    REQUIRE(pairings[0].digital_channel == 7);// 1-based 8 → 0-based 7
+    REQUIRE(pairings[0].analog_channel == 19);// 1-based 20 → 0-based 19
+}
+
+TEST_CASE("parseSpikeToAnalogCSV - tie-break picks smallest analog index",
+          "[SpikeToAnalogPairingLoader][Phase4E]") {
+    // digital ch 3 paired equally with analog ch 2 and ch 4 (one vote each) → ch 2 wins (smaller)
+    std::string const csv = "0.01,3,2\n0.02,3,4\n";
+    auto const pairings = parseSpikeToAnalogCSV(csv);
+    REQUIRE(pairings.size() == 1);
+    REQUIRE(pairings[0].digital_channel == 2);// 1-based 3 → 0-based 2
+    REQUIRE(pairings[0].analog_channel == 1); // 1-based 2 → 0-based 1
+}
+
+TEST_CASE("parseSpikeToAnalogCSV - malformed rows are silently skipped",
+          "[SpikeToAnalogPairingLoader][Phase4E]") {
+    // header line, empty line, and valid rows
+    std::string const csv = "timestamp,digital,analog\n\n0.01,1,2\n0.02,1,2\n";
+    auto const pairings = parseSpikeToAnalogCSV(csv);
+    REQUIRE(pairings.size() == 1);
+    REQUIRE(pairings[0].digital_channel == 0);
+    REQUIRE(pairings[0].analog_channel == 1);
+}
+
+TEST_CASE("parseSpikeToAnalogCSV - empty input returns empty vector",
+          "[SpikeToAnalogPairingLoader][Phase4E]") {
+    auto const pairings = parseSpikeToAnalogCSV("");
+    REQUIRE(pairings.empty());
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - SpikeToAnalog Overlay places event in analog lane",
+                 "[DataViewer_Widget][Phase4E][SpikeToAnalog][Overlay]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() >= 1);
+    REQUIRE(ev.size() >= 1);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Add analog_1 and event_1
+    widget.addFeature(analog[0], "#FF6B6B");// analog_1
+    widget.addFeature(ev[0], "#4ECDC4");    // event_1
+    QApplication::processEvents();
+
+    // CSV: digital ch 1 (event_1, 0-based ch 0) → analog ch 1 (analog_1, 0-based ch 0)
+    // CSV uses 1-based, so row = "0.01,1,1"
+    std::string const csv = "0.01,1,1\n0.02,1,1\n";
+
+    bool const invoked = invokeSpikeToAnalogFromText(
+            widget, "event", "analog", csv, SpikeToAnalogPlacementMode::Overlay);
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    // After Overlay: event_1 should share the same lane center as analog_1
+    auto layout_analog = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_event = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    REQUIRE(layout_analog.has_value());
+    REQUIRE(layout_event.has_value());
+    REQUIRE(layout_analog->offset == Catch::Approx(layout_event->offset).margin(1e-5));
+
+    // The state should show an override with Overlay mode on the event series
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+    auto const * override_data = state->getSeriesLaneOverride(ev[0]);
+    REQUIRE(override_data != nullptr);
+    REQUIRE(override_data->overlay_mode == LaneOverlayMode::Overlay);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - SpikeToAnalog AdjacentBelow places event below analog",
+                 "[DataViewer_Widget][Phase4E][SpikeToAnalog][AdjacentBelow]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() >= 2);
+    REQUIRE(ev.size() >= 1);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Add analog_1, analog_2, event_1
+    widget.addFeature(analog[0], "#FF6B6B");// analog_1
+    widget.addFeature(analog[1], "#FF6B6B");// analog_2
+    widget.addFeature(ev[0], "#4ECDC4");    // event_1
+    QApplication::processEvents();
+
+    // Pair: digital ch 1 (event_1) → analog ch 1 (analog_1), AdjacentBelow
+    std::string const csv = "0.01,1,1\n0.02,1,1\n";
+    bool const invoked = invokeSpikeToAnalogFromText(
+            widget, "event", "analog", csv, SpikeToAnalogPlacementMode::AdjacentBelow);
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    auto layout_analog1 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_event1 = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    REQUIRE(layout_analog1.has_value());
+    REQUIRE(layout_event1.has_value());
+
+    // AdjacentBelow: event's lane center should be below (lower offset value) analog's lane center.
+    // In the NDC coordinate system, lower offset = visually lower (bottom of the screen).
+    REQUIRE(layout_event1->offset < layout_analog1->offset);
+
+    // event and analog should be in DIFFERENT lanes (different offsets)
+    REQUIRE(layout_event1->offset != Catch::Approx(layout_analog1->offset).margin(1e-5));
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - SpikeToAnalog AdjacentAbove places event above analog",
+                 "[DataViewer_Widget][Phase4E][SpikeToAnalog][AdjacentAbove]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() >= 2);
+    REQUIRE(ev.size() >= 1);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeature(analog[0], "#FF6B6B");// analog_1
+    widget.addFeature(analog[1], "#FF6B6B");// analog_2
+    widget.addFeature(ev[0], "#4ECDC4");    // event_1
+    QApplication::processEvents();
+
+    // Pair: digital ch 1 (event_1) → analog ch 1 (analog_1), AdjacentAbove
+    std::string const csv = "0.01,1,1\n0.02,1,1\n";
+    bool const invoked = invokeSpikeToAnalogFromText(
+            widget, "event", "analog", csv, SpikeToAnalogPlacementMode::AdjacentAbove);
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    auto layout_analog1 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_event1 = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    REQUIRE(layout_analog1.has_value());
+    REQUIRE(layout_event1.has_value());
+
+    // AdjacentAbove: event's lane center should be above (higher offset value) analog's lane center.
+    REQUIRE(layout_event1->offset > layout_analog1->offset);
+
+    // event and analog should be in DIFFERENT lanes
+    REQUIRE(layout_event1->offset != Catch::Approx(layout_analog1->offset).margin(1e-5));
+
+    widget.close();
+}
+
+// =============================================================================
+// Phase 4E (extended): key_one_based, idempotency, pre-existing order
+// =============================================================================
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "SpikeToAnalog - 0-based destination key names match correctly with key_one_based=false",
+                 "[DataViewer_Widget][Phase4E][SpikeToAnalog][KeyOneBased]") {
+    // The fixture pre-populates "voltage_19" (AnalogTimeSeries) and "spikes_7"
+    // (DigitalEventSeries) in the DataManager with 0-based numeric suffixes.
+    auto & widget = getWidget();
+    std::string const ana_key = getZeroBasedAnalogKey(); // "voltage_19"
+    std::string const dig_key = getZeroBasedEventKey();  // "spikes_7"
+
+    widget.openWidget();
+    QApplication::processEvents();
+    widget.addFeature(ana_key, "#4ECDC4");
+    widget.addFeature(dig_key, "#FF6B6B");
+    QApplication::processEvents();
+
+    // Pairing: digital ch 7 (0-based) paired with analog ch 19 (0-based)
+    // These came from a 1-based CSV file with values 8 and 20.
+    std::vector<SpikeToAnalogPairing> const pairings = {{7, 19}};
+
+    SpikeToAnalogParseConfig cfg;
+    cfg.digital_key_one_based = false;// "spikes_7" suffix 7 = ch 7 (no subtraction)
+    cfg.analog_key_one_based = false; // "voltage_19" suffix 19 = ch 19 (no subtraction)
+
+    auto * glw = widget.getOpenGLWidget();
+    REQUIRE(glw != nullptr);
+    glw->loadSpikeToAnalogPairing("spikes", "voltage", pairings, SpikeToAnalogPlacementMode::AdjacentAbove, cfg);
+    QApplication::processEvents();
+
+    // After AdjacentAbove: spikes_7 should be above voltage_19 (higher offset)
+    auto layout_analog = TestHelpers::getAnalogLayoutTransform(widget, ana_key);
+    auto layout_event = TestHelpers::getEventLayoutTransform(widget, dig_key);
+    REQUIRE(layout_analog.has_value());
+    REQUIRE(layout_event.has_value());
+    REQUIRE(layout_event->offset > layout_analog->offset);
+
+    // Verify the digital series got a lane override (was actually placed)
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+    REQUIRE(state->getSeriesLaneOverride(dig_key) != nullptr);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - SpikeToAnalog AdjacentBelow is idempotent on second load",
+                 "[DataViewer_Widget][Phase4E][SpikeToAnalog][Idempotent]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeature(analog[0], "#FF6B6B");// analog_1
+    widget.addFeature(analog[1], "#FF6B6B");// analog_2
+    widget.addFeature(ev[0], "#4ECDC4");    // event_1
+    QApplication::processEvents();
+
+    std::string const csv = "0.01,1,1\n0.02,1,1\n";
+
+    // First load
+    bool const first = invokeSpikeToAnalogFromText(
+            widget, "event", "analog", csv, SpikeToAnalogPlacementMode::AdjacentBelow);
+    REQUIRE(first);
+    QApplication::processEvents();
+    widget.getOpenGLWidget()->updateCanvas();
+    QApplication::processEvents();
+
+    auto layout_analog_1st = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_event_1st = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    REQUIRE(layout_analog_1st.has_value());
+    REQUIRE(layout_event_1st.has_value());
+
+    // Second load with identical parameters
+    bool const second = invokeSpikeToAnalogFromText(
+            widget, "event", "analog", csv, SpikeToAnalogPlacementMode::AdjacentBelow);
+    REQUIRE(second);
+    QApplication::processEvents();
+    widget.getOpenGLWidget()->updateCanvas();
+    QApplication::processEvents();
+
+    auto layout_analog_2nd = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_event_2nd = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    REQUIRE(layout_analog_2nd.has_value());
+    REQUIRE(layout_event_2nd.has_value());
+
+    // Positions must be identical after a reload with the same parameters
+    REQUIRE(layout_analog_2nd->offset == Catch::Approx(layout_analog_1st->offset).margin(1e-5));
+    REQUIRE(layout_event_2nd->offset == Catch::Approx(layout_event_1st->offset).margin(1e-5));
+
+    // Relative order must still be: event below analog
+    REQUIRE(layout_event_2nd->offset < layout_analog_2nd->offset);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - SpikeToAnalog placement is independent of prior lane arrangement",
+                 "[DataViewer_Widget][Phase4E][SpikeToAnalog][LaneIndependence]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeature(analog[0], "#FF6B6B");// analog_1
+    widget.addFeature(analog[1], "#FF6B6B");// analog_2
+    widget.addFeature(ev[0], "#4ECDC4");    // event_1
+    QApplication::processEvents();
+
+    std::string const csv = "0.01,1,1\n0.02,1,1\n";
+
+    // First: place event_1 ABOVE analog_1 (AdjacentAbove)
+    bool const first = invokeSpikeToAnalogFromText(
+            widget, "event", "analog", csv, SpikeToAnalogPlacementMode::AdjacentAbove);
+    REQUIRE(first);
+    QApplication::processEvents();
+    widget.getOpenGLWidget()->updateCanvas();
+    QApplication::processEvents();
+
+    // Confirm event is now above analog
+    auto layout_analog_after_above = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_event_after_above = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    REQUIRE(layout_analog_after_above.has_value());
+    REQUIRE(layout_event_after_above.has_value());
+    REQUIRE(layout_event_after_above->offset > layout_analog_after_above->offset);
+
+    // Now reload with AdjacentBelow: event_1 should end up BELOW analog_1
+    // regardless of where it was placed by the previous call.
+    bool const second = invokeSpikeToAnalogFromText(
+            widget, "event", "analog", csv, SpikeToAnalogPlacementMode::AdjacentBelow);
+    REQUIRE(second);
+    QApplication::processEvents();
+    widget.getOpenGLWidget()->updateCanvas();
+    QApplication::processEvents();
+
+    auto layout_analog_final = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_event_final = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    REQUIRE(layout_analog_final.has_value());
+    REQUIRE(layout_event_final.has_value());
+
+    // Must now be below, not above
+    REQUIRE(layout_event_final->offset < layout_analog_final->offset);
 
     widget.close();
 }

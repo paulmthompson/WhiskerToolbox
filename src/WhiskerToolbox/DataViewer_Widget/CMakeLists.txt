@@ -24,6 +24,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         Ordering/OrderingPolicyResolver.hpp
         Ordering/SwindaleSpikeSorterLoader.cpp
         Ordering/SwindaleSpikeSorterLoader.hpp
+        Ordering/SpikeToAnalogPairingLoader.cpp
+        Ordering/SpikeToAnalogPairingLoader.hpp
 
         DataViewerWidgetRegistration.cpp
         DataViewerWidgetRegistration.hpp
@@ -60,6 +62,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         UI/Feature_Tree_Model.cpp
         UI/SeriesOrderingDialog.cpp
         UI/SeriesOrderingDialog.hpp
+        UI/SpikeToAnalogConfigDialog.cpp
+        UI/SpikeToAnalogConfigDialog.hpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.cpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.ui

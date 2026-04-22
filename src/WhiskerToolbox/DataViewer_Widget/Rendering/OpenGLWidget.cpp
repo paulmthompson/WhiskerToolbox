@@ -6,7 +6,10 @@
 #include "Interaction/DataViewerCoordinates.hpp"
 #include "Interaction/DataViewerSelectionManager.hpp"
 #include "Interaction/DataViewerTooltipController.hpp"
+#include "Ordering/SpikeToAnalogPairingLoader.hpp"
 #include "Ordering/SwindaleSpikeSorterLoader.hpp"
+#include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisState.hpp"
+#include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisStateData.hpp"
 #include "SceneBuildingHelpers.hpp"
 #include "TransformComposers.hpp"
 
@@ -37,13 +40,17 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <spdlog/spdlog.h>
+
 #include <algorithm>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <ranges>
+#include <unordered_map>
 
 
 OpenGLWidget::OpenGLWidget(QWidget * parent)
@@ -1557,6 +1564,292 @@ void OpenGLWidget::clearSpikeSorterConfiguration(std::string const & group_name)
         if (identity.group == group_name) {
             _state->clearSeriesLaneOverride(key);
         }
+    }
+}
+
+void OpenGLWidget::loadSpikeToAnalogPairing(std::string const & digital_group,
+                                            std::string const & analog_group,
+                                            std::vector<SpikeToAnalogPairing> const & pairings,
+                                            SpikeToAnalogPlacementMode mode,
+                                            SpikeToAnalogParseConfig const & config) {
+    if (pairings.empty()) {
+        return;
+    }
+
+    // Normalize: strip trailing underscore so "spikes_" and "spikes" both work.
+    auto const strip_trailing_underscore = [](std::string const & s) -> std::string {
+        if (!s.empty() && s.back() == '_') {
+            return s.substr(0, s.size() - 1);
+        }
+        return s;
+    };
+    std::string const dig_group_norm = strip_trailing_underscore(digital_group);
+    std::string const ana_group_norm = strip_trailing_underscore(analog_group);
+
+    // Extract a 0-based channel index from a series key.
+    // The key must start with group_norm + '_' followed by an integer suffix.
+    // If key_one_based is true, the suffix is 1-based: suffix "1" → channel 0.
+    // If key_one_based is false, the suffix is 0-based: suffix "0" → channel 0.
+    auto const extract_channel_from_key = [](std::string const & key,
+                                             std::string const & group_norm,
+                                             bool key_one_based) -> std::optional<int> {
+        if (key.size() <= group_norm.size() + 1) {
+            return std::nullopt;
+        }
+        if (key.substr(0, group_norm.size()) != group_norm) {
+            return std::nullopt;
+        }
+        if (key[group_norm.size()] != '_') {
+            return std::nullopt;
+        }
+        std::string const suffix = key.substr(group_norm.size() + 1);
+        int ch = 0;
+        auto const * begin = suffix.data();
+        auto const * end = suffix.data() + suffix.size();
+        auto const res = std::from_chars(begin, end, ch);
+        if (res.ec != std::errc{} || res.ptr != end) {
+            return std::nullopt;
+        }
+        if (key_one_based) {
+            if (ch <= 0) {
+                return std::nullopt;
+            }
+            return ch - 1;
+        }
+        if (ch < 0) {
+            return std::nullopt;
+        }
+        return ch;
+    };
+
+    // Build lookup maps: channel_index (0-based) → series key
+    // for both analog (from analogSeries) and digital (from eventSeries).
+    std::unordered_map<int, std::string> analog_ch_to_key;
+    for (auto const & [key, _]: _data_store->analogSeries()) {
+        auto const ch = extract_channel_from_key(key, ana_group_norm, config.analog_key_one_based);
+        if (ch.has_value()) {
+            analog_ch_to_key[*ch] = key;
+        }
+    }
+
+    std::unordered_map<int, std::string> digital_ch_to_key;
+    for (auto const & [key, _]: _data_store->eventSeries()) {
+        auto const ch = extract_channel_from_key(key, dig_group_norm, config.digital_key_one_based);
+        if (ch.has_value()) {
+            digital_ch_to_key[*ch] = key;
+        }
+    }
+
+    if (mode == SpikeToAnalogPlacementMode::Overlay) {
+        // For Overlay: digital series shares the analog series' lane_id.
+        // The analog series' effective lane_id is taken from its existing override,
+        // falling back to the auto-lane convention if no override is set.
+        std::string const auto_prefix = "__auto_lane__";
+
+        for (auto const & pairing: pairings) {
+            auto const dig_it = digital_ch_to_key.find(pairing.digital_channel);
+            auto const ana_it = analog_ch_to_key.find(pairing.analog_channel);
+            if (dig_it == digital_ch_to_key.end()) {
+                spdlog::debug("SpikeToAnalog [Overlay]: digital ch {} not found in group '{}'",
+                              pairing.digital_channel, dig_group_norm);
+                continue;
+            }
+            if (ana_it == analog_ch_to_key.end()) {
+                spdlog::debug("SpikeToAnalog [Overlay]: analog ch {} not found in group '{}'",
+                              pairing.analog_channel, ana_group_norm);
+                continue;
+            }
+
+            std::string const & dig_key = dig_it->second;
+            std::string const & ana_key = ana_it->second;
+
+            spdlog::debug("SpikeToAnalog [Overlay]: {} \u2192 {}", dig_key, ana_key);
+
+            // Resolve or create a shared explicit lane_id for this pairing.
+            // If analog already has an explicit lane_id, reuse it; otherwise mint one.
+            std::string shared_lane_id;
+            if (auto const * od = _state->getSeriesLaneOverride(ana_key);
+                od != nullptr && !od->lane_id.empty()) {
+                shared_lane_id = od->lane_id;
+            } else {
+                shared_lane_id = auto_prefix + ana_key;
+            }
+
+            // Ensure analog has an explicit override pointing at shared_lane_id.
+            // Copy any existing analog override so we don't destroy lane_order etc.
+            SeriesLaneOverrideData ana_override;
+            if (auto const * od = _state->getSeriesLaneOverride(ana_key); od != nullptr) {
+                ana_override = *od;
+            }
+            ana_override.lane_id = shared_lane_id;
+            _state->setSeriesLaneOverride(ana_key, ana_override);
+
+            // Assign the digital series to the same lane with overlay mode
+            SeriesLaneOverrideData dig_override;
+            dig_override.lane_id = shared_lane_id;
+            dig_override.overlay_mode = LaneOverlayMode::Overlay;
+            _state->setSeriesLaneOverride(dig_key, dig_override);
+        }
+        return;
+    }
+
+    // Adjacent Below / Adjacent Above: digital series gets its own lane inserted
+    // next to the analog series in the visual order.
+
+    // Read current visual order from axis state (top-to-bottom = reverse of lanes vector).
+    auto * axis_state = _state->multiLaneAxisState();
+    if (axis_state == nullptr) {
+        return;
+    }
+
+    auto const & lanes = axis_state->lanes();
+    int const total_lanes = static_cast<int>(lanes.size());
+
+    // Build visual_order: visual_order[i] = lane_id at visual position i (0 = top)
+    std::vector<std::string> visual_order;
+    visual_order.reserve(static_cast<size_t>(total_lanes));
+    for (int i = total_lanes - 1; i >= 0; --i) {
+        visual_order.push_back(lanes[static_cast<size_t>(i)].lane_id);
+    }
+
+    // Helper: resolve effective lane_id for any series key
+    std::string const auto_prefix = "__auto_lane__";
+    auto const resolve_lane_id = [&](std::string const & key) -> std::string {
+        if (auto const * od = _state->getSeriesLaneOverride(key);
+            od != nullptr && !od->lane_id.empty()) {
+            return od->lane_id;
+        }
+        return auto_prefix + key;
+    };
+
+    // For each pairing, insert the digital auto-lane adjacent to the analog lane.
+    // Process in reverse analog-slot order to avoid index shifts when inserting.
+    struct PairingToInsert {
+        int analog_visual_slot;
+        std::string digital_key;
+    };
+    std::vector<PairingToInsert> insertions;
+
+    for (auto const & pairing: pairings) {
+        auto const dig_it = digital_ch_to_key.find(pairing.digital_channel);
+        auto const ana_it = analog_ch_to_key.find(pairing.analog_channel);
+        if (dig_it == digital_ch_to_key.end()) {
+            spdlog::debug("SpikeToAnalog [Adjacent]: digital ch {} not found in group '{}'",
+                          pairing.digital_channel, dig_group_norm);
+            continue;
+        }
+        if (ana_it == analog_ch_to_key.end()) {
+            spdlog::debug("SpikeToAnalog [Adjacent]: analog ch {} not found in group '{}'",
+                          pairing.analog_channel, ana_group_norm);
+            continue;
+        }
+
+        std::string const & dig_key = dig_it->second;
+        std::string const & ana_key = ana_it->second;
+
+        spdlog::debug("SpikeToAnalog [{}]: {} \u2192 {}",
+                      mode == SpikeToAnalogPlacementMode::AdjacentBelow ? "AdjacentBelow"
+                                                                         : "AdjacentAbove",
+                      dig_key,
+                      ana_key);
+
+        std::string const ana_lid = resolve_lane_id(ana_key);
+
+        auto const ana_it2 = std::find(visual_order.begin(), visual_order.end(), ana_lid);
+        if (ana_it2 == visual_order.end()) {
+            continue;// analog not currently visible
+        }
+        int const ana_slot = static_cast<int>(ana_it2 - visual_order.begin());
+        insertions.push_back({ana_slot, dig_key});
+    }
+
+    if (insertions.empty()) {
+        return;
+    }
+
+    // Sort by analog_visual_slot in reverse order to avoid shifting index on insertions
+    std::sort(insertions.begin(), insertions.end(), [](PairingToInsert const & a, PairingToInsert const & b) {
+        return a.analog_visual_slot > b.analog_visual_slot;
+    });
+
+    // Remove any digital lanes that are already in visual_order to prevent duplicates.
+    // Then insert them at the new position.
+    for (auto const & ins: insertions) {
+        std::string const dig_lid = resolve_lane_id(ins.digital_key);
+
+        // Remove digital lane from its current position (if present)
+        auto const dig_it2 = std::find(visual_order.begin(), visual_order.end(), dig_lid);
+        if (dig_it2 != visual_order.end()) {
+            visual_order.erase(dig_it2);
+        }
+
+        // Re-find analog slot after potential removal
+        std::string const ana_lid = [&]() -> std::string {
+            // Find the analog key corresponding to this digital key
+            for (auto const & pairing: pairings) {
+                auto const dig_ch_it = digital_ch_to_key.find(pairing.digital_channel);
+                auto const ana_ch_it = analog_ch_to_key.find(pairing.analog_channel);
+                if (dig_ch_it != digital_ch_to_key.end() &&
+                    ana_ch_it != analog_ch_to_key.end() &&
+                    dig_ch_it->second == ins.digital_key) {
+                    return resolve_lane_id(ana_ch_it->second);
+                }
+            }
+            return {};
+        }();
+
+        if (ana_lid.empty()) {
+            continue;
+        }
+
+        auto const ana_pos = std::find(visual_order.begin(), visual_order.end(), ana_lid);
+        if (ana_pos == visual_order.end()) {
+            continue;
+        }
+
+        int const insert_offset = (mode == SpikeToAnalogPlacementMode::AdjacentBelow) ? 1 : 0;
+        int const insert_slot = static_cast<int>(ana_pos - visual_order.begin()) + insert_offset;
+        int const clamped = std::clamp(insert_slot, 0, static_cast<int>(visual_order.size()));
+        visual_order.insert(visual_order.begin() + clamped, dig_lid);
+    }
+
+    // Assign new lane_order values: visual slot 0 (top) = highest lane_order.
+    constexpr int kLaneOrderStep = 10;
+    int const n = static_cast<int>(visual_order.size());
+
+    auto const overrides_snapshot = _state->allSeriesLaneOverrides();
+
+    struct LaneUpdate {
+        std::string series_key;
+        SeriesLaneOverrideData updated;
+    };
+    std::vector<LaneUpdate> updates;
+
+    for (int visual_idx = 0; visual_idx < n; ++visual_idx) {
+        std::string const & lid = visual_order[static_cast<size_t>(visual_idx)];
+        int const new_order = (n - visual_idx) * kLaneOrderStep;
+
+        if (lid.rfind(auto_prefix, 0) == 0) {
+            // Auto-lane: series key is the suffix after the prefix
+            std::string const series_key = lid.substr(auto_prefix.size());
+            SeriesLaneOverrideData new_override;
+            new_override.lane_id = lid;
+            new_override.lane_order = new_order;
+            updates.push_back({series_key, new_override});
+        } else {
+            // Explicit lane: update all series whose lane_id matches
+            for (auto const & [key, od]: overrides_snapshot) {
+                if (od.lane_id == lid) {
+                    SeriesLaneOverrideData updated = od;
+                    updated.lane_order = new_order;
+                    updates.push_back({key, updated});
+                }
+            }
+        }
+    }
+
+    for (auto & upd: updates) {
+        _state->setSeriesLaneOverride(upd.series_key, upd.updated);
     }
 }
 

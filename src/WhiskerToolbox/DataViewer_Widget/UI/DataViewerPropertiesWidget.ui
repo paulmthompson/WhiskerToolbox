@@ -296,6 +296,16 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="load_spike_analog_button">
+            <property name="toolTip">
+             <string>Load a CSV file pairing spike channels to analog LFP channels and apply lane placement</string>
+            </property>
+            <property name="text">
+             <string>Load Spike-to-Analog Pairing...</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

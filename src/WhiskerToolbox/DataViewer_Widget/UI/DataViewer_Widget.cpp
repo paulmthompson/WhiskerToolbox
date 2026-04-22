@@ -5,12 +5,14 @@
 #include "Core/DataViewerStateData.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "Feature_Tree_Model.hpp"
+#include "Ordering/SpikeToAnalogPairingLoader.hpp"
 #include "Ordering/SwindaleSpikeSorterLoader.hpp"
 #include "Rendering/OpenGLWidget.hpp"
 #include "Rendering/SVGExporter.hpp"
 #include "SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp"
 #include "SubWidgets/DigitalEvent/EventViewer_Widget.hpp"
 #include "SubWidgets/DigitalInterval/IntervalViewer_Widget.hpp"
+#include "UI/SpikeToAnalogConfigDialog.hpp"
 
 #include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisState.hpp"
 #include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisStateData.hpp"
@@ -1376,6 +1378,64 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & gr
 
     // Load configuration into OpenGLWidget - layout will be recomputed on next render
     ui->openGLWidget->loadSpikeSorterConfiguration(group_name.toStdString(), positions);
+    ui->openGLWidget->updateCanvas();
+}
+
+void DataViewer_Widget::_loadSpikeToAnalogPairing() {
+    SpikeToAnalogConfigDialog dlg(this);
+    if (dlg.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    QString const file_path = QString::fromStdString(dlg.filePath());
+    QFile file(file_path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return;
+    }
+
+    QTextStream stream(&file);
+    QString const text = stream.readAll();
+
+    SpikeToAnalogParseConfig config;
+    config.delimiter = dlg.delimiter();
+    config.digital_column = dlg.digitalColumn();
+    config.analog_column = dlg.analogColumn();
+    config.digital_one_based = dlg.digitalOneBased();
+    config.analog_one_based = dlg.analogOneBased();
+    config.digital_key_one_based = dlg.digitalKeyOneBased();
+    config.analog_key_one_based = dlg.analogKeyOneBased();
+
+    _applyAnalogPairing(
+            dlg.digitalGroupPrefix(),
+            dlg.analogGroupPrefix(),
+            text.toStdString(),
+            dlg.placementMode(),
+            config);
+}
+
+void DataViewer_Widget::_loadSpikeToAnalogPairingFromText(QString const & digital_group,
+                                                          QString const & analog_group,
+                                                          QString const & text,
+                                                          int placement_mode) {
+    _applyAnalogPairing(
+            digital_group.toStdString(),
+            analog_group.toStdString(),
+            text.toStdString(),
+            static_cast<SpikeToAnalogPlacementMode>(placement_mode),
+            SpikeToAnalogParseConfig{});
+}
+
+void DataViewer_Widget::_applyAnalogPairing(std::string const & digital_group,
+                                            std::string const & analog_group,
+                                            std::string const & text,
+                                            SpikeToAnalogPlacementMode mode,
+                                            SpikeToAnalogParseConfig const & config) {
+    auto const pairings = parseSpikeToAnalogCSV(text, config);
+    if (pairings.empty()) {
+        return;
+    }
+
+    ui->openGLWidget->loadSpikeToAnalogPairing(digital_group, analog_group, pairings, mode, config);
     ui->openGLWidget->updateCanvas();
 }
 

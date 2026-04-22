@@ -215,6 +215,14 @@ signals:
      */
     void loadLaneLayoutRequested();
 
+    /**
+     * @brief Emitted when the user clicks "Load Spike-to-Analog Pairing..."
+     *
+     * The view widget should connect to this signal to open the configuration
+     * dialog and apply the resulting lane placement overrides.
+     */
+    void loadSpikeToAnalogPairingRequested();
+
 private slots:
     void _onThemeChanged(int index);
     void _onGlobalYScaleChanged(double value);

@@ -60,6 +60,7 @@
 #include "Interaction/DataViewerSelectionManager.hpp"
 #include "Interaction/DataViewerTooltipController.hpp"
 #include "Ordering/ChannelPositionMetadata.hpp"
+#include "Ordering/SpikeToAnalogPairingLoader.hpp"
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Interaction/DataCoordinates.hpp"
@@ -304,6 +305,42 @@ public:
      * @param group_name Group identifier to clear
      */
     void clearSpikeSorterConfiguration(std::string const & group_name);
+
+    /**
+     * @brief Apply lane placement overrides based on spike-to-analog pairings.
+     *
+     * For each pairing in @p pairings, locates the digital series key
+     * (@p digital_group + "_" + (digital_channel + 1)) and the analog series key
+     * (@p analog_group + "_" + (analog_channel + 1)) that are currently registered
+     * in the data store.
+     *
+     * The placement policy applied is controlled by @p mode:
+     * - **AdjacentBelow**: the digital series is inserted in its own auto-lane
+     *   immediately below the analog series' lane.
+     * - **AdjacentAbove**: the digital series is inserted immediately above.
+     * - **Overlay**: the digital series shares the analog series' @c lane_id
+     *   (with @c overlay_mode set to @c Overlay).
+     *
+     * The current visual order of all displayed series is read from
+     * @c _multi_lane_axis_state->lanes() to determine insertion positions.
+     * New @c lane_order values are assigned with the same @c (N - i) * 10
+     * formula used throughout the ordering system.
+     *
+     * @pre @p pairings must not be empty; zero-length pairings are no-ops.
+     * @param digital_group Group prefix for digital (spike) series (e.g. "spikes")
+     * @param analog_group  Group prefix for analog (LFP) series (e.g. "voltage")
+     * @param pairings      Parsed pairings from @c parseSpikeToAnalogCSV
+     * @param mode          Lane placement policy
+     * @param config        Parse config; the @c digital_key_one_based and
+     *                      @c analog_key_one_based fields control how the numeric
+     *                      suffix in series key names is interpreted when building
+     *                      the channel-to-key lookup maps.
+     */
+    void loadSpikeToAnalogPairing(std::string const & digital_group,
+                                  std::string const & analog_group,
+                                  std::vector<SpikeToAnalogPairing> const & pairings,
+                                  SpikeToAnalogPlacementMode mode,
+                                  SpikeToAnalogParseConfig const & config = SpikeToAnalogParseConfig{});
 
     [[nodiscard]] std::pair<int, int> getCanvasSize() const {
         return std::make_pair(width(), height());

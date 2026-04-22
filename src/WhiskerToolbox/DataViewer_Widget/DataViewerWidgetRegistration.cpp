@@ -152,6 +152,10 @@ void registerTypes(EditorRegistry * registry,
                                 QObject::connect(props, &DataViewerPropertiesWidget::loadLaneLayoutRequested,
                                                  view, &DataViewer_Widget::_loadLaneLayout);
 
+                                // Connect spike-to-analog pairing signal (Phase 4E)
+                                QObject::connect(props, &DataViewerPropertiesWidget::loadSpikeToAnalogPairingRequested,
+                                                 view, &DataViewer_Widget::_loadSpikeToAnalogPairing);
+
                                 // Update visible lane count indicator on scene rebuild and viewport changes
                                 auto update_lane_count = [opengl_widget, state, props]() {
                                     auto const & response = opengl_widget->layoutResponse();
