@@ -3,9 +3,9 @@
 
 #include "Core/DataViewerState.hpp"
 #include "Core/DataViewerStateData.hpp"
-#include "Ordering/SwindaleSpikeSorterLoader.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "Feature_Tree_Model.hpp"
+#include "Ordering/SwindaleSpikeSorterLoader.hpp"
 #include "Rendering/OpenGLWidget.hpp"
 #include "Rendering/SVGExporter.hpp"
 #include "SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp"
@@ -200,6 +200,16 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Connect sceneRebuilt to update lane descriptors
     connect(ui->openGLWidget, &OpenGLWidget::sceneRebuilt,
             this, &DataViewer_Widget::_updateLaneDescriptors);
+
+    // Connect laneReorderRequested to apply lane_order overrides via state
+    connect(_multi_lane_axis_widget, &MultiLaneVerticalAxisWidget::laneReorderRequested,
+            this, &DataViewer_Widget::_handleLaneReorderRequest);
+
+    // Mirror drag overlay (translucent rect + insertion line) across the OpenGL canvas
+    connect(_multi_lane_axis_widget, &MultiLaneVerticalAxisWidget::laneDragOverlayChanged,
+            this, [this](bool active, float center, float extent, float marker_y) {
+                ui->openGLWidget->setLaneDragOverlay(active, center, extent, marker_y);
+            });
 
     // Connect viewStateChanged to repaint the axis widget (for pan/zoom tracking)
     connect(_state.get(), &DataViewerState::viewStateChanged,
@@ -807,6 +817,7 @@ void DataViewer_Widget::_updateLaneDescriptors() {
         auto const & lane = ordered_lanes[static_cast<size_t>(index)];
         LaneAxisDescriptor descriptor;
         descriptor.label = chooseLaneLabel(_state.get(), _data_manager.get(), lane);
+        descriptor.lane_id = lane.lane_id;
         descriptor.y_center = lane.y_center;
         descriptor.y_extent = lane.y_extent;
         descriptor.lane_index = index;
@@ -1262,6 +1273,93 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & gr
     // Load configuration into OpenGLWidget - layout will be recomputed on next render
     ui->openGLWidget->loadSpikeSorterConfiguration(group_name.toStdString(), positions);
     ui->openGLWidget->updateCanvas();
+}
+
+void DataViewer_Widget::_handleLaneReorderRequest(QString const & source_lane_id, int target_visual_slot) {
+    auto * axis_state = _state->multiLaneAxisState();
+    if (axis_state == nullptr) {
+        return;
+    }
+
+    auto const & lanes = axis_state->lanes();
+    int const n = static_cast<int>(lanes.size());
+    if (n <= 1) {
+        return;// Nothing to reorder
+    }
+
+    // Build the current visual order (top-to-bottom = NDC descending = reverse of lanes vector).
+    // visual_order[i] = lane_id at visual position i (0 = top).
+    std::vector<std::string> visual_order;
+    visual_order.reserve(static_cast<size_t>(n));
+    for (int i = n - 1; i >= 0; --i) {
+        visual_order.push_back(lanes[static_cast<size_t>(i)].lane_id);
+    }
+
+    // Find the source lane in visual order.
+    std::string const src = source_lane_id.toStdString();
+    auto const src_it = std::find(visual_order.begin(), visual_order.end(), src);
+    if (src_it == visual_order.end()) {
+        return;// Unknown lane_id — stale descriptor
+    }
+    int const src_visual_idx = static_cast<int>(src_it - visual_order.begin());
+
+    // Build new visual order: remove source and insert at target slot.
+    std::vector<std::string> new_visual_order;
+    new_visual_order.reserve(static_cast<size_t>(n));
+    for (int i = 0; i < n; ++i) {
+        if (i != src_visual_idx) {
+            new_visual_order.push_back(visual_order[static_cast<size_t>(i)]);
+        }
+    }
+    int const clamped_slot = std::clamp(target_visual_slot, 0, n - 1);
+    new_visual_order.insert(new_visual_order.begin() + clamped_slot, src);
+
+    if (new_visual_order == visual_order) {
+        return;// No-op: dropped back to the same position
+    }
+
+    // Assign new lane_order values.
+    // Visual slot 0 (top) receives the highest lane_order; slot N-1 (bottom) receives the lowest.
+    // lane_order = (N - visual_idx) * 10
+    constexpr int kLaneOrderStep = 10;
+
+    // Snapshot the current overrides map before making changes to avoid iterator invalidation.
+    auto const overrides_snapshot = _state->allSeriesLaneOverrides();
+
+    struct LaneUpdate {
+        std::string series_key;
+        SeriesLaneOverrideData updated;
+    };
+    std::vector<LaneUpdate> updates;
+
+    std::string const auto_prefix = "__auto_lane__";
+    for (int visual_idx = 0; visual_idx < n; ++visual_idx) {
+        std::string const & lid = new_visual_order[static_cast<size_t>(visual_idx)];
+        int const new_order = (n - visual_idx) * kLaneOrderStep;
+
+        if (lid.rfind(auto_prefix, 0) == 0) {
+            // Auto-lane: the series key is the suffix after "__auto_lane__".
+            // Create an explicit override so the order persists.
+            std::string const series_key = lid.substr(auto_prefix.size());
+            SeriesLaneOverrideData new_override;
+            new_override.lane_id = lid;
+            new_override.lane_order = new_order;
+            updates.push_back({series_key, new_override});
+        } else {
+            // Explicit lane: update all series whose lane_id matches.
+            for (auto const & [key, od]: overrides_snapshot) {
+                if (od.lane_id == lid) {
+                    SeriesLaneOverrideData updated = od;
+                    updated.lane_order = new_order;
+                    updates.push_back({key, updated});
+                }
+            }
+        }
+    }
+
+    for (auto & upd: updates) {
+        _state->setSeriesLaneOverride(upd.series_key, upd.updated);
+    }
 }
 
 void DataViewer_Widget::_autoFillCanvas() {

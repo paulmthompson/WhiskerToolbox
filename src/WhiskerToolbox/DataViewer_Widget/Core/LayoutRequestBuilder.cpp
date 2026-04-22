@@ -7,6 +7,7 @@
 
 #include "DataViewerState.hpp"
 #include "DataViewerStateData.hpp"
+#include "Ordering/ChannelPositionMetadata.hpp"
 #include "Ordering/OrderingPolicyResolver.hpp"
 #include "TimeSeriesDataStore.hpp"
 
@@ -35,16 +36,6 @@ struct StackableSeriesCandidate {
     std::optional<int> explicit_lane_order;
     int insertion_index{0};
 };
-
-/**
- * @brief Check whether every candidate is analog.
- * @pre candidates may be empty; empty input is treated as true (enforcement: runtime_check)
- */
-[[nodiscard]] bool allCandidatesAnalog(std::vector<StackableSeriesCandidate> const & candidates) {
-    return std::all_of(candidates.begin(), candidates.end(), [](StackableSeriesCandidate const & c) {
-        return c.type == CorePlotting::SeriesType::Analog;
-    });
-}
 
 /**
  * @brief Build a normalized ordering item for one visible stackable series.
@@ -157,24 +148,11 @@ void appendNonStackableSeries(LayoutRequestBuildContext const & context,
  * @brief Apply ordering policy to stackable candidates in-place.
  * @pre candidates represents a complete stackable set for one request build (enforcement: none)
  * @pre visible_analog_keys must correspond to visible analog series in this same request build (enforcement: none)
- * @pre context.spike_sorter_configs keys, when provided, are compatible with orderKeysBySpikeSorterConfig (enforcement: none)
  */
 void applyOrderingRules(LayoutRequestBuildContext const & context,
                         std::vector<StackableSeriesCandidate> & candidates,
                         std::vector<std::string> const & visible_analog_keys) {
-    bool const has_explicit_order = std::any_of(candidates.begin(), candidates.end(),
-                                                [](StackableSeriesCandidate const & candidate) {
-                                                    return candidate.explicit_lane_order.has_value();
-                                                });
-
-    bool const allow_spike_sorter_fallback = !has_explicit_order &&
-                                             allCandidatesAnalog(candidates) &&
-                                             !context.spike_sorter_configs.empty();
-
-    SortableRankMap analog_order_rank;
-    if (allow_spike_sorter_fallback) {
-        analog_order_rank = buildSwindaleSpikeSorterRanks(visible_analog_keys, context.spike_sorter_configs);
-    }
+    (void) visible_analog_keys;// reserved for future rank providers
 
     std::vector<OrderingInputItem> resolver_input;
     resolver_input.reserve(candidates.size());
@@ -195,7 +173,7 @@ void applyOrderingRules(LayoutRequestBuildContext const & context,
                 constraint.below_series_key});
     }
 
-    OrderingResolution const resolution = resolveOrdering(resolver_input, analog_order_rank, resolver_constraints);
+    OrderingResolution const resolution = resolveOrdering(resolver_input, SortableRankMap{}, resolver_constraints);
 
     std::vector<StackableSeriesCandidate> ordered_candidates;
     ordered_candidates.reserve(candidates.size());

@@ -1,10 +1,12 @@
 #include "OpenGLWidget.hpp"
 
+#include "Core/DataViewerStateData.hpp"
 #include "Core/LayoutRequestBuilder.hpp"
 #include "Core/TimeSeriesDataStore.hpp"
 #include "Interaction/DataViewerCoordinates.hpp"
 #include "Interaction/DataViewerSelectionManager.hpp"
 #include "Interaction/DataViewerTooltipController.hpp"
+#include "Ordering/SwindaleSpikeSorterLoader.hpp"
 #include "SceneBuildingHelpers.hpp"
 #include "TransformComposers.hpp"
 
@@ -529,6 +531,9 @@ void OpenGLWidget::paintGL() {
 
     //unified controller preview overlay
     drawInteractionPreview();
+
+    // Lane drag overlay (always drawn when active, independent of developer mode)
+    drawLaneDragOverlay();
 
     // Developer overlay (QPainter on top of GL)
     if (_state && _state->developerMode()) {
@@ -1489,7 +1494,6 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     return DataViewer::buildLayoutRequest({
             .state = *_state,
             .data_store = *_data_store,
-            .spike_sorter_configs = _spike_sorter_configs,
             .viewport_y_min = static_cast<float>(view_state.y_min),
             .viewport_y_max = static_cast<float>(view_state.y_max),
     });
@@ -1517,15 +1521,43 @@ void OpenGLWidget::computeAndApplyLayout() {
 
 void OpenGLWidget::loadSpikeSorterConfiguration(std::string const & group_name,
                                                 std::vector<ChannelPosition> const & positions) {
-    _spike_sorter_configs[group_name] = positions;
-    _cache_state.layout_response_dirty = true;
-    updateCanvas(_time);
+    // Build a transient ChannelPositionMap for rank derivation only
+    ChannelPositionMap config_map;
+    config_map[group_name] = positions;
+
+    // Collect analog series keys belonging to this group
+    std::vector<std::string> group_keys;
+    for (auto const & [key, _]: _data_store->analogSeries()) {
+        auto const identity = parseSeriesIdentity(key);
+        if (identity.group == group_name) {
+            group_keys.push_back(key);
+        }
+    }
+
+    // Convert electrode Y positions to integer ranks
+    SortableRankMap const ranks = buildSwindaleSpikeSorterRanks(group_keys, config_map);
+
+    // Write lane_order overrides via state.
+    // setSeriesLaneOverride emits seriesLaneOverrideChanged, which already triggers
+    // layout invalidation and repaint via existing signal connections.
+    for (auto const & [key, rank]: ranks) {
+        SeriesLaneOverrideData override_data;
+        override_data.lane_id = key;// unique per channel; required for lane_order to persist
+        override_data.lane_order = rank;
+        _state->setSeriesLaneOverride(key, override_data);
+    }
 }
 
 void OpenGLWidget::clearSpikeSorterConfiguration(std::string const & group_name) {
-    _spike_sorter_configs.erase(group_name);
-    _cache_state.layout_response_dirty = true;
-    updateCanvas(_time);
+    // Remove lane_order overrides for every analog series in the group.
+    // clearSeriesLaneOverride emits seriesLaneOverrideChanged, which already triggers
+    // layout invalidation and repaint via existing signal connections.
+    for (auto const & [key, _]: _data_store->analogSeries()) {
+        auto const identity = parseSeriesIdentity(key);
+        if (identity.group == group_name) {
+            _state->clearSeriesLaneOverride(key);
+        }
+    }
 }
 
 DataViewerDiagnostics OpenGLWidget::getDiagnostics() const {
@@ -1693,6 +1725,41 @@ QColor overlayColorForType(std::string const & type) {
 }
 
 }// namespace
+
+void OpenGLWidget::setLaneDragOverlay(bool active,
+                                      float lane_center,
+                                      float lane_extent,
+                                      float marker_ndc_y) {
+    _drag_overlay = {active, lane_center, lane_extent, marker_ndc_y};
+    update();
+}
+
+void OpenGLWidget::drawLaneDragOverlay() {
+    if (!_drag_overlay.active || !_state) {
+        return;
+    }
+
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, false);
+
+    auto const eff = CorePlotting::computeEffectiveYViewport(_state->viewState());
+    int const h = height();
+    int const w = width();
+
+    // Translucent highlight rectangle over the dragged lane
+    float const top_world = _drag_overlay.lane_center + _drag_overlay.lane_extent / 2.0f;
+    float const bot_world = _drag_overlay.lane_center - _drag_overlay.lane_extent / 2.0f;
+    int const top_px = static_cast<int>(worldYToPixel(top_world, eff, h));
+    int const bot_px = static_cast<int>(worldYToPixel(bot_world, eff, h));
+    painter.fillRect(0, top_px, w, bot_px - top_px, QColor(100, 180, 255, 45));
+
+    // Bright horizontal insertion-line marker at the drop target
+    int const marker_px = static_cast<int>(worldYToPixel(_drag_overlay.marker_ndc_y, eff, h));
+    painter.setPen(QPen(QColor(100, 180, 255), 2));
+    painter.drawLine(0, marker_px, w, marker_px);
+
+    painter.end();
+}
 
 void OpenGLWidget::drawDeveloperOverlays() {
     QPainter painter(this);

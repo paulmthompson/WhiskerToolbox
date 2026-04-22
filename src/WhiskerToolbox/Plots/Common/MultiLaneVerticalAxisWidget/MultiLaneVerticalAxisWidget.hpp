@@ -9,16 +9,24 @@
  *
  * Viewport-aware: only renders labels for lanes visible in the current
  * Y viewport (respects y_pan from ViewStateData).
+ *
+ * Supports interactive lane drag-and-drop reordering. Clicking and dragging
+ * a lane label emits laneReorderRequested(source_lane_id, target_visual_slot)
+ * where target_visual_slot is 0-based from the top of the widget. Escape
+ * cancels an in-progress drag.
  */
 
 #ifndef MULTI_LANE_VERTICAL_AXIS_WIDGET_HPP
 #define MULTI_LANE_VERTICAL_AXIS_WIDGET_HPP
 
+#include <QString>
 #include <QWidget>
 
 #include <functional>
 
 class MultiLaneVerticalAxisState;
+class QKeyEvent;
+class QMouseEvent;
 class QPaintEvent;
 
 /**
@@ -93,8 +101,36 @@ public:
      */
     [[nodiscard]] QSize sizeHint() const override;
 
+signals:
+    /**
+     * @brief Emitted when the user completes a lane drag-and-drop reorder
+     *
+     * @param source_lane_id The stable lane_id of the dragged lane
+     * @param target_visual_slot Target insertion position, 0-based from the top
+     *        of the widget (0 = above topmost visible lane)
+     */
+    void laneReorderRequested(QString source_lane_id, int target_visual_slot);
+
+    /**
+     * @brief Emitted whenever the drag overlay visual state changes
+     *
+     * Fired on drag start, each mouse-move, and on drag end/cancel.
+     * The OpenGL canvas connects to this to mirror the overlay across the
+     * full plot area.
+     *
+     * @param active       True while a drag is in progress
+     * @param lane_center  NDC Y center of the lane being dragged
+     * @param lane_extent  NDC Y extent (height) of the dragged lane
+     * @param marker_ndc_y NDC Y position of the current insertion-line marker
+     */
+    void laneDragOverlayChanged(bool active, float lane_center, float lane_extent, float marker_ndc_y);
+
 protected:
     void paintEvent(QPaintEvent * event) override;
+    void mousePressEvent(QMouseEvent * event) override;
+    void mouseMoveEvent(QMouseEvent * event) override;
+    void mouseReleaseEvent(QMouseEvent * event) override;
+    void keyPressEvent(QKeyEvent * event) override;
 
 private:
     MultiLaneVerticalAxisState * _state{nullptr};
@@ -104,6 +140,13 @@ private:
     float _y_max{1.0f};
 
     static constexpr int kAxisWidth = 50;
+
+    // ---- Drag state ----
+    bool _drag_active{false};
+    int _dragged_lane_ndc_index{-1};///< Index into _state->lanes() of the dragged lane (NDC order)
+    QString _drag_source_lane_id;   ///< Stable lane_id of the dragged lane
+    int _current_insert_slot{0};    ///< Insertion slot, 0-based from top of widget
+    QPoint _drag_current_pos;       ///< Last mouse position during drag
 
     /**
      * @brief Convert NDC Y value to pixel Y position
@@ -124,6 +167,41 @@ private:
      * @return true if any part of the lane is within the viewport
      */
     [[nodiscard]] bool isLaneVisible(float center, float extent) const;
+
+    /**
+     * @brief Find the NDC-ordered lane index at a given pixel Y position
+     * @param pixel_y Pixel Y coordinate in widget space
+     * @return Index into _state->lanes() or -1 if no lane hit
+     */
+    [[nodiscard]] int laneIndexAtPixelY(int pixel_y) const;
+
+    /**
+     * @brief Compute the visual insertion slot for a pixel Y position
+     *
+     * Returns a slot in visual order (0 = above topmost lane).
+     * Clamped to [0, N] where N is the number of lanes.
+     *
+     * @param pixel_y Pixel Y coordinate in widget space
+     * @return Insertion slot index
+     */
+    [[nodiscard]] int insertSlotAtPixelY(int pixel_y) const;
+
+    /**
+     * @brief Compute the NDC Y coordinate of the insertion-line marker for a given slot
+     *
+     * Converts an integer visual insertion slot into the NDC y position of
+     * the horizontal insertion line shown during drag feedback.
+     *
+     * @pre _state must be non-null and lanes must be non-empty
+     * @param slot Visual insertion slot (0 = above topmost lane, N = below bottommost)
+     * @return NDC Y value for the insertion marker
+     */
+    [[nodiscard]] float insertSlotNdcY(int slot) const;
+
+    /**
+     * @brief Reset all drag state
+     */
+    void resetDragState();
 };
 
 #endif// MULTI_LANE_VERTICAL_AXIS_WIDGET_HPP

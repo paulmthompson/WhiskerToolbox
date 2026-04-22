@@ -9,9 +9,6 @@
  * widgets do not need to know fallback ordering details.
  */
 
-#include "Ordering/ChannelPositionMetadata.hpp"
-#include "Ordering/SwindaleSpikeSorterLoader.hpp"
-
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 
 class DataViewerState;
@@ -26,7 +23,6 @@ class TimeSeriesDataStore;
 struct LayoutRequestBuildContext {
     ::DataViewerState const & state;
     TimeSeriesDataStore const & data_store;
-    ChannelPositionMap const & spike_sorter_configs;
     float viewport_y_min{-1.0f};
     float viewport_y_max{1.0f};
 };

@@ -21,6 +21,7 @@
  */
 struct LaneAxisDescriptor {
     std::string label;   ///< Channel/series display name
+    std::string lane_id; ///< Stable lane identity key (matches SeriesLaneOverrideData::lane_id)
     float y_center{0.0f};///< Center Y position in NDC (from LayoutTransform offset)
     float y_extent{1.0f};///< Total height of the lane in NDC (from LayoutTransform gain * 2)
     int lane_index{0};   ///< Index in the stacking order

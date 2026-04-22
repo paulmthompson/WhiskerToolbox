@@ -20,8 +20,6 @@
  */
 
 #include "Rendering/AnalogVertexCache.hpp"
-#include "Ordering/ChannelPositionMetadata.hpp"
-#include "Ordering/SwindaleSpikeSorterLoader.hpp"
 
 #include "CorePlotting/DataTypes/SeriesDataCache.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
@@ -324,22 +322,6 @@ public:
      * @param registry Pointer to the SeriesOptionsRegistry (non-owning)
      */
     void setSeriesOptionsRegistry(SeriesOptionsRegistry * registry);
-
-    /**
-     * @brief Build a layout request from current series state
-     * 
-     * Constructs a LayoutRequest containing all visible series, ordered
-     * according to spike sorter configuration if present.
-     * 
-     * @param viewport_y_min Minimum Y viewport value
-     * @param viewport_y_max Maximum Y viewport value
-     * @param spike_sorter_configs Configuration for channel ordering
-     * @return LayoutRequest ready for LayoutEngine::compute()
-     */
-    [[nodiscard]] CorePlotting::LayoutRequest buildLayoutRequest(
-            float viewport_y_min,
-            float viewport_y_max,
-            ChannelPositionMap const & spike_sorter_configs) const;
 
     /**
      * @brief Apply layout response to display options

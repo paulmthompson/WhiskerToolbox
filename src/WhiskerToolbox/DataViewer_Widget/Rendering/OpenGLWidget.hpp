@@ -53,13 +53,13 @@
 
 #include "Core/DataViewerDiagnostics.hpp"
 #include "Core/DataViewerState.hpp"
-#include "Ordering/ChannelPositionMetadata.hpp"
 #include "Core/TimeSeriesDataStore.hpp"
 #include "Interaction/DataViewerCoordinates.hpp"
 #include "Interaction/DataViewerInputHandler.hpp"
 #include "Interaction/DataViewerInteractionManager.hpp"
 #include "Interaction/DataViewerSelectionManager.hpp"
 #include "Interaction/DataViewerTooltipController.hpp"
+#include "Ordering/ChannelPositionMetadata.hpp"
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Interaction/DataCoordinates.hpp"
@@ -369,6 +369,19 @@ public slots:
     void updateCanvas() { updateCanvas(_time); }
     void updateCanvas(TimeFrameIndex time);
 
+    /**
+     * @brief Set or clear the lane drag overlay drawn on top of the GL canvas
+     *
+     * Called by DataViewer_Widget when MultiLaneVerticalAxisWidget emits
+     * laneDragOverlayChanged. Triggers an immediate repaint.
+     *
+     * @param active       True while a drag is in progress
+     * @param lane_center  NDC Y center of the lane being dragged
+     * @param lane_extent  NDC Y height of the dragged lane
+     * @param marker_ndc_y NDC Y of the horizontal insertion-line marker
+     */
+    void setLaneDragOverlay(bool active, float lane_center, float lane_extent, float marker_ndc_y);
+
 signals:
     void mouseHover(float time_coordinate, float canvas_y, QString const & series_info);
     void mouseClick(float time_coordinate, float canvas_y, QString const & series_info);
@@ -443,6 +456,15 @@ private:
     void drawLaneBoundaries(QPainter & painter);
     void drawOriginMarkers(QPainter & painter);
     void drawCursorCrosshair(QPainter & painter);
+
+    /**
+     * @brief Draw the lane drag-and-drop overlay via QPainter on top of GL
+     *
+     * Draws a translucent highlight rectangle over the dragged lane and a
+     * bright horizontal insertion-line at the target drop position.
+     * No-op when _drag_overlay.active is false.
+     */
+    void drawLaneDragOverlay();
 
     /**
      * @brief Handle completed interaction and update DataManager
@@ -525,10 +547,6 @@ private:
     CorePlotting::LayoutEngine _layout_engine{
             std::make_unique<CorePlotting::StackedLayoutStrategy>()};
 
-    // Spike sorter configuration for custom series ordering
-    // Maps group_name -> vector of channel positions
-    ChannelPositionMap _spike_sorter_configs;
-
     // PlottingOpenGL Renderers
     // These use the new CorePlotting RenderableBatch approach for rendering.
     // SceneRenderer coordinates all batch renderers (polylines, glyphs, rectangles).
@@ -547,6 +565,15 @@ private:
         bool crosshair = true;
     };
     OverlayToggles _overlay_toggles;
+
+    /// State for the lane drag overlay drawn on top of the GL canvas
+    struct DragOverlayData {
+        bool active{false};
+        float lane_center{0.0f}; ///< NDC Y center of the dragged lane
+        float lane_extent{0.0f}; ///< NDC Y height of the dragged lane
+        float marker_ndc_y{0.0f};///< NDC Y of the insertion-line marker
+    };
+    DragOverlayData _drag_overlay;
 
     /// Last known mouse position for crosshair overlay
     QPoint _last_mouse_pos;

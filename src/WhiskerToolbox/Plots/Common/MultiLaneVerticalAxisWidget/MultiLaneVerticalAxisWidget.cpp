@@ -7,6 +7,8 @@
 #include "Core/MultiLaneVerticalAxisState.hpp"
 #include "Core/MultiLaneVerticalAxisStateData.hpp"
 
+#include <QKeyEvent>
+#include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
 
@@ -21,6 +23,7 @@ MultiLaneVerticalAxisWidget::MultiLaneVerticalAxisWidget(
     setMinimumWidth(kAxisWidth);
     setMaximumWidth(kAxisWidth);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    setFocusPolicy(Qt::ClickFocus);
 
     // Connect to state signals
     if (_state) {
@@ -110,16 +113,25 @@ void MultiLaneVerticalAxisWidget::paintEvent(QPaintEvent * /* event */) {
     QFontMetrics const fm(label_font);
     int const label_height = fm.height();
 
-    for (auto const & lane: lanes) {
+    for (int i = 0; i < static_cast<int>(lanes.size()); ++i) {
+        auto const & lane = lanes[static_cast<size_t>(i)];
+
         // Cull lanes that are entirely off-screen
         if (!isLaneVisible(lane.y_center, lane.y_extent)) {
             continue;
         }
 
+        bool const is_dragged = _drag_active && (i == _dragged_lane_ndc_index);
+
         int const center_px = ndcToPixelY(lane.y_center);
         float const half_extent = lane.y_extent / 2.0f;
         int const top_px = ndcToPixelY(lane.y_center + half_extent);
         int const bottom_px = ndcToPixelY(lane.y_center - half_extent);
+
+        // Highlight dragged lane with a translucent rectangle drawn behind text
+        if (is_dragged) {
+            painter.fillRect(0, top_px, width(), bottom_px - top_px, QColor(100, 180, 255, 55));
+        }
 
         // --- Lane separator lines (at top boundary of each lane) ---
         if (show_separators) {
@@ -129,14 +141,12 @@ void MultiLaneVerticalAxisWidget::paintEvent(QPaintEvent * /* event */) {
 
         // --- Channel label at the center of the lane ---
         if (show_labels) {
-            // Elide label text if it doesn't fit in the available width
-            int const available_width = width() - 6;// 3px margin on each side
+            int const available_width = width() - 6;
             QString const label = fm.elidedText(
                     QString::fromStdString(lane.label),
                     Qt::ElideRight,
                     available_width);
 
-            // Only draw if the lane is tall enough to fit the label
             int const lane_height_px = std::abs(bottom_px - top_px);
             if (lane_height_px >= label_height) {
                 painter.setPen(QColor(200, 200, 200));
@@ -154,6 +164,13 @@ void MultiLaneVerticalAxisWidget::paintEvent(QPaintEvent * /* event */) {
         int const bottom_px = ndcToPixelY(last.y_center - half_extent);
         painter.setPen(QPen(QColor(80, 80, 80), 1, Qt::DashLine));
         painter.drawLine(0, bottom_px, width() - 2, bottom_px);
+    }
+
+    // --- Insertion-line marker (shown during drag) ---
+    if (_drag_active) {
+        int const marker_px = ndcToPixelY(insertSlotNdcY(_current_insert_slot));
+        painter.setPen(QPen(QColor(100, 180, 255), 2));
+        painter.drawLine(0, marker_px, width() - 1, marker_px);
     }
 }
 
@@ -181,4 +198,149 @@ bool MultiLaneVerticalAxisWidget::isLaneVisible(float center, float extent) cons
 
     // Lane is visible if it overlaps the effective viewport
     return lane_top >= eff_y_min && lane_bottom <= eff_y_max;
+}
+
+void MultiLaneVerticalAxisWidget::mousePressEvent(QMouseEvent * event) {
+    if (event->button() != Qt::LeftButton || !_state) {
+        QWidget::mousePressEvent(event);
+        return;
+    }
+
+    int const hit_idx = laneIndexAtPixelY(event->pos().y());
+    if (hit_idx < 0) {
+        QWidget::mousePressEvent(event);
+        return;
+    }
+
+    auto const & lanes = _state->lanes();
+    _dragged_lane_ndc_index = hit_idx;
+    _drag_source_lane_id = QString::fromStdString(lanes[static_cast<size_t>(hit_idx)].lane_id);
+    _drag_current_pos = event->pos();
+
+    int const n = static_cast<int>(lanes.size());
+    // Convert NDC index to visual slot: visual = n-1 - ndc_idx
+    int const visual_idx = n - 1 - hit_idx;
+    _current_insert_slot = visual_idx;
+    _drag_active = true;
+
+    // Notify OpenGL canvas to draw the overlay
+    emit laneDragOverlayChanged(true,
+                                lanes[static_cast<size_t>(hit_idx)].y_center,
+                                lanes[static_cast<size_t>(hit_idx)].y_extent,
+                                insertSlotNdcY(_current_insert_slot));
+
+    setFocus();
+    update();
+    event->accept();
+}
+
+void MultiLaneVerticalAxisWidget::mouseMoveEvent(QMouseEvent * event) {
+    if (!_drag_active) {
+        QWidget::mouseMoveEvent(event);
+        return;
+    }
+
+    _drag_current_pos = event->pos();
+    _current_insert_slot = insertSlotAtPixelY(event->pos().y());
+
+    // Notify OpenGL canvas of updated marker position
+    auto const & lanes = _state->lanes();
+    emit laneDragOverlayChanged(true,
+                                lanes[static_cast<size_t>(_dragged_lane_ndc_index)].y_center,
+                                lanes[static_cast<size_t>(_dragged_lane_ndc_index)].y_extent,
+                                insertSlotNdcY(_current_insert_slot));
+
+    update();
+    event->accept();
+}
+
+void MultiLaneVerticalAxisWidget::mouseReleaseEvent(QMouseEvent * event) {
+    if (event->button() != Qt::LeftButton || !_drag_active) {
+        QWidget::mouseReleaseEvent(event);
+        return;
+    }
+
+    QString const source_id = _drag_source_lane_id;
+    int const target_slot = _current_insert_slot;
+    resetDragState();
+    update();
+
+    emit laneReorderRequested(source_id, target_slot);
+    event->accept();
+}
+
+void MultiLaneVerticalAxisWidget::keyPressEvent(QKeyEvent * event) {
+    if (event->key() == Qt::Key_Escape && _drag_active) {
+        resetDragState();
+        update();
+        event->accept();
+        return;
+    }
+    QWidget::keyPressEvent(event);
+}
+
+int MultiLaneVerticalAxisWidget::laneIndexAtPixelY(int pixel_y) const {
+    if (!_state || _state->lanes().empty()) {
+        return -1;
+    }
+
+    auto const & lanes = _state->lanes();
+    for (int i = 0; i < static_cast<int>(lanes.size()); ++i) {
+        auto const & lane = lanes[static_cast<size_t>(i)];
+        float const half_extent = lane.y_extent / 2.0f;
+        int const top_px = ndcToPixelY(lane.y_center + half_extent);
+        int const bottom_px = ndcToPixelY(lane.y_center - half_extent);
+        // top_px < bottom_px in pixel space (NDC y increases upward, pixel y increases downward)
+        if (pixel_y >= top_px && pixel_y <= bottom_px) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int MultiLaneVerticalAxisWidget::insertSlotAtPixelY(int pixel_y) const {
+    if (!_state || _state->lanes().empty()) {
+        return 0;
+    }
+
+    auto const & lanes = _state->lanes();
+    int const n = static_cast<int>(lanes.size());
+
+    // Lanes are sorted bottom-to-top (NDC ascending); visual order is top-to-bottom.
+    // visual[i] corresponds to NDC index (n-1-i).
+    // Divide at the center pixel of each visual lane: if cursor is above the center
+    // of visual lane i, the insert slot is i; otherwise it is i+1.
+    for (int visual = 0; visual < n; ++visual) {
+        int const ndc_idx = n - 1 - visual;
+        int const center_px = ndcToPixelY(lanes[static_cast<size_t>(ndc_idx)].y_center);
+        if (pixel_y <= center_px) {
+            return visual;
+        }
+    }
+    return n;
+}
+
+float MultiLaneVerticalAxisWidget::insertSlotNdcY(int slot) const {
+    auto const & lanes = _state->lanes();
+    int const n = static_cast<int>(lanes.size());
+    if (slot <= 0) {
+        // Above topmost visual lane = top boundary of NDC index n-1
+        return lanes[static_cast<size_t>(n - 1)].y_center + lanes[static_cast<size_t>(n - 1)].y_extent / 2.0f;
+    }
+    if (slot >= n) {
+        // Below bottommost visual lane = bottom boundary of NDC index 0
+        return lanes[0].y_center - lanes[0].y_extent / 2.0f;
+    }
+    // Top boundary of visual lane `slot` = top of NDC index (n-1-slot)
+    int const ndc_idx = n - 1 - slot;
+    return lanes[static_cast<size_t>(ndc_idx)].y_center + lanes[static_cast<size_t>(ndc_idx)].y_extent / 2.0f;
+}
+
+void MultiLaneVerticalAxisWidget::resetDragState() {
+    _drag_active = false;
+    _dragged_lane_ndc_index = -1;
+    _drag_source_lane_id.clear();
+    _current_insert_slot = 0;
+    _drag_current_pos = QPoint();
+    emit laneDragOverlayChanged(false, 0.0f, 0.0f, 0.0f);
 }

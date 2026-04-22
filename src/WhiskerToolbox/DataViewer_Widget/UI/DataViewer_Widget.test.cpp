@@ -779,7 +779,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ap
         key_center.emplace_back(keys[i], static_cast<float>(layout->offset));
     }
     // Capture centers after
-    std::vector<std::pair<std::string, float>> centers_after = key_center;
+    std::vector<std::pair<std::string, float>> const centers_after = key_center;
 
     INFO("Centers before:");
     for (auto const & kv: centers_before) {
@@ -1460,6 +1460,65 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - 
     REQUIRE(key_center[3].first == ev[1]);
 }
 
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - SpikeSorter analog ordering persists with stacked digital events", "[DataViewer_Widget][Mixed][Ordering][SpikeSorter]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() >= 3);
+    REQUIRE(ev.size() >= 2);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Enable analog and stacked digital event series.
+    for (auto const & k: analog) {
+        widget.addFeature(k, "#FF6B6B");
+    }
+    for (auto const & k: ev) {
+        widget.addFeature(k, "#4ECDC4");
+    }
+    QApplication::processEvents();
+
+    // Distinct Y positions force expected analog order:
+    // ch2 (100) < ch3 (200) < ch1 (300) in bottom-to-top layout.
+    char const * cfg =
+            "poly2\n"
+            "1 1 0 300\n"
+            "2 2 0 100\n"
+            "3 3 0 200\n";
+
+    bool const invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_loadSpikeSorterConfigurationFromText",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString("analog")),
+            Q_ARG(QString, QString(cfg)));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    std::vector<std::pair<std::string, float>> analog_center;
+    for (size_t i = 0; i < 3; ++i) {
+        auto layout = TestHelpers::getAnalogLayoutTransform(widget, analog[i]);
+        REQUIRE(layout.has_value());
+        analog_center.emplace_back(analog[i], static_cast<float>(layout->offset));
+    }
+
+    // Bottom-to-top order corresponds to ascending center.
+    std::sort(analog_center.begin(), analog_center.end(), [](auto const & a, auto const & b) { return a.second < b.second; });
+
+    REQUIRE(analog_center.size() == 3);
+    REQUIRE(analog_center[0].first == analog[1]);
+    REQUIRE(analog_center[1].first == analog[2]);
+    REQUIRE(analog_center[2].first == analog[0]);
+
+    // Stacked digital events remain in the stack and keep deterministic ordering.
+    auto layout_e0 = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    auto layout_e1 = TestHelpers::getEventLayoutTransform(widget, ev[1]);
+    REQUIRE(layout_e0.has_value());
+    REQUIRE(layout_e1.has_value());
+    REQUIRE(layout_e0->offset < layout_e1->offset);
+}
+
 // -----------------------------------------------------------------------------
 // Mode regression test: ensure FullCanvas event uses full height and Stacked stays in lane
 // -----------------------------------------------------------------------------
@@ -1638,6 +1697,293 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - 
         return lane.label == "Shared AE";
     });
     REQUIRE(has_shared_label);
+}
+
+// -----------------------------------------------------------------------------
+// Phase 4b: Lane drag-and-drop reorder tests
+// -----------------------------------------------------------------------------
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - LaneReorder basic reorder reverses two lanes", "[DataViewer_Widget][LaneReorder]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    REQUIRE(analog.size() >= 2);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeature(analog[0], "#FF6B6B");
+    widget.addFeature(analog[1], "#FF6B6B");
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+
+    // Assign explicit lane_order: analog[0] below analog[1]
+    SeriesLaneOverrideData a0;
+    a0.lane_id = "lane_a0";
+    a0.lane_order = 10;
+    state->setSeriesLaneOverride(analog[0], a0);
+
+    SeriesLaneOverrideData a1;
+    a1.lane_id = "lane_a1";
+    a1.lane_order = 20;
+    state->setSeriesLaneOverride(analog[1], a1);
+
+    auto * glw = widget.getOpenGLWidget();
+    REQUIRE(glw != nullptr);
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    // Before reorder: analog[0] center < analog[1] center (bottom < top)
+    auto before_a0 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto before_a1 = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    REQUIRE(before_a0.has_value());
+    REQUIRE(before_a1.has_value());
+    REQUIRE(before_a0->offset < before_a1->offset);
+
+    // Reorder: move lane_a1 (currently at visual slot 0 = top) to visual slot 1 (below lane_a0)
+    // lane_a1 has lane_order=20 (top), lane_a0 has lane_order=10 (bottom)
+    // Visual slot 0 = top = lane_a1; slot 1 = bottom = lane_a0
+    // We move lane_a1 to slot 1 → analog[1] should now be below analog[0]
+    bool const invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleLaneReorderRequest",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString("lane_a1")),
+            Q_ARG(int, 1));
+    REQUIRE(invoked);
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    auto after_a0 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto after_a1 = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    REQUIRE(after_a0.has_value());
+    REQUIRE(after_a1.has_value());
+
+    // After reorder: analog[1] center < analog[0] center (analog[1] now below analog[0])
+    REQUIRE(after_a1->offset < after_a0->offset);
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - LaneReorder result persists via lane_order overrides", "[DataViewer_Widget][LaneReorder][Persistence]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    REQUIRE(analog.size() >= 3);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeature(analog[0], "#FF6B6B");
+    widget.addFeature(analog[1], "#FF6B6B");
+    widget.addFeature(analog[2], "#FF6B6B");
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+
+    // Assign: analog[0]=bottom(10), analog[1]=middle(20), analog[2]=top(30)
+    for (int i = 0; i < 3; ++i) {
+        SeriesLaneOverrideData od;
+        od.lane_id = "lane_" + analog[static_cast<size_t>(i)];
+        od.lane_order = (i + 1) * 10;
+        state->setSeriesLaneOverride(analog[static_cast<size_t>(i)], od);
+    }
+
+    auto * glw = widget.getOpenGLWidget();
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    // Move analog[2] (top, visual slot 0) to visual slot 2 (middle position in new order)
+    bool const invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleLaneReorderRequest",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString("lane_") + QString::fromStdString(analog[2])),
+            Q_ARG(int, 2));
+    REQUIRE(invoked);
+
+    // All three series must have explicit lane_order overrides after reorder
+    auto const * od0 = state->getSeriesLaneOverride(analog[0]);
+    auto const * od1 = state->getSeriesLaneOverride(analog[1]);
+    auto const * od2 = state->getSeriesLaneOverride(analog[2]);
+    REQUIRE(od0 != nullptr);
+    REQUIRE(od1 != nullptr);
+    REQUIRE(od2 != nullptr);
+    REQUIRE(od0->lane_order.has_value());
+    REQUIRE(od1->lane_order.has_value());
+    REQUIRE(od2->lane_order.has_value());
+
+    // Analog[2] was moved from slot 0 (top) to slot 2 (bottom).
+    // Remaining elements keep their relative order: analog[1] stays top (slot 0),
+    // analog[0] stays middle (slot 1), and analog[2] is inserted at bottom (slot 2).
+    // NDC order: analog[2] (bottom) < analog[0] (middle) < analog[1] (top)
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    auto layout_0 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_1 = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    auto layout_2 = TestHelpers::getAnalogLayoutTransform(widget, analog[2]);
+    REQUIRE(layout_0.has_value());
+    REQUIRE(layout_1.has_value());
+    REQUIRE(layout_2.has_value());
+
+    REQUIRE(layout_2->offset < layout_0->offset);
+    REQUIRE(layout_0->offset < layout_1->offset);
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - LaneReorder no-op when dropped at same position", "[DataViewer_Widget][LaneReorder][NoOp]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    REQUIRE(analog.size() >= 2);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeature(analog[0], "#FF6B6B");
+    widget.addFeature(analog[1], "#FF6B6B");
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    SeriesLaneOverrideData a0;
+    a0.lane_id = "lane_a0";
+    a0.lane_order = 10;
+    state->setSeriesLaneOverride(analog[0], a0);
+
+    SeriesLaneOverrideData a1;
+    a1.lane_id = "lane_a1";
+    a1.lane_order = 20;
+    state->setSeriesLaneOverride(analog[1], a1);
+
+    auto * glw = widget.getOpenGLWidget();
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    auto before_a0 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto before_a1 = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    REQUIRE(before_a0.has_value());
+    REQUIRE(before_a1.has_value());
+
+    // Drop lane_a1 (currently at visual slot 0) back at slot 0 → no change
+    QMetaObject::invokeMethod(
+            &widget,
+            "_handleLaneReorderRequest",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString("lane_a1")),
+            Q_ARG(int, 0));
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    auto after_a0 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto after_a1 = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    REQUIRE(after_a0.has_value());
+    REQUIRE(after_a1.has_value());
+
+    // Layout must be unchanged
+    REQUIRE(after_a0->offset == Catch::Approx(before_a0->offset).margin(1e-5f));
+    REQUIRE(after_a1->offset == Catch::Approx(before_a1->offset).margin(1e-5f));
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - LaneReorder shared overlay lane moves as unit", "[DataViewer_Widget][LaneReorder][SharedLane]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() >= 2);
+    REQUIRE(!ev.empty());
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeature(analog[0], "#FF6B6B");
+    widget.addFeature(analog[1], "#FF6B6B");
+    widget.addFeature(ev[0], "#4ECDC4");
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+
+    // analog[0] and ev[0] share "shared_lane" (bottom)
+    SeriesLaneOverrideData a0;
+    a0.lane_id = "shared_lane";
+    a0.lane_order = 10;
+    state->setSeriesLaneOverride(analog[0], a0);
+
+    SeriesLaneOverrideData e0;
+    e0.lane_id = "shared_lane";
+    e0.lane_order = 11;
+    state->setSeriesLaneOverride(ev[0], e0);
+
+    // analog[1] is in a separate lane (top)
+    SeriesLaneOverrideData a1;
+    a1.lane_id = "lane_a1";
+    a1.lane_order = 30;
+    state->setSeriesLaneOverride(analog[1], a1);
+
+    auto * glw = widget.getOpenGLWidget();
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    auto before_a0 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto before_a1 = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    REQUIRE(before_a0.has_value());
+    REQUIRE(before_a1.has_value());
+    // shared_lane is bottom, lane_a1 is top
+    REQUIRE(before_a0->offset < before_a1->offset);
+
+    // Reorder: move "lane_a1" (top, visual slot 0) to slot 1 (below shared_lane)
+    QMetaObject::invokeMethod(
+            &widget,
+            "_handleLaneReorderRequest",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString("lane_a1")),
+            Q_ARG(int, 1));
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    auto after_a0 = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto after_e0 = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    auto after_a1 = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    REQUIRE(after_a0.has_value());
+    REQUIRE(after_e0.has_value());
+    REQUIRE(after_a1.has_value());
+
+    // shared_lane is now top; lane_a1 is now bottom
+    REQUIRE(after_a1->offset < after_a0->offset);
+
+    // Both members of shared_lane keep the same y_center (move as unit)
+    REQUIRE(after_a0->offset == Catch::Approx(after_e0->offset).margin(1e-5f));
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - LaneReorder axis descriptor lane_id is populated", "[DataViewer_Widget][LaneReorder][LaneId]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    REQUIRE(!analog.empty());
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeature(analog[0], "#FF6B6B");
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+
+    SeriesLaneOverrideData od;
+    od.lane_id = "my_lane";
+    od.lane_order = 10;
+    state->setSeriesLaneOverride(analog[0], od);
+
+    auto * glw = widget.getOpenGLWidget();
+    glw->updateCanvas();
+    QApplication::processEvents();
+
+    auto * axis_state = state->multiLaneAxisState();
+    REQUIRE(axis_state != nullptr);
+    auto const & lanes = axis_state->lanes();
+    REQUIRE(!lanes.empty());
+
+    bool found = std::any_of(lanes.begin(), lanes.end(), [](LaneAxisDescriptor const & lane) {
+        return lane.lane_id == "my_lane";
+    });
+    REQUIRE(found);
 }
 
 // -----------------------------------------------------------------------------

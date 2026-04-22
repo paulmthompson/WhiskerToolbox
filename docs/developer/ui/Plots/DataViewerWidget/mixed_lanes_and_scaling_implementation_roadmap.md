@@ -62,8 +62,8 @@ Current status by phase:
 - Phase 2: completed
 - Phase 3: completed
 - Phase 4: completed
-- Ordering abstractions roadmap: not started
-- Phase 4b: not started
+- Ordering abstractions roadmap: completed
+- Phase 4b: completed
 - Phase 5: not started
 - Phase 6: in progress (roadmap/doc updates)
 
@@ -245,63 +245,70 @@ Allow users to click-drag a lane on the vertical axis and drop it between other 
 ### Why this fits after Phase 4
 
 - Phase 4 establishes lane identity and ordering in DataViewer request construction.
-- Drag-and-drop should mutate the same source of truth (`series_lane_overrides` / `lane_overrides`) rather than introducing a parallel ordering path.
+- Drag-and-drop should mutate the same source of truth (`series_lane_overrides`) rather than introducing a parallel ordering path.
+
+### Context: What the Ordering Abstractions Roadmap Delivered
+
+The completed ordering abstractions roadmap changed several design constraints that Phase 4b was planned against:
+
+- **Per-series `lane_order` is the universal ordering mechanism.** Spike-sorter electrode positions are now converted to `SeriesLaneOverrideData.lane_order` overrides at load time inside `OpenGLWidget::loadSpikeSorterConfiguration`. There is no longer a separate spike-sorter fallback path in the resolver.
+- **Resolver precedence (Phase D):** explicit `lane_order` → relational constraints → deterministic tie-break. The spike-sorter fallback level is gone.
+- **Signal wiring is already complete.** `seriesLaneOverrideChanged` and `laneOverrideChanged` are wired in `OpenGLWidget::setState` to set `layout_response_dirty`, clear the scene, and call `update()`. Task 6 below requires no additional wiring.
+- **`LaneOverrideData` has no `lane_order` field.** The ordering abstractions roadmap (Phase E) implemented relational constraints (`StackableOrderingConstraintData`) but did not add `lane_order` to `LaneOverrideData`. Given that the spike-sorter F2 approach routes through per-series `lane_order`, drag/drop should follow the same pattern: when a lane is dragged, update `lane_order` on all series that share the dragged `lane_id` to the new resolved rank. No new field in `LaneOverrideData` is needed.
 
 ### UX Model (first release)
 
 - Drag handle surface: `MultiLaneVerticalAxisWidget` lane label area.
 - Start drag: left-click press within a visible lane hit region.
 - During drag: show insertion marker between target lanes and ghost highlight on dragged lane.
-- Drop: commit a new lane ordering by updating lane-level order, then recompute layout.
+- Drop: commit a new lane ordering by updating `lane_order` on all series sharing the dragged `lane_id`, then recompute layout.
 - Cancel: Escape key or mouse release outside valid target keeps existing order.
 
 ### Data/State Model Requirements
 
 1. Add stable lane identity to axis descriptors:
-	- Extend `LaneAxisDescriptor` with `lane_id` (stable key used by overrides).
+	- Extend `LaneAxisDescriptor` with `lane_id` (stable key matching the `lane_id` field in `SeriesLaneOverrideData`).
 	- Keep `label` as display-only.
+	- This is required so the axis widget can identify which override key to mutate on drop.
 
-2. Add optional lane order at lane-level state:
-	- Introduce lane-level order field in lane metadata (recommended: `lane_order` in `LaneOverrideData`).
-	- Keep per-series `lane_order` for explicit series-level overrides; lane-level order is preferred for drag/drop lane moves.
+2. No new lane-level `lane_order` field needed:
+	- `LaneOverrideData` does not need a `lane_order` field. Drag/drop reorder writes `lane_order` directly onto all `SeriesLaneOverrideData` entries whose `lane_id` matches the dragged lane — the same pattern used by `loadSpikeSorterConfiguration`.
+	- For a single-series lane: update the one series' `lane_order`.
+	- For a shared lane (multiple series with the same `lane_id`): update all member series to the same new `lane_order` value.
 
-3. Ordering precedence update:
-	1. explicit lane-level order (interactive drag/drop result)
-	2. explicit per-series order override
-	3. analog spike-sorter fallback (analog-only/no explicit overrides)
-	4. legacy type-based fallback
+3. Ordering precedence (no change from resolver):
+	1. explicit `lane_order` in `SeriesLaneOverrideData` (covers both spike-sorter-loaded and drag/drop results)
+	2. relational constraints (`StackableOrderingConstraintData`)
+	3. deterministic tie-break (series type precedence then stable key)
 
 ### Implementation Tasks
 
-- [ ] Extend axis descriptor payload with stable lane identity and any needed drag metadata.
-- [ ] Add mouse interaction handling to `MultiLaneVerticalAxisWidget` (`mousePressEvent`, `mouseMoveEvent`, `mouseReleaseEvent`, optional `keyPressEvent` for Escape).
-- [ ] Add hit-testing helpers in axis widget to map pixel Y to lane index and insertion slot.
-- [ ] Add a lane reorder callback/signal from axis widget to DataViewer (e.g., `laneReorderRequested(source_lane_id, target_slot)`).
-- [ ] In `DataViewer_Widget`, translate reorder requests into deterministic `DataViewerState` override updates.
-- [ ] Ensure OpenGL layout refresh is triggered from override changes (signal wiring for `seriesLaneOverrideChanged` / `laneOverrideChanged`).
-- [ ] Add rendering affordances in axis widget for drag preview and insertion marker.
-- [ ] Add tests for drag reorder behavior, state persistence, and mixed analog/event interspersing outcomes.
+- [x] Extend `LaneAxisDescriptor` with a `lane_id` field and populate it in the axis descriptor update path (`_updateLaneDescriptors` / `SceneBuildingHelpers`).
+- [x] Add mouse interaction handling to `MultiLaneVerticalAxisWidget` (`mousePressEvent`, `mouseMoveEvent`, `mouseReleaseEvent`, optional `keyPressEvent` for Escape).
+- [x] Add hit-testing helpers in axis widget to map pixel Y to lane index and insertion slot.
+- [x] Add a `laneReorderRequested(QString source_lane_id, int target_slot)` signal to `MultiLaneVerticalAxisWidget`.
+- [x] In `DataViewer_Widget`, connect `laneReorderRequested` and translate it into deterministic `DataViewerState` override updates: compute new `lane_order` ranks, call `state->setSeriesLaneOverride()` for all series sharing `source_lane_id`.
+- [x] Ensure OpenGL layout refresh is triggered from override changes — already wired: `seriesLaneOverrideChanged` / `laneOverrideChanged` → layout dirty + repaint in `OpenGLWidget::setState`.
+- [x] Add rendering affordances in axis widget for drag preview and insertion marker.
+- [x] Add tests for drag reorder behavior, state persistence, and mixed analog/event interspersing outcomes.
 
 ### Primary Files
 
-- src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisStateData.hpp
-- src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/MultiLaneVerticalAxisWidget.hpp
-- src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/MultiLaneVerticalAxisWidget.cpp
-- src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp
-- src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp
-- src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.hpp
-- src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp
-- src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.cpp
-- src/CorePlotting/Layout/StackedLayoutStrategy.cpp
-- src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp
+- src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisStateData.hpp — add `lane_id` to `LaneAxisDescriptor`
+- src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/MultiLaneVerticalAxisWidget.hpp — add `laneReorderRequested` signal and mouse event overrides
+- src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget/MultiLaneVerticalAxisWidget.cpp — mouse interaction and drag rendering
+- src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp — connect `laneReorderRequested`, compute new `lane_order` ranks, call `setSeriesLaneOverride`
+- src/WhiskerToolbox/DataViewer_Widget/Rendering/SceneBuildingHelpers.cpp — populate `lane_id` on `LaneAxisDescriptor` entries
+- src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp — reorder behavior and persistence tests
+- src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp — no new fields needed; `SeriesLaneOverrideData.lane_order` is the write target
 
 ### Acceptance Criteria
 
-- [ ] User can drag a visible lane and drop it between two lanes using the Y-axis widget.
-- [ ] Reorder result persists in `DataViewerState` and survives serialization roundtrip.
-- [ ] Mixed analog/event lanes can be interspersed interactively without manual JSON edits.
-- [ ] Reordering a shared overlay lane moves the lane as a unit (all member series remain grouped).
-- [ ] Full-canvas event/interval behavior remains unchanged.
+- [x] User can drag a visible lane and drop it between two lanes using the Y-axis widget.
+- [x] Reorder result persists in `DataViewerState` via `SeriesLaneOverrideData.lane_order` and survives serialization roundtrip.
+- [x] Mixed analog/event lanes can be interspersed interactively without manual JSON edits.
+- [x] Reordering a shared overlay lane moves the lane as a unit (all member series sharing `lane_id` receive matching new `lane_order`).
+- [x] Full-canvas event/interval behavior remains unchanged.
 
 ---
 

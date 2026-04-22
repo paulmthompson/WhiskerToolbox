@@ -166,6 +166,18 @@ private slots:
     void _loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text);
     void _clearConfigurationForGroup(QString const & group_name);
 
+    /**
+     * @brief Handle a lane reorder request from the axis widget
+     *
+     * Translates the visual reorder into deterministic lane_order overrides
+     * on all series belonging to each lane. The result persists through
+     * DataViewerState serialization.
+     *
+     * @param source_lane_id Stable lane_id of the dragged lane
+     * @param target_visual_slot Target insertion slot, 0-based from top of widget
+     */
+    void _handleLaneReorderRequest(const QString& source_lane_id, int target_visual_slot);
+
 private:
     std::shared_ptr<DataManager> _data_manager;
     Ui::DataViewer_Widget * ui;
