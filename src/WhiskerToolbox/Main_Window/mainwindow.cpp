@@ -93,6 +93,7 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QMessageBox>
+#include <QOpenGLWidget>
 #include <QPlainTextEdit>
 #include <QProgressDialog>
 #include <QSplitter>
@@ -245,6 +246,9 @@ MainWindow::MainWindow(QWidget * parent)
                 _state_manager->preferences()->setKeybindingOverrides(
                         _keymap_manager->exportOverrides());
             });
+
+    auto* dummyGL = new QOpenGLWidget(this);
+    dummyGL->hide();
 
     _buildInitialLayout();
 

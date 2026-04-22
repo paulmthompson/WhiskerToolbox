@@ -9,6 +9,7 @@
 #include <QObject>
 #include <QPalette>
 #include <QSurfaceFormat>
+#include <QWindow>
 #include <qstylefactory.h>
 
 #include <spdlog/spdlog.h>
@@ -125,6 +126,22 @@ int main(int argc, char * argv[]) {
     QApplication::setPalette(palette);
 
     MainWindow w;
+
+    // This should prevent window from closing and reopening with first
+    // OpenGL widget initialization.
+    // alone on WSL this didn't work, but adding dummy OpenGL
+    // widget to main window did
+
+    // Force the MainWindow to create its native OS window handle immediately.
+    //w.winId(); 
+    
+    // Explicitly tell the native window it will be hosting OpenGL content.
+    // This prevents Qt from destroying and recreating the window later 
+    // when the first QOpenGLWidget is dynamically docked.
+    //if (auto* handle = w.windowHandle()) {
+    //    handle->setSurfaceType(QSurface::OpenGLSurface);
+    //    handle->setFormat(QSurfaceFormat::defaultFormat());
+    //}
 
     w.show();
 
