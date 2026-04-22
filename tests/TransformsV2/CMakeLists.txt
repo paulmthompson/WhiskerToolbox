@@ -62,6 +62,7 @@ add_executable(test_TransformsV2
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogToTensor/AnalogToTensor.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorToAnalog/TensorColumnAnalogStorage.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorCAR/TensorCAR.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorWhitening/TensorWhitening.test.cpp
 
     test_tensor_column_views.test.cpp
 )
@@ -76,6 +77,10 @@ target_include_directories(test_TransformsV2 PRIVATE
 target_link_libraries(test_TransformsV2 PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(test_TransformsV2 PRIVATE DataManager)
 target_link_libraries(test_TransformsV2 PRIVATE WhiskerToolbox::TensorData)
+
+if(TENSOR_BACKEND_LIBTORCH)
+    target_compile_definitions(test_TransformsV2 PRIVATE TENSOR_BACKEND_LIBTORCH)
+endif()
 
 # Force whole-archive linking for TransformsV2 to ensure static transform registration
 # (RegisteredTransforms.cpp has file-scope RAII objects that register transforms into

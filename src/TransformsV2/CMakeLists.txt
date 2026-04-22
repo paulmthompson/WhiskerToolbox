@@ -92,6 +92,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/AnalogToTensor/AnalogToTensor.cpp
         algorithms/TensorCAR/TensorCAR.hpp
         algorithms/TensorCAR/TensorCAR.cpp
+        algorithms/TensorWhitening/TensorWhitening.hpp
+        algorithms/TensorWhitening/TensorWhitening.cpp
         algorithms/TensorToAnalog/TensorToAnalog.hpp
         algorithms/TensorToAnalog/TensorToAnalog.cpp
         utils/NaNFilter.hpp

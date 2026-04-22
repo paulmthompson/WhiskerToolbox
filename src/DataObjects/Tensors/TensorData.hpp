@@ -243,6 +243,26 @@ public:
             std::vector<std::string> column_names = {});
 
     /**
+     * @brief Create a 2D tensor with interval-based rows from a custom storage backend
+     *
+     * Enables non-Armadillo backends (for example LibTorchTensorStorage) to be
+     * used while preserving interval row semantics.
+     *
+     * @param storage Type-erased storage wrapper (must report 2D shape).
+     * @param intervals One TimeFrameInterval per row.
+     * @param time_frame Shared TimeFrame for time reference (may be nullptr).
+     * @param column_names Optional column labels.
+     *
+     * @pre storage.shape().size() == 2 (enforcement: exception)
+     * @pre intervals.size() == storage.shape()[0] (enforcement: exception)
+     */
+    [[nodiscard]] static TensorData createFromIntervalsFromStorage(
+            TensorStorageWrapper storage,
+            std::vector<TimeFrameInterval> intervals,
+            std::shared_ptr<TimeFrame> time_frame,
+            std::vector<std::string> column_names = {});
+
+    /**
      * @brief Create an N-dimensional tensor from flat data and axis descriptors
      *
      * Uses ArmadilloTensorStorage for ≤3D, DenseTensorStorage for >3D.
@@ -310,6 +330,23 @@ public:
             std::vector<float> const & data,
             std::size_t num_rows,
             std::size_t num_cols,
+            std::vector<std::string> column_names = {});
+
+    /**
+     * @brief Create a 2D ordinal tensor from a custom storage backend
+     *
+     * Enables non-Armadillo backends (for example LibTorchTensorStorage) to be
+     * wrapped as ordinal TensorData without materializing to Armadillo first.
+     *
+     * @param storage Type-erased storage wrapper (must report 2D shape).
+     * @param time_frame Optional TimeFrame metadata to preserve.
+     * @param column_names Optional column labels.
+     *
+     * @pre storage.shape().size() == 2 (enforcement: exception)
+     */
+    [[nodiscard]] static TensorData createOrdinal2DFromStorage(
+            TensorStorageWrapper storage,
+            std::shared_ptr<TimeFrame> time_frame = nullptr,
             std::vector<std::string> column_names = {});
 
     /**

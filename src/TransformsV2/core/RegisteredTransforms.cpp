@@ -1,10 +1,9 @@
 #include "core/RegisteredTransforms.hpp"
 
-#include "algorithms/AnalogToTensor/AnalogToTensor.hpp"
-#include "algorithms/TensorCAR/TensorCAR.hpp"
 #include "algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
 #include "algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
+#include "algorithms/AnalogToTensor/AnalogToTensor.hpp"
 #include "algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "algorithms/IntervalReduction/IntervalReduction.hpp"
 #include "algorithms/LineAngle/LineAngle.hpp"
@@ -20,13 +19,15 @@
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
 #include "algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
+#include "algorithms/TensorCAR/TensorCAR.hpp"
+#include "algorithms/TensorCentralDifference/TensorCentralDifference.hpp"
 #include "algorithms/TensorICA/TensorICA.hpp"
 #include "algorithms/TensorPCA/TensorPCA.hpp"
 #include "algorithms/TensorRobustPCA/TensorRobustPCA.hpp"
 #include "algorithms/TensorTSNE/TensorTSNE.hpp"
-#include "algorithms/TensorCentralDifference/TensorCentralDifference.hpp"
 #include "algorithms/TensorTemporalNeighbors/TensorTemporalNeighbors.hpp"
 #include "algorithms/TensorToAnalog/TensorToAnalog.hpp"
+#include "algorithms/TensorWhitening/TensorWhitening.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
 #include "core/PipelineLoader.hpp"// registerPipelineStepFactoryFor
@@ -83,6 +84,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<TensorCentralDifferenceParams>();
     registerPipelineStepFactoryFor<AnalogToTensorParams>();
     registerPipelineStepFactoryFor<TensorCARParams>();
+    registerPipelineStepFactoryFor<TensorWhiteningParams>();
     registerPipelineStepFactoryFor<TensorToAnalogParams>();
     return true;
 }();
@@ -729,6 +731,20 @@ auto const register_tensor_car = RegisterContainerTransform<TensorData, TensorDa
                 .output_type_name = "TensorData",
                 .params_type_name = "TensorCARParams",
                 .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register TensorWhitening (Container Transform: TensorData → TensorData)
+auto const register_tensor_whitening = RegisterContainerTransform<TensorData, TensorData, TensorWhiteningParams>(
+        "TensorWhitening",
+        tensorWhitening,
+        ContainerTransformMetadata{
+                .description = "Apply robust ZCA whitening to the included channels of a multi-channel TensorData",
+                .category = "Signal Processing",
+                .input_type_name = "TensorData",
+                .output_type_name = "TensorData",
+                .params_type_name = "TensorWhiteningParams",
+                .is_expensive = true,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 

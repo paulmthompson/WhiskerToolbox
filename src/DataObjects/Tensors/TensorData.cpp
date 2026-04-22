@@ -317,6 +317,44 @@ TensorData TensorData::createFromIntervals(
 }
 
 // =============================================================================
+// Factory: createFromIntervalsFromStorage
+// =============================================================================
+
+TensorData TensorData::createFromIntervalsFromStorage(
+        TensorStorageWrapper storage,
+        std::vector<TimeFrameInterval> intervals,
+        std::shared_ptr<TimeFrame> time_frame,
+        std::vector<std::string> column_names) {
+    auto const shape = storage.shape();
+    if (shape.size() != 2) {
+        throw std::invalid_argument(
+                "TensorData::createFromIntervalsFromStorage: storage must be 2D (got " +
+                std::to_string(shape.size()) + "D)");
+    }
+
+    auto const num_rows = shape[0];
+    auto const num_cols = shape[1];
+    if (intervals.size() != num_rows) {
+        throw std::invalid_argument(
+                "TensorData::createFromIntervalsFromStorage: intervals size (" +
+                std::to_string(intervals.size()) +
+                ") must match storage rows (" + std::to_string(num_rows) + ")");
+    }
+
+    DimensionDescriptor dims{{{"row", num_rows},
+                              {"channel", num_cols}}};
+    if (!column_names.empty()) {
+        dims.setColumnNames(std::move(column_names));
+    }
+
+    RowDescriptor rows = RowDescriptor::fromIntervals(
+            std::move(intervals), time_frame);
+
+    return TensorData{std::move(dims), std::move(rows),
+                      std::move(storage), std::move(time_frame)};
+}
+
+// =============================================================================
 // Factory: createND
 // =============================================================================
 
@@ -412,6 +450,35 @@ TensorData TensorData::createOrdinal2D(
 
     return TensorData{std::move(dims), std::move(rows),
                       std::move(storage), nullptr};
+}
+
+// =============================================================================
+// Factory: createOrdinal2DFromStorage
+// =============================================================================
+
+TensorData TensorData::createOrdinal2DFromStorage(
+        TensorStorageWrapper storage,
+        std::shared_ptr<TimeFrame> time_frame,
+        std::vector<std::string> column_names) {
+    auto const shape = storage.shape();
+    if (shape.size() != 2) {
+        throw std::invalid_argument(
+                "TensorData::createOrdinal2DFromStorage: storage must be 2D (got " +
+                std::to_string(shape.size()) + "D)");
+    }
+
+    auto const num_rows = shape[0];
+    auto const num_cols = shape[1];
+
+    DimensionDescriptor dims{{{"row", num_rows},
+                              {"channel", num_cols}}};
+    if (!column_names.empty()) {
+        dims.setColumnNames(std::move(column_names));
+    }
+
+    auto rows = RowDescriptor::ordinal(num_rows);
+    return TensorData{std::move(dims), std::move(rows),
+                      std::move(storage), std::move(time_frame)};
 }
 
 // =============================================================================
