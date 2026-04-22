@@ -276,6 +276,26 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="save_lane_layout_button">
+            <property name="toolTip">
+             <string>Save current lane order and placement overrides to a JSON file</string>
+            </property>
+            <property name="text">
+             <string>Save Lane Layout...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="load_lane_layout_button">
+            <property name="toolTip">
+             <string>Load lane order and placement overrides from a JSON file</string>
+            </property>
+            <property name="text">
+             <string>Load Lane Layout...</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

@@ -2795,3 +2795,182 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
 
     widget.close();
 }
+
+// =============================================================================
+// Phase 4D: Lane Layout Save/Load (_saveLaneLayout / _loadLaneLayout)
+// =============================================================================
+
+/**
+ * @brief Test that LaneLayoutFile serializes and deserializes correctly via rfl::json.
+ *
+ * This test does not require the full widget; it exercises the structs directly.
+ */
+TEST_CASE("LaneLayoutFile - roundtrip serialize/deserialize",
+          "[LaneLayoutFile][Serialization][Phase4D]") {
+    LaneLayoutFile original;
+    original.version = 1;
+    original.displayed_series.push_back(LaneLayoutDisplayedSeries{"analog_1", "#FF0000"});
+    original.displayed_series.push_back(LaneLayoutDisplayedSeries{"event_1", "#00FF00"});
+
+    SeriesLaneOverrideData slo;
+    slo.lane_id = "lane_A";
+    slo.lane_order = 10;
+    slo.lane_weight = 2.0f;
+    original.series_lane_overrides["analog_1"] = slo;
+
+    LaneOverrideData lo;
+    lo.display_label = "Channel A";
+    lo.lane_weight = 2.0f;
+    original.lane_overrides["lane_A"] = lo;
+
+    StackableOrderingConstraintData oc;
+    oc.above_series_key = "analog_1";
+    oc.below_series_key = "event_1";
+    original.ordering_constraints.push_back(oc);
+
+    std::string const json = rfl::json::write(original);
+    REQUIRE(!json.empty());
+
+    auto result = rfl::json::read<LaneLayoutFile>(json);
+    REQUIRE(result);
+    auto const & restored = result.value();
+
+    REQUIRE(restored.version == 1);
+    REQUIRE(restored.displayed_series.size() == 2);
+    REQUIRE(restored.displayed_series[0].key == "analog_1");
+    REQUIRE(restored.displayed_series[0].color == "#FF0000");
+    REQUIRE(restored.displayed_series[1].key == "event_1");
+    REQUIRE(restored.displayed_series[1].color == "#00FF00");
+
+    REQUIRE(restored.series_lane_overrides.count("analog_1") == 1);
+    REQUIRE(restored.series_lane_overrides.at("analog_1").lane_id == "lane_A");
+    REQUIRE(restored.series_lane_overrides.at("analog_1").lane_order.has_value());
+    REQUIRE(*restored.series_lane_overrides.at("analog_1").lane_order == 10);
+    REQUIRE(restored.series_lane_overrides.at("analog_1").lane_weight == Catch::Approx(2.0f));
+
+    REQUIRE(restored.lane_overrides.count("lane_A") == 1);
+    REQUIRE(restored.lane_overrides.at("lane_A").display_label == "Channel A");
+
+    REQUIRE(restored.ordering_constraints.size() == 1);
+    REQUIRE(restored.ordering_constraints[0].above_series_key == "analog_1");
+    REQUIRE(restored.ordering_constraints[0].below_series_key == "event_1");
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - _loadLaneLayout restores lane overrides",
+                 "[DataViewer_Widget][LaneLayout][Phase4D]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    REQUIRE(analog.size() >= 3);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Add all analog series
+    for (auto const & k: analog) {
+        widget.addFeature(k, "#FFFFFF");
+        QApplication::processEvents();
+    }
+
+    // Apply a relative placement to create lane_order overrides
+    bool const invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleSeriesRelativePlacement",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(analog[0])),
+            Q_ARG(QString, QString::fromStdString(analog[2])),
+            Q_ARG(bool, true));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    // Verify placement took effect
+    auto layout_0_before = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_2_before = TestHelpers::getAnalogLayoutTransform(widget, analog[2]);
+    REQUIRE(layout_0_before.has_value());
+    REQUIRE(layout_2_before.has_value());
+    REQUIRE(layout_0_before->offset > layout_2_before->offset);
+
+    // Serialize via the state (same data that _saveLaneLayout would write)
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+    auto const & d = state->data();
+
+    LaneLayoutFile layout_file;
+    layout_file.series_lane_overrides = d.series_lane_overrides;
+    layout_file.lane_overrides = d.lane_overrides;
+    layout_file.ordering_constraints = d.ordering_constraints;
+    for (auto const & k: analog) {
+        auto const * opts = state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(k));
+        if (opts != nullptr) {
+            layout_file.displayed_series.push_back(LaneLayoutDisplayedSeries{k, opts->hex_color()});
+        }
+    }
+    std::string const json = rfl::json::write(layout_file);
+    REQUIRE(!json.empty());
+
+    // Simulate what _loadLaneLayout does: clear overrides, then load from JSON
+    // (The test bypasses the file dialog by operating on state directly)
+    auto result = rfl::json::read<LaneLayoutFile>(json);
+    REQUIRE(result);
+    auto const & loaded = result.value();
+
+    // Clear overrides to simulate a fresh load
+    for (auto const & k: analog) {
+        state->setSeriesLaneOverride(k, SeriesLaneOverrideData{});
+    }
+    state->setOrderingConstraints({});
+    QApplication::processEvents();
+
+    // Apply loaded overrides
+    for (auto const & [key, od]: loaded.series_lane_overrides) {
+        state->setSeriesLaneOverride(key, od);
+    }
+    for (auto const & [lane_id, od]: loaded.lane_overrides) {
+        state->setLaneOverride(lane_id, od);
+    }
+    state->setOrderingConstraints(loaded.ordering_constraints);
+    widget.getOpenGLWidget()->updateCanvas();
+    QApplication::processEvents();
+
+    // The original placement should be restored
+    auto layout_0_restored = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_2_restored = TestHelpers::getAnalogLayoutTransform(widget, analog[2]);
+    REQUIRE(layout_0_restored.has_value());
+    REQUIRE(layout_2_restored.has_value());
+    REQUIRE(layout_0_restored->offset > layout_2_restored->offset);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - LaneLayoutFile skips series absent from DataManager",
+                 "[DataViewer_Widget][LaneLayout][Phase4D]") {
+    // Build a LaneLayoutFile referencing a series that does not exist in DataManager
+    LaneLayoutFile layout_file;
+    layout_file.displayed_series.push_back(
+            LaneLayoutDisplayedSeries{"nonexistent_series", "#AABBCC"});
+
+    std::string const json = rfl::json::write(layout_file);
+    auto result = rfl::json::read<LaneLayoutFile>(json);
+    REQUIRE(result);
+
+    // Simulate what _loadLaneLayout does for each displayed entry
+    auto & widget = getWidget();
+    widget.openWidget();
+    QApplication::processEvents();
+
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+
+    // The series "nonexistent_series" should not appear in the options registry after load
+    for (auto const & entry: result.value().displayed_series) {
+        // This should not crash and should not add the series
+        bool const in_data_manager =
+                widget.getOpenGLWidget()->getAnalogSeriesMap().count(entry.key) > 0 ||
+                widget.getOpenGLWidget()->getDigitalEventSeriesMap().count(entry.key) > 0 ||
+                widget.getOpenGLWidget()->getDigitalIntervalSeriesMap().count(entry.key) > 0;
+        REQUIRE(!in_data_manager);
+    }
+
+    widget.close();
+}

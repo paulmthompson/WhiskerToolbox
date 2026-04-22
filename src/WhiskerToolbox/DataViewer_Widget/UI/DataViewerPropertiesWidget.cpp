@@ -151,6 +151,12 @@ void DataViewerPropertiesWidget::_connectUIControls() {
     connect(ui->auto_arrange_button, &QPushButton::clicked,
             this, &DataViewerPropertiesWidget::autoArrangeRequested);
 
+    // Lane layout save/load buttons
+    connect(ui->save_lane_layout_button, &QPushButton::clicked,
+            this, &DataViewerPropertiesWidget::saveLaneLayoutRequested);
+    connect(ui->load_lane_layout_button, &QPushButton::clicked,
+            this, &DataViewerPropertiesWidget::loadLaneLayoutRequested);
+
     // Export SVG button
     connect(ui->export_svg_button, &QPushButton::clicked, this, [this]() {
         bool const includeScalebar = ui->svg_scalebar_checkbox->isChecked();

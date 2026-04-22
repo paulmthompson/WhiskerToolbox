@@ -24,7 +24,7 @@ void registerTypes(EditorRegistry * registry,
     }
 
     // Capture dependencies for lambdas
-    auto const & dm = std::move(data_manager);
+    auto const & dm = data_manager;
     auto reg = registry;
 
     registry->registerType({.type_id = QStringLiteral("DataViewerWidget"),
@@ -145,6 +145,12 @@ void registerTypes(EditorRegistry * registry,
                                                  view, [view](QString const & source_key, QString const & target_key, bool above) {
                                                      view->_handleSeriesRelativePlacement(source_key, target_key, above);
                                                  });
+
+                                // Connect lane layout save/load signals (Phase 4D)
+                                QObject::connect(props, &DataViewerPropertiesWidget::saveLaneLayoutRequested,
+                                                 view, &DataViewer_Widget::_saveLaneLayout);
+                                QObject::connect(props, &DataViewerPropertiesWidget::loadLaneLayoutRequested,
+                                                 view, &DataViewer_Widget::_loadLaneLayout);
 
                                 // Update visible lane count indicator on scene rebuild and viewport changes
                                 auto update_lane_count = [opengl_widget, state, props]() {

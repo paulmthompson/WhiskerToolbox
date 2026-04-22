@@ -199,6 +199,22 @@ signals:
      */
     void seriesRelativePlacementRequested(QString source_key, QString target_key, bool above);
 
+    /**
+     * @brief Emitted when the user clicks "Save Lane Layout..."
+     *
+     * The view widget should connect to this signal to serialize the current
+     * lane placement and displayed series to a JSON file.
+     */
+    void saveLaneLayoutRequested();
+
+    /**
+     * @brief Emitted when the user clicks "Load Lane Layout..."
+     *
+     * The view widget should connect to this signal to restore lane placement
+     * and displayed series from a previously saved JSON file.
+     */
+    void loadLaneLayoutRequested();
+
 private slots:
     void _onThemeChanged(int index);
     void _onGlobalYScaleChanged(double value);

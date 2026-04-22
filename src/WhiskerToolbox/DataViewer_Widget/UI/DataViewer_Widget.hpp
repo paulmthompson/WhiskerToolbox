@@ -180,6 +180,25 @@ private slots:
 
 public slots:
     /**
+     * @brief Save the current lane layout (displayed series + overrides) to a JSON file
+     *
+     * Opens a file dialog for the user to choose a destination. Writes all
+     * currently-displayed series with their colors and all lane-placement
+     * overrides to a .json file that can be restored with _loadLaneLayout().
+     */
+    void _saveLaneLayout();
+
+    /**
+     * @brief Load a previously saved lane layout from a JSON file
+     *
+     * Opens a file dialog for the user to select a .json file produced by
+     * _saveLaneLayout(). Series listed in the file that exist in the DataManager
+     * but are not currently displayed are automatically added. Series absent
+     * from the DataManager are silently skipped.
+     */
+    void _loadLaneLayout();
+
+    /**
      * @brief Handle a relative placement request from the properties widget context menu.
      *
      * Places @p source_key immediately above or below @p target_key in the visual lane

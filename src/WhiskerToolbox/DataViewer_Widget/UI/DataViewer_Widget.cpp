@@ -1259,6 +1259,110 @@ void DataViewer_Widget::_clearConfigurationForGroup(QString const & group_name) 
     ui->openGLWidget->updateCanvas();
 }
 
+void DataViewer_Widget::_saveLaneLayout() {
+    QString const path = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("lane_layout_json"),
+            "Save Lane Layout",
+            "JSON Files (*.json);;All Files (*)");
+    if (path.isEmpty()) return;
+
+    // Collect currently-displayed series and their colors from the series options registry
+    LaneLayoutFile layout_file;
+    auto const & opts = _state->seriesOptions();
+
+    for (auto const & qkey: opts.keys<AnalogSeriesOptionsData>()) {
+        auto const * series_opts = opts.get<AnalogSeriesOptionsData>(qkey);
+        if (series_opts != nullptr) {
+            layout_file.displayed_series.push_back(
+                    LaneLayoutDisplayedSeries{qkey.toStdString(), series_opts->hex_color()});
+        }
+    }
+    for (auto const & qkey: opts.keys<DigitalEventSeriesOptionsData>()) {
+        auto const * series_opts = opts.get<DigitalEventSeriesOptionsData>(qkey);
+        if (series_opts != nullptr) {
+            layout_file.displayed_series.push_back(
+                    LaneLayoutDisplayedSeries{qkey.toStdString(), series_opts->hex_color()});
+        }
+    }
+    for (auto const & qkey: opts.keys<DigitalIntervalSeriesOptionsData>()) {
+        auto const * series_opts = opts.get<DigitalIntervalSeriesOptionsData>(qkey);
+        if (series_opts != nullptr) {
+            layout_file.displayed_series.push_back(
+                    LaneLayoutDisplayedSeries{qkey.toStdString(), series_opts->hex_color()});
+        }
+    }
+
+    // Copy lane placement overrides from state
+    auto const & d = _state->data();
+    layout_file.series_lane_overrides = d.series_lane_overrides;
+    layout_file.lane_overrides = d.lane_overrides;
+    layout_file.ordering_constraints = d.ordering_constraints;
+
+    std::string const json = rfl::json::write(layout_file);
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "Save Failed", "Could not open file for writing.");
+        return;
+    }
+    file.write(QByteArray::fromStdString(json));
+}
+
+void DataViewer_Widget::_loadLaneLayout() {
+    QString const path = AppFileDialog::getOpenFileName(
+            this,
+            QStringLiteral("lane_layout_json"),
+            "Load Lane Layout",
+            "JSON Files (*.json);;All Files (*)");
+    if (path.isEmpty()) return;
+
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "Load Failed", "Could not open file for reading.");
+        return;
+    }
+
+    std::string const json = file.readAll().toStdString();
+    auto result = rfl::json::read<LaneLayoutFile>(json);
+    if (!result) {
+        QMessageBox::warning(this, "Parse Failed", "Could not parse lane layout JSON.");
+        return;
+    }
+
+    auto const & layout = result.value();
+
+    // Add series that exist in DataManager but are not currently displayed
+    for (auto const & entry: layout.displayed_series) {
+        DM_DataType const type = _data_manager->getType(entry.key);
+        if (type == DM_DataType::Unknown) {
+            continue;// silently skip missing series
+        }
+
+        // Skip series that are already displayed (check options registry)
+        auto const qkey = QString::fromStdString(entry.key);
+        bool const already_displayed =
+                _state->seriesOptions().has<AnalogSeriesOptionsData>(qkey) ||
+                _state->seriesOptions().has<DigitalEventSeriesOptionsData>(qkey) ||
+                _state->seriesOptions().has<DigitalIntervalSeriesOptionsData>(qkey);
+        if (already_displayed) {
+            continue;
+        }
+
+        addFeature(entry.key, entry.color);
+    }
+
+    // Apply all lane placement overrides
+    for (auto const & [key, od]: layout.series_lane_overrides) {
+        _state->setSeriesLaneOverride(key, od);
+    }
+    for (auto const & [lane_id, od]: layout.lane_overrides) {
+        _state->setLaneOverride(lane_id, od);
+    }
+    _state->setOrderingConstraints(layout.ordering_constraints);
+
+    ui->openGLWidget->updateCanvas();
+}
+
 std::vector<ChannelPosition> DataViewer_Widget::_parseSpikeSorterConfig(std::string const & text) {
     return parseSwindaleSpikeSorterConfig(text);
 }

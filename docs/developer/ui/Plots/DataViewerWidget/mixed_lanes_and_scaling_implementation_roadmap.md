@@ -68,7 +68,7 @@ Current status by phase:
 - Ordering abstractions roadmap: completed
 - Phase 4b: completed
 - Phase 4C: completed
-- Phase 4D: not started
+- Phase 4D: completed
 - Phase 4E: not started
 - Phase 5: not started
 - Phase 6: in progress (roadmap/doc updates)
@@ -386,14 +386,14 @@ Allow a developer or user to save the current DataViewer lane configuration — 
 
 ### Implementation Tasks
 
-- [ ] Create `LaneLayoutFile.hpp/.cpp` (`DataViewer_Widget/Ordering/`): define `LaneLayoutDisplayedSeries { std::string key; std::string color; }` and `LaneLayoutFile { int version; std::vector<LaneLayoutDisplayedSeries> displayed_series; std::map<std::string, SeriesLaneOverrideData> series_lane_overrides; std::map<std::string, LaneOverrideData> lane_overrides; }`. Implement `serializeLaneLayout()` and `deserializeLaneLayout()` via `rfl::json`.
-- [ ] Edit `DataViewerPropertiesWidget.ui`: add a `QGroupBox` "Layout Presets" (after the "Actions" group) with buttons `save_lane_layout_button` ("Save Lane Layout") and `load_lane_layout_button` ("Load Lane Layout").
-- [ ] Add signals to `DataViewerPropertiesWidget.hpp`: `void saveLaneLayoutRequested()` and `void loadLaneLayoutRequested()`.
-- [ ] Wire buttons in `DataViewerPropertiesWidget.cpp` → emit signals.
-- [ ] Wire signals in `DataViewerWidgetRegistration.cpp` → new `DataViewer_Widget` slots.
-- [ ] Implement `DataViewer_Widget::_saveLaneLayout()`: collect currently-displayed keys and their colors from `OpenGLWidget`, build `LaneLayoutFile` from `_state->data()` overrides, serialize, open `QFileDialog::getSaveFileName` (filter `*.dvlayout`) and write.
-- [ ] Implement `DataViewer_Widget::_loadLaneLayout()`: open `QFileDialog::getOpenFileName`, parse with `deserializeLaneLayout`, for each entry in `displayed_series` call `DataManager::getType(key)` — skip if not found, call `addFeature(key, color)` if not already displayed. Apply all `setSeriesLaneOverride` and `setLaneOverride` entries from the file, then call `updateCanvas()`.
-- [ ] Add tests in `LaneLayoutFile.test.cpp` or `DataViewer_Widget.test.cpp`: roundtrip serialize/deserialize; verify that auto-add adds missing series and skips absent ones.
+- [x] Create `LaneLayoutFile.hpp/.cpp` (`DataViewer_Widget/Ordering/`): define `LaneLayoutDisplayedSeries { std::string key; std::string color; }` and `LaneLayoutFile { int version; std::vector<LaneLayoutDisplayedSeries> displayed_series; std::map<std::string, SeriesLaneOverrideData> series_lane_overrides; std::map<std::string, LaneOverrideData> lane_overrides; }`. Implement `serializeLaneLayout()` and `deserializeLaneLayout()` via `rfl::json`.
+- [x] Edit `DataViewerPropertiesWidget.ui`: add a `QGroupBox` "Layout Presets" (after the "Actions" group) with buttons `save_lane_layout_button` ("Save Lane Layout") and `load_lane_layout_button` ("Load Lane Layout").
+- [x] Add signals to `DataViewerPropertiesWidget.hpp`: `void saveLaneLayoutRequested()` and `void loadLaneLayoutRequested()`.
+- [x] Wire buttons in `DataViewerPropertiesWidget.cpp` → emit signals.
+- [x] Wire signals in `DataViewerWidgetRegistration.cpp` → new `DataViewer_Widget` slots.
+- [x] Implement `DataViewer_Widget::_saveLaneLayout()`: collect currently-displayed keys and their colors from `OpenGLWidget`, build `LaneLayoutFile` from `_state->data()` overrides, serialize, open `QFileDialog::getSaveFileName` (filter `*.dvlayout`) and write.
+- [x] Implement `DataViewer_Widget::_loadLaneLayout()`: open `QFileDialog::getOpenFileName`, parse with `deserializeLaneLayout`, for each entry in `displayed_series` call `DataManager::getType(key)` — skip if not found, call `addFeature(key, color)` if not already displayed. Apply all `setSeriesLaneOverride` and `setLaneOverride` entries from the file, then call `updateCanvas()`.
+- [x] Add tests in `LaneLayoutFile.test.cpp` or `DataViewer_Widget.test.cpp`: roundtrip serialize/deserialize; verify that auto-add adds missing series and skips absent ones.
 
 ### Primary Files
 
@@ -408,11 +408,11 @@ Allow a developer or user to save the current DataViewer lane configuration — 
 
 ### Acceptance Criteria
 
-- [ ] "Save Lane Layout" serializes displayed series, colors, and all overrides to a `.dvlayout` JSON file.
-- [ ] "Load Lane Layout" re-adds series that exist in DataManager but are not currently displayed.
-- [ ] Series absent from DataManager are silently skipped during load.
-- [ ] Lane overrides are fully restored after a save/load roundtrip.
-- [ ] Layout roundtrip test passes for a mixed analog plus digital-event configuration.
+- [x] "Save Lane Layout" serializes displayed series, colors, and all overrides to a `.dvlayout` JSON file.
+- [x] "Load Lane Layout" re-adds series that exist in DataManager but are not currently displayed.
+- [x] Series absent from DataManager are silently skipped during load.
+- [x] Lane overrides are fully restored after a save/load roundtrip.
+- [x] Layout roundtrip test passes for a mixed analog plus digital-event configuration.
 
 ---
 

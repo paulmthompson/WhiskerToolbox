@@ -406,4 +406,40 @@ struct DataViewerStateData {
     std::map<std::string, GroupScalingState> group_scaling;
 };
 
+// ==================== Lane Layout File ====================
+
+/**
+ * @brief A displayed series entry in a saved lane layout file
+ *
+ * Stores the key and hex color of a series that was displayed at save time.
+ * On load, if the key exists in the DataManager but is not currently displayed,
+ * it will be added with the saved color.
+ */
+struct LaneLayoutDisplayedSeries {
+    std::string key;  ///< Series key in DataManager
+    std::string color;///< Hex color string (e.g. "#FF0000")
+};
+
+/**
+ * @brief Serializable snapshot of the DataViewer lane layout for save/load
+ *
+ * Captures which series were displayed, their colors, and all lane-placement
+ * overrides. Use rfl::json::write / rfl::json::read to serialize.
+ *
+ * @code
+ * LaneLayoutFile layout;
+ * layout.displayed_series = { ... };
+ * layout.series_lane_overrides = state->data().series_lane_overrides;
+ * auto json = rfl::json::write(layout);
+ * auto result = rfl::json::read<LaneLayoutFile>(json);
+ * @endcode
+ */
+struct LaneLayoutFile {
+    int version = 1;///< Schema version for future compatibility
+    std::vector<LaneLayoutDisplayedSeries> displayed_series;
+    std::map<std::string, SeriesLaneOverrideData> series_lane_overrides;
+    std::map<std::string, LaneOverrideData> lane_overrides;
+    std::vector<StackableOrderingConstraintData> ordering_constraints;
+};
+
 #endif// DATAVIEWER_STATE_DATA_HPP
