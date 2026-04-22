@@ -176,7 +176,22 @@ private slots:
      * @param source_lane_id Stable lane_id of the dragged lane
      * @param target_visual_slot Target insertion slot, 0-based from top of widget
      */
-    void _handleLaneReorderRequest(const QString& source_lane_id, int target_visual_slot);
+    void _handleLaneReorderRequest(QString const & source_lane_id, int target_visual_slot);
+
+public slots:
+    /**
+     * @brief Handle a relative placement request from the properties widget context menu.
+     *
+     * Places @p source_key immediately above or below @p target_key in the visual lane
+     * stack by writing deterministic lane_order overrides to DataViewerState.
+     *
+     * @param source_key Series key to reposition
+     * @param target_key Series key to place relative to
+     * @param above      true = place source above target, false = place below
+     */
+    void _handleSeriesRelativePlacement(QString const & source_key,
+                                        QString const & target_key,
+                                        bool above);
 
 private:
     std::shared_ptr<DataManager> _data_manager;

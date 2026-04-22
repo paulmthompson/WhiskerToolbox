@@ -7,6 +7,7 @@
 #include "DataViewerDebugPanel.hpp"
 #include "Feature_Tree_Model.hpp"
 #include "Rendering/OpenGLWidget.hpp"
+#include "SeriesOrderingDialog.hpp"
 #include "SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp"
 #include "SubWidgets/AnalogTimeSeries/GroupAnalogViewer_Widget.hpp"
 #include "SubWidgets/DigitalEvent/EventViewer_Widget.hpp"
@@ -373,6 +374,50 @@ void DataViewerPropertiesWidget::_setupFeatureTree() {
                 QPoint const global_pos = tw->viewport()->mapToGlobal(pos);
                 emit groupContextMenuRequested(key, global_pos);
             }
+        } else {
+            // Leaf item: offer relative placement
+            // Collect all other currently-displayed leaf keys
+            std::vector<std::string> other_keys;
+            std::function<void(QTreeWidgetItem *)> collect = [&](QTreeWidgetItem * node) {
+                if (node->childCount() == 0) {
+                    std::string const node_key = node->text(0).toStdString();
+                    if (node_key != key) {
+                        other_keys.push_back(node_key);
+                    }
+                    return;
+                }
+                for (int i = 0; i < node->childCount(); ++i) {
+                    collect(node->child(i));
+                }
+            };
+            for (int i = 0; i < tw->topLevelItemCount(); ++i) {
+                collect(tw->topLevelItem(i));
+            }
+
+            if (other_keys.empty()) {
+                return;// Nothing to place relative to
+            }
+
+            QMenu menu(tw);
+            QAction * place_action = menu.addAction(QStringLiteral("Place relative to\u2026"));
+            QAction * chosen = menu.exec(tw->viewport()->mapToGlobal(pos));
+            if (chosen != place_action) {
+                return;
+            }
+
+            SeriesOrderingDialog dlg(key, other_keys, tw);
+            if (dlg.exec() != QDialog::Accepted) {
+                return;
+            }
+            std::string const target = dlg.targetKey();
+            bool const above = dlg.placeAbove();
+            if (target.empty()) {
+                return;
+            }
+            emit seriesRelativePlacementRequested(
+                    QString::fromStdString(key),
+                    QString::fromStdString(target),
+                    above);
         }
     });
 

@@ -1362,6 +1362,111 @@ void DataViewer_Widget::_handleLaneReorderRequest(QString const & source_lane_id
     }
 }
 
+void DataViewer_Widget::_handleSeriesRelativePlacement(QString const & source_key,
+                                                       QString const & target_key,
+                                                       bool above) {
+    auto * axis_state = _state->multiLaneAxisState();
+    if (axis_state == nullptr) {
+        return;
+    }
+
+    auto const & lanes = axis_state->lanes();
+    int const n = static_cast<int>(lanes.size());
+    if (n <= 1) {
+        return;
+    }
+
+    // Build current visual order (top-to-bottom = NDC descending = reverse of lanes vector).
+    std::vector<std::string> visual_order;
+    visual_order.reserve(static_cast<size_t>(n));
+    for (int i = n - 1; i >= 0; --i) {
+        visual_order.push_back(lanes[static_cast<size_t>(i)].lane_id);
+    }
+
+    // Resolve lane_ids for source and target series.
+    // A series without an explicit lane_id lives in an auto-lane named "__auto_lane__<key>".
+    std::string const auto_prefix = "__auto_lane__";
+    auto const resolve_lane_id = [&](std::string const & key) -> std::string {
+        if (auto const * od = _state->getSeriesLaneOverride(key);
+            od != nullptr && !od->lane_id.empty()) {
+            return od->lane_id;
+        }
+        return auto_prefix + key;
+    };
+
+    std::string const src_lid = resolve_lane_id(source_key.toStdString());
+    std::string const tgt_lid = resolve_lane_id(target_key.toStdString());
+
+    auto const src_it = std::find(visual_order.begin(), visual_order.end(), src_lid);
+    auto const tgt_it = std::find(visual_order.begin(), visual_order.end(), tgt_lid);
+
+    if (src_it == visual_order.end() || tgt_it == visual_order.end()) {
+        return;// Unknown lane — stale descriptors
+    }
+
+    int const src_visual_idx = static_cast<int>(src_it - visual_order.begin());
+    int const tgt_visual_idx = static_cast<int>(tgt_it - visual_order.begin());
+
+    // Build new visual order: remove source, insert adjacent to target.
+    // Insert at tgt_visual_idx for "above", tgt_visual_idx+1 for "below"
+    // (adjusting for the removal of source which may shift indices).
+    std::vector<std::string> new_visual_order;
+    new_visual_order.reserve(static_cast<size_t>(n));
+    for (int i = 0; i < n; ++i) {
+        if (i != src_visual_idx) {
+            new_visual_order.push_back(visual_order[static_cast<size_t>(i)]);
+        }
+    }
+
+    // After removal, find where the target now sits.
+    auto const new_tgt_it = std::find(new_visual_order.begin(), new_visual_order.end(), tgt_lid);
+    if (new_tgt_it == new_visual_order.end()) {
+        return;
+    }
+    int const new_tgt_idx = static_cast<int>(new_tgt_it - new_visual_order.begin());
+    int const insert_slot = above ? new_tgt_idx : new_tgt_idx + 1;
+    new_visual_order.insert(new_visual_order.begin() + insert_slot, src_lid);
+
+    if (new_visual_order == visual_order) {
+        return;// No-op
+    }
+
+    // Assign new lane_order values: visual slot 0 (top) = highest value.
+    constexpr int kLaneOrderStep = 10;
+    auto const overrides_snapshot = _state->allSeriesLaneOverrides();
+
+    struct LaneUpdate {
+        std::string series_key;
+        SeriesLaneOverrideData updated;
+    };
+    std::vector<LaneUpdate> updates;
+
+    for (int visual_idx = 0; visual_idx < n; ++visual_idx) {
+        std::string const & lid = new_visual_order[static_cast<size_t>(visual_idx)];
+        int const new_order = (n - visual_idx) * kLaneOrderStep;
+
+        if (lid.rfind(auto_prefix, 0) == 0) {
+            std::string const series_key = lid.substr(auto_prefix.size());
+            SeriesLaneOverrideData new_override;
+            new_override.lane_id = lid;
+            new_override.lane_order = new_order;
+            updates.push_back({series_key, new_override});
+        } else {
+            for (auto const & [key, od]: overrides_snapshot) {
+                if (od.lane_id == lid) {
+                    SeriesLaneOverrideData updated = od;
+                    updated.lane_order = new_order;
+                    updates.push_back({key, updated});
+                }
+            }
+        }
+    }
+
+    for (auto & upd: updates) {
+        _state->setSeriesLaneOverride(upd.series_key, upd.updated);
+    }
+}
+
 void DataViewer_Widget::_autoFillCanvas() {
     std::cout << "DataViewer_Widget: Auto-filling canvas..." << std::endl;
 

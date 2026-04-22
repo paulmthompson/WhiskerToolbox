@@ -16,7 +16,7 @@
 namespace DataViewerWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   const std::shared_ptr<DataManager>& data_manager) {
+                   std::shared_ptr<DataManager> const & data_manager) {
 
     if (!registry) {
         std::cerr << "DataViewerWidgetModule::registerTypes: registry is null" << std::endl;
@@ -138,6 +138,12 @@ void registerTypes(EditorRegistry * registry,
                                 QObject::connect(props, &DataViewerPropertiesWidget::groupContextMenuRequested,
                                                  view, [view](std::string const & group_name, QPoint const & global_pos) {
                                                      view->showGroupContextMenu(group_name, global_pos);
+                                                 });
+
+                                // Connect relative placement signal (Phase 4C)
+                                QObject::connect(props, &DataViewerPropertiesWidget::seriesRelativePlacementRequested,
+                                                 view, [view](QString const & source_key, QString const & target_key, bool above) {
+                                                     view->_handleSeriesRelativePlacement(source_key, target_key, above);
                                                  });
 
                                 // Update visible lane count indicator on scene rebuild and viewport changes

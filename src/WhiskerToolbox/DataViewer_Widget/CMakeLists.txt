@@ -58,6 +58,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         UI/DataViewerPropertiesWidget.ui
         UI/Feature_Tree_Model.hpp
         UI/Feature_Tree_Model.cpp
+        UI/SeriesOrderingDialog.cpp
+        UI/SeriesOrderingDialog.hpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.cpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp
         UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.ui

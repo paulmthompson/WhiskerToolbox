@@ -2604,3 +2604,194 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture,
 // Realistic Event Propagation Tests
 // These send wheel events to the OpenGLWidget child (as happens in real use)
 // =============================================================================
+
+// =============================================================================
+// Phase 4C: Per-Series Relative Ordering (_handleSeriesRelativePlacement)
+// =============================================================================
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - seriesRelativePlacement places source above target",
+                 "[DataViewer_Widget][Ordering][RelativePlacement][Phase4C]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    REQUIRE(analog.size() >= 3);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    for (auto const & k: analog) {
+        widget.addFeature(k, "#FFFFFF");
+        QApplication::processEvents();
+    }
+
+    // Verify baseline: analog_3 is at top (highest NDC offset), analog_1 at bottom
+    auto layout_1_before = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_2_before = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    auto layout_3_before = TestHelpers::getAnalogLayoutTransform(widget, analog[2]);
+    REQUIRE(layout_1_before.has_value());
+    REQUIRE(layout_2_before.has_value());
+    REQUIRE(layout_3_before.has_value());
+    // Default order top->bottom: analog_3, analog_2, analog_1
+    REQUIRE(layout_3_before->offset > layout_2_before->offset);
+    REQUIRE(layout_2_before->offset > layout_1_before->offset);
+
+    // Place analog_1 ABOVE analog_3 (should now be the new top)
+    bool const invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleSeriesRelativePlacement",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(analog[0])),
+            Q_ARG(QString, QString::fromStdString(analog[2])),
+            Q_ARG(bool, true));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    auto layout_1_after = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_3_after = TestHelpers::getAnalogLayoutTransform(widget, analog[2]);
+    REQUIRE(layout_1_after.has_value());
+    REQUIRE(layout_3_after.has_value());
+
+    // analog_1 should now be above analog_3
+    REQUIRE(layout_1_after->offset > layout_3_after->offset);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - seriesRelativePlacement places source below target",
+                 "[DataViewer_Widget][Ordering][RelativePlacement][Phase4C]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    REQUIRE(analog.size() >= 3);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    for (auto const & k: analog) {
+        widget.addFeature(k, "#FFFFFF");
+        QApplication::processEvents();
+    }
+
+    // Default order top->bottom: analog_3, analog_2, analog_1
+    // Place analog_3 BELOW analog_1 (should now be the new bottom)
+    bool const invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleSeriesRelativePlacement",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(analog[2])),
+            Q_ARG(QString, QString::fromStdString(analog[0])),
+            Q_ARG(bool, false));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    auto layout_1_after = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_3_after = TestHelpers::getAnalogLayoutTransform(widget, analog[2]);
+    REQUIRE(layout_1_after.has_value());
+    REQUIRE(layout_3_after.has_value());
+
+    // analog_3 should now be below analog_1
+    REQUIRE(layout_1_after->offset > layout_3_after->offset);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - seriesRelativePlacement persists through toJson/fromJson roundtrip",
+                 "[DataViewer_Widget][Ordering][RelativePlacement][Serialization][Phase4C]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    REQUIRE(analog.size() >= 3);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    for (auto const & k: analog) {
+        widget.addFeature(k, "#FFFFFF");
+        QApplication::processEvents();
+    }
+
+    // Place analog_1 ABOVE analog_3
+    bool const invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleSeriesRelativePlacement",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(analog[0])),
+            Q_ARG(QString, QString::fromStdString(analog[2])),
+            Q_ARG(bool, true));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    auto layout_1_after = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_3_after = TestHelpers::getAnalogLayoutTransform(widget, analog[2]);
+    REQUIRE(layout_1_after.has_value());
+    REQUIRE(layout_3_after.has_value());
+    REQUIRE(layout_1_after->offset > layout_3_after->offset);
+
+    // Serialize and restore state
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+    std::string const json = state->toJson();
+    REQUIRE(!json.empty());
+
+    bool const restored = state->fromJson(json);
+    REQUIRE(restored);
+    QApplication::processEvents();
+
+    auto layout_1_restored = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    auto layout_3_restored = TestHelpers::getAnalogLayoutTransform(widget, analog[2]);
+    REQUIRE(layout_1_restored.has_value());
+    REQUIRE(layout_3_restored.has_value());
+
+    // Order should be preserved after round-trip
+    REQUIRE(layout_1_restored->offset > layout_3_restored->offset);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - seriesRelativePlacement works for mixed analog and event series",
+                 "[DataViewer_Widget][Ordering][RelativePlacement][Mixed][Phase4C]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() >= 2);
+    REQUIRE(ev.size() >= 1);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Add two analog and one event
+    widget.addFeature(analog[0], "#FF6B6B");
+    QApplication::processEvents();
+    widget.addFeature(analog[1], "#6BFF6B");
+    QApplication::processEvents();
+    widget.addFeature(ev[0], "#FFFFFF");
+    QApplication::processEvents();
+
+    // Capture initial event position
+    auto event_before = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    auto a0_before = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    REQUIRE(event_before.has_value());
+    REQUIRE(a0_before.has_value());
+
+    // Place event ABOVE analog_1
+    bool const invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleSeriesRelativePlacement",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(ev[0])),
+            Q_ARG(QString, QString::fromStdString(analog[0])),
+            Q_ARG(bool, true));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    auto event_after = TestHelpers::getEventLayoutTransform(widget, ev[0]);
+    auto a0_after = TestHelpers::getAnalogLayoutTransform(widget, analog[0]);
+    REQUIRE(event_after.has_value());
+    REQUIRE(a0_after.has_value());
+
+    // event should be above analog_1
+    REQUIRE(event_after->offset > a0_after->offset);
+
+    widget.close();
+}

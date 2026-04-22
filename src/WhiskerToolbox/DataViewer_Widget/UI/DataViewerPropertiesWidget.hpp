@@ -187,6 +187,18 @@ signals:
      */
     void groupContextMenuRequested(std::string const & group_name, QPoint const & global_pos);
 
+    /**
+     * @brief Emitted when the user requests relative placement of a series via the context menu.
+     *
+     * The view widget should connect to this signal and translate it into
+     * deterministic lane_order overrides via DataViewerState.
+     *
+     * @param source_key Series key to reposition
+     * @param target_key Series key to place relative to
+     * @param above      true = place source above target, false = place below
+     */
+    void seriesRelativePlacementRequested(QString source_key, QString target_key, bool above);
+
 private slots:
     void _onThemeChanged(int index);
     void _onGlobalYScaleChanged(double value);

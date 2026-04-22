@@ -43,8 +43,11 @@ Out of scope for this first delivery:
 4. Phase 4: DataViewer wiring for ordering, rendering, and axis descriptors
 5. Ordering abstractions roadmap (prerequisite for Phase 4b)
 6. Phase 4b: Interactive lane drag-and-drop reordering
-7. Phase 5: Compatibility and migration testing
-8. Phase 6: Documentation and handoff
+7. Phase 4C: Per-series relative ordering UI (autocomplete dialog)
+8. Phase 4D: JSON lane layout save and load
+9. Phase 4E: CSV spike-to-analog pairing loader
+10. Phase 5: Compatibility and migration testing
+11. Phase 6: Documentation and handoff
 
 ## Progress Update (2026-04-21)
 
@@ -64,6 +67,9 @@ Current status by phase:
 - Phase 4: completed
 - Ordering abstractions roadmap: completed
 - Phase 4b: completed
+- Phase 4C: completed
+- Phase 4D: not started
+- Phase 4E: not started
 - Phase 5: not started
 - Phase 6: in progress (roadmap/doc updates)
 
@@ -309,6 +315,164 @@ The completed ordering abstractions roadmap changed several design constraints t
 - [x] Mixed analog/event lanes can be interspersed interactively without manual JSON edits.
 - [x] Reordering a shared overlay lane moves the lane as a unit (all member series sharing `lane_id` receive matching new `lane_order`).
 - [x] Full-canvas event/interval behavior remains unchanged.
+
+---
+
+## Phase 4C: Per-Series Relative Ordering UI
+
+### Goal
+
+Allow a user to right-click any individual series currently displayed in the DataViewer tree and interactively place it above or below another named series. This complements axis drag-and-drop (Phase 4b) for high-channel-count datasets (e.g. 384-channel Neuropixel) where a submenu list would be impractical.
+
+### UX Model
+
+- Right-click a leaf series item in `Feature_Tree_Widget` → context menu shows "Place relative to…".
+- Action opens `SeriesOrderingDialog`: a `QLineEdit` with `QCompleter` fed by all other currently-displayed series keys, plus a `QComboBox` ("Above" / "Below").
+- User types a partial key; the completer filters live matches. On accept the relative placement is committed to `DataViewerState` as a `lane_order` override.
+- Reuses the same `(N - i) * 10` rank-assignment algorithm as `_handleLaneReorderRequest`.
+
+### Implementation Tasks
+
+- [x] Create `SeriesOrderingDialog` (`DataViewer_Widget/UI/SeriesOrderingDialog.hpp/.cpp`): `QLineEdit` + `QCompleter` + `QComboBox` ("Above" / "Below") + OK/Cancel. Constructor receives `std::vector<std::string> available_keys`. Returns `(target_key, bool above)` via accessor after `exec()`.
+- [x] Extend `DataViewerPropertiesWidget.cpp` context menu handler (line ~356): add `else` branch for leaf items (`hasChildren == false`). Collect all other leaf keys from the tree, show a `QMenu` with "Place relative to…", on trigger open `SeriesOrderingDialog`.
+- [x] Add signal to `DataViewerPropertiesWidget.hpp`: `void seriesRelativePlacementRequested(QString source_key, QString target_key, bool above)`.
+- [x] Wire signal in `DataViewerWidgetRegistration.cpp` → `DataViewer_Widget::_handleSeriesRelativePlacement`.
+- [x] Implement `DataViewer_Widget::_handleSeriesRelativePlacement`: resolve both series' `lane_id`s from overrides (falling back to `"__auto_lane__" + key`), locate the target's visual slot in `_multi_lane_axis_widget->state()->lanes()`, insert source at `slot` (above) or `slot + 1` (below), then assign `lane_order = (N - i) * 10` to all lanes in the new visual order.
+- [x] Add tests in `DataViewer_Widget.test.cpp`: verify that after placement, source is immediately above/below target in visual order and that the result survives a `toJson`/`fromJson` roundtrip.
+
+### Primary Files
+
+- `src/WhiskerToolbox/DataViewer_Widget/UI/SeriesOrderingDialog.hpp/.cpp` — new
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.hpp` — new signal
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp` — leaf context menu branch
+- `src/WhiskerToolbox/DataViewer_Widget/DataViewerWidgetRegistration.cpp` — new connection
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.hpp` — new private slot
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp` — implement `_handleSeriesRelativePlacement`
+- `src/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt` — add new source files
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp` — placement behavior tests
+
+### Acceptance Criteria
+
+- [x] Right-clicking a leaf series in the tree shows "Place relative to…".
+- [x] Dialog `QCompleter` filters all currently-displayed keys as the user types.
+- [x] Committing "Below voltage_3" places the source series immediately below `voltage_3` in visual order.
+- [x] Placement result persists in `DataViewerState` and survives a `toJson`/`fromJson` roundtrip.
+- [x] Behavior is correct for both AnalogTimeSeries and DigitalEventSeries leaf items.
+
+---
+
+## Phase 4D: JSON Lane Layout Save and Load
+
+### Goal
+
+Allow a developer or user to save the current DataViewer lane configuration — which series are displayed, their colors, and all lane overrides — to a `.dvlayout` JSON file, and reload it later. On load, series listed in the file that exist in the DataManager but are not currently displayed are automatically added.
+
+### JSON Schema
+
+```json
+{
+  "version": 1,
+  "displayed_series": [
+    {"key": "voltage_1", "color": "#FF0000"}
+  ],
+  "series_lane_overrides": {
+    "voltage_1": {"lane_id": "", "lane_order": 100, "lane_weight": 1.0, "overlay_mode": "Auto", "overlay_z": 0}
+  },
+  "lane_overrides": {}
+}
+```
+
+`series_lane_overrides` and `lane_overrides` reuse the existing `SeriesLaneOverrideData` and `LaneOverrideData` structs directly via `rfl::json`.
+
+### Implementation Tasks
+
+- [ ] Create `LaneLayoutFile.hpp/.cpp` (`DataViewer_Widget/Ordering/`): define `LaneLayoutDisplayedSeries { std::string key; std::string color; }` and `LaneLayoutFile { int version; std::vector<LaneLayoutDisplayedSeries> displayed_series; std::map<std::string, SeriesLaneOverrideData> series_lane_overrides; std::map<std::string, LaneOverrideData> lane_overrides; }`. Implement `serializeLaneLayout()` and `deserializeLaneLayout()` via `rfl::json`.
+- [ ] Edit `DataViewerPropertiesWidget.ui`: add a `QGroupBox` "Layout Presets" (after the "Actions" group) with buttons `save_lane_layout_button` ("Save Lane Layout") and `load_lane_layout_button` ("Load Lane Layout").
+- [ ] Add signals to `DataViewerPropertiesWidget.hpp`: `void saveLaneLayoutRequested()` and `void loadLaneLayoutRequested()`.
+- [ ] Wire buttons in `DataViewerPropertiesWidget.cpp` → emit signals.
+- [ ] Wire signals in `DataViewerWidgetRegistration.cpp` → new `DataViewer_Widget` slots.
+- [ ] Implement `DataViewer_Widget::_saveLaneLayout()`: collect currently-displayed keys and their colors from `OpenGLWidget`, build `LaneLayoutFile` from `_state->data()` overrides, serialize, open `QFileDialog::getSaveFileName` (filter `*.dvlayout`) and write.
+- [ ] Implement `DataViewer_Widget::_loadLaneLayout()`: open `QFileDialog::getOpenFileName`, parse with `deserializeLaneLayout`, for each entry in `displayed_series` call `DataManager::getType(key)` — skip if not found, call `addFeature(key, color)` if not already displayed. Apply all `setSeriesLaneOverride` and `setLaneOverride` entries from the file, then call `updateCanvas()`.
+- [ ] Add tests in `LaneLayoutFile.test.cpp` or `DataViewer_Widget.test.cpp`: roundtrip serialize/deserialize; verify that auto-add adds missing series and skips absent ones.
+
+### Primary Files
+
+- `src/WhiskerToolbox/DataViewer_Widget/Ordering/LaneLayoutFile.hpp/.cpp` — new
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui` — new GroupBox + buttons
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.hpp` — new signals
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp` — button wiring
+- `src/WhiskerToolbox/DataViewer_Widget/DataViewerWidgetRegistration.cpp` — new connections
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.hpp` — new private slots
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp` — implement `_saveLaneLayout`, `_loadLaneLayout`
+- `src/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt` — add new source files
+
+### Acceptance Criteria
+
+- [ ] "Save Lane Layout" serializes displayed series, colors, and all overrides to a `.dvlayout` JSON file.
+- [ ] "Load Lane Layout" re-adds series that exist in DataManager but are not currently displayed.
+- [ ] Series absent from DataManager are silently skipped during load.
+- [ ] Lane overrides are fully restored after a save/load roundtrip.
+- [ ] Layout roundtrip test passes for a mixed analog plus digital-event configuration.
+
+---
+
+## Phase 4E: CSV Spike-to-Analog Pairing Loader
+
+### Goal
+
+Parse a CSV file where each row records a spike event `(timestamp, digital_channel, analog_channel)`, compute the modal analog channel assignment for each digital channel, and then place each `spikes_N` series adjacent to (or overlaid on) its paired `voltage_M` series. This mirrors the Swindale spike-sorter loader but derives relative ordering between digital and analog series rather than absolute electrode positions.
+
+### CSV Format
+
+Whitespace- or comma-delimited; three columns: `timestamp` (ignored), `digital_channel` (1-based), `analog_channel` (1-based).
+Example:
+```
+0.01493,  8, 20
+0.01670, 24,  6
+0.04320, 24,  6
+```
+For each unique `digital_channel`, the `analog_channel` that appears most often (mode) is the pairing. Both channel numbers are converted to 0-based before lookup.
+
+### Placement Modes (configurable per load)
+
+- **Adjacent Below**: `spikes_N` placed in its own lane immediately below `voltage_M`.
+- **Adjacent Above**: `spikes_N` placed in its own lane immediately above `voltage_M`.
+- **Overlay**: `spikes_N` shares `voltage_M`'s `lane_id` (rendered in the same lane band).
+
+### Implementation Tasks
+
+- [ ] Create `SpikeToAnalogPairingLoader.hpp/.cpp` (`DataViewer_Widget/Ordering/`): define `struct SpikeToAnalogPairing { int digital_channel; int analog_channel; }` (both 0-based). Implement `parseSpikeToAnalogCSV(std::string const& text)` — skip malformed rows, count `(digital_ch → analog_ch)` occurrences, return one `SpikeToAnalogPairing` per unique digital channel (mode analog channel).
+- [ ] Create `SpikeToAnalogConfigDialog.hpp/.cpp` (`DataViewer_Widget/UI/`): `QLineEdit` for digital group prefix (default `"spikes_"`), `QLineEdit` for analog group prefix (default `"voltage_"`), `QComboBox` for placement mode ("Adjacent Below" / "Adjacent Above" / "Overlay"), a file-path `QLineEdit` + "Browse…" button, OK/Cancel.
+- [ ] Edit `DataViewerPropertiesWidget.ui`: add a `QPushButton` `load_spike_analog_button` ("Load Spike-to-Analog Pairing…") to an appropriate existing or new group box.
+- [ ] Add signal to `DataViewerPropertiesWidget.hpp`: `void loadSpikeToAnalogPairingRequested()`.
+- [ ] Wire button in `DataViewerPropertiesWidget.cpp` → emit signal.
+- [ ] Wire signal in `DataViewerWidgetRegistration.cpp` → `DataViewer_Widget::_loadSpikeToAnalogPairing`.
+- [ ] Add `OpenGLWidget::loadSpikeToAnalogPairing(digital_group, analog_group, pairings, PlacementMode)` (`OpenGLWidget.hpp/.cpp`). For **Overlay**: get `voltage_M`'s effective `lane_id` from overrides (or `"__auto_lane__" + key`), set `spikes_N.lane_id` to same and `overlay_mode = Overlay`. For **Adjacent**: read current visual order from `_multi_lane_axis_state->lanes()`, insert each digital auto-lane at `analog_slot + 1` (Below) or `analog_slot` (Above) — process in reverse analog-slot order to avoid index shifts — then assign `lane_order = (N - i) * 10` and call `setSeriesLaneOverride` for each digital key.
+- [ ] Implement `DataViewer_Widget::_loadSpikeToAnalogPairing()` and test-accessible `_loadSpikeToAnalogPairingFromText(QString digital_group, QString analog_group, QString text, int placement_mode)` (matching the pattern of `_loadSpikeSorterConfigurationFromText`): show `SpikeToAnalogConfigDialog`, on accept parse CSV, delegate to `openGLWidget->loadSpikeToAnalogPairing(...)`, call `updateCanvas()`.
+- [ ] Add tests in `DataViewer_Widget.test.cpp`: CSV parse correctness (mode wins ties deterministically), adjacent below placement, adjacent above placement, overlay lane sharing.
+
+### Primary Files
+
+- `src/WhiskerToolbox/DataViewer_Widget/Ordering/SpikeToAnalogPairingLoader.hpp/.cpp` — new
+- `src/WhiskerToolbox/DataViewer_Widget/UI/SpikeToAnalogConfigDialog.hpp/.cpp` — new
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui` — new button
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.hpp` — new signal
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp` — button wiring
+- `src/WhiskerToolbox/DataViewer_Widget/DataViewerWidgetRegistration.cpp` — new connection
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.hpp` — new private slots
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.cpp` — implement `_loadSpikeToAnalogPairing`, `_loadSpikeToAnalogPairingFromText`
+- `src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.hpp/.cpp` — implement `loadSpikeToAnalogPairing`
+- `src/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt` — add new source files
+- `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp` — CSV parse and placement tests
+
+### Acceptance Criteria
+
+- [ ] `parseSpikeToAnalogCSV` returns one pairing per unique digital channel (mode analog channel); malformed rows are skipped.
+- [ ] "Adjacent Below" places each `spikes_N` in its own lane immediately below its paired `voltage_M`.
+- [ ] "Adjacent Above" places each `spikes_N` immediately above its paired `voltage_M`.
+- [ ] "Overlay" assigns `spikes_N` to `voltage_M`'s lane band (same `lane_id`).
+- [ ] Placements are committed via `setSeriesLaneOverride` and survive a `toJson`/`fromJson` roundtrip.
+- [ ] A test-accessible text-based entry point exists for automated tests (no file dialog).
 
 ---
 
