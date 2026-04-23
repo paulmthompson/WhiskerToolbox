@@ -96,6 +96,7 @@ if("${MSVC_WARNINGS}" STREQUAL "")
          -Wuseless-cast # warn if you perform a cast to the same type
          -Wsuggest-override # warn if an overridden member function is not marked 'override' or 'final'
          -Wuninitialized
+         -fPIC
      )
    endif()
 
