@@ -3,12 +3,10 @@
 
 #include "EditorState/SelectionContext.hpp"// For SelectionSource
 #include "TimeFrame/StrongTimeTypes.hpp"   // For TimeKey
-#include "TimeFrame/TimeFrame.hpp"         // For TimeFrameIndex
 
 #include <QWidget>
 
 #include <memory>
-#include <set>
 
 class DataManager;
 class Media_Window;

@@ -7,13 +7,13 @@
 #include "ui_CSVTensorImport_Widget.h"
 
 #include "IO/formats/CSV/tensors/Tensor_Data_CSV.hpp"
+#include "StateManagement/AppFileDialog.hpp"
 
 #include <QComboBox>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
 
-#include "StateManagement/AppFileDialog.hpp"
 
 CSVTensorImport_Widget::CSVTensorImport_Widget(QWidget * parent)
     : QWidget(parent),

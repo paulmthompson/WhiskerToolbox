@@ -35,7 +35,7 @@ signals:
      * @brief Emitted when user requests to load a CSV file
      * @param options Configured loader options (filename will be set by parent)
      */
-    void loadSingleCSVFileRequested(CSVPointLoaderOptions const & options);
+    void loadSingleCSVFileRequested(CSVPointLoaderOptions & options);
 
 private:
     Ui::CSVPointImport_Widget * ui;

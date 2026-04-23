@@ -3,14 +3,14 @@
 
 
 #include "CoreGeometry/lines.hpp"
-#include "Entity/EntityTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "Entity/EntityId.hpp"
+#include "TimeFrame/TimeFrameIndex.hpp"
 
+#include <opencv2/opencv.hpp>
 #include <QMap>
 #include <QWidget>
 
 #include <memory>
-#include <opencv2/opencv.hpp>
 #include <optional>
 #include <string>
 

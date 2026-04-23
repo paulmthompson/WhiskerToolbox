@@ -2,19 +2,17 @@
 #define MEDIA_WINDOW_HPP
 
 #include "../Media_Widget/DisplayOptions/CoordinateTypes.hpp"
-#include "../Media_Widget/DisplayOptions/DisplayOptions.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
 #include "Entity/EntityTypes.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"      // TimePosition
 
 #include <QGraphicsScene>
 #include <QtCore/QtGlobal>
 
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -44,6 +42,12 @@ class KeyActionAdapter;
 }// namespace KeymapSystem
 
 struct TextOverlay;
+
+struct DigitalIntervalDisplayOptions;
+struct LineDisplayOptions;
+struct MaskDisplayOptions;
+struct PointDisplayOptions;
+struct TensorDisplayOptions;
 
 int const default_width = 640;
 int const default_height = 480;
@@ -193,35 +197,35 @@ public:
     EntityId findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type);
 
     /**
-     * @brief Get mutable line display options for a key (Phase 4C: forwards to state registry)
+     * @brief Get mutable line display options for a key
      * @param line_key The line data key
      * @return Pointer to options if found, nullopt otherwise
      */
     [[nodiscard]] std::optional<LineDisplayOptions *> getLineConfig(std::string const & line_key) const;
 
     /**
-     * @brief Get mutable mask display options for a key (Phase 4C: forwards to state registry)
+     * @brief Get mutable mask display options for a key
      * @param mask_key The mask data key
      * @return Pointer to options if found, nullopt otherwise
      */
     [[nodiscard]] std::optional<MaskDisplayOptions *> getMaskConfig(std::string const & mask_key) const;
 
     /**
-     * @brief Get mutable point display options for a key (Phase 4C: forwards to state registry)
+     * @brief Get mutable point display options for a key
      * @param point_key The point data key
      * @return Pointer to options if found, nullopt otherwise
      */
     [[nodiscard]] std::optional<PointDisplayOptions *> getPointConfig(std::string const & point_key) const;
 
     /**
-     * @brief Get mutable interval display options for a key (Phase 4C: forwards to state registry)
+     * @brief Get mutable interval display options for a key
      * @param interval_key The interval data key
      * @return Pointer to options if found, nullopt otherwise
      */
     [[nodiscard]] std::optional<DigitalIntervalDisplayOptions *> getIntervalConfig(std::string const & interval_key) const;
 
     /**
-     * @brief Get mutable tensor display options for a key (Phase 4C: forwards to state registry)
+     * @brief Get mutable tensor display options for a key
      * @param tensor_key The tensor data key
      * @return Pointer to options if found, nullopt otherwise
      */
@@ -296,10 +300,6 @@ private:
     std::vector<QGraphicsEllipseItem *> _temporary_line_points;// Track temporary line point markers
 
     std::vector<QPointF> _drawing_points;
-
-    // Display options are now stored in MediaWidgetState's DisplayOptionsRegistry
-    // (Phase 4C: removed _line_configs, _mask_configs, _point_configs,
-    //  _interval_configs, _tensor_configs - use _media_widget_state->displayOptions() instead)
 
     // Preview data storage for masks
     std::unordered_map<std::string, std::vector<Mask2D>> _preview_mask_data;

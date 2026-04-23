@@ -5,7 +5,6 @@
 
 #include <QWidget>
 
-// Forward declaration of the UI class
 namespace Ui {
 class CSVEventSaver_Widget;
 }
