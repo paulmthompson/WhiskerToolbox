@@ -3,8 +3,9 @@
  * @brief Parser and rank adapter for the Swindale SpikeSorter electrode configuration format.
  *
  * Reference:
- *   Swindale NV, Spacek MA. "SpikeSorter: Sorting large sets of waveforms from
- *   tetrode recordings." eNeuro. 2014. PMID: 28287541.
+ *   Swindale, N.V., Mitelut, C., Murphy, T.H., Spacek, M.A., 2017. 
+ *   A Visual Guide to Sorting Electrophysiological Recordings Using “SpikeSorter.” 
+ *   J Vis Exp 55217. https://doi.org/10.3791/55217
  */
 
 #include "Ordering/SwindaleSpikeSorterLoader.hpp"
