@@ -2,6 +2,8 @@
 #include "ui_TensorImport_Widget.h"
 
 #include "DataImportTypeRegistry.hpp"
+#include "IO/formats/CSV/tensors/Tensor_Data_CSV.hpp"
+
 #include "DataManager.hpp"
 
 // https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library

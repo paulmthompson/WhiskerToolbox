@@ -2,6 +2,8 @@
 
 #include "ui_PointImport_Widget.h"
 
+#include "IO/formats/CSV/points/Point_Data_CSV.hpp"
+
 #include "DataManager/DataManager.hpp"
 #include "IO/formats/CSV/points/Point_Data_CSV.hpp"
 #include "Points/Point_Data.hpp"
@@ -46,7 +48,7 @@ void PointImport_Widget::_onLoaderTypeChanged(int index) {
     }
 }
 
-void PointImport_Widget::_handleSingleCSVLoadRequested(CSVPointLoaderOptions options) {
+void PointImport_Widget::_handleSingleCSVLoadRequested(CSVPointLoaderOptions & options) {
     auto keypoint_filename = AppFileDialog::getOpenFileName(
             this,
             QStringLiteral("import_csv"),

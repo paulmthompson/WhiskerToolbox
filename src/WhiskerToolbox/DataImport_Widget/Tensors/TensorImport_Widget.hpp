@@ -12,10 +12,10 @@
  */
 
 #include <QWidget>
+
 #include <memory>
 
-#include "IO/formats/CSV/tensors/Tensor_Data_CSV.hpp"
-
+struct CSVTensorLoaderOptions;
 class DataManager;
 
 namespace Ui {
@@ -56,7 +56,7 @@ private:
 private slots:
     void _onLoaderTypeChanged(int index);
     void _loadNumpyArray();
-    void _handleCSVLoadRequested(const CSVTensorLoaderOptions& options);
+    void _handleCSVLoadRequested(CSVTensorLoaderOptions const & options);
 };
 
 #endif// TENSOR_IMPORT_WIDGET_HPP

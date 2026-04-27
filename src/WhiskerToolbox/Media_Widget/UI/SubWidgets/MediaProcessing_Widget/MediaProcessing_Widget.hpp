@@ -11,11 +11,8 @@
  * receive special handling due to rendering-level integration and canvas interaction.
  */
 
-#include "ImageProcessing/ProcessingOptions.hpp"
-
 #include <QWidget>
 
-#include <map>
 #include <memory>
 #include <string>
 

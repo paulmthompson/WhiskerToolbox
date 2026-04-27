@@ -18,12 +18,11 @@
  * - Data naming and registration with DataManager
  */
 
-#include "IO/formats/CSV/points/Point_Data_CSV.hpp"
-
 #include <QWidget>
 
 #include <memory>
 
+struct CSVPointLoaderOptions;
 class DataManager;
 
 namespace Ui {
@@ -79,7 +78,7 @@ private slots:
      * @brief Handle CSV load request from sub-widget
      * @param options Configured options (filename will be prompted)
      */
-    void _handleSingleCSVLoadRequested(CSVPointLoaderOptions options);
+    void _handleSingleCSVLoadRequested(CSVPointLoaderOptions & options);
 };
 
 #endif // POINT_IMPORT_WIDGET_HPP

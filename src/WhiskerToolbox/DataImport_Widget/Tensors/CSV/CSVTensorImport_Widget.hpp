@@ -8,8 +8,7 @@
 
 #include <QWidget>
 
-#include "IO/formats/CSV/tensors/Tensor_Data_CSV.hpp"
-
+struct CSVTensorLoaderOptions;
 namespace Ui {
 class CSVTensorImport_Widget;
 }
@@ -35,7 +34,7 @@ signals:
      * @brief Emitted when user requests to load tensor data from CSV
      * @param options The configured loader options
      */
-    void loadTensorCSVRequested(CSVTensorLoaderOptions options);
+    void loadTensorCSVRequested(CSVTensorLoaderOptions const & options);
 
 private slots:
     void _onBrowseButtonClicked();
