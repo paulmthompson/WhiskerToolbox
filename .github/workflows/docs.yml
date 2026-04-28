@@ -1,0 +1,55 @@
+name: Documentation
+
+# This workflow triggers on pull requests targeting the main branch,
+# or when manually triggered via the GitHub Actions tab.
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Documentation Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen
+
+      - name: Install Doxybook2
+        # Fetches the pre-compiled Linux binary, extracts it, and moves it to the system PATH
+        run: |
+          wget https://github.com/matusnovak/doxybook2/releases/download/v1.5.0/doxybook2-linux-amd64-v1.5.0.zip
+          unzip doxybook2-linux-amd64-v1.5.0.zip -d doxybook2_bin
+          sudo mv doxybook2_bin/bin/doxybook2 /usr/local/bin/
+          rm -rf doxybook2-linux-amd64-v1.5.0.zip doxybook2_bin
+          
+          # Verify installation
+          doxybook2 --version
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Execute Build Script
+        run: |
+          # Ensure the script is executable (in case file permissions were lost in git)
+          chmod +x build_docs.sh
+          
+          # Run the documentation pipeline
+          ./build_docs.sh
+
+      # Optional: Upload the built site as an artifact so you can download and preview 
+      # the PR's documentation locally before merging.
+      - name: Upload HTML Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: quarto-site-preview
+          path: docs/_site/
+          retention-days: 7
