@@ -38,6 +38,8 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
 
       - name: Execute Build Script
+        env:
+          QUARTO_DENO_V8_OPTIONS="--max-old-space-size=8192,--stack-size=16384"
         run: |
           # Ensure the script is executable (in case file permissions were lost in git)
           chmod +x build_docs.sh
