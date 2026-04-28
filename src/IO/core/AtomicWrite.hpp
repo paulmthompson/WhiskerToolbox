@@ -1,6 +1,6 @@
 /**
  * @file AtomicWrite.hpp
- * @brief Atomic file write utility: writes to a temp file then renames over the target.
+ * @brief Atomic file write utility writes to a temp file then renames over the target.
  */
 #ifndef DATAMANAGER_IO_ATOMIC_WRITE_HPP
 #define DATAMANAGER_IO_ATOMIC_WRITE_HPP

@@ -14,7 +14,9 @@
 #include <string>
 #include <vector>
 
-/// Serializable binding for a dynamic (per-frame) model input slot.
+/**
+ * @brief Serializable binding for a dynamic (per-frame) model input slot.
+ */
 struct SlotBindingData {
     std::string slot_name;      ///< Model input slot name (e.g. "encoder_image")
     std::string data_key;       ///< DataManager key (e.g. "media/video_1")
@@ -37,7 +39,9 @@ inline int computeEncodingFrame(
     return std::clamp(current_frame + batch_index + time_offset, 0, max_frame);
 }
 
-/// Serializable binding for a model output slot.
+/**
+ * @brief Serializable binding for a model output slot.
+ */
 struct OutputBindingData {
     std::string slot_name; ///< Model output slot name
     std::string data_key;  ///< DataManager key to write results into
@@ -56,12 +60,16 @@ enum class CaptureMode {
     Absolute ///< Encode once, cache, and reuse
 };
 
-/// Convert CaptureMode to a string for serialization.
+/**
+ * @brief Convert CaptureMode to a string for serialization.
+ */
 [[nodiscard]] inline std::string captureModeToString(CaptureMode mode) {
     return mode == CaptureMode::Absolute ? "Absolute" : "Relative";
 }
 
-/// Convert a string to CaptureMode (defaults to Relative on unknown input).
+/**
+ * @brief Convert a string to CaptureMode (defaults to Relative on unknown input).
+ */
 [[nodiscard]] inline CaptureMode captureModeFromString(std::string const & s) {
     return s == "Absolute" ? CaptureMode::Absolute : CaptureMode::Relative;
 }
@@ -75,7 +83,9 @@ enum class CaptureMode {
     return slot_name + ":" + std::to_string(memory_index);
 }
 
-/// Serializable entry for a static (memory) model input.
+/**
+ * @brief Serializable entry for a static (memory) model input.
+ */
 struct StaticInputData {
     std::string slot_name;                    ///< Static slot name (e.g. "memory_images")
     int memory_index = 0;                     ///< Position in the memory buffer
@@ -85,12 +95,16 @@ struct StaticInputData {
     std::string capture_mode_str = "Relative";///< "Relative" or "Absolute" (serialization-friendly)
     int captured_frame = -1;                  ///< Frame that was captured (Absolute mode only, -1 = not captured)
 
-    /// Get the capture mode as an enum.
+    /**
+     * @brief Get the capture mode as an enum.
+     */
     [[nodiscard]] CaptureMode captureMode() const {
         return captureModeFromString(capture_mode_str);
     }
 
-    /// Set the capture mode from an enum.
+    /**
+     * @brief Set the capture mode from an enum.
+     */
     void setCaptureMode(CaptureMode mode) {
         capture_mode_str = captureModeToString(mode);
     }
@@ -113,7 +127,9 @@ enum class RecurrentInitMode {
     FirstOutput   ///< Run once with zeros, use raw output as initial state
 };
 
-/// Convert RecurrentInitMode to a string for serialization.
+/**
+ * @brief Convert RecurrentInitMode to a string for serialization.
+ */
 [[nodiscard]] inline std::string recurrentInitModeToString(RecurrentInitMode mode) {
     switch (mode) {
         case RecurrentInitMode::StaticCapture:
@@ -125,7 +141,9 @@ enum class RecurrentInitMode {
     }
 }
 
-/// Convert a string to RecurrentInitMode (defaults to Zeros on unknown input).
+/**
+ * @brief Convert a string to RecurrentInitMode (defaults to Zeros on unknown input).
+ */
 [[nodiscard]] inline RecurrentInitMode recurrentInitModeFromString(std::string const & s) {
     if (s == "StaticCapture") return RecurrentInitMode::StaticCapture;
     if (s == "FirstOutput") return RecurrentInitMode::FirstOutput;
@@ -162,17 +180,23 @@ struct RecurrentBindingData {
     /// When < 0 (default), the recurrent output replaces the full slot.
     int target_memory_index = -1;
 
-    /// Whether this binding targets a specific sequence position.
+    /**
+     * @brief Whether this binding targets a specific sequence position.
+     */
     [[nodiscard]] bool hasTargetMemoryIndex() const {
         return target_memory_index >= 0;
     }
 
-    /// Get the init mode as an enum.
+    /**
+     * @brief Get the init mode as an enum.
+     */
     [[nodiscard]] RecurrentInitMode initMode() const {
         return recurrentInitModeFromString(init_mode_str);
     }
 
-    /// Set the init mode from an enum.
+    /**
+     * @brief Set the init mode from an enum.
+     */
     void setInitMode(RecurrentInitMode mode) {
         init_mode_str = recurrentInitModeToString(mode);
     }

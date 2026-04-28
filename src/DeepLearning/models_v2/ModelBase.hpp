@@ -26,13 +26,19 @@ class ModelBase {
 public:
     virtual ~ModelBase() = default;
 
-    /// Unique string identifier for this model class (e.g. "neurosam").
+    /**
+     * @brief Unique string identifier for this model class (e.g. "neurosam").
+     */
     [[nodiscard]] virtual std::string modelId() const = 0;
 
-    /// Human-readable display name (e.g. "NeuroSAM").
+    /**
+     * @brief Human-readable display name (e.g. "NeuroSAM").
+     */
     [[nodiscard]] virtual std::string displayName() const = 0;
 
-    /// Description for UI tooltip.
+    /**
+     * @brief Description for UI tooltip.
+     */
     [[nodiscard]] virtual std::string description() const = 0;
 
     /// Input slot descriptors (ordered). Each describes one named tensor
@@ -46,7 +52,9 @@ public:
     /// Load weights from a file (e.g. a `.pte` ExecuTorch program or a TorchScript model).
     virtual void loadWeights(std::filesystem::path const & path) = 0;
 
-    /// Whether weights are loaded and model is ready for inference.
+    /**
+     * @brief Whether weights are loaded and model is ready for inference.
+     */
     [[nodiscard]] virtual bool isReady() const = 0;
 
     /// Preferred batch size. 0 = model decides; 1 = single-frame (e.g.
@@ -54,7 +62,9 @@ public:
     /// UI uses this as the default for the "Batch Size" spinbox.
     [[nodiscard]] virtual int preferredBatchSize() const { return 0; }
 
-    /// Maximum batch size the model supports. 0 = unlimited.
+    /**
+     * @brief Maximum batch size the model supports. 0 = unlimited.
+     */
     [[nodiscard]] virtual int maxBatchSize() const { return 0; }
 
     /// Batch mode describing the model's batch-size constraints.

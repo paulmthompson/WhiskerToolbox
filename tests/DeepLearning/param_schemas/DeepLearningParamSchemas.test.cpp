@@ -9,6 +9,8 @@
 
 #include "DeepLearning_Widget/Core/DeepLearningParamSchemas.hpp"
 
+#include "ParameterSchema/ParameterSchema.hpp"
+
 #include <rfl/json.hpp>
 
 

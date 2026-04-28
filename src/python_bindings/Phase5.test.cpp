@@ -1,6 +1,6 @@
 /**
  * @file Phase5.test.cpp
- * @brief Phase 5 tests: working directory, sys.argv, auto-import prelude
+ * @brief working directory, sys.argv, auto-import prelude tests
  *
  * Tests PythonEngine features added in Phase 5:
  * - setWorkingDirectory / getWorkingDirectory

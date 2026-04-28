@@ -34,13 +34,13 @@ struct GroupContextMenuCallbacks {
     std::function<void()> clearSelection;
     
     /**
-     * @brief Optional: Check if the widget has any selected entities
+     * @brief Check if the widget has any selected entities
      * If not provided, will use !getSelectedEntities().empty()
      */
     std::function<bool()> hasSelection;
     
     /**
-     * @brief Optional: Called after a group operation is completed
+     * @brief Called after a group operation is completed
      * Can be used to trigger a redraw or update
      */
     std::function<void()> onGroupOperationCompleted;

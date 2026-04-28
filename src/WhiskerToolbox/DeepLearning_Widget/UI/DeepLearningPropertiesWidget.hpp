@@ -90,17 +90,25 @@ public slots:
     void onTimeChanged(TimePosition const & position);
 
 signals:
-    /// Emitted when the static tensor cache changes (capture/clear).
+    /**
+     * @brief Emitted when the static tensor cache changes (capture/clear).
+     */
     void staticCacheChanged();
 
-    /// Emitted during recurrent inference to report progress.
-    /// @param current 0-based frame being processed
-    /// @param total Total number of frames
+    /**
+     * @brief Emitted during recurrent inference to report progress.
+     * 
+     * @param current 0-based frame being processed
+     * @param total Total number of frames to process
+     */
     void recurrentProgressChanged(int current, int total);
 
-    /// Emitted during batch inference to report progress.
-    /// @param current 0-based index of the frame being processed
-    /// @param total Total number of frames to process
+    /**
+     * @brief Emitted during batch inference to report progress.
+     * 
+     * @param current 0-based index of the frame being processed
+     * @param total Total number of frames to process
+     */
     void batchProgressChanged(int current, int total);
 
 private slots:

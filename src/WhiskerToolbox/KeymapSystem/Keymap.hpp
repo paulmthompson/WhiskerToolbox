@@ -1,6 +1,6 @@
 /**
  * @file Keymap.hpp
- * @brief Keymap binding types: resolved entries and serializable user overrides
+ * @brief Keymap binding types including resolved entries and serializable user overrides
  *
  * Defines the runtime binding representation and the persistable override format.
  *

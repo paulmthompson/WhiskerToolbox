@@ -25,3 +25,13 @@ dist
 build_log.txt
 test_log.txt
 tidy_log.txt
+
+# Doxygen intermediate XML
+docs/api/xml/
+
+# Doxybook2 generated Markdown
+docs/api_generated/
+
+# Quarto build artifact
+.quarto/
+_site/

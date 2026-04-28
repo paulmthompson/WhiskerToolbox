@@ -1,6 +1,6 @@
 /**
  * @file KeyAction.hpp
- * @brief Core types for the Keymap System: action scopes and descriptors
+ * @brief Core types for the Keymap System including action scopes and descriptors
  *
  * Defines how keyboard actions are categorized by scope (global, editor-focused,
  * always-routed) and how action metadata is represented.

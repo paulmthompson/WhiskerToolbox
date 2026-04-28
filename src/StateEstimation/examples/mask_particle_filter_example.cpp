@@ -38,7 +38,7 @@ Mask2D generateCircleMask(Point2D<uint32_t> center, float radius) {
 }
 
 /**
- * @brief Example 1: Track a single point through moving masks
+ * @brief Example 1 - Track a single point through moving masks
  */
 void example_single_point_tracking() {
     std::cout << "\n=== Example 1: Single Point Tracking ===\n\n";
@@ -102,7 +102,7 @@ void example_single_point_tracking() {
 }
 
 /**
- * @brief Example 2: Track multiple correlated points (whisker simulation)
+ * @brief Example 2 - Track multiple correlated points (whisker simulation)
  */
 void example_correlated_tracking() {
     std::cout << "\n=== Example 2: Correlated Multi-Point Tracking ===\n\n";
@@ -200,7 +200,7 @@ void example_correlated_tracking() {
 }
 
 /**
- * @brief Example 3: Handling ambiguous cases
+ * @brief Example 3 - Handling ambiguous cases
  */
 void example_ambiguous_tracking() {
     std::cout << "\n=== Example 3: Ambiguous Case (Large Mask) ===\n\n";

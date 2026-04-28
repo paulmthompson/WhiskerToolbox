@@ -75,7 +75,7 @@ float calculateMaskArea(
         MaskAreaParams const & params);
 
 /**
- * @brief Alternative: Calculate area with context support
+ * @brief Calculate area with context support
  * 
  * Demonstrates progress reporting and cancellation checking.
  */

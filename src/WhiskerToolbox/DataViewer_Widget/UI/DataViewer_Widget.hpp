@@ -180,8 +180,9 @@ private slots:
     void _handleLaneReorderRequest(QString const & source_lane_id, int target_visual_slot);
 
     /**
-     * @brief Core worker for spike-to-analog pairing: parse CSV with the given config
-     *        and apply lane placement overrides.
+     * @brief Core worker for spike-to-analog pairing
+     * 
+     * Parses CSV with the given config and applies lane placement overrides.
      *
      * Called by both @c _loadSpikeToAnalogPairing (interactive, full config) and
      * @c _loadSpikeToAnalogPairingFromText (test slot, default config).

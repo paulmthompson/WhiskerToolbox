@@ -977,7 +977,7 @@ private:
     }
 
     /**
-     * @brief Internal: Get typed transform
+     * @brief Get typed transform
      */
     template<typename In, typename Out, typename Params>
     std::shared_ptr<TypedTransform<In, Out, Params>>
@@ -993,7 +993,7 @@ private:
     }
 
     /**
-     * @brief Internal: Get typed time-grouped transform
+     * @brief Get typed time-grouped transform
      */
     template<typename In, typename Out, typename Params>
     std::shared_ptr<TypedTimeGroupedTransform<In, Out, Params>>
@@ -1009,7 +1009,7 @@ private:
     }
 
     /**
-     * @brief Internal: Get typed container transform
+     * @brief Get typed container transform
      */
     template<typename InContainer, typename OutContainer, typename Params>
     std::shared_ptr<TypedContainerTransform<InContainer, OutContainer, Params>>

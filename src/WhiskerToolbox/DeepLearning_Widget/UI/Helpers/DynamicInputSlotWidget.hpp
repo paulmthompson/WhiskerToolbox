@@ -1,9 +1,11 @@
-/// @file DynamicInputSlotWidget.hpp
-/// @brief Self-contained widget for configuring one dynamic input slot.
-///
-/// Replaces the hand-built `_buildDynamicInputGroup()` panel with a
-/// schema-driven form powered by AutoParamWidget. The widget owns a
-/// `DynamicInputSlotParams` struct and exposes it via signals.
+/**
+ * @file DynamicInputSlotWidget.hpp
+ * @brief Self-contained widget for configuring one dynamic input slot.
+ * 
+ * Replaces the hand-built `_buildDynamicInputGroup()` panel with a
+ * schema-driven form powered by AutoParamWidget. The widget owns a
+ * `DynamicInputSlotParams` struct and exposes it via signals.
+ */
 
 #ifndef DYNAMIC_INPUT_SLOT_WIDGET_HPP
 #define DYNAMIC_INPUT_SLOT_WIDGET_HPP
@@ -63,35 +65,54 @@ public:
     DynamicInputSlotWidget(DynamicInputSlotWidget &&) = delete;
     DynamicInputSlotWidget & operator=(DynamicInputSlotWidget &&) = delete;
 
-    /// @brief Return the current parameter values.
+    /**
+     * @brief Return the current parameter values.
+     */
     [[nodiscard]] DynamicInputSlotParams params() const;
 
-    /// @brief Set the parameter values and update the UI.
+    /**
+     * @brief Set the parameter values and update the UI.
+     */
     void setParams(DynamicInputSlotParams const & params);
 
-    /// @brief Refresh the data-source combo with current DataManager keys.
+    /**
+     * @brief Refresh the data-source combo with current DataManager keys.
+     */
     void refreshDataSources();
 
-    /// @brief Return the slot name this widget is bound to.
+    /**
+     * @brief Return the slot name this widget is bound to.
+     */
     [[nodiscard]] std::string const & slotName() const;
 
-    /// @brief Convert current parameters to a SlotBindingData for SlotAssembler.
-    /// Extracts encoder_id, mode, gaussian_sigma from the EncoderVariant.
+    /**
+     * @brief Convert current parameters to a SlotBindingData for SlotAssembler.
+     * 
+     * Extracts encoder_id, mode, gaussian_sigma from the EncoderVariant.
+     */
     [[nodiscard]] SlotBindingData toSlotBindingData() const;
 
 signals:
-    /// Emitted whenever any parameter in the slot changes.
+    /**
+     * @brief Emitted whenever any parameter in the slot changes.
+     */
     void bindingChanged();
 
 private:
-    /// Populate the source combo with DM keys matching all dynamic input types.
+    /**
+     * @brief Populate the source combo with DM keys matching all dynamic input types.
+     */
     void _refreshSourceCombo();
 
-    /// Map an encoder tag to the DM data types it can consume.
+    /**
+     * @brief Map an encoder tag to the DM data types it can consume.
+     */
     [[nodiscard]] static std::vector<std::string> _encoderTagsForDataType(
             std::string const & data_type_hint);
 
-    /// Map an encoder variant tag to its SlotAssembler encoder ID string.
+    /**
+     * @brief Map an encoder variant tag to its SlotAssembler encoder ID string.
+     */
     [[nodiscard]] static std::string _encoderIdFromTag(
             std::string const & json);
 

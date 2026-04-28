@@ -19,21 +19,33 @@ namespace dl {
 /// Call `setDevice()` to override (e.g. for testing or user preference).
 class DeviceManager {
 public:
-    /// Get the singleton instance (thread-safe via Meyers' singleton).
+    /**
+     * @brief Get the singleton instance (thread-safe via Meyers' singleton).
+     */
     static DeviceManager & instance();
 
-    /// The active device. Determined once at first access:
-    /// CUDA if available, else CPU.
+    /**
+     * @brief The active device. Determined once at first access.
+     * 
+     * CUDA if available, else CPU.
+     */
     [[nodiscard]] torch::Device device() const;
 
-    /// Force a specific device (useful for testing or user preference).
+    /**
+     * @brief Force a specific device (useful for testing or user preference).
+     */
     void setDevice(torch::Device dev);
 
-    /// Whether CUDA is available on this system.
+    /**
+     * @brief Whether CUDA is available on this system.
+     */
     [[nodiscard]] static bool cudaAvailable();
 
-    /// Move a tensor to the active device. Returns the tensor unchanged
-    /// if it is already on the correct device.
+    /**
+     * @brief Move a tensor to the active device. 
+     * 
+     * Returns the tensor unchanged if it is already on the correct device.
+     */
     [[nodiscard]] torch::Tensor toDevice(torch::Tensor tensor) const;
 
     // Non-copyable, non-movable

@@ -175,7 +175,9 @@ public:
     [[nodiscard]] float getCacheHitRatio() const;
 
     /**
-     * @brief Set the tolerance for comparing vertices (default: 0.0)
+     * @brief Set the tolerance for comparing vertices 
+     * 
+     * Default: 0.0
      * 
      * Vertices within this tolerance are considered equal.
      * Useful when floating point precision causes minor variations.

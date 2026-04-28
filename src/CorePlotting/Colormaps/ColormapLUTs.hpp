@@ -29,7 +29,7 @@ namespace CorePlotting::Colormaps::detail {
 // =============================================================================
 
 /**
- * @brief Generate a Grayscale LUT: black (0) → white (1)
+ * @brief Generate a Grayscale LUT from black (0) → white (1)
  */
 inline ColormapLUT generateGrayscaleLUT()
 {
@@ -42,7 +42,7 @@ inline ColormapLUT generateGrayscaleLUT()
 }
 
 /**
- * @brief Generate a Hot LUT: black → red → yellow → white
+ * @brief Generate a Hot LUT from black (0) → red → yellow → white
  *
  * Follows the classic "hot" colormap: R ramps 0→1 over [0, 0.375],
  * G ramps 0→1 over [0.375, 0.75], B ramps 0→1 over [0.75, 1.0].
@@ -63,7 +63,7 @@ inline ColormapLUT generateHotLUT()
 }
 
 /**
- * @brief Generate a Coolwarm diverging LUT: blue → white → red
+ * @brief Generate a Coolwarm diverging LUT from blue (0) → white (0.5) → red (1)
  *
  * Uses a simple smooth interpolation: blue at t=0, white at t=0.5, red at t=1.
  * This is a simplified version of the Moreland diverging colormap.

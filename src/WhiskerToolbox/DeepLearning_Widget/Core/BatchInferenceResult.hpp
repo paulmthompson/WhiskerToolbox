@@ -17,14 +17,18 @@
 #include <variant>
 #include <vector>
 
-/// Decoded data produced by a single output decoder for one frame.
-///
-/// `std::vector<float>` represents a feature vector output from
-/// `TensorToFeatureVector`, to be written into a `TensorData` row.
+/**
+ * @brief Decoded data produced by a single output decoder for one frame.
+ * 
+ * `std::vector<float>` represents a feature vector output from
+ * `TensorToFeatureVector`, to be written into a `TensorData` row.
+ */
 using DecodedOutputVariant = std::variant<Mask2D, Point2D<float>, Line2D,
                                           std::vector<float>>;
 
-/// A single decoded result for one frame + one output binding.
+/**
+ * @brief A single decoded result for one frame + one output binding.
+ */
 struct FrameResult {
     int frame_index = 0;      ///< Frame that was processed
     DecodedOutputVariant data;///< Decoded geometry data or feature vector
@@ -32,10 +36,12 @@ struct FrameResult {
     std::string decoder_id;   ///< Decoder that produced this result
 };
 
-/// Accumulated results from an offline batch inference run.
-///
-/// The worker fills this on its thread; the main thread consumes it to
-/// write into DataManager in one bulk pass.
+/**
+ * @brief Accumulated results from an offline batch inference run.
+ * 
+ * The worker fills this on its thread; the main thread consumes it to
+ * write into DataManager in one bulk pass.
+ */
 struct BatchInferenceResult {
     std::vector<FrameResult> results;///< Per-frame decoded outputs
     bool success = true;             ///< False if an error occurred

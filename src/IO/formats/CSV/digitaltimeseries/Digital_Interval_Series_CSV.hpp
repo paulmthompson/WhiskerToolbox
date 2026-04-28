@@ -17,7 +17,8 @@ DATAMANAGERIO_EXPORT std::vector<Interval> load_digital_series_from_csv(std::str
  * @struct CSVIntervalLoaderOptions
  *
  * @brief Options for loading DigitalIntervalSeries data from a CSV file.
- *          The CSV should have two columns: Start and End for each interval.
+ * 
+ * The CSV should have two columns: Start and End for each interval.
  *
  * @var CSVIntervalLoaderOptions::filepath
  * The path to the CSV file to load.
@@ -77,7 +78,8 @@ struct ParameterUIHints<CSVIntervalLoaderOptions> {
  * @struct CSVIntervalSaverOptions
  *
  * @brief Options for saving DigitalIntervalSeries data to a CSV file.
- *          The CSV will typically have two columns: Start and End for each interval.
+ * 
+ * The CSV will typically have two columns: Start and End for each interval.
  *
  * @var CSVIntervalSaverOptions::filename
  * The name of the file to save the data to (e.g., "intervals.csv").

@@ -1,6 +1,6 @@
 /**
  * @file TensorToAnalog.hpp
- * @brief Container transform: extract TensorData columns as AnalogTimeSeries
+ * @brief Container transform to extract TensorData columns as AnalogTimeSeries
  *
  * Phase 1 of the multi-channel storage roadmap.
  * Extracts selected columns from a 2D TensorData and returns them as

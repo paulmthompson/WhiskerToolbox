@@ -58,8 +58,10 @@ struct ScalebarTimeRange {
         SVGExportParams const & params);
 
 /**
- * @brief Build a full SVG 1.1 document: XML declaration, root `<svg>`, fixed `<desc>`, background
- *        `<rect>`, then scene elements.
+ * @brief Build a full SVG 1.1 document 
+ * 
+ * 
+ * XML declaration, root `<svg>`, fixed `<desc>`, background `<rect>`, then scene elements.
  *
  * Implementation is string-based (not `SVGDocument`); fragment strings are not XML-escaped.
  *
@@ -79,7 +81,9 @@ struct ScalebarTimeRange {
         SVGExportParams const & params);
 
 /**
- * @brief Bottom-right scalebar (default `SVGScalebar` corner): horizontal bar, end ticks, numeric label.
+ * @brief Bottom-right scalebar (default `SVGScalebar` corner) 
+ * 
+ * horizontal bar, end ticks, numeric label.
  *
  * Delegates to `SVGScalebar(scalebar_length, time_range.start, time_range.end)` and `render(canvas)`.
  *

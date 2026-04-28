@@ -49,7 +49,7 @@ namespace MLCore {
 class MLModelRegistry {
 public:
     /**
-     * @brief Factory function type: returns a new, untrained model instance
+     * @brief Factory function type that returns a new, untrained model instance
      */
     using FactoryFn = std::function<std::unique_ptr<MLModelOperation>()>;
 
@@ -85,7 +85,7 @@ public:
             FactoryFn factory);
 
     /**
-     * @brief Convenience: register by instantiating a model to extract metadata
+     * @brief Register by instantiating a model to extract metadata
      *
      * Creates one temporary instance to get the name and task type,
      * then stores the factory for future `create()` calls.

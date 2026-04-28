@@ -1,10 +1,12 @@
-/// @file EncoderShapeWidget.hpp
-/// @brief Self-contained widget for configuring encoder input/output shape.
-///
-/// Replaces the hand-built `_buildEncoderShapeSection()` panel with a
-/// schema-driven form powered by AutoParamWidget. The widget owns an
-/// `EncoderShapeParams` struct, syncs changes to DeepLearningState, and
-/// applies shape configuration to SlotAssembler when the user clicks Apply.
+/**
+ * @file EncoderShapeWidget.hpp
+ * @brief Self-contained widget for configuring encoder input/output shape.
+ * 
+ * Replaces the hand-built `_buildEncoderShapeSection()` panel with a
+ * schema-driven form powered by AutoParamWidget. The widget owns an
+ * `EncoderShapeParams` struct, syncs changes to DeepLearningState, and
+ * applies shape configuration to SlotAssembler when the user clicks Apply.
+ */
 
 #ifndef ENCODER_SHAPE_WIDGET_HPP
 #define ENCODER_SHAPE_WIDGET_HPP
@@ -58,18 +60,28 @@ public:
     EncoderShapeWidget(EncoderShapeWidget &&) = delete;
     EncoderShapeWidget & operator=(EncoderShapeWidget &&) = delete;
 
-    /// @brief Return the current parameter values.
+    /**
+     * @brief Return the current parameter values.
+     */
     [[nodiscard]] EncoderShapeParams params() const;
 
-    /// @brief Set the parameter values and update the UI.
+    /**
+     * @brief Set the parameter values and update the UI.
+     */
     void setParams(EncoderShapeParams const & params);
 
-    /// @brief Apply current state to SlotAssembler (for model load restore).
-    /// Reads from state, calls configureModelShape, does not emit shapeApplied.
+    /**
+     * @brief Apply current state to SlotAssembler (for model load restore).
+     * 
+     * Reads from state, calls configureModelShape, does not emit shapeApplied.
+     */
     void applyFromState();
 
-    /// @brief Apply encoder shape from state to assembler (static, for model load).
-    /// Call when loading a general_encoder model before the widget exists.
+    /**
+     * @brief Apply encoder shape from state to assembler (static, for model load).
+     * 
+     * Call when loading a general_encoder model before the widget exists.
+     */
     static void applyEncoderShapeToAssembler(
             DeepLearningState const * state,
             SlotAssembler * assembler);

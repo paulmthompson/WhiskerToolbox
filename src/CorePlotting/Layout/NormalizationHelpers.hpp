@@ -9,7 +9,7 @@ namespace CorePlotting {
 namespace NormalizationHelpers {
 
 /**
- * @brief Z-score normalization: output = (value - mean) / std_dev
+ * @brief Z-score normalization where output = (value - mean) / std_dev
  * 
  * Centers data at 0, scales so ±1 = ±1 standard deviation.
  * Useful for comparing signals with different baselines and amplitudes.

@@ -106,7 +106,7 @@ std::optional<Hypothesis> select_best_hypothesis(
 }
 
 /**
-     * @brief Default scoring function: simple sum of Mahalanobis distances.
+     * @brief Default scoring function as a simple sum of Mahalanobis distances.
      * Can be replaced with log-likelihood or discounted sum.
      */
 double score_hypothesis_simple_sum(std::vector<double> const & frame_costs) {

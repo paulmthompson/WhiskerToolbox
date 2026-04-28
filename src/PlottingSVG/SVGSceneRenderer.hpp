@@ -3,7 +3,7 @@
 
 /**
  * @file SVGSceneRenderer.hpp
- * @brief Public entry point: RenderableScene to SVG document string.
+ * @brief Public entry point for RenderableScene to SVG document string.
  */
 
 #include "PlottingSVG/Decorations/SVGDecoration.hpp"

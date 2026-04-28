@@ -86,7 +86,7 @@ struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
 };
 
 /**
- * @brief Main function: Group lines using Kalman filtering and assignment
+ * @brief Group lines using Kalman filtering and assignment
  * 
  * This function processes all time frames, using existing grouped lines as
  * anchor points and tracking multiple line features (centroid + base point + length) 

@@ -1,5 +1,7 @@
-/// @file PostEncoderPipeline.cpp
-/// @brief Implementation of the sequential post-encoder pipeline.
+/**
+ * @file PostEncoderPipeline.cpp
+ * @brief Implementation of the sequential post-encoder pipeline.
+ */
 
 #include "PostEncoderPipeline.hpp"
 

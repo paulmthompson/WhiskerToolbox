@@ -39,7 +39,7 @@
 using ColumnProviderFn = std::function<std::vector<float>()>;
 
 /**
- * @brief Describes one column source: a name and a provider function.
+ * @brief Describes one column source with a name and a provider function.
  *
  * The provider is called lazily on first access (or after invalidation).
  * The result is cached until explicitly invalidated.

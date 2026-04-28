@@ -99,7 +99,8 @@ struct ParameterUIHints<CSVAnalogLoaderOptions> {
  * @struct CSVAnalogSaverOptions
  *
  * @brief Options for saving AnalogTimeSeries data to a CSV file.
- *          The CSV will typically have two columns: Time and Data.
+ * 
+ * The CSV will typically have two columns: Time and Data.
  *
  * @var CSVAnalogSaverOptions::filename
  * The name of the file to save the data to (e.g., "analog_data.csv").

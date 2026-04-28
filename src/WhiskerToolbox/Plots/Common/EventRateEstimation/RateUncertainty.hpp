@@ -29,7 +29,7 @@ struct ConfidenceBand {
 };
 
 /**
- * @brief Compute SEM-based confidence band: mean ± k × SEM
+ * @brief Compute SEM-based confidence band as mean ± k × SEM
  *
  * @param data  RateEstimateWithTrials (must have per-trial data)
  * @param k     Multiplier for SEM (1.0 for ±1 SEM, 1.96 for 95% CI)

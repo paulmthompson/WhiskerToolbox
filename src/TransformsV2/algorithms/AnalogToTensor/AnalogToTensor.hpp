@@ -1,6 +1,6 @@
 /**
  * @file AnalogToTensor.hpp
- * @brief N-ary container transform: pack N AnalogTimeSeries into one TensorData
+ * @brief N-ary container transform that packs N AnalogTimeSeries into one TensorData
  *
  * Phase 1 of the multi-channel storage roadmap.
  * Takes a vector of AnalogTimeSeries channels (sharing the same TimeFrame)

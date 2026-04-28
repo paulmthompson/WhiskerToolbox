@@ -1,5 +1,7 @@
-/// @file PostEncoderModuleFactory.cpp
-/// @brief Implementation of the PostEncoderModule factory.
+/**
+ * @file PostEncoderModuleFactory.cpp
+ * @brief Implementation of the PostEncoderModule factory.
+ */
 
 #include "PostEncoderModuleFactory.hpp"
 

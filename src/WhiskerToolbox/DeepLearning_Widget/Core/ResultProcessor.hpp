@@ -27,44 +27,67 @@ class DataManager;
 class DeepLearningState;
 class WriteReservation;
 
-/// Merges decoded inference results into DataManager and flushes feature vectors.
+/**
+ * @brief Merges decoded inference results into DataManager and flushes feature vectors.
+ */
 class ResultProcessor : public QObject {
     Q_OBJECT
 
 public:
-    /// @param dm Shared DataManager for writing outputs.
-    /// @param state Shared state (used for context; bindings come from results).
-    /// @param parent Optional QObject parent.
+    /**
+     * @brief Constructor for ResultProcessor.
+     * 
+     * @param dm Shared DataManager for writing outputs.
+     * @param state Shared state (used for context; bindings come from results).
+     * @param parent Optional QObject parent.
+     */
     explicit ResultProcessor(std::shared_ptr<DataManager> dm,
                              std::shared_ptr<DeepLearningState> state,
                              QObject * parent = nullptr);
 
     ~ResultProcessor() override;
 
-    /// Process a batch of frame results: write geometry immediately, accumulate
-    /// feature vectors for later flush.
-    /// @param results Decoded outputs from batch inference.
+    /**
+     * @brief Process a batch of frame results: write geometry immediately, accumulate
+     *        feature vectors for later flush.
+     * 
+     * @param results Decoded outputs from batch inference.
+     */
     void acceptResults(std::vector<FrameResult> results);
 
-    /// Write accumulated feature vectors to TensorData and clear the buffer.
+    /**
+     * @brief Write accumulated feature vectors to TensorData and clear the buffer.
+     */
     void flushFeatureVectors();
 
-    /// Clear accumulated feature vectors (call at batch start).
+    /**
+     * @brief Clear accumulated feature vectors (call at batch start).
+     */
     void clear();
 
-    /// Set the reservation to drain on timer ticks. Call before startMergeTimer().
-    /// @param reservation Shared reservation; may be null to clear.
+    /**
+     * @brief Set the reservation to drain on timer ticks. Call before startMergeTimer().
+     * 
+     * @param reservation Shared reservation; may be null to clear.
+     */
     void setReservation(std::shared_ptr<WriteReservation> reservation);
 
-    /// Start periodic merge timer (200 ms). Drains reservation on each tick.
+    /**
+     * @brief Start periodic merge timer (200 ms). Drains reservation on each tick.
+     */
     void startMergeTimer();
 
-    /// Stop merge timer and perform final drain.
+    /**
+     * @brief Stop merge timer and perform final drain.
+     */
     void stopMergeTimer();
 
 signals:
-    /// Emitted after processing results that wrote to geometry data.
-    /// @param count Number of data keys that received updates.
+    /**
+     * @brief Emitted after processing results that wrote to geometry data.
+     * 
+     * @param count Number of data keys that received updates.
+     */
     void resultsWritten(int count);
 
 private:

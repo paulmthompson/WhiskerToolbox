@@ -3,7 +3,7 @@
 
 /**
  * @file SVGUtils.hpp
- * @brief Shared SVG export helpers: MVP → canvas pixels and RGBA → `#RRGGBB`.
+ * @brief Shared SVG export helpers with MVP → canvas pixels and RGBA → `#RRGGBB`.
  */
 
 #include <glm/glm.hpp>

@@ -1344,7 +1344,7 @@ private:
     }
 
     /**
-     * @brief Expand hypotheses by one frame: predict, compute costs, and branch.
+     * @brief Expand hypotheses by one frame. Predict, compute costs, and branch.
      * 
      * @param hypotheses Current hypotheses for a chain
      * @param candidates Available observations at next frame

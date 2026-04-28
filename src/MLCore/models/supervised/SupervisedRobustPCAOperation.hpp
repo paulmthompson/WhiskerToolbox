@@ -1,6 +1,6 @@
 /**
  * @file SupervisedRobustPCAOperation.hpp
- * @brief Supervised Robust PCA: fits Robust PCA (ROSL) on labeled subset, projects all data
+ * @brief Supervised Robust PCA fits Robust PCA (ROSL) on labeled subset, projects all data
  *
  * Standard Robust PCA finds components that maximize variance across the entire
  * dataset while being robust to sparse outliers. Supervised Robust PCA fits

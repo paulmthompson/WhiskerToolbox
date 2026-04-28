@@ -37,7 +37,9 @@ namespace WhiskerToolbox::Entity::Lineage {
 struct Source {};
 
 /**
- * @brief 1:1 mapping by time: derived[time, idx] ← source[time, idx]
+ * @brief One-to-one mapping by time 
+ * 
+ * derived[time, idx] ← source[time, idx]
  * 
  * Each element in the derived container corresponds to exactly one
  * element in the source container at the same time and local index.
@@ -51,7 +53,9 @@ struct OneToOneByTime {
 };
 
 /**
- * @brief N:1 mapping: derived[time] ← ALL source entities at time
+ * @brief N-to-1 mapping
+ * 
+ * derived[time] ← ALL source entities at time
  * 
  * Each element in the derived container is computed from all elements
  * in the source container at that time (reduction/aggregation).
@@ -65,7 +69,7 @@ struct AllToOneByTime {
 };
 
 /**
- * @brief Subset mapping: derived came from specific subset of source
+ * @brief Subset mapping where derived came from specific subset of source
  * 
  * The derived container contains only elements that correspond to
  * a specific subset of source entities.
@@ -83,7 +87,7 @@ struct SubsetLineage {
 };
 
 /**
- * @brief Multi-source: derived from multiple parent containers
+ * @brief Multi-source when derived from multiple parent containers
  * 
  * The derived container combines data from multiple source containers.
  * 

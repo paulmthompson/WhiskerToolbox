@@ -66,14 +66,14 @@ struct AxisMapping {
 // =============================================================================
 
 /**
- * @brief Identity mapping: world == domain. Labels formatted as decimals.
+ * @brief Identity mapping where world == domain. Labels formatted as decimals.
  * @param title Optional axis title
  * @param decimals Number of decimal places in labels (default 1)
  */
 AxisMapping identityAxis(std::string title = {}, int decimals = 1);
 
 /**
- * @brief Linear mapping: domain = world * scale + offset
+ * @brief Linear mapping where domain = world * scale + offset
  *
  * Inverse: world = (domain - offset) / scale
  *

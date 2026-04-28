@@ -1,3 +1,4 @@
 /.quarto/
 BehaviorToolbox.pdf
 /api/
+**/*.quarto_ipynb

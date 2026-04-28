@@ -66,16 +66,24 @@ public:
     /// @return true if loading succeeded.
     bool load(std::filesystem::path const & path);
 
-    /// Whether a model is loaded and ready for execution.
+    /**
+     * @brief Whether a model is loaded and ready for execution.
+     */
     [[nodiscard]] bool isLoaded() const;
 
-    /// Get the path of the currently loaded model.
+    /**
+     * @brief Get the path of the currently loaded model.
+     */
     [[nodiscard]] std::filesystem::path loadedPath() const;
 
-    /// Get the active backend type (Auto if no model is loaded yet).
+    /**
+     * @brief Get the active backend type (Auto if no model is loaded yet).
+     */
     [[nodiscard]] BackendType activeBackend() const;
 
-    /// Get the active backend's human-readable name.
+    /**
+     * @brief Get the active backend's human-readable name.
+     */
     [[nodiscard]] std::string activeBackendName() const;
 
     /// Execute the default "forward" method with ordered input tensors.

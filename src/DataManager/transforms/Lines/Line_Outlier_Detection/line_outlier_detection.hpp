@@ -70,7 +70,7 @@ struct LineOutlierDetectionParameters : public GroupingTransformParametersBase {
 };
 
 /**
- * @brief Main function: Detect outliers in grouped lines using Kalman filtering
+ * @brief Detect outliers in grouped lines using Kalman filtering
  * 
  * This function processes existing groups in the LineData, using Kalman filtering
  * and smoothing to establish expected trajectories. Entities that deviate significantly

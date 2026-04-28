@@ -54,7 +54,7 @@ struct ConversionConfig {
  */
 struct ConvertedFeatures {
     /**
-     * @brief The feature matrix in mlpack layout: features × observations (double)
+     * @brief The feature matrix in mlpack layout where features × observations (double)
      *
      * Each column is one observation, each row is one feature.
      * This is the transpose of the TensorData layout (rows × columns).

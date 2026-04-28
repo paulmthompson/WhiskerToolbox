@@ -1,6 +1,7 @@
-/// @file TensorToFeatureVector.hpp
-/// @brief Decoder that extracts a flat feature vector from a 1D or 2D tensor.
-
+/**
+ * @file TensorToFeatureVector.hpp
+ * @brief Decoder that extracts a flat feature vector from a 1D or 2D tensor.
+ */
 #ifndef WHISKERTOOLBOX_TENSOR_TO_FEATURE_VECTOR_HPP
 #define WHISKERTOOLBOX_TENSOR_TO_FEATURE_VECTOR_HPP
 

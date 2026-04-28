@@ -1,6 +1,6 @@
 /**
  * @file Phase6.test.cpp
- * @brief Phase 6 tests: virtual environment support
+ * @brief virtual environment support tests
  *
  * Tests PythonEngine features added in Phase 6:
  * - discoverVenvs

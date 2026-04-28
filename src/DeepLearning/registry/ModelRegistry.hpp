@@ -57,7 +57,9 @@ public:
         BatchMode batch_mode = DynamicBatch{1, 0};///< Rich batch-size constraint
     };
 
-    /// Get the singleton instance.
+    /**
+     * @brief Get the singleton instance.
+     */
     static ModelRegistry & instance();
 
     /// Register a model factory by ID.
@@ -70,13 +72,19 @@ public:
     /// Returns true if the model was found and removed.
     bool unregisterModel(std::string const & model_id);
 
-    /// Get a sorted list of all registered model IDs.
+    /**
+     * @brief Get a sorted list of all registered model IDs.
+     */
     [[nodiscard]] std::vector<std::string> availableModels() const;
 
-    /// Get the number of registered models.
+    /**
+     * @brief Get the number of registered models.
+     */
     [[nodiscard]] std::size_t size() const;
 
-    /// Check if a model ID is registered.
+    /**
+     * @brief Check if a model ID is registered.
+     */
     [[nodiscard]] bool hasModel(std::string const & model_id) const;
 
     /// Instantiate a model by ID.

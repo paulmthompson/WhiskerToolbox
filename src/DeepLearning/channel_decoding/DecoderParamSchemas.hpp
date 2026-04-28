@@ -1,5 +1,7 @@
-/// @file DecoderParamSchemas.hpp
-/// @brief ParameterUIHints specializations for per-decoder parameter structs.
+/**
+ * @file DecoderParamSchemas.hpp
+ * @brief ParameterUIHints specializations for per-decoder parameter structs.
+ */
 
 #ifndef WHISKERTOOLBOX_DECODER_PARAM_SCHEMAS_HPP
 #define WHISKERTOOLBOX_DECODER_PARAM_SCHEMAS_HPP

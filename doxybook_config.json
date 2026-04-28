@@ -1,0 +1,7 @@
+{
+    "baseUrl": "/api_generated/",
+    "linkLowercase": false,
+    "copyIncludes": false,
+    "useFolderIndex": true,
+    "generateIndex": true
+}

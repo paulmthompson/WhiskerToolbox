@@ -39,12 +39,17 @@ public:
     void setAssembler(SlotAssembler * assembler);
 
 public slots:
-    /// Refresh the static tensor cache preview display.
+    /**
+     * @brief Refresh the static tensor cache preview display.
+     */
     void refreshCachePreview();
 
-    /// Update the progress bar during recurrent inference.
-    /// @param current 0-based frame being processed
-    /// @param total Total number of frames to process
+    /**
+     * @brief Update the progress bar during recurrent inference.
+     * 
+     * @param current 0-based frame being processed
+     * @param total Total number of frames to process
+     */
     void updateRecurrentProgress(int current, int total);
 
 private:

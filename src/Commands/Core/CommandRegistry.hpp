@@ -89,7 +89,7 @@ private:
     std::unordered_map<std::string, Entry> _commands;
 };
 
-/// @brief Convenience helper: register a command with automatic JSON deserialization
+/// @brief Convenience helper to register a command with automatic JSON deserialization
 ///        and ParameterSchema extraction.
 ///
 /// The creator function deserializes the JSON string into @p Params via rfl::json::read,

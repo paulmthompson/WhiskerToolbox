@@ -1,5 +1,7 @@
-/// @file GlobalAvgPoolModule.hpp
-/// @brief Global average pooling post-encoder module.
+/**
+ * @file GlobalAvgPoolModule.hpp
+ * @brief Global average pooling post-encoder module.
+ */
 
 #ifndef WHISKERTOOLBOX_GLOBAL_AVG_POOL_MODULE_HPP
 #define WHISKERTOOLBOX_GLOBAL_AVG_POOL_MODULE_HPP

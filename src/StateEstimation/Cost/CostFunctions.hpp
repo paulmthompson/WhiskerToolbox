@@ -8,7 +8,7 @@
 namespace StateEstimation {
 
 /**
- * @brief Cost function signature: computes cost between predicted state and observation.
+ * @brief Cost function signature computes cost between predicted state and observation.
  * 
  * @param predicted_state The predicted state from the filter
  * @param observation The observation feature vector
@@ -31,7 +31,7 @@ CostFunction createMahalanobisCostFunction(Eigen::MatrixXd const & H,
                                            Eigen::MatrixXd const & R);
 
 /**
- * @brief Factory: dynamics-aware transition cost with velocity and implied-acceleration penalties.
+ * @brief Factory function to create a dynamics-aware transition cost with velocity and implied-acceleration penalties.
  *
  * c = 0.5 r^T S^{-1} r + 0.5 log det S
  *   + beta * 0.5 (v_impl - v_pred)^T Sigma_v^{-1} (v_impl - v_pred)

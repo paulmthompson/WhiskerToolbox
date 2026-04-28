@@ -3,7 +3,7 @@
 
 /**
  * @file SVGScalebar.hpp
- * @brief Horizontal time scale bar: bar, end ticks, and numeric label (canvas pixel space).
+ * @brief Horizontal time scale bar including bar, end ticks, and numeric label (canvas pixel space).
  */
 
 #include "PlottingSVG/Decorations/SVGDecoration.hpp"

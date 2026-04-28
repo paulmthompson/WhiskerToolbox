@@ -16,7 +16,11 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 
 namespace {
 
-/// @brief Normalized sinc function: sinc(t) = sin(pi*t) / (pi*t), sinc(0) = 1.
+/**
+ * @brief Normalized sinc function
+ * 
+ * sinc(t) = sin(pi*t) / (pi*t), sinc(0) = 1.
+ */
 double sinc(double t) {
     if (std::abs(t) < 1e-12) {
         return 1.0;
@@ -25,7 +29,11 @@ double sinc(double t) {
     return std::sin(pi_t) / pi_t;
 }
 
-/// @brief Lanczos window: sinc(t / a) for |t| <= a, 0 otherwise.
+/**
+ * @brief Lanczos window
+ * 
+ * sinc(t / a) for |t| <= a, 0 otherwise.
+ */
 double lanczosWindow(double t, int a) {
     if (std::abs(t) >= static_cast<double>(a)) {
         return 0.0;
@@ -33,7 +41,11 @@ double lanczosWindow(double t, int a) {
     return sinc(t / static_cast<double>(a));
 }
 
-/// @brief Hann window: 0.5 * (1 + cos(pi*t/a)) for |t| <= a, 0 otherwise.
+/**
+ * @brief Hann window
+ * 
+ * 0.5 * (1 + cos(pi*t/a)) for |t| <= a, 0 otherwise.
+ */
 double hannWindow(double t, int a) {
     if (std::abs(t) >= static_cast<double>(a)) {
         return 0.0;
@@ -41,7 +53,11 @@ double hannWindow(double t, int a) {
     return 0.5 * (1.0 + std::cos(std::numbers::pi * t / static_cast<double>(a)));
 }
 
-/// @brief Blackman window for |t| <= a, 0 otherwise.
+/**
+ * @brief Blackman window
+ * 
+ * 0.42 + 0.5 * cos(pi*t/a) + 0.08 * cos(2*pi*t/a) for |t| <= a, 0 otherwise.
+ */
 double blackmanWindow(double t, int a) {
     if (std::abs(t) >= static_cast<double>(a)) {
         return 0.0;
@@ -50,7 +66,9 @@ double blackmanWindow(double t, int a) {
     return 0.42 + 0.5 * std::cos(x) + 0.08 * std::cos(2.0 * x);
 }
 
-/// @brief Apply the selected window function.
+/**
+ * @brief Apply the selected window function.
+ */
 double applyWindow(double t, int a, SincWindowType window) {
     switch (window) {
         case SincWindowType::Hann:

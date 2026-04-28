@@ -374,7 +374,7 @@ private:
 // ============================================================================
 
 /**
- * @brief Compose two transforms: f ∘ g
+ * @brief Compose two transforms f(g(x))
  * 
  * Creates a new transform that applies g then f.
  * Types must be compatible: In → Mid → Out

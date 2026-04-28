@@ -72,7 +72,7 @@ public:
                        std::vector<DM_DataType> const & types) const;
 
     /**
-     * @brief Convenience overload: populate from a single data type.
+     * @brief Convenience overload to populate from a single data type.
      */
     void populateCombo(QComboBox * combo, DM_DataType type) const;
 
@@ -93,7 +93,7 @@ public:
     void track(QComboBox * combo, std::vector<DM_DataType> const & types);
 
     /**
-     * @brief Convenience overload: track with a single data type.
+     * @brief Convenience overload to track with a single data type.
      */
     void track(QComboBox * combo, DM_DataType type);
 

@@ -1,5 +1,7 @@
-/// @file GlobalAvgPoolModule.cpp
-/// @brief Implementation of the global average pooling post-encoder module.
+/**
+ * @file GlobalAvgPoolModule.cpp
+ * @brief Implementation of the global average pooling post-encoder module.
+ */
 
 #include "GlobalAvgPoolModule.hpp"
 

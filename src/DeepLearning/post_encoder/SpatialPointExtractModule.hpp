@@ -1,6 +1,7 @@
-/// @file SpatialPointExtractModule.hpp
-/// @brief Point-based spatial feature extraction post-encoder module.
-
+/**
+ * @file SpatialPointExtractModule.hpp
+ * @brief Point-based spatial feature extraction post-encoder module.
+ */
 #ifndef WHISKERTOOLBOX_SPATIAL_POINT_EXTRACT_MODULE_HPP
 #define WHISKERTOOLBOX_SPATIAL_POINT_EXTRACT_MODULE_HPP
 
@@ -14,7 +15,9 @@
 
 namespace dl {
 
-/// Interpolation strategy for spatial feature extraction.
+/**
+ * @brief Interpolation strategy for spatial feature extraction.
+ */
 enum class InterpolationMode {
     Nearest,  ///< Round to nearest grid location (fast)
     Bilinear  ///< Sub-pixel bilinear interpolation via grid_sample (accurate)
@@ -95,10 +98,14 @@ private:
     InterpolationMode _mode;
     Point2D<float> _current_point{0.0f, 0.0f};
 
-    /// Nearest-neighbor extraction.
+    /**
+     * @brief Nearest-neighbor extraction.
+     */
     [[nodiscard]] at::Tensor _extractNearest(at::Tensor const & features) const;
 
-    /// Bilinear interpolation extraction using grid_sample.
+    /**
+     * @brief Bilinear interpolation extraction using grid_sample.
+     */
     [[nodiscard]] at::Tensor _extractBilinear(at::Tensor const & features) const;
 };
 

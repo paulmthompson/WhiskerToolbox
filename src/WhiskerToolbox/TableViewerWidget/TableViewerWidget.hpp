@@ -62,7 +62,9 @@ public:
     void clearTable();
 
     /**
-     * @brief Set the page size for pagination (default: 1000 rows)
+     * @brief Set the page size for pagination 
+     * 
+     * default: 1000 rows per page
      * @param page_size Number of rows per page
      */
     void setPageSize(size_t page_size);

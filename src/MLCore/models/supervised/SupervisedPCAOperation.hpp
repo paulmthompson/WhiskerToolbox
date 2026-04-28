@@ -1,6 +1,6 @@
 /**
  * @file SupervisedPCAOperation.hpp
- * @brief Supervised PCA: fits PCA on labeled subset, projects all data
+ * @brief Supervised PCA fits PCA on labeled subset, projects all data
  *
  * Standard PCA finds components that maximize variance across the entire
  * dataset. Supervised PCA fits only on the subset of observations that

@@ -18,15 +18,20 @@
 #include <mutex>
 #include <vector>
 
-/// Thread-safe accumulation buffer for progressive result delivery.
-///
-/// The worker thread calls push() after decoding each frame's outputs.
-/// The main thread calls drain() on a timer to move accumulated results
-/// into DataManager in bulk.
+/**
+ * @brief Thread-safe accumulation buffer for progressive result delivery.
+ * 
+ * The worker thread calls push() after decoding each frame's outputs.
+ * The main thread calls drain() on a timer to move accumulated results
+ * into DataManager in bulk.
+ */
 class WriteReservation {
 public:
-    /// Push decoded results from the worker thread.
-    /// @param results Decoded outputs for one frame (may contain multiple bindings)
+    /**
+     * @brief Push decoded results from the worker thread.
+     * 
+     * @param results Decoded outputs for one frame (may contain multiple bindings)
+     */
     void push(std::vector<FrameResult> results) {
         std::lock_guard const lock(_mutex);
         _pending.insert(
@@ -35,8 +40,11 @@ public:
                 std::make_move_iterator(results.end()));
     }
 
-    /// Drain all pending results (called from main thread).
-    /// Returns an empty vector if nothing is pending.
+    /**
+     * @brief Drain all pending results (called from main thread).
+     * 
+     * @returns An empty vector if nothing is pending.
+     */
     [[nodiscard]] std::vector<FrameResult> drain() {
         std::lock_guard const lock(_mutex);
         std::vector<FrameResult> drained;
@@ -44,7 +52,9 @@ public:
         return drained;
     }
 
-    /// Check if there are pending results without draining.
+    /**
+     * @brief Check if there are pending results without draining.
+     */
     [[nodiscard]] bool hasPending() const {
         std::lock_guard const lock(_mutex);
         return !_pending.empty();

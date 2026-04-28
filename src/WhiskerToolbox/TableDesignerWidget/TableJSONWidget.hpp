@@ -32,7 +32,9 @@ public:
     QString getJsonText() const;
 
     /**
-     * @brief For tests: Force the next Load JSON action to use this path.
+     * @brief Force the next Load JSON action to use this path.
+     * 
+     * Useful for testing or when the caller wants to control the file selection.
      */
     void setForcedLoadPathForTests(QString const & path);
 

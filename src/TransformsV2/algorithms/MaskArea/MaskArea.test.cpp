@@ -452,7 +452,7 @@ inline std::shared_ptr<AnalogTimeSeries> calculateAndSumMaskAreas(
 }
 
 /**
- * @brief Test: Transform Mask2D to std::vector<float> (area calculation)
+ * @brief Transform Mask2D to std::vector<float> (area calculation)
  * 
  * This demonstrates:
  * 1. Element-level transform: Mask2D → std::vector<float>

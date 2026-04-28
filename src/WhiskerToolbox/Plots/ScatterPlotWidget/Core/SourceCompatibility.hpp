@@ -54,7 +54,7 @@ struct SourceCompatibilityResult {
     std::string warning_message;            ///< Human-readable reason when incompatible
 
     /**
-     * @brief Convenience: true when both sources were found in the DataManager
+     * @brief true when both sources were found in the DataManager
      */
     [[nodiscard]] bool bothSourcesResolved() const {
         return x_row_type != ScatterSourceRowType::Unknown

@@ -1,5 +1,7 @@
-/// @file PostEncoderPipeline.hpp
-/// @brief Sequential pipeline of PostEncoderModule instances.
+/**
+ * @file PostEncoderPipeline.hpp
+ * @brief Sequential pipeline of PostEncoderModule instances.
+ */
 
 #ifndef WHISKERTOOLBOX_POST_ENCODER_PIPELINE_HPP
 #define WHISKERTOOLBOX_POST_ENCODER_PIPELINE_HPP

@@ -58,7 +58,7 @@ struct Assignment {
 using SmoothedResults = std::map<GroupId, std::vector<FilterState>>;
 
 /**
- * @brief Progress callback: percent complete [0,100].
+ * @brief Progress callback as percent complete [0,100].
  */
 using ProgressCallback = std::function<void(int)>;
 

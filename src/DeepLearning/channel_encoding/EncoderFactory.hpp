@@ -18,11 +18,17 @@ namespace dl {
 ///   - "Line2DEncoder"    → Line2DEncoder
 class EncoderFactory {
 public:
-    /// Create an encoder instance by name.
+    /**
+     * @brief Create an encoder instance by name.
+     * 
+     * Returns nullptr if the name is not recognized.
+     */
     /// Returns nullptr if the name is not recognized.
     [[nodiscard]] static std::unique_ptr<ChannelEncoder> create(std::string const & encoder_name);
 
-    /// Get the list of all registered encoder names.
+    /**
+     * @brief Get the list of all registered encoder names.
+     */
     [[nodiscard]] static std::vector<std::string> availableEncoders();
 };
 

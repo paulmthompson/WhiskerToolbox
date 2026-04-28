@@ -23,7 +23,7 @@ namespace CorePlotting::FeatureColor {
 namespace {
 
 /**
- * @brief ATS join: look up each point's time in the AnalogTimeSeries
+ * @brief ATS join looks up each point's time in the AnalogTimeSeries
  */
 std::vector<std::optional<float>> resolveFromATS(
         std::shared_ptr<AnalogTimeSeries> const & ats,
@@ -51,7 +51,7 @@ std::vector<float> extractTensorColumn(
 }
 
 /**
- * @brief TensorData TFI join: build TFI→row map, then look up each point
+ * @brief TensorData TFI join to build TFI→row map, then look up each point
  */
 std::vector<std::optional<float>> resolveFromTensorTFI(
         std::shared_ptr<TensorData> const & tensor,
@@ -83,7 +83,7 @@ std::vector<std::optional<float>> resolveFromTensorTFI(
 }
 
 /**
- * @brief TensorData ordinal join: row i maps to point i
+ * @brief TensorData ordinal join where row i maps to point i
  */
 std::vector<std::optional<float>> resolveFromTensorOrdinal(
         std::shared_ptr<TensorData> const & tensor,
@@ -101,7 +101,7 @@ std::vector<std::optional<float>> resolveFromTensorOrdinal(
 }
 
 /**
- * @brief DIS containment join: 1.0 if point time is inside an interval, 0.0 otherwise
+ * @brief DIS containment join where 1.0 if point time is inside an interval, 0.0 otherwise
  */
 std::vector<std::optional<float>> resolveFromDIS(
         std::shared_ptr<DigitalIntervalSeries> const & dis,

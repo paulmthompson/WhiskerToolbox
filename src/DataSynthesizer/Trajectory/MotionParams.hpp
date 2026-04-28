@@ -26,12 +26,16 @@ namespace WhiskerToolbox::DataSynthesizer {
 // Boundary
 // ============================================================================
 
-/// Boundary enforcement mode for trajectory computation.
+/**
+ * @brief Boundary enforcement mode for trajectory computation.
+ */
 enum class BoundaryMode { clamp,
                           bounce,
                           wrap };
 
-/// Boundary parameters shared by all moving generators.
+/**
+ * @brief Boundary parameters shared by all moving generators.
+ */
 struct BoundaryParams {
     BoundaryMode boundary_mode = BoundaryMode::clamp;
     float bounds_min_x = 0.0f;
@@ -44,13 +48,22 @@ struct BoundaryParams {
 // Per-Model Parameter Sub-Structs
 // ============================================================================
 
-/// Parameters for linear motion: position(t) = start + velocity * t
+/**
+ * @brief Parameters for linear motion
+ *  
+ * position(t) = start + velocity * t
+ * 
+ */
 struct LinearMotionParams {
     float velocity_x = 1.0f;
     float velocity_y = 0.0f;
 };
 
-/// Parameters for sinusoidal motion: position(t) = start + amplitude * sin(2pi * freq * t + phase)
+/**
+ * @brief Parameters for sinusoidal motion
+ *  
+ * position(t) = start + amplitude * sin(2pi * freq * t + phase)
+ */
 struct SinusoidalMotionParams {
     float amplitude_x = 0.0f;
     float amplitude_y = 0.0f;
@@ -60,7 +73,11 @@ struct SinusoidalMotionParams {
     float phase_y = 0.0f;
 };
 
-/// Parameters for Brownian motion: position(t) = position(t-1) + N(0, diffusion)
+/**
+ * @brief Parameters for Brownian motion
+ *  
+ * position(t) = position(t-1) + N(0, diffusion)
+ */
 struct BrownianMotionParams {
     float diffusion = 1.0f;
     uint64_t seed = 42;
@@ -82,7 +99,9 @@ using MotionModelVariant = rfl::TaggedUnion<
 // Conversion to internal TrajectoryParams
 // ============================================================================
 
-/// Convert enum BoundaryMode to the string expected by TrajectoryParams.
+/**
+ * @brief Convert enum BoundaryMode to the string expected by TrajectoryParams.
+ */
 inline std::string boundaryModeToString(BoundaryMode mode) {
     switch (mode) {
         case BoundaryMode::clamp:

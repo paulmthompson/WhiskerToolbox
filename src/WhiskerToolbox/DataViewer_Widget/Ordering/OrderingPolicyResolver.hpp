@@ -68,7 +68,9 @@ struct OrderingResolution {
 };
 
 /**
- * @brief Resolve ordering with precedence:
+ * @brief Resolve ordering with precedence
+ * 
+ * Resolves the ordering of stackable series based on the following precedence:
  * 1) explicit lane order
  * 2) relational constraints (when present)
  * 3) fallback provider ranks

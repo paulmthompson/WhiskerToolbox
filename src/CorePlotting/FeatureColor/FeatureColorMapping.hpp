@@ -21,7 +21,7 @@
 namespace CorePlotting::FeatureColor {
 
 /**
- * @brief Continuous colormap mapping: float → colormap(t) with vmin/vmax normalization
+ * @brief Continuous colormap from float values to colors with vmin/vmax normalization
  *
  * Values are clamped to [vmin, vmax] then mapped through a colormap preset.
  */
@@ -32,7 +32,9 @@ struct ContinuousMapping {
 };
 
 /**
- * @brief Threshold (binary) mapping: float >= threshold → above_color, else below_color
+ * @brief Threshold (binary) mapping from float values to colors
+ *
+ * Values are compared against a threshold, if float >= threshold then above_color, else below_color.
  *
  * Useful for:
  * - DigitalIntervalSeries (already 0/1, threshold=0.5)

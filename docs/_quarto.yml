@@ -26,8 +26,7 @@ website:
           - text: "Developer Guide"
             href: developer/index.qmd
           - text: "API Reference"
-            href: api_reference.qmd
-
+            href: api_generated/index_classes.md
       - icon: github
         href: https://github.com/paulmthompson/WhiskerToolbox
         aria-label: GitHub
@@ -41,6 +40,7 @@ website:
         - developer/python_bindings/python_integration.qmd
         - developer/benchmark/benchmarking.qmd
         - developer/benchmark/tensor_car_gpu_cpu.qmd
+        - developer/benchmark/tensor_whitening_memory_profile.qmd
         - developer/benchmark/dataviewer_rendering_pipeline.qmd
         - developer/building.qmd
         - developer/copilot.qmd
@@ -53,8 +53,12 @@ website:
           href: developer/testing/testing.qmd
           contents:
             - developer/testing/layout_sanity_checker_roadmap.qmd
-        - text: "API Reference"
-          href: api_reference.qmd
+        - section: "API Reference"
+          href: api_generated/index_classes.md
+          contents:
+            - api_generated/Classes/
+            - api_generated/Files/
+            - api_generated/Namespaces/
         - section: "Core Libraries"
           contents:
             - developer/CoreGeometry/index.qmd
@@ -105,6 +109,7 @@ website:
                 - developer/transforms_v2/tensor_temporal_neighbors.qmd
                 - developer/transforms_v2/analog_to_tensor.qmd
                 - developer/transforms_v2/tensor_car.qmd
+                - developer/transforms_v2/tensor_whitening.qmd
             - section: "ParameterSchema"
               href: developer/ParameterSchema/index.qmd
               contents:
@@ -355,6 +360,7 @@ website:
             - user_guide/data_transformations/overview.qmd
             - text: "Transform Widget"
               href: user_guide/data_transformations/transforms_v2_widget.qmd
+            - user_guide/data_transformations/tensor_whitening.qmd
         - section: "Data Inspectors"
           contents:
             - text: "Tensor Inspector"

@@ -8,7 +8,7 @@
 namespace CorePlotting {
 
 /**
- * @brief Pure geometric transform: output = input * gain + offset
+ * @brief Pure geometric transform that is output = input * gain + offset
  * 
  * This is the fundamental building block for positioning data in world space.
  * The LayoutEngine outputs these, and they become part of the Model matrix.
@@ -41,14 +41,14 @@ struct LayoutTransform {
           gain(g) {}
 
     /**
-     * @brief Apply transform: output = input * gain + offset
+     * @brief Apply transform as output = input * gain + offset
      */
     [[nodiscard]] float apply(float value) const {
         return value * gain + offset;
     }
 
     /**
-     * @brief Inverse transform: recover original value from transformed
+     * @brief Inverse transform to recover original value from transformed
      * 
      * @note Returns 0 if gain is effectively zero (non-invertible)
      */
@@ -58,7 +58,7 @@ struct LayoutTransform {
     }
 
     /**
-     * @brief Compose transforms: result applies this AFTER other
+     * @brief Compose transforms where result applies this AFTER other
      * 
      * If we apply `other` then `this`:
      *   result = (x * other.gain + other.offset) * this.gain + this.offset

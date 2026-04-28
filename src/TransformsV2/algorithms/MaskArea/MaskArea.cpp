@@ -26,11 +26,6 @@ float calculateMaskArea(
     return area * params.getScaleFactor();
 }
 
-/**
- * @brief Alternative: Calculate area with context support
- * 
- * Demonstrates progress reporting and cancellation checking.
- */
 float calculateMaskAreaWithContext(
         Mask2D const & mask,
         MaskAreaParams const & params,

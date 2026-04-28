@@ -101,7 +101,9 @@ public:
     [[nodiscard]] std::vector<RecurrentBindingData> const & recurrentBindings() const;
     void setRecurrentBindings(std::vector<RecurrentBindingData> bindings);
 
-    /// Whether any recurrent bindings are active (forces batch_size=1).
+    /**
+     * @brief Whether any recurrent bindings are active (forces batch_size=1).
+     */
     [[nodiscard]] bool hasRecurrentBindings() const;
 
     // ── Post-Encoder Module ──

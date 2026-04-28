@@ -16,7 +16,9 @@
 
 namespace commands {
 
-/// @brief Parameters for `SetEventAtTime` (JSON field `data_key`, `time`, `event`).
+/**
+ * @brief Parameters for `SetEventAtTime` (JSON field `data_key`, `time`, `event`).
+ */
 struct SetEventAtTimeParams {
     std::string data_key;
     int64_t time = 0;
@@ -29,7 +31,9 @@ struct SetEventAtTimeParams {
  */
 class SetEventAtTime : public ICommand {
 public:
-    /// @brief Construct from deserialized parameters.
+    /**
+     * @brief Construct from deserialized parameters.
+     */
     explicit SetEventAtTime(SetEventAtTimeParams p);
 
     [[nodiscard]] std::string commandName() const override;
