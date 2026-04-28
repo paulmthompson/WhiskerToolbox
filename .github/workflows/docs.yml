@@ -45,11 +45,10 @@ jobs:
           # Run the documentation pipeline
           ./build_docs.sh
 
-      # Optional: Upload the built site as an artifact so you can download and preview 
-      # the PR's documentation locally before merging.
-      - name: Upload HTML Artifact
-        uses: actions/upload-artifact@v4
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          name: quarto-site-preview
-          path: docs/_site/
-          retention-days: 7
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/_site
+          publish_branch: gh-pages
