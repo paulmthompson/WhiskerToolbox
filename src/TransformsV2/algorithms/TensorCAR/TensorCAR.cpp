@@ -5,6 +5,7 @@
 
 #include "TensorCAR.hpp"
 
+#include "ParameterSchema/ParameterSchema.hpp"
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
 #include "Tensors/storage/TensorStorageBase.hpp"
@@ -403,3 +404,25 @@ auto tensorCAR(
 }
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
+
+
+/**
+ * @brief ParameterUIHints specialization for TensorCARParams
+ */
+template<>
+struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorCARParams> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("method")) {
+            f->tooltip = "Mean: arithmetic mean across channels. "
+                         "Median: more robust to outlier channels (recommended).";
+        }
+        if (auto * f = schema.field("exclude_channels")) {
+            f->tooltip = "0-based channel indices to exclude from reference computation. "
+                         "Excluded channels still have the reference subtracted.";
+        }
+        if (auto * f = schema.field("use_gpu")) {
+            f->tooltip = "Request CUDA GPU acceleration. When unchecked, the compute "
+                         "path auto-detects the storage backend (LibTorch CPU or Armadillo CPU).";
+        }
+    }
+};

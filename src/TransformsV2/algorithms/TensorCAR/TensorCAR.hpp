@@ -10,8 +10,6 @@
 #ifndef WHISKERTOOLBOX_V2_TENSOR_CAR_HPP
 #define WHISKERTOOLBOX_V2_TENSOR_CAR_HPP
 
-#include "ParameterSchema/ParameterSchema.hpp"
-
 #include <memory>
 #include <vector>
 
@@ -77,26 +75,5 @@ struct TensorCARParams {
         ComputeContext const & ctx) -> std::shared_ptr<TensorData>;
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
-
-/**
- * @brief ParameterUIHints specialization for TensorCARParams
- */
-template<>
-struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorCARParams> {
-    static void annotate(ParameterSchema & schema) {
-        if (auto * f = schema.field("method")) {
-            f->tooltip = "Mean: arithmetic mean across channels. "
-                         "Median: more robust to outlier channels (recommended).";
-        }
-        if (auto * f = schema.field("exclude_channels")) {
-            f->tooltip = "0-based channel indices to exclude from reference computation. "
-                         "Excluded channels still have the reference subtracted.";
-        }
-        if (auto * f = schema.field("use_gpu")) {
-            f->tooltip = "Request CUDA GPU acceleration. When unchecked, the compute "
-                         "path auto-detects the storage backend (LibTorch CPU or Armadillo CPU).";
-        }
-    }
-};
 
 #endif// WHISKERTOOLBOX_V2_TENSOR_CAR_HPP

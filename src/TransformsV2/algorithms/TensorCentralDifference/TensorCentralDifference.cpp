@@ -5,10 +5,12 @@
 
 #include "TensorCentralDifference.hpp"
 
+#include "core/ComputeContext.hpp"
+
+#include "ParameterSchema/ParameterSchema.hpp"
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
-#include "core/ComputeContext.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -180,3 +182,19 @@ auto tensorCentralDifference(
 }
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
+
+
+/**
+ * @brief ParameterUIHints specialization for TensorCentralDifferenceParams
+ */
+template<>
+struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorCentralDifferenceParams> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("boundary_policy")) {
+            f->tooltip = "How to handle the first/last row where t-1 or t+1 is missing";
+        }
+        if (auto * f = schema.field("include_original")) {
+            f->tooltip = "Include the original (unshifted) columns in the output";
+        }
+    }
+};

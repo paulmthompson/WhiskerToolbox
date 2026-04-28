@@ -10,8 +10,6 @@
 #ifndef WHISKERTOOLBOX_V2_TENSOR_TEMPORAL_NEIGHBORS_HPP
 #define WHISKERTOOLBOX_V2_TENSOR_TEMPORAL_NEIGHBORS_HPP
 
-#include "ParameterSchema/ParameterSchema.hpp"
-
 #include <memory>
 #include <vector>
 
@@ -65,40 +63,6 @@ struct TensorTemporalNeighborParams {
     [[nodiscard]] std::vector<int> buildOffsets() const;
 };
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
-
-/**
- * @brief ParameterUIHints specialization for TensorTemporalNeighborParams
- */
-template<>
-struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorTemporalNeighborParams> {
-    static void annotate(ParameterSchema & schema) {
-        if (auto * f = schema.field("lag_range")) {
-            f->tooltip = "Maximum lag offset magnitude (past). 0 disables lags.";
-            f->min_value = 0;
-        }
-        if (auto * f = schema.field("lag_step")) {
-            f->tooltip = "Step size between lag offsets";
-            f->min_value = 1;
-        }
-        if (auto * f = schema.field("lead_range")) {
-            f->tooltip = "Maximum lead offset magnitude (future). 0 disables leads.";
-            f->min_value = 0;
-        }
-        if (auto * f = schema.field("lead_step")) {
-            f->tooltip = "Step size between lead offsets";
-            f->min_value = 1;
-        }
-        if (auto * f = schema.field("boundary_policy")) {
-            f->tooltip = "How to handle rows where an offset falls outside the tensor";
-        }
-        if (auto * f = schema.field("include_original")) {
-            f->tooltip = "Include the original (unshifted) columns in the output";
-        }
-    }
-};
-
-namespace WhiskerToolbox::Transforms::V2::Examples {
 
 /**
  * @brief Augment a time-indexed TensorData with neighbor feature columns

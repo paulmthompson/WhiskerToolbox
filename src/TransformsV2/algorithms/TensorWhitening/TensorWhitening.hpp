@@ -6,8 +6,6 @@
 #ifndef WHISKERTOOLBOX_V2_TENSOR_WHITENING_HPP
 #define WHISKERTOOLBOX_V2_TENSOR_WHITENING_HPP
 
-#include "ParameterSchema/ParameterSchema.hpp"
-
 #include <memory>
 #include <vector>
 
@@ -71,30 +69,5 @@ struct TensorWhiteningParams {
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-template<>
-struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorWhiteningParams> {
-    static void annotate(ParameterSchema & schema) {
-        if (auto * f = schema.field("mad_threshold_multiplier")) {
-            f->tooltip = "MAD multiplier used to reject noisy samples when estimating the "
-                         "whitening covariance. Set <= 0 to disable sample rejection.";
-        }
-        if (auto * f = schema.field("exclude_channels")) {
-            f->tooltip = "0-based channel indices to exclude from whitening. "
-                         "Excluded channels are copied through unchanged.";
-        }
-        if (auto * f = schema.field("rescale_amplitude")) {
-            f->tooltip = "When enabled, scales the whitened channels by the mean robust "
-                         "channel amplitude to preserve a familiar output magnitude.";
-        }
-        if (auto * f = schema.field("epsilon")) {
-            f->tooltip = "Small diagonal regularizer added to covariance eigenvalues "
-                         "before inverting their square roots.";
-        }
-        if (auto * f = schema.field("use_gpu")) {
-            f->tooltip = "Request CUDA execution. When unavailable, the transform falls "
-                         "back to the LibTorch CPU path.";
-        }
-    }
-};
 
 #endif// WHISKERTOOLBOX_V2_TENSOR_WHITENING_HPP
