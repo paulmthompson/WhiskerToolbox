@@ -13,6 +13,7 @@ add_executable(test_DataSynthesizer
     SineWaveGenerator.test.cpp
     SquareWaveGenerator.test.cpp
     TriangleWaveGenerator.test.cpp
+    SawtoothWaveGenerator.test.cpp
     GaussianNoiseGenerator.test.cpp
     UniformNoiseGenerator.test.cpp
     PoissonEventsGenerator.test.cpp
