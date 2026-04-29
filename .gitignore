@@ -35,3 +35,5 @@ docs/api_generated/
 # Quarto build artifact
 .quarto/
 _site/
+
+docs/site_libs/
